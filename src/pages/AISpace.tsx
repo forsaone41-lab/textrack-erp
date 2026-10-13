@@ -479,7 +479,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   };
 
   const exportToFicheTechnique = async (mode: 'current' | 'complete' = 'current') => {
-    if (!analysisResult) return;
+    setActiveTab('fiche');
     setExporting(true);
 
     try {
@@ -492,41 +492,67 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         return parseFloat(s) || 0;
       };
 
-      let ftModele = analysisResult.category;
-      const fitStr = analysisResult.fit || (analysisResult.pieces?.[0]?.fit) || '';
-      const compStr = analysisResult.complexity || '';
+      let curAnalysis = analysisResult;
+      if (!curAnalysis) {
+        const allChatText = chat.map(c => c.text).join('\n');
+        const userChatText = chat.filter(c => c.role === 'user').map(c => c.text).join(' ');
+        const combinedContext = `${userChatText} ${allChatText}`;
+        const breakdown = getGarmentTechnicalBreakdown(combinedContext);
+        curAnalysis = {
+          category: breakdown.categorie || (isAr ? 'موديل من الذكاء الاصطناعي' : 'Modèle AI'),
+          consumption: `${breakdown.consommationMetrage}m`,
+          complexity: 'متوسطة',
+          components: breakdown.postesTravail.map(p => p.nomAr),
+          costEstimate: `${breakdown.coutRevientEstime.toFixed(1)} - ${breakdown.prixVenteConseille.toFixed(1)} MAD`,
+          fabricSuggested: breakdown.tissuType,
+          gammeMontage: breakdown.postesTravail,
+          rawAnalysis: ''
+        };
+        setAnalysisResult(curAnalysis);
+      }
 
-      const extrasAr = ` | Ø§Ù„Ù‚ØµØ©: ${fitStr || 'Ø¹Ø§Ø¯ÙŠ'} | Ø§Ù„ØµØ¹ÙˆØ¨Ø©: ${compStr || 'Ù…ØªÙˆØ³Ø·'}`;
+      let ftModele = curAnalysis.category;
+      const fitStr = curAnalysis.fit || (curAnalysis.pieces?.[0]?.fit) || '';
+      const compStr = curAnalysis.complexity || '';
+
+      const extrasAr = ` | القصة: ${fitStr || 'عادي'} | الصعوبة: ${compStr || 'متوسط'}`;
       const extrasFr = ` | Coupe: ${fitStr || 'Regular'} | Complexité: ${compStr || 'Moyenne'}`;
 
       let ftDescription = isAr
-        ? `Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª: ${analysisResult.components.join('ØŒ ')}${extrasAr}`
-        : `Composants: ${analysisResult.components.join(', ')}${extrasFr}`;
-      let ftMesures = customMesures;
-      let ftConso = parseConso(analysisResult.consumption) || 2.50;
+        ? `المكونات: ${(curAnalysis.components || []).join('، ')}${extrasAr}`
+        : `Composants: ${(curAnalysis.components || []).join(', ')}${extrasFr}`;
+      let ftMesures = (customMesures && customMesures.length > 0) ? customMesures : [
+        { nom: isAr ? 'دورة الصدر (Poitrine)' : 'Tour de poitrine', valeurs: { S: 92, M: 96, L: 100, XL: 106, XXL: 112 } },
+        { nom: isAr ? 'عرض الكتف (Carrure)' : 'Carrure', valeurs: { S: 38, M: 40, L: 42, XL: 44, XXL: 46 } },
+        { nom: isAr ? 'الطول الإجمالي (Longueur)' : 'Longueur totale', valeurs: { S: 95, M: 96, L: 97, XL: 98, XXL: 99 } },
+        { nom: isAr ? 'طول الكم (Manche)' : 'Longueur manche', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } },
+        { nom: isAr ? 'دورة الخصر (Tour de taille)' : 'Tour de taille', valeurs: { S: 74, M: 78, L: 82, XL: 88, XXL: 94 } },
+        { nom: isAr ? 'دورة الحوض (Hanches)' : 'Tour de hanches', valeurs: { S: 98, M: 102, L: 106, XL: 112, XXL: 118 } }
+      ];
+      let ftConso = parseConso(curAnalysis.consumption) || 2.50;
 
-      if (mode === 'current' && analysisResult.pieces && analysisResult.pieces.length > 0) {
-        const p = analysisResult.pieces[activePieceIdx];
+      if (mode === 'current' && curAnalysis.pieces && curAnalysis.pieces.length > 0) {
+        const p = curAnalysis.pieces[activePieceIdx];
         if (p) {
           const pFit = p.fit || fitStr;
           const pComp = p.complexity || compStr;
-          const pExtAr = ` | Ø§Ù„Ù‚ØµØ©: ${pFit || 'Ø¹Ø§Ø¯ÙŠ'} | Ø§Ù„ØµØ¹ÙˆØ¨Ø©: ${pComp || 'Ù…ØªÙˆØ³Ø·'}`;
+          const pExtAr = ` | القصة: ${pFit || 'عادي'} | الصعوبة: ${pComp || 'متوسط'}`;
           const pExtFr = ` | Coupe: ${pFit || 'Regular'} | Complexité: ${pComp || 'Moyenne'}`;
 
           ftModele = p.name;
-          ftDescription = isAr ? `Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª: ${(p.components || []).join('ØŒ ')}${pExtAr}` : `Composants: ${(p.components || []).join(', ')}${pExtFr}`;
+          ftDescription = isAr ? `المكونات: ${(p.components || []).join('، ')}${pExtAr}` : `Composants: ${(p.components || []).join(', ')}${pExtFr}`;
           ftMesures = piecesMesures[activePieceIdx] || customMesures; // The active table (with any manual edits)
           ftConso = parseConso(p.consumption) || ftConso;
         }
       } else if (mode === 'complete') {
-        ftModele = analysisResult.category;
+        ftModele = curAnalysis.category;
         const allComps: string[] = [];
 
-        if (analysisResult.pieces && analysisResult.pieces.length > 0) {
+        if (curAnalysis.pieces && curAnalysis.pieces.length > 0) {
           const combinedMesures: any[] = [];
           let totalConso = 0;
 
-          analysisResult.pieces.forEach((p: any, pIdx: number) => {
+          curAnalysis.pieces.forEach((p: any, pIdx: number) => {
             const prefix = p.name.trim();
             const pConso = parseConso(p.consumption);
             if (pConso > 0) {
@@ -556,16 +582,16 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
           ftMesures = customMesures;
         }
 
-        if (allComps.length === 0 && analysisResult.components && Array.isArray(analysisResult.components)) {
-          allComps.push(...analysisResult.components);
+        if (allComps.length === 0 && curAnalysis.components && Array.isArray(curAnalysis.components)) {
+          allComps.push(...curAnalysis.components);
         }
 
         if (allComps.length > 0) {
-          ftDescription = isAr ? `Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª: ${allComps.join('ØŒ ')}${extrasAr}` : `Composants: ${allComps.join(', ')}${extrasFr}`;
+          ftDescription = isAr ? `المكونات: ${allComps.join('، ')}${extrasAr}` : `Composants: ${allComps.join(', ')}${extrasFr}`;
         }
       } else {
-        if (analysisResult.components && Array.isArray(analysisResult.components) && analysisResult.components.length > 0) {
-          ftDescription = isAr ? `Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª: ${analysisResult.components.join('ØŒ ')}${extrasAr}` : `Composants: ${analysisResult.components.join(', ')}${extrasFr}`;
+        if (curAnalysis.components && Array.isArray(curAnalysis.components) && curAnalysis.components.length > 0) {
+          ftDescription = isAr ? `المكونات: ${curAnalysis.components.join('، ')}${extrasAr}` : `Composants: ${curAnalysis.components.join(', ')}${extrasFr}`;
         }
       }
 
@@ -573,19 +599,19 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         id: genId(),
         modele: ftModele,
         description: ftDescription,
-        client: isAr ? 'Ø§Ù‚ØªØ±Ø§Ø­ Ø®Ø¨ÙŠØ± BEYA' : 'Suggestion Expert',
+        client: isAr ? 'اقتراح خبير BEYA' : 'Suggestion Expert',
         tailles: selectedTailles,
         mesures: ftMesures,
         tissuConsommation: ftConso,
-        type: mode === 'complete' ? 'Ensemble' : (analysisResult.category || 'creations'),
-        tissuRecommande: (mode === 'current' ? analysisResult.pieces?.[activePieceIdx]?.fabricSuggested : null) || analysisResult.fabricSuggested || analysisResult.pieces?.[0]?.fabricSuggested || '—',
+        type: mode === 'complete' ? 'Ensemble' : (curAnalysis.category || 'creations'),
+        tissuRecommande: (mode === 'current' ? curAnalysis.pieces?.[activePieceIdx]?.fabricSuggested : null) || curAnalysis.fabricSuggested || curAnalysis.pieces?.[0]?.fabricSuggested || '—',
         createdAt: new Date().toISOString().split('T')[0],
         photo: image || undefined,
-        fit: (mode === 'current' ? analysisResult.pieces?.[activePieceIdx]?.fit : null) || fitStr || analysisResult.pieces?.[0]?.fit || 'Regular',
-        complexity: (mode === 'current' ? analysisResult.pieces?.[activePieceIdx]?.complexity : null) || compStr || analysisResult.pieces?.[0]?.complexity || 'Moyenne',
-        costEstimate: (mode === 'current' ? analysisResult.pieces?.[activePieceIdx]?.costEstimate : null) || analysisResult.costEstimate || analysisResult.pieces?.[0]?.costEstimate || '—',
+        fit: (mode === 'current' ? curAnalysis.pieces?.[activePieceIdx]?.fit : null) || fitStr || curAnalysis.pieces?.[0]?.fit || 'Regular',
+        complexity: (mode === 'current' ? curAnalysis.pieces?.[activePieceIdx]?.complexity : null) || compStr || curAnalysis.pieces?.[0]?.complexity || 'Moyenne',
+        costEstimate: (mode === 'current' ? curAnalysis.pieces?.[activePieceIdx]?.costEstimate : null) || curAnalysis.costEstimate || curAnalysis.pieces?.[0]?.costEstimate || '—',
         aiNotes: chat.filter(c => c.role === 'ai').map(c => c.text).join('\n\n---\n\n'),
-        tissuPhoto: analysisResult.tissuPhoto || undefined
+        tissuPhoto: curAnalysis.tissuPhoto || undefined
       };
 
       // Save to fiches, but we'll use client="Suggestion Expert" to identify them
@@ -593,9 +619,20 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       try {
         localStorage.setItem('beya_ai_to_ft', JSON.stringify(newFT));
       } catch (e) {
-        console.warn('LocalStorage limit exceeded, skipping local cache for export.');
+        try {
+          const lightFT = { ...newFT, photo: undefined, tissuPhoto: undefined };
+          localStorage.setItem('beya_ai_to_ft', JSON.stringify(lightFT));
+        } catch (e2) {
+          console.warn('LocalStorage limit exceeded, skipping local cache for export.');
+        }
       }
-      window.open('/#/ai-models', '_blank');
+      window.open('/#/fiches-techniques', '_blank');
+      setCustomAlert({
+        title: isAr ? "تم التصدير بنجاح 🎉" : "Exportation réussie 🎉",
+        message: isAr 
+          ? "تم حفظ الموديل وإرساله للبطاقة التقنية وفتحها في صفحة البطاقات التقنية." 
+          : "Le modèle a été exporté et ouvert dans les Fiches Techniques.",
+      });
     } catch (err) {
       console.error("Export Error:", err);
       setCustomAlert({
@@ -1733,12 +1770,13 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
               <button
                 onClick={() => {
-                  if (analysisResult) {
+                  setActiveTab('fiche');
+                  if (analysisResult || chat.length > 1 || image) {
                     exportToFicheTechnique();
                   } else {
                     setCustomAlert({
                       title: isAr ? 'تنبيه' : 'Attention',
-                      message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                      message: isAr ? 'يرجى رفع صورة موديل أو التحدث مع المستشار الذكي أولاً!' : 'Veuillez uploader un modèle ou consulter l\'IA d\'abord !',
                       isError: true
                     });
                   }
@@ -1746,7 +1784,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                 className="flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200/60 text-indigo-700 rounded-xl font-black text-xs transition-all shadow-sm group"
               >
                 <FileText className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                <span>{isAr ? 'البطاقة التقنية' : 'Fiche Technique'}</span>
+                <span>{isAr ? 'إرسال للبطاقة التقنية' : 'Fiche Technique'}</span>
               </button>
 
               <button
@@ -2049,7 +2087,13 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                   })()}
 
                   {/* Print / Export Report Button */}
-                  <div className="pt-2 flex justify-end">
+                  <div className="pt-4 flex flex-wrap items-center justify-end gap-3 border-t border-slate-100">
+                    <button
+                      onClick={() => exportToFicheTechnique()}
+                      className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:bg-indigo-700 transition-all shadow-md hover:shadow-indigo-200"
+                    >
+                      <FileText className="w-4 h-4" /> <span>{isAr ? 'إرسال وفتح في صفحة البطاقات التقنية' : 'Ouvrir dans Fiches Techniques'}</span>
+                    </button>
                     <button
                       onClick={() => printRapportIA(analysisResult, image, isAr)}
                       className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:bg-slate-800 transition-all shadow-sm"
@@ -2414,6 +2458,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               <button
                 onClick={() => {
                   setShowDispatchModal(false);
+                  setActiveTab('fiche');
                   exportToFicheTechnique();
                 }}
                 className={`flex items-center justify-between p-3.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/60 text-indigo-800 rounded-2xl font-black text-xs transition-all shadow-sm group ${isAr ? 'flex-row-reverse' : ''}`}
@@ -2421,8 +2466,8 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                 <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                   <FileText className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform flex-shrink-0" />
                   <div>
-                    <div className="font-black">{isAr ? 'البطاقة التقنية Fiche Technique' : 'Fiche Technique'}</div>
-                    <div className="text-[10px] font-bold text-indigo-600/80">{isAr ? 'حفظ بطاقة التفصيل للموديل' : 'Génération fiche technique'}</div>
+                    <div className="font-black">{isAr ? 'إرسال للبطاقة التقنية Fiche Technique' : 'Fiche Technique'}</div>
+                    <div className="text-[10px] font-bold text-indigo-600/80">{isAr ? 'حفظ بطاقة التفصيل وفتحها فوراً' : 'Génération fiche technique'}</div>
                   </div>
                 </div>
                 <ChevronRight className={`w-4 h-4 text-indigo-600 ${isAr ? 'rotate-180' : ''}`} />

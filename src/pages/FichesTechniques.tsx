@@ -479,6 +479,11 @@ export default function FichesTechniques() {
           try {
             const parsedFT = JSON.parse(aiFT);
             setForm(parsedFT);
+            setEditId(parsedFT.id);
+            setFiches(prev => {
+              if (prev.some(x => x.id === parsedFT.id)) return prev;
+              return [parsedFT, ...prev];
+            });
             setShowModal(true);
             localStorage.removeItem('beya_ai_to_ft');
           } catch (e) { /* ignore */ }
