@@ -156,7 +156,7 @@ export default function Demandes() {
 
   const sanitizeLead = (l: any) => ({
     ...l,
-    type: l.type || '',
+    type: l.type === '__FOURNISSEUR__' ? 'Fournisseur' : (l.type || ''),
     phone: String(l.phone || ''),
     name: l.name || '',
     email: l.email || '',
@@ -193,7 +193,7 @@ export default function Demandes() {
       ]);
       if (tissusData) setTissus(tissusData);
       if (leadsData) {
-        let validLeads = (leadsData as Lead[]).filter(l => l && !l.type?.startsWith('__') && !l.name?.startsWith('__')).map(sanitizeLead);
+        let validLeads = (leadsData as Lead[]).filter(l => l && !l.name?.startsWith('__') && (l.type === '__FOURNISSEUR__' || !l.type?.startsWith('__'))).map(sanitizeLead);
         
         // Auto-delete logic: remove if crmStage === 'annule' and rejectedAt is > 48 hours ago
         const now = Date.now();
@@ -225,7 +225,7 @@ export default function Demandes() {
       if (cachedLeads) {
         const parsed = JSON.parse(cachedLeads);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setLeads(parsed.filter((l: any) => l && !l.type?.startsWith('__') && !l.name?.startsWith('__')).map(sanitizeLead));
+          setLeads(parsed.filter((l: any) => l && !l.name?.startsWith('__') && (l.type === '__FOURNISSEUR__' || !l.type?.startsWith('__'))).map(sanitizeLead));
         }
       }
       const cachedUsers = localStorage.getItem('textrack_data_users');
