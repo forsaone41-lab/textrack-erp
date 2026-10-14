@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { Plus, Search, Edit2, Trash2, CreditCard, DollarSign, Image as ImageIcon, X, Printer, Download, File, Phone, RotateCw, Copy, Check, Zap, Calculator } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, CreditCard, DollarSign, Image as ImageIcon, X, Printer, Download, File, Phone, RotateCw, Copy, Check, Zap, Calculator, Camera, Upload, User as UserIcon } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Employe, PaiementSalaire, Commande, loadData, genId, loadCompanyProfile, saveRecord, safeStorage } from '../types';
 import { generatePDF, printElement } from '../utils/pdf';
@@ -91,6 +91,230 @@ const POSTES_SOUSTRAITANCE_AR = [
   'خدمات الطرز',
   'خدمات الطباعة',
 ];
+
+function ProfessionalBadgeCard({
+  emp,
+  company,
+  isAr,
+  empName,
+  id,
+  showPhotoUpload = false,
+  onPhotoUpload,
+}: {
+  emp: Employe;
+  company: any;
+  isAr: boolean;
+  empName: (e: Employe) => string;
+  id?: string;
+  showPhotoUpload?: boolean;
+  onPhotoUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  const shortId = emp.id ? emp.id.replace(/-/g, '').slice(0, 16).toUpperCase() : 'EMP0000000000000';
+  const matricule = `#EMP-${(emp.id || '').slice(0, 6).toUpperCase()}`;
+
+  return (
+    <div
+      id={id}
+      dir="ltr"
+      className="w-full max-w-[480px] bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-2xl relative text-slate-900 select-none print:shadow-none print:border-slate-300 break-inside-avoid text-left transition-all"
+      style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+    >
+      {/* Top Corporate Header Banner (Deep Blue Gradient) */}
+      <div className="relative bg-gradient-to-r from-[#0a2540] via-[#0d3b66] to-[#0052cc] px-5 py-3 text-white flex items-center justify-between shadow-md overflow-hidden">
+        {/* Subtle patterned overlay */}
+        <div 
+          className="absolute inset-0 opacity-15 pointer-events-none mix-blend-overlay"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+            backgroundSize: '10px 10px'
+          }}
+        />
+
+        {/* Company Brand (Left) */}
+        <div className="flex items-center gap-3 relative z-10">
+          <div className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+            {company.logoAdmin || company.logoUrl ? (
+              <img src={company.logoAdmin || company.logoUrl} alt={company.name} className="w-full h-full object-contain filter brightness-110" />
+            ) : (
+              <div className="w-5 h-5 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-sm transform rotate-45" />
+            )}
+          </div>
+          <div>
+            <h2 className="text-sm sm:text-base font-black tracking-wider uppercase leading-none drop-shadow-sm text-white">
+              {company.name || 'BEYA CREATIVE'}
+            </h2>
+            <span className="text-[7.5px] font-bold uppercase tracking-[0.25em] text-cyan-200 block mt-0.5">
+              CARTE PROFESSIONNELLE
+            </span>
+          </div>
+        </div>
+
+        {/* Brand Slogan (Right) */}
+        <div className="text-right relative z-10">
+          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-cyan-200 block drop-shadow-sm">
+            MANUFACTURING EXCELLENCE
+          </span>
+          <span className="text-[7.5px] text-blue-100 font-semibold tracking-widest block opacity-90 italic">
+            for the better world
+          </span>
+        </div>
+      </div>
+
+      {/* Card Body */}
+      <div className="p-4 sm:p-5 bg-gradient-to-b from-slate-50/70 to-white">
+        <div className="flex gap-4 items-start">
+          {/* Employee Photo Container (Left) */}
+          <div className="shrink-0 flex flex-col items-center">
+            <div className="w-[110px] h-[140px] sm:w-[125px] sm:h-[155px] rounded-xl overflow-hidden bg-slate-100 border-2 border-slate-200 shadow-sm relative group flex items-center justify-center">
+              {emp.photo ? (
+                <img src={emp.photo} alt={empName(emp)} className="w-full h-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-slate-300 p-2 text-center">
+                  <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-black text-lg mb-1">
+                    {emp.prenom?.[0] || emp.nom?.[0] || 'U'}
+                  </div>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+                    {isAr ? 'بدون صورة' : 'Sans photo'}
+                  </span>
+                </div>
+              )}
+
+              {/* Photo change hover action if enabled */}
+              {showPhotoUpload && onPhotoUpload && (
+                <label className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer p-2 text-center">
+                  <Camera className="w-5 h-5 mb-1" />
+                  <span className="text-[9px] font-bold uppercase">{isAr ? 'تغيير' : 'Modifier'}</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={onPhotoUpload} />
+                </label>
+              )}
+            </div>
+          </div>
+
+          {/* Details (Right) */}
+          <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch">
+            <div>
+              {/* Employee Name */}
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight leading-tight truncate">
+                {empName(emp)}
+              </h3>
+
+              {/* Role / Title */}
+              <div className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] sm:text-[11px] font-black uppercase tracking-wider">
+                <span>{emp.poste || 'Personnel Atelier'}</span>
+              </div>
+
+              {/* Info Grid (CIN, MATRICULE, VALIDITÉ, TEL) */}
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mt-2.5 pt-2 border-t border-slate-100">
+                <div>
+                  <span className="block text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none">CIN</span>
+                  <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">{emp.cin || '—'}</span>
+                </div>
+                <div>
+                  <span className="block text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none">MATRICULE</span>
+                  <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider font-mono">{matricule}</span>
+                </div>
+                <div>
+                  <span className="block text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none">VALIDITÉ</span>
+                  <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">PERMANENT</span>
+                </div>
+                <div>
+                  <span className="block text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none">TÉLÉPHONE</span>
+                  <span className="text-[11px] font-black text-slate-800 tracking-wider tabular-nums">{emp.telephone || '—'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Signature & Contract Status Row */}
+            <div className="flex items-end justify-between mt-2 pt-2 border-t border-slate-100">
+              <div className="flex flex-col">
+                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">TYPE CONTRAT</span>
+                <span className="text-[9.5px] font-bold text-slate-600 uppercase">
+                  {emp.type === 'atelier' ? 'Interne (Atelier)' : 'Sous-traitance'}
+                </span>
+              </div>
+
+              <div className="flex flex-col items-end">
+                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">SIGNATURE</span>
+                <svg className="w-20 h-5 text-slate-700 opacity-75 mt-0.5" viewBox="0 0 140 35" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M 10 24 C 25 6, 38 30, 52 14 C 60 6, 68 28, 90 16 C 105 9, 102 24, 130 13" />
+                  <path d="M 30 28 L 120 28" strokeWidth="1" strokeDasharray="2 3" opacity="0.4" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Barcode & QR Code Section (Bottom) */}
+        <div className="mt-3.5 pt-2.5 border-t border-slate-200/80 flex items-center justify-between gap-3 bg-white/80 p-2 rounded-xl">
+          {/* Barcode Graphic */}
+          <div className="flex-1 min-w-0 flex flex-col items-start">
+            <svg className="h-6 w-full max-w-[220px] text-slate-900" viewBox="0 0 200 24" fill="currentColor" preserveAspectRatio="none">
+              <rect x="0" y="0" width="3" height="24" />
+              <rect x="5" y="0" width="1.5" height="24" />
+              <rect x="8" y="0" width="4" height="24" />
+              <rect x="14" y="0" width="2" height="24" />
+              <rect x="18" y="0" width="1" height="24" />
+              <rect x="21" y="0" width="3.5" height="24" />
+              <rect x="27" y="0" width="2" height="24" />
+              <rect x="31" y="0" width="1" height="24" />
+              <rect x="34" y="0" width="4" height="24" />
+              <rect x="40" y="0" width="1.5" height="24" />
+              <rect x="44" y="0" width="3" height="24" />
+              <rect x="49" y="0" width="2" height="24" />
+              <rect x="53" y="0" width="4" height="24" />
+              <rect x="59" y="0" width="1.5" height="24" />
+              <rect x="63" y="0" width="3" height="24" />
+              <rect x="68" y="0" width="1" height="24" />
+              <rect x="71" y="0" width="4" height="24" />
+              <rect x="77" y="0" width="2" height="24" />
+              <rect x="81" y="0" width="1.5" height="24" />
+              <rect x="85" y="0" width="3" height="24" />
+              <rect x="90" y="0" width="1" height="24" />
+              <rect x="93" y="0" width="4" height="24" />
+              <rect x="99" y="0" width="2" height="24" />
+              <rect x="103" y="0" width="1.5" height="24" />
+              <rect x="107" y="0" width="3.5" height="24" />
+              <rect x="113" y="0" width="1" height="24" />
+              <rect x="116" y="0" width="4" height="24" />
+              <rect x="122" y="0" width="2" height="24" />
+              <rect x="126" y="0" width="1.5" height="24" />
+              <rect x="130" y="0" width="3" height="24" />
+              <rect x="135" y="0" width="1" height="24" />
+              <rect x="138" y="0" width="4.5" height="24" />
+              <rect x="145" y="0" width="1.5" height="24" />
+              <rect x="149" y="0" width="3" height="24" />
+              <rect x="154" y="0" width="2" height="24" />
+              <rect x="158" y="0" width="1" height="24" />
+              <rect x="161" y="0" width="4" height="24" />
+              <rect x="167" y="0" width="2" height="24" />
+              <rect x="171" y="0" width="1.5" height="24" />
+              <rect x="175" y="0" width="3.5" height="24" />
+              <rect x="181" y="0" width="2" height="24" />
+              <rect x="185" y="0" width="2" height="24" />
+              <rect x="190" y="0" width="3" height="24" />
+              <rect x="195" y="0" width="2" height="24" />
+            </svg>
+            <span className="text-[8.5px] font-mono font-bold text-slate-500 tracking-[0.25em] uppercase mt-0.5">
+              {shortId}
+            </span>
+          </div>
+
+          {/* Quick-Scan QR Code */}
+          <div className="shrink-0 p-1.5 bg-white border border-slate-200 rounded-lg shadow-sm flex items-center justify-center">
+            {emp.id ? (
+              <QRCodeSVG value={emp.id} size={44} level="M" />
+            ) : (
+              <div className="w-[44px] h-[44px] bg-slate-100 rounded animate-pulse" />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Accent Bar */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-[#0a2540] via-[#0d3b66] to-[#0052cc]" />
+    </div>
+  );
+}
 
 export default function SuiviRH() {
   const { isAr } = useLang();
@@ -258,13 +482,80 @@ export default function SuiviRH() {
   const stCount = useMemo(() => (employes || []).filter(e => e && e.type === 'sous_traitance' && e.actif).length, [employes]);
   const masseSalariale = useMemo(() => (employes || []).filter(e => e && e.type === 'atelier' && e.actif).reduce((a, e) => a + (e.salaireMensuel || 0), 0), [employes]);
 
+  const compressImageFile = (file: File, maxW = 400, maxH = 480): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event: any) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxW) {
+              height = Math.round((height * maxW) / width);
+              width = maxW;
+            }
+          } else {
+            if (height > maxH) {
+              width = Math.round((width * maxH) / height);
+              height = maxH;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.85));
+          } else {
+            resolve(event.target.result as string);
+          }
+        };
+        img.onerror = () => resolve('');
+        img.src = event.target.result;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleEmployeePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const compressed = await compressImageFile(file);
+    if (compressed) {
+      setForm(prev => ({ ...prev, photo: compressed }));
+    }
+  };
+
+  const handleDirectBadgePhotoUpload = async (empId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const compressed = await compressImageFile(file);
+    if (compressed) {
+      setSelectedBadge(prev => prev ? { ...prev, photo: compressed } : null);
+      setEmployes(prev => {
+        const next = prev.map(emp => emp.id === empId ? { ...emp, photo: compressed } : emp);
+        saveLocalRH('employes', next);
+        return next;
+      });
+      const targetEmp = employes.find(emp => emp.id === empId);
+      if (targetEmp) {
+        saveRecord('employes', { ...targetEmp, photo: compressed }, true).catch(() => {});
+      }
+    }
+  };
+
   function openCreate() {
     setEditId(null);
     setForm({
       nom: '', prenom: '', poste: '', type: 'atelier',
       telephone: '', email: '', adresse: '', cin: '',
       banque: '', rib: '', actif: true, salaireMensuel: 0,
-      remunerationType: 'mensuel'
+      remunerationType: 'mensuel', photo: ''
     });
     setShowModal(true);
   }
@@ -321,6 +612,21 @@ export default function SuiviRH() {
 
       setToast({ nom: newUser.nom, pin: finalPin });
       setTimeout(() => setToast(null), 6000);
+    } else {
+      // Sync photo to existing user if exists
+      try {
+        const localUsersRaw = localStorage.getItem('textrack_users');
+        if (localUsersRaw) {
+          const localUsers = JSON.parse(localUsersRaw);
+          const idx = localUsers.findIndex((u: any) => u.employeId === eId);
+          if (idx !== -1) {
+            localUsers[idx].photo = empData.photo || localUsers[idx].photo || '';
+            localUsers[idx].nom = `${empData.prenom || ''} ${empData.nom}`.trim();
+            localStorage.setItem('textrack_users', JSON.stringify(localUsers));
+            saveRecord('users', localUsers[idx], true).catch(() => {});
+          }
+        }
+      } catch {}
     }
 
     setShowModal(false);
@@ -726,19 +1032,16 @@ export default function SuiviRH() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-12 bg-white scrollbar-hide">
-              <div className="grid grid-cols-2 gap-8" id="all-badges-capture">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-10 bg-slate-100/70 scrollbar-hide">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 justify-items-center" id="all-badges-capture">
                 {employes.filter(e => e.type === 'atelier' && e.actif).map(e => (
-                  <div key={e.id} className="border-2 border-slate-100 rounded-[32px] p-8 flex flex-col items-center text-center bg-white shadow-sm break-inside-avoid">
-                    <p className="text-xl font-black text-slate-900 italic uppercase mb-6">{company.name}</p>
-                    <div className="p-4 bg-white border-2 border-slate-50 rounded-3xl mb-6 flex items-center justify-center">
-                      {e.id ? <QRCodeSVG value={e.id} size={150} level="H" /> : <div className="w-[150px] h-[150px] bg-slate-100 animate-pulse rounded-2xl" />}
-                    </div>
-                    <h2 className="text-2xl font-black text-slate-900 uppercase leading-tight mb-2">{empName(e)}</h2>
-                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-5 py-2 rounded-full">
-                      {isAr ? (POSTES_ATELIER_AR[POSTES_ATELIER.indexOf(e.poste)] || e.poste) : e.poste || 'Personnel'}
-                    </p>
-                  </div>
+                  <ProfessionalBadgeCard
+                    key={e.id}
+                    emp={e}
+                    company={company}
+                    isAr={isAr}
+                    empName={empName}
+                  />
                 ))}
               </div>
             </div>
@@ -757,6 +1060,62 @@ export default function SuiviRH() {
               <button onClick={() => setShowModal(false)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-8 space-y-6">
+              {/* Photo d'identité / صورة الموظف */}
+              <div className={`p-4 bg-slate-50 border-2 border-slate-100 rounded-3xl flex items-center gap-5 ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                {/* Photo Preview */}
+                <div className="relative group shrink-0">
+                  <div className="w-24 h-28 rounded-2xl overflow-hidden bg-white border-2 border-slate-200 shadow-sm flex items-center justify-center">
+                    {form.photo ? (
+                      <img src={form.photo} alt="Employé" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-slate-300">
+                        <Camera className="w-8 h-8 mb-1" />
+                        <span className="text-[9px] font-black uppercase tracking-tight">{isAr ? 'بدون صورة' : 'Sans photo'}</span>
+                      </div>
+                    )}
+                  </div>
+                  {form.photo && (
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, photo: '' })}
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center shadow hover:bg-rose-600 transition"
+                      title={isAr ? 'حذف الصورة' : 'Supprimer'}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Upload Buttons & Label */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">
+                    {isAr ? 'صورة الموظف (للبطاقة المهنية)' : 'Photo d\'identité (pour le badge)'}
+                  </h4>
+                  <p className="text-[11px] font-medium text-slate-500 mt-1 leading-snug">
+                    {isAr 
+                      ? 'ارفع صورة شخصية واضحة للموظف، تظهر تلقائياً في شارة العمل وبطاقة QR الاحترافية.' 
+                      : 'Téléversez une photo claire pour le badge professionnel et l\'identification rapide.'}
+                  </p>
+                  <div className={`mt-3 flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition active:scale-95">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{form.photo ? (isAr ? 'تغيير الصورة' : 'Changer photo') : (isAr ? 'إضافة صورة' : 'Choisir une photo')}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleEmployeePhotoUpload}
+                      />
+                    </label>
+                    {form.photo && (
+                      <span className="text-[10px] font-black text-emerald-600 flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" /> {isAr ? 'جاهزة للحفظ' : 'Photo attachée'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className={isAr ? 'text-right' : ''}>
                 <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 border-b border-indigo-50 pb-2">{isAr ? 'الهوية والمنصب' : 'Identité & Poste'}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -976,34 +1335,74 @@ export default function SuiviRH() {
       {/* Badge QR Modal */}
       {selectedBadge && (
         <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white rounded-[32px] w-full max-w-[380px] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
-            <div className="p-6 flex items-center justify-between border-b border-slate-100">
-              <h3 className="font-black text-slate-900 uppercase tracking-tighter">Badge QR</h3>
-              <div className="flex gap-2">
+          <div className="bg-white rounded-[32px] w-full max-w-[540px] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+            {/* Modal Header */}
+            <div className={`p-6 flex items-center justify-between border-b border-slate-100 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 uppercase tracking-tighter text-base leading-none">
+                    {isAr ? 'بطاقة العمل المهنية' : 'Badge Professionnel'}
+                  </h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    {empName(selectedBadge)}
+                  </p>
+                </div>
+              </div>
+              <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
                 <button
                   onClick={() => printElement('badge-capture')}
-                  className="bg-indigo-600 text-white p-2 rounded-xl flex items-center justify-center shadow-lg"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 font-black text-xs uppercase tracking-wider shadow-md transition"
+                  title={isAr ? 'طباعة' : 'Imprimer'}
                 >
                   <Printer className="w-4 h-4" />
+                  <span className="hidden sm:inline">{isAr ? 'طباعة' : 'Imprimer'}</span>
                 </button>
-                <button onClick={() => setSelectedBadge(null)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center"><X className="w-5 h-5" /></button>
+                <button 
+                  onClick={() => setSelectedBadge(null)} 
+                  className="w-9 h-9 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center transition"
+                >
+                  <X className="w-5 h-5 text-slate-600" />
+                </button>
               </div>
             </div>
-            <div className="p-8 flex flex-col items-center text-center" id="badge-capture">
-              <p className="text-xl font-black tracking-tighter text-slate-900 italic uppercase mb-8">{company.name}</p>
-              <div className="w-48 h-48 bg-white p-4 rounded-3xl border-2 border-slate-100 shadow-sm mb-6 flex items-center justify-center">
-                <QRCodeSVG value={selectedBadge.id} size={160} level="H" />
-              </div>
-              <h2 className="text-2xl font-black text-slate-900 uppercase leading-none mb-2">{empName(selectedBadge)}</h2>
-              <p className="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em] mb-8 bg-indigo-50 px-4 py-1.5 rounded-full">{selectedBadge.poste}</p>
+
+            {/* Badge Card Preview Area */}
+            <div className="p-6 sm:p-8 flex items-center justify-center bg-slate-100/70">
+              <ProfessionalBadgeCard
+                id="badge-capture"
+                emp={selectedBadge}
+                company={company}
+                isAr={isAr}
+                empName={empName}
+                showPhotoUpload={true}
+                onPhotoUpload={(e) => handleDirectBadgePhotoUpload(selectedBadge.id, e)}
+              />
             </div>
-            <div className="p-6 bg-slate-50">
+
+            {/* Footer with Actions */}
+            <div className={`p-5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+              {/* Direct photo upload button */}
+              <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95">
+                <Camera className="w-4 h-4 text-indigo-600" />
+                <span>{selectedBadge.photo ? (isAr ? 'تغيير صورة الموظف' : 'Modifier la photo') : (isAr ? 'إضافة صورة للموظف' : 'Ajouter une photo')}</span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => handleDirectBadgePhotoUpload(selectedBadge.id, e)} 
+                />
+              </label>
+
+              {/* PDF Download Button */}
               <button
                 onClick={() => handleDownloadPDF('badge-capture', `Badge_${selectedBadge.nom}`)}
                 disabled={isGenerating}
-                className={`w-full h-14 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg transition-all ${isGenerating ? 'bg-slate-400' : 'bg-slate-900'}`}
+                className={`h-11 px-6 text-white rounded-xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg transition-all ${isGenerating ? 'bg-slate-400' : 'bg-slate-900 hover:bg-indigo-600'}`}
               >
-                {isGenerating ? <RotateCw className="w-4 h-4 animate-spin" /> : <><Download className="w-4 h-4" /> PDF</>}
+                {isGenerating ? <RotateCw className="w-4 h-4 animate-spin" /> : <><Download className="w-4 h-4" /> {isAr ? 'تحميل PDF' : 'Télécharger PDF'}</>}
               </button>
             </div>
           </div>
