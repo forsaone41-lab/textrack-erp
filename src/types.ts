@@ -188,6 +188,26 @@ export interface StockFourniture {
   fournisseur?: string;
 }
 
+export interface EmployeFaute {
+  id: string;
+  date: string;
+  titre: string;
+  description?: string;
+  degre: 'mineure' | 'avertissement' | 'grave';
+  decision?: string;
+  auteur?: string;
+}
+
+export interface EmployeDocument {
+  id: string;
+  type: 'cin' | 'contrat' | 'casier' | 'medical' | 'rib' | 'photo' | 'cnss' | 'diplome' | 'autre';
+  nom: string;
+  fourni: boolean;
+  fileUrl?: string;
+  dateMaj?: string;
+  remarques?: string;
+}
+
 export interface Employe {
   id: string;
   nom: string;
@@ -208,6 +228,14 @@ export interface Employe {
   matricule?: string;
   dateExpiration?: string;
   signature?: string;
+  // Dossier Personnel RH fields:
+  dateEmbauche?: string;
+  dateNaissance?: string;
+  cnss?: string;
+  dossierValide?: boolean;
+  fautes?: EmployeFaute[];
+  documents?: EmployeDocument[];
+  notesRH?: string;
 }
 
 export interface Fournisseur {

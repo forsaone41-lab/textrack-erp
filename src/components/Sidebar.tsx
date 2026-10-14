@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, FileText, Settings, LogOut, ShoppingCart,
   Package, Scissors, Activity, Receipt, PieChart, TrendingUp, UserCheck, Globe, X, ClipboardCheck, Trophy, ShieldCheck, QrCode, User as UserIcon, CheckCircle,
@@ -23,7 +23,9 @@ import {
   Calculator,
   Bot,
   Handshake,
-  FolderHeart
+  FolderHeart,
+  Search,
+  FolderOpen
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -70,8 +72,20 @@ const LogoIconOnly = ({ src, alt }: { src: string; alt: string }) => {
 
 export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOpen, company }: SidebarProps) {
   const { lang, isAr, toggle } = useLang();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = React.useState(false);
   const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = React.useState(false);
+  const [globalEmpCode, setGlobalEmpCode] = React.useState('');
+  const [showSearchModal, setShowSearchModal] = React.useState(false);
+
+  const handleGlobalCodeSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!globalEmpCode.trim()) return;
+    navigate(`/rh?code=${encodeURIComponent(globalEmpCode.trim())}`);
+    setGlobalEmpCode('');
+    setShowSearchModal(false);
+    if (setMobileOpen) setMobileOpen(false);
+  };
   
   const permissions = loadPermissions();
   let userRoleRaw = (currentUser.role || '').toLowerCase();
@@ -240,6 +254,85 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             }
           </button>
         </div>
+
+        {/* Global Employee Code Search (Dossier RH Direct Lookup) */}
+        {!collapsed ? (
+          <div className="px-4 mb-3">
+            <form onSubmit={handleGlobalCodeSearch} className="relative">
+              <input
+                type="text"
+                value={globalEmpCode}
+                onChange={e => setGlobalEmpCode(e.target.value)}
+                placeholder={isAr ? '⚡ كود الموظف (Dossier RH)...' : '⚡ Code employé (Dossier)...'}
+                className={`w-full bg-slate-900/90 border border-indigo-500/30 hover:border-indigo-500/60 rounded-xl py-2.5 text-xs font-mono font-bold text-white placeholder-slate-500 outline-none focus:border-indigo-500 shadow-inner transition ${
+                  isAr ? 'pr-8 pl-8 text-right' : 'pl-8 pr-8 text-left'
+                }`}
+              />
+              <Search className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-indigo-400 pointer-events-none ${isAr ? 'right-2.5' : 'left-2.5'}`} />
+              {globalEmpCode && (
+                <button
+                  type="submit"
+                  className={`absolute top-1/2 -translate-y-1/2 p-1 text-indigo-400 hover:text-white transition ${isAr ? 'left-2' : 'right-2'}`}
+                  title={isAr ? 'فتح الملف' : 'Ouvrir'}
+                >
+                  <FolderOpen className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </form>
+          </div>
+        ) : (
+          <div className="px-3 mb-2">
+            <button
+              onClick={() => setShowSearchModal(true)}
+              className="w-full h-9 rounded-xl bg-white/5 hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center transition border border-transparent hover:border-indigo-500/30 group"
+              title={isAr ? '⚡ بحث سريع بكود الموظف (Dossier RH)' : '⚡ Code Employé (Dossier RH)'}
+            >
+              <FolderOpen className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            </button>
+          </div>
+        )}
+
+        {/* Modal for Collapsed Search */}
+        {showSearchModal && (
+          <div className="fixed inset-0 z-[300] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-indigo-500/30 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className={`flex items-center justify-between mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <h4 className="text-sm font-black text-white uppercase tracking-tight flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4 text-indigo-400" />
+                  <span>{isAr ? 'فتح ملف الموظف مباشرة' : 'Ouvrir Dossier RH'}</span>
+                </h4>
+                <button onClick={() => setShowSearchModal(false)} className="text-slate-400 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <form onSubmit={handleGlobalCodeSearch} className="space-y-4">
+                <input
+                  type="text"
+                  autoFocus
+                  value={globalEmpCode}
+                  onChange={e => setGlobalEmpCode(e.target.value)}
+                  placeholder={isAr ? 'ادخل كود الموظف (ID / PIN / CIN)...' : 'Code employé (ID, PIN, CIN)...'}
+                  className={`w-full bg-slate-800 border border-indigo-500/40 rounded-2xl p-3.5 text-xs font-mono font-bold text-white placeholder-slate-500 outline-none focus:border-indigo-400 ${isAr ? 'text-right' : ''}`}
+                />
+                <div className={`flex gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-lg shadow-indigo-600/20"
+                  >
+                    {isAr ? 'فتح الملف فوراً' : 'Ouvrir'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowSearchModal(false)}
+                    className="px-4 py-3 bg-slate-800 text-slate-400 hover:text-white rounded-xl text-xs font-bold transition"
+                  >
+                    {isAr ? 'إلغاء' : 'Annuler'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Navigation Links */}
         <nav className={`flex-1 ${collapsed ? 'px-2' : 'px-4'} space-y-6 overflow-y-auto scrollbar-hide py-4 transition-all duration-300`}>
