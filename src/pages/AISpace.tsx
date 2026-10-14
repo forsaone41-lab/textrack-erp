@@ -1287,6 +1287,100 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
 
     const speakAr = aiLangOverride === 'ar' || (aiLangOverride === null && isAr);
 
+    // 0. Fabric Where to Buy & Exact Market Price (Where to find fabric in Morocco & exact prices)
+    const asksWhereToBuy = /(fin|fen|fayn|mneen|mnin|mmin|achmen blasa|blasa|marche|souk|fournisseur|sourcing|فين.*(نلقى|نلقا|نشري|كيتباع|كاين|كايتباع)|(نلقى|نلقا|نشري|شراء).*(ثوب|قماش|سلعة)|درب عمر|القريعة|كراج علال|سوق|أسواق|أماكن|فين|fin.*nlqa|fen.*nlqa|ou.*trouver|ou.*acheter)/i.test(m);
+    const asksFabricPrice = /(taman|thman|prix|cout|coût|cost|سعر|ثمن|تكلفة|بشحال|chehal.*(toub|tissu|tweb)|combien.*(tissu|tweb)|prix.*(tissu|metre|kilo)|dak toub|had toub|diak toub|داك الثوب|داك التوب|هاد الثوب|هاد التوب|ثمن داك|ثمن هاد|ثمن الثوب|سعر الثوب|تمن داك)/i.test(m);
+
+    if (asksWhereToBuy || asksFabricPrice) {
+      let specificModelPart = '';
+      if (analysisResult) {
+        const cat = analysisResult.category || 'الموديل الحالي';
+        const fab = analysisResult.fabricSuggested || 'ثوب مناسب للموديل';
+        const conso = analysisResult.consumption || '1.50م';
+        const costEst = analysisResult.costEstimate || '';
+        const numConso = parseFloat(conso) || 1.5;
+        specificModelPart = speakAr
+          ? `\n🎯 بالنسبة للموديل المحلل حالياً (${cat}):
+• الثوب المقترح: ${fab}
+• استهلاك البياسة الواحدة: حوالي ${conso}
+• ثمن الثوب فالسوق المغربي: ما بين 22 إلى 48 درهم للمتر (أو 48-65 درهم/كلغ للتريكو)
+• تكلفة الثوب فالبياسة الواحدة: تقريباً ${(numConso * 25).toFixed(0)} إلى ${(numConso * 45).toFixed(0)} درهم
+${costEst ? `• التكلفة الإجمالية التقديرية للقطعة (Prix de revient): ${costEst}` : ''}\n`
+          : `\n🎯 Détails pour votre modèle (${cat}) :
+• Tissu suggéré : ${fab}
+• Consommation : ~${conso}
+• Prix marché : 22 - 48 MAD/mètre\n`;
+      }
+
+      if (speakAr) {
+        return `🧵 جواب دقيق ومفصل: أثمنة الأثواب وفين تلقاها في المغرب (درب عمر / القريعة / كراج علال):
+${specificModelPart}
+💰 1. جدول أثمنة الأثواب بالتدقيق في السوق المغربي (أسعار الجملة 2025/2026):
+• أثواب الهوديات والترينغات (Sweatwear):
+  - ميلتون ممشوط دافي (Molleton Gratté 300g-380g): من 48 إلى 65 درهم للكيلو (الكيلو كيعطيك حوالي 1.8م إلى 2.1م).
+  - فرينش تيري ربيعي (French Terry 260g-320g): من 45 إلى 60 درهم للكيلو.
+  - ريب / كوتلي للأسوار والعنق (Bord-Côte / Rib): من 50 إلى 70 درهم للكيلو.
+• أثواب التيشرتات والملابس الصيفية:
+  - سينجل جيرسي قطن 100% (Single Jersey 180g-220g): من 42 إلى 58 درهم للكيلو (~20 إلى 26 درهم/متر).
+  - إنترلوك فاخر مزدوج (Interlock Coton Double Face 240g-280g): من 55 إلى 75 درهم للكيلو (~32 إلى 45 درهم/متر).
+• أثواب القمصان والبلوزات:
+  - بوبلين قطن 100% (Popeline de Coton): من 22 إلى 35 درهم للمتر (عرض 1.50م).
+  - بوبلين بوليستير/قطن تجاري: من 14 إلى 20 درهم للمتر.
+  - أكسفورد (Oxford Chemise): من 24 إلى 38 درهم للمتر.
+• أثواب السراويل والبدل والعمل:
+  - غاباردين ستريتش (Gabardine Stretch): من 28 إلى 48 درهم للمتر.
+  - جينز / دينيم (Denim Jeans 10oz - 13oz): من 25 إلى 48 درهم للمتر.
+• أثواب اللباس التقليدي والفساتين والعبايات:
+  - كريب ريحانة (Crêpe Rayhana): من 22 إلى 32 درهم للمتر.
+  - كريب زوم / بوسطن الممتاز: من 28 إلى 42 درهم للمتر.
+  - كريب الحرير (Crêpe de Soie): من 45 إلى 75 درهم للمتر.
+  - المليفة والمخمل (Velours): من 35 إلى 70 درهم للمتر.
+  - ساتان دو شيس (Satin Duchesse): من 22 إلى 42 درهم للمتر.
+  - الكتان الطبيعي (Lin 100%): من 40 إلى 70 درهم للمتر.
+
+📍 2. فين تلقى وتشتري هاد الأثواب بالتدقيق في المغرب:
+🏙️ الدار البيضاء (العاصمة الوطنية للنسيج والجملة):
+1️⃣ درب عمر (Derb Omar):
+  • شارع ستراسبورغ (Rue de Strasbourg): أكبر تجمع لمستوردي أثواب الجملة (الرولوات الكبار Rouleaux) للقمصان، الكريب، البوبلين، والبدل.
+  • زنقة لندن ودرب التازي: تجار الجملة ونصف الجملة (تقدر تشري حتى نصف رولو أو كوبونات للتجارب).
+2️⃣ حي القريعة (El Koréa):
+  • عاصمة التريكو والميلتون والجيرسي بالمغرب (البيع بالكيلو).
+  • هنا كاينين أكبر مستودعات أثواب الهوديات، التيشرتات، الترينغات، ومستلزمات الخياطة (البورد كوت Bord-Côte، الخيط، لاستيك، السحابات).
+3️⃣ كراج علال وقيساريات درب السلطان:
+  • المتخصصين في أثواب التقليدي (المليفة، الكريب، الساتان، المخمل/Velours) وسفايف الخياطة والعقاد.
+4️⃣ المنطقة الصناعية عين السبع وسيدي البرنوصي:
+  • معامل النسيج والتريكو المباشرة (Tricotage & Teinture) للطلبيات الكبيرة (+200kg) بسعر المصنع المباشر.
+
+🏙️ المدن الأخرى:
+• طنجة: أسواق بني مكادة، ومستودعات ديسطوكاج أثواب التصدير (Tissus export déstockage جودة أوربية وثمن رخيص).
+• فاس: قيساريات باب بودير، سوق العطارين، والصفاح (المليفة، الكريب، وأثواب الجلابة والقفطان).
+• مراكش: قيسارية الدباغ وباب الملاح (أثواب الجلابة والكتان والأثواب الطبيعية).
+
+💡 3. نصائح احترافية قبل الشراء باش ما تشمتش:
+1. تأكد ديماً من عرض الثوب (Laize): العرض 1.80م كيوفر ليك فالفصالة مقارنة مع 1.50م.
+2. دير اختبار الحرق (Test de combustion) لخيط صغير: القطن الطبيعي كيتحرق ويعطي رماد رطب، أما البوليستير كيذوب بحال البلاستيك.
+3. فاش كتشري بالكيلو، طلب "الميتراج التقريبي للكيلو" باش تحسب ثمن المتر الحقيقي بدقة.`;
+      } else {
+        return `🧵 Prix précis des tissus et adresses de sourcing au Maroc (Derb Omar & El Korea) :
+${specificModelPart}
+💰 1. Prix indicatifs au mètre et au kilo (Grossistes 2025/2026) :
+• Molleton Gratté / French Terry (Sweats & Hoodies) : 48 - 65 MAD/kg (~26 - 35 MAD/m, laize 1.80m).
+• Interlock Coton 100% (T-shirts Heavyweight 240g+) : 55 - 75 MAD/kg.
+• Single Jersey (T-shirts & Boxers) : 42 - 58 MAD/kg (~18 - 26 MAD/m).
+• Popeline Coton (Chemises & Blouses) : 20 - 35 MAD/m (laize 1.50m).
+• Gabardine Stretch (Pantalons & Uniformes) : 28 - 48 MAD/m.
+• Crêpe Rayhana / Zoom (Robes, Djellabas & Abayas) : 22 - 42 MAD/m.
+• Denim / Jean : 25 - 48 MAD/m.
+
+📍 2. Où trouver et acheter les tissus au Maroc :
+• Casablanca - Derb Omar (Rue de Strasbourg & Rue de Londres) : Grossistes importateurs en rouleaux (popeline, crêpe, costume, chemiserie).
+• Casablanca - El Koréa : Marché roi pour la maille tricotée au kilo (molleton, jersey, bord-côte, fournitures).
+• Casablanca - Garage Allal & Derb Soltane : Tissus traditionnels (mlifa, velours, crêpe, sfifa).
+• Tanger : Marchés Beni Makada et entrepôts de déstockage export.
+• Fès : Kissariats Bab Boujloud et Souk El Attarine.`;
+      }
+    }
+
     // 1. Specific Fabric: INTERLOCK / LANTRLOC
     if (/(interlock|interlok|lantrloc|linterloc|linterlock|انترلوك|إنترلوك|لانترلوك)/i.test(m)) {
       return speakAr
@@ -1306,23 +1400,17 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
 • ملابس الأطفال والرضع (حيت ناعم بزاف على البشرة ومكيسببش حساسية)
 • بيجامات فخمة وملابس رياضية (Jogging / Ensembles).
 
-💰 ثمنه التقريبي في المغرب (درب عمر / القريعة): ما بين 45 إلى 70 درهم للكيلو (أو 35-50 درهم للمتر حسب الغراماج ونسبة القطن).`
+💰 ثمنه التقريبي في المغرب (درب عمر / القريعة): ما بين 55 إلى 75 درهم للكيلو (أو 35-50 درهم للمتر حسب الغراماج ونسبة القطن).
+📍 أماكن الشراء: سوق القريعة بالدار البيضاء (جناح التريكو) أو زنقة لندن بدرب عمر.`
         : `🧵 Le tissu Interlock en confection industrielle :
 
-• Définition :
-L'Interlock est une maille tricotée double face (Double Knit). Les deux faces (endroit et envers) sont rigoureusement identiques, lisses et très douces.
-
-• Avantages majeurs en atelier :
-1. Ne roule pas sur les bords lors de la coupe, ce qui facilite grandement le travail du coupeur et des couturières.
-2. Plus dense, plus lourd et plus opaque que le jersey classique.
-3. Excellente tenue et tombé parfait pour le prêt-à-porter haut de gamme.
-
-• Utilisations idéales :
-T-shirts Heavyweight (240g-300g), polos, sweats légers, vêtements bébé/enfant et ensembles sportswear.`;
+• Définition : Maille tricotée double face (Double Knit). Lisse, douce et ne roule pas sur les bords.
+• Utilisations idéales : T-shirts Heavyweight (240g-300g), polos, sweats légers et sportswear.
+💰 Prix Maroc : 55 - 75 MAD/kg à El Koréa et Derb Omar.`;
     }
 
     // 2. Specific Fabric: MOLLETON
-    if (/(molleton|molton|ميلتون|مولتون|ملتون)/i.test(m)) {
+    if (/(molleton|molton|ميلتون|مولتون|ملتون|سويت|هودي|sweat)/i.test(m)) {
       return speakAr
         ? `🧵 ثوب الميلتون (Molleton / Sweat Fabric):
 هو الثوب الأساسي للهوديز والترينغات الشتوية (Sweat à capuche & Jogging).
@@ -1330,9 +1418,11 @@ T-shirts Heavyweight (240g-300g), polos, sweats légers, vêtements bébé/enfan
   1. ميلتون مبطن وممشوط من الداخل (Molleton Gratté / Brossé): كيكون فيه فرو ناعم ودافي.
   2. ميلتون غير مبطن (French Terry / Molleton Non Gratté): كيكون من الداخل بحال حلقات الخيط (bouclettes)، خفيف وربيعي.
 • الغراماج المعتاد: من 280g حتى 400g/m².
-💰 الثمن في المغرب: من 45 حتى 65 درهم للكيلو في درب عمر والقريعة.`
+💰 الثمن في المغرب: من 48 حتى 65 درهم للكيلو في درب عمر وسوق القريعة بالدار البيضاء.
+📍 أين يباع: حي القريعة (تجار التريكو بالكيلو) وزنقة لندن بدرب عمر.`
         : `🧵 Le tissu Molleton :
-Idéal pour les sweats à capuche et joggings. Disponible en Molleton Gratté (chaud et doux) ou French Terry (bouclettes non grattées). Grammage moyen : 280-400g/m².`;
+Idéal pour les sweats à capuche et joggings. Disponible en Molleton Gratté (chaud et doux) ou French Terry (bouclettes non grattées). Grammage moyen : 280-400g/m².
+💰 Prix : 48 - 65 MAD/kg à El Koréa et Derb Omar.`;
     }
 
     // 3. Specific Fabric: CREPE
@@ -1340,22 +1430,29 @@ Idéal pour les sweats à capuche et joggings. Disponible en Molleton Gratté (c
       return speakAr
         ? `🧵 أثواب الكريب (Crêpe) في المغرب:
 هو الثوب الأكثر طلباً للفساتين، الجلابة والقفطان العصري.
-• أشهر الأنواع: كريب ريحانة (Crêpe Rayhana)، كريب الحرير (Crêpe de Soie)، وكريب جورجيت.
+• أشهر الأنواع: كريب ريحانة (Crêpe Rayhana)، كريب زوم (Crêpe Zoom)، وكريب الحرير (Crêpe de Soie).
 • المميزات: طايح، مكيتبينش، ومكيكمشش بزاف.
-💰 الثمن في المغرب: من 20 إلى 45 درهم للمتر حسب الجودة.`
+💰 الثمن في المغرب:
+  - كريب ريحانة: 22 إلى 32 درهم للمتر.
+  - كريب زوم / بوسطن: 28 إلى 42 درهم للمتر.
+  - كريب الحرير: 45 إلى 75 درهم للمتر.
+📍 أين يباع: شارع ستراسبورغ بدرب عمر، وقيساريات كراج علال بالدار البيضاء.`
         : `🧵 Les tissus Crêpe :
-Incontournables pour robes, djellabas et caftans. Fluides, opaques et avec un tombé élégant.`;
+Incontournables pour robes, djellabas et caftans. Fluides, opaques et avec un tombé élégant.
+💰 Prix : 22 - 45 MAD/mètre à Derb Omar et Garage Allal.`;
     }
 
     // 4. Specific Fabric: POPELINE / COTON
-    if (/(popeline|بوبلين|قطن|coton)/i.test(m)) {
+    if (/(popeline|بوبلين|قطن|coton|oxford|أكسفورد)/i.test(m)) {
       return speakAr
         ? `🧵 ثوب البوبلين والقطن (Popeline de Coton):
 النسيج الأساسي للقمصان (Chemises)، البلوزات، وملابس العمل الطبية.
 • المميزات: محكم النسيج، ناعم، وبارد في الصيف ومريح على الجسم.
-💰 الثمن في المغرب: ما بين 18 إلى 35 درهم للمتر لعرض 1.50م.`
+💰 الثمن في المغرب: ما بين 20 إلى 35 درهم للمتر لعرض 1.50م (والتجاري البوليستير بـ 15-20 درهم).
+📍 أين يباع: شارع ستراسبورغ بدرب عمر بالدار البيضاء.`
         : `🧵 Popeline de Coton :
-Le tissu roi pour la chemiserie et blouses. Fin, doux et respirant.`;
+Le tissu roi pour la chemiserie et blouses. Fin, doux et respirant.
+💰 Prix : 20 - 35 MAD/mètre à Derb Omar.`;
     }
 
     // 5. Specific Fabric: GABARDINE
@@ -1364,15 +1461,30 @@ Le tissu roi pour la chemiserie et blouses. Fin, doux et respirant.`;
         ? `🧵 ثوب الغاباردين (Gabardine):
 نسيج مائل مضلع (Sergé) قوي جداً ومقاوم للاحتكاك.
 • الاستعمالات: سراويل شينو (Chino)، سترات، أزياء موحدة للشركات، ومعاطف خفيفة (Trench).
-💰 الثمن في المغرب: من 25 إلى 45 درهم للمتر.`
+💰 الثمن في المغرب: من 28 إلى 48 درهم للمتر.
+📍 أين يباع: درب عمر وزنقة التازي بالدار البيضاء.`
         : `🧵 Tissu Gabardine :
-Tissage sergé très robuste pour pantalons chino, vestes et uniformes professionnels.`;
+Tissage sergé très robuste pour pantalons chino, vestes et uniformes professionnels.
+💰 Prix : 28 - 48 MAD/mètre à Derb Omar.`;
+    }
+
+    // 6. Specific Fabric: DENIM / JEANS
+    if (/(denim|jean|jeans|جينز|دينيم)/i.test(m)) {
+      return speakAr
+        ? `🧵 قماش الدينيم والجينز (Denim Fabric):
+• الاستعمالات: سراويل الجينز، الجواكيت، والمآزر المهنية.
+• الأونصة (Poids en Oz): من 9oz خفيف للصيف حتى 14oz ثقيل شتوي.
+💰 الثمن في المغرب: من 25 إلى 48 درهم للمتر حسب نسبة الستريتش (Élasthanne) والوزن.
+📍 أين يباع: درب عمر بالدار البيضاء ومستودعات طنجة.`
+        : `🧵 Tissu Denim / Jeans :
+Idéal pour pantalons et vestes jeans. Grammages de 9oz à 14oz.
+💰 Prix : 25 - 48 MAD/mètre.`;
     }
 
     // Greetings
     if (/^(salam|salaam|slm|hi|hello|bonjour|bonsoir|hey|مرحبا|السلام|سلام|صباح|مساء|ahlan)/.test(m)) {
       return speakAr
-        ? 'وعليكم السلام! 👋 مرحباً بك في مستشار BEYA الذكي. كيف يمكنني مساعدتك اليوم في الموديلات، الأثواب، أو حسابات الورشة؟'
+        ? 'وعليكم السلام! 👋 مرحباً بك في مستشار BEYA الذكي. كيف يمكنني مساعدتك اليوم في الموديلات، الأثواب، الأسعار فالمغرب، أو حسابات الورشة؟'
         : 'Salam ! 👋 Bienvenue dans votre cockpit BEYA. Comment puis-je vous aider aujourd\'hui ?';
     }
 
@@ -1383,14 +1495,14 @@ Tissage sergé très robuste pour pantalons chino, vestes et uniformes professio
         : 'Très bien, merci ! 😊 Je suis à votre service pour toute question technique ou analyse.';
     }
 
-    // Fabric / Tissu general questions
-    if (/(toub|tissu|fabric|قماش|ثوب|متر|metre|consomm|conso|كمية|قدش|chehal|combien.*tissu|combien.*metre)/i.test(m)) {
+    // Fabric Consumption ONLY (When specifically asking about metrage consumption)
+    if (/(كمية.*(ثوب|قماش)|شحال.*(كيخص|خاص|يلزم|نحتاج).*(متر|ثوب)|استهلاك.*(الثوب|القماش)|قدش.*(من متر|ثوب)|consommation.*(metre|tissu)|chhal.*(khsni|khasso|khass|metre)|combien.*(de metre|metre faut|consommation))/i.test(m)) {
       return speakAr
-        ? '🧵 لتقدير استهلاك الثوب بدقة لعرض (Laize 1.50م):\n• قميص رجالي/نسائي: 1.30م - 1.60م\n• سروال كلاسيك/جينز: 1.30م - 1.50م\n• هودي/سويت شيرت: 1.50م - 1.80م\n• فستان قصير: 2.00م - 2.40م\n• فستان طويل/جلابة: 2.80م - 3.50م\n\nارفع صورة الموديل بالزر أعلاه وسأحلل لك الأمتار الدقيقة لكل قطعة!'
-        : '🧵 Consommation moyenne (laize 1.50m) :\n• Chemise : 1.30 - 1.60m\n• Pantalon : 1.30 - 1.50m\n• Hoodie : 1.50 - 1.80m\n• Robe / Djellaba : 2.50 - 3.50m\n\nUploadez la photo pour une estimation précise !';
+        ? '🧵 جدول تقدير استهلاك الثوب الدقيق للقطعة الواحدة لعرض (Laize 1.50م):\n• قميص رجالي/نسائي: 1.30م - 1.60م\n• سروال كلاسيك/جينز: 1.30م - 1.50م\n• هودي/سويت شيرت: 1.50م - 1.80م (أو 500-600 غرام بالكيلو)\n• فستان قصير: 2.00م - 2.40م\n• فستان طويل/جلابة: 2.80م - 3.50م\n• بوكسر / ملابس داخلية: 0.35م - 0.45م\n• تيشرت صيفي: 0.85م - 1.10م\n\n💡 ارفع صورة الموديل بالزر أعلاه وسأحلل لك الأمتار الدقيقة والتكلفة فوراً!'
+        : '🧵 Consommation moyenne (laize 1.50m) :\n• Chemise : 1.30 - 1.60m\n• Pantalon : 1.30 - 1.50m\n• Hoodie : 1.50 - 1.80m\n• Robe / Djellaba : 2.50 - 3.50m\n• T-shirt : 0.85 - 1.10m\n• Boxer : 0.35 - 0.45m\n\nUploadez la photo pour une estimation précise !';
     }
 
-    // Cost / Price questions
+    // Cost / Price general questions
     if (/(prix|cout|coût|cost|taman|ثمن|سعر|تكلفة|كلفة|chehal|combien|price|devis|فلوس|flous|money)/i.test(m)) {
       return speakAr
         ? '💰 حساب تكلفة البياسة (Prix de revient) كيعتمد على 4 عناصر:\n1. ثمن الثوب بالمتر × الاستهلاك\n2. اليد العاملة فالورشة (الوقت بالدقائق SAM × ثمن الدقيقة)\n3. اللوازم (الخيط، الأزرار، السحاب، التيكيت، الميكة)\n4. المصاريف الثابتة ومارج الربح.\n\nاستعمل زر "تسعير Devis PRO" فاليسار لإنشاء حساب مفصل فوراً!'
@@ -1407,14 +1519,14 @@ Tissage sergé très robuste pour pantalons chino, vestes et uniformes professio
     // Thanks
     if (/(merci|شكرا|شكر|بارك|thanks|thank|chokran|jazak)/i.test(m)) {
       return speakAr
-        ? 'بلا جميل! 😊 ديما هنا فخدمتك لمساعدتك تخرج إنتاج متقن وناجح.'
+        ? 'بلا جميل! 😊 ديما هنا فخدمتك لمساعدتك تخرج إنتاج متقن وناجح وتوفر في تكاليف السلعة والخياطة.'
         : 'Avec grand plaisir ! 😊 N\'hésitez pas pour toute autre question.';
     }
 
     // Default
     return speakAr
-      ? `فهمت سؤالك حول "${userMsg}". 💡 يمكنك رفع صورة الموديل أو طرح سؤال مباشر حول (نوع الثوب، أثمنة درب عمر، مراحل الخياطة، أو المقاسات S-XXL) وسأجيبك فوراً.`
-      : `J'ai noté votre question sur "${userMsg}". Vous pouvez uploader la photo du modèle ou poser une question précise sur les tissus, étapes d'atelier ou coûts.`;
+      ? `فهمت سؤالك حول "${userMsg}". 💡 يمكنك سؤالي مباشرة عن:\n• ثمن أي ثوب فالمغرب (ميلتون، كريب، بوبلين، إنترلوك، جينز...)\n• أسواق وأماكن بيع الأثواب في درب عمر والقريعة بالدار البيضاء والمدن الأخرى\n• مراحل الخياطة والتسعير، أو ارفع صورة الموديل وسأحلل لك كل شيء بدقة!`
+      : `J'ai noté votre question sur "${userMsg}". Vous pouvez me poser des questions précises sur les prix des tissus à Derb Omar/El Koréa, adresses de sourcing, étapes d'atelier ou coûts.`;
   };
 
   const [translatingFabrics, setTranslatingFabrics] = useState(false);
