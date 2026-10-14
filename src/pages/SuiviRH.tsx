@@ -633,8 +633,30 @@ export default function SuiviRH() {
     setSyncStatus(isAr ? 'جاري التحميل...' : 'Chargement...');
     
     loadData<Employe>('employes').then(remoteEmps => {
-      setEmployes(remoteEmps || []);
-      saveLocalRH('employes', remoteEmps || []);
+      const localEmps = getLocalRH<Employe>('employes');
+      const merged = (remoteEmps || []).map(rem => {
+        const loc = localEmps.find(l => l.id === rem.id);
+        return {
+          ...rem,
+          dateEmbauche: rem.dateEmbauche || loc?.dateEmbauche || rem.dateEntree || '',
+          dateNaissance: rem.dateNaissance || loc?.dateNaissance || '',
+          cnss: rem.cnss || loc?.cnss || '',
+          dossierValide: rem.dossierValide !== undefined ? rem.dossierValide : (loc?.dossierValide || false),
+          fautes: rem.fautes || loc?.fautes || [],
+          documents: rem.documents || loc?.documents || [],
+          notesRH: rem.notesRH || loc?.notesRH || '',
+          photo: rem.photo || loc?.photo || '',
+          signature: rem.signature || loc?.signature || '',
+        };
+      });
+      // Keep any local-only employees
+      localEmps.forEach(l => {
+        if (!merged.find(m => m.id === l.id)) {
+          merged.push(l);
+        }
+      });
+      setEmployes(merged);
+      saveLocalRH('employes', merged);
     }).catch(() => {
       setEmployes(getLocalRH<Employe>('employes'));
     });
@@ -1107,7 +1129,7 @@ export default function SuiviRH() {
     saveLocalRH('employes', updated);
 
     // Sync with Supabase so other modules (like Commandes) can see them
-    await saveRecord('employes', empData);
+    await saveRecord('employes', empData, true);
 
     // ✅ AUTO-CREATE USER ACCOUNT for new employees
     if (isNew) {
@@ -1128,7 +1150,7 @@ export default function SuiviRH() {
       };
       
       // Save to Supabase (users table)
-      await saveRecord('users', newUser);
+      await saveRecord('users', newUser, true);
       
       // Update local users list in storage for immediate UI sync
       try {

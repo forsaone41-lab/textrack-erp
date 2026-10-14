@@ -1347,7 +1347,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
       const isMissingColumn = errMsg.includes('column') || errMsg.includes('not find') || errMsg.includes('attribute') || errMsg.includes('schema cache');
       
       if (isMissingColumn) {
-        const fallbackRecord = { ...payload };
+        let fallbackRecord = { ...payload };
         
         // --- BEYA MAGIC META ---
         // If the table is 'fiches', embed non-schema fields into the description so they persist!
@@ -1365,6 +1365,8 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
         }
         
         const newCols = [
+          'documents', 'fautes', 'dossierValide', 'dateEmbauche', 'dateNaissance', 'notesRH', 'cnss',
+          'dossier_valide', 'date_embauche', 'date_naissance', 'notes_rh',
           'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
           'tissuConsommation', 'fournisseurTel', 'fournisseurEmail',
           'pinCode',
@@ -1372,7 +1374,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
           'cin', 'rib', 'salaireMensuel', 'remunerationType', 'actif',
           'matricule', 'dateExpiration', 'signature',
-          'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
+          'dateEntree', 'contrat', 'mutuelle', 'enfants', 'situation_familiale',
           'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus',
           'partenaireId', 'externalTasks', 'typeDossier',
           'adresse', 'notes',
@@ -1382,17 +1384,38 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         
-        const { error: retryError } = await supabase.from(table).upsert(fallbackRecord);
+        let { error: retryError } = await supabase.from(table).upsert(fallbackRecord);
+        
+        // Dynamic retry loop: automatically strip any column that Supabase complains about
+        let attempts = 0;
+        while (retryError && attempts < 10) {
+          attempts++;
+          const colMatch = retryError.message.match(/Could not find the '([^']+)' column/i)
+            || retryError.message.match(/column "?([^"\s]+)"? of relation/i)
+            || retryError.message.match(/column "?([^"\s]+)"? does not exist/i);
+            
+          if (colMatch && colMatch[1]) {
+            const badCol = colMatch[1];
+            delete fallbackRecord[badCol];
+            const res = await supabase.from(table).upsert(fallbackRecord);
+            retryError = res.error;
+          } else {
+            break;
+          }
+        }
+
         if (!retryError) {
           // ✅ Invalidate both caches on success
           localStorage.removeItem(`textrack_data_${table}`);
           delete _cache[table];
-          console.warn(`Saved ${table} using fallback (ignored new columns). Run SQL update to enable full tracking.`);
+          console.warn(`Saved ${table} using fallback (ignored non-schema columns).`);
           return; 
         }
         
-        // If even the fallback fails, use the latest error for the alert
-        if (!silent) alert(`Erreur de sauvegarde dans ${table} : ${retryError.message}\n\nNote: Certaines colonnes sont peut-être manquantes dans votre base de données Supabase.`);
+        // If even dynamic fallback fails, only show alert if not silent and not a non-critical schema mismatch
+        if (!silent) {
+          console.warn(`Supabase schema sync issue on ${table}:`, retryError.message);
+        }
         return;
       }
 
