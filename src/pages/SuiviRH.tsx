@@ -133,14 +133,15 @@ function ProfessionalBadgeCard({
 
         {/* Company Brand (Left) */}
         <div className="flex items-center gap-3 relative z-10">
-          <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-md border border-white/60">
-            {company.logoAdmin || company.logoUrl ? (
-              <img src={company.logoAdmin || company.logoUrl} alt={company.name} className="w-full h-full object-contain" />
-            ) : (
-              <div className="w-7 h-7 bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 rounded-lg flex items-center justify-center text-white font-black text-sm shadow">
-                B
-              </div>
-            )}
+          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 shadow-md border border-white/40 bg-[#5b21b6] flex items-center justify-center">
+            <img 
+              src={company.logoAppIcon || '/logo.png'} 
+              alt={company.name || 'BEYA'} 
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/logo.png';
+              }}
+            />
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-black tracking-wider uppercase leading-none drop-shadow-sm text-white">
