@@ -357,6 +357,39 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean) {
       ],
       mesures: defaultMesures
     }];
+  } else if (text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('سيرفيت') || ((text.includes('sweat') || text.includes('hoodie') || text.includes('هودي')) && (text.includes('jogging') || text.includes('سروال') || text.includes('pantalon')))) {
+    pieceName = isAr ? 'طقم رياضي هودي وسروال (Ensemble Survêtement)' : 'Ensemble Survêtement Hoodie & Jogging';
+    const mesuresHoodie = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']));
+    const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
+    piecesList = [
+      {
+        name: isAr ? 'هودي أوفر سايز بكابوش (Hoodie à Capuche)' : 'Hoodie à Capuche Oversize',
+        consumption: '1.70m',
+        fit: isAr ? 'أوفر سايز واسع (Over-size / Relaxed)' : 'Over-size / Relaxed',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: `65 - 75 MAD`,
+        components: isAr ? ['صدر أمامي', 'ظهر كامل', 'كابوش مزدوج', 'جيب كنغر أمامي', 'أكمام مع بورد-كوت'] : ['Devant', 'Dos', 'Capuche doublée', 'Poche kangourou', 'Manches avec bord-côte'],
+        fabricSuggested: isAr ? 'ميلتون قطن ممشوط دافي (Molleton Gratté 320g)' : 'Molleton Gratté 320g',
+        fabricAlternatives: [
+          { name: isAr ? 'فرينش تيري ربيعي (French Terry Coton)' : 'French Terry Coton', pros: isAr ? 'حلقات داخلية مريحة لجميع الفصول' : 'Boucles confortables toutes saisons', cons: isAr ? 'أقل دفئاً في الشتاء القارس' : 'Moins chaud en grand froid' },
+          { name: isAr ? 'إنترلوك قطن فاخر (Interlock Coton 280g)' : 'Interlock Coton 280g', pros: isAr ? 'وجهين ناعمين وقوام ثابت' : 'Toucher soyeux double face', cons: isAr ? 'ثمن الكيلو أعلى' : 'Prix au kilo supérieur' }
+        ],
+        mesures: mesuresHoodie
+      },
+      {
+        name: isAr ? 'سروال رياضي مريح (Pantalon Jogging)' : 'Pantalon Jogging Confort',
+        consumption: '1.40m',
+        fit: isAr ? 'مريح عادي (Regular Jogger)' : 'Regular Jogger',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: `50 - 58 MAD`,
+        components: isAr ? ['أرجل أمامية وخلفية', 'حزام خصر مطاطي مع كوردون', 'جيوب جانبية إيطالية', 'أساور كاحل مطاطية'] : ['Jambes devant/dos', 'Ceinture élastique avec cordon', 'Poches italiennes', 'Bord-côte chevilles'],
+        fabricSuggested: isAr ? 'ميلتون قطن ممشوط دافي (Molleton Gratté 320g)' : 'Molleton Gratté 320g',
+        fabricAlternatives: [
+          { name: isAr ? 'فرينش تيري (French Terry)' : 'French Terry', pros: isAr ? 'مرونة عالية ومقاومة للغسيل' : 'Grande élasticité et tenue', cons: isAr ? 'أخف وزناً' : 'Plus léger' }
+        ],
+        mesures: mesuresPantalon
+      }
+    ];
   } else if (text.includes('sweat') || text.includes('hoodie') || text.includes('سويت') || text.includes('هودي') || text.includes('توني') || text.includes('sport') || text.includes('over')) {
     pieceName = isAr ? 'سويت شيرت / هودي كاجوال (Sweatshirt / Hoodie)' : 'Sweatshirt / Hoodie';
     defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']));
@@ -1481,6 +1514,207 @@ Idéal pour pantalons et vestes jeans. Grammages de 9oz à 14oz.
 💰 Prix : 25 - 48 MAD/mètre.`;
     }
 
+    // 1. Handling "KML" / "كمل" / "واصل" / "زيد" / "suite" / "continue"
+    if (/^(kml|kemel|kamal|kamel|كمل|كمل ليا|زيد|زيدي|واصل|تابع|suite|continue|encore|next|quoi d'autre|et apres|et après)$/i.test(m) || /(^|\s)(kml|kemel|كمل|زيد|واصل)($|\s)/i.test(m)) {
+      if (image || analysisResult) {
+        return speakAr
+          ? `🏭 تكملة الدراسة التقنية للموديل (مراحل الفصالة، لاغام الخياطة، واللوازم بالتفصيل):
+
+1️⃣ مراحل الفصالة (Coupe):
+• وضع الباترون مع اتجاه النسيج (Droit-fil) لتفادي اعوجاج القطعة بعد الغسيل.
+• فصالة الكابوش (4 قطع: قطعتين للوجه الخارجي وقطعتين للتبطين Doublure).
+• فصالة الجيب الكنغر الأمامي بدقة مع ترك 1 سم لخياطة الحواشي.
+• فصالة السروال (قطعتين للأمام وقطعتين للخلف مع زيادة ارتفاع الحجر الخلفي 3 سم).
+
+2️⃣ لوازم الخياطة (Fournitures Nécessaires):
+• لاستيك عريض 4 سم لخصر السروال (حوالي 75-85 سم حسب المقاس).
+• كوردون قطني فاخر للكابوش والخصر مع 4 ليزويي معدنية (Oeillets inoxydables).
+• بورد-كوت ريب مطاطي (Bord-côte 1x1) للأساور وأسفل الهودي وأسفل السروال.
+• خيط بوليستير 100% مغزول نمرة 120 (4 كونات للسورجي + 2 كونات للبيكوز).
+
+3️⃣ لاغام ديال الخياطة المتسلسلة (Gamme de Montage):
+• مرحلة 1: تجميع الكابوش وتثبيت الدوبلير بالبيكوز (⏱️ 1.2 دقيقة)
+• مرحلة 2: خياطة وثني أطراف الجيب الأمامي وتثبيته على صدر الهودي (⏱️ 2.0 دقيقة)
+• مرحلة 3: تجميع أكتاف الهودي وإغلاق الجوانب بالسورجي 4 خيوط (⏱️ 1.8 دقيقة)
+• مرحلة 4: تركيب البورد كوت للأساور وأسفل الهودي بالروكوفروز (⏱️ 1.5 دقيقة)
+• مرحلة 5: تجميع حجر السروال (Fourche) وإغلاق الساقين (⏱️ 2.2 دقيقة)
+• مرحلة 6: تركيب حزام اللاستيك للسروال وتثبيت الكوردون (⏱️ 1.5 دقيقة)
+• مرحلة 7: المراقبة النهائية، إزالة الخيوط، والكي بالبخار (⏱️ 2.0 دقيقة)
+
+⏱️ إجمالي وقت خياطة الطقم كامل (Total SAM): حوالي 12 إلى 14 دقيقة!
+💡 اكتب:
+- '1' للتركيز على تفاصيل الهودي فقط
+- '2' للتركيز على تفاصيل السروال فقط
+- 'الثمن' لحساب تكلفة 500 أو 1000 بياسة!`
+          : `🏭 Suite technique du modèle :
+1. Coupe : Respect du droit-fil, capuche doublée, poche kangourou et pantalon jogging.
+2. Fournitures : Élastique 4cm, cordons, œillets métalliques, bord-côte 1x1, fil 120.
+3. Gamme de montage : Assemblage surjeteuse 4 fils, pose bord-côte recouvreuse, ceinture élastique (SAM total : ~12-14 min).
+Tapez '1' pour le hoodie, '2' pour le pantalon, ou 'prix' pour le coût complet !`;
+      } else {
+        return speakAr
+          ? 'تفضل! أنا في الخدمة لمتابعة الشرح. يمكنك تحديد نوع الثوب أو المرحلة التي تريد تفاصيل إضافية عنها (الفصالة، الخياطة، الأثمنة فدرب عمر، أو التسعير).'
+          : 'Je suis à votre disposition pour continuer. Précisez le tissu, le coût ou les étapes souhaitées.';
+      }
+    }
+
+    // 2. Handling "2" or "القطعة الثانية" or "السروال" or "Jogging"
+    if (/^(2|القطعة 2|القطعة الثانية|قطعة 2|جوج|السروال|سروال|jogging|pantalon|le pantalon|le jogging)$/i.test(m) || /(سروال|pantalon|jogging)/i.test(m)) {
+      return speakAr
+        ? `👖 تفاصيل القطعة رقم 2 في الطقم (سروال رياضي / Pantalon Jogging):
+
+• نوع الثوب المقترح: ميلتون قطن ممشوط (Molleton Gratté 320g) أو فرينش تيري نفس لون الهودي.
+• استهلاك الثوب للقطعة الواحدة: 1.30م إلى 1.45م (عرض Laize 1.80م)، أو حوالي 450 غرام بالكيلو.
+
+✂️ مواصفات الفصالة والتصميم:
+1. قصة مريحة (Coupe Regular / Slim Fit) مريحة في الحركة والرياضة.
+2. حزام خصر عريض (Ceinture) مع لاستيك 4 سم ورباط كوردون داخلي/خارجي مع ليزويي معدنية.
+3. جيبان جانبيان (Poches italiennes) مع بطانة داخلية من نفس الثوب.
+4. أسفل الساقين مزود ببورد-كوت ريب (Bord-côte) أو ثنية مطاطية مزدوجة مع لاستيك 2.5 سم.
+
+🧵 لاغام الخياطة للسروال (Gamme de Montage):
+1️⃣ سرفلة وتجميع الحجر الأمامي والخلفي (Fourche) بـ Surjeteuse 4 fils (⏱️ 1 دقيقة)
+2️⃣ تحضير وخياطة الجيوب الجانبية وتثبيتها بـ Piqueuse plate (⏱️ 2 دقيقة)
+3️⃣ تجميع الجوانب وإغلاق ما بين الساقين (Entrejambe) بالسورجي (⏱️ 1.5 دقيقة)
+4️⃣ خياطة وتثبيت حزام اللاستيك والكوردون بـ Recouvreuse أو بيكوز (⏱️ 1.5 دقيقة)
+5️⃣ ثني أو تركيب ريب أسفل الساقين (⏱️ 1 دقيقة)
+6️⃣ المراقبة، إزالة الخيوط، والكي بالبخار (⏱️ 1.2 دقيقة)
+
+💰 التكلفة التقديرية للسروال بوحده (Prix de revient):
+• ثوب السروال (1.35م × 26 درهم): ~35 درهم
+• اللوازم (لاستيك + كوردون + ليزويي + خيط): ~7 درهم
+• مصاريف الفصالة والخياطة (اليد العاملة Façon): ~12 درهم
+💵 التكلفة الإجمالية للسروال: حوالي 54 درهم للبياسة الواحدة!`
+        : `👖 Détails de la Pièce 2 (Pantalon Jogging) :
+• Tissu : Molleton Gratté 320g (consommation : 1.30m - 1.45m).
+• Finitions : Ceinture élastique 4cm avec cordon, poches italiennes, chevilles bord-côte.
+• Gamme : Fourche surjet ➔ Poches piqueuse ➔ Entrejambe ➔ Ceinture recouvreuse ➔ Bas de jambe.
+• Coût unitaire estimé : ~54 MAD (Tissu: 35 DH, fournitures: 7 DH, façon: 12 DH).`;
+    }
+
+    // 3. Handling "1" or "القطعة الأولى" or "الهودي" or "Hoodie"
+    if (/^(1|القطعة 1|القطعة الأولى|قطعة 1|واحد|الهودي|هودي|hoodie|sweat|sweatshirt)$/i.test(m) || /(هودي|hoodie|sweat à capuche)/i.test(m)) {
+      return speakAr
+        ? `🧥 تفاصيل القطعة رقم 1 في الطقم (الهودي / Sweatshirt à Capuche):
+
+• نوع الثوب المقترح: ميلتون قطن ممشوط (Molleton Gratté 300g-350g) ذو ملمس ناعم وفاخر.
+• استهلاك الثوب للقطعة الواحدة: 1.60م إلى 1.80م (عرض Laize 1.80م)، أو حوالي 600 غرام بالكيلو.
+
+✂️ مواصفات الفصالة والتصميم:
+1. قصة أوفر سايز عصرية (Oversized Streetwear) بأكتاف ساقطة (Drop shoulders).
+2. كابوش عريض (Capuche doublée) مبطن بطبقتين مع ثقوب ليزويي وحبل سميك.
+3. جيب كنغر أمامي واسع (Poche Kangourou) مع خياطة تدعيم في الزوايا (Points d'arrêt).
+4. أساور الأكمام وأسفل الهودي من نسيج الريب المطاطي (Bord-côte 1x1).
+
+🧵 لاغام الخياطة للهودي (Gamme de Montage):
+1️⃣ تجميع الكابوش المزدوج وتركيب الليزويي وتمرير الكوردون (⏱️ 1.5 دقيقة)
+2️⃣ ثني أطراف الجيب الكنغر وتثبيته على الصدر بالبيكوز (⏱️ 2.0 دقيقة)
+3️⃣ تجميع الأكتاف بالسورجي 4 خيوط مع شريط تدعيم (⏱️ 0.8 دقيقة)
+4️⃣ تركيب الأكمام وإغلاق الجوانب بالسورجي (⏱️ 1.5 دقيقة)
+5️⃣ تركيب الكابوش على الياقة مع شريط نظافة خلفي (Propreté) (⏱️ 1.5 دقيقة)
+6️⃣ تركيب بورد كوت الأساور والأسفل بالروكوفروز (⏱️ 1.2 دقيقة)
+7️⃣ الفينيسيون، إزالة الخيوط، والكي بالبخار (⏱️ 1.5 دقيقة)
+
+💰 التكلفة التقديرية للهودي بوحده (Prix de revient):
+• ثوب الهودي (1.70م × 26 درهم): ~44 درهم
+• ثوب الريب للكوتلي + لوازم (كوردون + ليزويي + خيط): ~10 درهم
+• الفصالة والخياطة (اليد العاملة Façon): ~16 درهم
+💵 التكلفة الإجمالية للهودي: حوالي 70 درهم للقطعة الواحدة!`
+        : `🧥 Détails de la Pièce 1 (Hoodie à Capuche) :
+• Tissu : Molleton Gratté 320g (consommation : 1.60m - 1.80m).
+• Finitions : Capuche doublée avec œillets/cordon, poche kangourou, bord-côte poignets et bas.
+• Gamme : Capuche piqueuse ➔ Poche kangourou ➔ Épaules surjet ➔ Manches & côtés ➔ Finition bas.
+• Coût unitaire estimé : ~70 MAD (Tissu: 44 DH, fournitures: 10 DH, façon: 16 DH).`;
+    }
+
+    // 4. Handling "?" or single punctuation or "chnou" / "achno" / "شنو" / "اشنو" / "شنو هادا" / "chof" / "chouf"
+    if (/^(\?|\؟|\!|\.)$/.test(m) || /(^|\s)(chnou|achno|achnou|chouf|chof|شنو|اشنو|شوف|شنو هادا|شنو هاد الموديل|بان لي|رايك|شنو بان ليك|avis)($|\s)/i.test(m)) {
+      if (image || analysisResult) {
+        return speakAr
+          ? `🔍 قراءة وتحليل خبير للموديل في الصورة (طقم رياضي هودي + سروال جوجينغ):
+
+• نوع الموديل: طقم رياضي كاجوال عصري (Ensemble Survêtement Hoodie & Jogging) بلون أزرق سماوي (Bleu Ciel).
+• يتكون من قطعتين متناسقتين:
+  1️⃣ هودي كاجوال أوفر سايز بكابوش وجيب أمامي كنغر.
+  2️⃣ سروال رياضي مريح بخصر مطاطي وجيوب جانبية وأساور كاحل.
+
+🧵 القماش والمواد:
+• القماش الأنسب: ميلتون قطن ممشوط (Molleton Coton Gratté 320g-350g) للشتاء، أو فرينش تيري (French Terry 280g) للربيع.
+• استهلاك الثوب للطقم كامل: حوالي 3.00 إلى 3.20 متر (أو 1.05 كجم بالكيلو).
+
+💰 الحساب المالي التقديري (Prix de Revient Complet):
+• تكلفة الهودي كاملاً: حوالي 70 درهم
+• تكلفة السروال كاملاً: حوالي 54 درهم
+• التكلفة الإجمالية للطقم (Prix de revient complet): حوالي 124 درهم للبياسة
+• ثمن البيع المقترح فالسوق بالجملة أو الديجيتال: ما بين 250 إلى 320 درهم (هامش ربح أكثر من 100%).
+
+💡 للتعمق أكثر، اكتب لي:
+- '1' 🧥 لتفاصيل فصالة وخياطة الهودي
+- '2' 👖 لتفاصيل فصالة وخياطة السروال
+- 'KML' 🏭 لعرض لاغام الخياطة والمراحل الكاملة
+- 'الثمن' 📍 لعناوين محلات بيع الميلتون في القريعة ودرب عمر!`
+          : `🔍 Analyse experte du modèle en image (Survêtement Hoodie + Jogging) :
+• Ensemble 2 pièces : Hoodie oversize à capuche + pantalon jogging assorti.
+• Tissu recommandé : Molleton Gratté 320g (3.10m au total pour l'ensemble).
+• Coût complet estimé : ~124 MAD (Hoodie: 70 DH + Jogging: 54 DH).
+• Prix de vente conseillé : 250 - 320 MAD.
+Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète !`;
+      }
+    }
+
+    // 5. Handling Tracksuit / Survêtement / Ensemble keywords
+    if (/(survet|survetement|ensemble|طقم|سيرفيت|ترينينغ|توني)/i.test(m)) {
+      return speakAr
+        ? `🏃‍♂️ تفاصيل إنتاج الطقم الرياضي (Survêtement / Ensemble Hoodie & Jogging):
+• يتكون من قطعتين: هودي أوفر سايز + سروال جوجينغ مطاطي.
+• استهلاك الثوب الإجمالي: 3.00 إلى 3.20 متر (عرض 1.80م).
+• أحسن ثوب مقترح: ميلتون قطن ممشوط (Molleton Gratté 320g).
+• التكلفة الإجمالية للطقم كامل: ما بين 120 إلى 135 درهم (حسب جودة الثوب واللوازم).
+• الربح المتوقع: يباع بالجملة بـ 180-210 درهم، وبالتقسيط في المتاجر الإلكترونية بـ 280-350 درهم!`
+        : `🏃‍♂️ Détails Survêtement 2 pièces : Hoodie + Jogging en Molleton 320g. Consommation : ~3.10m. Coût de revient complet : ~124 MAD.`;
+    }
+
+    // 6. Handling Sizes / المقاسات / Tailles
+    if (/(taille|tailles|mesure|mesures|مقاس|مقاسات|طاي|قياس|قياسات|gradation|جدول)/i.test(m)) {
+      return speakAr
+        ? `📐 جدول المقاسات القياسي للطقم الرياضي (S, M, L, XL, XXL) بالسنتيمتر (cm):
+
+🧥 1. مقاسات الهودي (Hoodie):
+• S: الصدر 56cm | الطول 68cm | الكم 62cm
+• M: الصدر 59cm | الطول 71cm | الكم 64cm
+• L: الصدر 62cm | الطول 73cm | الكم 66cm
+• XL: الصدر 65cm | الطول 76cm | الكم 68cm
+• XXL: الصدر 68cm | الطول 78cm | الكم 70cm
+
+👖 2. مقاسات السروال (Jogging):
+• S: الخصر (عادي/ممدد) 36/46cm | الحوض 52cm | الطول 98cm
+• M: الخصر (عادي/ممدد) 38/49cm | الحوض 55cm | الطول 101cm
+• L: الخصر (عادي/ممدد) 40/52cm | الحوض 58cm | الطول 104cm
+• XL: الخصر (عادي/ممدد) 42/55cm | الحوض 61cm | الطول 106cm
+• XXL: الخصر (عادي/ممدد) 45/58cm | الحوض 64cm | الطول 108cm`
+        : `📐 Tableau des tailles Survêtement (S à XXL) en cm :
+• Hoodie : Longueur S:68, M:71, L:73, XL:76 | Poitrine S:56, M:59, L:62, XL:65.
+• Jogging : Longueur S:98, M:101, L:104, XL:106 | Bassin S:52, M:55, L:58, XL:61.`;
+    }
+
+    // 7. Handling Printing / Embroidery / Branding
+    if (/(flockage|impression|broderie|طرز|طباعة|فلوكاج|logo|لوغو|علامة)/i.test(m)) {
+      return speakAr
+        ? `🎨 خيارات الطباعة والتطريز لهاد الموديل (Marquage & Branding):
+1️⃣ الطباعة الحرارية (DTF - Direct to Film):
+  • المميزات: ألوان زاهية، دقة عالية، ومناسبة للرسومات المعقدة.
+  • الثمن: ما بين 4 إلى 8 دراهم للقطعة (A5 إلى A4) في درب عمر والبرنوصي.
+2️⃣ التطريز الآلي (Broderie Industrielle):
+  • المميزات: فخامة عالية ومتانة لا تتأثر بالغسيل نهائياً.
+  • الثمن: ما بين 3 إلى 6 دراهم للشعار الصغير (Poitrine)، و 8-15 درهم للتطريز الكبير في الظهر.
+3️⃣ السيرينغرافي (Sérigraphie):
+  • للكميات الكبيرة (+200 قطعة)، الثمن كينزل لأقل من 3 دراهم للون الواحد.`
+        : `🎨 Options de marquage pour ce modèle :
+• DTF (Impression thermique) : 4 - 8 MAD/pièce.
+• Broderie industrielle : 3 - 6 MAD pour petit logo, 8 - 15 MAD pour grand dos.
+• Sérigraphie : < 3 MAD/pièce pour grandes séries (+200 pcs).`;
+    }
+
     // Greetings
     if (/^(salam|salaam|slm|hi|hello|bonjour|bonsoir|hey|مرحبا|السلام|سلام|صباح|مساء|ahlan)/.test(m)) {
       return speakAr
@@ -1498,8 +1732,8 @@ Idéal pour pantalons et vestes jeans. Grammages de 9oz à 14oz.
     // Fabric Consumption ONLY (When specifically asking about metrage consumption)
     if (/(كمية.*(ثوب|قماش)|شحال.*(كيخص|خاص|يلزم|نحتاج).*(متر|ثوب)|استهلاك.*(الثوب|القماش)|قدش.*(من متر|ثوب)|consommation.*(metre|tissu)|chhal.*(khsni|khasso|khass|metre)|combien.*(de metre|metre faut|consommation))/i.test(m)) {
       return speakAr
-        ? '🧵 جدول تقدير استهلاك الثوب الدقيق للقطعة الواحدة لعرض (Laize 1.50م):\n• قميص رجالي/نسائي: 1.30م - 1.60م\n• سروال كلاسيك/جينز: 1.30م - 1.50م\n• هودي/سويت شيرت: 1.50م - 1.80م (أو 500-600 غرام بالكيلو)\n• فستان قصير: 2.00م - 2.40م\n• فستان طويل/جلابة: 2.80م - 3.50م\n• بوكسر / ملابس داخلية: 0.35م - 0.45م\n• تيشرت صيفي: 0.85م - 1.10م\n\n💡 ارفع صورة الموديل بالزر أعلاه وسأحلل لك الأمتار الدقيقة والتكلفة فوراً!'
-        : '🧵 Consommation moyenne (laize 1.50m) :\n• Chemise : 1.30 - 1.60m\n• Pantalon : 1.30 - 1.50m\n• Hoodie : 1.50 - 1.80m\n• Robe / Djellaba : 2.50 - 3.50m\n• T-shirt : 0.85 - 1.10m\n• Boxer : 0.35 - 0.45m\n\nUploadez la photo pour une estimation précise !';
+        ? '🧵 جدول تقدير استهلاك الثوب الدقيق للقطعة الواحدة لعرض (Laize 1.50م):\n• قميص رجالي/نسائي: 1.30م - 1.60م\n• سروال كلاسيك/جينز: 1.30م - 1.50م\n• هودي/سويت شيرت: 1.50م - 1.80م (أو 500-600 غرام بالكيلو)\n• فستان قصير: 2.00م - 2.40م\n• فستان طويل/جلابة: 2.80م - 3.50م\n• بوكسر / ملابس داخلية: 0.35م - 0.45م\n• تيشرت صيفي: 0.85م - 1.10م\n\n💡 اكتب "1" أو "2" لمعرفة استهلاك قطع هذا الطقم بدقة!'
+        : '🧵 Consommation moyenne (laize 1.50m) :\n• Chemise : 1.30 - 1.60m\n• Pantalon : 1.30 - 1.50m\n• Hoodie : 1.50 - 1.80m\n• Robe / Djellaba : 2.50 - 3.50m\n• T-shirt : 0.85 - 1.10m\n• Boxer : 0.35 - 0.45m.';
     }
 
     // Cost / Price general questions
@@ -1523,10 +1757,34 @@ Idéal pour pantalons et vestes jeans. Grammages de 9oz à 14oz.
         : 'Avec grand plaisir ! 😊 N\'hésitez pas pour toute autre question.';
     }
 
-    // Default
+    // Contextual Fallback (If an image or analysis is active, give tailored production guidance!)
+    if (image || analysisResult) {
+      const cat = analysisResult?.category || 'طقم الهودي والسروال في الصورة';
+      return speakAr
+        ? `💡 بخصوص الموديل في الصورة (${cat}):
+أنا معك كخبير نسيج وهندسة إنتاج لمساعدتك فالتفاصيل الدقيقة:
+• اكتب '1' 🧥 لعرض تفاصيل وخياطة الهودي والكابوش
+• اكتب '2' 👖 لعرض تفاصيل وفصالة السروال الجوجينغ
+• اكتب 'KML' 🏭 لعرض لاغام الخياطة المتسلسلة والمكائن
+• اكتب 'الثمن' 💰 لعرض جدول تكلفة الإنتاج وأسعار الثوب فالمغرب
+• اكتب 'المقاسات' 📐 لعرض جدول المقاسات S-XXL
+
+شنو الجزء اللي بغيتي نخدمو عليه دابا؟ 😊`
+        : `💡 Concernant le modèle en image (${cat}) :
+• Tapez '1' pour les détails du Hoodie
+• Tapez '2' pour les détails du Jogging
+• Tapez 'KML' pour la gamme de montage
+• Tapez 'Prix' pour les coûts et adresses de tissu
+• Tapez 'Tailles' pour les mesures S-XXL.`;
+    }
+
+    // Generic Default (Only when no image is uploaded)
     return speakAr
-      ? `فهمت سؤالك حول "${userMsg}". 💡 يمكنك سؤالي مباشرة عن:\n• ثمن أي ثوب فالمغرب (ميلتون، كريب، بوبلين، إنترلوك، جينز...)\n• أسواق وأماكن بيع الأثواب في درب عمر والقريعة بالدار البيضاء والمدن الأخرى\n• مراحل الخياطة والتسعير، أو ارفع صورة الموديل وسأحلل لك كل شيء بدقة!`
-      : `J'ai noté votre question sur "${userMsg}". Vous pouvez me poser des questions précises sur les prix des tissus à Derb Omar/El Koréa, adresses de sourcing, étapes d'atelier ou coûts.`;
+      ? `فهمت سؤالك. 💡 يمكنك سؤالي مباشرة عن:
+• ثمن أي ثوب فالمغرب (ميلتون، كريب، بوبلين، إنترلوك، جينز...)
+• أسواق وأماكن بيع الأثواب في درب عمر والقريعة بالدار البيضاء والمدن الأخرى
+• مراحل الخياطة والتسعير، أو ارفع صورة أي موديل وسأحلل لك كل شيء بدقة!`
+      : `J'ai noté votre question. Vous pouvez me poser des questions précises sur les prix des tissus à Derb Omar/El Koréa, adresses de sourcing, étapes d'atelier ou coûts.`;
   };
 
   const [translatingFabrics, setTranslatingFabrics] = useState(false);
