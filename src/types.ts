@@ -205,6 +205,9 @@ export interface Employe {
   pin_code?: string;
   adresse?: string;
   photo?: string;
+  matricule?: string;
+  dateExpiration?: string;
+  signature?: string;
 }
 
 export interface Fournisseur {
@@ -1340,6 +1343,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'retouche', 'lastActive',
           'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
           'cin', 'rib', 'salaireMensuel', 'remunerationType', 'actif',
+          'matricule', 'dateExpiration', 'signature',
           'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
           'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus',
           'partenaireId', 'externalTasks', 'typeDossier',

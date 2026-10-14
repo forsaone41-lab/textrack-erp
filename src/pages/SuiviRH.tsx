@@ -110,7 +110,8 @@ function ProfessionalBadgeCard({
   onPhotoUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   const shortId = emp.id ? emp.id.replace(/-/g, '').slice(0, 16).toUpperCase() : 'EMP0000000000000';
-  const matricule = `#EMP-${(emp.id || '').slice(0, 6).toUpperCase()}`;
+  const matricule = emp.matricule?.trim() ? emp.matricule.trim().toUpperCase() : `#EMP-${(emp.id || '').slice(0, 6).toUpperCase()}`;
+  const validite = emp.dateExpiration?.trim() ? emp.dateExpiration.trim() : 'PERMANENT';
 
   return (
     <div
@@ -132,18 +133,20 @@ function ProfessionalBadgeCard({
 
         {/* Company Brand (Left) */}
         <div className="flex items-center gap-3 relative z-10">
-          <div className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+          <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-md border border-white/60">
             {company.logoAdmin || company.logoUrl ? (
-              <img src={company.logoAdmin || company.logoUrl} alt={company.name} className="w-full h-full object-contain filter brightness-110" />
+              <img src={company.logoAdmin || company.logoUrl} alt={company.name} className="w-full h-full object-contain" />
             ) : (
-              <div className="w-5 h-5 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-sm transform rotate-45" />
+              <div className="w-7 h-7 bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 rounded-lg flex items-center justify-center text-white font-black text-sm shadow">
+                B
+              </div>
             )}
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-black tracking-wider uppercase leading-none drop-shadow-sm text-white">
               {company.name || 'BEYA CREATIVE'}
             </h2>
-            <span className="text-[7.5px] font-bold uppercase tracking-[0.25em] text-cyan-200 block mt-0.5">
+            <span className="text-[7.5px] font-bold uppercase tracking-[0.25em] text-cyan-200 block mt-1">
               CARTE PROFESSIONNELLE
             </span>
           </div>
@@ -211,11 +214,11 @@ function ProfessionalBadgeCard({
                 </div>
                 <div>
                   <span className="block text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none">MATRICULE</span>
-                  <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider font-mono">{matricule}</span>
+                  <span className="text-[11px] font-black text-indigo-700 uppercase tracking-wider font-mono">{matricule}</span>
                 </div>
                 <div>
                   <span className="block text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none">VALIDITÉ</span>
-                  <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">PERMANENT</span>
+                  <span className={`text-[11px] font-black uppercase tracking-wider ${emp.dateExpiration ? 'text-amber-700 font-mono' : 'text-slate-800'}`}>{validite}</span>
                 </div>
                 <div>
                   <span className="block text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none">TÉLÉPHONE</span>
@@ -235,10 +238,14 @@ function ProfessionalBadgeCard({
 
               <div className="flex flex-col items-end">
                 <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">SIGNATURE</span>
-                <svg className="w-20 h-5 text-slate-700 opacity-75 mt-0.5" viewBox="0 0 140 35" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M 10 24 C 25 6, 38 30, 52 14 C 60 6, 68 28, 90 16 C 105 9, 102 24, 130 13" />
-                  <path d="M 30 28 L 120 28" strokeWidth="1" strokeDasharray="2 3" opacity="0.4" />
-                </svg>
+                {emp.signature ? (
+                  <img src={emp.signature} alt="Signature" className="h-6 max-h-6 max-w-[100px] object-contain drop-shadow-sm mt-0.5" />
+                ) : (
+                  <svg className="w-20 h-5 text-slate-700 opacity-75 mt-0.5" viewBox="0 0 140 35" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M 10 24 C 25 6, 38 30, 52 14 C 60 6, 68 28, 90 16 C 105 9, 102 24, 130 13" />
+                    <path d="M 30 28 L 120 28" strokeWidth="1" strokeDasharray="2 3" opacity="0.4" />
+                  </svg>
+                )}
               </div>
             </div>
           </div>
@@ -295,7 +302,7 @@ function ProfessionalBadgeCard({
               <rect x="195" y="0" width="2" height="24" />
             </svg>
             <span className="text-[8.5px] font-mono font-bold text-slate-500 tracking-[0.25em] uppercase mt-0.5">
-              {shortId}
+              {emp.matricule?.trim() ? emp.matricule.trim().toUpperCase() : shortId}
             </span>
           </div>
 
@@ -549,13 +556,67 @@ export default function SuiviRH() {
     }
   };
 
+  const handleDeleteBadgePhoto = async (empId: string) => {
+    setSelectedBadge(prev => prev ? { ...prev, photo: '' } : null);
+    setEmployes(prev => {
+      const next = prev.map(emp => emp.id === empId ? { ...emp, photo: '' } : emp);
+      saveLocalRH('employes', next);
+      return next;
+    });
+    const targetEmp = employes.find(emp => emp.id === empId);
+    if (targetEmp) {
+      saveRecord('employes', { ...targetEmp, photo: '' }, true).catch(() => {});
+    }
+  };
+
+  const handleEmployeeSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const compressed = await compressImageFile(file, 300, 120);
+    if (compressed) {
+      setForm(prev => ({ ...prev, signature: compressed }));
+    }
+  };
+
+  const handleDirectBadgeSignatureUpload = async (empId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const compressed = await compressImageFile(file, 300, 120);
+    if (compressed) {
+      setSelectedBadge(prev => prev ? { ...prev, signature: compressed } : null);
+      setEmployes(prev => {
+        const next = prev.map(emp => emp.id === empId ? { ...emp, signature: compressed } : emp);
+        saveLocalRH('employes', next);
+        return next;
+      });
+      const targetEmp = employes.find(emp => emp.id === empId);
+      if (targetEmp) {
+        saveRecord('employes', { ...targetEmp, signature: compressed }, true).catch(() => {});
+      }
+    }
+  };
+
+  const handleDeleteBadgeSignature = async (empId: string) => {
+    setSelectedBadge(prev => prev ? { ...prev, signature: '' } : null);
+    setEmployes(prev => {
+      const next = prev.map(emp => emp.id === empId ? { ...emp, signature: '' } : emp);
+      saveLocalRH('employes', next);
+      return next;
+    });
+    const targetEmp = employes.find(emp => emp.id === empId);
+    if (targetEmp) {
+      saveRecord('employes', { ...targetEmp, signature: '' }, true).catch(() => {});
+    }
+  };
+
   function openCreate() {
     setEditId(null);
     setForm({
       nom: '', prenom: '', poste: '', type: 'atelier',
       telephone: '', email: '', adresse: '', cin: '',
       banque: '', rib: '', actif: true, salaireMensuel: 0,
-      remunerationType: 'mensuel', photo: ''
+      remunerationType: 'mensuel', photo: '',
+      matricule: '', dateExpiration: '', signature: ''
     });
     setShowModal(true);
   }
@@ -1096,7 +1157,7 @@ export default function SuiviRH() {
                       ? 'ارفع صورة شخصية واضحة للموظف، تظهر تلقائياً في شارة العمل وبطاقة QR الاحترافية.' 
                       : 'Téléversez une photo claire pour le badge professionnel et l\'identification rapide.'}
                   </p>
-                  <div className={`mt-3 flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <div className={`mt-3 flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
                     <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition active:scale-95">
                       <Upload className="w-3.5 h-3.5" />
                       <span>{form.photo ? (isAr ? 'تغيير الصورة' : 'Changer photo') : (isAr ? 'إضافة صورة' : 'Choisir une photo')}</span>
@@ -1108,8 +1169,18 @@ export default function SuiviRH() {
                       />
                     </label>
                     {form.photo && (
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, photo: '' })}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>{isAr ? 'حذف الصورة' : 'Supprimer'}</span>
+                      </button>
+                    )}
+                    {form.photo && (
                       <span className="text-[10px] font-black text-emerald-600 flex items-center gap-1">
-                        <Check className="w-3.5 h-3.5" /> {isAr ? 'جاهزة للحفظ' : 'Photo attachée'}
+                        <Check className="w-3.5 h-3.5" /> {isAr ? 'محفوظة' : 'Attachée'}
                       </span>
                     )}
                   </div>
@@ -1165,6 +1236,111 @@ export default function SuiviRH() {
                   <div className={`sm:col-span-2 ${isAr ? 'text-right' : ''}`}>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'عنوان السكن' : 'Adresse Résidence'}</label>
                     <input value={form.adresse || ''} onChange={e => setForm({ ...form, adresse: e.target.value })} className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none ${isAr ? 'text-right' : ''}`} />
+                  </div>
+                </div>
+              </div>
+
+              {/* بيانات الشارة المهنية (Matricule, Expiration, Signature) */}
+              <div className={isAr ? 'text-right' : ''}>
+                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 border-b border-indigo-50 pb-2">
+                  {isAr ? 'بيانات الشارة المهنية (Badge & Carte)' : 'Données du Badge Professionnel'}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Matricule (Manual + Auto) */}
+                  <div className={isAr ? 'text-right' : ''}>
+                    <div className={`flex items-center justify-between mb-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        {isAr ? 'رقم الماتريكول (Matricule)' : 'N° Matricule'}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const autoMat = 'EMP-' + Math.floor(100 + Math.random() * 900);
+                          setForm({ ...form, matricule: autoMat });
+                        }}
+                        className="text-[9px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-wider flex items-center gap-1 active:scale-95 transition"
+                        title={isAr ? 'توليد تلقائي للماتريكول' : 'Générer automatiquement'}
+                      >
+                        <Zap className="w-3 h-3 text-indigo-500 fill-indigo-500" />
+                        {isAr ? 'توليد تلقائي' : 'Générer'}
+                      </button>
+                    </div>
+                    <input 
+                      value={form.matricule || ''} 
+                      onChange={e => setForm({ ...form, matricule: e.target.value })} 
+                      placeholder={isAr ? 'مثال: EMP-001 (أو اتركه فارغاً)' : 'Ex: EMP-001 (ou vide)'} 
+                      className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none uppercase font-mono ${isAr ? 'text-right' : ''}`} 
+                    />
+                  </div>
+
+                  {/* Date d'expiration */}
+                  <div className={isAr ? 'text-right' : ''}>
+                    <div className={`flex items-center justify-between mb-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        {isAr ? 'نهاية الصلاحية (Expiration)' : 'Date d\'expiration'}
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, dateExpiration: '' })}
+                          className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-lg transition ${!form.dateExpiration ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                          {isAr ? 'دائم' : 'Permanent'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextYear = new Date();
+                            nextYear.setFullYear(nextYear.getFullYear() + 1);
+                            setForm({ ...form, dateExpiration: nextYear.toISOString().slice(0, 10) });
+                          }}
+                          className="text-[9px] font-black text-slate-400 hover:text-indigo-600 uppercase"
+                        >
+                          +1 {isAr ? 'سنة' : 'an'}
+                        </button>
+                      </div>
+                    </div>
+                    <input 
+                      type="date"
+                      value={form.dateExpiration || ''} 
+                      onChange={e => setForm({ ...form, dateExpiration: e.target.value })} 
+                      className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none ${isAr ? 'text-right' : ''}`} 
+                    />
+                  </div>
+
+                  {/* Custom Signature */}
+                  <div className={`sm:col-span-2 ${isAr ? 'text-right' : ''}`}>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                      {isAr ? 'توقيع الشارة (Signature)' : 'Signature sur le Badge'}
+                    </label>
+                    <div className={`p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center justify-between gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      <div className="h-10 px-4 bg-white border border-slate-200 rounded-xl flex items-center justify-center min-w-[120px] shadow-sm">
+                        {form.signature ? (
+                          <img src={form.signature} alt="Signature" className="h-7 max-w-[100px] object-contain" />
+                        ) : (
+                          <svg className="w-20 h-5 text-slate-600 opacity-70" viewBox="0 0 140 35" fill="none" stroke="currentColor" strokeWidth="2.2">
+                            <path d="M 10 24 C 25 6, 38 30, 52 14 C 60 6, 68 28, 90 16 C 105 9, 102 24, 130 13" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="cursor-pointer px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95 flex items-center gap-1.5">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{form.signature ? (isAr ? 'تغيير التوقيع' : 'Modifier') : (isAr ? 'رفع توقيع مخصص' : 'Uploader signature')}</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={handleEmployeeSignatureUpload} />
+                        </label>
+                        {form.signature && (
+                          <button
+                            type="button"
+                            onClick={() => setForm({ ...form, signature: '' })}
+                            className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition"
+                            title={isAr ? 'إلغاء التوقيع المخصص' : 'Réinitialiser signature'}
+                          >
+                            <RotateCw className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1384,17 +1560,56 @@ export default function SuiviRH() {
 
             {/* Footer with Actions */}
             <div className={`p-5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
-              {/* Direct photo upload button */}
-              <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95">
-                <Camera className="w-4 h-4 text-indigo-600" />
-                <span>{selectedBadge.photo ? (isAr ? 'تغيير صورة الموظف' : 'Modifier la photo') : (isAr ? 'إضافة صورة للموظف' : 'Ajouter une photo')}</span>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={(e) => handleDirectBadgePhotoUpload(selectedBadge.id, e)} 
-                />
-              </label>
+              <div className={`flex flex-wrap items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                {/* Direct photo upload button */}
+                <label className="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95">
+                  <Camera className="w-4 h-4 text-indigo-600" />
+                  <span>{selectedBadge.photo ? (isAr ? 'تغيير الصورة' : 'Changer photo') : (isAr ? 'إضافة صورة' : 'Ajouter photo')}</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => handleDirectBadgePhotoUpload(selectedBadge.id, e)} 
+                  />
+                </label>
+
+                {/* Direct photo delete button */}
+                {selectedBadge.photo && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteBadgePhoto(selectedBadge.id)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95"
+                    title={isAr ? 'حذف صورة الموظف' : 'Supprimer la photo'}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{isAr ? 'حذف الصورة' : 'Supprimer'}</span>
+                  </button>
+                )}
+
+                {/* Signature upload / edit button */}
+                <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95">
+                  <Edit2 className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>{selectedBadge.signature ? (isAr ? 'تغيير التوقيع' : 'Modifier Signature') : (isAr ? 'تخصيص التوقيع' : 'Ajouter Signature')}</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => handleDirectBadgeSignatureUpload(selectedBadge.id, e)} 
+                  />
+                </label>
+
+                {/* Signature reset button */}
+                {selectedBadge.signature && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteBadgeSignature(selectedBadge.id)}
+                    className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition"
+                    title={isAr ? 'إعادة تعيين التوقيع للشكل القياسي' : 'Réinitialiser la signature'}
+                  >
+                    <RotateCw className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
 
               {/* PDF Download Button */}
               <button
