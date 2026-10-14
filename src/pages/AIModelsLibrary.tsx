@@ -28,18 +28,37 @@ export default function AIModelsLibrary() {
   const fetchModels = async () => {
     try {
       setLoading(true);
-      // Read all fiches and include any expert suggestions, AI analyses, or fiches with aiNotes
+      const deletedIds: string[] = JSON.parse(localStorage.getItem('textrack_deleted_fiches_ids') || '[]');
       const data = await loadData<FicheTechnique>('fiches');
       const filtered = (data || []).filter(f => 
-        f.client === 'Suggestion Expert' ||
-        f.client === 'اقتراح خبير BEYA' ||
-        f.client === 'BEYA Expert' ||
-        (f.client && f.client.toLowerCase().includes('expert')) ||
-        (f.client && f.client.includes('خبير')) ||
-        (f.client && f.client.includes('اقتراح')) ||
-        Boolean(f.aiNotes)
+        !deletedIds.includes(f.id) &&
+        (
+          f.client === 'Suggestion Expert' ||
+          f.client === 'اقتراح خبير BEYA' ||
+          f.client === 'BEYA Expert' ||
+          (f.client && f.client.toLowerCase().includes('expert')) ||
+          (f.client && f.client.includes('خبير')) ||
+          (f.client && f.client.includes('اقتراح')) ||
+          (f.client && f.client.includes('Ø§Ù‚ØªØ±Ø§Ø­')) ||
+          Boolean(f.aiNotes)
+        )
       );
-      setModels(filtered);
+
+      // Deduplicate: merge/favor the copy that has a valid photo
+      const seen = new Map<string, FicheTechnique>();
+      for (const m of filtered) {
+        const key = (m.modele || '').trim().toLowerCase();
+        if (!seen.has(key)) {
+          seen.set(key, m);
+        } else {
+          const existing = seen.get(key)!;
+          if (!existing.photo && m.photo) {
+            seen.set(key, { ...existing, photo: m.photo, id: m.id });
+          }
+        }
+      }
+
+      setModels(Array.from(seen.values()));
     } catch (err) {
       console.error('Failed to load AI models:', err);
     } finally {
@@ -48,12 +67,35 @@ export default function AIModelsLibrary() {
   };
 
   const removeModel = async (id: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (window.confirm(isAr ? 'هل أنت متأكد من حذف هذا الموديل؟' : 'Voulez-vous vraiment supprimer ce modèle ?')) {
-      await deleteRecord('fiches', id);
-      setModels(prev => prev.filter(m => m.id !== id));
+      const target = models.find(m => m.id === id);
+      const targetName = target?.modele?.trim().toLowerCase();
+
+      // 1. Optimistic removal from state
+      setModels(prev => prev.filter(m => m.id !== id && (!targetName || m.modele?.trim().toLowerCase() !== targetName)));
       if (selectedGammeModel?.id === id) setSelectedGammeModel(null);
       if (selectedDetailModel?.id === id) setSelectedDetailModel(null);
+
+      // 2. Persist to deleted IDs blacklist
+      try {
+        const deletedIds: string[] = JSON.parse(localStorage.getItem('textrack_deleted_fiches_ids') || '[]');
+        if (!deletedIds.includes(id)) {
+          deletedIds.push(id);
+          localStorage.setItem('textrack_deleted_fiches_ids', JSON.stringify(deletedIds));
+        }
+      } catch (_) {}
+
+      // 3. Delete from Supabase
+      try {
+        await deleteRecord('fiches', id);
+        localStorage.removeItem('textrack_data_fiches');
+      } catch (err) {
+        console.error('Failed to delete from database:', err);
+      }
     }
   };
 
@@ -259,40 +301,52 @@ export default function AIModelsLibrary() {
                     )}
 
                     {/* Top overlay badges */}
-                    <div className="absolute top-3 inset-x-3 flex justify-between items-start pointer-events-none">
+                    <div className="absolute top-3 inset-x-3 flex justify-between items-start z-30 pointer-events-none">
                       <span className="px-3 py-1 bg-black/60 backdrop-blur-md text-white rounded-full text-[10px] font-black pointer-events-auto">
                         {m.type || 'Création'}
                       </span>
                       <button 
+                        type="button"
                         onClick={(e) => removeModel(m.id, e)} 
                         title={isAr ? 'حذف الموديل' : 'Supprimer'}
-                        className="w-8 h-8 bg-black/50 hover:bg-rose-600 backdrop-blur-md text-white rounded-full flex items-center justify-center transition-all pointer-events-auto shadow-sm"
+                        className="w-9 h-9 bg-rose-600 hover:bg-rose-700 text-white rounded-full flex items-center justify-center transition-all pointer-events-auto shadow-md hover:scale-110 active:scale-90 cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
                     {/* Hover actions */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                      <div className="flex gap-2 w-full">
+                    <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4 pointer-events-none">
+                      <div className="flex gap-2 w-full pointer-events-auto">
                         <button 
+                          type="button"
                           onClick={() => setSelectedDetailModel(m)} 
                           className="flex-1 py-2.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-sm"
                         >
                           <Eye className="w-4 h-4 text-indigo-600" /> {isAr ? 'تفاصيل' : 'Détails'}
                         </button>
                         <button 
+                          type="button"
                           onClick={() => setSelectedGammeModel(m)} 
                           className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-sm"
                         >
                           <Scissors className="w-4 h-4" /> {isAr ? 'لاڭام' : 'Gamme'}
                         </button>
                         <button 
+                          type="button"
                           onClick={() => printFicheTechnique(m)} 
                           title="PDF"
                           className="w-10 h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center transition-all shadow-sm"
                         >
                           <Download className="w-4 h-4" />
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={(e) => removeModel(m.id, e)} 
+                          title={isAr ? 'حذف الموديل' : 'Supprimer'}
+                          className="w-10 h-10 bg-rose-600 hover:bg-rose-700 text-white rounded-xl flex items-center justify-center transition-all shadow-sm"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>

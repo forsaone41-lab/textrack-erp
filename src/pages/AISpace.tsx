@@ -554,7 +554,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }
   };
   const [activePieceIdx, setActivePieceIdx] = useState(0);
-  const [activeTab, setActiveTab] = useState<'fiche' | 'mesures' | 'chat' | 'photo'>('chat');
+  const [activeTab, setActiveTab] = useState<'fiche' | 'mesures' | 'chat' | 'photo' | 'gamme'>('chat');
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [chat, setChat] = useState<{ role: 'ai' | 'user'; text: string }[]>([
     { role: 'ai', text: isAr ? 'مرحباً بك في المستشار الذكي لتحليل الموديلات. ارفع صورة الموديل للبدء في التحليل الفوري للثوب والتكلفة والقياسات.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }
@@ -1945,6 +1945,18 @@ Tissage sergé très robuste pour pantalons chino, vestes et uniformes professio
             <FileText className="w-5 md:w-5.5 h-5 md:h-5.5" />
           </button>
 
+          <button
+            onClick={() => setActiveTab('gamme')}
+            title={isAr ? 'لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage)' : 'Gamme de Montage'}
+            className={`p-2.5 md:p-3 rounded-2xl transition-all flex items-center justify-center ${
+              activeTab === 'gamme'
+                ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-200 scale-105'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-amber-600'
+            }`}
+          >
+            <Scissors className="w-5 md:w-5.5 h-5 md:h-5.5" />
+          </button>
+
           <div className="w-px h-8 bg-slate-300 mx-1"></div>
 
           <button
@@ -2287,7 +2299,7 @@ Tissage sergé très robuste pour pantalons chino, vestes et uniformes professio
                     );
                   })}
 
-                  {/* Visual Gamme de Montage Card (لاغام ديال الخياطة وبوستات العمل) */}
+                  {/* Compact Gamme Callout Banner (Clickable to switch to the dedicated Gamme tab) */}
                   {(() => {
                     const allChatText = chat.map(c => c.text).join('\n');
                     const searchCtx = `${analysisResult.category || ''} ${analysisResult.fabricSuggested || ''} ${(analysisResult.pieces || []).map(p => p.name).join(' ')} ${allChatText}`;
@@ -2299,60 +2311,43 @@ Tissage sergé très robuste pour pantalons chino, vestes et uniformes professio
                     const totalSec = Math.round(totalMin * 60);
 
                     return (
-                      <div className="bg-gradient-to-br from-amber-50/70 to-white rounded-3xl p-5 border border-amber-200/80 shadow-sm space-y-4">
-                        <div className={`flex flex-wrap items-center justify-between gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                          <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                            <div className="p-2.5 bg-amber-600 text-white rounded-2xl shadow-sm">
-                              <Scissors className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <h3 className="font-black text-sm text-slate-900">
-                                {isAr ? '🏭 لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage)' : '🏭 Gamme de Montage & Postes Atelier'}
-                              </h3>
-                              <p className="text-[10px] text-slate-500 font-bold">
-                                {isAr
-                                  ? `${activeGamme.length} محطات عمل | إجمالي وقت البياسة (SAM): ${totalMin} دقيقة (${totalSec} ثانية)`
-                                  : `${activeGamme.length} postes | Temps total (SAM): ${totalMin} min (${totalSec} sec)`}
-                              </p>
-                            </div>
+                      <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-white p-4 sm:p-5 rounded-3xl border border-amber-300/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div 
+                          onClick={() => setActiveTab('gamme')}
+                          className={`flex items-center gap-3 cursor-pointer group ${isAr ? 'flex-row-reverse text-right' : ''}`}
+                        >
+                          <div className="p-3 bg-amber-500 text-white rounded-2xl shadow-xs group-hover:scale-110 transition-transform shrink-0">
+                            <Scissors className="w-5 h-5" />
                           </div>
-                          <button
-                            onClick={dispatchToAtelier}
-                            className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black transition-all shadow-sm flex items-center gap-1.5"
-                          >
-                            <Scissors className="w-3.5 h-3.5" />
-                            <span>{isAr ? 'إرسال هاد لاغام للورشة 🚀' : 'Envoyer la Gamme à l\'Atelier 🚀'}</span>
-                          </button>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-black text-xs sm:text-sm text-slate-900 group-hover:text-amber-800 transition-colors">
+                                {isAr ? '🏭 لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage)' : '🏭 Gamme de Montage & Postes Atelier'}
+                              </h4>
+                              <span className="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-black rounded-full">
+                                {activeGamme.length} {isAr ? 'محطة' : 'postes'}
+                              </span>
+                            </div>
+                            <p className="text-[11px] font-bold text-amber-900/80 mt-0.5">
+                              {isAr ? `إجمالي وقت البياسة (SAM): ${totalMin} دقيقة (${totalSec} ثانية) — اضغط هنا لعرض جدول لاغام المخصص ↗` : `Temps total (SAM): ${totalMin} min (${totalSec} sec) — Cliquez pour ouvrir la vue dédiée ↗`}
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="space-y-2">
-                          {activeGamme.map((gp, idx) => {
-                            const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
-                            return (
-                              <div
-                                key={idx}
-                                className={`flex items-center justify-between gap-3 p-3 bg-white rounded-2xl border border-amber-100 shadow-sm ${isAr ? 'flex-row-reverse text-right' : ''}`}
-                              >
-                                <div className={`flex items-center gap-3 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
-                                  <span className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 font-black text-xs flex items-center justify-center shrink-0">
-                                    {idx + 1}
-                                  </span>
-                                  <div className="min-w-0">
-                                    <p className="text-xs font-black text-slate-900 truncate">{isAr ? gp.nomAr : (gp.nomFr || gp.nomAr)}</p>
-                                    <p className="text-[10px] font-bold text-indigo-600 truncate">⚙️ {gp.machine} — {gp.roleOuvrier}</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <span className="px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-black rounded-lg">
-                                    {gp.tempsMin} {isAr ? 'د' : 'min'}
-                                  </span>
-                                  <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black rounded-lg">
-                                    {sec} {isAr ? 'ثانية' : 'sec'}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                          <button
+                            onClick={() => setActiveTab('gamme')}
+                            className="px-3.5 py-2 bg-white hover:bg-amber-50 text-amber-800 border border-amber-300 rounded-xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5"
+                          >
+                            <Scissors className="w-3.5 h-3.5" />
+                            <span>{isAr ? 'فتح لاغام' : 'Voir Gamme'}</span>
+                          </button>
+                          <button
+                            onClick={dispatchToAtelier}
+                            className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+                          >
+                            <span>{isAr ? 'إرسال للورشة 🚀' : 'Atelier 🚀'}</span>
+                          </button>
                         </div>
                       </div>
                     );
@@ -2516,6 +2511,130 @@ Tissage sergé très robuste pour pantalons chino, vestes et uniformes professio
               </div>
             </div>
           )}
+
+          {/* TAB 4: LA GAMME DE MONTAGE (activeTab === 'gamme') */}
+          {activeTab === 'gamme' && (() => {
+            const allChatText = chat.map(c => c.text).join('\n');
+            const searchCtx = `${analysisResult?.category || ''} ${analysisResult?.fabricSuggested || ''} ${(analysisResult?.pieces || []).map(p => p.name).join(' ')} ${allChatText}`;
+            const fallbackGamme = getGarmentTechnicalBreakdown(searchCtx).postesTravail;
+            const activeGamme = (analysisResult?.gammeMontage && analysisResult.gammeMontage.length > 0)
+              ? analysisResult.gammeMontage
+              : fallbackGamme;
+            const totalMin = Number(activeGamme.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0).toFixed(2));
+            const totalSec = Math.round(totalMin * 60);
+
+            return (
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 min-h-0">
+                {/* Header Strip with Metrics */}
+                <div className="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-white p-5 rounded-3xl border border-amber-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className={`flex items-center gap-3.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                    <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+                      <Scissors className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-base sm:text-lg font-black text-slate-900">
+                          {isAr ? 'لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage)' : 'Gamme de Montage & Postes de Travail'}
+                        </h2>
+                        <span className="px-2.5 py-0.5 bg-amber-500 text-white rounded-full text-[10px] font-black">
+                          {activeGamme.length} {isAr ? 'محطات' : 'postes'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 font-bold mt-0.5">
+                        {analysisResult?.category || (isAr ? 'موديل خياطة وتحضير' : 'Modèle confection')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end sm:self-center">
+                    <button
+                      onClick={dispatchToAtelier}
+                      className="px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-amber-600/20 flex items-center gap-2 active:scale-95"
+                    >
+                      <Scissors className="w-4 h-4" />
+                      <span>{isAr ? 'إرسال هاد لاغام للورشة 🚀' : 'Envoyer à l\'Atelier 🚀'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Metrics Summary Strip */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'إجمالي وقت البياسة (SAM)' : 'Temps Total (SAM)'}</span>
+                    <span className="text-base font-black text-amber-600 mt-0.5 block">{totalMin} min</span>
+                    <span className="text-[10px] font-bold text-slate-400">({totalSec} {isAr ? 'ثانية' : 'sec'})</span>
+                  </div>
+
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'عدد محطات العمل' : 'Postes de Travail'}</span>
+                    <span className="text-base font-black text-slate-900 mt-0.5 block">{activeGamme.length}</span>
+                    <span className="text-[10px] font-bold text-slate-400">{isAr ? 'محطة / آلة' : 'postes requis'}</span>
+                  </div>
+
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'الإنتاجية بالساعة (8 عمال)' : 'Cadence / Heure (8 op.)'}</span>
+                    <span className="text-base font-black text-slate-900 mt-0.5 block">{totalMin > 0 ? Math.round((8 * 60) / totalMin) : 0} pcs/h</span>
+                    <span className="text-[10px] font-bold text-slate-400">{isAr ? 'تقديري للورشة' : 'estimation atelier'}</span>
+                  </div>
+
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'الإنتاجية باليوم (8 ساعات)' : 'Cadence / Jour (8h)'}</span>
+                    <span className="text-base font-black text-emerald-600 mt-0.5 block">{totalMin > 0 ? Math.round((8 * 8 * 60) / totalMin) : 0} pcs/j</span>
+                    <span className="text-[10px] font-bold text-slate-400">{isAr ? 'فريق كامل' : 'par équipe'}</span>
+                  </div>
+                </div>
+
+                {/* Operations List */}
+                <div className="space-y-2.5">
+                  {activeGamme.map((gp, idx) => {
+                    const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
+                    const isPiqueuse = gp.machine.toLowerCase().includes('piqueuse');
+                    const isSurjet = gp.machine.toLowerCase().includes('surjet');
+                    const isRecouvreuse = gp.machine.toLowerCase().includes('recouvr') || gp.machine.toLowerCase().includes('ourle');
+
+                    const badgeColor = isPiqueuse
+                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                      : isSurjet
+                      ? 'bg-purple-50 text-purple-700 border-purple-200'
+                      : isRecouvreuse
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-amber-50 text-amber-800 border-amber-200';
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`p-3.5 bg-white hover:bg-slate-50/80 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}
+                      >
+                        <div className={`flex items-center gap-3 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
+                          <span className="w-7 h-7 rounded-xl bg-amber-500 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
+                            {idx + 1}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                              {isAr ? gp.nomAr : (gp.nomFr || gp.nomAr)}
+                            </p>
+                            <p className="text-[11px] font-bold text-slate-400 truncate mt-0.5">
+                              {isAr ? (gp.nomFr || '') : (gp.nomAr || '')} {gp.roleOuvrier ? `• ${gp.roleOuvrier}` : ''}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-end sm:self-center">
+                          <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black border ${badgeColor}`}>
+                            ⚙️ {gp.machine}
+                          </span>
+                          <div className="px-3 py-1 bg-amber-50 border border-amber-200/80 rounded-xl text-right shrink-0">
+                            <span className="text-xs font-black text-amber-800">{gp.tempsMin} {isAr ? 'د' : 'min'}</span>
+                            <span className="text-[10px] font-bold text-amber-600/80 mr-1">({sec}s)</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -2830,6 +2949,16 @@ Tissage sergé très robuste pour pantalons chino, vestes et uniformes professio
         >
           <FileText className="w-4.5 h-4.5" />
           <span className="text-[9px] font-black">{isAr ? 'البطاقة' : 'Fiche'}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('gamme')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-all ${
+            activeTab === 'gamme' ? 'text-amber-600 font-black scale-105' : 'text-slate-500 font-bold hover:text-slate-700'
+          }`}
+        >
+          <Scissors className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-black">{isAr ? 'لاغام' : 'Gamme'}</span>
         </button>
 
         <button
