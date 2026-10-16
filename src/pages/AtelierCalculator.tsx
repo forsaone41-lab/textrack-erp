@@ -5,7 +5,7 @@ import {
   Clock, Package, Users, Scissors, ShoppingCart, ArrowLeft,
   DollarSign, Sparkles, Check, X, RefreshCw, UserCheck,
   Ruler, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw, Maximize2, Minimize2, Plus, Copy,
-  Camera, ChevronLeft, ChevronRight, Layers
+  Camera, ChevronLeft, ChevronRight, Layers, ChevronUp, ChevronDown, GripVertical, ArrowUpDown
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { loadData, Employe, FicheTechnique, Charge } from '../types';
@@ -287,6 +287,8 @@ function isSupportRole(e: Employe): boolean {
   const [monthlyOther, setMonthlyOther] = useState(3000);
   const [monthlyChargesSynced, setMonthlyChargesSynced] = useState(false);
   const [customPostes, setCustomPostes] = useState<PosteTravail[] | null>(null);
+  const [draggedPosteIdx, setDraggedPosteIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [isPostesBoxExpanded, setIsPostesBoxExpanded] = useState(false);
   const [selectedQuickMachine, setSelectedQuickMachine] = useState<string>(ATELIER_MACHINES_PRESETS[0].machine);
   const [activeInputKey, setActiveInputKey] = useState<string | null>(null);
@@ -3427,6 +3429,45 @@ function isSupportRole(e: Employe): boolean {
           setCustomPostes(next);
         };
 
+        const movePoste = (fromIdx: number, toIdx: number) => {
+          const current = customPostes !== null ? [...customPostes] : [...breakdown.postesTravail];
+          if (toIdx < 0 || toIdx >= current.length || fromIdx === toIdx) return;
+          const updated = [...current];
+          const [movedItem] = updated.splice(fromIdx, 1);
+          updated.splice(toIdx, 0, movedItem);
+          setCustomPostes(updated);
+        };
+
+        const handleDragStart = (e: React.DragEvent, index: number) => {
+          setDraggedPosteIdx(index);
+          e.dataTransfer.effectAllowed = 'move';
+          try {
+            e.dataTransfer.setData('text/plain', String(index));
+          } catch (_) {}
+        };
+
+        const handleDragOver = (e: React.DragEvent, index: number) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (dragOverIdx !== index) {
+            setDragOverIdx(index);
+          }
+        };
+
+        const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+          e.preventDefault();
+          if (draggedPosteIdx !== null && draggedPosteIdx !== targetIndex) {
+            movePoste(draggedPosteIdx, targetIndex);
+          }
+          setDraggedPosteIdx(null);
+          setDragOverIdx(null);
+        };
+
+        const handleDragEnd = () => {
+          setDraggedPosteIdx(null);
+          setDragOverIdx(null);
+        };
+
         return (
           <div className="no-print w-full bg-slate-900 text-white rounded-3xl border border-amber-400/60 shadow-2xl shadow-amber-500/10 overflow-hidden flex flex-col animate-fadeIn">
             {/* Full-Page Header */}
@@ -3599,7 +3640,13 @@ function isSupportRole(e: Employe): boolean {
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-800 text-slate-300">
-                      <th className="p-3 text-center font-black border-b border-white/10 w-12">#</th>
+                      <th className="p-3 text-center font-black border-b border-white/10 w-28">
+                        <div className="flex items-center justify-center gap-1">
+                          <ArrowUpDown className="w-3.5 h-3.5 text-amber-400" />
+                          <span>#</span>
+                          <span className="text-[10px] text-amber-400 font-bold">({isAr ? 'ترتيب' : 'Ordre'})</span>
+                        </div>
+                      </th>
                       <th className="p-3 text-start font-black border-b border-white/10">{isAr ? 'المرحلة (وصف العملية)' : 'Étape (Opération)'}</th>
                       <th className="p-3 text-start font-black border-b border-white/10 w-64">{isAr ? 'الآلة (اختيار سريع أو كتابة)' : 'Machine'}</th>
                       <th className="p-3 text-center font-black border-b border-white/10 w-60">
@@ -3648,9 +3695,62 @@ function isSupportRole(e: Employe): boolean {
                       activePostes.map((poste, idx) => {
                         const minVal = Number(poste.tempsMin) || 0;
                         const secVal = Math.round(minVal * 60);
+                        const isBeingDragged = draggedPosteIdx === idx;
+                        const isDragOver = dragOverIdx === idx;
                         return (
-                          <tr key={idx} className="odd:bg-white/[0.02] even:bg-transparent hover:bg-white/5 transition-colors group">
-                            <td className="p-2.5 text-center font-black text-amber-400/80 border-b border-white/5">{idx + 1}</td>
+                          <tr
+                            key={idx}
+                            onDragOver={(e) => handleDragOver(e, idx)}
+                            onDrop={(e) => handleDrop(e, idx)}
+                            className={`transition-colors group ${
+                              isDragOver
+                                ? 'bg-amber-500/25 border-y-2 border-amber-400'
+                                : isBeingDragged
+                                ? 'opacity-35 bg-slate-800'
+                                : 'odd:bg-white/[0.02] even:bg-transparent hover:bg-white/5'
+                            }`}
+                          >
+                            <td className="p-2 text-center font-black text-amber-400/80 border-b border-white/5 select-none">
+                              <div className="flex items-center justify-center gap-1.5">
+                                {/* Drag handle */}
+                                <div
+                                  draggable={true}
+                                  onDragStart={(e) => handleDragStart(e, idx)}
+                                  onDragEnd={handleDragEnd}
+                                  title={isAr ? 'اضغط واسحب لتغيير الترتيب (Glisser-Déposer)' : 'Glisser pour réordonner'}
+                                  className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-amber-500/20 text-slate-500 hover:text-amber-300 transition-colors"
+                                >
+                                  <GripVertical className="w-3.5 h-3.5" />
+                                </div>
+
+                                {/* Step number */}
+                                <span className="w-5 text-center font-black text-amber-400 text-xs">
+                                  {idx + 1}
+                                </span>
+
+                                {/* Up / Down Order Buttons */}
+                                <div className="flex flex-col -space-y-0.5">
+                                  <button
+                                    type="button"
+                                    disabled={idx === 0}
+                                    onClick={() => movePoste(idx, idx - 1)}
+                                    title={isAr ? 'تقديم المرحلة للأعلى ⬆️' : 'Monter ⬆️'}
+                                    className="p-0.5 rounded hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition-all active:scale-90"
+                                  >
+                                    <ChevronUp className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={idx === activePostes.length - 1}
+                                    onClick={() => movePoste(idx, idx + 1)}
+                                    title={isAr ? 'تأخير المرحلة للأسفل ⬇️' : 'Descendre ⬇️'}
+                                    className="p-0.5 rounded hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition-all active:scale-90"
+                                  >
+                                    <ChevronDown className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
                             <td className="p-1.5 border-b border-white/5">
                               <input
                                 type="text"

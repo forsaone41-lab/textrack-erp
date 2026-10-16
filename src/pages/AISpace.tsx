@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -3040,9 +3040,45 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
                         className={`p-3.5 bg-white hover:bg-slate-50/80 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}
                       >
                         <div className={`flex items-center gap-3 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
-                          <span className="w-7 h-7 rounded-xl bg-amber-500 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
-                            {idx + 1}
-                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span className="w-7 h-7 rounded-xl bg-amber-500 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                              {idx + 1}
+                            </span>
+                            <div className="flex flex-col -space-y-1">
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => {
+                                  const list = [...activeGamme];
+                                  const [item] = list.splice(idx, 1);
+                                  list.splice(idx - 1, 0, item);
+                                  if (analysisResult) {
+                                    setAnalysisResult({ ...analysisResult, gammeMontage: list });
+                                  }
+                                }}
+                                title={isAr ? 'تقديم المرحلة للأعلى ⬆️' : 'Monter ⬆️'}
+                                className="p-0.5 hover:bg-amber-100 text-slate-400 hover:text-amber-800 rounded disabled:opacity-20 transition-all active:scale-90"
+                              >
+                                <ChevronUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={idx === activeGamme.length - 1}
+                                onClick={() => {
+                                  const list = [...activeGamme];
+                                  const [item] = list.splice(idx, 1);
+                                  list.splice(idx + 1, 0, item);
+                                  if (analysisResult) {
+                                    setAnalysisResult({ ...analysisResult, gammeMontage: list });
+                                  }
+                                }}
+                                title={isAr ? 'تأخير المرحلة للأسفل ⬇️' : 'Descendre ⬇️'}
+                                className="p-0.5 hover:bg-amber-100 text-slate-400 hover:text-amber-800 rounded disabled:opacity-20 transition-all active:scale-90"
+                              >
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
                           <div className="min-w-0">
                             <p className="text-xs sm:text-sm font-black text-slate-900 truncate">
                               {isAr ? gp.nomAr : (gp.nomFr || gp.nomAr)}
