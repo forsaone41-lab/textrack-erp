@@ -593,7 +593,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     { role: 'ai', text: isAr ? 'مرحباً بك في المستشار الذكي لتحليل الموديلات. ارفع صورة الموديل للبدء في التحليل الفوري للثوب والتكلفة والقياسات.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }
   ]);
   const [msg, setMsg] = useState('');
-  const [isChatMaximized, setIsChatMaximized] = useState(false);
+  const [isBoxMaximized, setIsBoxMaximized] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -2171,7 +2171,7 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
   };
 
   return (
-    <div className="flex flex-col h-full md:h-[calc(100vh-80px)] max-w-7xl mx-auto px-2 md:px-4 pb-2 md:pb-4 pt-2 md:pt-0 overflow-hidden select-none bg-white md:bg-transparent">
+    <div className={`flex flex-col h-full md:h-[calc(100vh-80px)] ${isBoxMaximized ? 'w-full max-w-full px-2 md:px-6' : 'max-w-7xl mx-auto px-2 md:px-4'} pb-2 md:pb-4 pt-2 md:pt-0 overflow-hidden select-none bg-white md:bg-transparent transition-all duration-300`}>
       {/* Compact Header Bar */}
       <div className={`flex items-center justify-between gap-2 md:gap-4 py-2 border-b border-slate-100 flex-shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
         <div className={`flex items-center gap-2 md:gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
@@ -2348,149 +2348,197 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
           </button>
         </div>
 
-        {analysisResult && (
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-100">
-            <Check className="w-3 h-3" /> {isAr ? 'تحليل مكتمل' : 'Analysé'}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {analysisResult && (
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-100">
+              <Check className="w-3 h-3" /> {isAr ? 'تحليل مكتمل' : 'Analysé'}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsBoxMaximized(!isBoxMaximized)}
+            title={isBoxMaximized ? (isAr ? 'تصغير وتقسيم الشاشة' : 'Restaurer la vue') : (isAr ? 'تكبير كامل الصفحة' : 'Plein écran')}
+            className={`p-2 md:p-2.5 rounded-2xl transition-all flex items-center justify-center border shadow-xs active:scale-95 ${
+              isBoxMaximized
+                ? 'bg-amber-500 text-white border-amber-600 hover:bg-amber-600 shadow-amber-500/20'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-indigo-600'
+            }`}
+          >
+            {isBoxMaximized ? <Minimize2 className="w-5 md:w-5.5 h-5 md:h-5.5" /> : <Maximize2 className="w-5 md:w-5.5 h-5 md:h-5.5" />}
+          </button>
+        </div>
       </div>
 
-      {/* Main 2-Column Cockpit Grid (Zero-Scroll on Desktop, Isolated Views on Mobile) */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-5 min-h-0 overflow-y-auto lg:overflow-hidden mt-2 md:mt-3 pb-16 md:pb-safe">
+      {/* Main 2-Column Cockpit Grid (Full width when maximized, 2-column when normal) */}
+      <div className={`flex-1 ${isBoxMaximized ? 'flex flex-col' : 'grid grid-cols-1 lg:grid-cols-12'} gap-3 md:gap-5 min-h-0 overflow-y-auto lg:overflow-hidden mt-2 md:mt-3 pb-16 md:pb-safe`}>
         
-        {/* LEFT COLUMN: Photo Cockpit (lg:col-span-5) */}
-        <div className={`lg:col-span-5 ${activeTab === 'photo' ? 'flex' : 'hidden lg:flex'} flex-col gap-4 overflow-visible lg:overflow-hidden h-auto lg:h-full`}>
-          {/* Photo Cockpit Box */}
-          <div className="flex-none lg:flex-1 min-h-[250px] lg:min-h-0 bg-slate-900 rounded-3xl overflow-hidden relative flex flex-col shadow-lg border border-slate-800 group">
-            {!image ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-700 rounded-3xl hover:border-indigo-400 hover:text-indigo-300 transition-all cursor-pointer p-6 text-center" onClick={() => fileInputRef.current?.click()}>
-                <Camera className="w-12 h-12 mb-3 text-indigo-400" />
-                <p className="font-black text-xs uppercase tracking-wider">{isAr ? 'اضغط لرفع صورة الموديل أو التصميم' : 'Cliquez pour uploader le modèle'}</p>
-                <p className="text-[10px] text-slate-500 mt-1">{isAr ? 'يدعم الصور عالية الدقة (JPG, PNG)' : 'JPG, PNG haute résolution'}</p>
-              </div>
-            ) : (
-              <div className="flex-1 relative rounded-3xl overflow-hidden bg-slate-950/80 flex items-center justify-center">
-                <img src={image} className="w-full h-full object-contain max-h-[320px]" alt="Model" />
-                <button onClick={() => setShowFullImage(true)} className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-xl text-slate-700 hover:bg-white hover:scale-105 transition-all shadow-md border border-slate-100" title={isAr ? 'تكبير الصورة' : 'Agrandir'}>
-                  <Eye className="w-4 h-4" />
-                </button>
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <button onClick={() => setImage(null)} className="bg-white/90 p-3 rounded-xl text-rose-600 hover:bg-white transition-all shadow-xl" title="حذف الصورة"><RefreshCw className="w-5 h-5" /></button>
-                  {!analysisResult && <button onClick={startAnalysis} className="bg-indigo-600 text-white px-5 py-3 rounded-xl font-black text-xs uppercase shadow-xl flex items-center gap-2 hover:bg-indigo-700"><Sparkles className="w-4 h-4" /> {isAr ? 'بدء التحليل الفوري' : 'Lancer l\'analyse'}</button>}
+        {/* LEFT COLUMN: Photo Cockpit (lg:col-span-5) - hidden when maximized */}
+        {!isBoxMaximized && (
+          <div className={`lg:col-span-5 ${activeTab === 'photo' ? 'flex' : 'hidden lg:flex'} flex-col gap-4 overflow-visible lg:overflow-hidden h-auto lg:h-full`}>
+            {/* Photo Cockpit Box */}
+            <div className="flex-none lg:flex-1 min-h-[250px] lg:min-h-0 bg-slate-900 rounded-3xl overflow-hidden relative flex flex-col shadow-lg border border-slate-800 group">
+              {!image ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-700 rounded-3xl hover:border-indigo-400 hover:text-indigo-300 transition-all cursor-pointer p-6 text-center" onClick={() => fileInputRef.current?.click()}>
+                  <Camera className="w-12 h-12 mb-3 text-indigo-400" />
+                  <p className="font-black text-xs uppercase tracking-wider">{isAr ? 'اضغط لرفع صورة الموديل أو التصميم' : 'Cliquez pour uploader le modèle'}</p>
+                  <p className="text-[10px] text-slate-500 mt-1">{isAr ? 'يدعم الصور عالية الدقة (JPG, PNG)' : 'JPG, PNG haute résolution'}</p>
                 </div>
-                {analyzing && (
-                  <div className="absolute inset-0 bg-indigo-900/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-20">
-                    <RefreshCw className="w-10 h-10 animate-spin mb-3" />
-                    <p className="font-black text-sm uppercase tracking-tight animate-pulse">{isAr ? 'جاري تحليل الأثواب والمقاسات...' : 'Analyse des tissus...'}</p>
+              ) : (
+                <div className="flex-1 relative rounded-3xl overflow-hidden bg-slate-950/80 flex items-center justify-center">
+                  <img src={image} className="w-full h-full object-contain max-h-[320px]" alt="Model" />
+                  <button onClick={() => setShowFullImage(true)} className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-xl text-slate-700 hover:bg-white hover:scale-105 transition-all shadow-md border border-slate-100" title={isAr ? 'تكبير الصورة' : 'Agrandir'}>
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                    <button onClick={() => setImage(null)} className="bg-white/90 p-3 rounded-xl text-rose-600 hover:bg-white transition-all shadow-xl" title="حذف الصورة"><RefreshCw className="w-5 h-5" /></button>
+                    {!analysisResult && <button onClick={startAnalysis} className="bg-indigo-600 text-white px-5 py-3 rounded-xl font-black text-xs uppercase shadow-xl flex items-center gap-2 hover:bg-indigo-700"><Sparkles className="w-4 h-4" /> {isAr ? 'بدء التحليل الفوري' : 'Lancer l\'analyse'}</button>}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* ONE-CLICK DISPATCH ENGINE (Desktop Only Sidebar) */}
-          <div className="hidden lg:block flex-shrink-0 bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-            <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
-              <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
-                  <Zap className="w-4 h-4" />
+                  {analyzing && (
+                    <div className="absolute inset-0 bg-indigo-900/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-20">
+                      <RefreshCw className="w-10 h-10 animate-spin mb-3" />
+                      <p className="font-black text-sm uppercase tracking-tight animate-pulse">{isAr ? 'جاري تحليل الأثواب والمقاسات...' : 'Analyse des tissus...'}</p>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <h4 className="font-black text-xs text-slate-800">{isAr ? 'توزيع بيانات التحليل فورا (One-Click Dispatch)' : 'Engine de Distribution Rapide'}</h4>
-                  <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'أرسل المقاسات والثوب للأدوات بضغطة زر واحدة' : 'Export direct vers les modules de production'}</p>
-                </div>
-              </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => {
-                  if (analysisResult) {
-                    const chatHistory = chat.map(c => c.text).join('\n');
-                    sendToDevis(chatHistory + '\n\n' + (analysisResult.rawAnalysis || JSON.stringify(analysisResult)));
-                  } else {
-                    setCustomAlert({
-                      title: isAr ? 'تنبيه' : 'Attention',
-                      message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
-                      isError: true
-                    });
-                  }
-                }}
-                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200/60 text-emerald-700 rounded-xl font-black text-xs transition-all shadow-sm group"
-              >
-                <DollarSign className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                <span>{isAr ? 'تسعير Devis PRO' : 'Devis PRO'}</span>
-              </button>
+            {/* ONE-CLICK DISPATCH ENGINE (Desktop Only Sidebar) */}
+            <div className="hidden lg:block flex-shrink-0 bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+              <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                  <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-xs text-slate-800">{isAr ? 'توزيع بيانات التحليل فورا (One-Click Dispatch)' : 'Engine de Distribution Rapide'}</h4>
+                    <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'أرسل المقاسات والثوب للأدوات بضغطة زر واحدة' : 'Export direct vers les modules de production'}</p>
+                  </div>
+                </div>
+              </div>
 
-              <button
-                onClick={() => {
-                  setActiveTab('fiche');
-                  if (analysisResult || chat.length > 1 || image) {
-                    exportToFicheTechnique();
-                  } else {
-                    setCustomAlert({
-                      title: isAr ? 'تنبيه' : 'Attention',
-                      message: isAr ? 'يرجى رفع صورة موديل أو التحدث مع المستشار الذكي أولاً!' : 'Veuillez uploader un modèle ou consulter l\'IA d\'abord !',
-                      isError: true
-                    });
-                  }
-                }}
-                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200/60 text-indigo-700 rounded-xl font-black text-xs transition-all shadow-sm group"
-              >
-                <FileText className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                <span>{isAr ? 'إرسال للبطاقة التقنية' : 'Fiche Technique'}</span>
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    if (analysisResult) {
+                      const chatHistory = chat.map(c => c.text).join('\n');
+                      sendToDevis(chatHistory + '\n\n' + (analysisResult.rawAnalysis || JSON.stringify(analysisResult)));
+                    } else {
+                      setCustomAlert({
+                        title: isAr ? 'تنبيه' : 'Attention',
+                        message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                        isError: true
+                      });
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200/60 text-emerald-700 rounded-xl font-black text-xs transition-all shadow-sm group"
+                >
+                  <DollarSign className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                  <span>{isAr ? 'تسعير Devis PRO' : 'Devis PRO'}</span>
+                </button>
 
-              <button
-                onClick={() => {
-                  if (analysisResult || chat.length > 1 || image) {
-                    dispatchToAtelier();
-                  } else {
-                    setCustomAlert({
-                      title: isAr ? 'تنبيه' : 'Attention',
-                      message: isAr ? 'يرجى تحليل موديل أو استشارة الذكاء الاصطناعي أولاً!' : 'Veuillez analyser un modèle d\'abord !',
-                      isError: true
-                    });
-                  }
-                }}
-                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-amber-50 hover:bg-amber-100/80 border border-amber-200/60 text-amber-800 rounded-xl font-black text-xs transition-all shadow-sm group"
-              >
-                <Scissors className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                <span>{isAr ? 'إرسال للورشة Atelier' : 'Atelier Production'}</span>
-              </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('fiche');
+                    if (analysisResult || chat.length > 1 || image) {
+                      exportToFicheTechnique();
+                    } else {
+                      setCustomAlert({
+                        title: isAr ? 'تنبيه' : 'Attention',
+                        message: isAr ? 'يرجى رفع صورة موديل أو التحدث مع المستشار الذكي أولاً!' : 'Veuillez uploader un modèle ou consulter l\'IA d\'abord !',
+                        isError: true
+                      });
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200/60 text-indigo-700 rounded-xl font-black text-xs transition-all shadow-sm group"
+                >
+                  <FileText className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                  <span>{isAr ? 'إرسال للبطاقة التقنية' : 'Fiche Technique'}</span>
+                </button>
 
-              <button
-                onClick={() => {
-                  if (analysisResult) {
-                    const achData = {
-                      tissuSuggested: analysisResult.fabricSuggested || '',
-                      consumption: analysisResult.consumption || '',
-                      modelName: analysisResult.category || '',
-                      timestamp: Date.now()
-                    };
-                    localStorage.setItem('beya_achats_import', JSON.stringify(achData));
-                    window.open('/#/achats', '_blank');
-                  } else {
-                    setCustomAlert({
-                      title: isAr ? 'تنبيه' : 'Attention',
-                      message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
-                      isError: true
-                    });
-                  }
-                }}
-                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-purple-50 hover:bg-purple-100/80 border border-purple-200/60 text-purple-700 rounded-xl font-black text-xs transition-all shadow-sm group"
-              >
-                <Package className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                <span>{isAr ? 'المشتريات والأثواب' : 'Achats Tissus'}</span>
-              </button>
+                <button
+                  onClick={() => {
+                    if (analysisResult || chat.length > 1 || image) {
+                      dispatchToAtelier();
+                    } else {
+                      setCustomAlert({
+                        title: isAr ? 'تنبيه' : 'Attention',
+                        message: isAr ? 'يرجى تحليل موديل أو استشارة الذكاء الاصطناعي أولاً!' : 'Veuillez analyser un modèle d\'abord !',
+                        isError: true
+                      });
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 bg-amber-50 hover:bg-amber-100/80 border border-amber-200/60 text-amber-800 rounded-xl font-black text-xs transition-all shadow-sm group"
+                >
+                  <Scissors className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                  <span>{isAr ? 'إرسال للورشة Atelier' : 'Atelier Production'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (analysisResult) {
+                      const achData = {
+                        tissuSuggested: analysisResult.fabricSuggested || '',
+                        consumption: analysisResult.consumption || '',
+                        modelName: analysisResult.category || '',
+                        timestamp: Date.now()
+                      };
+                      localStorage.setItem('beya_achats_import', JSON.stringify(achData));
+                      window.open('/#/achats', '_blank');
+                    } else {
+                      setCustomAlert({
+                        title: isAr ? 'تنبيه' : 'Attention',
+                        message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                        isError: true
+                      });
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 bg-purple-50 hover:bg-purple-100/80 border border-purple-200/60 text-purple-700 rounded-xl font-black text-xs transition-all shadow-sm group"
+                >
+                  <Package className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                  <span>{isAr ? 'المشتريات والأثواب' : 'Achats Tissus'}</span>
+                </button>
+              </div>
             </div>
           </div>
+        )}
 
+        {/* RIGHT COLUMN: HUD Content (Full width when isBoxMaximized, or lg:col-span-7) */}
+        <div className={`${isBoxMaximized ? 'w-full flex-1 h-full' : 'lg:col-span-7'} ${activeTab !== 'photo' ? 'flex' : 'hidden lg:flex'} flex-col bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden min-h-[60vh] lg:min-h-0 lg:h-full transition-all duration-300 relative`}>
 
-        </div>
+          {/* Universal Header Strip across all tabs with Maximize/Restore Button */}
+          <div className={`flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-100 flex-shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+              <span className={`w-2.5 h-2.5 rounded-full ${isBoxMaximized ? 'bg-amber-500' : 'bg-indigo-600'} animate-pulse`}></span>
+              <span className="text-xs font-black text-slate-800">
+                {activeTab === 'gamme' ? (isAr ? 'لاغام ديال الخياطة وبوستات العمل' : 'La Gamme de Montage') :
+                 activeTab === 'fiche' ? (isAr ? 'البطاقة التقنية والتسعير' : 'Fiche Technique & Prix') :
+                 activeTab === 'mesures' ? (isAr ? 'جدول المقاسات والأبعاد' : 'Tableau des Mesures') :
+                 activeTab === 'chat' ? (isAr ? 'المستشار الذكي (Chat IA)' : 'Chat IA') :
+                 (isAr ? 'صورة الموديل' : 'Photo')}
+              </span>
+              {isBoxMaximized && (
+                <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-black rounded-full border border-amber-200">
+                  {isAr ? 'كامل الشاشة (Plein écran)' : 'Plein écran'}
+                </span>
+              )}
+            </div>
 
-        {/* RIGHT COLUMN: HUD Content (lg:col-span-7) */}
-        <div className={`lg:col-span-7 ${activeTab !== 'photo' ? 'flex' : 'hidden lg:flex'} flex-col bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden min-h-[60vh] lg:min-h-0 lg:h-full`}>
+            <button
+              onClick={() => setIsBoxMaximized(!isBoxMaximized)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-xs border ${
+                isBoxMaximized
+                  ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-amber-500/20'
+                  : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 hover:text-indigo-600'
+              }`}
+              title={isBoxMaximized ? (isAr ? 'تصغير وتقسيم الشاشة' : 'Réduire') : (isAr ? 'تكبير لعرض الصفحة كاملة' : 'Agrandir en plein écran')}
+            >
+              {isBoxMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              <span className="text-[11px] font-black">
+                {isBoxMaximized ? (isAr ? 'تصغير الشاشة' : 'Réduire') : (isAr ? 'تكبير كامل الصفحة' : 'Plein écran')}
+              </span>
+            </button>
+          </div>
 
           {/* TAB 1: FICHE TECHNIQUE & PRIX (activeTab === 'fiche') */}
           {activeTab === 'fiche' && (
@@ -2917,6 +2965,22 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-center">
+                    <button
+                      type="button"
+                      onClick={() => setIsBoxMaximized(!isBoxMaximized)}
+                      title={isBoxMaximized ? (isAr ? 'تصغير وتقسيم الشاشة' : 'Restaurer la vue') : (isAr ? 'تكبير كامل الصفحة' : 'Plein écran')}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 border active:scale-95 shadow-xs ${
+                        isBoxMaximized
+                          ? 'bg-amber-600 hover:bg-amber-700 text-white border-amber-600 shadow-amber-600/20'
+                          : 'bg-white hover:bg-amber-50 text-slate-700 border-amber-300 hover:border-amber-400'
+                      }`}
+                    >
+                      {isBoxMaximized ? <Minimize2 className="w-4 h-4 text-white" /> : <Maximize2 className="w-4 h-4 text-amber-600" />}
+                      <span className="font-bold">
+                        {isBoxMaximized ? (isAr ? 'تصغير الشاشة' : 'Réduire') : (isAr ? 'تكبير كامل الصفحة' : 'Plein écran')}
+                      </span>
+                    </button>
+
                     <button
                       onClick={dispatchToAtelier}
                       className="px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-amber-600/20 flex items-center gap-2 active:scale-95"
