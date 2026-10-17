@@ -21,6 +21,43 @@ export interface PosteTravail {
   tempsPro?: number;
   tempsStandard?: number;
   tempsDebutant?: number;
+  workerId?: string; // ID of worker selected from RH (allWorkers)
+  workerName?: string; // Display name of worker or profile
+  tauxHoraire?: number; // Real hourly wage rate in DH/hour (hit la finition katkon taman dialha naqs 3la les machinistes)
+}
+
+export interface AtelierRolePreset {
+  id: string;
+  labelAr: string;
+  labelFr: string;
+  rate: number; // DH per hour
+  category: 'machiniste' | 'finition' | 'repassage' | 'coupe' | 'autre';
+}
+
+export const ATELIER_ROLE_PRESETS: AtelierRolePreset[] = [
+  { id: 'machiniste_pro', labelAr: '⚡ خياط ماكينة رئيسي (Machiniste Pro)', labelFr: 'Machiniste Pro', rate: 20.00, category: 'machiniste' },
+  { id: 'machiniste_std', labelAr: '🧵 خياط ماكينة عادي (Machiniste Std)', labelFr: 'Machiniste Standard', rate: 17.10, category: 'machiniste' },
+  { id: 'finition', labelAr: '✂️ عامل(ة) تشطيب وفينيسيون (Finition)', labelFr: 'Finition / Épluchage', rate: 14.50, category: 'finition' },
+  { id: 'repassage', labelAr: '💨 كّي وفحص الجودة (Repassage / Contrôle)', labelFr: 'Repassage & Contrôle', rate: 15.50, category: 'repassage' },
+  { id: 'coupe', labelAr: '📐 فصالة وباترون (Coupeur Matelas)', labelFr: 'Coupeur & Patronage', rate: 22.00, category: 'coupe' },
+  { id: 'aide_debutant', labelAr: '🌱 مساعد / مبتدئ (Aide Atelier)', labelFr: 'Aide / Débutant', rate: 12.50, category: 'autre' },
+];
+
+export function getDefaultHourlyRateForPoste(poste: { nomAr?: string; nomFr?: string; machine?: string; roleOuvrier?: string }, fallbackRate = 17.10): number {
+  const combined = `${poste.nomAr || ''} ${poste.nomFr || ''} ${poste.machine || ''} ${poste.roleOuvrier || ''}`.toLowerCase();
+  if (combined.includes('تشطيب') || combined.includes('تنظيف') || combined.includes('تغليف') || combined.includes('finition') || combined.includes('épluchage')) {
+    return 14.50; // La finition coûte moins cher que les machinistes
+  }
+  if (combined.includes('كي') || combined.includes('كّي') || combined.includes('بخار') || combined.includes('repass') || combined.includes('vapeur')) {
+    return 15.50;
+  }
+  if (combined.includes('فصال') || combined.includes('مطلوة') || combined.includes('coupe') || combined.includes('patron')) {
+    return 22.00;
+  }
+  if (combined.includes('رئيسي') || combined.includes('expert') || combined.includes('pro') || combined.includes('طرز') || combined.includes('broderie')) {
+    return 20.00;
+  }
+  return fallbackRate;
 }
 
 export interface TechnicalOperationBreakdown {

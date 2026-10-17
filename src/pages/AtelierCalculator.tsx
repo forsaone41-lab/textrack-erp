@@ -11,7 +11,7 @@ import {
 import { useNavigate, Navigate } from 'react-router-dom';
 import { loadData, Employe, FicheTechnique, Charge, safeStorage } from '../types';
 import { supabase } from '../supabase';
-import { PosteTravail, getGarmentTechnicalBreakdown, DEFAULT_FICHES_TECHNIQUES, parseGammeText, formatDurationHuman } from '../lib/atelierAi';
+import { PosteTravail, getGarmentTechnicalBreakdown, DEFAULT_FICHES_TECHNIQUES, parseGammeText, formatDurationHuman, ATELIER_ROLE_PRESETS, getDefaultHourlyRateForPoste, AtelierRolePreset } from '../lib/atelierAi';
 
 export interface SavedProduction {
   id: string;
@@ -101,16 +101,16 @@ const ATELIER_MACHINES_PRESETS = [
 ];
 
 const DEFAULT_WORKERS: Employe[] = [
-  { id: 'emp-1', nom: 'العلوي', prenom: 'أحمد', poste: 'خياط رئيسي (Confection)', type: 'atelier', telephone: '0600000001', email: '', actif: true },
-  { id: 'emp-2', nom: 'بنعلي', prenom: 'فاطمة', poste: 'فصالة وباترون (Coupe)', type: 'atelier', telephone: '0600000002', email: '', actif: true },
-  { id: 'emp-3', nom: 'التازي', prenom: 'ياسين', poste: 'ماكينة Overlock', type: 'atelier', telephone: '0600000003', email: '', actif: true },
-  { id: 'emp-4', nom: 'العزوزي', prenom: 'خديجة', poste: 'فني تشطيب (Finition)', type: 'atelier', telephone: '0600000004', email: '', actif: true },
-  { id: 'emp-5', nom: 'صابر', prenom: 'رشيد', poste: 'مراقب جودة (Contrôle)', type: 'atelier', telephone: '0600000005', email: '', actif: true },
-  { id: 'emp-6', nom: 'المنصوري', prenom: 'سناء', poste: 'خياطة (Confection)', type: 'atelier', telephone: '0600000006', email: '', actif: true },
-  { id: 'emp-7', nom: 'الهلالي', prenom: 'كريم', poste: 'مساعد إنتاج', type: 'atelier', telephone: '0600000007', email: '', actif: true },
-  { id: 'emp-8', nom: 'الشاوي', prenom: 'مريم', poste: 'كّي وتغليف (Repassage)', type: 'atelier', telephone: '0600000008', email: '', actif: true },
-  { id: 'emp-9', nom: 'المرابط', prenom: 'عمر', poste: 'خياط (Confection)', type: 'atelier', telephone: '0600000009', email: '', actif: true, salaireMensuel: 3900 },
-  { id: 'emp-10', nom: 'البرنوصي', prenom: 'هند', poste: 'خياطة (Confection)', type: 'atelier', telephone: '0600000010', email: '', actif: true, salaireMensuel: 3700 },
+  { id: 'emp-1', nom: 'العلوي', prenom: 'أحمد', poste: 'خياط رئيسي (Confection Pro)', type: 'atelier', telephone: '0600000001', email: '', actif: true, salaireMensuel: 4160 }, // 20.00 DH/h
+  { id: 'emp-2', nom: 'بنعلي', prenom: 'فاطمة', poste: 'فصالة وباترون (Coupe)', type: 'atelier', telephone: '0600000002', email: '', actif: true, salaireMensuel: 4576 }, // 22.00 DH/h
+  { id: 'emp-3', nom: 'التازي', prenom: 'ياسين', poste: 'ماكينة Overlock', type: 'atelier', telephone: '0600000003', email: '', actif: true, salaireMensuel: 3744 }, // 18.00 DH/h
+  { id: 'emp-4', nom: 'العزوزي', prenom: 'خديجة', poste: 'فني تشطيب (Finition)', type: 'atelier', telephone: '0600000004', email: '', actif: true, salaireMensuel: 3016 }, // 14.50 DH/h (Finition naqsa 3la les machinistes)
+  { id: 'emp-5', nom: 'صابر', prenom: 'رشيد', poste: 'مراقب جودة (Contrôle)', type: 'atelier', telephone: '0600000005', email: '', actif: true, salaireMensuel: 3556.80 }, // 17.10 DH/h (SMIG)
+  { id: 'emp-6', nom: 'المنصوري', prenom: 'سناء', poste: 'خياطة (Confection Std)', type: 'atelier', telephone: '0600000006', email: '', actif: true, salaireMensuel: 3556.80 }, // 17.10 DH/h
+  { id: 'emp-7', nom: 'الهلالي', prenom: 'كريم', poste: 'مساعد إنتاج وتشطيب', type: 'atelier', telephone: '0600000007', email: '', actif: true, salaireMensuel: 2912 }, // 14.00 DH/h
+  { id: 'emp-8', nom: 'الشاوي', prenom: 'مريم', poste: 'كّي وتغليف (Repassage)', type: 'atelier', telephone: '0600000008', email: '', actif: true, salaireMensuel: 3224 }, // 15.50 DH/h
+  { id: 'emp-9', nom: 'المرابط', prenom: 'عمر', poste: 'خياط (Confection Pro)', type: 'atelier', telephone: '0600000009', email: '', actif: true, salaireMensuel: 3900 }, // 18.75 DH/h
+  { id: 'emp-10', nom: 'البرنوصي', prenom: 'هند', poste: 'خياطة (Confection)', type: 'atelier', telephone: '0600000010', email: '', actif: true, salaireMensuel: 3700 }, // 17.79 DH/h
   { id: 'emp-11', nom: 'الريوس', prenom: 'فاطمة الزهراء', poste: 'Responsable RH', type: 'atelier', telephone: '0600000011', email: '', actif: true, salaireMensuel: 6500 },
   { id: 'emp-12', nom: 'أبو الفاتح', prenom: 'محمد', poste: 'Modéliste', type: 'atelier', telephone: '0600000012', email: '', actif: true, salaireMensuel: 7000 }
 ];
@@ -548,7 +548,21 @@ export default function AtelierCalculator({
   const activeGammeMinutes = Math.max(0.01, Number(rawGammeMinutes.toFixed(2)));
   const activeGammeSeconds = Math.round(rawGammeMinutes * 60);
   const activePostesCount = activePostesList.length;
-  const exactCostPerPiece = (quantity > 0 ? (materials / quantity) : 0) + unitLaborCostMinute;
+  const activeGammeLaborCostPerPiece = activePostesList.reduce((acc, p) => {
+    const pRate = typeof p.tauxHoraire === 'number' && p.tauxHoraire > 0
+      ? p.tauxHoraire
+      : (p.workerId ? (() => {
+          const found = allWorkers.find(w => w.id === p.workerId);
+          if (found) {
+            return found.salaireMensuel && found.salaireMensuel > 0
+              ? Number((found.salaireMensuel / 208).toFixed(2))
+              : getDefaultHourlyRateForPoste({ nomAr: found.poste, roleOuvrier: found.poste }, rate);
+          }
+          return getDefaultHourlyRateForPoste(p, rate);
+        })() : getDefaultHourlyRateForPoste(p, rate));
+    return acc + ((Number(p.tempsMin) || 0) / 60) * pRate;
+  }, 0);
+  const exactCostPerPiece = (quantity > 0 ? (materials / quantity) : 0) + activeGammeLaborCostPerPiece;
 
   // Gamme Copy & Paste Actions ("DIR LIA HNA LA BGHIT N COPE ILA COULE")
   const handleCopyEntireGamme = async () => {
@@ -3935,6 +3949,42 @@ export default function AtelierCalculator({
         const activeTotalMin = activePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
         const selectedPresetObj = ATELIER_MACHINES_PRESETS.find(m => m.machine === selectedQuickMachine) || ATELIER_MACHINES_PRESETS[0];
 
+        const getPosteEffectiveRate = (p: PosteTravail): number => {
+          if (typeof p.tauxHoraire === 'number' && p.tauxHoraire > 0) {
+            return p.tauxHoraire;
+          }
+          if (p.workerId) {
+            if (p.workerId.startsWith('rh:')) {
+              const rhId = p.workerId.replace('rh:', '');
+              const found = allWorkers.find(w => w.id === rhId);
+              if (found) {
+                return found.salaireMensuel && found.salaireMensuel > 0
+                  ? Number((found.salaireMensuel / 208).toFixed(2))
+                  : getDefaultHourlyRateForPoste({ nomAr: found.poste, roleOuvrier: found.poste }, rate);
+              }
+            } else if (p.workerId.startsWith('role:')) {
+              const roleId = p.workerId.replace('role:', '');
+              const preset = ATELIER_ROLE_PRESETS.find(r => r.id === roleId);
+              if (preset) return preset.rate;
+            } else {
+              const found = allWorkers.find(w => w.id === p.workerId);
+              if (found) {
+                return found.salaireMensuel && found.salaireMensuel > 0
+                  ? Number((found.salaireMensuel / 208).toFixed(2))
+                  : getDefaultHourlyRateForPoste({ nomAr: found.poste, roleOuvrier: found.poste }, rate);
+              }
+            }
+          }
+          return getDefaultHourlyRateForPoste(p, rate);
+        };
+
+        const activeTotalLaborCost = activePostes.reduce((acc, p) => {
+          const pRate = getPosteEffectiveRate(p);
+          return acc + ((Number(p.tempsMin) || 0) / 60) * pRate;
+        }, 0);
+        const activeExactPieceCost = (qty > 0 ? (materials / qty) : 0) + activeTotalLaborCost;
+        const activeWeightedHourlyRate = activeTotalMin > 0 ? (activeTotalLaborCost / (activeTotalMin / 60)) : rate;
+
         const applyCadenceToPostes = (level: 'pro' | 'standard' | 'debutant') => {
           setCadenceLevel(level);
           const current = customPostes !== null ? customPostes : [...breakdown.postesTravail];
@@ -3966,6 +4016,12 @@ export default function AtelierCalculator({
           let chosenTime = basePro;
           if (cadenceLevel === 'standard') chosenTime = baseStd;
           else if (cadenceLevel === 'debutant') chosenTime = baseDeb;
+          const defaultRate = getDefaultHourlyRateForPoste({
+            machine: machineName,
+            roleOuvrier: preset ? preset.role : undefined,
+            nomAr: preset ? preset.defaultNomAr : undefined,
+            nomFr: preset ? preset.defaultNomFr : undefined
+          }, rate);
           const next = [
             ...current,
             {
@@ -3976,7 +4032,8 @@ export default function AtelierCalculator({
               tempsPro: basePro,
               tempsStandard: baseStd,
               tempsDebutant: baseDeb,
-              roleOuvrier: preset ? preset.role : 'خياط متخصص'
+              roleOuvrier: preset ? preset.role : 'خياط متخصص',
+              tauxHoraire: defaultRate
             }
           ];
           setCustomPostes(next);
@@ -4037,9 +4094,11 @@ export default function AtelierCalculator({
                     <span className="text-[11px] text-amber-300 font-bold">
                       {activePostes.length} {isAr ? 'بوستات' : 'Postes'} | {fmtNum(activeTotalMin, 2)} {isAr ? 'دقيقة' : 'min'} ({Math.round(activeTotalMin * 60)} {isAr ? 'ثانية/بياسة' : 'sec/pc'})
                     </span>
-                    <span className="text-slate-600 hidden sm:inline">•</span>
                     <span className="text-[11px] text-emerald-400 font-black">
-                      {isAr ? 'التكلفة:' : 'Coût:'} {((materials / qty) + ((activeTotalMin / 60) * rate)).toFixed(2)} DH / {isAr ? 'بياسة' : 'pièce'}
+                      {isAr ? 'التكلفة الإجمالية:' : 'Coût Total:'} {activeExactPieceCost.toFixed(2)} DH / {isAr ? 'بياسة' : 'pièce'}
+                    </span>
+                    <span className="text-[10px] text-teal-300 font-bold hidden sm:inline">
+                      ({isAr ? 'يد عاملة:' : 'MO:'} {activeTotalLaborCost.toFixed(2)} DH • ~{activeWeightedHourlyRate.toFixed(1)} DH/س)
                     </span>
                   </div>
                 </div>
@@ -4297,14 +4356,23 @@ export default function AtelierCalculator({
                           </div>
                         </div>
                       </th>
-                      <th className="p-2 sm:p-2.5 text-start font-black border-b border-white/10 w-56 sm:w-64">{isAr ? 'الآلة (اختيار سريع أو كتابة)' : 'Machine'}</th>
-                      <th className="p-2 sm:p-2.5 text-center font-black border-b border-white/10 w-52 sm:w-60">
+                      <th className="p-2 sm:p-2.5 text-start font-black border-b border-white/10 w-56 sm:w-64">
+                        <div className="flex items-center gap-1.5 text-amber-300">
+                          <Users className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{isAr ? '👤 عامل الأتوليي (RH & الأجرة)' : '👤 Ouvrier & Taux RH'}</span>
+                        </div>
+                        <div className="text-[9.5px] font-bold text-slate-400">
+                          {isAr ? '(فينيسيون، خياط، فصالة...)' : '(Finition, Machiniste, Coupe...)'}
+                        </div>
+                      </th>
+                      <th className="p-2 sm:p-2.5 text-start font-black border-b border-white/10 w-48 sm:w-56">{isAr ? 'الآلة (اختيار سريع أو كتابة)' : 'Machine'}</th>
+                      <th className="p-2 sm:p-2.5 text-center font-black border-b border-white/10 w-44 sm:w-52">
                         <div className="text-amber-300">{isAr ? '⏱️ وقت العملية فـ البياسة' : '⏱️ Temps / Pièce'}</div>
                         <div className="text-[9.5px] font-bold text-slate-400">
                           {isAr ? '(دقائق وثواني — تحويل أوتوماتيك)' : '(Minutes & Secondes — Synchro Auto)'}
                         </div>
                       </th>
-                      <th className="p-1.5 text-center font-black border-b border-white/10 w-32 sm:w-36">
+                      <th className="p-1.5 text-center font-black border-b border-white/10 w-28 sm:w-32">
                         <div className="flex flex-col items-center gap-0.5">
                           <span className="text-[10px] text-slate-300">{isAr ? 'مضاعفة / حذف' : 'Actions'}</span>
                           <div className="flex items-center gap-1">
@@ -4334,7 +4402,7 @@ export default function AtelierCalculator({
                   <tbody className="divide-y divide-white/5">
                     {activePostes.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="p-6 text-center">
+                        <td colSpan={6} className="p-6 text-center">
                           <div className="max-w-md mx-auto space-y-2.5">
                             <div className="text-amber-400 font-black text-sm">
                               {isAr ? '✨ القائمة فارغة تماماً! يمكنك الآن إضافة بوستاتك من الصفر' : '✨ La liste est vide ! Ajoutez vos postes de zéro'}
@@ -4446,6 +4514,110 @@ export default function AtelierCalculator({
                                     ✂️ {isAr ? 'فصالة بالمطلوة' : 'Coupe Matelas'}
                                   </span>
                                 )}
+                              </div>
+                            </td>
+                            <td className="p-1.5 border-b border-white/5">
+                              <div className="flex flex-col gap-1">
+                                {/* Dropdown selecting from RH Workers or Role Presets */}
+                                <select
+                                  value={poste.workerId ? (poste.workerId.startsWith('rh:') || poste.workerId.startsWith('role:') ? poste.workerId : `rh:${poste.workerId}`) : ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    const current = customPostes !== null ? customPostes : [...breakdown.postesTravail];
+                                    let updatedWorkerId: string | undefined = undefined;
+                                    let updatedWorkerName: string | undefined = undefined;
+                                    let updatedRate: number | undefined = undefined;
+
+                                    if (val.startsWith('rh:')) {
+                                      const rhId = val.replace('rh:', '');
+                                      const foundWorker = allWorkers.find(w => w.id === rhId);
+                                      if (foundWorker) {
+                                        updatedWorkerId = `rh:${foundWorker.id}`;
+                                        updatedWorkerName = `${foundWorker.prenom} ${foundWorker.nom}`;
+                                        updatedRate = foundWorker.salaireMensuel && foundWorker.salaireMensuel > 0
+                                          ? Number((foundWorker.salaireMensuel / 208).toFixed(2))
+                                          : getDefaultHourlyRateForPoste({ nomAr: foundWorker.poste, roleOuvrier: foundWorker.poste }, rate);
+                                      }
+                                    } else if (val.startsWith('role:')) {
+                                      const roleId = val.replace('role:', '');
+                                      const foundPreset = ATELIER_ROLE_PRESETS.find(r => r.id === roleId);
+                                      if (foundPreset) {
+                                        updatedWorkerId = `role:${foundPreset.id}`;
+                                        updatedWorkerName = isAr ? foundPreset.labelAr : foundPreset.labelFr;
+                                        updatedRate = foundPreset.rate;
+                                      }
+                                    } else {
+                                      // Default auto-detect
+                                      updatedWorkerId = undefined;
+                                      updatedWorkerName = undefined;
+                                      updatedRate = getDefaultHourlyRateForPoste(poste, rate);
+                                    }
+
+                                    setCustomPostes(current.map((p, i) => i === idx ? {
+                                      ...p,
+                                      workerId: updatedWorkerId,
+                                      workerName: updatedWorkerName,
+                                      tauxHoraire: updatedRate
+                                    } : p));
+                                  }}
+                                  className="w-full bg-slate-800/80 hover:bg-slate-800 focus:bg-slate-800 text-amber-200 font-bold outline-none px-2 py-1.5 rounded-xl border border-slate-700/80 focus:border-amber-500/50 transition-all text-xs cursor-pointer truncate"
+                                >
+                                  <option value="">
+                                    {isAr ? '🤖 تحديد تلقائي حسب العملية' : '🤖 Détection auto'} ({getPosteEffectiveRate(poste).toFixed(2)} DH/h)
+                                  </option>
+
+                                  {/* Optgroup 1: Actual RH Workshop Employees */}
+                                  <optgroup label={isAr ? '👥 عمال الأتوليي من قسم RH' : '👥 Ouvriers Atelier RH'}>
+                                    {allWorkers.filter(w => w.actif !== false).map((w) => {
+                                      const wRate = w.salaireMensuel && w.salaireMensuel > 0
+                                        ? Number((w.salaireMensuel / 208).toFixed(2))
+                                        : getDefaultHourlyRateForPoste({ nomAr: w.poste, roleOuvrier: w.poste }, rate);
+                                      return (
+                                        <option key={w.id} value={`rh:${w.id}`}>
+                                          👤 {w.prenom} {w.nom} ({w.poste}) — {wRate.toFixed(2)} DH/h
+                                        </option>
+                                      );
+                                    })}
+                                  </optgroup>
+
+                                  {/* Optgroup 2: Standard Trade Profiles */}
+                                  <optgroup label={isAr ? '🏷️ مهن وتخصصات قياسية' : '🏷️ Profils Métiers'}>
+                                    {ATELIER_ROLE_PRESETS.map((rp) => (
+                                      <option key={rp.id} value={`role:${rp.id}`}>
+                                        {isAr ? rp.labelAr : rp.labelFr} — {rp.rate.toFixed(2)} DH/h
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                </select>
+
+                                {/* Editable Hourly Rate & Live Step Piece Cost */}
+                                <div className="flex items-center justify-between gap-1 px-0.5 text-[10px]">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-slate-400 font-bold">{isAr ? 'الساعة:' : 'Taux:'}</span>
+                                    <div className="relative flex items-center">
+                                      <input
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        value={getPosteEffectiveRate(poste)}
+                                        onChange={(e) => {
+                                          const newRate = Math.max(0, Number(e.target.value) || 0);
+                                          const current = customPostes !== null ? customPostes : [...breakdown.postesTravail];
+                                          setCustomPostes(current.map((p, i) => i === idx ? { ...p, tauxHoraire: newRate } : p));
+                                        }}
+                                        className="w-16 bg-slate-950/80 text-amber-300 font-mono font-black text-center px-1 py-0.5 rounded-lg border border-slate-700 focus:border-amber-400 outline-none text-[10.5px]"
+                                        title={isAr ? 'أجر الساعة لهذا العامل (DH/h)' : 'Taux horaire de l\'ouvrier'}
+                                      />
+                                      <span className="text-[9px] text-amber-400 font-bold ms-1">DH/س</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Step Cost for 1 piece */}
+                                  <div className="flex items-center gap-1 font-mono font-bold bg-slate-950/60 px-1.5 py-0.5 rounded-lg border border-emerald-500/20 text-emerald-300 text-[10px]" title={isAr ? 'تكلفة يد العامل في هذه المرحلة للبياسة الواحدة' : 'Coût main d\'oeuvre de cette étape'}>
+                                    <span>{((minVal / 60) * getPosteEffectiveRate(poste)).toFixed(2)}</span>
+                                    <span className="text-[9px] text-emerald-400 font-bold">DH/pc</span>
+                                  </div>
+                                </div>
                               </div>
                             </td>
                             <td className="p-1.5 border-b border-white/5">
@@ -4588,8 +4760,11 @@ export default function AtelierCalculator({
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] text-slate-400">{isAr ? '🧵 التكلفة الدقيقة للبياسة:' : 'Coût de revient :'}</span>
                   <strong className="text-emerald-400 font-black text-xs sm:text-sm">
-                    {((materials / qty) + ((activeTotalMin / 60) * rate)).toFixed(2)} DH / {isAr ? 'بياسة' : 'pièce'}
+                    {activeExactPieceCost.toFixed(2)} DH / {isAr ? 'بياسة' : 'pièce'}
                   </strong>
+                  <span className="text-[10px] text-teal-300 font-bold hidden sm:inline">
+                    ({isAr ? 'ثوب:' : 'Tissu:'} {(qty > 0 ? (materials / qty) : 0).toFixed(2)} + {isAr ? 'يد عاملة:' : 'MO:'} {activeTotalLaborCost.toFixed(2)} DH)
+                  </span>
                 </div>
                 <span className="text-slate-600 hidden sm:inline">|</span>
                 <div className="flex items-center gap-1.5">
