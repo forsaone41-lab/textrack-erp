@@ -371,6 +371,22 @@ export default function AtelierCalculator({
     }
   }, []);
 
+  // Lock outer page scroll when Gamme Modal is open, so ONLY the table of postes scrolls ("tabmu ibqa fix ila kan scroul ytscroula ghir hwa Y3ni ghir les post liytscrolaw")
+  useEffect(() => {
+    if (showGammeModal) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        mainEl.scrollTo({ top: 0, behavior: 'instant' });
+        const origOverflow = mainEl.style.overflowY;
+        mainEl.style.overflowY = 'hidden';
+        return () => {
+          mainEl.style.overflowY = origOverflow;
+        };
+      }
+    }
+  }, [showGammeModal]);
+
   useEffect(() => {
     loadData<Employe>('employes').then((data: Employe[]) => {
       const activeAtelier = (data || []).filter(isAtelierEmployee);
@@ -881,7 +897,11 @@ export default function AtelierCalculator({
 
   return (
     <div 
-      className={`atelier-calc-root w-full print:p-0 print:m-0 print:bg-white print:gap-0 ${isModal ? 'p-3' : 'p-3 md:px-5 md:py-3.5 flex flex-col gap-3 bg-slate-50/50'}`} 
+      className={`atelier-calc-root w-full print:p-0 print:m-0 print:bg-white print:gap-0 ${
+        showGammeModal 
+          ? 'p-0 m-0' 
+          : isModal ? 'p-3' : 'p-3 md:px-5 md:py-3.5 flex flex-col gap-3 bg-slate-50/50'
+      }`} 
       dir={isAr ? 'rtl' : 'ltr'}
     >
       {/* Hidden File Input for Custom Model Photo Upload */}
@@ -943,7 +963,8 @@ export default function AtelierCalculator({
         }
       `}</style>
 
-      {/* COMPACT TOP HEADER WITH MODEL PHOTO NEXT TO TITLE & SMART ACTIONS */}
+      {/* COMPACT TOP HEADER WITH MODEL PHOTO NEXT TO TITLE & SMART ACTIONS (Hidden when Gamme is open to give 100% full view) */}
+      {!showGammeModal && (
       <div className="no-print flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-2xs gap-2.5">
         <div className="flex items-center gap-3 min-w-0">
           {/* Square Model Photo Thumbnail right next to the Header Title */}
@@ -1123,6 +1144,7 @@ export default function AtelierCalculator({
           )}
         </div>
       </div>
+      )}
 
       {/* MAIN NO-SCROLL 2-COLUMN HUD (Hidden when Full-Page Gamme is open) */}
       {!showGammeModal && (
@@ -4000,37 +4022,37 @@ export default function AtelierCalculator({
         };
 
         return (
-          <div className="no-print w-full bg-slate-900 text-white rounded-3xl border border-amber-400/60 shadow-2xl shadow-amber-500/10 overflow-hidden flex flex-col animate-fadeIn">
-            {/* Full-Page Header */}
-            <div className="p-5 bg-slate-800/90 border-b border-slate-700 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md shadow-amber-500/20 shrink-0">
-                  <Wrench className="w-5 h-5" />
+          <div className="no-print w-full bg-slate-900 text-white rounded-2xl md:rounded-3xl border border-amber-400/60 shadow-2xl shadow-amber-500/10 overflow-hidden flex flex-col h-[calc(100vh-4.5rem)] md:h-[calc(100vh-5rem)] lg:h-[calc(100vh-6.5rem)] max-h-[calc(100vh-4.5rem)] md:max-h-[calc(100vh-5rem)] lg:max-h-[calc(100vh-6.5rem)] animate-fadeIn">
+            {/* Full-Page Header - Pinned at Top (shrink-0) */}
+            <div className="px-3.5 py-2 sm:px-5 sm:py-2.5 bg-slate-800/95 border-b border-slate-700/80 flex flex-wrap items-center justify-between gap-2 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md shadow-amber-500/20 shrink-0">
+                  <Wrench className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-black text-white">
-                    {isAr ? '🏭 بوستات العمل الفنية ومراحل الخياطة (صفحة التعديل المباشر)' : '🏭 Gamme de Montage & Postes de Travail (Page complète)'}
+                  <h2 className="text-xs sm:text-sm md:text-base font-black text-white leading-tight">
+                    {isAr ? '🏭 بوستات العمل ومراحل الخياطة (صفحة التعديل المباشر)' : '🏭 Gamme de Montage & Postes de Travail'}
                   </h2>
                   <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                    <span className="text-xs text-amber-300 font-bold">
-                      {activePostes.length} {isAr ? 'بوستات عمل' : 'Postes'} | {fmtNum(activeTotalMin, 2)} {isAr ? 'دقيقة' : 'min'} ({Math.round(activeTotalMin * 60)} {isAr ? 'ثانية / بياسة' : 'sec / pièce'})
+                    <span className="text-[11px] text-amber-300 font-bold">
+                      {activePostes.length} {isAr ? 'بوستات' : 'Postes'} | {fmtNum(activeTotalMin, 2)} {isAr ? 'دقيقة' : 'min'} ({Math.round(activeTotalMin * 60)} {isAr ? 'ثانية/بياسة' : 'sec/pc'})
                     </span>
-                    <span className="text-slate-600">•</span>
-                    <span className="text-xs text-emerald-400 font-black">
-                      {isAr ? 'التكلفة الدقيقة:' : 'Coût exact:'} {((materials / qty) + ((activeTotalMin / 60) * rate)).toFixed(2)} DH / {isAr ? 'بياسة' : 'pièce'}
+                    <span className="text-slate-600 hidden sm:inline">•</span>
+                    <span className="text-[11px] text-emerald-400 font-black">
+                      {isAr ? 'التكلفة:' : 'Coût:'} {((materials / qty) + ((activeTotalMin / 60) * rate)).toFixed(2)} DH / {isAr ? 'بياسة' : 'pièce'}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={handleCopyEntireGamme}
                   title={isAr ? 'نسخ جميع مراحل لاغام إلى الحافظة (Copier)' : 'Copier toute la gamme'}
-                  className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 rounded-xl text-xs font-black border border-amber-500/40 flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                  className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 rounded-xl text-[11px] font-black border border-amber-500/40 flex items-center gap-1 transition-all shadow-sm active:scale-95"
                 >
-                  <Copy className="w-3.5 h-3.5" />
+                  <Copy className="w-3 h-3" />
                   <span>{isAr ? '📋 نسخ لاغام' : 'Copier Gamme'}</span>
                 </button>
 
@@ -4038,9 +4060,9 @@ export default function AtelierCalculator({
                   type="button"
                   onClick={handleOpenPasteModal}
                   title={isAr ? 'لصق مراحل لاغام من نص أو حافظة (Coller)' : 'Coller une gamme'}
-                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 rounded-xl text-xs font-black border border-emerald-500/40 flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                  className="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 rounded-xl text-[11px] font-black border border-emerald-500/40 flex items-center gap-1 transition-all shadow-sm active:scale-95"
                 >
-                  <ClipboardPaste className="w-3.5 h-3.5" />
+                  <ClipboardPaste className="w-3 h-3" />
                   <span>{isAr ? '📥 لصق لاغام' : 'Coller Gamme'}</span>
                 </button>
 
@@ -4048,61 +4070,61 @@ export default function AtelierCalculator({
                   type="button"
                   onClick={() => setWorkers(Math.max(1, activePostes.length))}
                   title={isAr ? 'ضبط عدد العمال تلقائياً على عدد البوستات' : 'Ajuster ouvriers = postes'}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black transition-all shadow-sm"
+                  className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[11px] font-black transition-all shadow-sm active:scale-95"
                 >
-                  🔄 {isAr ? `تعيين العمال = (${activePostes.length})` : `Ouvriers = ${activePostes.length}`}
+                  🔄 {isAr ? `تعيين العمال (${activePostes.length})` : `Ouvriers = ${activePostes.length}`}
                 </button>
 
                 {customPostes !== null && (
                   <button
                     type="button"
                     onClick={() => setCustomPostes(null)}
-                    className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white rounded-xl text-xs font-bold border border-rose-500/30 transition-all"
+                    className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white rounded-xl text-[11px] font-bold border border-rose-500/30 transition-all active:scale-95"
                   >
-                    🔄 {isAr ? 'إعادة الافتراضي' : 'Défaut'}
+                    🔄 {isAr ? 'الافتراضي' : 'Défaut'}
                   </button>
                 )}
 
                 <button
                   type="button"
                   onClick={() => setShowGammeModal(false)}
-                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-emerald-900/30"
+                  className="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-md shadow-emerald-900/30 active:scale-95"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="w-3.5 h-3.5" />
                   <span>{isAr ? 'حفظ والرجوع للحاسبة' : 'Enregistrer & Retour'}</span>
                 </button>
               </div>
             </div>
 
-            {/* Full-Page Body */}
-            <div className="p-5 space-y-4 flex-1">
-              {/* Top Section: Custom Model Name + Quick Machines Bar + Add Post Action */}
-              <div className="p-4 bg-slate-800/60 rounded-2xl border border-slate-700/80 space-y-3.5">
-                {/* Row 1: Model Name + Add Workstation + Clear */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 flex-1 min-w-[260px]">
-                    <span className="text-xs text-amber-400 font-black shrink-0 flex items-center gap-1">
+            {/* Gamme View Body - Strictly Constrained Flex Column */}
+            <div className="p-2.5 sm:p-3.5 space-y-2 flex-1 min-h-0 flex flex-col overflow-hidden">
+              {/* Top Controls Card: Custom Model Name + Cadence + Quick Machines Bar (Harmonious & Light on the Eyes) */}
+              <div className="shrink-0 p-2 sm:p-2.5 bg-slate-800/60 rounded-2xl border border-slate-700/80 space-y-2">
+                {/* Row 1: Model Name + Add Workstation + Clear All */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+                    <span className="text-[11px] text-amber-400 font-black shrink-0 flex items-center gap-1">
                       <span>🏷️</span>
-                      {isAr ? 'اسم الموديل المخصص:' : 'Modèle personnalisé :'}
+                      {isAr ? 'اسم الموديل:' : 'Modèle :'}
                     </span>
                     <input
                       type="text"
                       value={itemName}
                       onChange={(e) => setItemName(e.target.value)}
-                      placeholder={isAr ? 'مثال: قفطان ملكي، جلابة مغربية... (اكتب اسم موديلك)' : 'Ex: Caftan Royal, Robe Soie, Chemise...'}
-                      className="flex-1 bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 font-bold outline-none transition-all"
+                      placeholder={isAr ? 'مثال: قفطان، جلابة، فستان... (اكتب اسم موديلك)' : 'Ex: Caftan Royal, Robe Soie, Chemise...'}
+                      className="flex-1 bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-xl px-2.5 py-1 text-xs text-white placeholder-slate-500 font-bold outline-none transition-all"
                     />
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
                       onClick={() => addPosteWithMachine(selectedQuickMachine)}
-                      className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-amber-900/40 active:scale-95"
+                      className="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md shadow-amber-900/40 active:scale-95"
                     >
-                      <Plus className="w-4 h-4" />
-                      <span>{isAr ? '+ إضافة مرحلة عمل' : '+ Ajouter Poste'}</span>
-                      <span className="px-2 py-0.5 bg-black/25 rounded-lg text-[10px] text-amber-100 font-bold">
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{isAr ? '+ إضافة بوست' : '+ Ajouter Poste'}</span>
+                      <span className="px-1.5 py-0.2 bg-black/30 rounded text-[10px] text-amber-100 font-bold">
                         {isAr ? selectedPresetObj.labelAr : selectedQuickMachine}
                       </span>
                     </button>
@@ -4111,33 +4133,33 @@ export default function AtelierCalculator({
                       type="button"
                       onClick={() => setCustomPostes([])}
                       title={isAr ? 'تفريغ جميع المراحل للبدء من الصفر' : 'Vider tous les postes pour commencer de zéro'}
-                      className="px-3 py-2 bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95"
+                      className="px-2.5 py-1 bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 rounded-xl text-xs font-black transition-all flex items-center gap-1 active:scale-95"
                     >
-                      <Trash2 className="w-4 h-4 text-rose-400" />
-                      <span>{isAr ? 'تفريغ الكل' : 'Tout vider'}</span>
+                      <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                      <span>{isAr ? 'تفريغ' : 'Vider'}</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Cadence Selector Banner (حرافيين 120% / ستاندار 85% / مبتدئين 60%) */}
-                <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-900/90 rounded-2xl border border-amber-500/20 shadow-inner">
+                {/* Row 2: Cadence Selector (حرافيين 120% / ستاندار 85% / مبتدئين 60%) */}
+                <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 py-1 bg-slate-900/90 rounded-xl border border-amber-500/20 shadow-inner">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-amber-300 flex items-center gap-1.5">
+                    <span className="text-[11px] font-black text-amber-300 flex items-center gap-1">
                       <span>⚡</span>
-                      <span>{isAr ? 'سرعة وريتم العمال (Cadence de Production):' : 'Cadence de Production :'}</span>
+                      <span>{isAr ? 'سرعة الخياطة (Cadence):' : 'Cadence de Production :'}</span>
                     </span>
-                    <span className="text-[10px] text-slate-400 font-bold hidden sm:inline">
-                      {isAr ? '(كيحدد التوقيت واش د الخياطة الحرافيين، العاديين، أو المبتدئين)' : '(Ajuste les temps selon le niveau d\'expérience)'}
+                    <span className="text-[9.5px] text-slate-400 font-bold hidden md:inline">
+                      {isAr ? '(ضبط التوقيت حسب مستوى خياطة الأتوليي)' : '(Ajuste les temps selon le niveau d\'expérience)'}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-white/10">
                     <button
                       type="button"
                       onClick={() => applyCadenceToPostes('pro')}
-                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 ${
+                      className={`px-2.5 py-0.5 rounded-md font-black text-[11px] transition-all flex items-center gap-1 ${
                         cadenceLevel === 'pro'
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm ring-1 ring-amber-400'
                           : 'text-slate-400 hover:text-white hover:bg-white/5'
                       }`}
                     >
@@ -4147,9 +4169,9 @@ export default function AtelierCalculator({
                     <button
                       type="button"
                       onClick={() => applyCadenceToPostes('standard')}
-                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 ${
+                      className={`px-2.5 py-0.5 rounded-md font-black text-[11px] transition-all flex items-center gap-1 ${
                         cadenceLevel === 'standard'
-                          ? 'bg-indigo-600 text-white shadow-md ring-1 ring-indigo-400'
+                          ? 'bg-indigo-600 text-white shadow-sm ring-1 ring-indigo-400'
                           : 'text-slate-400 hover:text-white hover:bg-white/5'
                       }`}
                     >
@@ -4159,51 +4181,51 @@ export default function AtelierCalculator({
                     <button
                       type="button"
                       onClick={() => applyCadenceToPostes('debutant')}
-                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 ${
+                      className={`px-2.5 py-0.5 rounded-md font-black text-[11px] transition-all flex items-center gap-1 ${
                         cadenceLevel === 'debutant'
-                          ? 'bg-rose-600 text-white shadow-md ring-1 ring-rose-400'
+                          ? 'bg-rose-600 text-white shadow-sm ring-1 ring-rose-400'
                           : 'text-slate-400 hover:text-white hover:bg-white/5'
                       }`}
                     >
                       <span>🐢</span>
-                      <span>{isAr ? 'مبتدئين / ثقال (60%)' : 'Débutants (60%)'}</span>
+                      <span>{isAr ? 'مبتدئين (60%)' : 'Débutants (60%)'}</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Row 2: Quick Machines Bar at the Top ("les machin ikon mktoubin fchi blasa lfouq bach fach nbghi nzid ay pst lkhtar lamachin lighadi tkhdm lih bzrba") */}
-                <div className="pt-3 border-t border-slate-700/70">
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
-                    <span className="text-xs font-black text-amber-300 flex items-center gap-1.5">
+                {/* Row 3: Quick Machines Bar (12 Machines Grid - Compact, Crisp, Light on Eyes) */}
+                <div className="pt-1.5 border-t border-slate-700/60">
+                  <div className="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+                    <span className="text-[11px] font-black text-amber-300 flex items-center gap-1">
                       <span>⚡</span>
                       {isAr
-                        ? 'الآلات المتوفرة (اضغط على الآلة لاختيارها، أو اضغط على [+] لإضافة بوست بها فوراً):'
-                        : 'Machines disponibles (Cliquez pour choisir la machine, ou sur [+] pour ajouter un poste directement) :'}
+                        ? 'الآلات المتوفرة (اختر آلة أو اضغط [+] للإضافة مباشرة):'
+                        : 'Machines disponibles (Cliquez pour choisir ou [+] pour ajouter) :'}
                     </span>
-                    <span className="text-[11px] font-bold text-slate-400">
-                      {isAr ? 'الآلة المختارة حالياً:' : 'Machine sélectionnée :'}{' '}
+                    <span className="text-[10px] font-bold text-slate-400">
+                      {isAr ? 'المختارة:' : 'Choisie :'}{' '}
                       <strong className="text-amber-400">{selectedQuickMachine}</strong>
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
                     {ATELIER_MACHINES_PRESETS.map((m) => {
                       const isSelected = selectedQuickMachine === m.machine;
                       return (
                         <div
                           key={m.id}
                           onClick={() => setSelectedQuickMachine(m.machine)}
-                          className={`group flex items-center justify-between gap-1.5 p-2 rounded-xl border cursor-pointer transition-all select-none ${
+                          className={`group flex items-center justify-between gap-1 p-1.5 px-2 rounded-xl border cursor-pointer transition-all select-none ${
                             isSelected
-                              ? 'bg-amber-500/20 border-amber-400 text-white shadow-md shadow-amber-500/10 ring-1 ring-amber-400/50'
-                              : 'bg-slate-900/80 border-slate-700/80 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
+                              ? 'bg-amber-500/25 border-amber-400 text-white shadow-sm ring-1 ring-amber-400/50'
+                              : 'bg-slate-900/80 border-slate-700/70 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
                           }`}
                         >
                           <div className="min-w-0 flex-1">
-                            <div className={`text-[11px] font-black truncate ${isSelected ? 'text-amber-300' : 'text-white'}`}>
+                            <div className={`text-[10.5px] font-black truncate leading-tight ${isSelected ? 'text-amber-300' : 'text-white'}`}>
                               {m.labelAr}
                             </div>
-                            <div className="text-[10px] font-bold text-slate-400 truncate">
+                            <div className="text-[9.5px] font-bold text-slate-400 truncate leading-tight">
                               {m.machine}
                             </div>
                           </div>
@@ -4215,14 +4237,14 @@ export default function AtelierCalculator({
                               setSelectedQuickMachine(m.machine);
                               addPosteWithMachine(m.machine);
                             }}
-                            title={isAr ? `إضافة بوست جديد مباشرة بآلة: ${m.machine}` : `Ajouter directement un poste avec: ${m.machine}`}
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 transition-all active:scale-90 ${
+                            title={isAr ? `إضافة بوست بآلة: ${m.machine}` : `Ajouter poste: ${m.machine}`}
+                            className={`w-5 h-5 rounded-md flex items-center justify-center font-black text-xs shrink-0 transition-all active:scale-90 ${
                               isSelected
-                                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm'
+                                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs'
                                 : 'bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700'
                             }`}
                           >
-                            <Plus className="w-3.5 h-3.5" />
+                            <Plus className="w-3 h-3" />
                           </button>
                         </div>
                       );
@@ -4238,19 +4260,19 @@ export default function AtelierCalculator({
                 ))}
               </datalist>
 
-              {/* Workstations Table (Full-Page, With Synchronized Minute & Second Inputs, Duplicate & Quick Machine Select) */}
-              <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/50">
+              {/* Workstations Table (INTERNAL SCROLL ONLY — "tabmu ibqa fix ila kan scroul ytscroula ghir hwa Y3ni ghir les post liytscrolaw") */}
+              <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/60 shadow-inner scrollbar-thin scrollbar-thumb-amber-500/30 scrollbar-track-slate-950/40">
                 <table className="w-full text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-slate-800 text-slate-300">
-                      <th className="p-3 text-center font-black border-b border-white/10 w-28">
+                  <thead className="sticky top-0 z-20 bg-slate-800/95 backdrop-blur-md border-b border-slate-700 shadow-md">
+                    <tr className="text-slate-300">
+                      <th className="p-2 sm:p-2.5 text-center font-black border-b border-white/10 w-24">
                         <div className="flex items-center justify-center gap-1">
                           <ArrowUpDown className="w-3.5 h-3.5 text-amber-400" />
                           <span>#</span>
                           <span className="text-[10px] text-amber-400 font-bold">({isAr ? 'ترتيب' : 'Ordre'})</span>
                         </div>
                       </th>
-                      <th className="p-3 text-start font-black border-b border-white/10">
+                      <th className="p-2 sm:p-2.5 text-start font-black border-b border-white/10">
                         <div className="flex items-center justify-between gap-2">
                           <span>{isAr ? 'المرحلة (وصف العملية)' : 'Étape (Opération)'}</span>
                           <div className="flex items-center gap-1.5 font-bold text-[10px]">
@@ -4275,22 +4297,22 @@ export default function AtelierCalculator({
                           </div>
                         </div>
                       </th>
-                      <th className="p-3 text-start font-black border-b border-white/10 w-64">{isAr ? 'الآلة (اختيار سريع أو كتابة)' : 'Machine'}</th>
-                      <th className="p-3 text-center font-black border-b border-white/10 w-60">
+                      <th className="p-2 sm:p-2.5 text-start font-black border-b border-white/10 w-56 sm:w-64">{isAr ? 'الآلة (اختيار سريع أو كتابة)' : 'Machine'}</th>
+                      <th className="p-2 sm:p-2.5 text-center font-black border-b border-white/10 w-52 sm:w-60">
                         <div className="text-amber-300">{isAr ? '⏱️ وقت العملية فـ البياسة' : '⏱️ Temps / Pièce'}</div>
-                        <div className="text-[10px] font-bold text-slate-400 mt-0.5">
-                          {isAr ? '(اكتب بالدقيقة أو بالثانية — كيتحولو أوتوماتيك)' : '(En Minutes ou Secondes — Synchro Auto)'}
+                        <div className="text-[9.5px] font-bold text-slate-400">
+                          {isAr ? '(دقائق وثواني — تحويل أوتوماتيك)' : '(Minutes & Secondes — Synchro Auto)'}
                         </div>
                       </th>
-                      <th className="p-2 text-center font-black border-b border-white/10 w-36">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-[11px] text-slate-300">{isAr ? 'مضاعفة / حذف' : 'Actions'}</span>
+                      <th className="p-1.5 text-center font-black border-b border-white/10 w-32 sm:w-36">
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-[10px] text-slate-300">{isAr ? 'مضاعفة / حذف' : 'Actions'}</span>
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
                               onClick={handleCopyEntireGamme}
                               title={isAr ? 'نسخ كامل لاغام (Copier)' : 'Copier Gamme'}
-                              className="px-1.5 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 rounded text-[9.5px] font-black flex items-center gap-0.5 transition-all active:scale-95"
+                              className="px-1.5 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 rounded text-[9px] font-black flex items-center gap-0.5 transition-all active:scale-95"
                             >
                               <Copy className="w-2.5 h-2.5" />
                               <span>{isAr ? 'نسخ' : 'Copie'}</span>
@@ -4299,7 +4321,7 @@ export default function AtelierCalculator({
                               type="button"
                               onClick={handleOpenPasteModal}
                               title={isAr ? 'لصق لاغام (Coller)' : 'Coller Gamme'}
-                              className="px-1.5 py-0.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 border border-emerald-500/30 rounded text-[9.5px] font-black flex items-center gap-0.5 transition-all active:scale-95"
+                              className="px-1.5 py-0.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 border border-emerald-500/30 rounded text-[9px] font-black flex items-center gap-0.5 transition-all active:scale-95"
                             >
                               <ClipboardPaste className="w-2.5 h-2.5" />
                               <span>{isAr ? 'لصق' : 'Colle'}</span>
@@ -4309,11 +4331,11 @@ export default function AtelierCalculator({
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-white/5">
                     {activePostes.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center">
-                          <div className="max-w-md mx-auto space-y-3">
+                        <td colSpan={5} className="p-6 text-center">
+                          <div className="max-w-md mx-auto space-y-2.5">
                             <div className="text-amber-400 font-black text-sm">
                               {isAr ? '✨ القائمة فارغة تماماً! يمكنك الآن إضافة بوستاتك من الصفر' : '✨ La liste est vide ! Ajoutez vos postes de zéro'}
                             </div>
@@ -4326,7 +4348,7 @@ export default function AtelierCalculator({
                               <button
                                 type="button"
                                 onClick={() => addPosteWithMachine(selectedQuickMachine)}
-                                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95"
+                                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95"
                               >
                                 <Plus className="w-4 h-4" />
                                 <span>{isAr ? `+ إضافة أول بوست (${selectedPresetObj.labelAr})` : `+ Ajouter 1er poste (${selectedQuickMachine})`}</span>
@@ -4334,7 +4356,7 @@ export default function AtelierCalculator({
                               <button
                                 type="button"
                                 onClick={() => setCustomPostes(null)}
-                                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs border border-slate-700 transition-all"
+                                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs border border-slate-700 transition-all"
                               >
                                 🔄 {isAr ? 'استرجاع الافتراضي' : 'Restaurer défaut'}
                               </button>
@@ -4361,8 +4383,8 @@ export default function AtelierCalculator({
                                 : 'odd:bg-white/[0.02] even:bg-transparent hover:bg-white/5'
                             }`}
                           >
-                            <td className="p-2 text-center font-black text-amber-400/80 border-b border-white/5 select-none">
-                              <div className="flex items-center justify-center gap-1.5">
+                            <td className="p-1.5 text-center font-black text-amber-400/80 border-b border-white/5 select-none">
+                              <div className="flex items-center justify-center gap-1">
                                 {/* Drag handle */}
                                 <div
                                   draggable={true}
@@ -4375,7 +4397,7 @@ export default function AtelierCalculator({
                                 </div>
 
                                 {/* Step number */}
-                                <span className="w-5 text-center font-black text-amber-400 text-xs">
+                                <span className="w-4 text-center font-black text-amber-400 text-xs">
                                   {idx + 1}
                                 </span>
 
@@ -4411,16 +4433,16 @@ export default function AtelierCalculator({
                                   const updated = current.map((p, i) => i === idx ? { ...p, [isAr ? 'nomAr' : 'nomFr']: e.target.value } : p);
                                   setCustomPostes(updated);
                                 }}
-                                className="w-full bg-slate-800/40 hover:bg-slate-800 focus:bg-slate-800 text-white font-bold outline-none px-3 py-2 rounded-xl border border-transparent focus:border-amber-500/50 transition-all"
+                                className="w-full bg-slate-800/40 hover:bg-slate-800 focus:bg-slate-800 text-white font-bold outline-none px-2.5 py-1.5 rounded-xl border border-transparent focus:border-amber-500/50 transition-all text-xs"
                               />
-                              <div className="flex flex-wrap items-center gap-2 px-1 mt-1 text-[10px]">
+                              <div className="flex flex-wrap items-center gap-1.5 px-0.5 mt-0.5 text-[9.5px]">
                                 <span className="text-amber-400 font-bold">⚡ {isAr ? 'حرافي' : 'Pro'}: {poste.tempsPro || minVal}د</span>
                                 <span className="text-slate-600">•</span>
                                 <span className="text-indigo-300 font-bold">⏱️ {isAr ? 'ستاندار' : 'Std'}: {poste.tempsStandard || Number((minVal * 1.35).toFixed(1))}د</span>
                                 <span className="text-slate-600">•</span>
                                 <span className="text-rose-400 font-bold">🐢 {isAr ? 'مبتدئ' : 'Déb'}: {poste.tempsDebutant || Number((minVal * 2).toFixed(1))}د</span>
                                 {(poste.nomAr?.includes('مطلوة') || poste.nomFr?.toLowerCase().includes('matelas')) && (
-                                  <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded text-[9px] font-black ms-auto">
+                                  <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1 py-0.2 rounded text-[8.5px] font-black ms-auto">
                                     ✂️ {isAr ? 'فصالة بالمطلوة' : 'Coupe Matelas'}
                                   </span>
                                 )}
@@ -4437,7 +4459,7 @@ export default function AtelierCalculator({
                                     const updated = current.map((p, i) => i === idx ? { ...p, machine: e.target.value } : p);
                                     setCustomPostes(updated);
                                   }}
-                                  className="flex-1 bg-slate-800/40 hover:bg-slate-800 focus:bg-slate-800 text-amber-200 font-bold outline-none px-2.5 py-2 rounded-xl border border-transparent focus:border-amber-500/50 transition-all"
+                                  className="flex-1 bg-slate-800/40 hover:bg-slate-800 focus:bg-slate-800 text-amber-200 font-bold outline-none px-2 py-1.5 rounded-xl border border-transparent focus:border-amber-500/50 transition-all text-xs"
                                 />
                                 <select
                                   value={ATELIER_MACHINES_PRESETS.some(m => m.machine === poste.machine) ? poste.machine : ''}
@@ -4448,7 +4470,7 @@ export default function AtelierCalculator({
                                     setCustomPostes(updated);
                                   }}
                                   title={isAr ? 'تغيير الآلة بسرعة' : 'Changer la machine rapidement'}
-                                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold px-2 py-2 rounded-xl border border-slate-700 outline-none cursor-pointer max-w-[115px] truncate"
+                                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10.5px] font-bold px-1.5 py-1.5 rounded-xl border border-slate-700 outline-none cursor-pointer max-w-[110px] truncate"
                                 >
                                   <option value="">{isAr ? '⚡ آلة...' : '⚡ Machine...'}</option>
                                   {ATELIER_MACHINES_PRESETS.map((m) => (
@@ -4461,7 +4483,7 @@ export default function AtelierCalculator({
                             </td>
                             <td className="p-1.5 border-b border-white/5">
                               {/* Synchronized Minute + Second Dual Inputs */}
-                              <div className="grid grid-cols-2 gap-1.5">
+                              <div className="grid grid-cols-2 gap-1">
                                 {/* Minute Input */}
                                 <div className="relative">
                                   <input
@@ -4481,10 +4503,10 @@ export default function AtelierCalculator({
                                       setCustomPostes(current.map((p, i) => i === idx ? { ...p, tempsMin: newMin } : p));
                                     }}
                                     title={isAr ? 'وقت العملية بالدقيقة (Min)' : 'Temps en minutes'}
-                                    className="w-full bg-slate-800/80 hover:bg-slate-800 focus:bg-slate-800 text-center font-black text-amber-300 text-xs outline-none ps-2 pe-9 py-2 rounded-xl border border-amber-500/30 focus:border-amber-400 transition-all"
+                                    className="w-full bg-slate-800/80 hover:bg-slate-800 focus:bg-slate-800 text-center font-black text-amber-300 text-xs outline-none ps-1.5 pe-7 py-1.5 rounded-xl border border-amber-500/30 focus:border-amber-400 transition-all"
                                   />
-                                  <span className="absolute inset-y-0 end-2 flex items-center text-[9px] font-black text-amber-400/80 pointer-events-none">
-                                    {isAr ? 'دقيقة' : 'min'}
+                                  <span className="absolute inset-y-0 end-1.5 flex items-center text-[9px] font-black text-amber-400/80 pointer-events-none">
+                                    {isAr ? 'د' : 'min'}
                                   </span>
                                 </div>
 
@@ -4507,17 +4529,17 @@ export default function AtelierCalculator({
                                       const convertedMin = Number((newSec / 60).toFixed(4));
                                       setCustomPostes(current.map((p, i) => i === idx ? { ...p, tempsMin: convertedMin } : p));
                                     }}
-                                    title={isAr ? 'وقت العملية بالثانية (Sec) — كيتحول أوتوماتيك للدقائق' : 'Temps en secondes'}
-                                    className="w-full bg-slate-800/80 hover:bg-slate-800 focus:bg-slate-800 text-center font-black text-emerald-300 text-xs outline-none ps-2 pe-9 py-2 rounded-xl border border-emerald-500/30 focus:border-emerald-400 transition-all"
+                                    title={isAr ? 'وقت العملية بالثانية (Sec)' : 'Temps en secondes'}
+                                    className="w-full bg-slate-800/80 hover:bg-slate-800 focus:bg-slate-800 text-center font-black text-emerald-300 text-xs outline-none ps-1.5 pe-7 py-1.5 rounded-xl border border-emerald-500/30 focus:border-emerald-400 transition-all"
                                   />
-                                  <span className="absolute inset-y-0 end-2 flex items-center text-[9px] font-black text-emerald-400/80 pointer-events-none">
-                                    {isAr ? 'ثانية' : 'sec'}
+                                  <span className="absolute inset-y-0 end-1.5 flex items-center text-[9px] font-black text-emerald-400/80 pointer-events-none">
+                                    {isAr ? 'ث' : 'sec'}
                                   </span>
                                 </div>
                               </div>
                             </td>
                             <td className="p-1.5 text-center border-b border-white/5">
-                              <div className="flex items-center justify-center gap-1.5">
+                              <div className="flex items-center justify-center gap-1">
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -4530,10 +4552,10 @@ export default function AtelierCalculator({
                                     ];
                                     setCustomPostes(updated);
                                   }}
-                                  title={isAr ? 'مضاعفة هذا البوست (Dupliquer ce poste)' : 'Dupliquer ce poste'}
-                                  className="px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 rounded-xl font-black text-[11px] flex items-center gap-1 transition-all active:scale-95"
+                                  title={isAr ? 'مضاعفة هذا البوست (Dupliquer)' : 'Dupliquer ce poste'}
+                                  className="px-2 py-1 bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 rounded-xl font-black text-[10.5px] flex items-center gap-1 transition-all active:scale-95"
                                 >
-                                  <Copy className="w-3.5 h-3.5" />
+                                  <Copy className="w-3 h-3" />
                                   <span>{isAr ? 'نسخ' : 'Dupliquer'}</span>
                                 </button>
 
@@ -4545,7 +4567,7 @@ export default function AtelierCalculator({
                                     setCustomPostes(updated);
                                   }}
                                   title={isAr ? 'حذف هذه المرحلة' : 'Supprimer ce poste'}
-                                  className="p-2 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 rounded-xl transition-all active:scale-95"
+                                  className="p-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 rounded-xl transition-all active:scale-95"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -4560,19 +4582,19 @@ export default function AtelierCalculator({
               </div>
             </div>
 
-            {/* Full-Page Footer */}
-            <div className="p-4 bg-slate-800 border-t border-slate-700 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
-                <div className="flex items-center gap-2">
-                  <span>{isAr ? '🧵 التكلفة الدقيقة للبياسة:' : 'Coût de revient :'}</span>
-                  <strong className="text-emerald-400 font-black text-sm">
+            {/* Full-Page Footer - Pinned at Bottom (shrink-0) */}
+            <div className="px-3.5 py-2 sm:px-5 sm:py-2.5 bg-slate-800/95 border-t border-slate-700/80 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-slate-400">{isAr ? '🧵 التكلفة الدقيقة للبياسة:' : 'Coût de revient :'}</span>
+                  <strong className="text-emerald-400 font-black text-xs sm:text-sm">
                     {((materials / qty) + ((activeTotalMin / 60) * rate)).toFixed(2)} DH / {isAr ? 'بياسة' : 'pièce'}
                   </strong>
                 </div>
-                <span className="text-slate-600">|</span>
-                <div className="flex items-center gap-2">
-                  <span>{isAr ? '⏱️ مجموع وقت الخياطة:' : 'Temps total :' }</span>
-                  <strong className="text-amber-300 font-black text-sm">
+                <span className="text-slate-600 hidden sm:inline">|</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-slate-400">{isAr ? '⏱️ مجموع وقت الخياطة:' : 'Temps total :' }</span>
+                  <strong className="text-amber-300 font-black text-xs sm:text-sm">
                     {fmtNum(activeTotalMin, 2)} {isAr ? 'دقيقة' : 'min'} ({Math.round(activeTotalMin * 60)} {isAr ? 'ثانية' : 'sec'} • {activePostes.length} {isAr ? 'بوستات' : 'postes'})
                   </strong>
                 </div>
@@ -4588,22 +4610,22 @@ export default function AtelierCalculator({
                 const pcsTeamDay = (effectiveWorkers * 480) / safeTotalMin;
 
                 return (
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 bg-slate-900/95 border border-emerald-500/40 px-3 py-2 rounded-2xl shadow-lg shadow-emerald-950/40">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 bg-slate-900/95 border border-emerald-500/40 px-2.5 py-1.5 rounded-2xl shadow-lg shadow-emerald-950/40">
                     {/* Badge 1: Production Journalière Team */}
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-sm">
-                        <Zap className="w-4 h-4 text-emerald-300 animate-pulse" />
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-sm">
+                        <Zap className="w-3.5 h-3.5 text-emerald-300 animate-pulse" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                          {isAr ? '📦 إنتاج النهار (8 سوايع):' : '📦 Prod. / Jour (8h) :'}
+                        <span className="text-[9.5px] text-slate-400 font-bold uppercase tracking-wider">
+                          {isAr ? '📦 إنتاج النهار (8س):' : '📦 Prod. / Jour (8h) :'}
                         </span>
-                        <div className="flex items-baseline gap-1.5">
-                          <strong className="text-emerald-300 font-black text-base sm:text-lg font-mono leading-none">
+                        <div className="flex items-baseline gap-1">
+                          <strong className="text-emerald-300 font-black text-sm sm:text-base font-mono leading-none">
                             {fmtNum(pcsTeamDay, 0)}
                           </strong>
-                          <span className="text-emerald-400 font-black text-xs">
-                            {isAr ? 'بياسة / نهار' : 'pcs/jour'}
+                          <span className="text-emerald-400 font-black text-[10px]">
+                            {isAr ? 'بياسة / نهار' : 'pcs/j'}
                           </span>
                         </div>
                       </div>
@@ -4613,15 +4635,15 @@ export default function AtelierCalculator({
 
                     {/* Badge 2: Production Horaire Team */}
                     <div className="flex flex-col text-xs">
-                      <span className="text-[10px] text-slate-400 font-bold">
+                      <span className="text-[9.5px] text-slate-400 font-bold">
                         {isAr ? '⚡ وتيرة الساعة (60د):' : '⚡ Cadence / Heure (60m) :'}
                       </span>
                       <div className="flex items-baseline gap-1">
-                        <strong className="text-cyan-300 font-black font-mono text-sm leading-tight">
+                        <strong className="text-cyan-300 font-black font-mono text-xs sm:text-sm leading-tight">
                           {fmtNum(pcsTeamHour, 1)}
                         </strong>
-                        <span className="text-[11px] font-bold text-cyan-400/90">
-                          {isAr ? 'بياسة/ساعة' : 'pcs/h'}
+                        <span className="text-[10px] font-bold text-cyan-400/90">
+                          {isAr ? 'بياسة/س' : 'pcs/h'}
                         </span>
                       </div>
                     </div>
@@ -4630,17 +4652,17 @@ export default function AtelierCalculator({
 
                     {/* Badge 3: Production Solo (par ouvrier) */}
                     <div className="flex flex-col text-xs hidden md:flex">
-                      <span className="text-[10px] text-slate-400 font-bold">
+                      <span className="text-[9.5px] text-slate-400 font-bold">
                         {isAr ? '👤 معدل كل خياط (فردي):' : '👤 Par ouvrier (solo) :'}
                       </span>
                       <div className="flex items-baseline gap-1 text-xs">
-                        <strong className="text-amber-300 font-mono font-black text-sm">
+                        <strong className="text-amber-300 font-mono font-black text-xs sm:text-sm">
                           {fmtNum(pcsSoloDay, 0)}
                         </strong>
-                        <span className="text-amber-400/90 font-bold text-[11px]">
+                        <span className="text-amber-400/90 font-bold text-[10px]">
                           {isAr ? 'بياسة/نهار' : 'pcs/j'}
                         </span>
-                        <span className="text-slate-500 text-[10.5px]">
+                        <span className="text-slate-500 text-[9.5px]">
                           ({fmtNum(pcsSoloHour, 1)} {isAr ? 'بياسة/س' : 'pcs/h'})
                         </span>
                       </div>
@@ -4649,8 +4671,8 @@ export default function AtelierCalculator({
                     <span className="text-slate-700 font-bold hidden lg:inline">|</span>
 
                     {/* Badge 4: Interactive Workers adjuster */}
-                    <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-700/80 px-2 py-1 rounded-xl text-xs">
-                      <span className="text-slate-400 text-[11px] font-bold">
+                    <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-700/80 px-2 py-0.5 rounded-xl text-xs">
+                      <span className="text-slate-400 text-[10px] font-bold">
                         {isAr ? 'فريق:' : 'Équipe:'}
                       </span>
                       <button
@@ -4661,7 +4683,7 @@ export default function AtelierCalculator({
                       >
                         -
                       </button>
-                      <strong className="text-white font-mono font-black px-1.5 min-w-[22px] text-center text-xs">
+                      <strong className="text-white font-mono font-black px-1 min-w-[20px] text-center text-xs">
                         {workers} {isAr ? 'عمال' : 'ouv.'}
                       </strong>
                       <button
@@ -4680,9 +4702,9 @@ export default function AtelierCalculator({
               <button
                 type="button"
                 onClick={() => setShowGammeModal(false)}
-                className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-emerald-900/30 flex items-center gap-2 active:scale-95 shrink-0"
+                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-emerald-900/30 flex items-center gap-1.5 active:scale-95 shrink-0"
               >
-                <Check className="w-4 h-4" />
+                <Check className="w-3.5 h-3.5" />
                 <span>{isAr ? 'تم (حفظ والرجوع إلى الحاسبة)' : 'Terminer (Enregistrer & Retour)'}</span>
               </button>
             </div>
