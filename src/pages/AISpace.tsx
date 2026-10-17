@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown, ArrowUpDown, Plus, GripVertical } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -7,6 +7,21 @@ import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile,
 import { printElement } from '../utils/pdf';
 import { printRapportIA } from '../utils/print';
 import { PosteTravail, getGarmentTechnicalBreakdown } from '../lib/atelierAi';
+
+export const ATELIER_MACHINES_PRESETS = [
+  { id: 'piqueuse', machine: 'Piqueuse Plate', labelAr: 'بيكوز سامبل', defaultNomAr: 'خياطة وتجميع الأجزاء (بيكوز)', defaultNomFr: 'Assemblage Piqueuse Plate', defaultMin: 3.5, role: 'خياط رئيسي' },
+  { id: 'surjeteuse_34', machine: 'Surjeteuse 3/4 Fils', labelAr: 'سورجي 3/4 خيوط', defaultNomAr: 'سرفلة وتجميع الأطراف', defaultNomFr: 'Surfilage 3/4 Fils', defaultMin: 1.8, role: 'ماكينة Overlock' },
+  { id: 'surjeteuse_5', machine: 'Surjeteuse 5 Fils (Safety)', labelAr: 'سورجي 5 خيوط', defaultNomAr: 'تجميع وسرفلة سافتي 5 خيوط', defaultNomFr: 'Assemblage Safety 5 Fils', defaultMin: 2.2, role: 'ماكينة Overlock' },
+  { id: 'recouvreuse', machine: 'Recouvreuse', labelAr: 'روكوفروز / كوليتوز', defaultNomAr: 'ثني الأطراف والياقة (روكوفروز)', defaultNomFr: 'Ourlets & Finitions Recouvreuse', defaultMin: 1.5, role: 'خياطة متخصصة' },
+  { id: 'double_aiguille', machine: 'Piqueuse 2 Aiguilles', labelAr: 'بيكوز 2 إبر', defaultNomAr: 'خياطة مزدوجة 2 إبر (Surpiqûre)', defaultNomFr: 'Couture Double Aiguille', defaultMin: 2.0, role: 'خياط متخصص' },
+  { id: 'coupe', machine: 'Table de Coupe / Ciseaux', labelAr: 'فصالة بالمطلوة (Matelas)', defaultNomAr: 'فصالة القماش بالمطلوة الصناعية وتحضير الرزم', defaultNomFr: 'Coupe Matelas & Préparation Paquets', defaultMin: 0.8, role: 'فصالة وباترون' },
+  { id: 'repassage', machine: 'Fer Vapeur / Table Aspirante', labelAr: 'كيّ بالبخار', defaultNomAr: 'كّي بالبخار وفحص الجودة النهائي', defaultNomFr: 'Repassage Vapeur & Contrôle', defaultMin: 1.2, role: 'مراقب جودة وتشطيب' },
+  { id: 'boutonniere', machine: 'Boutonnière / Pose Bouton', labelAr: 'عيون وأزرار', defaultNomAr: 'فتح العيون وتركيب الأزرار', defaultNomFr: 'Boutonnière & Pose Boutons', defaultMin: 1.0, role: 'خياطة متخصصة' },
+  { id: 'brideuse', machine: 'Brideuse (Bartack)', labelAr: 'ماكينة البريد', defaultNomAr: 'تثبيت ودعم نقاط القوة (Bride)', defaultNomFr: 'Renforts & Brides (Bartack)', defaultMin: 0.8, role: 'خياطة متخصصة' },
+  { id: 'thermocollage', machine: 'Presse à Thermocoller', labelAr: 'پريس فيزلين', defaultNomAr: 'لصق الفيزلين وتقوية الأجزاء', defaultNomFr: 'Thermocollage & Entoilage', defaultMin: 1.0, role: 'مساعد فصالة' },
+  { id: 'broderie', machine: 'Machine Broderie / Sfifa', labelAr: 'طرز / سفيفة', defaultNomAr: 'تطريز أو تركيب السفيفة والعقاد', defaultNomFr: 'Broderie / Pose Sfifa', defaultMin: 4.0, role: 'معلم طرز / خياطة' },
+  { id: 'finition_main', machine: 'Travail Manuel / Contrôle', labelAr: 'تشطيب ومراقبة يدوية', defaultNomAr: 'تشطيب، تنظيف الخيوط وتغليف', defaultNomFr: 'Épluchage, Contrôle & Emballage', defaultMin: 0.8, role: 'فني تشطيب' },
+];
 
 const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, number> }[]> = {
   Robe: [
@@ -595,6 +610,97 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [msg, setMsg] = useState('');
   const [isBoxMaximized, setIsBoxMaximized] = useState(false);
   const [cadenceLevel, setCadenceLevel] = useState<'pro' | 'standard' | 'debutant'>('pro');
+
+  // Gamme Confirmation & Modification Modal States (Image 2 exact match)
+  const [showGammeConfirmModal, setShowGammeConfirmModal] = useState(false);
+  const [editablePostes, setEditablePostes] = useState<PosteTravail[]>([]);
+  const [selectedQuickMachine, setSelectedQuickMachine] = useState<string>(ATELIER_MACHINES_PRESETS[0].machine);
+  const [draggedPosteIdx, setDraggedPosteIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [activeSyncInputKey, setActiveSyncInputKey] = useState<string | null>(null);
+  const [activeSyncInputRaw, setActiveSyncInputRaw] = useState<string>('');
+
+  const applyCadenceToEditablePostes = (level: 'pro' | 'standard' | 'debutant') => {
+    setCadenceLevel(level);
+    setEditablePostes(prev => prev.map(p => {
+      let baseTime = Number(p.tempsPro || p.tempsMin || 1);
+      if ((p.nomAr || '').includes('فصالة') || (p.machine || '').toLowerCase().includes('coupe')) {
+        baseTime = 0.8;
+      }
+      const tPro = baseTime;
+      const tStd = Number((baseTime * 1.35).toFixed(2));
+      const tDeb = Number((baseTime * 2.0).toFixed(2));
+      const chosen = level === 'pro' ? tPro : level === 'standard' ? tStd : tDeb;
+      return {
+        ...p,
+        tempsPro: tPro,
+        tempsStandard: tStd,
+        tempsDebutant: tDeb,
+        tempsMin: chosen
+      };
+    }));
+  };
+
+  const addPosteWithMachine = (machineName: string) => {
+    const preset = ATELIER_MACHINES_PRESETS.find(m => m.machine === machineName);
+    const basePro = preset ? preset.defaultMin : 2;
+    const baseStd = Number((basePro * 1.35).toFixed(2));
+    const baseDeb = Number((basePro * 2.0).toFixed(2));
+    const chosenTime = cadenceLevel === 'pro' ? basePro : cadenceLevel === 'standard' ? baseStd : baseDeb;
+
+    const newPoste: PosteTravail = {
+      nomAr: preset ? preset.defaultNomAr : `${isAr ? 'مرحلة خياطة بـ' : 'Opération'} ${machineName}`,
+      nomFr: preset ? preset.defaultNomFr : `Opération ${machineName}`,
+      machine: machineName,
+      tempsMin: chosenTime,
+      tempsPro: basePro,
+      tempsStandard: baseStd,
+      tempsDebutant: baseDeb,
+      roleOuvrier: preset ? preset.role : (isAr ? 'خياط متخصص' : 'Couturier qualifié')
+    };
+
+    setEditablePostes(prev => [...prev, newPoste]);
+  };
+
+  const movePoste = (fromIdx: number, toIdx: number) => {
+    if (toIdx < 0 || toIdx >= editablePostes.length) return;
+    setEditablePostes(prev => {
+      const copy = [...prev];
+      const [moved] = copy.splice(fromIdx, 1);
+      copy.splice(toIdx, 0, moved);
+      return copy;
+    });
+  };
+
+  const handleDragStart = (e: React.DragEvent, idx: number) => {
+    setDraggedPosteIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIdx !== idx) setDragOverIdx(idx);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIdx: number) => {
+    e.preventDefault();
+    if (draggedPosteIdx !== null && draggedPosteIdx !== targetIdx) {
+      movePoste(draggedPosteIdx, targetIdx);
+    }
+    setDraggedPosteIdx(null);
+    setDragOverIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedPosteIdx(null);
+    setDragOverIdx(null);
+  };
+
+  const getSyncValue = (key: string, numVal: number, decimals: number) => {
+    if (activeSyncInputKey === key) return activeSyncInputRaw;
+    return decimals === 0 ? String(Math.round(numVal)) : Number(numVal.toFixed(decimals)).toString();
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -2429,55 +2535,54 @@ Posez-moi toute question sur le coût unitaire, le timing atelier, le sourcing t
   };
 
   const dispatchToAtelier = () => {
+    // When the user clicks "إرسال للورشة", open the Gamme confirmation & edit modal (Image 2)
     const allChatText = chat.map(c => c.text).join('\n');
     const userChatText = chat.filter(c => c.role === 'user').map(c => c.text).join(' ');
     const combinedContext = `${analysisResult?.category || ''} ${analysisResult?.fabricSuggested || ''} ${(analysisResult?.pieces || []).map(p => p.name).join(' ')} ${userChatText} ${allChatText}`;
-
     const breakdown = getGarmentTechnicalBreakdown(combinedContext);
 
-    // Determine best article name
-    let articleName = analysisResult?.category || breakdown.categorie || 'Modèle Atelier';
-    const lowerCtx = combinedContext.toLowerCase();
-    if (lowerCtx.includes('بوكسر') || lowerCtx.includes('كالسون') || lowerCtx.includes('boxer') || lowerCtx.includes('caleçon') || lowerCtx.includes('calson')) {
-      if (!articleName.toLowerCase().includes('boxer') && !articleName.includes('بوكسر') && !articleName.includes('كالسون')) {
-        articleName = isAr ? 'بوكسر رجالي جيرسي (Boxer / Sous-vêtement)' : 'Boxer / Sous-vêtement Jersey';
-      }
-    }
-
-    // Determine tailored Gamme de Montage (customPostes) with selected cadence level
-    const rawPostes: PosteTravail[] = (
+    const basePostes: PosteTravail[] = (
       analysisResult?.gammeMontage &&
       Array.isArray(analysisResult.gammeMontage) &&
-      analysisResult.gammeMontage.length > 0 &&
-      !(
-        (lowerCtx.includes('بوكسر') || lowerCtx.includes('كالسون') || lowerCtx.includes('boxer')) &&
-        !analysisResult.gammeMontage.some(p => p.nomAr.includes('حجر') || p.nomAr.includes('خصر') || p.nomAr.includes('بوكسر') || p.nomAr.includes('جيرسي') || p.tempsMin <= 2)
-      )
+      analysisResult.gammeMontage.length > 0
     )
       ? analysisResult.gammeMontage
       : breakdown.postesTravail;
 
-    const customPostes: PosteTravail[] = rawPostes.map(p => ({
+    const initialEditablePostes: PosteTravail[] = basePostes.map(p => ({
       ...p,
       tempsMin: getPosteTimeForCadence(p, cadenceLevel)
     }));
 
-    // Extract quantity from user chat if mentioned (e.g. "6000")
-    let detectedQty = 1000;
-    const qtyMatches = userChatText.match(/\b(\d{2,6})\b/g);
-    if (qtyMatches && qtyMatches.length > 0) {
-      const validNums = qtyMatches.map(Number).filter(n => n >= 20 && n <= 500000);
-      if (validNums.length > 0) {
-        detectedQty = Math.max(...validNums);
-      }
+    setEditablePostes(initialEditablePostes);
+    setShowGammeConfirmModal(true);
+  };
+
+  const confirmAndDispatchToAtelier = () => {
+    // Update active analysis with user-confirmed Gamme
+    if (analysisResult) {
+      setAnalysisResult(prev => prev ? { ...prev, gammeMontage: editablePostes } : null);
     }
 
-    // Parse consumption & unit material cost
+    const allChatText = chat.map(c => c.text).join('\n');
+    const userChatText = chat.filter(c => c.role === 'user').map(c => c.text).join(' ');
+    const combinedContext = `${analysisResult?.category || ''} ${analysisResult?.fabricSuggested || ''} ${(analysisResult?.pieces || []).map(p => p.name).join(' ')} ${userChatText} ${allChatText}`;
+    const breakdown = getGarmentTechnicalBreakdown(combinedContext);
+
+    let articleName = analysisResult?.category || breakdown.categorie || 'Modèle Atelier';
     let consMetrage = breakdown.consommationMetrage;
     if (analysisResult?.consumption) {
       const m = String(analysisResult.consumption).match(/[\d.]+/);
       if (m && parseFloat(m[0]) > 0) consMetrage = parseFloat(m[0]);
     }
+
+    let detectedQty = 1000;
+    const qtyMatches = userChatText.match(/\b(\d{2,6})\b/g);
+    if (qtyMatches && qtyMatches.length > 0) {
+      const validNums = qtyMatches.map(Number).filter(n => n >= 20 && n <= 500000);
+      if (validNums.length > 0) detectedQty = Math.max(...validNums);
+    }
+
     const unitMaterialCost = Math.round(((consMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees) * 100) / 100;
     const totalMaterialsCost = Math.round(unitMaterialCost * detectedQty);
 
@@ -2490,15 +2595,14 @@ Posez-moi toute question sur le coût unitaire, le timing atelier, le sourcing t
       }
     }
 
-    const totalSamMin = customPostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
-    const workersCount = Math.max(1, customPostes.length);
+    const totalSamMin = editablePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
+    const workersCount = Math.max(1, editablePostes.length);
     const estimatedDays = Math.max(1, Math.ceil((detectedQty * totalSamMin) / (workersCount * 8 * 60)));
 
-    // Save to both localStorage keys so AtelierCalculator loads the exact Gamme, Photo, Quantity, and Costs
     const pilotExportData = {
       itemName: articleName,
       photo: image || undefined,
-      customPostes,
+      customPostes: editablePostes,
       workers: workersCount,
       quantity: detectedQty,
       materials: totalMaterialsCost,
@@ -2515,7 +2619,7 @@ Posez-moi toute question sur le coût unitaire, le timing atelier, le sourcing t
       complexity: analysisResult?.complexity || 'Moyenne',
       prixEstimation: `${recommendedUnitPrice} MAD`,
       pieces: analysisResult?.pieces || [],
-      customPostes,
+      customPostes: editablePostes,
       workers: workersCount,
       quantity: detectedQty,
       materials: totalMaterialsCost,
@@ -2524,7 +2628,20 @@ Posez-moi toute question sur le coût unitaire, le timing atelier, le sourcing t
     };
     localStorage.setItem('beya_atelier_import', JSON.stringify(atelierData));
 
+    setShowGammeConfirmModal(false);
     window.open('/#/atelier-calculator', '_blank');
+  };
+
+  const saveGammeModifications = () => {
+    if (analysisResult) {
+      setAnalysisResult(prev => prev ? { ...prev, gammeMontage: editablePostes } : null);
+    }
+    setShowGammeConfirmModal(false);
+    setCustomAlert({
+      title: isAr ? 'تم حفظ التعديلات بنجاح' : 'Modifications enregistrées',
+      message: isAr ? 'تم تحديث مراحل لاغام والتوقيت والماكينات بنجاح في البطاقة الحالية.' : 'La gamme de montage a été mise à jour avec succès.',
+      isError: false
+    });
   };
 
   const executeGeminiChat = async (userMessage: string): Promise<string> => {
@@ -3806,6 +3923,429 @@ ${userMessage}
               >
                 {isAr ? 'إغلاق' : 'Fermer'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GAMME CONFIRMATION & MODIFICATION MODAL (Image 2 Exact Match) */}
+      {showGammeConfirmModal && (
+        <div className="fixed inset-0 z-[1500] bg-slate-950/85 backdrop-blur-md flex flex-col p-2 sm:p-4 md:p-6 overflow-hidden animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl flex flex-col h-full max-h-[96vh] max-w-7xl mx-auto w-full overflow-hidden text-slate-100">
+            
+            {/* Top Modal Header */}
+            <div className={`p-4 border-b border-slate-800 flex items-center justify-between gap-3 bg-slate-950/60 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-slate-950 shadow-md shadow-amber-500/20 font-black shrink-0">
+                  <Scissors className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                    <span>{isAr ? '📋 مراجعة وتأكيد لاغام الخياطة قبل الإرسال للورشة' : 'Validation & Modification de la Gamme de Montage'}</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold">
+                      {editablePostes.length} {isAr ? 'محطة' : 'postes'}
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-400 font-bold mt-0.5">
+                    {isAr ? 'عدّل المراحل، التوقيت، أو الماكينات حسب ورشتك، ثم اضغط على "تأكيد وإرسال للورشة"' : 'Ajustez les étapes, temps ou machines avant envoi à l\'atelier'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowGammeConfirmModal(false)}
+                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4">
+              {/* Row 1: Cadence Buttons (Exact match to Image 2) */}
+              <div className={`bg-slate-950/70 border border-slate-800 rounded-2xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                  <span className="text-xs font-black text-amber-300 flex items-center gap-1.5">
+                    <span>⚡</span>
+                    <span>{isAr ? 'سرعة وريتم العمال (Cadence de Production):' : 'Cadence de Production :'}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold hidden sm:inline">
+                    {isAr ? '(كيحدد التوقيت واش د الخياطة الحرافيين، العاديين، أو المبتدئين)' : '(Ajuste les temps selon le niveau d\'expérience)'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => applyCadenceToEditablePostes('pro')}
+                    className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 ${
+                      cadenceLevel === 'pro'
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span>⚡</span>
+                    <span>{isAr ? 'حرافيين (Pro 120%)' : 'Pros (120%)'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyCadenceToEditablePostes('standard')}
+                    className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 ${
+                      cadenceLevel === 'standard'
+                        ? 'bg-indigo-600 text-white shadow-md ring-1 ring-indigo-400'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span>⏱️</span>
+                    <span>{isAr ? 'ستاندار (85%)' : 'Standard (85%)'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyCadenceToEditablePostes('debutant')}
+                    className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 ${
+                      cadenceLevel === 'debutant'
+                        ? 'bg-rose-600 text-white shadow-md ring-1 ring-rose-400'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span>🐢</span>
+                    <span>{isAr ? 'مبتدئين / ثقال (60%)' : 'Débutants (60%)'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Row 2: Quick Machines Bar (Exact match to Image 2) */}
+              <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-3 sm:p-4 space-y-2.5">
+                <div className={`flex flex-wrap items-center justify-between gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <span className="text-xs font-black text-amber-300 flex items-center gap-1.5">
+                    <span>⚡</span>
+                    {isAr
+                      ? 'الآلات المتوفرة (اضغط على الآلة لاختيارها، أو اضغط على [+] لإضافة بوست بها فوراً):'
+                      : 'Machines disponibles (Cliquez pour choisir la machine, ou sur [+] pour ajouter un poste) :'}
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-400">
+                    {isAr ? 'الآلة المختارة حالياً:' : 'Machine sélectionnée :'}{' '}
+                    <strong className="text-amber-400">{selectedQuickMachine}</strong>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                  {ATELIER_MACHINES_PRESETS.map((m) => {
+                    const isSelected = selectedQuickMachine === m.machine;
+                    return (
+                      <div
+                        key={m.id}
+                        onClick={() => setSelectedQuickMachine(m.machine)}
+                        className={`group flex items-center justify-between gap-1.5 p-2 rounded-xl border cursor-pointer transition-all select-none ${
+                          isSelected
+                            ? 'bg-amber-500/20 border-amber-400 text-white shadow-md shadow-amber-500/10 ring-1 ring-amber-400/50'
+                            : 'bg-slate-900/80 border-slate-700/80 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className={`text-[11px] font-black truncate ${isSelected ? 'text-amber-300' : 'text-white'}`}>
+                            {m.labelAr}
+                          </div>
+                          <div className="text-[10px] font-bold text-slate-400 truncate">
+                            {m.machine}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedQuickMachine(m.machine);
+                            addPosteWithMachine(m.machine);
+                          }}
+                          title={isAr ? `إضافة بوست جديد بآلة: ${m.machine}` : `Ajouter un poste avec: ${m.machine}`}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 transition-all active:scale-90 ${
+                            isSelected
+                              ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm'
+                              : 'bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700'
+                          }`}
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Datalist for machines autocomplete */}
+              <datalist id="ai-space-machines-datalist">
+                {ATELIER_MACHINES_PRESETS.map((m) => (
+                  <option key={m.id} value={m.machine}>{m.labelAr}</option>
+                ))}
+              </datalist>
+
+              {/* Row 3: Workstations Table (Exact match to Image 2) */}
+              <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/50">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-800 text-slate-300">
+                      <th className="p-3 text-center font-black border-b border-white/10 w-28">
+                        <div className="flex items-center justify-center gap-1">
+                          <ArrowUpDown className="w-3.5 h-3.5 text-amber-400" />
+                          <span>#</span>
+                          <span className="text-[10px] text-amber-400 font-bold">({isAr ? 'ترتيب' : 'Ordre'})</span>
+                        </div>
+                      </th>
+                      <th className="p-3 text-start font-black border-b border-white/10">{isAr ? 'المرحلة (وصف العملية)' : 'Étape (Opération)'}</th>
+                      <th className="p-3 text-start font-black border-b border-white/10 w-64">{isAr ? 'الآلة (اختيار سريع أو كتابة)' : 'Machine'}</th>
+                      <th className="p-3 text-center font-black border-b border-white/10 w-60">
+                        <div className="text-amber-300">{isAr ? '⏱️ وقت العملية فـ البياسة' : '⏱️ Temps / Pièce'}</div>
+                        <div className="text-[10px] font-bold text-slate-400 mt-0.5">
+                          {isAr ? '(اكتب بالدقيقة أو بالثانية — كيتحولو أوتوماتيك)' : '(En Minutes ou Secondes — Synchro Auto)'}
+                        </div>
+                      </th>
+                      <th className="p-3 text-center font-black border-b border-white/10 w-32">{isAr ? 'مضاعفة / حذف' : 'Actions'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {editablePostes.map((poste, idx) => {
+                      const minVal = Number(poste.tempsMin) || 0;
+                      const secVal = Math.round(minVal * 60);
+                      const isBeingDragged = draggedPosteIdx === idx;
+                      const isDragOver = dragOverIdx === idx;
+                      return (
+                        <tr
+                          key={idx}
+                          onDragOver={(e) => handleDragOver(e, idx)}
+                          onDrop={(e) => handleDrop(e, idx)}
+                          className={`transition-colors group ${
+                            isDragOver
+                              ? 'bg-amber-500/25 border-y-2 border-amber-400'
+                              : isBeingDragged
+                              ? 'opacity-35 bg-slate-800'
+                              : 'odd:bg-white/[0.02] even:bg-transparent hover:bg-white/5'
+                          }`}
+                        >
+                          <td className="p-2 text-center font-black text-amber-400/80 border-b border-white/5 select-none">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <div
+                                draggable={true}
+                                onDragStart={(e) => handleDragStart(e, idx)}
+                                onDragEnd={handleDragEnd}
+                                title={isAr ? 'اضغط واسحب لتغيير الترتيب' : 'Glisser pour réordonner'}
+                                className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-amber-500/20 text-slate-500 hover:text-amber-300 transition-colors"
+                              >
+                                <GripVertical className="w-3.5 h-3.5" />
+                              </div>
+
+                              <span className="w-5 text-center font-black text-amber-400 text-xs">
+                                {idx + 1}
+                              </span>
+
+                              <div className="flex flex-col -space-y-0.5">
+                                <button
+                                  type="button"
+                                  disabled={idx === 0}
+                                  onClick={() => movePoste(idx, idx - 1)}
+                                  className="p-0.5 rounded hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 disabled:opacity-20 transition-all active:scale-90"
+                                >
+                                  <ChevronUp className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={idx === editablePostes.length - 1}
+                                  onClick={() => movePoste(idx, idx + 1)}
+                                  className="p-0.5 rounded hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 disabled:opacity-20 transition-all active:scale-90"
+                                >
+                                  <ChevronDown className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="p-1.5 border-b border-white/5">
+                            <input
+                              type="text"
+                              value={isAr ? poste.nomAr : poste.nomFr}
+                              onChange={(e) => {
+                                const updated = editablePostes.map((p, i) => i === idx ? { ...p, [isAr ? 'nomAr' : 'nomFr']: e.target.value } : p);
+                                setEditablePostes(updated);
+                              }}
+                              className="w-full bg-slate-800/40 hover:bg-slate-800 focus:bg-slate-800 text-white font-bold outline-none px-3 py-2 rounded-xl border border-transparent focus:border-amber-500/50 transition-all"
+                            />
+                            <div className="flex flex-wrap items-center gap-2 px-1 mt-1 text-[10px]">
+                              <span className="text-amber-400 font-bold">⚡ {isAr ? 'حرافي' : 'Pro'}: {poste.tempsPro || minVal}د</span>
+                              <span className="text-slate-600">•</span>
+                              <span className="text-indigo-300 font-bold">⏱️ {isAr ? 'ستاندار' : 'Std'}: {poste.tempsStandard || Number((minVal * 1.35).toFixed(1))}د</span>
+                              <span className="text-slate-600">•</span>
+                              <span className="text-rose-400 font-bold">🐢 {isAr ? 'مبتدئ' : 'Déb'}: {poste.tempsDebutant || Number((minVal * 2).toFixed(1))}د</span>
+                              {((poste.nomAr || '').includes('مطلوة') || (poste.nomAr || '').includes('فصالة') || (poste.machine || '').toLowerCase().includes('coupe')) && (
+                                <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded text-[9px] font-black ms-auto">
+                                  ✂️ {isAr ? 'فصالة بالمطلوة' : 'Coupe Matelas'}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="p-1.5 border-b border-white/5">
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                type="text"
+                                list="ai-space-machines-datalist"
+                                value={poste.machine}
+                                onChange={(e) => {
+                                  const updated = editablePostes.map((p, i) => i === idx ? { ...p, machine: e.target.value } : p);
+                                  setEditablePostes(updated);
+                                }}
+                                className="flex-1 bg-slate-800/40 hover:bg-slate-800 focus:bg-slate-800 text-amber-200 font-bold outline-none px-2.5 py-2 rounded-xl border border-transparent focus:border-amber-500/50 transition-all"
+                              />
+                              <select
+                                value={ATELIER_MACHINES_PRESETS.some(m => m.machine === poste.machine) ? poste.machine : ''}
+                                onChange={(e) => {
+                                  if (!e.target.value) return;
+                                  const updated = editablePostes.map((p, i) => i === idx ? { ...p, machine: e.target.value } : p);
+                                  setEditablePostes(updated);
+                                }}
+                                className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold px-2 py-2 rounded-xl border border-slate-700 outline-none cursor-pointer max-w-[115px] truncate"
+                              >
+                                <option value="">{isAr ? '⚡ آلة...' : '⚡ Machine...'}</option>
+                                {ATELIER_MACHINES_PRESETS.map((m) => (
+                                  <option key={m.id} value={m.machine}>
+                                    {isAr ? `${m.labelAr} (${m.machine})` : m.machine}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </td>
+
+                          <td className="p-1.5 border-b border-white/5">
+                            <div className="grid grid-cols-2 gap-1.5">
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="any"
+                                  value={getSyncValue(`modal_poste_min_${idx}`, minVal, 2)}
+                                  onFocus={() => {
+                                    setActiveSyncInputKey(`modal_poste_min_${idx}`);
+                                    setActiveSyncInputRaw(minVal === 0 ? '' : String(minVal));
+                                  }}
+                                  onBlur={() => setActiveSyncInputKey(null)}
+                                  onChange={(e) => {
+                                    setActiveSyncInputRaw(e.target.value);
+                                    const newMin = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value));
+                                    setEditablePostes(prev => prev.map((p, i) => i === idx ? { ...p, tempsMin: newMin } : p));
+                                  }}
+                                  className="w-full bg-slate-800/80 text-center font-black text-amber-300 text-xs outline-none ps-2 pe-9 py-2 rounded-xl border border-amber-500/30 focus:border-amber-400 transition-all"
+                                />
+                                <span className="absolute inset-y-0 end-2 flex items-center text-[9px] font-black text-amber-400/80 pointer-events-none">
+                                  {isAr ? 'دقيقة' : 'min'}
+                                </span>
+                              </div>
+
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="any"
+                                  value={getSyncValue(`modal_poste_sec_${idx}`, secVal, 0)}
+                                  onFocus={() => {
+                                    setActiveSyncInputKey(`modal_poste_sec_${idx}`);
+                                    setActiveSyncInputRaw(secVal === 0 ? '' : String(secVal));
+                                  }}
+                                  onBlur={() => setActiveSyncInputKey(null)}
+                                  onChange={(e) => {
+                                    setActiveSyncInputRaw(e.target.value);
+                                    const newSec = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value));
+                                    const convertedMin = Number((newSec / 60).toFixed(4));
+                                    setEditablePostes(prev => prev.map((p, i) => i === idx ? { ...p, tempsMin: convertedMin } : p));
+                                  }}
+                                  className="w-full bg-slate-800/80 text-center font-black text-emerald-300 text-xs outline-none ps-2 pe-9 py-2 rounded-xl border border-emerald-500/30 focus:border-emerald-400 transition-all"
+                                />
+                                <span className="absolute inset-y-0 end-2 flex items-center text-[9px] font-black text-emerald-400/80 pointer-events-none">
+                                  {isAr ? 'ثانية' : 'sec'}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="p-1.5 text-center border-b border-white/5">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const duplicated: PosteTravail = { ...poste };
+                                  setEditablePostes(prev => [
+                                    ...prev.slice(0, idx + 1),
+                                    duplicated,
+                                    ...prev.slice(idx + 1)
+                                  ]);
+                                }}
+                                className="px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 rounded-xl font-black text-[11px] flex items-center gap-1 transition-all active:scale-95"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>{isAr ? 'نسخ' : 'Dupliquer'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditablePostes(prev => prev.filter((_, i) => i !== idx));
+                                }}
+                                className="p-2 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 rounded-xl transition-all active:scale-95"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Sticky Bottom Actions Bar */}
+            <div className={`p-4 border-t border-slate-800 bg-slate-950/80 flex flex-wrap items-center justify-between gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex flex-wrap items-center gap-2 sm:gap-3 text-xs ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                <div className="px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 rounded-xl font-mono font-black flex items-center gap-1.5">
+                  <span>⏱️ Total SAM:</span>
+                  <span>{editablePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0).toFixed(1)} {isAr ? 'دقيقة' : 'min'}</span>
+                </div>
+
+                <div className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl font-bold">
+                  {editablePostes.length} {isAr ? 'محطة عمل' : 'postes'}
+                </div>
+
+                <div className="text-[11px] text-slate-400 font-bold hidden sm:inline">
+                  ⚡ ~{(60 / Math.max(0.1, editablePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0))).toFixed(0)} {isAr ? 'بياسة/ساعة' : 'pcs/h'}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowGammeConfirmModal(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs transition-all"
+                >
+                  {isAr ? 'إلغاء' : 'Annuler'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={saveGammeModifications}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-black text-xs transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{isAr ? 'حفظ في لاغام الحالية' : 'Enregistrer dans la Gamme'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={confirmAndDispatchToAtelier}
+                  className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 rounded-xl font-black text-xs transition-all shadow-md shadow-amber-500/20 flex items-center gap-2 active:scale-95"
+                >
+                  <Scissors className="w-4 h-4" />
+                  <span>{isAr ? 'تأكيد وإرسال للورشة 🚀' : 'Valider & Envoyer Atelier 🚀'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
