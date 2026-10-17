@@ -275,6 +275,7 @@ export default function AtelierCalculator({
   const [isFichePickerOpen, setIsFichePickerOpen] = useState(false);
   const [fichePickerSearch, setFichePickerSearch] = useState('');
   const [selectedFiche, setSelectedFiche] = useState<FicheTechnique | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
