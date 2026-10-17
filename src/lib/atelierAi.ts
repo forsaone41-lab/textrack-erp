@@ -369,3 +369,174 @@ export const estimateFromFiche = (f: FicheTechnique, isAr: boolean): AiPreset =>
     stitchingMin
   };
 };
+
+/**
+ * Smart Parser to convert any pasted Gamme text (Excel TSV, WhatsApp text, Pipe-delimited, or JSON)
+ * into a typed array of PosteTravail[].
+ */
+export function parseGammeText(raw: string): PosteTravail[] {
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+
+  // 1. Try parsing JSON
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((p: any, idx: number) => {
+          const name = p.nomAr || p.nomFr || p.poste || p.name || p.operation || `مرحلة ${idx + 1}`;
+          const tMin = Number(p.tempsMin || (Number(p.tempsSec) / 60) || 1);
+          return {
+            nomAr: p.nomAr || name,
+            nomFr: p.nomFr || name,
+            machine: p.machine || 'Piqueuse Plate',
+            tempsMin: Number(tMin.toFixed(2)),
+            roleOuvrier: p.roleOuvrier || 'Ouvrier Spécialisé',
+            tempsPro: p.tempsPro ? Number(p.tempsPro) : Number(tMin.toFixed(2)),
+            tempsStandard: p.tempsStandard ? Number(p.tempsStandard) : Number((tMin * 1.35).toFixed(2)),
+            tempsDebutant: p.tempsDebutant ? Number(p.tempsDebutant) : Number((tMin * 2.0).toFixed(2)),
+          };
+        });
+      }
+    } catch (_) {
+      // not JSON, continue
+    }
+  }
+
+  // 2. Parse lines
+  const lines = trimmed
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(l => l && !l.startsWith('---') && !l.startsWith('المجموع') && !l.startsWith('Total'));
+
+  const results: PosteTravail[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Case A: Tab-separated (Excel copy/paste)
+    if (line.includes('\t')) {
+      const cols = line.split('\t').map(c => c.trim());
+      if (cols.length >= 2) {
+        let name = cols[0] || `مرحلة ${i + 1}`;
+        let machine = cols[1] || 'Piqueuse Plate';
+        let timeStr = cols[2] || '';
+
+        // Check if first column is just a number like "1", "2"
+        if (/^\d+$/.test(name) && cols.length >= 3) {
+          name = cols[1];
+          machine = cols[2];
+          timeStr = cols[3] || '';
+        }
+
+        let timeMin = 1;
+        if (timeStr) {
+          const num = parseFloat(timeStr.replace(',', '.').replace(/[^\d.]/g, ''));
+          if (!isNaN(num) && num > 0) {
+            timeMin = timeStr.toLowerCase().includes('s') || timeStr.toLowerCase().includes('ث') ? num / 60 : num;
+          }
+        } else {
+          const mMatch = machine.match(/(\d+(?:[.,]\d+)?)\s*(min|m|دقيقة|د|sec|s|ثانية|ث)/i);
+          if (mMatch) {
+            const num = parseFloat(mMatch[1].replace(',', '.'));
+            timeMin = mMatch[2].toLowerCase().startsWith('s') || mMatch[2].toLowerCase().startsWith('ث') ? num / 60 : num;
+            machine = 'Piqueuse Plate';
+          }
+        }
+
+        results.push({
+          nomAr: name,
+          nomFr: name,
+          machine,
+          tempsMin: Number(timeMin.toFixed(2)),
+          roleOuvrier: 'Ouvrier Spécialisé',
+          tempsPro: Number(timeMin.toFixed(2)),
+          tempsStandard: Number((timeMin * 1.35).toFixed(2)),
+          tempsDebutant: Number((timeMin * 2.0).toFixed(2)),
+        });
+        continue;
+      }
+    }
+
+    // Case B: Pipe separated (e.g. "1. Assemblage | Piqueuse | 0.5 دقيقة")
+    if (line.includes('|')) {
+      const parts = line.split('|').map(p => p.trim());
+      const rawPoste = parts[0].replace(/^[\d#\.\-\)\s]+/, '').trim() || `مرحلة ${i + 1}`;
+      const machine = parts[1] || 'Piqueuse Plate';
+      let timeMin = 1;
+      if (parts[2]) {
+        const num = parseFloat(parts[2].replace(',', '.').replace(/[^\d.]/g, ''));
+        if (!isNaN(num) && num > 0) {
+          timeMin = parts[2].includes('ثانية') || parts[2].toLowerCase().includes('sec') || parts[2].toLowerCase().includes('s') ? num / 60 : num;
+        }
+      }
+      results.push({
+        nomAr: rawPoste,
+        nomFr: rawPoste,
+        machine,
+        tempsMin: Number(timeMin.toFixed(2)),
+        roleOuvrier: 'Ouvrier Spécialisé',
+        tempsPro: Number(timeMin.toFixed(2)),
+        tempsStandard: Number((timeMin * 1.35).toFixed(2)),
+        tempsDebutant: Number((timeMin * 2.0).toFixed(2)),
+      });
+      continue;
+    }
+
+    // Case C: Freeform text line (e.g. "سرفلة الجوانب 45 ثانية" or "Piquage poches 1.2 min")
+    const cleanLine = line.replace(/^[\d#\.\-\)\s]+/, '').trim();
+    if (!cleanLine) continue;
+
+    // Detect time
+    let timeMin = 1;
+    const timeMatch = cleanLine.match(/(\d+(?:[.,]\d+)?)\s*(min|m|دقيقة|د|sec|s|ثانية|ث)/i);
+    if (timeMatch) {
+      const num = parseFloat(timeMatch[1].replace(',', '.'));
+      const unit = timeMatch[2].toLowerCase();
+      if (unit.startsWith('s') || unit.startsWith('ث')) {
+        timeMin = num / 60;
+      } else {
+        timeMin = num;
+      }
+    }
+
+    // Detect machine
+    let machine = 'Piqueuse Plate';
+    const lower = cleanLine.toLowerCase();
+    if (lower.includes('surjet') || lower.includes('سورجي')) {
+      machine = lower.includes('5') ? 'Surjeteuse 5 Fils (Safety)' : 'Surjeteuse 3/4 Fils';
+    } else if (lower.includes('recouv') || lower.includes('روكوف') || lower.includes('كوليتور')) {
+      machine = 'Recouvreuse';
+    } else if (lower.includes('bouton') || lower.includes('صداف') || lower.includes('عراوي')) {
+      machine = lower.includes('boutonnière') || lower.includes('عراوي') ? 'Boutonnière' : 'Pose Bouton';
+    } else if (lower.includes('repass') || lower.includes('حديد') || lower.includes('بخار') || lower.includes('مصلوح') || lower.includes('vapeur')) {
+      machine = 'Fer Vapeur / Table Aspirante';
+    } else if (lower.includes('coupe') || lower.includes('فصالة') || lower.includes('ماتلا') || lower.includes('matelas')) {
+      machine = 'Table de Coupe / Ciseaux';
+    } else if (lower.includes('manuel') || lower.includes('يدوي') || lower.includes('تشطيب') || lower.includes('contrôle') || lower.includes('مراقبة')) {
+      machine = 'Travail Manuel / Contrôle';
+    } else if (lower.includes('2 aiguille') || lower.includes('2 إبر')) {
+      machine = 'Piqueuse 2 Aiguilles';
+    }
+
+    // Remove time from name
+    const finalPoste = cleanLine
+      .replace(/(\d+(?:[.,]\d+)?)\s*(min|m|دقيقة|د|sec|s|ثانية|ث).*/i, '')
+      .replace(/[-–—|:]\s*$/, '')
+      .trim() || cleanLine;
+
+    results.push({
+      nomAr: finalPoste,
+      nomFr: finalPoste,
+      machine,
+      tempsMin: Number(timeMin.toFixed(2)),
+      roleOuvrier: 'Ouvrier Spécialisé',
+      tempsPro: Number(timeMin.toFixed(2)),
+      tempsStandard: Number((timeMin * 1.35).toFixed(2)),
+      tempsDebutant: Number((timeMin * 2.0).toFixed(2)),
+    });
+  }
+
+  return results;
+}
+

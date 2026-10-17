@@ -6,12 +6,12 @@ import {
   DollarSign, Sparkles, Check, X, RefreshCw, UserCheck,
   Ruler, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw, Maximize2, Minimize2, Plus, Copy,
   Camera, ChevronLeft, ChevronRight, Layers, ChevronUp, ChevronDown, GripVertical, ArrowUpDown, Save, FolderOpen,
-  Zap
+  Zap, ClipboardPaste, ClipboardCopy
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { loadData, Employe, FicheTechnique, Charge, safeStorage } from '../types';
 import { supabase } from '../supabase';
-import { PosteTravail, getGarmentTechnicalBreakdown, DEFAULT_FICHES_TECHNIQUES } from '../lib/atelierAi';
+import { PosteTravail, getGarmentTechnicalBreakdown, DEFAULT_FICHES_TECHNIQUES, parseGammeText } from '../lib/atelierAi';
 
 export interface SavedProduction {
   id: string;
@@ -260,8 +260,12 @@ export default function AtelierCalculator({
   });
   const [showSavedProdModal, setShowSavedProdModal] = useState(false);
   const [savedSearchQuery, setSavedSearchQuery] = useState('');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Gamme Copy & Paste State ("DIR LIA HNA LA BGHIT N COPE ILA COULE")
+  const [showPasteGammeModal, setShowPasteGammeModal] = useState(false);
+  const [pasteGammeText, setPasteGammeText] = useState('');
+  const [pasteMode, setPasteMode] = useState<'replace' | 'append'>('replace');
 
   const [selectedModelCategory, setSelectedModelCategory] = useState<string | undefined>(undefined);
 
@@ -527,8 +531,61 @@ export default function AtelierCalculator({
   const activeGammeMinutes = Math.max(0.01, Number(rawGammeMinutes.toFixed(2)));
   const activeGammeSeconds = Math.round(rawGammeMinutes * 60);
   const activePostesCount = activePostesList.length;
-  const unitLaborCostMinute = ((activeGammeMinutes / 60) * rate);
   const exactCostPerPiece = (quantity > 0 ? (materials / quantity) : 0) + unitLaborCostMinute;
+
+  // Gamme Copy & Paste Actions ("DIR LIA HNA LA BGHIT N COPE ILA COULE")
+  const handleCopyEntireGamme = async () => {
+    try {
+      const textLines = activePostesList.map((p, i) => `${i + 1}. ${isAr ? (p.nomAr || p.nomFr) : (p.nomFr || p.nomAr)} | ${p.machine} | ${p.tempsMin} دقيقة (${Math.round((Number(p.tempsMin) || 0) * 60)} ثانية)`).join('\n');
+      const fullText = `--- لاغام الخياطة / Gamme de Montage ---\n${textLines}\nالمجموع: ${activeGammeMinutes} دقيقة (${activeGammeSeconds} ثانية) • ${activePostesList.length} بوستات`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(fullText);
+      }
+      safeStorage.setItem('beya_gamme_clipboard', JSON.stringify(activePostesList));
+      triggerToast(isAr ? `✅ تم نسخ لاغام بالكامل (${activePostesList.length} مراحل)! يمكنك لصقها الآن في أي مكان.` : `✅ Gamme copiée (${activePostesList.length} postes) !`);
+    } catch (err) {
+      safeStorage.setItem('beya_gamme_clipboard', JSON.stringify(activePostesList));
+      triggerToast(isAr ? `✅ تم حفظ لاغام في ذاكرة التطبيق (${activePostesList.length} مراحل)!` : `✅ Gamme enregistrée en mémoire !`);
+    }
+  };
+
+  const handleOpenPasteModal = async () => {
+    setShowPasteGammeModal(true);
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && text.trim()) {
+          setPasteGammeText(text.trim());
+          return;
+        }
+      }
+    } catch (_) {}
+    const saved = safeStorage.getItem('beya_gamme_clipboard');
+    if (saved && !pasteGammeText) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const textLines = parsed.map((p: any, i: number) => `${i + 1}. ${p.nomAr || p.nomFr || p.poste} | ${p.machine} | ${p.tempsMin} دقيقة`).join('\n');
+          setPasteGammeText(textLines);
+        }
+      } catch (_) {}
+    }
+  };
+
+  const applyPastedGamme = () => {
+    const parsedPostes = parseGammeText(pasteGammeText);
+    if (parsedPostes.length === 0) {
+      triggerToast(isAr ? '⚠️ لم يتم التعرف على أي مرحلة. يرجى التأكد من النص الملصوق.' : '⚠️ Aucun poste reconnu dans le texte.');
+      return;
+    }
+
+    const current = customPostes !== null ? customPostes : activePostesList;
+    const finalPostes = pasteMode === 'append' ? [...current, ...parsedPostes] : parsedPostes;
+    setCustomPostes(finalPostes);
+    setShowPasteGammeModal(false);
+    setPasteGammeText('');
+    triggerToast(isAr ? `✅ تم استيراد ولصق (${parsedPostes.length}) مراحل في لاغام بنجاح!` : `✅ (${parsedPostes.length}) postes importés avec succès !`);
+  };
 
   // Exact Work Duration Conversions (1h = 60m, 1j = 8h = 480m, 1 mois = 26j = 208h = 12480m)
   const totalHoursPerWorker = (days * 8) + extraHours;
@@ -3842,6 +3899,26 @@ export default function AtelierCalculator({
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
+                  onClick={handleCopyEntireGamme}
+                  title={isAr ? 'نسخ جميع مراحل لاغام إلى الحافظة (Copier)' : 'Copier toute la gamme'}
+                  className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 rounded-xl text-xs font-black border border-amber-500/40 flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{isAr ? '📋 نسخ لاغام' : 'Copier Gamme'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenPasteModal}
+                  title={isAr ? 'لصق مراحل لاغام من نص أو حافظة (Coller)' : 'Coller une gamme'}
+                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 rounded-xl text-xs font-black border border-emerald-500/40 flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                >
+                  <ClipboardPaste className="w-3.5 h-3.5" />
+                  <span>{isAr ? '📥 لصق لاغام' : 'Coller Gamme'}</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setWorkers(Math.max(1, activePostes.length))}
                   title={isAr ? 'ضبط عدد العمال تلقائياً على عدد البوستات' : 'Ajuster ouvriers = postes'}
                   className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black transition-all shadow-sm"
@@ -4046,7 +4123,31 @@ export default function AtelierCalculator({
                           <span className="text-[10px] text-amber-400 font-bold">({isAr ? 'ترتيب' : 'Ordre'})</span>
                         </div>
                       </th>
-                      <th className="p-3 text-start font-black border-b border-white/10">{isAr ? 'المرحلة (وصف العملية)' : 'Étape (Opération)'}</th>
+                      <th className="p-3 text-start font-black border-b border-white/10">
+                        <div className="flex items-center justify-between gap-2">
+                          <span>{isAr ? 'المرحلة (وصف العملية)' : 'Étape (Opération)'}</span>
+                          <div className="flex items-center gap-1.5 font-bold text-[10px]">
+                            <button
+                              type="button"
+                              onClick={handleCopyEntireGamme}
+                              title={isAr ? 'نسخ كامل لاغام (Copier la gamme)' : 'Copier toute la gamme'}
+                              className="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/40 rounded-lg flex items-center gap-1 transition-all active:scale-95 shadow-sm"
+                            >
+                              <Copy className="w-3 h-3" />
+                              <span>{isAr ? 'نسخ لاغام' : 'Copier Gamme'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleOpenPasteModal}
+                              title={isAr ? 'لصق لاغام (Coller une gamme)' : 'Coller une gamme'}
+                              className="px-2 py-0.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 border border-emerald-500/40 rounded-lg flex items-center gap-1 transition-all active:scale-95 shadow-sm"
+                            >
+                              <ClipboardPaste className="w-3 h-3" />
+                              <span>{isAr ? 'لصق لاغام' : 'Coller Gamme'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </th>
                       <th className="p-3 text-start font-black border-b border-white/10 w-64">{isAr ? 'الآلة (اختيار سريع أو كتابة)' : 'Machine'}</th>
                       <th className="p-3 text-center font-black border-b border-white/10 w-60">
                         <div className="text-amber-300">{isAr ? '⏱️ وقت العملية فـ البياسة' : '⏱️ Temps / Pièce'}</div>
@@ -4054,7 +4155,31 @@ export default function AtelierCalculator({
                           {isAr ? '(اكتب بالدقيقة أو بالثانية — كيتحولو أوتوماتيك)' : '(En Minutes ou Secondes — Synchro Auto)'}
                         </div>
                       </th>
-                      <th className="p-3 text-center font-black border-b border-white/10 w-32">{isAr ? 'مضاعفة / حذف' : 'Actions'}</th>
+                      <th className="p-2 text-center font-black border-b border-white/10 w-36">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[11px] text-slate-300">{isAr ? 'مضاعفة / حذف' : 'Actions'}</span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={handleCopyEntireGamme}
+                              title={isAr ? 'نسخ كامل لاغام (Copier)' : 'Copier Gamme'}
+                              className="px-1.5 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 rounded text-[9.5px] font-black flex items-center gap-0.5 transition-all active:scale-95"
+                            >
+                              <Copy className="w-2.5 h-2.5" />
+                              <span>{isAr ? 'نسخ' : 'Copie'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleOpenPasteModal}
+                              title={isAr ? 'لصق لاغام (Coller)' : 'Coller Gamme'}
+                              className="px-1.5 py-0.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 border border-emerald-500/30 rounded text-[9.5px] font-black flex items-center gap-0.5 transition-all active:scale-95"
+                            >
+                              <ClipboardPaste className="w-2.5 h-2.5" />
+                              <span>{isAr ? 'لصق' : 'Colle'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -4437,6 +4562,161 @@ export default function AtelierCalculator({
           </div>
         );
       })()}
+
+      {/* MODAL: PASTE GAMME (COLLER UNE GAMME DE MONTAGE - "DIR LIA HNA LA BGHIT N COPE ILA COULE") */}
+      {showPasteGammeModal && (
+        <div className="no-print fixed inset-0 z-[1500] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
+          <div className="bg-slate-900 text-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-emerald-500/40 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 border-b border-slate-800 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                  <ClipboardPaste className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-white">
+                    {isAr ? '📥 لصق مراحل لاغام (Coller la Gamme)' : '📥 Coller une Gamme de Montage'}
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-bold">
+                    {isAr ? 'الصق نص لاغام من إكسيل، واتساب، أو من موديل منسوخ سابقاً' : 'Collez depuis Excel, WhatsApp ou le presse-papier'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowPasteGammeModal(false)}
+                className="p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
+              {/* Quick Paste from Saved Gamme in LocalStorage */}
+              {(() => {
+                const savedGammeRaw = safeStorage.getItem('beya_gamme_clipboard');
+                if (!savedGammeRaw) return null;
+                try {
+                  const saved = JSON.parse(savedGammeRaw);
+                  if (!Array.isArray(saved) || saved.length === 0) return null;
+                  return (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xl">📋</span>
+                        <div>
+                          <div className="text-xs font-black text-emerald-300">
+                            {isAr ? `توجد لاغام منسوخة فالتطبيق (${saved.length} مراحل)` : `Gamme en mémoire trouvée (${saved.length} postes)`}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            {saved.slice(0, 3).map((p: any) => p.nomAr || p.nomFr || p.poste).join(' • ')}...
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = customPostes !== null ? customPostes : activePostesList;
+                          const finalPostes = pasteMode === 'append' ? [...current, ...saved] : saved;
+                          setCustomPostes(finalPostes);
+                          setShowPasteGammeModal(false);
+                          triggerToast(isAr ? `✅ تم لصق (${saved.length}) مراحل بنجاح!` : `✅ (${saved.length}) postes collés !`);
+                        }}
+                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shrink-0 transition-all shadow-md active:scale-95"
+                      >
+                        ⚡ {isAr ? 'لصق فوراً' : 'Coller direct'}
+                      </button>
+                    </div>
+                  );
+                } catch (_) {
+                  return null;
+                }
+              })()}
+
+              {/* Mode: Replace or Append */}
+              <div className="flex items-center justify-between bg-slate-950 p-2 rounded-2xl border border-slate-800 text-xs">
+                <span className="text-slate-400 font-bold px-2">{isAr ? 'طريقة اللصق:' : 'Mode d\'insertion :'}</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setPasteMode('replace')}
+                    className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all ${
+                      pasteMode === 'replace'
+                        ? 'bg-amber-500 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {isAr ? '🔄 استبدال لاغام الحالية' : 'Remplacer actuelle'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPasteMode('append')}
+                    className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all ${
+                      pasteMode === 'append'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {isAr ? '➕ إضافة للمراحل الحالية' : 'Ajouter à la suite'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Textarea for pasting */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <label className="font-bold text-slate-300">
+                    {isAr ? 'الصق النص هنا (Ctrl + V):' : 'Collez le texte ici (Ctrl + V) :'}
+                  </label>
+                  {pasteGammeText.trim() && (
+                    <span className="text-[11px] text-emerald-400 font-black">
+                      {isAr
+                        ? `✓ تم التعرف على ~${parseGammeText(pasteGammeText).length} مرحلة`
+                        : `✓ ~${parseGammeText(pasteGammeText).length} postes détectés`}
+                    </span>
+                  )}
+                </div>
+                <textarea
+                  rows={8}
+                  value={pasteGammeText}
+                  onChange={(e) => setPasteGammeText(e.target.value)}
+                  placeholder={
+                    isAr
+                      ? `مثال 1 (من إكسيل أو واتساب):\n1. شريط الرقبة | Recouvreuse | 0.5 دقيقة\n2. سرفلة الأطراف | Surjeteuse | 30 ثانية\n3. الفينيسيون والكي | Fer Vapeur | 1 دقيقة\n\nأو الصق أعمدة إكسيل مباشرة (Tab Separated) أو كود JSON.`
+                      : `Exemple :\n1. Assemblage devant | Piqueuse | 0.5 min\n2. Surjet côtés | Surjeteuse | 30s\n3. Repassage | Fer Vapeur | 1 min`
+                  }
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-2xl p-3 text-xs text-white placeholder-slate-500 font-mono focus:outline-none transition-all resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-800/90 border-t border-slate-800 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setPasteGammeText('');
+                  setShowPasteGammeModal(false);
+                }}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all"
+              >
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+
+              <button
+                type="button"
+                onClick={applyPastedGamme}
+                disabled={!pasteGammeText.trim()}
+                className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 active:scale-95"
+              >
+                <Check className="w-4 h-4" />
+                <span>{isAr ? 'تطبيق واستيراد لاغام 🚀' : 'Appliquer et Importer 🚀'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: SAVED PRODUCTIONS LIBRARY ("PAGE NBDA LQA FIHA LES PROD KANDIHOM SAVE") */}
       {showSavedProdModal && (

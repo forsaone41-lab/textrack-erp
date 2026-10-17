@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown, ArrowUpDown, Plus, GripVertical } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown, ArrowUpDown, Plus, GripVertical, ClipboardPaste, ClipboardCopy } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile, loadLeadPhoto } from '../types';
 import { printElement } from '../utils/pdf';
 import { printRapportIA } from '../utils/print';
-import { PosteTravail, getGarmentTechnicalBreakdown } from '../lib/atelierAi';
+import { PosteTravail, getGarmentTechnicalBreakdown, parseGammeText } from '../lib/atelierAi';
 
 export const ATELIER_MACHINES_PRESETS = [
   { id: 'piqueuse', machine: 'Piqueuse Plate', labelAr: 'بيكوز سامبل', defaultNomAr: 'خياطة وتجميع الأجزاء (بيكوز)', defaultNomFr: 'Assemblage Piqueuse Plate', defaultMin: 3.5, role: 'خياط رئيسي' },
@@ -619,6 +619,63 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [activeSyncInputKey, setActiveSyncInputKey] = useState<string | null>(null);
   const [activeSyncInputRaw, setActiveSyncInputRaw] = useState<string>('');
+
+  // Gamme Copy & Paste State ("DIR LIA HNA LA BGHIT N COPE ILA COULE")
+  const [showPasteGammeModal, setShowPasteGammeModal] = useState(false);
+  const [pasteGammeText, setPasteGammeText] = useState('');
+  const [pasteMode, setPasteMode] = useState<'replace' | 'append'>('replace');
+
+  const handleCopyEntireGamme = async () => {
+    try {
+      const textLines = editablePostes.map((p, i) => `${i + 1}. ${isAr ? (p.nomAr || p.nomFr) : (p.nomFr || p.nomAr)} | ${p.machine} | ${p.tempsMin} دقيقة (${Math.round((Number(p.tempsMin) || 0) * 60)} ثانية)`).join('\n');
+      const totalMin = editablePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
+      const fullText = `--- لاغام الخياطة / Gamme de Montage ---\n${textLines}\nالمجموع: ${totalMin.toFixed(2)} دقيقة • ${editablePostes.length} بوستات`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(fullText);
+      }
+      localStorage.setItem('beya_gamme_clipboard', JSON.stringify(editablePostes));
+      alert(isAr ? `✅ تم نسخ لاغام بالكامل (${editablePostes.length} مراحل)! يمكنك لصقها الآن في أي مكان.` : `✅ Gamme copiée (${editablePostes.length} postes) !`);
+    } catch (err) {
+      localStorage.setItem('beya_gamme_clipboard', JSON.stringify(editablePostes));
+      alert(isAr ? `✅ تم حفظ لاغام في ذاكرة التطبيق (${editablePostes.length} مراحل)!` : `✅ Gamme enregistrée en mémoire !`);
+    }
+  };
+
+  const handleOpenPasteModal = async () => {
+    setShowPasteGammeModal(true);
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && text.trim()) {
+          setPasteGammeText(text.trim());
+          return;
+        }
+      }
+    } catch (_) {}
+    const saved = localStorage.getItem('beya_gamme_clipboard');
+    if (saved && !pasteGammeText) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const textLines = parsed.map((p: any, i: number) => `${i + 1}. ${p.nomAr || p.nomFr || p.poste} | ${p.machine} | ${p.tempsMin} دقيقة`).join('\n');
+          setPasteGammeText(textLines);
+        }
+      } catch (_) {}
+    }
+  };
+
+  const applyPastedGamme = () => {
+    const parsedPostes = parseGammeText(pasteGammeText);
+    if (parsedPostes.length === 0) {
+      alert(isAr ? '⚠️ لم يتم التعرف على أي مرحلة. يرجى التأكد من النص.' : '⚠️ Aucun poste reconnu dans le texte.');
+      return;
+    }
+
+    const finalPostes = pasteMode === 'append' ? [...editablePostes, ...parsedPostes] : parsedPostes;
+    setEditablePostes(finalPostes);
+    setShowPasteGammeModal(false);
+    setPasteGammeText('');
+  };
 
   const applyCadenceToEditablePostes = (level: 'pro' | 'standard' | 'debutant') => {
     setCadenceLevel(level);
@@ -3952,12 +4009,32 @@ ${userMessage}
                 </div>
               </div>
 
-              <button
-                onClick={() => setShowGammeConfirmModal(false)}
-                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-all"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopyEntireGamme}
+                  title={isAr ? 'نسخ كامل لاغام (Copier)' : 'Copier Gamme'}
+                  className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 rounded-xl text-xs font-black border border-amber-500/30 flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{isAr ? '📋 نسخ لاغام' : 'Copier'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenPasteModal}
+                  title={isAr ? 'لصق لاغام (Coller)' : 'Coller Gamme'}
+                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 rounded-xl text-xs font-black border border-emerald-500/30 flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                >
+                  <ClipboardPaste className="w-3.5 h-3.5" />
+                  <span>{isAr ? '📥 لصق لاغام' : 'Coller'}</span>
+                </button>
+                <button
+                  onClick={() => setShowGammeConfirmModal(false)}
+                  className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Scrollable Body */}
@@ -4092,7 +4169,31 @@ ${userMessage}
                           <span className="text-[10px] text-amber-400 font-bold">({isAr ? 'ترتيب' : 'Ordre'})</span>
                         </div>
                       </th>
-                      <th className="p-3 text-start font-black border-b border-white/10">{isAr ? 'المرحلة (وصف العملية)' : 'Étape (Opération)'}</th>
+                      <th className="p-3 text-start font-black border-b border-white/10">
+                        <div className="flex items-center justify-between gap-2">
+                          <span>{isAr ? 'المرحلة (وصف العملية)' : 'Étape (Opération)'}</span>
+                          <div className="flex items-center gap-1.5 font-bold text-[10px]">
+                            <button
+                              type="button"
+                              onClick={handleCopyEntireGamme}
+                              title={isAr ? 'نسخ كامل لاغام (Copier la gamme)' : 'Copier toute la gamme'}
+                              className="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/40 rounded-lg flex items-center gap-1 transition-all active:scale-95 shadow-sm"
+                            >
+                              <Copy className="w-3 h-3" />
+                              <span>{isAr ? 'نسخ لاغام' : 'Copier Gamme'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleOpenPasteModal}
+                              title={isAr ? 'لصق لاغام (Coller une gamme)' : 'Coller une gamme'}
+                              className="px-2 py-0.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 border border-emerald-500/40 rounded-lg flex items-center gap-1 transition-all active:scale-95 shadow-sm"
+                            >
+                              <ClipboardPaste className="w-3 h-3" />
+                              <span>{isAr ? 'لصق لاغام' : 'Coller Gamme'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </th>
                       <th className="p-3 text-start font-black border-b border-white/10 w-64">{isAr ? 'الآلة (اختيار سريع أو كتابة)' : 'Machine'}</th>
                       <th className="p-3 text-center font-black border-b border-white/10 w-60">
                         <div className="text-amber-300">{isAr ? '⏱️ وقت العملية فـ البياسة' : '⏱️ Temps / Pièce'}</div>
@@ -4100,7 +4201,31 @@ ${userMessage}
                           {isAr ? '(اكتب بالدقيقة أو بالثانية — كيتحولو أوتوماتيك)' : '(En Minutes ou Secondes — Synchro Auto)'}
                         </div>
                       </th>
-                      <th className="p-3 text-center font-black border-b border-white/10 w-32">{isAr ? 'مضاعفة / حذف' : 'Actions'}</th>
+                      <th className="p-2 text-center font-black border-b border-white/10 w-36">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[11px] text-slate-300">{isAr ? 'مضاعفة / حذف' : 'Actions'}</span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={handleCopyEntireGamme}
+                              title={isAr ? 'نسخ كامل لاغام (Copier)' : 'Copier Gamme'}
+                              className="px-1.5 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 rounded text-[9.5px] font-black flex items-center gap-0.5 transition-all active:scale-95"
+                            >
+                              <Copy className="w-2.5 h-2.5" />
+                              <span>{isAr ? 'نسخ' : 'Copie'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleOpenPasteModal}
+                              title={isAr ? 'لصق لاغام (Coller)' : 'Coller Gamme'}
+                              className="px-1.5 py-0.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 border border-emerald-500/30 rounded text-[9.5px] font-black flex items-center gap-0.5 transition-all active:scale-95"
+                            >
+                              <ClipboardPaste className="w-2.5 h-2.5" />
+                              <span>{isAr ? 'لصق' : 'Colle'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -4372,6 +4497,160 @@ ${userMessage}
                   <span>{isAr ? 'تأكيد وإرسال للورشة 🚀' : 'Valider & Envoyer Atelier 🚀'}</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: PASTE GAMME (COLLER UNE GAMME DE MONTAGE) */}
+      {showPasteGammeModal && (
+        <div className="no-print fixed inset-0 z-[1500] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
+          <div className="bg-slate-900 text-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-emerald-500/40 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 border-b border-slate-800 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                  <ClipboardPaste className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-white">
+                    {isAr ? '📥 لصق مراحل لاغام (Coller la Gamme)' : '📥 Coller une Gamme de Montage'}
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-bold">
+                    {isAr ? 'الصق نص لاغام من إكسيل، واتساب، أو من موديل منسوخ سابقاً' : 'Collez depuis Excel, WhatsApp ou le presse-papier'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowPasteGammeModal(false)}
+                className="p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
+              {/* Quick Paste from Saved Gamme in LocalStorage */}
+              {(() => {
+                const savedGammeRaw = localStorage.getItem('beya_gamme_clipboard');
+                if (!savedGammeRaw) return null;
+                try {
+                  const saved = JSON.parse(savedGammeRaw);
+                  if (!Array.isArray(saved) || saved.length === 0) return null;
+                  return (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xl">📋</span>
+                        <div>
+                          <div className="text-xs font-black text-emerald-300">
+                            {isAr ? `توجد لاغام منسوخة فالتطبيق (${saved.length} مراحل)` : `Gamme en mémoire trouvée (${saved.length} postes)`}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            {saved.slice(0, 3).map((p: any) => p.nomAr || p.nomFr || p.poste).join(' • ')}...
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const finalPostes = pasteMode === 'append' ? [...editablePostes, ...saved] : saved;
+                          setEditablePostes(finalPostes);
+                          setShowPasteGammeModal(false);
+                          alert(isAr ? `✅ تم لصق (${saved.length}) مراحل بنجاح!` : `✅ (${saved.length}) postes collés !`);
+                        }}
+                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shrink-0 transition-all shadow-md active:scale-95"
+                      >
+                        ⚡ {isAr ? 'لصق فوراً' : 'Coller direct'}
+                      </button>
+                    </div>
+                  );
+                } catch (_) {
+                  return null;
+                }
+              })()}
+
+              {/* Mode: Replace or Append */}
+              <div className="flex items-center justify-between bg-slate-950 p-2 rounded-2xl border border-slate-800 text-xs">
+                <span className="text-slate-400 font-bold px-2">{isAr ? 'طريقة اللصق:' : 'Mode d\'insertion :'}</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setPasteMode('replace')}
+                    className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all ${
+                      pasteMode === 'replace'
+                        ? 'bg-amber-500 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {isAr ? '🔄 استبدال لاغام الحالية' : 'Remplacer actuelle'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPasteMode('append')}
+                    className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all ${
+                      pasteMode === 'append'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {isAr ? '➕ إضافة للمراحل الحالية' : 'Ajouter à la suite'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Textarea for pasting */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <label className="font-bold text-slate-300">
+                    {isAr ? 'الصق النص هنا (Ctrl + V):' : 'Collez le texte ici (Ctrl + V) :'}
+                  </label>
+                  {pasteGammeText.trim() && (
+                    <span className="text-[11px] text-emerald-400 font-black">
+                      {isAr
+                        ? `✓ تم التعرف على ~${parseGammeText(pasteGammeText).length} مرحلة`
+                        : `✓ ~${parseGammeText(pasteGammeText).length} postes détectés`}
+                    </span>
+                  )}
+                </div>
+                <textarea
+                  rows={8}
+                  value={pasteGammeText}
+                  onChange={(e) => setPasteGammeText(e.target.value)}
+                  placeholder={
+                    isAr
+                      ? `مثال 1 (من إكسيل أو واتساب):\n1. شريط الرقبة | Recouvreuse | 0.5 دقيقة\n2. سرفلة الأطراف | Surjeteuse | 30 ثانية\n3. الفينيسيون والكي | Fer Vapeur | 1 دقيقة\n\nأو الصق أعمدة إكسيل مباشرة (Tab Separated) أو كود JSON.`
+                      : `Exemple :\n1. Assemblage devant | Piqueuse | 0.5 min\n2. Surjet côtés | Surjeteuse | 30s\n3. Repassage | Fer Vapeur | 1 min`
+                  }
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-2xl p-3 text-xs text-white placeholder-slate-500 font-mono focus:outline-none transition-all resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-800/90 border-t border-slate-800 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setPasteGammeText('');
+                  setShowPasteGammeModal(false);
+                }}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all"
+              >
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+
+              <button
+                type="button"
+                onClick={applyPastedGamme}
+                disabled={!pasteGammeText.trim()}
+                className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 active:scale-95"
+              >
+                <Check className="w-4 h-4" />
+                <span>{isAr ? 'تطبيق واستيراد لاغام 🚀' : 'Appliquer et Importer 🚀'}</span>
+              </button>
             </div>
           </div>
         </div>
