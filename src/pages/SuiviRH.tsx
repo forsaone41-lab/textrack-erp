@@ -5,7 +5,7 @@ import {
   Plus, Search, Edit2, Trash2, CreditCard, DollarSign, Image as ImageIcon, X, Printer, Download, File, Phone, 
   RotateCw, Copy, Check, Zap, Calculator, Camera, Upload, User as UserIcon, QrCode, ShieldCheck, Scissors,
   FolderOpen, FileCheck, AlertTriangle, ShieldAlert, Award, FileUp, ExternalLink, Calendar, CheckCircle2, AlertCircle, FileText,
-  Eye, ArrowLeft, ArrowRight
+  Eye, ArrowLeft, ArrowRight, Sparkles
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Employe, EmployeFaute, EmployeDocument, PaiementSalaire, Commande, loadData, genId, loadCompanyProfile, saveRecord, safeStorage } from '../types';
@@ -186,6 +186,207 @@ function BarcodeGraphic({ value }: { value: string }) {
   );
 }
 
+export type BadgeTheme = 'platinum' | 'slate_dark' | 'blue_prestige' | 'ivory';
+
+export const BADGE_THEMES: Record<BadgeTheme, {
+  id: BadgeTheme;
+  nameAr: string;
+  nameFr: string;
+  isDark: boolean;
+  cardBorder: string;
+  bodyBg: string;
+  cardOuterBg: string;
+  headerGradient: string;
+  nameColor: string;
+  rolePillClass: string;
+  labelColor: string;
+  valueColor: string;
+  matriculeColor: string;
+  subtextColor: string;
+  dividerBorder: string;
+  photoBorder: string;
+  photoBg: string;
+  signatureColor: string;
+  qrBoxBg: string;
+  qrBoxBorder: string;
+  accentBar: string;
+}> = {
+  platinum: {
+    id: 'platinum',
+    nameAr: 'بلاتين سيلفر (رمادي مغلوق)',
+    nameFr: 'Platine Argenté',
+    isDark: false,
+    cardBorder: 'border-slate-400/90 shadow-2xl',
+    cardOuterBg: 'bg-slate-300',
+    bodyBg: 'bg-gradient-to-br from-[#dfe6ef] via-[#cbd5e1] to-[#b3c1d1]',
+    headerGradient: 'from-[#07162c] via-[#0d2a4d] to-[#0284c7]',
+    nameColor: 'text-slate-950',
+    rolePillClass: 'bg-indigo-600/15 border-indigo-400/50 text-indigo-950 shadow-2xs font-black',
+    labelColor: 'text-slate-600 font-black',
+    valueColor: 'text-slate-950 font-black',
+    matriculeColor: 'text-indigo-900 font-mono font-black',
+    subtextColor: 'text-slate-700 font-bold',
+    dividerBorder: 'border-slate-300',
+    photoBorder: 'border-2 border-white/90 shadow-md',
+    photoBg: 'bg-slate-200',
+    signatureColor: 'text-slate-900',
+    qrBoxBg: 'bg-white/85 backdrop-blur-sm',
+    qrBoxBorder: 'border-slate-300',
+    accentBar: 'from-[#07162c] via-[#0284c7] to-[#4f46e5]',
+  },
+  slate_dark: {
+    id: 'slate_dark',
+    nameAr: 'تيتانيوم كحل مغلوق',
+    nameFr: 'Titanium Dark VIP',
+    isDark: true,
+    cardBorder: 'border-slate-700 shadow-2xl shadow-slate-950/60',
+    cardOuterBg: 'bg-slate-950',
+    bodyBg: 'bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0b1120]',
+    headerGradient: 'from-[#030712] via-[#0f172a] to-[#1e293b]',
+    nameColor: 'text-white drop-shadow-sm',
+    rolePillClass: 'bg-amber-500/20 border-amber-400/50 text-amber-300 shadow-2xs font-black',
+    labelColor: 'text-slate-400 font-bold',
+    valueColor: 'text-white font-black',
+    matriculeColor: 'text-amber-300 font-mono font-black',
+    subtextColor: 'text-slate-300 font-medium',
+    dividerBorder: 'border-white/10',
+    photoBorder: 'border-2 border-amber-400/80 shadow-lg shadow-amber-500/10',
+    photoBg: 'bg-slate-900',
+    signatureColor: 'text-amber-300',
+    qrBoxBg: 'bg-slate-900/90 backdrop-blur-sm',
+    qrBoxBorder: 'border-slate-700',
+    accentBar: 'from-amber-600 via-amber-400 to-yellow-500',
+  },
+  blue_prestige: {
+    id: 'blue_prestige',
+    nameAr: 'أزرق ملكي مغلوق',
+    nameFr: 'Bleu Nuit Prestige',
+    isDark: true,
+    cardBorder: 'border-sky-900 shadow-2xl shadow-sky-950/60',
+    cardOuterBg: 'bg-[#061224]',
+    bodyBg: 'bg-gradient-to-br from-[#06142a] via-[#0b254a] to-[#040e1e]',
+    headerGradient: 'from-[#030b18] via-[#071e3d] to-[#0284c7]',
+    nameColor: 'text-white drop-shadow-sm',
+    rolePillClass: 'bg-cyan-500/20 border-cyan-400/50 text-cyan-200 shadow-2xs font-black',
+    labelColor: 'text-cyan-200/70 font-bold',
+    valueColor: 'text-white font-black',
+    matriculeColor: 'text-cyan-300 font-mono font-black',
+    subtextColor: 'text-cyan-100/90 font-medium',
+    dividerBorder: 'border-cyan-500/20',
+    photoBorder: 'border-2 border-cyan-400/80 shadow-lg shadow-cyan-500/20',
+    photoBg: 'bg-[#030d1c]',
+    signatureColor: 'text-cyan-300',
+    qrBoxBg: 'bg-[#071a35]/90 backdrop-blur-sm',
+    qrBoxBorder: 'border-cyan-500/30',
+    accentBar: 'from-[#07162c] via-[#0284c7] to-[#38bdf8]',
+  },
+  ivory: {
+    id: 'ivory',
+    nameAr: 'عاجي بنكي أمني',
+    nameFr: 'Ivoire Sécurisé Bank',
+    isDark: false,
+    cardBorder: 'border-amber-300/80 shadow-2xl',
+    cardOuterBg: 'bg-[#ebd8c0]',
+    bodyBg: 'bg-gradient-to-br from-[#ebd8c0] via-[#dfc8ad] to-[#cca782]',
+    headerGradient: 'from-[#2b1f13] via-[#4a3520] to-[#8c5e2d]',
+    nameColor: 'text-amber-950 font-black',
+    rolePillClass: 'bg-amber-800/15 border-amber-800/40 text-amber-950 shadow-2xs font-black',
+    labelColor: 'text-amber-900/70 font-bold',
+    valueColor: 'text-amber-950 font-black',
+    matriculeColor: 'text-amber-900 font-mono font-black',
+    subtextColor: 'text-amber-900 font-bold',
+    dividerBorder: 'border-amber-800/20',
+    photoBorder: 'border-2 border-amber-900/30 shadow-md',
+    photoBg: 'bg-[#e5cfb3]',
+    signatureColor: 'text-amber-950',
+    qrBoxBg: 'bg-amber-50/85 backdrop-blur-sm',
+    qrBoxBorder: 'border-amber-300',
+    accentBar: 'from-[#2b1f13] via-[#8c5e2d] to-[#d4af37]',
+  }
+};
+
+function BeyaWatermark({
+  company,
+  themeConfig
+}: {
+  company?: any;
+  themeConfig: typeof BADGE_THEMES[BadgeTheme];
+}) {
+  const logoSrc = company?.logoAppIcon || company?.logoAdmin || company?.logoUrl || '/logo.png';
+  const companyName = company?.name || 'BEYA CREATIVE';
+  const isDark = themeConfig.isDark;
+
+  return (
+    <div className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0">
+      {/* 1. Fine Guilloché / Security Geometric Pattern (SVG) */}
+      <svg
+        className={`absolute inset-0 w-full h-full ${isDark ? 'text-white' : 'text-slate-900'}`}
+        style={{ opacity: isDark ? 0.06 : 0.05 }}
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 370 180"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <pattern id="guilloche-wave" width="60" height="30" patternUnits="userSpaceOnUse">
+            <path
+              d="M0 15 Q15 0 30 15 T60 15 M0 20 Q15 5 30 20 T60 20 M0 10 Q15 25 30 10 T60 10"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="0.5"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#guilloche-wave)" />
+      </svg>
+
+      {/* 2. Repeating Micro-Text Security Bands (Diagonal) */}
+      <div 
+        className="absolute inset-0 -rotate-12 scale-125 flex flex-col justify-around pointer-events-none"
+        style={{ opacity: isDark ? 0.08 : 0.06 }}
+      >
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div 
+            key={i} 
+            className={`whitespace-nowrap font-mono text-[7px] font-black uppercase tracking-[0.3em] text-center ${isDark ? 'text-white' : 'text-slate-900'}`}
+          >
+            {`${companyName} • ATELIER PASS • ${companyName} • CARTE OFFICIELLE • `}
+          </div>
+        ))}
+      </div>
+
+      {/* 3. Central Prominent BEYA CREATIVE Watermark Seal */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div 
+          className="relative flex items-center justify-center"
+          style={{ opacity: isDark ? 0.16 : 0.12 }}
+        >
+          {/* Circular Guilloché Security Rings */}
+          <div className={`w-36 h-36 rounded-full border-2 border-dashed flex items-center justify-center p-2.5 ${isDark ? 'border-cyan-300' : 'border-slate-800'}`}>
+            <div className={`w-32 h-32 rounded-full border flex items-center justify-center p-2 ${isDark ? 'border-white' : 'border-slate-700'}`}>
+              <div className={`w-28 h-28 rounded-full border-2 border-dotted flex items-center justify-center relative ${isDark ? 'border-cyan-200' : 'border-slate-600'}`}>
+                {/* Logo Image */}
+                <img
+                  src={logoSrc}
+                  alt={companyName}
+                  className="w-20 h-20 object-contain filter grayscale contrast-200"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Arched text badge watermark */}
+          <div className={`absolute bottom-2 font-black tracking-widest text-[8.5px] uppercase font-mono px-2 ${isDark ? 'text-cyan-200' : 'text-slate-900'}`}>
+            ★ {companyName} ★
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BadgeFront({
   emp,
   company,
@@ -193,6 +394,7 @@ function BadgeFront({
   empName,
   showPhotoUpload = false,
   onPhotoUpload,
+  theme = 'platinum',
 }: {
   emp: Employe;
   company: any;
@@ -200,7 +402,9 @@ function BadgeFront({
   empName: (e: Employe) => string;
   showPhotoUpload?: boolean;
   onPhotoUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  theme?: BadgeTheme;
 }) {
+  const cfg = BADGE_THEMES[theme] || BADGE_THEMES.platinum;
   const matricule = emp.matricule?.trim() ? emp.matricule.trim().toUpperCase() : `#EMP-${(emp.id || '').slice(0, 6).toUpperCase()}`;
   const validite = emp.dateExpiration?.trim() ? emp.dateExpiration.trim() : 'PERMANENT';
   const roleDisplay = formatBadgePoste(emp.poste, isAr);
@@ -208,11 +412,11 @@ function BadgeFront({
   return (
     <div
       dir="ltr"
-      className="wallet-card-standard relative w-[370px] h-[234px] bg-white rounded-2xl overflow-hidden border border-slate-300 shadow-xl flex flex-col justify-between text-slate-900 select-none print:shadow-none print:border-slate-400 break-inside-avoid text-left transition-all shrink-0"
+      className={`wallet-card-standard relative w-[370px] h-[234px] ${cfg.cardOuterBg} rounded-2xl overflow-hidden border ${cfg.cardBorder} flex flex-col justify-between select-none print:shadow-none print:border-slate-400 break-inside-avoid text-left transition-all shrink-0`}
       style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
-      {/* Top Corporate Header Banner (Deep Blue Gradient) */}
-      <div className="relative bg-gradient-to-r from-[#07162c] via-[#0d2a4d] to-[#0284c7] px-3.5 py-2 text-white flex items-center justify-between shadow-sm overflow-hidden shrink-0">
+      {/* Top Corporate Header Banner */}
+      <div className={`relative bg-gradient-to-r ${cfg.headerGradient} px-3.5 py-2 text-white flex items-center justify-between shadow-sm overflow-hidden shrink-0 z-10`}>
         <div 
           className="absolute inset-0 opacity-15 pointer-events-none mix-blend-overlay"
           style={{
@@ -257,19 +461,22 @@ function BadgeFront({
         </div>
       </div>
 
-      {/* Card Body */}
-      <div className="p-2.5 flex-1 flex gap-2.5 items-stretch bg-gradient-to-b from-slate-50/60 to-white min-h-0">
+      {/* Card Body with BEYA CREATIVE Watermark & Tinted Darker Background */}
+      <div className={`relative p-2.5 flex-1 flex gap-2.5 items-stretch ${cfg.bodyBg} min-h-0 overflow-hidden`}>
+        {/* The Watermark Layer */}
+        <BeyaWatermark company={company} themeConfig={cfg} />
+
         {/* Photo Container (Left) */}
-        <div className="shrink-0 flex flex-col items-center justify-between">
-          <div className="w-[84px] h-[106px] rounded-xl overflow-hidden bg-slate-100 border border-slate-300 shadow-sm relative group flex items-center justify-center">
+        <div className="shrink-0 flex flex-col items-center justify-between relative z-10">
+          <div className={`w-[84px] h-[106px] rounded-xl overflow-hidden ${cfg.photoBg} ${cfg.photoBorder} relative group flex items-center justify-center`}>
             {emp.photo ? (
               <img src={emp.photo} alt={empName(emp)} className="w-full h-full object-cover" />
             ) : (
-              <div className="flex flex-col items-center justify-center text-slate-300 p-1 text-center">
-                <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-black text-sm mb-1">
+              <div className="flex flex-col items-center justify-center text-slate-400 p-1 text-center">
+                <div className="w-9 h-9 rounded-full bg-slate-300/60 flex items-center justify-center text-slate-700 font-black text-sm mb-1">
                   {emp.prenom?.[0] || emp.nom?.[0] || 'U'}
                 </div>
-                <span className="text-[7.5px] font-bold text-slate-400 uppercase tracking-tight">
+                <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-tight">
                   {isAr ? 'بدون صورة' : 'Sans photo'}
                 </span>
               </div>
@@ -277,7 +484,7 @@ function BadgeFront({
 
             {/* Photo change hover action if enabled */}
             {showPhotoUpload && onPhotoUpload && (
-              <label className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer p-1 text-center">
+              <label className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer p-1 text-center z-20">
                 <Camera className="w-4 h-4 mb-0.5" />
                 <span className="text-[7.5px] font-bold uppercase">{isAr ? 'تغيير' : 'Modifier'}</span>
                 <input type="file" accept="image/*" className="hidden" onChange={onPhotoUpload} />
@@ -286,61 +493,61 @@ function BadgeFront({
           </div>
 
           {/* Micro status below photo */}
-          <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 text-[6.5px] font-black uppercase tracking-wider mt-1">
+          <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[6.5px] font-black uppercase tracking-wider mt-1 backdrop-blur-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>ACTIF</span>
+            <span className={cfg.isDark ? 'text-emerald-300' : 'text-emerald-800'}>ACTIF</span>
           </div>
         </div>
 
         {/* Employee Info Details (Right) */}
-        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 relative z-10">
           <div>
             {/* Employee Full Name */}
-            <h3 className="text-[13px] font-black text-slate-900 uppercase tracking-tight leading-tight truncate">
+            <h3 className={`text-[13px] font-black ${cfg.nameColor} uppercase tracking-tight leading-tight truncate drop-shadow-2xs`}>
               {empName(emp)}
             </h3>
 
-            {/* Role Title Pill (Shows "MACHINISTE" for machine operators) */}
-            <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 text-[8.5px] font-black uppercase tracking-wider shadow-2xs">
+            {/* Role Title Pill */}
+            <div className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md ${cfg.rolePillClass}`}>
               <span className="truncate">{roleDisplay}</span>
             </div>
 
             {/* Info Grid (CIN, MATRICULE, VALIDITÉ, TEL) */}
-            <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1.5 pt-1.5 border-t border-slate-100">
+            <div className={`grid grid-cols-2 gap-x-2 gap-y-1 mt-1.5 pt-1.5 border-t ${cfg.dividerBorder}`}>
               <div>
-                <span className="block text-[6px] font-black text-slate-400 uppercase tracking-widest leading-none">CIN</span>
-                <span className="text-[9.5px] font-black text-slate-800 uppercase tracking-wider">{emp.cin || '—'}</span>
+                <span className={`block text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>CIN</span>
+                <span className={`text-[9.5px] font-black ${cfg.valueColor} uppercase tracking-wider`}>{emp.cin || '—'}</span>
               </div>
               <div>
-                <span className="block text-[6px] font-black text-slate-400 uppercase tracking-widest leading-none">MATRICULE</span>
-                <span className="text-[9.5px] font-black text-indigo-700 uppercase tracking-wider font-mono">{matricule}</span>
+                <span className={`block text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>MATRICULE</span>
+                <span className={`text-[9.5px] font-black ${cfg.matriculeColor} uppercase tracking-wider font-mono`}>{matricule}</span>
               </div>
               <div>
-                <span className="block text-[6px] font-black text-slate-400 uppercase tracking-widest leading-none">VALIDITÉ</span>
-                <span className={`text-[9px] font-black uppercase tracking-wider ${emp.dateExpiration ? 'text-amber-700 font-mono' : 'text-slate-800'}`}>{validite}</span>
+                <span className={`block text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>VALIDITÉ</span>
+                <span className={`text-[9px] font-black uppercase tracking-wider ${emp.dateExpiration ? (cfg.isDark ? 'text-amber-400 font-mono' : 'text-amber-800 font-mono') : cfg.valueColor}`}>{validite}</span>
               </div>
               <div>
-                <span className="block text-[6px] font-black text-slate-400 uppercase tracking-widest leading-none">TÉLÉPHONE</span>
-                <span className="text-[9px] font-black text-slate-800 tracking-wider tabular-nums">{emp.telephone || '—'}</span>
+                <span className={`block text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>TÉLÉPHONE</span>
+                <span className={`text-[9px] font-black ${cfg.valueColor} tracking-wider tabular-nums`}>{emp.telephone || '—'}</span>
               </div>
             </div>
           </div>
 
           {/* Signature & Contract Status Row */}
-          <div className="flex items-end justify-between mt-1 pt-1 border-t border-slate-100">
+          <div className={`flex items-end justify-between mt-1 pt-1 border-t ${cfg.dividerBorder}`}>
             <div className="flex flex-col">
-              <span className="text-[6px] font-black text-slate-400 uppercase tracking-widest leading-none">CONTRAT</span>
-              <span className="text-[8px] font-bold text-slate-700 uppercase mt-0.5">
+              <span className={`text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>CONTRAT</span>
+              <span className={`text-[8px] font-bold ${cfg.subtextColor} uppercase mt-0.5`}>
                 {emp.type === 'atelier' ? 'Interne (Atelier)' : 'Sous-traitance'}
               </span>
             </div>
 
             <div className="flex flex-col items-end">
-              <span className="text-[6px] font-black text-slate-400 uppercase tracking-widest leading-none">SIGNATURE</span>
+              <span className={`text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>SIGNATURE</span>
               {emp.signature ? (
                 <img src={emp.signature} alt="Signature" className="h-5 max-h-5 max-w-[75px] object-contain drop-shadow-xs mt-0.5" />
               ) : (
-                <svg className="w-16 h-4 text-slate-700 opacity-75 mt-0.5" viewBox="0 0 140 35" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className={`w-16 h-4 ${cfg.signatureColor} opacity-85 mt-0.5`} viewBox="0 0 140 35" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M 10 24 C 25 6, 38 30, 52 14 C 60 6, 68 28, 90 16 C 105 9, 102 24, 130 13" />
                   <path d="M 30 28 L 120 28" strokeWidth="1" strokeDasharray="2 3" opacity="0.4" />
                 </svg>
@@ -351,7 +558,7 @@ function BadgeFront({
       </div>
 
       {/* Bottom Accent Bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-[#07162c] via-[#0284c7] to-[#4f46e5]" />
+      <div className={`h-1 w-full bg-gradient-to-r ${cfg.accentBar}`} />
     </div>
   );
 }
@@ -360,38 +567,44 @@ function BadgeBack({
   emp,
   company,
   isAr,
+  theme = 'platinum',
 }: {
   emp: Employe;
   company: any;
   isAr: boolean;
+  theme?: BadgeTheme;
 }) {
+  const cfg = BADGE_THEMES[theme] || BADGE_THEMES.platinum;
   const shortId = emp.id ? emp.id.replace(/-/g, '').slice(0, 16).toUpperCase() : 'EMP0000000000000';
   const matricule = emp.matricule?.trim() ? emp.matricule.trim().toUpperCase() : `#EMP-${(emp.id || '').slice(0, 6).toUpperCase()}`;
 
   return (
     <div
       dir="ltr"
-      className="wallet-card-standard relative w-[370px] h-[234px] bg-white rounded-2xl overflow-hidden border border-slate-300 shadow-xl flex flex-col justify-between text-slate-900 select-none print:shadow-none print:border-slate-400 break-inside-avoid text-left transition-all shrink-0"
+      className={`wallet-card-standard relative w-[370px] h-[234px] ${cfg.cardOuterBg} rounded-2xl overflow-hidden border ${cfg.cardBorder} flex flex-col justify-between select-none print:shadow-none print:border-slate-400 break-inside-avoid text-left transition-all shrink-0`}
       style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
       {/* Top Magnetic Stripe Graphic */}
-      <div className="h-[26px] bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex items-center justify-between px-3 text-slate-400 text-[6.5px] font-mono tracking-widest uppercase shrink-0">
+      <div className="h-[26px] bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex items-center justify-between px-3 text-slate-400 text-[6.5px] font-mono tracking-widest uppercase shrink-0 z-10">
         <span className="opacity-75">{company.name || 'BEYA CREATIVE'} • ATELIER ACCREDITATION</span>
         <span className="text-slate-500 font-bold">SEC-ID #{shortId.slice(0, 8)}</span>
       </div>
 
-      {/* DEDICATED SCAN ZONE (ZONE DE SCAN FLBACK & ID) */}
-      <div className="px-2.5 py-1.5 flex-1 flex flex-col justify-between min-h-0 bg-white">
+      {/* DEDICATED SCAN ZONE (ZONE DE SCAN FLBACK & ID) with Watermark */}
+      <div className={`relative px-2.5 py-1.5 flex-1 flex flex-col justify-between min-h-0 ${cfg.bodyBg} overflow-hidden`}>
+        {/* The Watermark Layer */}
+        <BeyaWatermark company={company} themeConfig={cfg} />
+
         {/* Scanner Target Container Box */}
-        <div className="bg-slate-50/90 border border-slate-200 rounded-xl p-2 shadow-2xs">
-          <div className="flex items-center justify-between mb-1 pb-1 border-b border-slate-200">
+        <div className={`${cfg.qrBoxBg} border ${cfg.qrBoxBorder} rounded-xl p-2 shadow-2xs relative z-10`}>
+          <div className={`flex items-center justify-between mb-1 pb-1 border-b ${cfg.dividerBorder}`}>
             <div className="flex items-center gap-1.5">
-              <QrCode className="w-3.5 h-3.5 text-indigo-600" />
-              <span className="text-[7px] font-black uppercase tracking-wider text-slate-900">
+              <QrCode className={`w-3.5 h-3.5 ${cfg.isDark ? 'text-amber-400' : 'text-indigo-600'}`} />
+              <span className={`text-[7px] font-black uppercase tracking-wider ${cfg.nameColor}`}>
                 ZONE DE SCANNING & CONTRÔLE D'ACCÈS
               </span>
             </div>
-            <span className="text-[6px] font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-1 py-0.2 rounded uppercase">
+            <span className={`text-[6px] font-mono font-bold ${cfg.isDark ? 'text-amber-300 bg-amber-500/20 border-amber-500/30' : 'text-indigo-700 bg-indigo-50 border-indigo-100'} border px-1 py-0.2 rounded uppercase`}>
               POINTAGE RH
             </span>
           </div>
@@ -408,17 +621,19 @@ function BadgeBack({
 
             {/* Barcode Graphic & Large Bold Legible ID */}
             <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <BarcodeGraphic value={emp.matricule || shortId} />
+              <div className="bg-white p-1 rounded border border-slate-200">
+                <BarcodeGraphic value={emp.matricule || shortId} />
+              </div>
               
-              <div className="mt-1 pt-1 border-t border-slate-200/80">
-                <span className="block text-[6px] font-black text-slate-400 uppercase tracking-widest leading-none">
+              <div className={`mt-1 pt-1 border-t ${cfg.dividerBorder}`}>
+                <span className={`block text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>
                   IDENTIFIANT SCANNER & MATRICULE
                 </span>
                 <div className="flex items-center justify-between mt-0.5">
-                  <span className="text-[11px] font-mono font-black text-slate-900 tracking-wider uppercase leading-none">
+                  <span className={`text-[11px] font-mono font-black ${cfg.nameColor} tracking-wider uppercase leading-none`}>
                     {matricule}
                   </span>
-                  <span className="text-[7.5px] font-mono font-bold text-slate-500 uppercase">
+                  <span className={`text-[7.5px] font-mono font-bold ${cfg.labelColor} uppercase`}>
                     {shortId.slice(0, 10)}
                   </span>
                 </div>
@@ -428,28 +643,28 @@ function BadgeBack({
         </div>
 
         {/* Security Legal Notice */}
-        <div className="px-1 text-[6.5px] text-slate-500 leading-tight">
+        <div className={`px-1 text-[6.5px] ${cfg.subtextColor} leading-tight relative z-10`}>
           <p className="line-clamp-2">
             Cette carte est strictement personnelle et demeure la propriété de {company.name || 'BEYA CREATIVE'}. Elle doit être présentée à toute réquisition du contrôle. En cas de perte, merci de la retourner au service RH.
           </p>
         </div>
 
         {/* Footer Contact & Validation Stamp */}
-        <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-[7px] text-slate-600 font-bold">
+        <div className={`flex items-center justify-between pt-1 border-t ${cfg.dividerBorder} text-[7px] ${cfg.subtextColor} font-bold relative z-10`}>
           <div className="flex items-center gap-1">
-            <Phone className="w-2.5 h-2.5 text-slate-400" />
+            <Phone className={`w-2.5 h-2.5 ${cfg.labelColor}`} />
             <span>Tél RH : {company.phone || '06 73 43 79 08'}</span>
           </div>
 
-          <div className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded-md text-[6.5px] font-black text-slate-700 uppercase">
-            <Check className="w-2.5 h-2.5 text-emerald-600" />
+          <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 ${cfg.isDark ? 'bg-slate-800/80 border-slate-700 text-slate-200' : 'bg-white/80 border-slate-300 text-slate-700'} border rounded-md text-[6.5px] font-black uppercase`}>
+            <Check className="w-2.5 h-2.5 text-emerald-500" />
             <span>VALIDÉ DIRECTION RH</span>
           </div>
         </div>
       </div>
 
       {/* Bottom Accent Bar */}
-      <div className="h-1 w-full bg-slate-900" />
+      <div className={`h-1 w-full bg-gradient-to-r ${cfg.accentBar}`} />
     </div>
   );
 }
@@ -463,6 +678,7 @@ function ProfessionalBadgeCard({
   showPhotoUpload = false,
   onPhotoUpload,
   viewMode = 'both',
+  theme = 'platinum',
 }: {
   emp: Employe;
   company: any;
@@ -472,6 +688,7 @@ function ProfessionalBadgeCard({
   showPhotoUpload?: boolean;
   onPhotoUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   viewMode?: 'both' | 'front' | 'back';
+  theme?: BadgeTheme;
 }) {
   return (
     <div
@@ -487,16 +704,17 @@ function ProfessionalBadgeCard({
           empName={empName}
           showPhotoUpload={showPhotoUpload}
           onPhotoUpload={onPhotoUpload}
+          theme={theme}
         />
       )}
 
       {viewMode === 'both' && (
-        <div className="hidden md:flex flex-col items-center justify-center text-slate-300 print:flex shrink-0">
-          <div className="w-[1px] h-14 border-r border-dashed border-slate-300 print:border-slate-400" />
-          <span className="text-[7.5px] font-mono uppercase tracking-widest rotate-90 my-2 text-slate-400 print:text-slate-500 whitespace-nowrap">
+        <div className="hidden md:flex flex-col items-center justify-center text-slate-400 print:flex shrink-0">
+          <div className="w-[1px] h-14 border-r border-dashed border-slate-400 print:border-slate-400" />
+          <span className="text-[7.5px] font-mono uppercase tracking-widest rotate-90 my-2 text-slate-500 print:text-slate-500 whitespace-nowrap">
             ✂ Découpe / Pli
           </span>
-          <div className="w-[1px] h-14 border-r border-dashed border-slate-300 print:border-slate-400" />
+          <div className="w-[1px] h-14 border-r border-dashed border-slate-400 print:border-slate-400" />
         </div>
       )}
 
@@ -505,6 +723,7 @@ function ProfessionalBadgeCard({
           emp={emp}
           company={company}
           isAr={isAr}
+          theme={theme}
         />
       )}
     </div>
@@ -587,6 +806,14 @@ export default function SuiviRH() {
   const [showHistorique, setShowHistorique] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<Employe | null>(null);
   const [badgeViewFace, setBadgeViewFace] = useState<'both' | 'front' | 'back'>('both');
+  const [badgeTheme, setBadgeTheme] = useState<BadgeTheme>(() => {
+    return (safeStorage.getItem('beya_badge_theme') as BadgeTheme) || 'platinum';
+  });
+
+  const handleBadgeThemeChange = (newTheme: BadgeTheme) => {
+    setBadgeTheme(newTheme);
+    safeStorage.setItem('beya_badge_theme', newTheme);
+  };
   const [selectedDossierEmp, setSelectedDossierEmp] = useState<Employe | null>(null);
   const [dossierActiveTab, setDossierActiveTab] = useState<'papiers' | 'fautes' | 'infos' | 'paiements'>('papiers');
   const [directCodeInput, setDirectCodeInput] = useState('');
@@ -2588,6 +2815,48 @@ export default function SuiviRH() {
               </div>
             </div>
 
+            {/* Theme Customization Bar for Batch Badges */}
+            <div className="px-8 py-2.5 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-black text-slate-700 flex items-center gap-1">
+                  <span>🎨</span>
+                  <span>{isAr ? 'لون وخلفية البطاقات:' : 'Couleur & Thème :'}</span>
+                </span>
+                <div className="flex items-center gap-1 bg-white p-0.5 rounded-xl border border-slate-300 shadow-2xs">
+                  {(Object.keys(BADGE_THEMES) as BadgeTheme[]).map((tKey) => {
+                    const themeObj = BADGE_THEMES[tKey];
+                    const isSelected = badgeTheme === tKey;
+                    return (
+                      <button
+                        key={tKey}
+                        type="button"
+                        onClick={() => handleBadgeThemeChange(tKey)}
+                        className={`px-2.5 py-1 rounded-lg text-[10.5px] font-black flex items-center gap-1.5 transition-all ${
+                          isSelected
+                            ? 'bg-slate-900 text-white shadow-sm ring-1 ring-slate-950'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span 
+                          className={`w-2.5 h-2.5 rounded-full border border-black/20 shrink-0 ${
+                            tKey === 'platinum' ? 'bg-[#cbd5e1]' :
+                            tKey === 'slate_dark' ? 'bg-[#1e293b]' :
+                            tKey === 'blue_prestige' ? 'bg-[#0b254a]' : 'bg-[#dfc8ad]'
+                          }`} 
+                        />
+                        <span>{isAr ? themeObj.nameAr : themeObj.nameFr}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-800 text-[10.5px] font-black">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>{isAr ? '🛡️ علامة مائية BEYA CREATIVE مدمجة تلقائياً' : '🛡️ Filigrane BEYA CREATIVE actif'}</span>
+              </div>
+            </div>
+
             <div className="flex-1 overflow-y-auto p-6 sm:p-10 bg-slate-100/70 scrollbar-hide">
               <div className="grid grid-cols-1 gap-8 justify-items-center" id="all-badges-capture">
                 {employes.filter(e => e.type === 'atelier' && e.actif).map(e => (
@@ -2597,6 +2866,7 @@ export default function SuiviRH() {
                       company={company}
                       isAr={isAr}
                       empName={empName}
+                      theme={badgeTheme}
                     />
                   </div>
                 ))}
@@ -3117,6 +3387,48 @@ export default function SuiviRH() {
               </div>
             </div>
 
+            {/* Customization Bar: Theme Selector + Watermark Indicator */}
+            <div className="px-4 sm:px-6 py-2.5 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-black text-slate-700 flex items-center gap-1">
+                  <span>🎨</span>
+                  <span>{isAr ? 'لون وخلفية البطاقة:' : 'Couleur & Thème :'}</span>
+                </span>
+                <div className="flex items-center gap-1 bg-white p-0.5 rounded-xl border border-slate-300 shadow-2xs">
+                  {(Object.keys(BADGE_THEMES) as BadgeTheme[]).map((tKey) => {
+                    const themeObj = BADGE_THEMES[tKey];
+                    const isSelected = badgeTheme === tKey;
+                    return (
+                      <button
+                        key={tKey}
+                        type="button"
+                        onClick={() => handleBadgeThemeChange(tKey)}
+                        className={`px-2.5 py-1 rounded-lg text-[10.5px] font-black flex items-center gap-1.5 transition-all ${
+                          isSelected
+                            ? 'bg-slate-900 text-white shadow-sm ring-1 ring-slate-950'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span 
+                          className={`w-2.5 h-2.5 rounded-full border border-black/20 shrink-0 ${
+                            tKey === 'platinum' ? 'bg-[#cbd5e1]' :
+                            tKey === 'slate_dark' ? 'bg-[#1e293b]' :
+                            tKey === 'blue_prestige' ? 'bg-[#0b254a]' : 'bg-[#dfc8ad]'
+                          }`} 
+                        />
+                        <span>{isAr ? themeObj.nameAr : themeObj.nameFr}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-800 text-[10.5px] font-black">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>{isAr ? '🛡️ علامة مائية BEYA CREATIVE مدمجة' : '🛡️ Filigrane BEYA CREATIVE actif'}</span>
+              </div>
+            </div>
+
             {/* Mobile View Switcher if screen small */}
             <div className="sm:hidden px-4 py-2 flex items-center justify-center bg-slate-100/70 border-b border-slate-200">
               <div className="flex items-center bg-slate-200 p-1 rounded-xl gap-1 w-full max-w-xs justify-around">
@@ -3152,6 +3464,7 @@ export default function SuiviRH() {
                 showPhotoUpload={true}
                 onPhotoUpload={(e) => handleDirectBadgePhotoUpload(selectedBadge.id, e)}
                 viewMode={badgeViewFace}
+                theme={badgeTheme}
               />
             </div>
 
