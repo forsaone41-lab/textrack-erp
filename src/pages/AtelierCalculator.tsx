@@ -5,7 +5,8 @@ import {
   Clock, Package, Users, Scissors, ShoppingCart, ArrowLeft,
   DollarSign, Sparkles, Check, X, RefreshCw, UserCheck,
   Ruler, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw, Maximize2, Minimize2, Plus, Copy,
-  Camera, ChevronLeft, ChevronRight, Layers, ChevronUp, ChevronDown, GripVertical, ArrowUpDown, Save, FolderOpen
+  Camera, ChevronLeft, ChevronRight, Layers, ChevronUp, ChevronDown, GripVertical, ArrowUpDown, Save, FolderOpen,
+  Zap
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { loadData, Employe, FicheTechnique, Charge, safeStorage } from '../types';
@@ -4325,10 +4326,109 @@ export default function AtelierCalculator({
                 </div>
               </div>
 
+              {/* Central Area: Production Capacity Metrics (Pcs/Jour & Pcs/Heure based on Gamme calculation) */}
+              {(() => {
+                const safeTotalMin = Math.max(0.01, activeTotalMin);
+                const effectiveWorkers = Math.max(1, workers || activePostes.length || 1);
+                const pcsSoloHour = 60 / safeTotalMin;
+                const pcsSoloDay = 480 / safeTotalMin;
+                const pcsTeamHour = (effectiveWorkers * 60) / safeTotalMin;
+                const pcsTeamDay = (effectiveWorkers * 480) / safeTotalMin;
+
+                return (
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 bg-slate-900/95 border border-emerald-500/40 px-3 py-2 rounded-2xl shadow-lg shadow-emerald-950/40">
+                    {/* Badge 1: Production Journalière Team */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-sm">
+                        <Zap className="w-4 h-4 text-emerald-300 animate-pulse" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                          {isAr ? '📦 إنتاج النهار (8 سوايع):' : '📦 Prod. / Jour (8h) :'}
+                        </span>
+                        <div className="flex items-baseline gap-1.5">
+                          <strong className="text-emerald-300 font-black text-base sm:text-lg font-mono leading-none">
+                            {fmtNum(pcsTeamDay, 0)}
+                          </strong>
+                          <span className="text-emerald-400 font-black text-xs">
+                            {isAr ? 'بياسة / نهار' : 'pcs/jour'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className="text-slate-700 font-bold hidden sm:inline">|</span>
+
+                    {/* Badge 2: Production Horaire Team */}
+                    <div className="flex flex-col text-xs">
+                      <span className="text-[10px] text-slate-400 font-bold">
+                        {isAr ? '⚡ وتيرة الساعة (60د):' : '⚡ Cadence / Heure (60m) :'}
+                      </span>
+                      <div className="flex items-baseline gap-1">
+                        <strong className="text-cyan-300 font-black font-mono text-sm leading-tight">
+                          {fmtNum(pcsTeamHour, 1)}
+                        </strong>
+                        <span className="text-[11px] font-bold text-cyan-400/90">
+                          {isAr ? 'بياسة/ساعة' : 'pcs/h'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span className="text-slate-700 font-bold hidden md:inline">|</span>
+
+                    {/* Badge 3: Production Solo (par ouvrier) */}
+                    <div className="flex flex-col text-xs hidden md:flex">
+                      <span className="text-[10px] text-slate-400 font-bold">
+                        {isAr ? '👤 معدل كل خياط (فردي):' : '👤 Par ouvrier (solo) :'}
+                      </span>
+                      <div className="flex items-baseline gap-1 text-xs">
+                        <strong className="text-amber-300 font-mono font-black text-sm">
+                          {fmtNum(pcsSoloDay, 0)}
+                        </strong>
+                        <span className="text-amber-400/90 font-bold text-[11px]">
+                          {isAr ? 'بياسة/نهار' : 'pcs/j'}
+                        </span>
+                        <span className="text-slate-500 text-[10.5px]">
+                          ({fmtNum(pcsSoloHour, 1)} {isAr ? 'بياسة/س' : 'pcs/h'})
+                        </span>
+                      </div>
+                    </div>
+
+                    <span className="text-slate-700 font-bold hidden lg:inline">|</span>
+
+                    {/* Badge 4: Interactive Workers adjuster */}
+                    <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-700/80 px-2 py-1 rounded-xl text-xs">
+                      <span className="text-slate-400 text-[11px] font-bold">
+                        {isAr ? 'فريق:' : 'Équipe:'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setWorkers(Math.max(1, workers - 1))}
+                        title={isAr ? 'إنقاص خياط' : 'Moins 1 ouvrier'}
+                        className="w-5 h-5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-black active:scale-90 transition-all text-xs"
+                      >
+                        -
+                      </button>
+                      <strong className="text-white font-mono font-black px-1.5 min-w-[22px] text-center text-xs">
+                        {workers} {isAr ? 'عمال' : 'ouv.'}
+                      </strong>
+                      <button
+                        type="button"
+                        onClick={() => setWorkers(workers + 1)}
+                        title={isAr ? 'زيادة خياط' : 'Plus 1 ouvrier'}
+                        className="w-5 h-5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-black active:scale-90 transition-all text-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <button
                 type="button"
                 onClick={() => setShowGammeModal(false)}
-                className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-emerald-900/30 flex items-center gap-2"
+                className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-emerald-900/30 flex items-center gap-2 active:scale-95 shrink-0"
               >
                 <Check className="w-4 h-4" />
                 <span>{isAr ? 'تم (حفظ والرجوع إلى الحاسبة)' : 'Terminer (Enregistrer & Retour)'}</span>

@@ -4314,9 +4314,35 @@ ${userMessage}
                   {editablePostes.length} {isAr ? 'محطة عمل' : 'postes'}
                 </div>
 
-                <div className="text-[11px] text-slate-400 font-bold hidden sm:inline">
-                  ⚡ ~{(60 / Math.max(0.1, editablePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0))).toFixed(0)} {isAr ? 'بياسة/ساعة' : 'pcs/h'}
-                </div>
+                {/* Production Capacity Metrics (Pcs/Jour & Pcs/Heure based on Gamme calculation) */}
+                {(() => {
+                  const totalMin = Math.max(0.01, editablePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0));
+                  const nPostes = Math.max(1, editablePostes.length);
+                  const pcsTeamDay = Math.round((nPostes * 480) / totalMin);
+                  const pcsTeamHour = ((nPostes * 60) / totalMin).toFixed(0);
+                  const pcsSoloDay = Math.round(480 / totalMin);
+                  const pcsSoloHour = (60 / totalMin).toFixed(1);
+
+                  return (
+                    <div className="flex flex-wrap items-center gap-2 bg-slate-900 border border-emerald-500/40 px-3 py-1.5 rounded-xl shadow-inner">
+                      <div className="flex items-center gap-1.5 text-emerald-300 font-bold">
+                        <Zap className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                        <span className="text-[11px] text-slate-300">{isAr ? '📦 إنتاج النهار (8 سوايع):' : '📦 Prod. Jour (8h):'}</span>
+                        <strong className="text-white bg-emerald-600/30 border border-emerald-500/50 px-2 py-0.5 rounded-lg font-mono font-black text-sm text-emerald-300">
+                          {pcsTeamDay} {isAr ? 'بياسة/نهار' : 'pcs/j'}
+                        </strong>
+                      </div>
+                      <span className="text-slate-700 hidden sm:inline">|</span>
+                      <span className="text-cyan-300 font-bold font-mono text-[11px]">
+                        ⚡ {pcsTeamHour} {isAr ? 'بياسة/ساعة' : 'pcs/h'}
+                      </span>
+                      <span className="text-slate-700 hidden md:inline">|</span>
+                      <span className="text-amber-300/90 text-[11px] font-bold hidden md:inline">
+                        👤 {isAr ? 'لكل خياط:' : 'Solo:'} <strong className="font-mono">{pcsSoloDay}</strong> {isAr ? 'بياسة/نهار' : 'pcs/j'} ({pcsSoloHour} {isAr ? 'بياسة/س' : 'pcs/h'})
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="flex items-center gap-2">
