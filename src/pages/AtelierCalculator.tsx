@@ -632,55 +632,64 @@ export default function AtelierCalculator({
   const difference = totalPriceClient - realCost;
   const costPerPiece = quantity > 0 ? (realCost / quantity) : 0;
 
-  // Multi-Unit Synchronized Breakdown (Minute / Hour / Day / Month)
+  // Multi-Unit Synchronized Breakdown (Minute / Hour / Day / Week / Month)
   const effectiveDurationMin = Math.max(1, totalMinutesPerWorker || 480);
   const pcsPerMin = (quantity || 0) / effectiveDurationMin;
   const pcsPerHour = pcsPerMin * 60;
   const pcsPerDay = pcsPerMin * 480;
+  const pcsPerWeek = pcsPerMin * 2880; // 6 jours = 48h = 2 880 min
   const pcsPerMonth = pcsPerMin * 12480;
 
   const unitMatCost = quantity > 0 ? (materials / quantity) : 0;
 
-  // Worker Wage in 4 units (for 1 worker)
+  // Worker Wage in 5 units (for 1 worker)
   const ratePerMin = rate / 60;
   const ratePerHour = rate;
   const ratePerDay = rate * 8;
+  const ratePerWeek = rate * 48; // 6 jours * 8h = 48h
   const ratePerMonth = rate * 208;
 
-  // Atelier Fixed Expenses in 4 units (total workshop)
+  // Atelier Fixed Expenses in 5 units (total workshop)
   const monthlyAtelierMin = monthlyOther / 12480;
   const monthlyAtelierHour = monthlyOther / 208;
   const monthlyAtelierDay = monthlyOther / 26;
+  const monthlyAtelierWeek = monthlyAtelierDay * 6;
 
-  // Team Operating Cost & Profit across 4 timeframes (Minute, Hour, Day, Month)
+  // Team Operating Cost & Profit across 5 timeframes (Minute, Hour, Day, Week, Month)
   const teamLaborMin = ratePerMin * workers;
   const teamLaborHour = ratePerHour * workers;
   const teamLaborDay = ratePerDay * workers;
+  const teamLaborWeek = ratePerWeek * workers;
   const teamLaborMonth = ratePerMonth * workers;
 
   const teamAtelierMin = (costPerMachinePerHour / 60) * workers;
   const teamAtelierHour = costPerMachinePerHour * workers;
   const teamAtelierDay = teamAtelierHour * 8;
+  const teamAtelierWeek = teamAtelierHour * 48;
   const teamAtelierMonth = teamAtelierHour * 208;
 
   const revMin = pcsPerMin * priceSale;
   const revHour = pcsPerHour * priceSale;
   const revDay = pcsPerDay * priceSale;
+  const revWeek = pcsPerWeek * priceSale;
   const revMonth = pcsPerMonth * priceSale;
 
   const matMin = pcsPerMin * unitMatCost;
   const matHour = pcsPerHour * unitMatCost;
   const matDay = pcsPerDay * unitMatCost;
+  const matWeek = pcsPerWeek * unitMatCost;
   const matMonth = pcsPerMonth * unitMatCost;
 
   const totalCostMin = teamLaborMin + teamAtelierMin + matMin;
   const totalCostHour = teamLaborHour + teamAtelierHour + matHour;
   const totalCostDay = teamLaborDay + teamAtelierDay + matDay;
+  const totalCostWeek = teamLaborWeek + teamAtelierWeek + matWeek;
   const totalCostMonth = teamLaborMonth + teamAtelierMonth + matMonth;
 
   const profitMin = revMin - totalCostMin;
   const profitHour = revHour - totalCostHour;
   const profitDay = revDay - totalCostDay;
+  const profitWeek = revWeek - totalCostWeek;
   const profitMonth = revMonth - totalCostMonth;
 
   const fmtNum = (val: number, maxDec = 2): string => {
@@ -1379,23 +1388,24 @@ export default function AtelierCalculator({
               </CostTooltip>
             </div>
 
-            {/* Row 4: LIVE AUTOMATIC 4-TIMEFRAME MATRIX (الدقيقة | الساعة | النهار | الشهر أوتوماتيك) */}
+            {/* Row 4: LIVE AUTOMATIC 5-TIMEFRAME MATRIX (الدقيقة | الساعة | النهار | السيمانة | الشهر أوتوماتيك) */}
             <div className="pt-2 border-t border-black/10">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] font-black text-slate-800 flex items-center gap-1">
                   <span>📊</span>
-                  {isAr ? 'الحساب الدقيق الأوتوماتيكي (دقيقة • ساعة • نهار • شهر):' : 'Calcul Automatique (Min • Heure • Jour • Mois) :'}
+                  {isAr ? 'الحساب الدقيق الأوتوماتيكي (دقيقة • ساعة • نهار • سيمانة • شهر):' : 'Calcul Automatique (Min • Heure • Jour • Semaine • Mois) :'}
                 </span>
                 <span className="text-[9px] font-bold text-slate-500">
                   {isAr ? 'اضغط لتطبيق المدة' : 'Cliquer pour appliquer'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-4 gap-1.5 text-center">
+              <div className="grid grid-cols-5 gap-1 text-center">
                 {[
                   { id: 'min', label: isAr ? '⏱️ فالدقيقة' : '⏱️ / Min', targetMin: 1, pcs: pcsPerMin, rev: revMin, cost: totalCostMin, profit: profitMin, dec: 2 },
                   { id: 'hour', label: isAr ? '🕐 فالساعة' : '🕐 / Heure', targetMin: 60, pcs: pcsPerHour, rev: revHour, cost: totalCostHour, profit: profitHour, dec: 1 },
                   { id: 'day', label: isAr ? '☀️ فالنهار' : '☀️ / Jour', targetMin: 480, pcs: pcsPerDay, rev: revDay, cost: totalCostDay, profit: profitDay, dec: 0 },
+                  { id: 'week', label: isAr ? '🗓️ فالسيمانة' : '🗓️ / Semaine', targetMin: 2880, pcs: pcsPerWeek, rev: revWeek, cost: totalCostWeek, profit: profitWeek, dec: 0 },
                   { id: 'month', label: isAr ? '📅 فالشهر' : '📅 / Mois', targetMin: 12480, pcs: pcsPerMonth, rev: revMonth, cost: totalCostMonth, profit: profitMonth, dec: 0 },
                 ].map((tf) => {
                   const isCurrentDuration = Math.abs(totalMinutesPerWorker - tf.targetMin) < 0.05;
@@ -1404,33 +1414,33 @@ export default function AtelierCalculator({
                       key={tf.id}
                       onClick={() => switchDurationWithScale(tf.targetMin)}
                       title={isAr ? `اضغط لتحويل الحاسبة بالكامل إلى ${tf.label}` : `Cliquer pour basculer le calcul sur ${tf.label}`}
-                      className={`p-1.5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between gap-0.5 ${
+                      className={`p-1 sm:p-1.5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between gap-0.5 ${
                         isCurrentDuration
                           ? 'bg-slate-900 text-white border-slate-900 shadow-sm ring-2 ring-indigo-500/40'
                           : 'bg-white/90 hover:bg-white text-slate-800 border-black/10 hover:border-indigo-400'
                       }`}
                     >
-                      <div className={`text-[9px] font-black pb-0.5 border-b ${isCurrentDuration ? 'text-amber-300 border-white/15' : 'text-indigo-700 border-slate-200'}`}>
+                      <div className={`text-[8px] sm:text-[9px] font-black pb-0.5 border-b truncate ${isCurrentDuration ? 'text-amber-300 border-white/15' : 'text-indigo-700 border-slate-200'}`}>
                         {tf.label}
                       </div>
-                      <div className="space-y-0.5 text-[9px]">
+                      <div className="space-y-0.5 text-[7.5px] sm:text-[8.5px]">
                         <div className="flex items-center justify-between">
                           <span className={isCurrentDuration ? 'text-slate-300' : 'text-slate-500'}>{isAr ? 'إنتاج:' : 'Pcs:'}</span>
-                          <strong className="font-black">{fmtNum(tf.pcs, 1)}</strong>
+                          <strong className="font-black truncate">{fmtNum(tf.pcs, 1)}</strong>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className={isCurrentDuration ? 'text-slate-300' : 'text-slate-500'}>{isAr ? 'بيع:' : 'Vente:'}</span>
-                          <strong className="font-bold">{tf.rev.toFixed(tf.dec)}</strong>
+                          <strong className="font-bold truncate">{fmtNum(tf.rev, tf.dec)}</strong>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className={isCurrentDuration ? 'text-slate-300' : 'text-slate-500'}>{isAr ? 'تكلفة:' : 'Coût:'}</span>
-                          <strong className="font-bold">{tf.cost.toFixed(tf.dec)}</strong>
+                          <strong className="font-bold truncate">{fmtNum(tf.cost, tf.dec)}</strong>
                         </div>
                       </div>
-                      <div className={`pt-0.5 border-t text-[9px] font-black ${
+                      <div className={`pt-0.5 border-t text-[8px] sm:text-[8.5px] font-black truncate ${
                         isCurrentDuration ? 'border-white/15' : 'border-slate-200'
                       } ${tf.profit >= 0 ? (isCurrentDuration ? 'text-emerald-400' : 'text-emerald-700') : (isCurrentDuration ? 'text-rose-400' : 'text-rose-600')}`}>
-                        {tf.profit >= 0 ? '+' : ''}{tf.profit.toFixed(tf.dec)} DH
+                        {tf.profit >= 0 ? '+' : ''}{fmtNum(tf.profit, tf.dec)} DH
                       </div>
                     </div>
                   );
@@ -1988,17 +1998,17 @@ export default function AtelierCalculator({
                     <div className="flex flex-wrap items-center justify-between gap-1 mb-2.5">
                       <span className="text-[11px] font-black text-indigo-950">
                         {isAr
-                          ? '⚡ وتيرة الإنتاج الأوتوماتيكية (اكتب فـ الدقيقة أو الساعة أو النهار أو الشهر وكيعطيك الباقي أوتوماتيك):'
-                          : '⚡ Cadence de production (saisissez par Minute, Heure, Jour ou Mois — calcul automatique) :'}
+                          ? '⚡ وتيرة الإنتاج الأوتوماتيكية (دقيقة • ساعة • نهار • سيمانة • شهر):'
+                          : '⚡ Cadence de production (Min • Heure • Jour • Semaine • Mois) :'}
                       </span>
                       <span className="text-[10px] font-black text-emerald-700 bg-white px-2 py-0.5 rounded-lg border border-emerald-200">
-                        {isAr ? `1 شهر = 26 يوم = 208 ساعة = 12,480 دقيقة` : `1 mois = 26j = 208h = 12 480 min`}
+                        {isAr ? `1 سيمانة = 6 أيام (48س) • 1 شهر = 26 يوم (208س)` : `1 sem. = 6j (48h) • 1 mois = 26j (208h)`}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                       {/* Pieces per Minute */}
-                      <div className="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-2xs">
+                      <div className="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
                         <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
                           {isAr ? '⏱️ بياسة / دقيقة' : '⏱️ Pièces / Minute'}
                         </label>
@@ -2018,16 +2028,16 @@ export default function AtelierCalculator({
                             const val = e.target.value === '' ? 0 : Number(e.target.value);
                             setQuantity(Math.round(val * effectiveDurationMin * 100) / 100);
                           }}
-                          className="w-full px-2 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
+                          className="w-full px-1.5 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
                         />
-                        <div className="mt-1.5 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
-                          <span>{isAr ? 'البيع:' : 'Vente:'}</span>
-                          <strong className="text-emerald-700">{revMin.toFixed(2)} DH/د</strong>
+                        <div className="mt-1 text-[8.5px] font-bold text-slate-500 text-center flex justify-between px-0.5">
+                          <span>{isAr ? 'بيع:' : 'Vente:'}</span>
+                          <strong className="text-emerald-700 truncate">{fmtNum(revMin, 2)} DH/د</strong>
                         </div>
                       </div>
 
                       {/* Pieces per Hour */}
-                      <div className="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-2xs">
+                      <div className="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
                         <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
                           {isAr ? '🕐 بياسة / ساعة' : '🕐 Pièces / Heure'}
                         </label>
@@ -2048,16 +2058,16 @@ export default function AtelierCalculator({
                             const newPcsMin = val / 60;
                             setQuantity(Math.round(newPcsMin * effectiveDurationMin * 100) / 100);
                           }}
-                          className="w-full px-2 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
+                          className="w-full px-1.5 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
                         />
-                        <div className="mt-1.5 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
-                          <span>{isAr ? 'البيع:' : 'Vente:'}</span>
-                          <strong className="text-emerald-700">{revHour.toFixed(2)} DH/س</strong>
+                        <div className="mt-1 text-[8.5px] font-bold text-slate-500 text-center flex justify-between px-0.5">
+                          <span>{isAr ? 'بيع:' : 'Vente:'}</span>
+                          <strong className="text-emerald-700 truncate">{fmtNum(revHour, 1)} DH/س</strong>
                         </div>
                       </div>
 
                       {/* Pieces per Day (8h) */}
-                      <div className="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-2xs">
+                      <div className="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
                         <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
                           {isAr ? '☀️ بياسة / نهار (8س)' : '☀️ Pièces / Jour (8h)'}
                         </label>
@@ -2078,16 +2088,46 @@ export default function AtelierCalculator({
                             const newPcsMin = val / 480;
                             setQuantity(Math.round(newPcsMin * effectiveDurationMin * 100) / 100);
                           }}
-                          className="w-full px-2 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
+                          className="w-full px-1.5 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
                         />
-                        <div className="mt-1.5 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
-                          <span>{isAr ? 'البيع:' : 'Vente:'}</span>
-                          <strong className="text-emerald-700">{revDay.toFixed(2)} DH/يوم</strong>
+                        <div className="mt-1 text-[8.5px] font-bold text-slate-500 text-center flex justify-between px-0.5">
+                          <span>{isAr ? 'بيع:' : 'Vente:'}</span>
+                          <strong className="text-emerald-700 truncate">{fmtNum(revDay, 0)} DH/ي</strong>
+                        </div>
+                      </div>
+
+                      {/* Pieces per Week (6j = 48h = 2880 min) */}
+                      <div className="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
+                        <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
+                          {isAr ? '🗓️ بياسة / سيمانة (6ي)' : '🗓️ Pièces / Semaine (6j)'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          placeholder="0"
+                          value={getSyncValue('pcs_week', pcsPerWeek, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('pcs_week');
+                            setActiveInputRaw(pcsPerWeek === 0 ? '' : fmtNum(pcsPerWeek, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
+                            const newPcsMin = val / 2880;
+                            setQuantity(Math.round(newPcsMin * effectiveDurationMin * 100) / 100);
+                          }}
+                          className="w-full px-1.5 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
+                        />
+                        <div className="mt-1 text-[8.5px] font-bold text-slate-500 text-center flex justify-between px-0.5">
+                          <span>{isAr ? 'بيع:' : 'Vente:'}</span>
+                          <strong className="text-emerald-700 truncate">{fmtNum(revWeek, 0)} DH/سيم</strong>
                         </div>
                       </div>
 
                       {/* Pieces per Month (26j = 208h = 12,480 min) */}
-                      <div className="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-2xs">
+                      <div className="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
                         <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
                           {isAr ? '📅 بياسة / شهر (26ي)' : '📅 Pièces / Mois (26j)'}
                         </label>
@@ -2108,11 +2148,11 @@ export default function AtelierCalculator({
                             const newPcsMin = val / 12480;
                             setQuantity(Math.round(newPcsMin * effectiveDurationMin * 100) / 100);
                           }}
-                          className="w-full px-2 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
+                          className="w-full px-1.5 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
                         />
-                        <div className="mt-1.5 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
+                        <div className="mt-1 text-[8.5px] font-bold text-slate-500 text-center flex justify-between px-0.5">
                           <span>{isAr ? 'البيع:' : 'Vente:'}</span>
-                          <strong className="text-emerald-700">{revMonth.toFixed(2)} DH/شهر</strong>
+                          <strong className="text-emerald-700 truncate">{fmtNum(revMonth, 0)} DH/شهر</strong>
                         </div>
                       </div>
                     </div>
@@ -2146,8 +2186,8 @@ export default function AtelierCalculator({
                     </div>
                   </div>
 
-                  {/* Row 1: Workers Count + Synchronized Work Duration in 4 Units */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                  {/* Row 1: Workers Count + Synchronized Work Duration in 5 Units */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
                     <div>
                       <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
                         {isAr ? '👥 عدد العمال' : '👥 Ouvriers'}
@@ -2238,6 +2278,32 @@ export default function AtelierCalculator({
                     </div>
 
                     <div>
+                      <label className="block text-[10px] font-black text-blue-700 mb-1 text-center">
+                        {isAr ? '🗓️ أسابيع العمل (6ي)' : '🗓️ Semaines (6j)'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="0"
+                        value={getSyncValue('dur_week', totalHoursPerWorker / 48, 3)}
+                        onFocus={() => {
+                          setActiveInputKey('dur_week');
+                          const w = totalHoursPerWorker / 48;
+                          setActiveInputRaw(w === 0 ? '' : fmtNum(w, 3));
+                        }}
+                        onBlur={() => setActiveInputKey(null)}
+                        onChange={(e) => {
+                          setActiveInputRaw(e.target.value);
+                          const weekVal = e.target.value === '' ? 0 : Number(e.target.value);
+                          setExtraHours(0);
+                          setDays(weekVal * 6);
+                        }}
+                        className="w-full px-2 py-2 bg-blue-50/50 border border-blue-200 rounded-xl font-black text-blue-700 text-xs text-center focus:bg-white focus:border-blue-600 outline-none"
+                      />
+                    </div>
+
+                    <div>
                       <label className="block text-[10px] font-black text-emerald-700 mb-1 text-center">
                         {isAr ? '📅 أشهر العمل (26ي)' : '📅 Mois (26j)'}
                       </label>
@@ -2264,13 +2330,13 @@ export default function AtelierCalculator({
                     </div>
                   </div>
 
-                  {/* Row 2: Synchronized Worker Wage Rate in 4 Units */}
+                  {/* Row 2: Synchronized Worker Wage Rate in 5 Units */}
                   <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                       <span className="text-[10px] font-black text-slate-700">
                         {isAr
-                          ? '💵 أجر العامل الواحد (عدّل أي خانة: دقيقة أو ساعة أو نهار أو شهر وكيتحسب الباقي أوتوماتيك):'
-                          : '💵 Salaire d\'un ouvrier (modifiable par Minute, Heure, Jour ou Mois) :'}
+                          ? '💵 أجر العامل الواحد (عدّل أي خانة: دقيقة أو ساعة أو نهار أو سيمانة أو شهر وكيتحسب الباقي أوتوماتيك):'
+                          : '💵 Salaire d\'un ouvrier (modifiable par Minute, Heure, Jour, Semaine ou Mois) :'}
                       </span>
                       <div className="flex items-center bg-white p-0.5 rounded-lg border border-slate-200">
                         <button
@@ -2310,7 +2376,7 @@ export default function AtelierCalculator({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 mb-1 text-center">
                           {isAr ? 'ثمن الدقيقة (DH/د)' : 'Taux / Minute'}
@@ -2380,6 +2446,30 @@ export default function AtelierCalculator({
                             if (rateMode === 'rh') setRateMode('smig');
                           }}
                           className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-black text-indigo-600 text-xs text-center focus:border-indigo-600 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1 text-center">
+                          {isAr ? 'ثمن السيمانة (DH/أسبوع)' : 'Taux / Semaine (48h)'}
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={getSyncValue('rate_week', ratePerWeek, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('rate_week');
+                            setActiveInputRaw(fmtNum(ratePerWeek, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const v = e.target.value === '' ? 0 : Number(e.target.value);
+                            setRate(v / 48);
+                            if (rateMode === 'rh') setRateMode('smig');
+                          }}
+                          className="w-full px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-black text-blue-700 text-xs text-center focus:border-blue-600 outline-none"
                         />
                       </div>
 
@@ -2823,6 +2913,10 @@ export default function AtelierCalculator({
                     <strong dir="ltr" className="font-black text-emerald-700">{fmtNum(pcsPerDay, 2)} pc/j</strong>
                   </div>
                   <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'الإنتاج في السيمانة (6 أيام):' : 'Production / semaine (6j) :'}</span>
+                    <strong dir="ltr" className="font-black text-blue-700">{fmtNum(pcsPerWeek, 1)} pc/sem</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
                     <span className="text-slate-600 font-bold">{isAr ? 'الإنتاج في الشهر (26 يوم):' : 'Production / mois (26j) :'}</span>
                     <strong dir="ltr" className="font-black text-slate-900">{fmtNum(pcsPerMonth, 0)} pc/mois</strong>
                   </div>
@@ -2853,8 +2947,8 @@ export default function AtelierCalculator({
                     <strong dir="ltr" className="font-black text-slate-900">{ratePerHour.toFixed(2)} DH/h ({ratePerMin.toFixed(3)} DH/m)</strong>
                   </div>
                   <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
-                    <span className="text-slate-600 font-bold">{isAr ? 'أجر العامل (نهار / شهر):' : 'Taux (jour / mois) :'}</span>
-                    <strong dir="ltr" className="font-black text-slate-900">{ratePerDay.toFixed(1)} DH/j ({ratePerMonth.toFixed(0)} DH/mois)</strong>
+                    <span className="text-slate-600 font-bold">{isAr ? 'أجر العامل (نهار / سيمانة / شهر):' : 'Taux (jour / sem / mois) :'}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{ratePerDay.toFixed(0)}j • {ratePerWeek.toFixed(0)}sem • {ratePerMonth.toFixed(0)}m</strong>
                   </div>
                   <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
                     <span className="text-slate-600 font-bold">{isAr ? 'اليد العاملة للبياسة:' : 'MOD par pièce :'}</span>
@@ -2902,10 +2996,10 @@ export default function AtelierCalculator({
               </div>
             </div>
 
-            {/* 4. 4-Timeframe Precision Table in PDF */}
+            {/* 4. 5-Timeframe Precision Table in PDF */}
             <div className="border border-slate-300 rounded-xl overflow-hidden">
               <div className="bg-slate-900 text-white px-3 py-1.5 font-black text-[11px] flex items-center justify-between">
-                <span>{isAr ? '📊 جدول الحساب الدقيق الأوتوماتيكي (فالدقيقة • فالساعة • فالنهار • فالشهر)' : '📊 Tableau Récapitulatif Multi-Unités (Minute • Heure • Jour • Mois)'}</span>
+                <span>{isAr ? '📊 جدول الحساب الدقيق الأوتوماتيكي (فالدقيقة • فالساعة • فالنهار • فالسيمانة • فالشهر)' : '📊 Tableau Récapitulatif Multi-Unités (Minute • Heure • Jour • Semaine • Mois)'}</span>
                 <span className="text-[9px] text-amber-300 font-bold">{isAr ? 'حساب متزامن 100% لجميع الوحدات الزمنية' : 'Synchronisation temps réel'}</span>
               </div>
               <table className="w-full text-[10.5px] border-collapse text-center">
@@ -2925,6 +3019,7 @@ export default function AtelierCalculator({
                     { label: isAr ? '⏱️ فالدقيقة الواحدة (1 دقيقة)' : '⏱️ Par Minute (1 min)', pcs: `${fmtNum(pcsPerMin, 3)} pcs`, rev: `${revMin.toFixed(2)} DH`, mod: `${teamLaborMin.toFixed(2)} DH`, matFrais: `${(matMin + teamAtelierMin).toFixed(2)} DH`, cost: `${totalCostMin.toFixed(2)} DH`, prof: `${profitMin >= 0 ? '+' : ''}${profitMin.toFixed(2)} DH`, isPos: profitMin >= 0 },
                     { label: isAr ? '🕐 فالساعة الواحدة (60 دقيقة)' : '🕐 Par Heure (60 min)', pcs: `${fmtNum(pcsPerHour, 2)} pcs`, rev: `${revHour.toFixed(2)} DH`, mod: `${teamLaborHour.toFixed(2)} DH`, matFrais: `${(matHour + teamAtelierHour).toFixed(2)} DH`, cost: `${totalCostHour.toFixed(2)} DH`, prof: `${profitHour >= 0 ? '+' : ''}${profitHour.toFixed(2)} DH`, isPos: profitHour >= 0 },
                     { label: isAr ? '☀️ فالنهار الواحد (8 سوايع = 480 د)' : '☀️ Par Jour (8h = 480 min)', pcs: `${fmtNum(pcsPerDay, 2)} pcs`, rev: `${revDay.toFixed(2)} DH`, mod: `${teamLaborDay.toFixed(2)} DH`, matFrais: `${(matDay + teamAtelierDay).toFixed(2)} DH`, cost: `${totalCostDay.toFixed(2)} DH`, prof: `${profitDay >= 0 ? '+' : ''}${profitDay.toFixed(2)} DH`, isPos: profitDay >= 0 },
+                    { label: isAr ? '🗓️ فالسيمانة (6 أيام = 48س = 2,880 د)' : '🗓️ Par Semaine (6j = 48h = 2 880 min)', pcs: `${fmtNum(pcsPerWeek, 1)} pcs`, rev: `${revWeek.toFixed(2)} DH`, mod: `${teamLaborWeek.toFixed(2)} DH`, matFrais: `${(matWeek + teamAtelierWeek).toFixed(2)} DH`, cost: `${totalCostWeek.toFixed(2)} DH`, prof: `${profitWeek >= 0 ? '+' : ''}${profitWeek.toFixed(2)} DH`, isPos: profitWeek >= 0 },
                     { label: isAr ? '📅 فالشهر الكامل (26 يوم = 12,480 د)' : '📅 Par Mois (26j = 12 480 min)', pcs: `${fmtNum(pcsPerMonth, 0)} pcs`, rev: `${revMonth.toFixed(2)} DH`, mod: `${teamLaborMonth.toFixed(2)} DH`, matFrais: `${(matMonth + teamAtelierMonth).toFixed(2)} DH`, cost: `${totalCostMonth.toFixed(2)} DH`, prof: `${profitMonth >= 0 ? '+' : ''}${profitMonth.toFixed(2)} DH`, isPos: profitMonth >= 0 },
                   ].map((r, i) => (
                     <tr key={i} className="border-b border-slate-200 last:border-0 odd:bg-white even:bg-slate-50/60">
