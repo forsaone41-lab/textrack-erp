@@ -540,3 +540,121 @@ export function parseGammeText(raw: string): PosteTravail[] {
   return results;
 }
 
+/**
+ * Format any duration in days into clear, natural Moroccan / French workshop terms.
+ * Especially when duration is less than 1 day (< 8h): converts to 2h, 4h (demi-journée), etc.
+ */
+export function formatDurationHuman(
+  daysVal: number,
+  isAr: boolean
+): { mainText: string; subText: string; totalHours: number; totalMinutes: number; isUnderOneDay: boolean } {
+  const safeDays = Math.max(0, Number(daysVal) || 0);
+  const totalHours = Number((safeDays * 8).toFixed(2));
+  const totalMinutes = Math.round(safeDays * 480);
+  const isUnderOneDay = totalHours < 8;
+
+  // Less than 1 hour (e.g. 15min, 30min, 45min)
+  if (totalHours < 1) {
+    if (totalMinutes <= 0) {
+      return {
+        mainText: isAr ? '0 دقيقة' : '0 min',
+        subText: '0h',
+        totalHours: 0,
+        totalMinutes: 0,
+        isUnderOneDay: true
+      };
+    }
+    const minText = isAr
+      ? (totalMinutes === 30 ? 'نصف ساعة (30 د)' : `${totalMinutes} دقيقة`)
+      : `${totalMinutes} min`;
+    return {
+      mainText: minText,
+      subText: isAr ? `${totalHours} ساعة` : `${totalHours}h`,
+      totalHours,
+      totalMinutes,
+      isUnderOneDay: true
+    };
+  }
+
+  // Less than 1 day (< 8 hours)
+  if (totalHours < 8) {
+    let hourLabel = '';
+    if (Math.abs(totalHours - 1) < 0.05) hourLabel = isAr ? 'ساعة واحدة (1h)' : '1 heure';
+    else if (Math.abs(totalHours - 2) < 0.05) hourLabel = isAr ? 'ساعتان (2h)' : '2 heures';
+    else if (Math.abs(totalHours - 4) < 0.05) hourLabel = isAr ? '4 سوايع (نصف يوم • 4h)' : '4h (demi-journée)';
+    else if (Math.abs(totalHours - 3) < 0.05) hourLabel = isAr ? '3 سوايع (3h)' : '3 heures';
+    else if (Math.abs(totalHours - 5) < 0.05) hourLabel = isAr ? '5 سوايع (5h)' : '5 heures';
+    else if (Math.abs(totalHours - 6) < 0.05) hourLabel = isAr ? '6 سوايع (6h)' : '6 heures';
+    else if (Math.abs(totalHours - 7) < 0.05) hourLabel = isAr ? '7 سوايع (7h)' : '7 heures';
+    else {
+      const hInt = Math.floor(totalHours);
+      const mRemain = Math.round((totalHours - hInt) * 60);
+      hourLabel = isAr
+        ? `${hInt} سوايع ${mRemain > 0 ? `و ${mRemain} د` : ''} (${totalHours}h)`
+        : `${hInt}h ${mRemain > 0 ? `${mRemain}m` : ''}`;
+    }
+
+    return {
+      mainText: hourLabel,
+      subText: isAr ? `${safeDays} يوم عمل (8س)` : `${safeDays} j`,
+      totalHours,
+      totalMinutes,
+      isUnderOneDay: true
+    };
+  }
+
+  // Exactly 1 day (8 hours)
+  if (Math.abs(safeDays - 1) < 0.05) {
+    return {
+      mainText: isAr ? 'نهار واحد (8 سوايع)' : '1 jour (8h)',
+      subText: isAr ? '1.0 يوم' : '1.0 j',
+      totalHours: 8,
+      totalMinutes: 480,
+      isUnderOneDay: false
+    };
+  }
+
+  // Exactly integer days (2, 3, 4, etc.)
+  if (Math.abs(safeDays - Math.round(safeDays)) < 0.05) {
+    const roundDays = Math.round(safeDays);
+    const dayName = isAr
+      ? (roundDays === 2 ? 'يومان (16 ساعة)' : `${roundDays} أيام (${roundDays * 8} ساعة)`)
+      : `${roundDays} jours (${roundDays * 8}h)`;
+    return {
+      mainText: dayName,
+      subText: `${roundDays} j`,
+      totalHours,
+      totalMinutes,
+      isUnderOneDay: false
+    };
+  }
+
+  // Fractional days > 1 (e.g. 1.25, 1.5, 2.5)
+  const wholeDays = Math.floor(safeDays);
+  const fracHours = Number(((safeDays - wholeDays) * 8).toFixed(1));
+  let fracDesc = '';
+  if (isAr) {
+    const dayWord = wholeDays === 1 ? 'نهار' : wholeDays === 2 ? 'يومان' : `${wholeDays} أيام`;
+    if (Math.abs(fracHours - 4) < 0.2) {
+      fracDesc = `${dayWord} ونصف (نصف نهار)`;
+    } else if (Math.abs(fracHours - 2) < 0.2) {
+      fracDesc = `${dayWord} و ساعتان (2h)`;
+    } else if (Math.abs(fracHours - 1) < 0.2) {
+      fracDesc = `${dayWord} و ساعة واحدة`;
+    } else {
+      fracDesc = `${dayWord} و ${fracHours} سوايع`;
+    }
+  } else {
+    fracDesc = `${wholeDays}j et ${fracHours}h`;
+  }
+
+  return {
+    mainText: fracDesc,
+    subText: isAr ? `${safeDays} يوم • ${totalHours}h` : `${safeDays} j • ${totalHours}h`,
+    totalHours,
+    totalMinutes,
+    isUnderOneDay: false
+  };
+}
+
+

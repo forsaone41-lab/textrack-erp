@@ -11,7 +11,7 @@ import {
 import { useNavigate, Navigate } from 'react-router-dom';
 import { loadData, Employe, FicheTechnique, Charge, safeStorage } from '../types';
 import { supabase } from '../supabase';
-import { PosteTravail, getGarmentTechnicalBreakdown, DEFAULT_FICHES_TECHNIQUES, parseGammeText } from '../lib/atelierAi';
+import { PosteTravail, getGarmentTechnicalBreakdown, DEFAULT_FICHES_TECHNIQUES, parseGammeText, formatDurationHuman } from '../lib/atelierAi';
 
 export interface SavedProduction {
   id: string;
@@ -228,6 +228,7 @@ export default function AtelierCalculator({
   const [workers, setWorkers] = useState(10);
   const [days, setDays] = useState(2);
   const [extraHours, setExtraHours] = useState(0);
+  const [topDurationUnit, setTopDurationUnit] = useState<'days' | 'hours'>('days');
   const [rate, setRate] = useState(17.10); // SMIG rate per hour
   const [rateMode, setRateMode] = useState<'smig' | 'rh'>('smig');
   
@@ -744,10 +745,14 @@ export default function AtelierCalculator({
   const netMarginPct = pricePerPiece > 0 && costPerPiece > 0
     ? (((pricePerPiece - costPerPiece) / pricePerPiece) * 100)
     : 0;
+  const rawRealisticDays = (((quantity || 0) * activeGammeMinutes) / Math.max(1, workers * 480));
   const realisticDaysFromGamme = Math.max(
-    0.25,
-    Number((((quantity || 0) * activeGammeMinutes) / Math.max(1, workers * 480)).toFixed(2))
+    0.05,
+    Number(rawRealisticDays.toFixed(2))
   );
+  const currentTotalDays = days + (extraHours / 8);
+  const currentHumanDur = formatDurationHuman(currentTotalDays, isAr);
+  const realisticHumanDur = formatDurationHuman(realisticDaysFromGamme, isAr);
   const isDurationMismatch = (days > realisticDaysFromGamme * 1.35) || (difference < 0 && Math.abs(days - realisticDaysFromGamme) > 0.5);
 
   const bottleneckPoste = activePostesList.length > 0
@@ -1566,7 +1571,11 @@ export default function AtelierCalculator({
                     }`}
                   >
                     <span>⚡</span>
-                    <span>{isAr ? `الوقت الواقعي للطلبية: ${realisticDaysFromGamme} يوم (اضغط للتطبيق)` : `Durée réaliste : ${realisticDaysFromGamme} j (Appliquer)`}</span>
+                    <span>
+                      {isAr
+                        ? `الوقت الواقعي للطلبية: ${realisticHumanDur.mainText} (${realisticDaysFromGamme} يوم) — اضغط للتطبيق`
+                        : `Durée réaliste : ${realisticHumanDur.mainText} (${realisticDaysFromGamme}j) — Appliquer`}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -1632,36 +1641,149 @@ export default function AtelierCalculator({
                   />
                 </div>
 
-                {/* 4. Work Duration in Days (8h) */}
-                <div className={`bg-white p-2 rounded-xl border-2 shadow-2xs ${
+                {/* 4. Work Duration in Days or Hours (Smart Human-Friendly Display) */}
+                <div className={`bg-white p-2 rounded-xl border-2 shadow-2xs transition-all ${
                   isDurationMismatch ? 'border-rose-500 ring-2 ring-rose-300/60' : 'border-amber-400'
                 }`}>
-                  <label className="block text-[10px] font-black text-amber-900 mb-1 text-center">
-                    {isAr ? '4️⃣ أيام العمل (8س)' : '4️⃣ Jours travail (8h)'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={getSyncValue('top_days', days + (extraHours / 8), 3)}
-                    onFocus={() => {
-                      setActiveInputKey('top_days');
-                      const d = days + (extraHours / 8);
-                      setActiveInputRaw(d === 0 ? '' : fmtNum(d, 3));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const dayVal = e.target.value === '' ? 0 : Number(e.target.value);
-                      setExtraHours(0);
-                      setDays(dayVal);
-                    }}
-                    className={`w-full px-2 py-1 focus:bg-white border rounded-lg font-black text-sm text-center outline-none ${
-                      isDurationMismatch
-                        ? 'bg-rose-50 border-rose-400 text-rose-700 focus:border-rose-600'
-                        : 'bg-amber-50/70 border-amber-300 text-amber-800 focus:border-amber-600'
-                    }`}
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[10px] font-black text-amber-900">
+                      {isAr ? '4️⃣ مدة العمل' : '4️⃣ Durée trav.'}
+                    </label>
+                    {/* Unit toggle (Hours / Days) */}
+                    <div className="flex items-center gap-0.5 bg-amber-100/80 p-0.5 rounded-md border border-amber-300/60 text-[9px] font-black">
+                      <button
+                        type="button"
+                        onClick={() => setTopDurationUnit('hours')}
+                        className={`px-1.5 py-0.5 rounded transition-all ${
+                          topDurationUnit === 'hours'
+                            ? 'bg-amber-500 text-slate-950 shadow-xs'
+                            : 'text-amber-800 hover:text-amber-950'
+                        }`}
+                        title={isAr ? 'إدخال بالساعات' : 'En heures'}
+                      >
+                        ⏱️ {isAr ? 'سوايع' : 'h'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTopDurationUnit('days')}
+                        className={`px-1.5 py-0.5 rounded transition-all ${
+                          topDurationUnit === 'days'
+                            ? 'bg-amber-500 text-slate-950 shadow-xs'
+                            : 'text-amber-800 hover:text-amber-950'
+                        }`}
+                        title={isAr ? 'إدخال بالأيام' : 'En jours'}
+                      >
+                        📅 {isAr ? 'أيام' : 'j'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {topDurationUnit === 'hours' ? (
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="ساعات"
+                      value={getSyncValue('top_hours', currentHumanDur.totalHours, 2)}
+                      onFocus={() => {
+                        setActiveInputKey('top_hours');
+                        const h = currentHumanDur.totalHours;
+                        setActiveInputRaw(h === 0 ? '' : fmtNum(h, 2));
+                      }}
+                      onBlur={() => setActiveInputKey(null)}
+                      onChange={(e) => {
+                        setActiveInputRaw(e.target.value);
+                        const hrVal = e.target.value === '' ? 0 : Number(e.target.value);
+                        setExtraHours(0);
+                        setDays(hrVal / 8);
+                      }}
+                      className={`w-full px-2 py-1 focus:bg-white border rounded-lg font-black text-sm text-center outline-none ${
+                        isDurationMismatch
+                          ? 'bg-rose-50 border-rose-400 text-rose-700 focus:border-rose-600'
+                          : 'bg-amber-50/70 border-amber-300 text-amber-800 focus:border-amber-600'
+                      }`}
+                    />
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="أيام"
+                      value={getSyncValue('top_days', currentTotalDays, 3)}
+                      onFocus={() => {
+                        setActiveInputKey('top_days');
+                        setActiveInputRaw(currentTotalDays === 0 ? '' : fmtNum(currentTotalDays, 3));
+                      }}
+                      onBlur={() => setActiveInputKey(null)}
+                      onChange={(e) => {
+                        setActiveInputRaw(e.target.value);
+                        const dayVal = e.target.value === '' ? 0 : Number(e.target.value);
+                        setExtraHours(0);
+                        setDays(dayVal);
+                      }}
+                      className={`w-full px-2 py-1 focus:bg-white border rounded-lg font-black text-sm text-center outline-none ${
+                        isDurationMismatch
+                          ? 'bg-rose-50 border-rose-400 text-rose-700 focus:border-rose-600'
+                          : 'bg-amber-50/70 border-amber-300 text-amber-800 focus:border-amber-600'
+                      }`}
+                    />
+                  )}
+
+                  {/* Human-Friendly Explanatory Pill (e.g. "⏱️ ساعتان (2h)") */}
+                  <div className="mt-1 text-center">
+                    <div className={`px-1.5 py-0.5 rounded-md font-black text-[10.5px] inline-flex items-center justify-center gap-1 w-full ${
+                      currentTotalDays < 1
+                        ? 'bg-amber-200/90 text-amber-950 border border-amber-400/80 shadow-xs'
+                        : 'bg-slate-100 text-slate-800 border border-slate-200'
+                    }`}>
+                      <span>⏱️</span>
+                      <strong className="truncate">{currentHumanDur.mainText}</strong>
+                    </div>
+
+                    {/* Quick 1-Click Durations Preset Row */}
+                    <div className="flex items-center justify-center gap-1 mt-1 pt-0.5 border-t border-amber-200/50 text-[9px] font-black">
+                      <button
+                        type="button"
+                        onClick={() => { setExtraHours(0); setDays(1 / 8); }}
+                        title={isAr ? 'ساعة واحدة' : '1 heure'}
+                        className={`px-1 py-0.2 rounded hover:bg-amber-300 text-slate-700 transition-all ${Math.abs(currentTotalDays - 0.125) < 0.02 ? 'bg-amber-400 font-black' : 'bg-slate-100'}`}
+                      >
+                        1h
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setExtraHours(0); setDays(2 / 8); }}
+                        title={isAr ? 'ساعتان' : '2 heures'}
+                        className={`px-1 py-0.2 rounded hover:bg-amber-300 text-slate-700 transition-all ${Math.abs(currentTotalDays - 0.25) < 0.02 ? 'bg-amber-400 font-black' : 'bg-slate-100'}`}
+                      >
+                        2h
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setExtraHours(0); setDays(4 / 8); }}
+                        title={isAr ? 'نصف يوم (4 سوايع)' : 'Demi-journée (4h)'}
+                        className={`px-1 py-0.2 rounded hover:bg-amber-300 text-slate-700 transition-all ${Math.abs(currentTotalDays - 0.5) < 0.02 ? 'bg-amber-400 font-black' : 'bg-slate-100'}`}
+                      >
+                        4h
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setExtraHours(0); setDays(1); }}
+                        title={isAr ? 'نهار واحد (8 سوايع)' : '1 jour (8h)'}
+                        className={`px-1 py-0.2 rounded hover:bg-amber-300 text-slate-700 transition-all ${Math.abs(currentTotalDays - 1) < 0.02 ? 'bg-amber-400 font-black' : 'bg-slate-100'}`}
+                      >
+                        1j
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setExtraHours(0); setDays(2); }}
+                        title={isAr ? 'يومان (16 ساعة)' : '2 jours (16h)'}
+                        className={`px-1 py-0.2 rounded hover:bg-amber-300 text-slate-700 transition-all ${Math.abs(currentTotalDays - 2) < 0.02 ? 'bg-amber-400 font-black' : 'bg-slate-100'}`}
+                      >
+                        2j
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1672,8 +1794,8 @@ export default function AtelierCalculator({
                     <AlertTriangle className="w-4 h-4 shrink-0 text-amber-300" />
                     <span>
                       {isAr
-                        ? `⚠️ انتبه! داير ${fmtNum(days, 2)} يوم عمل لـ ${workers} عمال مقابل ${fmtNum(quantity, 0)} بياسة فقط! الوقت الواقعي لي خاصها هو ${realisticDaysFromGamme} يوم.`
-                        : `⚠️ Attention ! Vous avez mis ${fmtNum(days, 2)} jours pour ${fmtNum(quantity, 0)} pcs. La durée réaliste est ${realisticDaysFromGamme} jours.`}
+                        ? `⚠️ انتبه! داير ${currentHumanDur.mainText} لـ ${workers} عمال مقابل ${fmtNum(quantity, 0)} بياسة فقط! الوقت الواقعي لي خاصها هو ${realisticHumanDur.mainText}.`
+                        : `⚠️ Attention ! Vous avez mis ${currentHumanDur.mainText} pour ${fmtNum(quantity, 0)} pcs. La durée réaliste est ${realisticHumanDur.mainText}.`}
                     </span>
                   </div>
                   <button
@@ -1684,7 +1806,7 @@ export default function AtelierCalculator({
                     }}
                     className="px-2.5 py-0.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-lg text-[10px] font-black shrink-0"
                   >
-                    {isAr ? `✓ صحح إلى ${realisticDaysFromGamme} يوم` : `✓ Corriger (${realisticDaysFromGamme}j)`}
+                    {isAr ? `✓ صحح إلى ${realisticHumanDur.mainText}` : `✓ Corriger (${realisticHumanDur.mainText})`}
                   </button>
                 </div>
               )}
@@ -3337,9 +3459,9 @@ export default function AtelierCalculator({
                         setExtraHours(0);
                         setDays(realisticDaysFromGamme);
                       }}
-                      className="px-1.5 py-0.5 bg-rose-600 text-white rounded text-[9px] font-black"
+                      className="px-2 py-0.5 bg-rose-600 text-white rounded text-[9.5px] font-black"
                     >
-                      ⚡ {isAr ? `الواقعي: ${realisticDaysFromGamme} يوم` : `Réaliste: ${realisticDaysFromGamme}j`}
+                      ⚡ {isAr ? `الواقعي: ${realisticHumanDur.mainText}` : `Réaliste: ${realisticHumanDur.mainText}`}
                     </button>
                   </div>
                   <label className="block text-xs font-black text-slate-900">
@@ -3364,6 +3486,11 @@ export default function AtelierCalculator({
                     }}
                     className="w-full px-3 py-2 bg-white border-2 border-amber-300 focus:border-amber-600 rounded-xl font-black text-amber-800 text-base text-center outline-none"
                   />
+                  <div className="mt-1 text-center">
+                    <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-950 border border-amber-300 font-black text-xs inline-flex items-center gap-1">
+                      ⏱️ {currentHumanDur.mainText}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -3395,7 +3522,7 @@ export default function AtelierCalculator({
                 }}
                 className="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-xl text-xs font-black transition-all"
               >
-                ⚡ {isAr ? `ضبط الوقت أوتوماتيك (${realisticDaysFromGamme} يوم)` : `Auto-ajuster (${realisticDaysFromGamme}j)`}
+                ⚡ {isAr ? `ضبط الوقت أوتوماتيك (${realisticHumanDur.mainText})` : `Auto-ajuster (${realisticHumanDur.mainText})`}
               </button>
 
               <button
