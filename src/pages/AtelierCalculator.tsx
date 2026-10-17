@@ -162,6 +162,44 @@ function CostTooltip({
   );
 }
 
+// Filter employees working INSIDE the company (Production MOD + Support/Admin MOI)
+function isAtelierEmployee(e: Employe): boolean {
+  if (!e.actif) return false;
+  if (e.type === 'sous_traitance') return false;
+
+  const poste = (e.poste || '').toLowerCase();
+  // Exclude ONLY external subcontractors & printing/embroidery providers (Prestataire, Impression, Broderie, DTF, etc.)
+  if (
+    poste.includes('prestataire') ||
+    poste.includes('impression') ||
+    poste.includes('broderie') ||
+    poste.includes('dtf') ||
+    poste.includes('sérigraphie') ||
+    poste.includes('serigraphie') ||
+    poste.includes('sublimation')
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+// Check if role is Indirect Labor / Overhead Support (RH, Modéliste, Admin, etc.)
+function isSupportRole(e: Employe): boolean {
+  const poste = (e.poste || '').toLowerCase();
+  return (
+    poste.includes('rh') ||
+    poste.includes('ressources humaines') ||
+    poste.includes('modéliste') ||
+    poste.includes('modeliste') ||
+    poste.includes('commercial') ||
+    poste.includes('comptable') ||
+    poste.includes('admin') ||
+    poste.includes('directeur') ||
+    poste.includes('responsable')
+  );
+}
+
 export default function AtelierCalculator({
   isModal = false,
   onClose,
@@ -173,6 +211,81 @@ export default function AtelierCalculator({
   // Admin & AI import check
   const [isAdmin, setIsAdmin] = useState(true);
   const importedGammeRef = useRef(false);
+
+  // Real Atelier Workers Connection (Smart Feature 1 - All Internal Staff MOD + MOI)
+  const [allWorkers, setAllWorkers] = useState<Employe[]>(DEFAULT_WORKERS);
+  const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>(DEFAULT_WORKERS.map(w => w.id));
+  const [showWorkersModal, setShowWorkersModal] = useState(false);
+  const [showGammeModal, setShowGammeModal] = useState(false);
+  const [workerTab, setWorkerTab] = useState<'all' | 'mod' | 'moi'>('all');
+
+  // Form State
+  const [itemName, setItemName] = useState('SAK');
+  const [quantity, setQuantity] = useState(1000);
+  const [pricePerPiece, setPricePerPiece] = useState(1.50);
+  
+  const [workers, setWorkers] = useState(10);
+  const [days, setDays] = useState(2);
+  const [extraHours, setExtraHours] = useState(0);
+  const [rate, setRate] = useState(17.10); // SMIG rate per hour
+  const [rateMode, setRateMode] = useState<'smig' | 'rh'>('smig');
+  
+  const [materials, setMaterials] = useState(300);
+  const [totalMachines, setTotalMachines] = useState(7);
+  const [monthlyOther, setMonthlyOther] = useState(3000);
+  const [monthlyChargesSynced, setMonthlyChargesSynced] = useState(false);
+  const [customPostes, setCustomPostes] = useState<PosteTravail[] | null>(null);
+  const [draggedPosteIdx, setDraggedPosteIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [isPostesBoxExpanded, setIsPostesBoxExpanded] = useState(false);
+  const [selectedQuickMachine, setSelectedQuickMachine] = useState<string>(ATELIER_MACHINES_PRESETS[0].machine);
+  const [activeInputKey, setActiveInputKey] = useState<string | null>(null);
+  const [activeInputRaw, setActiveInputRaw] = useState<string>('');
+  const [customModelPhoto, setCustomModelPhoto] = useState<string | null>(null);
+  const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
+  const [showEssentialBox, setShowEssentialBox] = useState(true);
+  const [calcPage, setCalcPage] = useState<1 | 2 | 3>(1);
+  const modelPhotoInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Saved Productions Library State ("page nbda lqa fiha les prod kandihom save")
+  const [savedProductions, setSavedProductions] = useState<SavedProduction[]>(() => {
+    try {
+      const raw = safeStorage.getItem('beya_saved_atelier_productions');
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) {
+      return [];
+    }
+  });
+  const [showSavedProdModal, setShowSavedProdModal] = useState(false);
+  const [savedSearchQuery, setSavedSearchQuery] = useState('');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const [selectedModelCategory, setSelectedModelCategory] = useState<string | undefined>(undefined);
+
+  // Import a real model: either from the Beya Creative fiches techniques catalog, or a photo from the device
+  const [fichesList, setFichesList] = useState<FicheTechnique[]>([]);
+  const [isFichePickerOpen, setIsFichePickerOpen] = useState(false);
+  const [fichePickerSearch, setFichePickerSearch] = useState('');
+  const [selectedFiche, setSelectedFiche] = useState<FicheTechnique | null>(null);
+
+  const triggerToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const handleModelPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setCustomModelPhoto(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   useEffect(() => {
     try {
       const s = localStorage.getItem('textrack_auth');
@@ -251,51 +364,6 @@ export default function AtelierCalculator({
     }
   }, []);
 
-// Filter employees working INSIDE the company (Production MOD + Support/Admin MOI)
-function isAtelierEmployee(e: Employe): boolean {
-  if (!e.actif) return false;
-  if (e.type === 'sous_traitance') return false;
-
-  const poste = (e.poste || '').toLowerCase();
-  // Exclude ONLY external subcontractors & printing/embroidery providers (Prestataire, Impression, Broderie, DTF, etc.)
-  if (
-    poste.includes('prestataire') ||
-    poste.includes('impression') ||
-    poste.includes('broderie') ||
-    poste.includes('dtf') ||
-    poste.includes('sérigraphie') ||
-    poste.includes('serigraphie') ||
-    poste.includes('sublimation')
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-// Check if role is Indirect Labor / Overhead Support (RH, Modéliste, Admin, etc.)
-function isSupportRole(e: Employe): boolean {
-  const poste = (e.poste || '').toLowerCase();
-  return (
-    poste.includes('rh') ||
-    poste.includes('ressources humaines') ||
-    poste.includes('modéliste') ||
-    poste.includes('modeliste') ||
-    poste.includes('commercial') ||
-    poste.includes('comptable') ||
-    poste.includes('admin') ||
-    poste.includes('directeur') ||
-    poste.includes('responsable')
-  );
-}
-
-  // Real Atelier Workers Connection (Smart Feature 1 - All Internal Staff MOD + MOI)
-  const [allWorkers, setAllWorkers] = useState<Employe[]>(DEFAULT_WORKERS);
-  const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>(DEFAULT_WORKERS.map(w => w.id));
-  const [showWorkersModal, setShowWorkersModal] = useState(false);
-  const [showGammeModal, setShowGammeModal] = useState(false);
-  const [workerTab, setWorkerTab] = useState<'all' | 'mod' | 'moi'>('all');
-
   useEffect(() => {
     loadData<Employe>('employes').then((data: Employe[]) => {
       const activeAtelier = (data || []).filter(isAtelierEmployee);
@@ -311,17 +379,6 @@ function isSupportRole(e: Employe): boolean {
     }).catch(() => {});
   }, []);
 
-  // Form State
-  const [itemName, setItemName] = useState('SAK');
-  const [quantity, setQuantity] = useState(1000);
-  const [pricePerPiece, setPricePerPiece] = useState(1.50);
-  
-  const [workers, setWorkers] = useState(10);
-  const [days, setDays] = useState(2);
-  const [extraHours, setExtraHours] = useState(0);
-  const [rate, setRate] = useState(17.10); // SMIG rate per hour
-  const [rateMode, setRateMode] = useState<'smig' | 'rh'>('smig');
-
   useEffect(() => {
     if (rateMode === 'rh') {
       const sel = allWorkers.filter(w => selectedWorkerIds.includes(w.id));
@@ -333,42 +390,6 @@ function isSupportRole(e: Employe): boolean {
       setRate(avg);
     }
   }, [selectedWorkerIds, allWorkers, rateMode]);
-  
-  const [materials, setMaterials] = useState(300);
-  const [totalMachines, setTotalMachines] = useState(7);
-  const [monthlyOther, setMonthlyOther] = useState(3000);
-  const [monthlyChargesSynced, setMonthlyChargesSynced] = useState(false);
-  const [customPostes, setCustomPostes] = useState<PosteTravail[] | null>(null);
-  const [draggedPosteIdx, setDraggedPosteIdx] = useState<number | null>(null);
-  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
-  const [isPostesBoxExpanded, setIsPostesBoxExpanded] = useState(false);
-  const [selectedQuickMachine, setSelectedQuickMachine] = useState<string>(ATELIER_MACHINES_PRESETS[0].machine);
-  const [activeInputKey, setActiveInputKey] = useState<string | null>(null);
-  const [activeInputRaw, setActiveInputRaw] = useState<string>('');
-  const [customModelPhoto, setCustomModelPhoto] = useState<string | null>(null);
-  const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
-  const [showEssentialBox, setShowEssentialBox] = useState(true);
-  const [calcPage, setCalcPage] = useState<1 | 2 | 3>(1);
-  const modelPhotoInputRef = useRef<HTMLInputElement | null>(null);
-
-  // Saved Productions Library State ("page nbda lqa fiha les prod kandihom save")
-  const [savedProductions, setSavedProductions] = useState<SavedProduction[]>(() => {
-    try {
-      const raw = safeStorage.getItem('beya_saved_atelier_productions');
-      return raw ? JSON.parse(raw) : [];
-    } catch (_) {
-      return [];
-    }
-  });
-  const [showSavedProdModal, setShowSavedProdModal] = useState(false);
-  const [savedSearchQuery, setSavedSearchQuery] = useState('');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
-  const triggerToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
-  };
 
   // Sync saved productions from Supabase cloud backup on mount
   useEffect(() => {
@@ -396,6 +417,44 @@ function isSupportRole(e: Employe): boolean {
     })();
   }, []);
 
+  // Pull the monthly recurring charges from Charges & Dépenses instead of retyping them here
+  useEffect(() => {
+    loadData<Charge>('charges').then(res => {
+      if (Array.isArray(res)) {
+        const total = res.filter(c => c.recurrence === 'mensuel').reduce((s, c) => s + (c.montant || 0), 0);
+        if (total > 0) {
+          setMonthlyOther(total);
+          setMonthlyChargesSynced(true);
+        }
+      }
+    }).catch(() => {});
+  }, []);
+
+  // Auto-sync workers count with customPostes (Gamme) when user modifies it
+  useEffect(() => {
+    if (customPostes && customPostes.length > 0) {
+      setWorkers(customPostes.length);
+    }
+  }, [customPostes]);
+
+  // Load fiches techniques catalog
+  useEffect(() => {
+     loadData<FicheTechnique>('fiches').then(res => {
+       if (res && res.length > 0) {
+         setFichesList(res);
+       } else {
+         setFichesList(DEFAULT_FICHES_TECHNIQUES);
+       }
+     }).catch(() => setFichesList(DEFAULT_FICHES_TECHNIQUES));
+  }, []);
+
+  useEffect(() => {
+     if (selectedFiche) {
+       const cons = selectedFiche.tissuConsommation && selectedFiche.tissuConsommation > 0 ? selectedFiche.tissuConsommation : 1.5;
+       setMaterials(Math.round(cons * 35 * (quantity || 1)));
+     }
+  }, [selectedFiche, quantity]);
+
   // Auto-save active draft to localStorage so user always finds their work exactly as they left it
   useEffect(() => {
     const draft = {
@@ -421,86 +480,6 @@ function isSupportRole(e: Employe): boolean {
     rate, rateMode, selectedWorkerIds, materials, totalMachines,
     monthlyOther, customPostes, customModelPhoto, selectedModelCategory
   ]);
-
-  const handleModelPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setCustomModelPhoto(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Pull the monthly recurring charges from Charges & Dépenses instead of retyping them here
-  useEffect(() => {
-    loadData<Charge>('charges').then(res => {
-      if (Array.isArray(res)) {
-        const total = res.filter(c => c.recurrence === 'mensuel').reduce((s, c) => s + (c.montant || 0), 0);
-        if (total > 0) {
-          setMonthlyOther(total);
-          setMonthlyChargesSynced(true);
-        }
-      }
-    }).catch(() => {});
-  }, []);
-
-  // Auto-sync workers count with customPostes (Gamme) when user modifies it
-  useEffect(() => {
-    if (customPostes && customPostes.length > 0) {
-      setWorkers(customPostes.length);
-    }
-  }, [customPostes]);
-
-  const [selectedModelCategory, setSelectedModelCategory] = useState<string | undefined>(undefined);
-
-  // Import a real model: either from the Beya Creative fiches techniques catalog, or a photo from the device
-  const [fichesList, setFichesList] = useState<FicheTechnique[]>([]);
-  const [isFichePickerOpen, setIsFichePickerOpen] = useState(false);
-  const [fichePickerSearch, setFichePickerSearch] = useState('');
-  const [selectedFiche, setSelectedFiche] = useState<FicheTechnique | null>(null);
-
-  useEffect(() => {
-     loadData<FicheTechnique>('fiches').then(res => {
-       if (res && res.length > 0) {
-         setFichesList(res);
-       } else {
-         setFichesList(DEFAULT_FICHES_TECHNIQUES);
-       }
-     }).catch(() => setFichesList(DEFAULT_FICHES_TECHNIQUES));
-  }, []);
-
-  useEffect(() => {
-     if (selectedFiche) {
-       const cons = selectedFiche.tissuConsommation && selectedFiche.tissuConsommation > 0 ? selectedFiche.tissuConsommation : 1.5;
-       setMaterials(Math.round(cons * 35 * (quantity || 1)));
-     }
-  }, [selectedFiche, quantity]);
-
-  useEffect(() => {
-     try {
-       const exported = localStorage.getItem('beya_ai_gamme_pilot_export');
-       if (exported) {
-         const data = JSON.parse(exported);
-         if (data.itemName) setItemName(data.itemName);
-         if (data.photo) setCustomModelPhoto(data.photo);
-         if (data.customPostes && Array.isArray(data.customPostes)) {
-           setCustomPostes(data.customPostes);
-         } else if (data.customPostes === null) {
-           setCustomPostes(null);
-         }
-         if (data.workers) setWorkers(Number(data.workers) || 8);
-         if (typeof data.materials === 'number') setMaterials(data.materials);
-         if (typeof data.pricePerPiece === 'number') setPricePerPiece(data.pricePerPiece);
-         if (typeof data.days === 'number') setDays(data.days);
-         localStorage.removeItem('beya_ai_gamme_pilot_export');
-       }
-     } catch (e) {
-       console.error(e);
-     }
-  }, []);
 
   const selectAndApplyFicheDirectly = (f: FicheTechnique) => {
      setSelectedFiche(f);
