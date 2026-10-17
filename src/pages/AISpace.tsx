@@ -1366,9 +1366,416 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
 
     const speakAr = aiLangOverride === 'ar' || (aiLangOverride === null && isAr);
 
-    // 0. Fabric Where to Buy & Exact Market Price (Where to find fabric in Morocco & exact prices)
+    // 0. DIRECT PIECE COST & PRODUCTION DEVIS (شحال كتقام البياسة / Prix de revient unitaire & Devis)
+    const asksPieceCost = /(chehal.*(tqam|tsqam|lpiasa|piasa|piece|cout|prix|taman|flous|cost|revient)|tqam|tsqam|شحال.*(كتقام|كتقامش|تقام|تسقام|البياسة|القطعة|الموديل|التكلفة|الثمن|نبيع|نربح)|بشحال.*(كتقام|تقام|البياسة|القطعة|نبيع|نبيعها)|(prix|cout|coût|cost).*(revient|piece|unitaire|fabrication|total|modele|modèle)|ثمن.*(البياسة|القطعة|الموديل|الإنتاج)|تكلفة.*(البياسة|القطعة|الموديل|الإنتاج)|كلفة.*(البياسة|القطعة)|bchhal.*(tqam|lpiasa|nbi3)|chehal.*(lcost|flous|nbi3)|(devis|تسعير|حساب التكلفة|شحال غادي تقام|شحال كتقام)|^(prix|cout|coût|cost|taman|ثمن|سعر|تكلفة|كلفة|devis|فلوس)$)/i.test(m);
+
+    if (asksPieceCost) {
+      const pieces = analysisResult?.pieces || [];
+      const hasMultiplePieces = pieces.length > 1;
+      const modelTitle = analysisResult?.category || (image ? 'طقم هودي وسروال رياضي (Survêtement)' : 'الموديل');
+      const suggestedFab = analysisResult?.fabricSuggested || pieces[0]?.fabricSuggested || 'ميلتون قطن ممشوط (Molleton Gratté 320g)';
+
+      if (hasMultiplePieces) {
+        const p1 = pieces[0];
+        const p1Name = p1.name || 'هودي أوفر سايز (Hoodie à Capuche)';
+        const p1Conso = parseFloat(String(p1.consumption || '1.65').replace(',', '.')) || 1.65;
+        const p1FabCost = Math.round(p1Conso * 26 * 10) / 10;
+        const p1Trims = 8.5; // cordon, oeillets, bord-côte, fil, sachet
+        const p1Labor = 14.0; // façon atelier SAM ~7 min
+        const p1Charges = 4.5; // coupe & frais généraux
+        const p1Total = Math.round((p1FabCost + p1Trims + p1Labor + p1Charges) * 10) / 10;
+
+        const p2 = pieces[1];
+        const p2Name = p2.name || 'سروال رياضي (Pantalon Jogging)';
+        const p2Conso = parseFloat(String(p2.consumption || '1.35').replace(',', '.')) || 1.35;
+        const p2FabCost = Math.round(p2Conso * 26 * 10) / 10;
+        const p2Trims = 6.5; // élastique 4cm, cordon, fil, étiquette
+        const p2Labor = 11.0; // façon atelier SAM ~5.5 min
+        const p2Charges = 3.5; // coupe & frais généraux
+        const p2Total = Math.round((p2FabCost + p2Trims + p2Labor + p2Charges) * 10) / 10;
+
+        const totalFabMeters = Math.round((p1Conso + p2Conso) * 100) / 100;
+        const totalFabCost = Math.round((p1FabCost + p2FabCost) * 10) / 10;
+        const totalTrims = Math.round((p1Trims + p2Trims) * 10) / 10;
+        const totalLabor = Math.round((p1Labor + p2Labor) * 10) / 10;
+        const totalCharges = Math.round((p1Charges + p2Charges) * 10) / 10;
+        const totalEnsembleCost = Math.round((p1Total + p2Total) * 10) / 10;
+
+        const wholesalePrice = Math.round(totalEnsembleCost * 1.38); // +38% margin ~175 MAD
+        const retailMin = Math.round(totalEnsembleCost * 2.1); // ~265 MAD
+        const retailMax = Math.round(totalEnsembleCost * 2.5); // ~315 MAD
+
+        if (speakAr) {
+          return `💰 حساب تكلفة البياسة المباشر والدقيق (Prix de Revient بالتدقيق):
+
+🎯 الموديل: ${modelTitle}
+🧵 الثوب المقترح: ${suggestedFab} (ثمن الجملة فدرب عمر / القريعة: ~26 درهم للمتر / 55 درهم للكيلو)
+
+────────────────────────────────────────
+🧥 1. تكلفة القطعة الأولى (${p1Name}):
+• ثوب الميلتون (${p1Conso}م × 26 درهم): ${p1FabCost.toFixed(2)} درهم
+• اللوازم (كوردون كابوش + ليزويي + ريب كوتلي + خيط + تيكيت): ${p1Trims.toFixed(2)} درهم
+• الفصالة فالمطلة (Coupe en matelas): 2.00 درهم
+• خياطة الورشة (اليد العاملة Façon - SAM ~7 دقائق): ${p1Labor.toFixed(2)} درهم
+• مصاريف عامة واستهلاك الطاقة: 2.50 درهم
+👉 تكلفة الهودي بوحدو: ${p1Total.toFixed(2)} درهم
+
+👖 2. تكلفة القطعة الثانية (${p2Name}):
+• ثوب الميلتون (${p2Conso}م × 26 درهم): ${p2FabCost.toFixed(2)} درهم
+• اللوازم (لاستيك 4سم عريض + كوردون + ليزويي + خيط): ${p2Trims.toFixed(2)} درهم
+• الفصالة فالمطلة (Coupe en matelas): 1.50 درهم
+• خياطة الورشة (اليد العاملة Façon - SAM ~5.5 دقائق): ${p2Labor.toFixed(2)} درهم
+• مصاريف عامة واستهلاك الطاقة: 2.00 درهم
+👉 تكلفة السروال بوحدو: ${p2Total.toFixed(2)} درهم
+
+────────────────────────────────────────
+💵 التكلفة الإجمالية للطقم كامل (Prix de Revient Complet):
+• إجمالي الثوب (${totalFabMeters}م): ${totalFabCost.toFixed(2)} درهم
+• إجمالي اللوازم (Fournitures): ${totalTrims.toFixed(2)} درهم
+• إجمالي اليد العاملة فالخياطة والفصالة: ${(totalLabor + 3.5).toFixed(2)} درهم
+• مصاريف ثابتة وتغليف: 4.50 درهم
+🔥 المجموع النهائي لتكلفة الطقم: ${totalEnsembleCost.toFixed(2)} درهم للبياسة!
+────────────────────────────────────────
+
+📈 3. أثمنة البيع المقترحة والأرباح الصافية فالمغرب:
+• 🏢 سعر البيع بالجملة (Grossiste): ${wholesalePrice} درهم
+  ➔ ربح صافي بالجملة: +${(wholesalePrice - totalEnsembleCost).toFixed(2)} درهم في كل طقم!
+• 🛍️ سعر البيع بالتقسيط / المتاجر الإلكترونية (Détail / E-commerce): من ${retailMin} إلى ${retailMax} درهم
+  ➔ ربح صافي بالتقسيط: من +${(retailMin - totalEnsembleCost).toFixed(2)} إلى +${(retailMax - totalEnsembleCost).toFixed(2)} درهم في كل طقم (أكثر من 100% هامش ربح)!
+
+📦 4. دراسة رأس المال والأرباح للكميات:
+• سيرية ديال 500 طقم:
+  - الثوب المطلوب: ${Math.round(totalFabMeters * 500)} متر (حوالي ${Math.ceil((totalFabMeters * 500) / 50)} رولو ديال 50م)
+  - رأس المال المطلوب للإنتاج: ${(totalEnsembleCost * 500).toLocaleString('fr-FR')} درهم
+  - المداخيل المتوقعة بالجملة: ${(wholesalePrice * 500).toLocaleString('fr-FR')} درهم
+  - 💵 صافي الأرباح بالجملة: +${((wholesalePrice - totalEnsembleCost) * 500).toLocaleString('fr-FR')} درهم!
+• سيرية ديال 1000 طقم:
+  - الثوب المطلوب: ${Math.round(totalFabMeters * 1000)} متر (حوالي ${Math.ceil((totalFabMeters * 1000) / 50)} رولو)
+  - رأس المال المطلوب: ${(totalEnsembleCost * 1000).toLocaleString('fr-FR')} درهم
+  - 💵 صافي الأرباح بالجملة: +${((wholesalePrice - totalEnsembleCost) * 1000).toLocaleString('fr-FR')} درهم (أو أكثر من ${Math.round((retailMin - totalEnsembleCost) * 1000).toLocaleString('fr-FR')} درهم في التجارة الإلكترونية)!`;
+        } else {
+          return `💰 Calcul Direct et Précis du Coût de Revient (Prix de Revient) :
+
+🎯 Modèle : ${modelTitle}
+🧵 Tissu conseillé : ${suggestedFab} (~26 MAD/mètre chez grossistes Derb Omar & El Korea)
+
+────────────────────────────────────────
+🧥 1. Détail Pièce 1 (${p1Name}) :
+• Tissu (${p1Conso}m × 26 MAD) : ${p1FabCost.toFixed(2)} MAD
+• Fournitures (cordon, œillets, bord-côte, fil, sachet) : ${p1Trims.toFixed(2)} MAD
+• Façon atelier & Coupe (SAM ~7 min) : ${(p1Labor + 2.0).toFixed(2)} MAD
+• Charges fixes atelier : 2.50 MAD
+👉 Coût unitaire Hoodie : ${p1Total.toFixed(2)} MAD
+
+👖 2. Détail Pièce 2 (${p2Name}) :
+• Tissu (${p2Conso}m × 26 MAD) : ${p2FabCost.toFixed(2)} MAD
+• Fournitures (élastique 4cm, cordon, fil, étiquette) : ${p2Trims.toFixed(2)} MAD
+• Façon atelier & Coupe (SAM ~5.5 min) : ${(p2Labor + 1.5).toFixed(2)} MAD
+• Charges fixes atelier : 2.00 MAD
+👉 Coût unitaire Jogging : ${p2Total.toFixed(2)} MAD
+
+────────────────────────────────────────
+💵 PRIX DE REVIENT TOTAL DE L'ENSEMBLE :
+• Total Tissu (${totalFabMeters}m) : ${totalFabCost.toFixed(2)} MAD
+• Total Fournitures : ${totalTrims.toFixed(2)} MAD
+• Total Façon & Coupe : ${(totalLabor + 3.5).toFixed(2)} MAD
+• Charges fixes : 4.50 MAD
+🔥 Total Coût de Revient : ${totalEnsembleCost.toFixed(2)} MAD / pièce !
+────────────────────────────────────────
+
+📈 3. Prix de Vente Conseillés et Marges :
+• 🏢 Prix de Vente Gros : ${wholesalePrice} MAD (Marge nette : +${(wholesalePrice - totalEnsembleCost).toFixed(2)} MAD/pièce)
+• 🛍️ Prix de Vente Détail / E-commerce : ${retailMin} - ${retailMax} MAD (Marge nette : +${(retailMin - totalEnsembleCost).toFixed(2)} à +${(retailMax - totalEnsembleCost).toFixed(2)} MAD)
+
+📦 4. Budget de Production Série :
+• Série de 500 ensembles :
+  - Métrage : ${Math.round(totalFabMeters * 500)}m (~${Math.ceil((totalFabMeters * 500) / 50)} rouleaux)
+  - Capital requis : ${(totalEnsembleCost * 500).toLocaleString('fr-FR')} MAD
+  - Bénéfice net en Gros : +${((wholesalePrice - totalEnsembleCost) * 500).toLocaleString('fr-FR')} MAD !
+• Série de 1000 ensembles :
+  - Métrage : ${Math.round(totalFabMeters * 1000)}m (~${Math.ceil((totalFabMeters * 1000) / 50)} rouleaux)
+  - Bénéfice net en Gros : +${((wholesalePrice - totalEnsembleCost) * 1000).toLocaleString('fr-FR')} MAD !`;
+        }
+      }
+
+      // Single piece calculation
+      let unitConso = 1.5;
+      if (analysisResult?.consumption) {
+        const parsed = parseFloat(String(analysisResult.consumption).replace(',', '.'));
+        if (parsed > 0) unitConso = parsed;
+      }
+      let fabPriceM = 26;
+      let trimsCost = 5.0;
+      let laborCost = 12.0;
+      let overhead = 3.5;
+
+      const lowerCat = (analysisResult?.category || '').toLowerCase();
+      if (lowerCat.includes('tshirt') || lowerCat.includes('t-shirt') || lowerCat.includes('تيشرت')) {
+        unitConso = 0.95; fabPriceM = 22; trimsCost = 3.5; laborCost = 6.5; overhead = 2.0;
+      } else if (lowerCat.includes('boxer') || lowerCat.includes('بوكسر') || lowerCat.includes('slip')) {
+        unitConso = 0.35; fabPriceM = 22; trimsCost = 3.5; laborCost = 4.5; overhead = 1.5;
+      } else if (lowerCat.includes('chemise') || lowerCat.includes('قميص')) {
+        unitConso = 1.50; fabPriceM = 24; trimsCost = 6.5; laborCost = 16.0; overhead = 4.0;
+      } else if (lowerCat.includes('robe') || lowerCat.includes('djellaba') || lowerCat.includes('فستان') || lowerCat.includes('جلابة')) {
+        unitConso = 2.80; fabPriceM = 28; trimsCost = 14.0; laborCost = 22.0; overhead = 5.5;
+      } else if (lowerCat.includes('pantalon') || lowerCat.includes('jogging') || lowerCat.includes('سروال')) {
+        unitConso = 1.35; fabPriceM = 26; trimsCost = 6.5; laborCost = 11.0; overhead = 3.5;
+      } else if (lowerCat.includes('hoodie') || lowerCat.includes('sweat') || lowerCat.includes('هودي')) {
+        unitConso = 1.70; fabPriceM = 26; trimsCost = 9.0; laborCost = 14.5; overhead = 4.5;
+      }
+
+      const fabCost = Math.round(unitConso * fabPriceM * 10) / 10;
+      const unitTotal = Math.round((fabCost + trimsCost + laborCost + overhead) * 10) / 10;
+      const grossiste = Math.round(unitTotal * 1.38);
+      const retailMin = Math.round(unitTotal * 2.1);
+      const retailMax = Math.round(unitTotal * 2.6);
+
+      if (speakAr) {
+        return `💰 حساب تكلفة البياسة المباشر والدقيق (Prix de Revient بالتدقيق):
+
+🎯 الموديل: ${modelTitle}
+🧵 الثوب المقترح: ${suggestedFab} (~${fabPriceM} درهم للمتر بالجملة)
+
+📊 1. تفصيل تكلفة البياسة الواحدة (Prix Unitaire):
+• 🧵 ثوب البياسة (${unitConso}م × ${fabPriceM} درهم): ${fabCost.toFixed(2)} درهم
+• 🪡 لوازم الخياطة (Fournitures - خيط، أزرار/سحاب، لاستيك، تيكيت، تغليف): ${trimsCost.toFixed(2)} درهم
+• ✂️ الفصالة فالمطلة (Coupe en matelas): 1.50 درهم
+• 🏭 خياطة الورشة (اليد العاملة Façon): ${laborCost.toFixed(2)} درهم
+• 💡 مصاريف عامة واستهلاك الورشة: ${overhead.toFixed(2)} درهم
+
+────────────────────────────────────────
+💵 التكلفة الإجمالية للبياسة (Prix de Revient): ${unitTotal.toFixed(2)} درهم
+────────────────────────────────────────
+
+📈 2. أثمنة البيع وهامش الربح فالسوق المغربي:
+• 🏢 سعر البيع بالجملة (Grossiste): ${grossiste} درهم (ربح صافي: +${(grossiste - unitTotal).toFixed(2)} درهم/بياسة)
+• 🛍️ سعر البيع بالتقسيط / المتاجر الإلكترونية: من ${retailMin} إلى ${retailMax} درهم (ربح صافي يتجاوز 100%)
+
+📦 3. دراسة رأس المال والإنتاج للكميات:
+• سيرية 500 بياسة:
+  - الثوب المطلوب: ${Math.round(unitConso * 500)} متر (حوالي ${Math.ceil((unitConso * 500) / 50)} رولو ديال 50م)
+  - رأس المال المطلوب: ${(unitTotal * 500).toLocaleString('fr-FR')} درهم
+  - 💵 صافي الربح بالجملة: +${((grossiste - unitTotal) * 500).toLocaleString('fr-FR')} درهم!
+• سيرية 1000 بياسة:
+  - الثوب المطلوب: ${Math.round(unitConso * 1000)} متر (حوالي ${Math.ceil((unitConso * 1000) / 50)} رولو)
+  - رأس المال المطلوب: ${(unitTotal * 1000).toLocaleString('fr-FR')} درهم
+  - 💵 صافي الربح بالجملة: +${((grossiste - unitTotal) * 1000).toLocaleString('fr-FR')} درهم!`;
+      } else {
+        return `💰 Calcul Direct et Précis du Coût de Revient Unitaire (Prix de Revient) :
+
+🎯 Modèle : ${modelTitle}
+🧵 Tissu conseillé : ${suggestedFab} (~${fabPriceM} MAD/mètre chez grossistes)
+
+📊 1. Décomposition du Coût Unitaire :
+• 🧵 Tissu (${unitConso}m × ${fabPriceM} MAD) : ${fabCost.toFixed(2)} MAD
+• 🪡 Fournitures (fil, étiquettes, élastique/boutons, sachet) : ${trimsCost.toFixed(2)} MAD
+• ✂️ Coupe au matelas : 1.50 MAD
+• 🏭 Façon confection atelier : ${laborCost.toFixed(2)} MAD
+• 💡 Charges fixes atelier : ${overhead.toFixed(2)} MAD
+
+────────────────────────────────────────
+💵 PRIX DE REVIENT TOTAL : ${unitTotal.toFixed(2)} MAD / pièce
+────────────────────────────────────────
+
+📈 2. Prix de Vente Conseillés :
+• 🏢 Vente en Gros : ${grossiste} MAD (Marge nette : +${(grossiste - unitTotal).toFixed(2)} MAD/pièce)
+• 🛍️ Vente en Détail / E-commerce : ${retailMin} - ${retailMax} MAD (Marge brute > 100%)
+
+📦 3. Budget Série de Production :
+• Série 500 pièces :
+  - Métrage nécessaire : ${Math.round(unitConso * 500)}m (~${Math.ceil((unitConso * 500) / 50)} rouleaux)
+  - Capital requis : ${(unitTotal * 500).toLocaleString('fr-FR')} MAD
+  - Bénéfice net en Gros : +${((grossiste - unitTotal) * 500).toLocaleString('fr-FR')} MAD !
+• Série 1000 pièces :
+  - Métrage : ${Math.round(unitConso * 1000)}m (~${Math.ceil((unitConso * 1000) / 50)} rouleaux)
+  - Capital : ${(unitTotal * 1000).toLocaleString('fr-FR')} MAD
+  - Bénéfice net en Gros : +${((grossiste - unitTotal) * 1000).toLocaleString('fr-FR')} MAD !`;
+      }
+    }
+
+    // 0.1 DIRECT SAM & PRODUCTION TIMING (توقيت الإنتاج وسرعة العمل للناس الحرافيين والمبتدئين)
+    const asksTimeOrSAM = /(waqt|wqt|weqt|temps|duree|durée|dqiqa|dkika|timing|cadence|sam|minute|شحال.*(وقت|دقيقة|دقائق|ساعة)|وقت.*(الخياطة|الفصالة|الإنتاج)|التوقيت|السرعة|شحال كتاخد)/i.test(m);
+    if (asksTimeOrSAM) {
+      const rawPostes = analysisResult?.gammeMontage || [];
+      const totalSamMin = rawPostes.length > 0 
+        ? rawPostes.reduce((acc: number, p: any) => acc + (Number(p.tempsMin) || Number(p.tempsPro) || 1), 0)
+        : (analysisResult?.pieces && analysisResult.pieces.length > 1 ? 12.5 : 8.0);
+      const samPro = Math.round(totalSamMin * 0.85 * 10) / 10;
+      const samStd = Math.round(totalSamMin * 1.0 * 10) / 10;
+      const samDeb = Math.round(totalSamMin * 1.45 * 10) / 10;
+
+      const pcsPerHourPro = Math.round((60 / samPro) * 10) / 10;
+      const pcsPerDayPro = Math.round(pcsPerHourPro * 8);
+
+      const pcsPerHourStd = Math.round((60 / samStd) * 10) / 10;
+      const pcsPerDayStd = Math.round(pcsPerHourStd * 8);
+
+      const pcsPerHourDeb = Math.round((60 / samDeb) * 10) / 10;
+      const pcsPerDayDeb = Math.round(pcsPerHourDeb * 8);
+
+      if (speakAr) {
+        return `⏱️ توقيت الإنتاج الدقيق وسرعة العمل (Timing & Cadence بالتدقيق):
+
+🎯 إجمالي وقت خياطة البياسة (Total SAM): حوالي ${samStd} دقائق (متوسط)
+
+📊 1. مقارنة التوقيت حسب مستوى العمالة فالمعمل (حرافيين vs مبتدئين):
+• ⚡ الناس الحرافيين (Ouvriers Qualifiés / Professionnels):
+  - وقت الفصالة فالمطلة: ~30 إلى 45 ثانية للبياسة (فصالة 50-100 طبقة دفعة واحدة بالمقص العمودي، ماشي بياسة ببياسة)
+  - وقت الخياطة والتجميع: ${samPro} دقائق للبياسة فقط!
+  - مردودية الخياط الحرافي: ~${pcsPerHourPro} بياسات فالساعة (حوالي ${pcsPerDayPro} بياسة في اليوم بـ 8 ساعات).
+
+• ⚖️ التوقيت القياسي العادي (Ouvriers Standards):
+  - وقت الخياطة: ${samStd} دقائق للبياسة
+  - مردودية العامل: ~${pcsPerHourStd} بياسات فالساعة (حوالي ${pcsPerDayStd} بياسة في اليوم).
+
+• 🐢 العمال المبتدئين / المتدربين (Débutants / Apprentis):
+  - وقت الخياطة: ${samDeb} دقائق للبياسة (بسبب التردد وتصحيح الأخطاء)
+  - مردودية المبتدئ: ~${pcsPerHourDeb} بياسات فالساعة (حوالي ${pcsPerDayDeb} بياسة في اليوم).
+
+🏭 2. الطاقة الإنتاجية اليومية للورشة (8 ساعات عمل):
+• ورشة صغيرة (3 خياطة + فصال + فينيسيون): ~130 إلى 160 بياسة في اليوم.
+• ورشة متوسطة (5 خياطة متسلسلين): ~220 إلى 270 بياسة في اليوم.
+• خط إنتاج صناعي (10 خياطة مع موازنة الخط): ~450 إلى 550 بياسة في اليوم!
+
+💡 نصيحة للمعلم:
+الفصالة ديما كتحسب بالمطلة (Coupe au matelas) حيت كتسرح 20 أو 40 رولو وكتضرب الباترون كامل دقة وحدة، والوقت ديالها كيكون شبه مهمل (أقل من دقيقة للبياسة)!`;
+      } else {
+        return `⏱️ Timing et Cadence de Production Détaillés (SAM & Productivité) :
+
+🎯 Temps total de confection (SAM Moyen) : ~${samStd} minutes / pièce.
+
+📊 1. Timing selon l'expérience des ouvriers :
+• ⚡ Ouvriers Professionnels / Qualifiés :
+  - Confection : ${samPro} min / pièce
+  - Productivité : ~${pcsPerHourPro} pièces/heure (~${pcsPerDayPro} pièces/jour de 8h).
+• ⚖️ Ouvriers Standards :
+  - Confection : ${samStd} min / pièce
+  - Productivité : ~${pcsPerHourStd} pièces/heure (~${pcsPerDayStd} pièces/jour).
+• 🐢 Ouvriers Débutants :
+  - Confection : ${samDeb} min / pièce
+  - Productivité : ~${pcsPerHourDeb} pièces/heure (~${pcsPerDayDeb} pièces/jour).
+
+🏭 2. Capacité de l'Atelier par Jour (8h) :
+• Atelier 3 ouvriers : ~140 pièces / jour
+• Atelier 5 ouvriers : ~240 pièces / jour
+• Atelier 10 ouvriers : ~480 pièces / jour.
+
+💡 Astuce Coupe : La coupe au matelas (plusieurs dizaines d'épaisseurs) réduit le temps de coupe unitaire à moins de 45 secondes par pièce !`;
+      }
+    }
+
+    // 0.2 DIRECT FABRIC SELECTION (أشمن ثوب ندير / Choix du Tissu)
+    const asksFabricChoice = /(achmen toub|chmen toub|ina toub|ina toub ndir|quel tissu|choix tissu|tissu conseille|tissu conseillé|شنو الثوب|اشمن ثوب|اشمن توب|شنو ندير ثوب|أفضل ثوب|احسن ثوب)/i.test(m);
+    if (asksFabricChoice) {
+      const cat = analysisResult?.category || 'الموديل';
+      const fab = analysisResult?.fabricSuggested || 'ميلتون قطن ممشوط (Molleton Gratté 320g)';
+      if (speakAr) {
+        return `🧵 أحسن ثوب مقترح لهاد الموديل (${cat}):
+
+1️⃣ الاختيار الأول (الأفضل والأكثر طلباً فالسوق المغربي):
+• ${fab}
+• المميزات: دافي، ملمس ناعم وفاخر، مكيكمشش، ومقاوم للغسيل المتكرر.
+• الثمن فدرب عمر والقريعة: ما بين 48 إلى 65 درهم للكيلو (أو 26-34 درهم للمتر لعرض 1.80م).
+
+2️⃣ بدائل ممتازة حسب الموسم ومستوى الجودة:
+• فرينش تيري (French Terry Coton 280g): ممتاز للربيع والصيف، فيه حلقات قطنية خفيفة من الداخل.
+• إنترلوك قطن فاخر (Interlock Double Face 260g): وجهين ناعمين، أنيق جداً للقطع الكلاسيكية والرياضية الراقية.
+
+📍 فين تشريه: سوق القريعة (جناح التريكو بالكيلو) أو شارع ستراسبورغ بدرب عمر بالدار البيضاء.`;
+      } else {
+        return `🧵 Tissu Recommandé pour ce modèle (${cat}) :
+1. Choix Principal : ${fab} (Prix : 48 - 65 MAD/kg ou ~26 MAD/m).
+2. Alternatives : French Terry (280g) pour mi-saison, ou Interlock Coton (260g) pour haut de gamme.
+📍 Sourcing : Marché El Koréa (au kilo) et Derb Omar à Casablanca.`;
+      }
+    }
+
+    // 0.3 DIRECT METRAGE & ROLLS NEEDED (شحال من متر ورولو للكميات)
+    const asksMetrageOrRolls = /(chhal mn metre|chhal dial toub|كم متر|كمية الثوب|استهلاك الثوب|قدش من متر|شحال من رولو|rouleau|rouleaux|رولو|رولوات|métrage|metrage)/i.test(m);
+    if (asksMetrageOrRolls) {
+      let unitConso = 1.65;
+      if (analysisResult?.consumption) {
+        const p = parseFloat(String(analysisResult.consumption).replace(',', '.'));
+        if (p > 0) unitConso = p;
+      }
+      if (analysisResult?.pieces && analysisResult.pieces.length > 1) {
+        unitConso = analysisResult.pieces.reduce((acc, pc) => acc + (parseFloat(String(pc.consumption || '1.5').replace(',', '.')) || 1.5), 0);
+      }
+      const roundUnit = Math.round(unitConso * 100) / 100;
+      if (speakAr) {
+        return `📏 حساب ميتراج ورولوات الثوب المطلوبة بالتدقيق (+5% ضياع الفصالة Chutes):
+
+• استهلاك البياسة الواحدة: حوالي ${roundUnit} متر (عرض Laize 1.80م).
+
+📦 الكميات المطلوبة حسب حجم الطلبية:
+• لـ 50 بياسة: ${Math.round(roundUnit * 50 * 1.05)} متر (حوالي رولو واحد كبير ديال 50-60م).
+• لـ 100 بياسة: ${Math.round(roundUnit * 100 * 1.05)} متر (2 رولوات).
+• لـ 200 بياسة: ${Math.round(roundUnit * 200 * 1.05)} متر (حوالي 4 رولوات).
+• لـ 500 بياسة: ${Math.round(roundUnit * 500 * 1.05)} متر (حوالي 10 إلى 12 رولو ديال 50م).
+• لـ 1000 بياسة: ${Math.round(roundUnit * 1000 * 1.05)} متر (حوالي 21 رولو).
+
+💡 ملاحظة مهمة: الحساب يشمل 5% هامش أمان لفصالة المطلة وحواشي الثوب.`;
+      } else {
+        return `📏 Métrage et Rouleaux Nécessaires (+5% marge de coupe) :
+• Consommation unitaire : ~${roundUnit}m (laize 1.80m).
+• Pour 50 pcs : ~${Math.round(roundUnit * 50 * 1.05)}m (1 rouleau de 50m).
+• Pour 100 pcs : ~${Math.round(roundUnit * 100 * 1.05)}m (2 rouleaux).
+• Pour 500 pcs : ~${Math.round(roundUnit * 500 * 1.05)}m (~11 rouleaux).
+• Pour 1000 pcs : ~${Math.round(roundUnit * 1000 * 1.05)}m (~21 rouleaux).`;
+      }
+    }
+
+    // 0.4 DIRECT WORKSHOP BALANCING & WORKERS (عدد العمال والماكينات)
+    const asksWorkersOrLine = /(chhal.*(mn khayat|mn khyata|khayata|ouvrier|ouvriers)|عدد العمال|شحال خاصني ديال الخياطة|شحال من ماكينة|machines necessaires|équilibrage|equilibrage)/i.test(m);
+    if (asksWorkersOrLine) {
+      if (speakAr) {
+        return `👥 توزيع العمال والماكينات المثالي بالورشة (Équilibrage de Ligne):
+
+🏭 ورشة متوازنة ديال 5 عمال (إنتاجية ~250 بياسة/يوم):
+1️⃣ عامل فصال (Coupeur): تكفل بالمطلة، التسريح والقص بالمقص الكهربائي العمودي + الترقيم.
+2️⃣ خياط سورجي 1 (Surjeteuse 4 fils): تجميع الأكتاف، الأكمام، وجوانب البياسة.
+3️⃣ خياط سورجي 2 (Surjeteuse 4 fils): تجميع الكابوش، الجيوب، وحجر السروال.
+4️⃣ خياط بيكوز (Piqueuse plate): تفاصيل الجيب الكنغر، شريط النظافة، والأربطة.
+5️⃣ خياط روكوفروز / فينيسيون (Recouvreuse / Finition): تركيب البورد-كوت، الأساور، الحزام، والكي والتغليف.
+
+⏱️ هاد التوزيع كيعطيك تدفق مستمر للسلعة بدون أي بلوكاج (Goulot d'étranglement)!`;
+      } else {
+        return `👥 Équilibrage optimal d'atelier (5 ouvriers - ~250 pcs/jour) :
+1. Coupeur : Matelasage et découpe ciseau vertical.
+2. Surjeteuse 1 (4 fils) : Assemblage corps et manches.
+3. Surjeteuse 2 (4 fils) : Capuche et poches / entrejambe.
+4. Piqueuse plate : Finitions, cordons et propreté.
+5. Recouvreuse & Finition : Bord-côte, repassage et ensachage.`;
+      }
+    }
+
+    // 0.5 DIRECT THREAD & ACCESSORIES (شحال ديال الخيط واللوازم)
+    const asksThreadOrAccessories = /(chhal.*(dial lkhit|khit|fil|bobine)|شحال ديال الخيط|شحال من كونة|الخيط|لوازم|fournitures|accessoires)/i.test(m);
+    if (asksThreadOrAccessories) {
+      if (speakAr) {
+        return `🧵 حساب كميات الخيط واللوازم (Fournitures & Fil de couture):
+
+1️⃣ خيط الخياطة (Fil 100% Polyester n°120):
+• ماكينات السورجي كتستهلك حوالي 12 إلى 15 متر ديال الخيط في كل متر خياطة!
+• لسيرية ديال 500 طقم: خاصك 6 إلى 8 كونات كبار (Cônes 5000m) للسورجي + 2 كونات للبيكوز.
+• لسيرية ديال 1000 طقم: خاصك حوالي 14 إلى 16 كونة للسورجي + 4 كونات للبيكوز.
+
+2️⃣ اللوازم الأخرى (Fournitures):
+• لاستيك عريض 4 سم: 80 سم للبياسة ➔ 400 متر لسيرية 500 بياسة (حوالي 8 رولوات ديال 50م).
+• كوردون قطني: 1.30م للبياسة ➔ 650 متر لسيرية 500 بياسة.
+• أكياس التغليف (Sachets polybag transparents): 500 ميكة بـ 45-60 درهم للباكية.`;
+      } else {
+        return `🧵 Calcul du Fil et Fournitures :
+• Fil polyester 120 : 6 à 8 cônes de 5000m pour 500 pièces (surjets 4 fils).
+• Élastique 4cm : 400m pour 500 pièces (8 rouleaux de 50m).
+• Cordon : ~650m pour 500 pièces.
+• Polybags : 500 sachets (~50 MAD).`;
+      }
+    }
+
+    // 0.6 Fabric Where to Buy & Exact Market Price (Where to find fabric in Morocco & exact prices)
     const asksWhereToBuy = /(fin|fen|fayn|mneen|mnin|mmin|achmen blasa|blasa|marche|souk|fournisseur|sourcing|فين.*(نلقى|نلقا|نشري|كيتباع|كاين|كايتباع)|(نلقى|نلقا|نشري|شراء).*(ثوب|قماش|سلعة)|درب عمر|القريعة|كراج علال|سوق|أسواق|أماكن|فين|fin.*nlqa|fen.*nlqa|ou.*trouver|ou.*acheter)/i.test(m);
-    const asksFabricPrice = /(taman|thman|prix|cout|coût|cost|سعر|ثمن|تكلفة|بشحال|chehal.*(toub|tissu|tweb)|combien.*(tissu|tweb)|prix.*(tissu|metre|kilo)|dak toub|had toub|diak toub|داك الثوب|داك التوب|هاد الثوب|هاد التوب|ثمن داك|ثمن هاد|ثمن الثوب|سعر الثوب|تمن داك)/i.test(m);
+    const asksFabricPrice = /((taman|thman|prix|cout|coût|cost|سعر|ثمن|تكلفة|بشحال|chehal|combien).*(toub|tissu|tweb|قماش|المتر|متر|metre|mètre|kilo|كيلو|كيلوغرام|كلغ))|(dak toub|had toub|diak toub|داك الثوب|داك التوب|هاد الثوب|هاد التوب|ثمن داك|ثمن هاد|ثمن الثوب|سعر الثوب|تمن داك)/i.test(m);
 
     if (asksWhereToBuy || asksFabricPrice) {
       let specificModelPart = '';
@@ -1782,18 +2189,59 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
         : '🧵 Consommation moyenne (laize 1.50m) :\n• Chemise : 1.30 - 1.60m\n• Pantalon : 1.30 - 1.50m\n• Hoodie : 1.50 - 1.80m\n• Robe / Djellaba : 2.50 - 3.50m\n• T-shirt : 0.85 - 1.10m\n• Boxer : 0.35 - 0.45m.';
     }
 
-    // Cost / Price general questions
-    if (/(prix|cout|coût|cost|taman|ثمن|سعر|تكلفة|كلفة|chehal|combien|price|devis|فلوس|flous|money)/i.test(m)) {
-      return speakAr
-        ? '💰 حساب تكلفة البياسة (Prix de revient) كيعتمد على 4 عناصر:\n1. ثمن الثوب بالمتر × الاستهلاك\n2. اليد العاملة فالورشة (الوقت بالدقائق SAM × ثمن الدقيقة)\n3. اللوازم (الخيط، الأزرار، السحاب، التيكيت، الميكة)\n4. المصاريف الثابتة ومارج الربح.\n\nاستعمل زر "تسعير Devis PRO" فاليسار لإنشاء حساب مفصل فوراً!'
-        : '💰 Le coût unitaire comprend : tissu + façon atelier + accessoires + charges fixes. Utilisez "Devis PRO" pour calculer le devis exact !';
+    // Production steps & Gamme direct answer
+    if (/(étape|etape|مراحل|مرحلة|production|confection|خياطة|montage|تركيب|process|كيفاش نركب|comment faire)/i.test(m)) {
+      const rawPostes = analysisResult?.gammeMontage || [];
+      if (rawPostes.length > 0) {
+        const postesList = rawPostes.map((p, idx) => `  ${idx + 1}️⃣ ${p.nomAr || p.nomFr} (${p.machine}) ➔ ⏱️ ${p.tempsMin || p.tempsPro || 1} دقيقة`).join('\n');
+        return speakAr
+          ? `🏭 لاغام ومراحل الخياطة المتسلسلة المباشرة لهاد الموديل بالورشة:\n\n${postesList}\n\n⏱️ إجمالي وقت الخياطة (SAM): حوالي ${rawPostes.reduce((acc, p) => acc + (Number(p.tempsMin) || Number(p.tempsPro) || 1), 0).toFixed(1)} دقيقة للبياسة!`
+          : `🏭 Gamme de montage directe pour ce modèle :\n\n${rawPostes.map((p, idx) => `${idx + 1}. ${p.nomFr || p.nomAr} (${p.machine}) : ~${p.tempsMin || 1} min`).join('\n')}`;
+      } else {
+        return speakAr
+          ? `🏭 المراحل المتسلسلة لخياطة هاد الموديل بالورشة:
+1️⃣ الفصالة بالمطلة (Matelasage) بالمقص العمودي والترقيم والكرونتاج.
+2️⃣ تجميع الأكتاف والكابوش والجيوب بماكينة السورجي (Surjeteuse 4 fils).
+3️⃣ خياطة التثبيت وشريط النظافة بالبيكوز (Piqueuse plate).
+4️⃣ تركيب بورد كوت الأساور وحزام اللاستيك بالروكوفروز (Recouvreuse).
+5️⃣ الفينيسيون والمصلوح بالبخار، المراقبة، والتغليف بالميكة Polybag.
+
+⏱️ إجمالي وقت الخياطة (SAM): ما بين 10 إلى 13 دقيقة للبياسة!`
+          : `🏭 Étapes : Coupe au matelas ➔ Assemblage surjet 4 fils ➔ Piqueuse plate ➔ Pose bord-côte recouvreuse ➔ Repassage vapeur & ensachage.`;
+      }
     }
 
-    // Production steps
-    if (/(étape|etape|مراحل|مرحلة|production|confection|خياطة|montage|تركيب|process|كيفاش|comment faire)/i.test(m)) {
+    // Selling & Marketing strategy
+    if (/(fin.*(nbi3|nbi3o|nbi3ha)|kifash.*(nbi3|nssweq|nsswq|nssawq)|ou.*vendre|comment.*vendre|marketing|commercialisation|فين.*(نبيع|نبيعو|نسوق)|كيفاش.*(نبيع|نسوق|ندير مارك))/i.test(m)) {
       return speakAr
-        ? '🏭 مراحل الإنتاج القياسية بالورشة:\n1️⃣ الفصالة (Coupe) والترقيم\n2️⃣ السورجي والتجميع المبدئي (Surjeteuse)\n3️⃣ الخياطة المسطحة والتثبيت (Piqueuse plate)\n4️⃣ التفاصيل والأزرار (Boutonnière / Pose)\n5️⃣ المصلوح والتشطيب (Repassage / Finition)\n6️⃣ المراقبة والتغليف (Contrôle & Emballage)\n\nاضغط على زر "إرسال للورشة Atelier" لعرض لاغام الكاملة!'
-        : '🏭 Étapes : Coupe ➔ Assemblage surjet ➔ Piqueuse plate ➔ Finitions & Boutons ➔ Repassage ➔ Contrôle qualité ➔ Emballage.';
+        ? `🛍️ استراتيجية بيع وتسويق هاد الموديل فالمغرب وتحقيق أرباح ممتازة:
+1️⃣ البيع بالجملة (Vente en Gros):
+  • الأسواق المستهدفة: درب عمر، كراج علال بالبيضاء، قيساريات إنزكان، وسوق الأحد بأكادير.
+  • طريقة التعامل: توفير سيريات فيها المقاسات كاملة (S, M, L, XL, XXL) في باكيتات مغلفة مع تيكيت وشريط السعر.
+2️⃣ التجارة الإلكترونية (E-commerce / Brand):
+  • إطلاق متجر إلكتروني مع إعلانات ممولة في TikTok و Instagram Reels (الموديلات الرياضية والهوديز هي الأكثر مبيعاً).
+  • التوصيل والدفع عند الاستلام (COD) مع شركات التوصيل الوطنية (Amana, Cathedis, Ozone...).
+  • هامش الربح بالتقسيط كيوصل لأكثر من 150%!
+3️⃣ التوريد للشركات والنوادي (B2B):
+  • طباعة أو تطريز شعارات النوادي الرياضية والمقاهي والشركات بالطلب.`
+        : `🛍️ Stratégies de vente au Maroc :
+1. Vente en Gros : Derb Omar, Garage Allal, Inezgane. Vente par séries complètes S à XXL.
+2. E-commerce & Réseaux Sociaux : TikTok Ads, Instagram, paiement à la livraison (COD).
+3. B2B / Entreprises : Vente personnalisée avec broderie ou marquage DTF.`;
+    }
+
+    // Washing & Care
+    if (/(ghasl|lavage|tban|صبين|غسيل|كيكمش|detrecit|shrinkage|انكماش)/i.test(m)) {
+      return speakAr
+        ? `🧼 إرشادات الغسيل والحفاظ على جودة القماش:
+• درجة حرارة الغسيل: 30°C كحد أقصى لتفادي انكماش ألياف القطن الطبيعي.
+• عصر معتدل (800 دورة/دقيقة كحد أقصى) لتجنب تجعد الريب والبورد-كوت.
+• تفادي الكلور أو ماء جافيل نهائياً للحفاظ على ثبات اللون.
+• الكي: بالبخار بدرجة حرارة متوسطة، وممنوع كي التطريز أو طباعة الفلوكاج DTF مباشرة من الوجه.`
+        : `🧼 Conseils de Lavage et d'Entretien :
+• Lavage à 30°C max pour éviter le rétrécissement des fibres de coton.
+• Essorage doux (max 800 tr/min).
+• Repassage à la vapeur à température moyenne (ne pas repasser sur les impressions DTF).`;
     }
 
     // Thanks
@@ -1805,23 +2253,32 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
 
     // Contextual Fallback (If an image or analysis is active, give tailored production guidance!)
     if (image || analysisResult) {
-      const cat = analysisResult?.category || 'طقم الهودي والسروال في الصورة';
+      const cat = analysisResult?.category || 'الموديل الحالي';
+      const fab = analysisResult?.fabricSuggested || 'ثوب مناسب للموديل';
+      const conso = analysisResult?.consumption || '1.65م';
+      const costEst = analysisResult?.costEstimate || '65 - 80 درهم';
       return speakAr
-        ? `💡 بخصوص الموديل في الصورة (${cat}):
-أنا معك كخبير نسيج وهندسة إنتاج لمساعدتك فالتفاصيل الدقيقة:
-• اكتب '1' 🧥 لعرض تفاصيل وخياطة الهودي والكابوش
-• اكتب '2' 👖 لعرض تفاصيل وفصالة السروال الجوجينغ
-• اكتب 'KML' 🏭 لعرض لاغام الخياطة المتسلسلة والمكائن
-• اكتب 'الثمن' 💰 لعرض جدول تكلفة الإنتاج وأسعار الثوب فالمغرب
-• اكتب 'المقاسات' 📐 لعرض جدول المقاسات S-XXL
+        ? `💡 جواب خبير بخصوص الموديل المحلل حالياً (${cat}):
 
-شنو الجزء اللي بغيتي نخدمو عليه دابا؟ 😊`
-        : `💡 Concernant le modèle en image (${cat}) :
-• Tapez '1' pour les détails du Hoodie
-• Tapez '2' pour les détails du Jogging
-• Tapez 'KML' pour la gamme de montage
-• Tapez 'Prix' pour les coûts et adresses de tissu
-• Tapez 'Tailles' pour les mesures S-XXL.`;
+• نوع وتصنيف الموديل: ${cat}
+• نوع القماش المعتمد: ${fab}
+• استهلاك الثوب للقطعة: حوالي ${conso}
+• التكلفة التقديرية الحالية (Prix de revient): ${costEst}
+
+🎯 نصيحة تقنية فورية للإنتاج:
+هاد الموديل مطلوب بزاف فالسوق المغربي، خصوصاً إلى خدمتي الفصالة مريحة (Oversize) ودرتي فينيسيون متقونة مع تيكيت ممتازة.
+تقدر تسولني مباشرة وبدون تردد عن:
+• "شحال كتقام البياسة" لحساب التكلفة المالية والأرباح بدقة
+• "شحال الوقت" لمعرفة توقيت الإنتاج للحرافيين والمبتدئين
+• "فين نشري الثوب" لعناوين وأثمنة درب عمر والقريعة
+• "شحال من متر ورولو" لحساب كميات السيريات
+وسأجاوبك فوراً وبشكل مباشر بالأرقام الدقيقة!`
+        : `💡 Réponse experte pour votre modèle (${cat}) :
+• Modèle : ${cat}
+• Tissu : ${fab}
+• Consommation : ~${conso}
+• Coût estimé : ${costEst}
+Posez-moi toute question sur le coût unitaire, le timing atelier, le sourcing tissu ou le montage, je vous répondrai directement avec des chiffres précis !`;
     }
 
     // Generic Default (Only when no image is uploaded)
@@ -2070,58 +2527,118 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
     window.open('/#/atelier-calculator', '_blank');
   };
 
+  const executeGeminiChat = async (userMessage: string): Promise<string> => {
+    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
+    if (!apiKey) {
+      return getSmartReply(userMessage);
+    }
+
+    try {
+      const totalSamMin = (analysisResult?.gammeMontage && analysisResult.gammeMontage.length > 0)
+        ? analysisResult.gammeMontage.reduce((acc: number, p: any) => acc + (Number(p.tempsMin) || Number(p.tempsPro) || 1), 0)
+        : (analysisResult?.pieces && analysisResult.pieces.length > 1 ? 12.5 : 8.0);
+
+      const modelContextPrompt = analysisResult ? `
+معطيات الموديل المحلل حالياً بالورشة:
+• اسم/فئة الموديل: ${analysisResult.category}
+• الثوب المقترح: ${analysisResult.fabricSuggested || 'غير محدد'}
+• استهلاك الثوب للقطعة: ${analysisResult.consumption}
+• تقدير التكلفة المسجل: ${analysisResult.costEstimate}
+• القطع: ${(analysisResult.pieces || []).map(p => `${p.name} (استهلاك: ${p.consumption}, كلفة: ${p.costEstimate})`).join('، ')}
+• إجمالي وقت الخياطة (SAM): ${totalSamMin.toFixed(1)} دقيقة
+• عدد المراحل: ${(analysisResult.gammeMontage || []).length} مرحلة
+` : '';
+
+      const fullPromptText = `${CHAT_AI_SYSTEM_PROMPT}
+
+${modelContextPrompt}
+
+طلب وسؤال المستخدم المباشر:
+${userMessage}
+
+تنبيه تقني إلزامي:
+1. أجب المستخدم فوراً وبشكل مباشر، تقني، وواضح جداً وبدون أي لف أو دوران، ولا تحله على أزرار أخرى أبداً!
+2. إذا سألك عن "شحال كتقام البياسة" أو عن التكلفة أو الثمن أو الأرباح، احسب له التكلفة فوراً بالأرقام المحددة بناءً على الموديل الحالي وأسعار السوق المغربي (درب عمر والقريعة): ثمن الثوب بالدرهم، لوازم الخياطة، تكلفة اليد العاملة والورشة، وثمن البياسة النهائي Prix de revient، وسعر الجملة وسعر التقسيط المقترح، وتكلفة 500 أو 1000 بياسة.
+3. إذا سألك عن الثوب، الوقت، الفصالة، أو مراحل الخياطة، أجب فوراً بأرقام ومعلومات تقنية عملية بالدارجة المغربية المفهومة للحرفيين.`;
+
+      const contents: any[] = [
+        {
+          role: "user",
+          parts: [{ text: fullPromptText }]
+        }
+      ];
+
+      if (image) {
+        const base64Data = image.split(',')[1];
+        const mimeType = image.split(';')[0].split(':')[1];
+        contents[0].parts.push({
+          inlineData: {
+            data: base64Data,
+            mimeType: mimeType
+          }
+        });
+      }
+
+      const systemInstructionText = "أنت خبير نسيج وهندسة إنتاج وتسعير في مصنع مغربي (BEYA Expert). تكلم بالدارجة المغربية بأسلوب احترافي مباشر ومفيد جداً. أجب المستخدم فوراً وبشكل مباشر وبدون أي لف أو دوران أو إحالة إلى أزرار أخرى! إذا سأل عن التكلفة أو الثمن أو 'شحال كتقام البياسة'، احسب له التكلفة فوراً بالأرقام المحددة والمفصلة: ثمن الثوب، اللوازم، اليد العاملة، التكلفة الإجمالية للقطعة (Prix de revient)، وسعر الجملة وسعر التقسيط وتكلفة 500 أو 1000 بياسة. إذا سأل عن الثوب، الوقت، الفصالة، أو مراحل الخياطة، أجب فوراً بأرقام ومعلومات تقنية عملية.";
+
+      const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      let data: any = null;
+
+      for (const model of candidateModels) {
+        try {
+          const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents,
+              systemInstruction: {
+                parts: [{ text: systemInstructionText }]
+              }
+            })
+          });
+          const json = await resp.json();
+          if (json.candidates && json.candidates[0]?.content?.parts?.[0]?.text) {
+            data = json;
+            break;
+          } else if (json.error) {
+            console.warn(`Model ${model} returned error:`, json.error.message);
+            data = json;
+          }
+        } catch (fetchErr) {
+          console.warn(`Fetch error for ${model}:`, fetchErr);
+        }
+      }
+
+      if (data?.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+        return parseAiChatAndExtractGamme(data.candidates[0].content.parts[0].text, userMessage);
+      } else {
+        const smartReply = getSmartReply(userMessage);
+        const errMsg = data?.error?.message || '';
+        const isLimit0 = errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded') || errMsg.includes('RESOURCE_EXHAUSTED');
+        let note = '';
+        if (isLimit0) {
+          note = isAr 
+            ? "\n\n────────────────────────────\n⚠️ ملاحظة: مفتاح Gemini API بدون رصيد في Google Cloud (Limit: 0)، تمت إجابتك مباشرة عبر خبير BEYA الداخلي."
+            : "\n\n────────────────────────────\n⚠️ Note: Clé Gemini API sans quota (Limit: 0), réponse fournie par l'Expert BEYA interne.";
+        }
+        return smartReply + note;
+      }
+    } catch (e: any) {
+      console.warn('executeGeminiChat error:', e);
+      return getSmartReply(userMessage);
+    }
+  };
+
   const sendDirect = async (directMsg: string) => {
     const userMessage = directMsg;
     setChat(prev => [...prev, { role: 'user', text: userMessage }]);
-
-    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
-    if (apiKey) {
-      try {
-        setChat(prev => [...prev, { role: 'ai', text: '...' }]);
-        const contents: any[] = [{ role: "user", parts: [{ text: `${CHAT_AI_SYSTEM_PROMPT}\n\nطلب المستخدم:\n${userMessage}` }] }];
-        if (image) {
-          const base64Data = image.split(',')[1];
-          const mimeType = image.split(';')[0].split(':')[1];
-          contents[0].parts.push({ inlineData: { data: base64Data, mimeType } });
-        }
-        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. مهمتك الأساسية: 1. حساب كميات الثوب بدقة. 2. إعطاء تقديرات دقيقة للأسعار في السوق المغربي (مثلا أثمنة الأثواب في درب عمر أو أسواق الجملة). 3. إذا سألك المستخدم عن التكلفة، أعطه تفصيلاً دقيقاً: ثمن الثوب (شحال للمتر والمجموع)، تكلفة الخياطة (اليد العاملة)، والتكلفة الإجمالية للقطعة (Prix de revient). 4. اقترح أماكن شراء الأثواب في المغرب. كن مفيداً، دقيقاً في الأرقام التقريبية، وتصرف كخبير نسيج حقيقي." }] } })
-        });
-        let data = await response.json();
-        
-        if (data.error && (data.error.message.includes('high demand') || data.error.code === 503 || data.error.code === 404 || data.error.message.includes('not found'))) {
-          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي." }] } })
-          });
-          data = await response.json();
-        }
-
-        let aiText = "";
-        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-          aiText = parseAiChatAndExtractGamme(data.candidates[0].content.parts[0].text, userMessage);
-        } else {
-          // If Gemini API fails or limits, answer directly with built-in textile expert!
-          const smartReply = getSmartReply(userMessage);
-          const errMsg = data.error?.message || '';
-          const isLimit0 = errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded') || errMsg.includes('RESOURCE_EXHAUSTED');
-          let note = '';
-          if (isLimit0) {
-            note = isAr 
-              ? "\n\n────────────────────────────\n⚠️ ملاحظة: مفتاح Gemini API بدون رصيد في Google Cloud (Limit: 0)، تمت إجابتك مباشرة عبر خبير BEYA الداخلي."
-              : "\n\n────────────────────────────\n⚠️ Note: Clé Gemini API sans quota (Limit: 0), réponse fournie par l'Expert BEYA interne.";
-          }
-          aiText = smartReply + note;
-        }
-        setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: aiText }]; });
-      } catch (e: any) {
-        const smartReply = getSmartReply(userMessage);
-        setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: smartReply }]; });
-      }
-    } else {
-      setChat(prev => [...prev, { role: 'ai', text: getSmartReply(userMessage) }]);
-    }
+    setChat(prev => [...prev, { role: 'ai', text: '...' }]);
+    const reply = await executeGeminiChat(userMessage);
+    setChat(prev => {
+      const n = [...prev];
+      n.pop();
+      return [...n, { role: 'ai', text: reply }];
+    });
   };
 
   const sendMsg = async () => {
@@ -2129,97 +2646,15 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
     const userMessage = msg;
     setChat(prev => [...prev, { role: 'user', text: userMessage }]);
     setMsg('');
-
-    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
-    if (apiKey) {
-      try {
-        // show loading indicator
-        setChat(prev => [...prev, { role: 'ai', text: '...' }]);
-
-        const contents: any[] = [
-          {
-            role: "user",
-            parts: [
-              { text: `${CHAT_AI_SYSTEM_PROMPT}\n\nطلب المستخدم:\n${userMessage}` }
-            ]
-          }
-        ];
-
-        if (image) {
-          const base64Data = image.split(',')[1];
-          const mimeType = image.split(';')[0].split(':')[1];
-          contents[0].parts.push({
-            inlineData: {
-              data: base64Data,
-              mimeType: mimeType
-            }
-          });
-        }
-
-        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents,
-            systemInstruction: {
-              parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. مهمتك الأساسية: 1. حساب كميات الثوب بدقة. 2. إعطاء تقديرات دقيقة للأسعار في السوق المغربي (مثلا أثمنة الأثواب في درب عمر أو أسواق الجملة). 3. إذا سألك المستخدم عن التكلفة، أعطه تفصيلاً دقيقاً: ثمن الثوب (شحال للمتر والمجموع)، تكلفة الخياطة (اليد العاملة)، والتكلفة الإجمالية للقطعة (Prix de revient). 4. اقترح أماكن شراء الأثواب في المغرب. كن مفيداً، دقيقاً في الأرقام التقريبية، وتصرف كخبير نسيج حقيقي." }]
-            }
-          })
-        });
-
-        let data = await response.json();
-        
-        // Fallback to gemini-1.5-flash if 2.0 is overloaded or not found
-        if (data.error && (data.error.message.includes('high demand') || data.error.code === 503 || data.error.code === 404 || data.error.message.includes('not found'))) {
-          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents,
-              systemInstruction: {
-                parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي." }]
-              }
-            })
-          });
-          data = await response.json();
-        }
-
-        let aiResponseText = "";
-        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-          aiResponseText = parseAiChatAndExtractGamme(data.candidates[0].content.parts[0].text, userMessage);
-        } else {
-          // If Gemini API fails or has limit: 0, answer directly with the Smart Textile Expert!
-          const smartReply = getSmartReply(userMessage);
-          const errMsg = data.error?.message || '';
-          const isLimit0 = errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded') || errMsg.includes('RESOURCE_EXHAUSTED');
-          let note = '';
-          if (isLimit0) {
-            note = isAr 
-              ? "\n\n────────────────────────────\n⚠️ ملاحظة: مفتاح Gemini API بدون رصيد في Google Cloud (Limit: 0)، تمت إجابتك مباشرة عبر خبير BEYA الداخلي."
-              : "\n\n────────────────────────────\n⚠️ Note: Clé Gemini API sans quota (Limit: 0), réponse fournie par l'Expert BEYA interne.";
-          }
-          aiResponseText = smartReply + note;
-        }
-
-        setChat(prev => {
-          const newChat = [...prev];
-          newChat.pop(); // remove loading
-          return [...newChat, { role: 'ai', text: aiResponseText }];
-        });
-      } catch (e: any) {
-        const smartReply = getSmartReply(userMessage);
-        setChat(prev => {
-          const newChat = [...prev];
-          newChat.pop();
-          return [...newChat, { role: 'ai', text: smartReply }];
-        });
-      }
-    } else {
-      setTimeout(() => {
-        setChat(prev => [...prev, { role: 'ai', text: getSmartReply(userMessage) }]);
-      }, 500);
-    }
+    setChat(prev => [...prev, { role: 'ai', text: '...' }]);
+    const reply = await executeGeminiChat(userMessage);
+    setChat(prev => {
+      const n = [...prev];
+      n.pop();
+      return [...n, { role: 'ai', text: reply }];
+    });
   };
+
 
   return (
     <div className={`flex flex-col h-full md:h-[calc(100vh-80px)] ${isBoxMaximized ? 'w-full max-w-full px-2 md:px-6' : 'max-w-7xl mx-auto px-2 md:px-4'} pb-2 md:pb-4 pt-2 md:pt-0 overflow-hidden select-none bg-white md:bg-transparent transition-all duration-300`}>
