@@ -594,6 +594,23 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   ]);
   const [msg, setMsg] = useState('');
   const [isBoxMaximized, setIsBoxMaximized] = useState(false);
+  const [cadenceLevel, setCadenceLevel] = useState<'pro' | 'standard' | 'debutant'>('pro');
+
+  const getPosteTimeForCadence = (p: PosteTravail, level: 'pro' | 'standard' | 'debutant'): number => {
+    const isCoupe = (p.machine || '').toLowerCase().includes('coupe') || (p.nomAr || '').includes('فصالة');
+    if (level === 'pro') {
+      if (typeof p.tempsPro === 'number') return p.tempsPro;
+      return isCoupe ? Math.min(p.tempsMin, 0.8) : Number(Math.max(0.3, p.tempsMin * 0.6).toFixed(2));
+    }
+    if (level === 'debutant') {
+      if (typeof p.tempsDebutant === 'number') return p.tempsDebutant;
+      return isCoupe ? Math.max(p.tempsMin * 2, 2.5) : Number((p.tempsMin * 1.8).toFixed(2));
+    }
+    // 'standard'
+    if (typeof p.tempsStandard === 'number') return p.tempsStandard;
+    return isCoupe ? Math.max(p.tempsMin, 1.5) : Number((p.tempsMin * 1.15).toFixed(2));
+  };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -1106,7 +1123,10 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
    - تنبيه هام جداً: إذا كانت القطعة العلوية طويلة (تصل أو تتجاوز منطقة الأرداف/الورك، مثل الفستان، الجلابة، القفطان، أو البلوزة الطويلة Tunique)، يجب عليك إضافة قياس "الورك (Hanches)" كقياس سادس أساسي في جدول هذه القطعة!
    - للسروال أو البوكسر: الخصر، الورك، الطول، الفخذ، أسفل الرجل.
 8. نوع الثوب الرئيسي المقترح لصناعة هذه القطعة مع اقتراحين بديلين للثوب، مع ذكر المزايا والعيوب لكل بديل بالدارجة المغربية بشكل مختصر ومفيد للمصنع.
-9. لاغام ديال الخياطة وبوستات العمل (gammeMontage): أعطني سلسلة مراحل الخياطة الدقيقة الخاصة بهذا الموديل بالضبط في الورشة (من الفصالة حتى التشطيب والتغليف)، مع تحديد الآلة لكل مرحلة والوقت الحقيقي بالدقائق (tempsMin).
+9. لاغام ديال الخياطة وبوستات العمل (gammeMontage): أعطني سلسلة مراحل الخياطة الدقيقة الخاصة بهذا الموديل في مصنع ملابس حقيقي:
+   - هام جداً بخصوص الفصالة: الفصالة في المعمل تكون بالمطلوة الصناعية (Coupe Matelas) وليس بياسة ببياسة، والوقت المحسوب هو وقت إطلاق المطلوة مقسوم على عدد البياسات (حوالي 0.8 إلى 1.2 دقيقة للبياسة فقط).
+   - أوقات الخياطة (Piqueuse, Surjeteuse, Finition...): يجب أن تكون أوقات عمال محترفين حرافيين (Cadence Pro) بحيث يكون الوقت الإجمالي للموديل (SAM) واقعياً للإنتاج السريع (مثلاً بين 9 و 18 دقيقة للموديل الكامل).
+   - لكل مرحلة حدد: الآلة، وقت الحرافيين (tempsPro)، وقت ستاندار (tempsStandard)، ووقت المبتدئين (tempsDebutant).
 
 أجب بصيغة JSON فقط بدون أي نص إضافي، بهذا الشكل:
 {
@@ -1124,10 +1144,13 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   ],
   "gammeMontage": [
     {
-      "nomAr": "فصالة القماش وتحضير الأجزاء",
-      "nomFr": "Coupe & Préparation",
+      "nomAr": "فصالة القماش بالمطلوة الصناعية وتحضير الرزم",
+      "nomFr": "Coupe Matelas & Préparation Paquets",
       "machine": "Table de Coupe / Ciseaux",
-      "tempsMin": 1.0,
+      "tempsMin": 0.8,
+      "tempsPro": 0.8,
+      "tempsStandard": 1.2,
+      "tempsDebutant": 2.0,
       "roleOuvrier": "فصالة وباترون"
     }
   ],
@@ -1147,7 +1170,11 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }
   ]
 }`
-        : `Tu es un expert textile et confection professionnel. Analyse cette image avec une très haute précision.
+        : `Tu es un expert textile et confection en atelier industriel marocain. Analyse cette image avec une très haute précision.
+Consignes pour la gamme de montage :
+- Coupe industrielle : calculée impérativement en coupe matelas par pli amorti (0.8 à 1.2 min/pièce, jamais du sur-mesure pièce par pièce).
+- Cadence ateliers pro : temps de couture et finition réalistes pour ouvriers qualifiés (total SAM 10 à 18 min pour le vêtement complet).
+- Fournir pour chaque opération : nomAr, nomFr, machine, tempsMin, tempsPro, tempsStandard, tempsDebutant, roleOuvrier.
 Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
       const candidateModels = [
@@ -1252,13 +1279,22 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
 
         // Populate tailored Gamme de Montage
         if (parsed.gammeMontage && Array.isArray(parsed.gammeMontage) && parsed.gammeMontage.length > 0) {
-          result.gammeMontage = parsed.gammeMontage.map((g: any) => ({
-            nomAr: g.nomAr || g.nomFr || 'مرحلة خياطة',
-            nomFr: g.nomFr || g.nomAr || 'Opération couture',
-            machine: g.machine || 'Piqueuse Plate',
-            tempsMin: Math.max(0.1, Number(parseFloat(String(g.tempsMin || 1)).toFixed(2))),
-            roleOuvrier: g.roleOuvrier || (isAr ? 'خياط متخصص' : 'Couturier qualifié')
-          }));
+          result.gammeMontage = parsed.gammeMontage.map((g: any) => {
+            const rawPro = g.tempsPro || g.tempsMin || 1;
+            const tPro = Math.max(0.1, Number(parseFloat(String(rawPro)).toFixed(2)));
+            const tStd = g.tempsStandard ? Math.max(0.1, Number(parseFloat(String(g.tempsStandard)).toFixed(2))) : Number((tPro * 1.35).toFixed(2));
+            const tDeb = g.tempsDebutant ? Math.max(0.1, Number(parseFloat(String(g.tempsDebutant)).toFixed(2))) : Number((tPro * 2.0).toFixed(2));
+            return {
+              nomAr: g.nomAr || g.nomFr || 'مرحلة خياطة',
+              nomFr: g.nomFr || g.nomAr || 'Opération couture',
+              machine: g.machine || 'Piqueuse Plate',
+              tempsMin: tPro,
+              tempsPro: tPro,
+              tempsStandard: tStd,
+              tempsDebutant: tDeb,
+              roleOuvrier: g.roleOuvrier || (isAr ? 'خياط متخصص' : 'Couturier qualifié')
+            };
+          });
         } else {
           const fallbackCtx = `${result.category} ${result.fabricSuggested} ${result.pieces.map((p: any) => p.name).join(' ')}`;
           result.gammeMontage = getGarmentTechnicalBreakdown(fallbackCtx).postesTravail;
@@ -1941,8 +1977,8 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
       }
     }
 
-    // Determine tailored Gamme de Montage (customPostes)
-    const customPostes: PosteTravail[] = (
+    // Determine tailored Gamme de Montage (customPostes) with selected cadence level
+    const rawPostes: PosteTravail[] = (
       analysisResult?.gammeMontage &&
       Array.isArray(analysisResult.gammeMontage) &&
       analysisResult.gammeMontage.length > 0 &&
@@ -1953,6 +1989,11 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
     )
       ? analysisResult.gammeMontage
       : breakdown.postesTravail;
+
+    const customPostes: PosteTravail[] = rawPostes.map(p => ({
+      ...p,
+      tempsMin: getPosteTimeForCadence(p, cadenceLevel)
+    }));
 
     // Extract quantity from user chat if mentioned (e.g. "6000")
     let detectedQty = 1000;
@@ -2938,7 +2979,7 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
             const activeGamme = (analysisResult?.gammeMontage && analysisResult.gammeMontage.length > 0)
               ? analysisResult.gammeMontage
               : fallbackGamme;
-            const totalMin = Number(activeGamme.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0).toFixed(2));
+            const totalMin = Number(activeGamme.reduce((acc, p) => acc + getPosteTimeForCadence(p, cadenceLevel), 0).toFixed(2));
             const totalSec = Math.round(totalMin * 60);
 
             return (
@@ -2991,6 +3032,75 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
                   </div>
                 </div>
 
+                {/* 3-Level Cadence Selector (حرافيين Pro vs عادي Standard vs مبتدئين / ثقال Débutant) */}
+                <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-4 rounded-3xl border border-amber-400/60 shadow-md text-white space-y-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-base shrink-0 shadow-sm">
+                        ⚡
+                      </div>
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-black text-white flex items-center gap-2">
+                          <span>{isAr ? 'وتيرة سرعة الخياطة (حرافيين vs مبتدئين)' : 'Niveau de Cadence & Efficacité Atelier'}</span>
+                          <span className={`px-2 py-0.5 text-[9px] font-black rounded-full uppercase ${
+                            cadenceLevel === 'pro'
+                              ? 'bg-emerald-500 text-white'
+                              : cadenceLevel === 'standard'
+                              ? 'bg-amber-400 text-slate-950'
+                              : 'bg-rose-500 text-white'
+                          }`}>
+                            {cadenceLevel === 'pro' ? (isAr ? '⚡ حرافيين (Pro 120%)' : 'PRO 120%') : cadenceLevel === 'standard' ? (isAr ? '⏱️ ستاندار (85%)' : 'STANDARD 85%') : (isAr ? '🐢 مبتدئين (60%)' : 'DÉBUTANTS 60%')}
+                          </span>
+                        </h3>
+                        <p className="text-[10px] text-slate-300 font-bold mt-0.5">
+                          {isAr ? 'الفصالة بالمطلوة الصناعية (Coupe Matelas) وسرعة الماكينات محسوبة أوتوماتيكياً' : 'Coupe matelas industrielle & temps réel adapté au profil de vos ouvriers'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 p-1 bg-white/10 rounded-2xl border border-white/15 self-stretch sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => setCadenceLevel('pro')}
+                        className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                          cadenceLevel === 'pro'
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm ring-2 ring-emerald-400/40'
+                            : 'text-slate-300 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <span>⚡</span>
+                        <span>{isAr ? 'حرافيين (120% Pro)' : 'Pros (120%)'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setCadenceLevel('standard')}
+                        className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                          cadenceLevel === 'standard'
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-sm ring-2 ring-amber-400/40'
+                            : 'text-slate-300 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <span>⏱️</span>
+                        <span>{isAr ? 'ستاندار (عادي 85%)' : 'Standard (85%)'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setCadenceLevel('debutant')}
+                        className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                          cadenceLevel === 'debutant'
+                            ? 'bg-gradient-to-r from-rose-600 to-orange-600 text-white shadow-sm ring-2 ring-rose-400/40'
+                            : 'text-slate-300 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <span>🐢</span>
+                        <span>{isAr ? 'مبتدئين / ثقال (60%)' : 'Débutants (60%)'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Metrics Summary Strip */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
@@ -3021,7 +3131,11 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
                 {/* Operations List */}
                 <div className="space-y-2.5">
                   {activeGamme.map((gp, idx) => {
-                    const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
+                    const currentMin = getPosteTimeForCadence(gp, cadenceLevel);
+                    const sec = Math.round(currentMin * 60);
+                    const proTime = getPosteTimeForCadence(gp, 'pro');
+                    const debTime = getPosteTimeForCadence(gp, 'debutant');
+                    const isCoupe = (gp.machine || '').toLowerCase().includes('coupe') || (gp.nomAr || '').includes('فصالة');
                     const isPiqueuse = gp.machine.toLowerCase().includes('piqueuse');
                     const isSurjet = gp.machine.toLowerCase().includes('surjet');
                     const isRecouvreuse = gp.machine.toLowerCase().includes('recouvr') || gp.machine.toLowerCase().includes('ourle');
@@ -3080,8 +3194,13 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
                             </div>
                           </div>
                           <div className="min-w-0">
-                            <p className="text-xs sm:text-sm font-black text-slate-900 truncate">
-                              {isAr ? gp.nomAr : (gp.nomFr || gp.nomAr)}
+                            <p className="text-xs sm:text-sm font-black text-slate-900 truncate flex items-center gap-2">
+                              <span>{isAr ? gp.nomAr : (gp.nomFr || gp.nomAr)}</span>
+                              {isCoupe && (
+                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-md border border-indigo-200 shrink-0">
+                                  ✂️ {isAr ? 'فصالة بالمطلوة (Matelas)' : 'Coupe Matelas'}
+                                </span>
+                              )}
                             </p>
                             <p className="text-[11px] font-bold text-slate-400 truncate mt-0.5">
                               {isAr ? (gp.nomFr || '') : (gp.nomAr || '')} {gp.roleOuvrier ? `• ${gp.roleOuvrier}` : ''}
@@ -3089,13 +3208,21 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-end sm:self-center">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 shrink-0 self-end sm:self-center">
                           <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black border ${badgeColor}`}>
                             ⚙️ {gp.machine}
                           </span>
-                          <div className="px-3 py-1 bg-amber-50 border border-amber-200/80 rounded-xl text-right shrink-0">
-                            <span className="text-xs font-black text-amber-800">{gp.tempsMin} {isAr ? 'د' : 'min'}</span>
-                            <span className="text-[10px] font-bold text-amber-600/80 mr-1">({sec}s)</span>
+
+                          <div className="flex flex-col items-end">
+                            <div className="px-3 py-1 bg-amber-50 border border-amber-200/80 rounded-xl text-right">
+                              <span className="text-xs font-black text-amber-800">{currentMin} {isAr ? 'د' : 'min'}</span>
+                              <span className="text-[10px] font-bold text-amber-600/80 mr-1">({sec}s)</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5 text-[9px] font-bold">
+                              <span className="text-emerald-700 font-black">⚡ حرافي: {proTime}د</span>
+                              <span className="text-slate-300">|</span>
+                              <span className="text-rose-600 font-black">🐢 مبتدئ: {debTime}د</span>
+                            </div>
                           </div>
                         </div>
                       </div>

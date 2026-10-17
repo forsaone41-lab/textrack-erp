@@ -85,18 +85,18 @@ interface AtelierCalculatorProps {
 }
 
 const ATELIER_MACHINES_PRESETS = [
-  { id: 'piqueuse', machine: 'Piqueuse Plate', labelAr: 'بيكوز سامبل', defaultNomAr: 'خياطة وتجميع الأجزاء', defaultNomFr: 'Assemblage Piqueuse Plate', defaultMin: 6, role: 'خياط رئيسي' },
-  { id: 'surjeteuse_34', machine: 'Surjeteuse 3/4 Fils', labelAr: 'سورجي 3/4 خيوط', defaultNomAr: 'سرفلة وحماية الأطراف', defaultNomFr: 'Surfilage 3/4 Fils', defaultMin: 5, role: 'ماكينة Overlock' },
-  { id: 'surjeteuse_5', machine: 'Surjeteuse 5 Fils (Safety)', labelAr: 'سورجي 5 خيوط', defaultNomAr: 'تجميع وسرفلة سافتي 5 خيوط', defaultNomFr: 'Assemblage Safety 5 Fils', defaultMin: 6, role: 'ماكينة Overlock' },
-  { id: 'recouvreuse', machine: 'Recouvreuse', labelAr: 'روكوفروز / كوليتوز', defaultNomAr: 'ثني الأطراف الخارجية والتشطيب', defaultNomFr: 'Ourlets & Finitions Recouvreuse', defaultMin: 5, role: 'خياطة متخصصة' },
-  { id: 'double_aiguille', machine: 'Piqueuse 2 Aiguilles', labelAr: 'بيكوز 2 إبر', defaultNomAr: 'خياطة مزدوجة 2 إبر (Surpiqûre)', defaultNomFr: 'Couture Double Aiguille', defaultMin: 6, role: 'خياط متخصص' },
-  { id: 'coupe', machine: 'Table de Coupe / Ciseaux', labelAr: 'طاولة الفصالة / مقص', defaultNomAr: 'فصالة القماش وتحضير الأجزاء', defaultNomFr: 'Coupe & Préparation', defaultMin: 5, role: 'فصالة وباترون' },
-  { id: 'repassage', machine: 'Fer Vapeur / Table Aspirante', labelAr: 'كيّ بالبخار', defaultNomAr: 'كّي بالبخار ومراقبة الجودة نهائية', defaultNomFr: 'Repassage Vapeur & Contrôle', defaultMin: 4, role: 'مراقب جودة وتشطيب' },
-  { id: 'boutonniere', machine: 'Boutonnière / Pose Bouton', labelAr: 'عيون وأزرار', defaultNomAr: 'فتح العيون وتركيب الأزرار', defaultNomFr: 'Boutonnière & Pose Boutons', defaultMin: 4, role: 'خياطة متخصصة' },
-  { id: 'brideuse', machine: 'Brideuse (Bartack)', labelAr: 'ماكينة البريد', defaultNomAr: 'تثبيت ودعم نقاط القوة (Bride)', defaultNomFr: 'Renforts & Brides (Bartack)', defaultMin: 3, role: 'خياطة متخصصة' },
-  { id: 'thermocollage', machine: 'Presse à Thermocoller', labelAr: 'پريس فيزلين', defaultNomAr: 'لصق الفيزلين وتقوية الأجزاء', defaultNomFr: 'Thermocollage & Entoilage', defaultMin: 4, role: 'مساعد فصالة' },
-  { id: 'broderie', machine: 'Machine Broderie / Sfifa', labelAr: 'طرز / سفيفة', defaultNomAr: 'تطريز أو تركيب السفيفة والعقاد', defaultNomFr: 'Broderie / Pose Sfifa', defaultMin: 10, role: 'معلم طرز / خياطة' },
-  { id: 'finition_main', machine: 'Travail Manuel / Contrôle', labelAr: 'تشطيب ومراقبة يدوية', defaultNomAr: 'تشطيب، تنظيف الخيوط وتغليف', defaultNomFr: 'Épluchage, Contrôle & Emballage', defaultMin: 3, role: 'فني تشطيب' },
+  { id: 'piqueuse', machine: 'Piqueuse Plate', labelAr: 'بيكوز سامبل', defaultNomAr: 'خياطة وتجميع الأجزاء (بيكوز)', defaultNomFr: 'Assemblage Piqueuse Plate', defaultMin: 3.5, role: 'خياط رئيسي' },
+  { id: 'surjeteuse_34', machine: 'Surjeteuse 3/4 Fils', labelAr: 'سورجي 3/4 خيوط', defaultNomAr: 'سرفلة وتجميع الأطراف', defaultNomFr: 'Surfilage 3/4 Fils', defaultMin: 1.8, role: 'ماكينة Overlock' },
+  { id: 'surjeteuse_5', machine: 'Surjeteuse 5 Fils (Safety)', labelAr: 'سورجي 5 خيوط', defaultNomAr: 'تجميع وسرفلة سافتي 5 خيوط', defaultNomFr: 'Assemblage Safety 5 Fils', defaultMin: 2.2, role: 'ماكينة Overlock' },
+  { id: 'recouvreuse', machine: 'Recouvreuse', labelAr: 'روكوفروز / كوليتوز', defaultNomAr: 'ثني الأطراف والياقة (روكوفروز)', defaultNomFr: 'Ourlets & Finitions Recouvreuse', defaultMin: 1.5, role: 'خياطة متخصصة' },
+  { id: 'double_aiguille', machine: 'Piqueuse 2 Aiguilles', labelAr: 'بيكوز 2 إبر', defaultNomAr: 'خياطة مزدوجة 2 إبر (Surpiqûre)', defaultNomFr: 'Couture Double Aiguille', defaultMin: 2.0, role: 'خياط متخصص' },
+  { id: 'coupe', machine: 'Table de Coupe / Ciseaux', labelAr: 'فصالة بالمطلوة (Matelas)', defaultNomAr: 'فصالة القماش بالمطلوة الصناعية وتحضير الرزم', defaultNomFr: 'Coupe Matelas & Préparation Paquets', defaultMin: 0.8, role: 'فصالة وباترون' },
+  { id: 'repassage', machine: 'Fer Vapeur / Table Aspirante', labelAr: 'كيّ بالبخار', defaultNomAr: 'كّي بالبخار وفحص الجودة النهائي', defaultNomFr: 'Repassage Vapeur & Contrôle', defaultMin: 1.2, role: 'مراقب جودة وتشطيب' },
+  { id: 'boutonniere', machine: 'Boutonnière / Pose Bouton', labelAr: 'عيون وأزرار', defaultNomAr: 'فتح العيون وتركيب الأزرار', defaultNomFr: 'Boutonnière & Pose Boutons', defaultMin: 1.0, role: 'خياطة متخصصة' },
+  { id: 'brideuse', machine: 'Brideuse (Bartack)', labelAr: 'ماكينة البريد', defaultNomAr: 'تثبيت ودعم نقاط القوة (Bride)', defaultNomFr: 'Renforts & Brides (Bartack)', defaultMin: 0.8, role: 'خياطة متخصصة' },
+  { id: 'thermocollage', machine: 'Presse à Thermocoller', labelAr: 'پريس فيزلين', defaultNomAr: 'لصق الفيزلين وتقوية الأجزاء', defaultNomFr: 'Thermocollage & Entoilage', defaultMin: 1.0, role: 'مساعد فصالة' },
+  { id: 'broderie', machine: 'Machine Broderie / Sfifa', labelAr: 'طرز / سفيفة', defaultNomAr: 'تطريز أو تركيب السفيفة والعقاد', defaultNomFr: 'Broderie / Pose Sfifa', defaultMin: 4.0, role: 'معلم طرز / خياطة' },
+  { id: 'finition_main', machine: 'Travail Manuel / Contrôle', labelAr: 'تشطيب ومراقبة يدوية', defaultNomAr: 'تشطيب، تنظيف الخيوط وتغليف', defaultNomFr: 'Épluchage, Contrôle & Emballage', defaultMin: 0.8, role: 'فني تشطيب' },
 ];
 
 const DEFAULT_WORKERS: Employe[] = [
@@ -239,6 +239,7 @@ export default function AtelierCalculator({
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [isPostesBoxExpanded, setIsPostesBoxExpanded] = useState(false);
   const [selectedQuickMachine, setSelectedQuickMachine] = useState<string>(ATELIER_MACHINES_PRESETS[0].machine);
+  const [cadenceLevel, setCadenceLevel] = useState<'pro' | 'standard' | 'debutant'>('pro');
   const [activeInputKey, setActiveInputKey] = useState<string | null>(null);
   const [activeInputRaw, setActiveInputRaw] = useState<string>('');
   const [customModelPhoto, setCustomModelPhoto] = useState<string | null>(null);
@@ -3727,16 +3728,47 @@ export default function AtelierCalculator({
         const activeTotalMin = activePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
         const selectedPresetObj = ATELIER_MACHINES_PRESETS.find(m => m.machine === selectedQuickMachine) || ATELIER_MACHINES_PRESETS[0];
 
+        const applyCadenceToPostes = (level: 'pro' | 'standard' | 'debutant') => {
+          setCadenceLevel(level);
+          const current = customPostes !== null ? customPostes : [...breakdown.postesTravail];
+          const updated = current.map((p) => {
+            const basePro = p.tempsPro ?? p.tempsMin;
+            const baseStd = p.tempsStandard ?? Number((basePro * 1.35).toFixed(2));
+            const baseDeb = p.tempsDebutant ?? Number((basePro * 2.0).toFixed(2));
+            let newTime = basePro;
+            if (level === 'pro') newTime = basePro;
+            else if (level === 'standard') newTime = baseStd;
+            else if (level === 'debutant') newTime = baseDeb;
+            return {
+              ...p,
+              tempsMin: Number(newTime.toFixed(2)),
+              tempsPro: basePro,
+              tempsStandard: baseStd,
+              tempsDebutant: baseDeb
+            };
+          });
+          setCustomPostes(updated);
+        };
+
         const addPosteWithMachine = (machineName: string) => {
           const preset = ATELIER_MACHINES_PRESETS.find(m => m.machine === machineName);
           const current = customPostes !== null ? customPostes : [...breakdown.postesTravail];
+          const basePro = preset ? preset.defaultMin : 2;
+          const baseStd = Number((basePro * 1.35).toFixed(2));
+          const baseDeb = Number((basePro * 2.0).toFixed(2));
+          let chosenTime = basePro;
+          if (cadenceLevel === 'standard') chosenTime = baseStd;
+          else if (cadenceLevel === 'debutant') chosenTime = baseDeb;
           const next = [
             ...current,
             {
               nomAr: preset ? preset.defaultNomAr : 'مرحلة عمل مخصصة جديدة',
               nomFr: preset ? preset.defaultNomFr : 'Nouveau poste personnalisé',
               machine: machineName,
-              tempsMin: preset ? preset.defaultMin : 5,
+              tempsMin: chosenTime,
+              tempsPro: basePro,
+              tempsStandard: baseStd,
+              tempsDebutant: baseDeb,
               roleOuvrier: preset ? preset.role : 'خياط متخصص'
             }
           ];
@@ -3878,6 +3910,58 @@ export default function AtelierCalculator({
                     >
                       <Trash2 className="w-4 h-4 text-rose-400" />
                       <span>{isAr ? 'تفريغ الكل' : 'Tout vider'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Cadence Selector Banner (حرافيين 120% / ستاندار 85% / مبتدئين 60%) */}
+                <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-900/90 rounded-2xl border border-amber-500/20 shadow-inner">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-amber-300 flex items-center gap-1.5">
+                      <span>⚡</span>
+                      <span>{isAr ? 'سرعة وريتم العمال (Cadence de Production):' : 'Cadence de Production :'}</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-bold hidden sm:inline">
+                      {isAr ? '(كيحدد التوقيت واش د الخياطة الحرافيين، العاديين، أو المبتدئين)' : '(Ajuste les temps selon le niveau d\'expérience)'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => applyCadenceToPostes('pro')}
+                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 ${
+                        cadenceLevel === 'pro'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <span>⚡</span>
+                      <span>{isAr ? 'حرافيين (Pro 120%)' : 'Pros (120%)'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyCadenceToPostes('standard')}
+                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 ${
+                        cadenceLevel === 'standard'
+                          ? 'bg-indigo-600 text-white shadow-md ring-1 ring-indigo-400'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <span>⏱️</span>
+                      <span>{isAr ? 'ستاندار (85%)' : 'Standard (85%)'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyCadenceToPostes('debutant')}
+                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 ${
+                        cadenceLevel === 'debutant'
+                          ? 'bg-rose-600 text-white shadow-md ring-1 ring-rose-400'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <span>🐢</span>
+                      <span>{isAr ? 'مبتدئين / ثقال (60%)' : 'Débutants (60%)'}</span>
                     </button>
                   </div>
                 </div>
@@ -4076,6 +4160,18 @@ export default function AtelierCalculator({
                                 }}
                                 className="w-full bg-slate-800/40 hover:bg-slate-800 focus:bg-slate-800 text-white font-bold outline-none px-3 py-2 rounded-xl border border-transparent focus:border-amber-500/50 transition-all"
                               />
+                              <div className="flex flex-wrap items-center gap-2 px-1 mt-1 text-[10px]">
+                                <span className="text-amber-400 font-bold">⚡ {isAr ? 'حرافي' : 'Pro'}: {poste.tempsPro || minVal}د</span>
+                                <span className="text-slate-600">•</span>
+                                <span className="text-indigo-300 font-bold">⏱️ {isAr ? 'ستاندار' : 'Std'}: {poste.tempsStandard || Number((minVal * 1.35).toFixed(1))}د</span>
+                                <span className="text-slate-600">•</span>
+                                <span className="text-rose-400 font-bold">🐢 {isAr ? 'مبتدئ' : 'Déb'}: {poste.tempsDebutant || Number((minVal * 2).toFixed(1))}د</span>
+                                {(poste.nomAr?.includes('مطلوة') || poste.nomFr?.toLowerCase().includes('matelas')) && (
+                                  <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded text-[9px] font-black ms-auto">
+                                    ✂️ {isAr ? 'فصالة بالمطلوة' : 'Coupe Matelas'}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="p-1.5 border-b border-white/5">
                               <div className="flex items-center gap-1.5">
