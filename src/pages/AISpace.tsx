@@ -596,6 +596,16 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [isBoxMaximized, setIsBoxMaximized] = useState(false);
   const [cadenceLevel, setCadenceLevel] = useState<'pro' | 'standard' | 'debutant'>('pro');
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isBoxMaximized) {
+        setIsBoxMaximized(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isBoxMaximized]);
+
   const getPosteTimeForCadence = (p: PosteTravail, level: 'pro' | 'standard' | 'debutant'): number => {
     const isCoupe = (p.machine || '').toLowerCase().includes('coupe') || (p.nomAr || '').includes('فصالة');
     if (level === 'pro') {
@@ -2395,18 +2405,6 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
               <Check className="w-3 h-3" /> {isAr ? 'تحليل مكتمل' : 'Analysé'}
             </span>
           )}
-          <button
-            type="button"
-            onClick={() => setIsBoxMaximized(!isBoxMaximized)}
-            title={isBoxMaximized ? (isAr ? 'تصغير وتقسيم الشاشة' : 'Restaurer la vue') : (isAr ? 'تكبير كامل الصفحة' : 'Plein écran')}
-            className={`p-2 md:p-2.5 rounded-2xl transition-all flex items-center justify-center border shadow-xs active:scale-95 ${
-              isBoxMaximized
-                ? 'bg-amber-500 text-white border-amber-600 hover:bg-amber-600 shadow-amber-500/20'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-indigo-600'
-            }`}
-          >
-            {isBoxMaximized ? <Minimize2 className="w-5 md:w-5.5 h-5 md:h-5.5" /> : <Maximize2 className="w-5 md:w-5.5 h-5 md:h-5.5" />}
-          </button>
         </div>
       </div>
 
@@ -2544,14 +2542,21 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
           </div>
         )}
 
-        {/* RIGHT COLUMN: HUD Content (Full width when isBoxMaximized, or lg:col-span-7) */}
-        <div className={`${isBoxMaximized ? 'w-full flex-1 h-full' : 'lg:col-span-7'} ${activeTab !== 'photo' ? 'flex' : 'hidden lg:flex'} flex-col bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden min-h-[60vh] lg:min-h-0 lg:h-full transition-all duration-300 relative`}>
+        {/* RIGHT COLUMN: HUD Content (True Fullscreen Modal Overlay when isBoxMaximized, or lg:col-span-7) */}
+        <div
+          className={`${
+            isBoxMaximized
+              ? 'fixed inset-0 z-[1400] w-screen h-screen bg-slate-950/85 backdrop-blur-md p-1 sm:p-3 flex flex-col overflow-hidden animate-in fade-in duration-200'
+              : 'lg:col-span-7 flex flex-col bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden min-h-[60vh] lg:min-h-0 lg:h-full transition-all duration-300 relative'
+          } ${activeTab !== 'photo' ? 'flex' : 'hidden lg:flex'}`}
+        >
+          <div className={`w-full h-full flex flex-col overflow-hidden ${isBoxMaximized ? 'bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200' : ''}`}>
 
-          {/* Universal Header Strip across all tabs with Maximize/Restore Button */}
-          <div className={`flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-100 flex-shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
+          {/* Universal Header Strip with ONE SINGLE Maximize/Restore Button */}
+          <div className={`flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-50 border-b border-slate-100 flex-shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
             <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-              <span className={`w-2.5 h-2.5 rounded-full ${isBoxMaximized ? 'bg-amber-500' : 'bg-indigo-600'} animate-pulse`}></span>
-              <span className="text-xs font-black text-slate-800">
+              <span className={`w-2.5 h-2.5 rounded-full ${isBoxMaximized ? 'bg-amber-500 ring-4 ring-amber-500/20' : 'bg-indigo-600'} animate-pulse`}></span>
+              <span className="text-xs sm:text-sm font-black text-slate-800">
                 {activeTab === 'gamme' ? (isAr ? 'لاغام ديال الخياطة وبوستات العمل' : 'La Gamme de Montage') :
                  activeTab === 'fiche' ? (isAr ? 'البطاقة التقنية والتسعير' : 'Fiche Technique & Prix') :
                  activeTab === 'mesures' ? (isAr ? 'جدول المقاسات والأبعاد' : 'Tableau des Mesures') :
@@ -2559,20 +2564,72 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
                  (isAr ? 'صورة الموديل' : 'Photo')}
               </span>
               {isBoxMaximized && (
-                <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-black rounded-full border border-amber-200">
-                  {isAr ? 'كامل الشاشة (Plein écran)' : 'Plein écran'}
+                <span className="px-2 py-0.5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-full shadow-xs">
+                  {isAr ? 'كامل الشاشة ⚡' : 'Plein écran ⚡'}
                 </span>
               )}
             </div>
 
+            {/* In Fullscreen mode: Compact Tab Switcher so user can switch tabs effortlessly */}
+            {isBoxMaximized && (
+              <div className="flex items-center gap-1 bg-slate-200/80 p-0.5 sm:p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('gamme')}
+                  title={isAr ? 'لاغام وبوستات العمل' : 'Gamme de Montage'}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
+                    activeTab === 'gamme' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
+                  }`}
+                >
+                  <Scissors className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{isAr ? 'لاغام' : 'Gamme'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('fiche')}
+                  title={isAr ? 'البطاقة التقنية' : 'Fiche Technique'}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
+                    activeTab === 'fiche' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{isAr ? 'البطاقة' : 'Fiche'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('mesures')}
+                  title={isAr ? 'المقاسات والأبعاد' : 'Mesures'}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
+                    activeTab === 'mesures' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
+                  }`}
+                >
+                  <Ruler className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{isAr ? 'المقاسات' : 'Mesures'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('chat')}
+                  title={isAr ? 'المستشار الذكي' : 'Chat IA'}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
+                    activeTab === 'chat' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
+                  }`}
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{isAr ? 'شات' : 'Chat'}</span>
+                </button>
+              </div>
+            )}
+
+            {/* THE ONE AND ONLY MAXIMIZE / RESTORE BUTTON (NO DUPLICATES!) */}
             <button
+              type="button"
               onClick={() => setIsBoxMaximized(!isBoxMaximized)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-xs border ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-xs border active:scale-95 ${
                 isBoxMaximized
-                  ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-amber-500/20'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-amber-600 shadow-md shadow-amber-500/20'
                   : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 hover:text-indigo-600'
               }`}
-              title={isBoxMaximized ? (isAr ? 'تصغير وتقسيم الشاشة' : 'Réduire') : (isAr ? 'تكبير لعرض الصفحة كاملة' : 'Agrandir en plein écran')}
+              title={isBoxMaximized ? (isAr ? 'تصغير الشاشة والرجوع (Esc)' : 'Réduire (Esc)') : (isAr ? 'تكبير كامل الصفحة' : 'Plein écran')}
             >
               {isBoxMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               <span className="text-[11px] font-black">
@@ -2983,153 +3040,102 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
             const totalSec = Math.round(totalMin * 60);
 
             return (
-              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 min-h-0">
-                {/* Header Strip with Metrics */}
-                <div className="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-white p-5 rounded-3xl border border-amber-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className={`flex items-center gap-3.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                    <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
-                      <Scissors className="w-6 h-6" />
+              <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0">
+                {/* Sleek Integrated Tactical HUD Header (Zero wasted space -> Evite scroll!) */}
+                <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-3 sm:p-3.5 rounded-2xl border border-amber-400/50 shadow-md text-white flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+                  {/* Left: Category + SAM + Metrics Inline */}
+                  <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                    <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 font-black text-sm flex items-center justify-center shrink-0 shadow-sm">
+                      <Scissors className="w-4 h-4 text-slate-950" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-base sm:text-lg font-black text-slate-900">
-                          {isAr ? 'لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage)' : 'Gamme de Montage & Postes de Travail'}
-                        </h2>
-                        <span className="px-2.5 py-0.5 bg-amber-500 text-white rounded-full text-[10px] font-black">
-                          {activeGamme.length} {isAr ? 'محطات' : 'postes'}
+                        <span className="text-xs sm:text-sm font-black text-white">
+                          {isAr ? 'لاغام وبوستات العمل' : 'Gamme de Montage'}
+                        </span>
+                        <span className="px-2 py-0.5 bg-amber-500 text-slate-950 rounded-full text-[10px] font-black">
+                          {activeGamme.length} {isAr ? 'محطة' : 'postes'}
+                        </span>
+                        <span className="text-slate-500 text-xs hidden sm:inline">•</span>
+                        <span className="text-xs text-amber-200 font-bold hidden sm:inline truncate max-w-[200px]">
+                          {analysisResult?.category || (isAr ? 'موديل خياطة' : 'Modèle')}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 font-bold mt-0.5">
-                        {analysisResult?.category || (isAr ? 'موديل خياطة وتحضير' : 'Modèle confection')}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] font-black mt-0.5">
+                        <span className="text-amber-300 flex items-center gap-1">
+                          <span>⏱️ SAM:</span>
+                          <span className="text-xs font-black text-white">{totalMin} {isAr ? 'دقيقة' : 'min'}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">({totalSec}s)</span>
+                        </span>
+                        <span className="text-slate-600">•</span>
+                        <span className="text-emerald-400">⚡ {totalMin > 0 ? Math.round((8 * 60) / totalMin) : 0} {isAr ? 'بياسة/ساعة' : 'pcs/h'}</span>
+                        <span className="text-slate-600">•</span>
+                        <span className="text-teal-300">📦 {totalMin > 0 ? Math.round((8 * 8 * 60) / totalMin) : 0} {isAr ? 'بياسة/نهار' : 'pcs/j'}</span>
+                        <span className="text-slate-600">•</span>
+                        <span className="text-[10px] text-amber-400 font-bold">✂️ {isAr ? 'فصالة بالمطلوة' : 'Coupe Matelas'}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-end sm:self-center">
-                    <button
-                      type="button"
-                      onClick={() => setIsBoxMaximized(!isBoxMaximized)}
-                      title={isBoxMaximized ? (isAr ? 'تصغير وتقسيم الشاشة' : 'Restaurer la vue') : (isAr ? 'تكبير كامل الصفحة' : 'Plein écran')}
-                      className={`px-3 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 border active:scale-95 shadow-xs ${
-                        isBoxMaximized
-                          ? 'bg-amber-600 hover:bg-amber-700 text-white border-amber-600 shadow-amber-600/20'
-                          : 'bg-white hover:bg-amber-50 text-slate-700 border-amber-300 hover:border-amber-400'
-                      }`}
-                    >
-                      {isBoxMaximized ? <Minimize2 className="w-4 h-4 text-white" /> : <Maximize2 className="w-4 h-4 text-amber-600" />}
-                      <span className="font-bold">
-                        {isBoxMaximized ? (isAr ? 'تصغير الشاشة' : 'Réduire') : (isAr ? 'تكبير كامل الصفحة' : 'Plein écran')}
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={dispatchToAtelier}
-                      className="px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-amber-600/20 flex items-center gap-2 active:scale-95"
-                    >
-                      <Scissors className="w-4 h-4" />
-                      <span>{isAr ? 'إرسال هاد لاغام للورشة 🚀' : 'Envoyer à l\'Atelier 🚀'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 3-Level Cadence Selector (حرافيين Pro vs عادي Standard vs مبتدئين / ثقال Débutant) */}
-                <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-4 rounded-3xl border border-amber-400/60 shadow-md text-white space-y-2.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-base shrink-0 shadow-sm">
-                        ⚡
-                      </div>
-                      <div>
-                        <h3 className="text-xs sm:text-sm font-black text-white flex items-center gap-2">
-                          <span>{isAr ? 'وتيرة سرعة الخياطة (حرافيين vs مبتدئين)' : 'Niveau de Cadence & Efficacité Atelier'}</span>
-                          <span className={`px-2 py-0.5 text-[9px] font-black rounded-full uppercase ${
-                            cadenceLevel === 'pro'
-                              ? 'bg-emerald-500 text-white'
-                              : cadenceLevel === 'standard'
-                              ? 'bg-amber-400 text-slate-950'
-                              : 'bg-rose-500 text-white'
-                          }`}>
-                            {cadenceLevel === 'pro' ? (isAr ? '⚡ حرافيين (Pro 120%)' : 'PRO 120%') : cadenceLevel === 'standard' ? (isAr ? '⏱️ ستاندار (85%)' : 'STANDARD 85%') : (isAr ? '🐢 مبتدئين (60%)' : 'DÉBUTANTS 60%')}
-                          </span>
-                        </h3>
-                        <p className="text-[10px] text-slate-300 font-bold mt-0.5">
-                          {isAr ? 'الفصالة بالمطلوة الصناعية (Coupe Matelas) وسرعة الماكينات محسوبة أوتوماتيكياً' : 'Coupe matelas industrielle & temps réel adapté au profil de vos ouvriers'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 p-1 bg-white/10 rounded-2xl border border-white/15 self-stretch sm:self-auto">
+                  {/* Right: Cadence 3-Way Switcher + Dispatch Button */}
+                  <div className="flex flex-wrap items-center gap-2 self-stretch sm:self-auto justify-end">
+                    <div className="flex items-center gap-1 p-1 bg-white/10 rounded-xl border border-white/15">
                       <button
                         type="button"
                         onClick={() => setCadenceLevel('pro')}
-                        className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                        title={isAr ? 'توقيت العمال الحرافيين المحترفين (120%)' : 'Cadence Pro 120%'}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
                           cadenceLevel === 'pro'
-                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm ring-2 ring-emerald-400/40'
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm ring-1 ring-emerald-400'
                             : 'text-slate-300 hover:text-white hover:bg-white/10'
                         }`}
                       >
                         <span>⚡</span>
-                        <span>{isAr ? 'حرافيين (120% Pro)' : 'Pros (120%)'}</span>
+                        <span>{isAr ? 'حرافيين (120%)' : 'Pros (120%)'}</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setCadenceLevel('standard')}
-                        className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                        title={isAr ? 'توقيت المعمل العادي (85%)' : 'Standard 85%'}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
                           cadenceLevel === 'standard'
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-sm ring-2 ring-amber-400/40'
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-sm ring-1 ring-amber-400'
                             : 'text-slate-300 hover:text-white hover:bg-white/10'
                         }`}
                       >
                         <span>⏱️</span>
-                        <span>{isAr ? 'ستاندار (عادي 85%)' : 'Standard (85%)'}</span>
+                        <span>{isAr ? 'ستاندار (85%)' : 'Standard'}</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setCadenceLevel('debutant')}
-                        className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                        title={isAr ? 'توقيت المتعلمين والمبتدئين (60%)' : 'Débutants 60%'}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
                           cadenceLevel === 'debutant'
-                            ? 'bg-gradient-to-r from-rose-600 to-orange-600 text-white shadow-sm ring-2 ring-rose-400/40'
+                            ? 'bg-gradient-to-r from-rose-600 to-orange-600 text-white shadow-sm ring-1 ring-rose-400'
                             : 'text-slate-300 hover:text-white hover:bg-white/10'
                         }`}
                       >
                         <span>🐢</span>
-                        <span>{isAr ? 'مبتدئين / ثقال (60%)' : 'Débutants (60%)'}</span>
+                        <span>{isAr ? 'مبتدئين / ثقال (60%)' : 'Débutants'}</span>
                       </button>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={dispatchToAtelier}
+                      className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black rounded-xl text-xs transition-all shadow-md shadow-amber-500/20 flex items-center gap-1.5 active:scale-95 shrink-0"
+                    >
+                      <Scissors className="w-3.5 h-3.5" />
+                      <span>{isAr ? 'إرسال للورشة 🚀' : 'Envoyer Atelier 🚀'}</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* Metrics Summary Strip */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                    <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'إجمالي وقت البياسة (SAM)' : 'Temps Total (SAM)'}</span>
-                    <span className="text-base font-black text-amber-600 mt-0.5 block">{totalMin} min</span>
-                    <span className="text-[10px] font-bold text-slate-400">({totalSec} {isAr ? 'ثانية' : 'sec'})</span>
-                  </div>
-
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                    <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'عدد محطات العمل' : 'Postes de Travail'}</span>
-                    <span className="text-base font-black text-slate-900 mt-0.5 block">{activeGamme.length}</span>
-                    <span className="text-[10px] font-bold text-slate-400">{isAr ? 'محطة / آلة' : 'postes requis'}</span>
-                  </div>
-
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                    <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'الإنتاجية بالساعة (8 عمال)' : 'Cadence / Heure (8 op.)'}</span>
-                    <span className="text-base font-black text-slate-900 mt-0.5 block">{totalMin > 0 ? Math.round((8 * 60) / totalMin) : 0} pcs/h</span>
-                    <span className="text-[10px] font-bold text-slate-400">{isAr ? 'تقديري للورشة' : 'estimation atelier'}</span>
-                  </div>
-
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                    <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'الإنتاجية باليوم (8 ساعات)' : 'Cadence / Jour (8h)'}</span>
-                    <span className="text-base font-black text-emerald-600 mt-0.5 block">{totalMin > 0 ? Math.round((8 * 8 * 60) / totalMin) : 0} pcs/j</span>
-                    <span className="text-[10px] font-bold text-slate-400">{isAr ? 'فريق كامل' : 'par équipe'}</span>
-                  </div>
-                </div>
-
-                {/* Operations List */}
-                <div className="space-y-2.5">
+                {/* Operations List (Compact, No-Scroll Optimized Rows) */}
+                <div className="space-y-1.5">
                   {activeGamme.map((gp, idx) => {
                     const currentMin = getPosteTimeForCadence(gp, cadenceLevel);
                     const sec = Math.round(currentMin * 60);
@@ -3151,77 +3157,78 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
                     return (
                       <div
                         key={idx}
-                        className={`p-3.5 bg-white hover:bg-slate-50/80 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}
+                        className={`px-3 py-2 bg-white hover:bg-amber-50/40 rounded-xl border border-slate-200/90 shadow-2xs hover:border-amber-400/50 transition-all flex items-center justify-between gap-2.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}
                       >
-                        <div className={`flex items-center gap-3 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <span className="w-7 h-7 rounded-xl bg-amber-500 text-white font-black text-xs flex items-center justify-center shadow-xs">
-                              {idx + 1}
-                            </span>
-                            <div className="flex flex-col -space-y-1">
-                              <button
-                                type="button"
-                                disabled={idx === 0}
-                                onClick={() => {
-                                  const list = [...activeGamme];
-                                  const [item] = list.splice(idx, 1);
-                                  list.splice(idx - 1, 0, item);
-                                  if (analysisResult) {
-                                    setAnalysisResult({ ...analysisResult, gammeMontage: list });
-                                  }
-                                }}
-                                title={isAr ? 'تقديم المرحلة للأعلى ⬆️' : 'Monter ⬆️'}
-                                className="p-0.5 hover:bg-amber-100 text-slate-400 hover:text-amber-800 rounded disabled:opacity-20 transition-all active:scale-90"
-                              >
-                                <ChevronUp className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                disabled={idx === activeGamme.length - 1}
-                                onClick={() => {
-                                  const list = [...activeGamme];
-                                  const [item] = list.splice(idx, 1);
-                                  list.splice(idx + 1, 0, item);
-                                  if (analysisResult) {
-                                    setAnalysisResult({ ...analysisResult, gammeMontage: list });
-                                  }
-                                }}
-                                title={isAr ? 'تأخير المرحلة للأسفل ⬇️' : 'Descendre ⬇️'}
-                                className="p-0.5 hover:bg-amber-100 text-slate-400 hover:text-amber-800 rounded disabled:opacity-20 transition-all active:scale-90"
-                              >
-                                <ChevronDown className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs sm:text-sm font-black text-slate-900 truncate flex items-center gap-2">
-                              <span>{isAr ? gp.nomAr : (gp.nomFr || gp.nomAr)}</span>
-                              {isCoupe && (
-                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-md border border-indigo-200 shrink-0">
-                                  ✂️ {isAr ? 'فصالة بالمطلوة (Matelas)' : 'Coupe Matelas'}
-                                </span>
-                              )}
-                            </p>
-                            <p className="text-[11px] font-bold text-slate-400 truncate mt-0.5">
-                              {isAr ? (gp.nomFr || '') : (gp.nomAr || '')} {gp.roleOuvrier ? `• ${gp.roleOuvrier}` : ''}
-                            </p>
+                        {/* Index & Order Controls */}
+                        <div className={`flex items-center gap-1.5 shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
+                          <span className="w-6 h-6 rounded-lg bg-amber-500 text-white font-black text-xs flex items-center justify-center shadow-2xs">
+                            {idx + 1}
+                          </span>
+                          <div className="flex flex-col -space-y-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => {
+                                const list = [...activeGamme];
+                                const [item] = list.splice(idx, 1);
+                                list.splice(idx - 1, 0, item);
+                                if (analysisResult) setAnalysisResult({ ...analysisResult, gammeMontage: list });
+                              }}
+                              title={isAr ? 'تقديم المرحلة للأعلى ⬆️' : 'Monter ⬆️'}
+                              className="p-0.5 hover:bg-amber-100 text-slate-400 hover:text-amber-800 rounded disabled:opacity-20 transition-all active:scale-90"
+                            >
+                              <ChevronUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === activeGamme.length - 1}
+                              onClick={() => {
+                                const list = [...activeGamme];
+                                const [item] = list.splice(idx, 1);
+                                list.splice(idx + 1, 0, item);
+                                if (analysisResult) setAnalysisResult({ ...analysisResult, gammeMontage: list });
+                              }}
+                              title={isAr ? 'تأخير المرحلة للأسفل ⬇️' : 'Descendre ⬇️'}
+                              className="p-0.5 hover:bg-amber-100 text-slate-400 hover:text-amber-800 rounded disabled:opacity-20 transition-all active:scale-90"
+                            >
+                              <ChevronDown className="w-3 h-3" />
+                            </button>
                           </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 shrink-0 self-end sm:self-center">
-                          <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black border ${badgeColor}`}>
+                        {/* Operation Name & Role */}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-black text-slate-900 truncate flex items-center gap-1.5">
+                            <span>{isAr ? gp.nomAr : (gp.nomFr || gp.nomAr)}</span>
+                            {isCoupe && (
+                              <span className="px-1.5 py-0.2 bg-amber-100 text-amber-900 text-[9px] font-black rounded border border-amber-300 shrink-0">
+                                ✂️ {isAr ? 'فصالة بالمطلوة' : 'Coupe Matelas'}
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-bold truncate">
+                            {isAr ? (gp.nomFr || '') : (gp.nomAr || '')} {gp.roleOuvrier ? `• ${gp.roleOuvrier}` : ''}
+                          </p>
+                        </div>
+
+                        {/* Machine Badge */}
+                        <div className="shrink-0 hidden sm:block">
+                          <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${badgeColor}`}>
                             ⚙️ {gp.machine}
                           </span>
+                        </div>
 
-                          <div className="flex flex-col items-end">
-                            <div className="px-3 py-1 bg-amber-50 border border-amber-200/80 rounded-xl text-right">
-                              <span className="text-xs font-black text-amber-800">{currentMin} {isAr ? 'د' : 'min'}</span>
-                              <span className="text-[10px] font-bold text-amber-600/80 mr-1">({sec}s)</span>
+                        {/* Timing Badges (Pro / Deb Comparatif) */}
+                        <div className={`flex items-center gap-2 shrink-0 ${isAr ? 'text-left' : 'text-right'}`}>
+                          <div>
+                            <div className="px-2.5 py-0.5 bg-amber-50 border border-amber-200/80 rounded-lg inline-block">
+                              <span className="text-xs font-black text-amber-900">{currentMin} {isAr ? 'د' : 'min'}</span>
+                              <span className="text-[9px] font-bold text-amber-600/80 ml-1">({sec}s)</span>
                             </div>
-                            <div className="flex items-center gap-1.5 mt-0.5 text-[9px] font-bold">
-                              <span className="text-emerald-700 font-black">⚡ حرافي: {proTime}د</span>
-                              <span className="text-slate-300">|</span>
-                              <span className="text-rose-600 font-black">🐢 مبتدئ: {debTime}د</span>
+                            <div className="flex items-center gap-1.5 text-[9px] font-bold justify-end mt-0.5">
+                              <span className="text-emerald-700 font-black">⚡ {proTime}د</span>
+                              <span className="text-slate-300">•</span>
+                              <span className="text-rose-600 font-black">🐢 {debTime}د</span>
                             </div>
                           </div>
                         </div>
@@ -3232,8 +3239,9 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
               </div>
             );
           })()}
+            </div>
+          </div>
         </div>
-      </div>
 
       {/* API KEY SETTINGS MODAL */}
       {showApiKeyModal && (
