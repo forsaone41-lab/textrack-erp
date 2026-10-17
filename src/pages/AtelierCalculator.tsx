@@ -5,11 +5,40 @@ import {
   Clock, Package, Users, Scissors, ShoppingCart, ArrowLeft,
   DollarSign, Sparkles, Check, X, RefreshCw, UserCheck,
   Ruler, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw, Maximize2, Minimize2, Plus, Copy,
-  Camera, ChevronLeft, ChevronRight, Layers, ChevronUp, ChevronDown, GripVertical, ArrowUpDown
+  Camera, ChevronLeft, ChevronRight, Layers, ChevronUp, ChevronDown, GripVertical, ArrowUpDown, Save, FolderOpen
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { loadData, Employe, FicheTechnique, Charge } from '../types';
+import { loadData, Employe, FicheTechnique, Charge, safeStorage } from '../types';
+import { supabase } from '../supabase';
 import { PosteTravail, getGarmentTechnicalBreakdown, DEFAULT_FICHES_TECHNIQUES } from '../lib/atelierAi';
+
+export interface SavedProduction {
+  id: string;
+  name: string;
+  date: string;
+  displayDate: string;
+  photo?: string | null;
+  quantity: number;
+  pricePerPiece: number;
+  totalPriceClient: number;
+  workers: number;
+  days: number;
+  extraHours: number;
+  rate: number;
+  rateMode: 'smig' | 'rh';
+  selectedWorkerIds: string[];
+  materials: number;
+  totalMachines: number;
+  monthlyOther: number;
+  customPostes?: PosteTravail[] | null;
+  selectedModelCategory?: string;
+  costPerPiece: number;
+  totalCost: number;
+  netProfit: number;
+  netMarginPct: number;
+  activeGammeMinutes: number;
+  activePostesCount: number;
+}
 
 const FALLBACK_GARMENT_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
@@ -196,6 +225,29 @@ export default function AtelierCalculator({
       } catch (e) {
         console.error(e);
       }
+    } else {
+      // Auto-restore active draft if user refreshed or returned to calculator
+      const draftRaw = safeStorage.getItem('beya_atelier_active_draft');
+      if (draftRaw) {
+        try {
+          const d = JSON.parse(draftRaw);
+          if (d.itemName) setItemName(d.itemName);
+          if (typeof d.quantity === 'number') setQuantity(d.quantity);
+          if (typeof d.pricePerPiece === 'number') setPricePerPiece(d.pricePerPiece);
+          if (typeof d.workers === 'number') setWorkers(d.workers);
+          if (typeof d.days === 'number') setDays(d.days);
+          if (typeof d.extraHours === 'number') setExtraHours(d.extraHours);
+          if (typeof d.rate === 'number') setRate(d.rate);
+          if (d.rateMode) setRateMode(d.rateMode);
+          if (Array.isArray(d.selectedWorkerIds) && d.selectedWorkerIds.length > 0) setSelectedWorkerIds(d.selectedWorkerIds);
+          if (typeof d.materials === 'number') setMaterials(d.materials);
+          if (typeof d.totalMachines === 'number') setTotalMachines(d.totalMachines);
+          if (typeof d.monthlyOther === 'number') setMonthlyOther(d.monthlyOther);
+          if (d.customPostes && Array.isArray(d.customPostes)) setCustomPostes(d.customPostes);
+          if (d.customModelPhoto) setCustomModelPhoto(d.customModelPhoto);
+          if (d.selectedModelCategory) setSelectedModelCategory(d.selectedModelCategory);
+        } catch (_) {}
+      }
     }
   }, []);
 
@@ -298,6 +350,77 @@ function isSupportRole(e: Employe): boolean {
   const [showEssentialBox, setShowEssentialBox] = useState(true);
   const [calcPage, setCalcPage] = useState<1 | 2 | 3>(1);
   const modelPhotoInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Saved Productions Library State ("page nbda lqa fiha les prod kandihom save")
+  const [savedProductions, setSavedProductions] = useState<SavedProduction[]>(() => {
+    try {
+      const raw = safeStorage.getItem('beya_saved_atelier_productions');
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) {
+      return [];
+    }
+  });
+  const [showSavedProdModal, setShowSavedProdModal] = useState(false);
+  const [savedSearchQuery, setSavedSearchQuery] = useState('');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const triggerToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Sync saved productions from Supabase cloud backup on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.from('leads').select('*').eq('type', '__ATELIER_PROD_CALC__');
+        if (data && data.length > 0) {
+          setSavedProductions(prev => {
+            const map = new Map<string, SavedProduction>();
+            prev.forEach(p => map.set(p.id, p));
+            data.forEach(l => {
+              try {
+                const parsed = JSON.parse(l.details || '{}');
+                if (parsed && parsed.id) {
+                  map.set(parsed.id, parsed);
+                }
+              } catch (_) {}
+            });
+            const merged = Array.from(map.values()).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            safeStorage.setItem('beya_saved_atelier_productions', JSON.stringify(merged));
+            return merged;
+          });
+        }
+      } catch (_) {}
+    })();
+  }, []);
+
+  // Auto-save active draft to localStorage so user always finds their work exactly as they left it
+  useEffect(() => {
+    const draft = {
+      itemName,
+      quantity,
+      pricePerPiece,
+      workers,
+      days,
+      extraHours,
+      rate,
+      rateMode,
+      selectedWorkerIds,
+      materials,
+      totalMachines,
+      monthlyOther,
+      customPostes,
+      customModelPhoto,
+      selectedModelCategory
+    };
+    safeStorage.setItem('beya_atelier_active_draft', JSON.stringify(draft));
+  }, [
+    itemName, quantity, pricePerPiece, workers, days, extraHours,
+    rate, rateMode, selectedWorkerIds, materials, totalMachines,
+    monthlyOther, customPostes, customModelPhoto, selectedModelCategory
+  ]);
 
   const handleModelPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -602,6 +725,117 @@ function isSupportRole(e: Employe): boolean {
   const laborSharePct = realCost > 0 ? ((totalLaborCost / realCost) * 100) : 0;
   const atelierSharePct = realCost > 0 ? ((allocatedExpenses / realCost) * 100) : 0;
 
+  // Handler to Save the current calculation into the library
+  const handleSaveCurrentProduction = async () => {
+    const now = new Date();
+    const displayDate = now.toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const newProd: SavedProduction = {
+      id: `prod_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      name: itemName || (isAr ? 'موديل بدون اسم' : 'Modèle sans nom'),
+      date: now.toISOString(),
+      displayDate,
+      photo: customModelPhoto || selectedFiche?.photo || null,
+      quantity: qty,
+      pricePerPiece,
+      totalPriceClient,
+      workers,
+      days,
+      extraHours,
+      rate,
+      rateMode,
+      selectedWorkerIds,
+      materials,
+      totalMachines,
+      monthlyOther,
+      customPostes: customPostes ? [...customPostes] : null,
+      selectedModelCategory,
+      costPerPiece,
+      totalCost: realCost,
+      netProfit: difference,
+      netMarginPct,
+      activeGammeMinutes,
+      activePostesCount
+    };
+
+    const updated = [newProd, ...savedProductions.filter(p => p.id !== newProd.id)];
+    setSavedProductions(updated);
+    safeStorage.setItem('beya_saved_atelier_productions', JSON.stringify(updated));
+
+    // Also sync to Supabase leads table
+    try {
+      const lead = {
+        id: newProd.id,
+        name: newProd.name,
+        phone: '0000',
+        ville: 'SYSTEM',
+        type: '__ATELIER_PROD_CALC__',
+        status: difference >= 0 ? 'profit' : 'loss',
+        date: newProd.date,
+        quantity: newProd.quantity,
+        details: JSON.stringify(newProd)
+      };
+      await supabase.from('leads').delete().eq('id', newProd.id);
+      await supabase.from('leads').insert(lead);
+    } catch (_) {}
+
+    triggerToast(
+      isAr
+        ? `✨ تم حفظ دراسة الإنتاج "${newProd.name}" بنجاح!`
+        : `✨ L'étude "${newProd.name}" a été enregistrée avec succès !`
+    );
+  };
+
+  // Handler to Load a saved production into the calculator
+  const handleLoadProduction = (prod: SavedProduction) => {
+    setItemName(prod.name || '');
+    if (typeof prod.quantity === 'number') setQuantity(prod.quantity);
+    if (typeof prod.pricePerPiece === 'number') setPricePerPiece(prod.pricePerPiece);
+    if (typeof prod.workers === 'number') setWorkers(prod.workers);
+    if (typeof prod.days === 'number') setDays(prod.days);
+    if (typeof prod.extraHours === 'number') setExtraHours(prod.extraHours);
+    if (typeof prod.rate === 'number') setRate(prod.rate);
+    if (prod.rateMode) setRateMode(prod.rateMode);
+    if (Array.isArray(prod.selectedWorkerIds) && prod.selectedWorkerIds.length > 0) setSelectedWorkerIds(prod.selectedWorkerIds);
+    if (typeof prod.materials === 'number') setMaterials(prod.materials);
+    if (typeof prod.totalMachines === 'number') setTotalMachines(prod.totalMachines);
+    if (typeof prod.monthlyOther === 'number') setMonthlyOther(prod.monthlyOther);
+    if (prod.customPostes) setCustomPostes(prod.customPostes);
+    if (prod.photo) setCustomModelPhoto(prod.photo);
+    if (prod.selectedModelCategory) setSelectedModelCategory(prod.selectedModelCategory);
+
+    setShowSavedProdModal(false);
+    triggerToast(
+      isAr
+        ? `📂 تم استرجاع دراسة "${prod.name}" بنجاح! جميع المعلومات رجعات كما كانت.`
+        : `📂 L'étude "${prod.name}" a été chargée avec succès !`
+    );
+  };
+
+  // Handler to Delete a saved production
+  const handleDeleteProduction = async (id: string) => {
+    const updated = savedProductions.filter(p => p.id !== id);
+    setSavedProductions(updated);
+    safeStorage.setItem('beya_saved_atelier_productions', JSON.stringify(updated));
+    setDeleteConfirmId(null);
+    try {
+      await supabase.from('leads').delete().eq('id', id);
+    } catch (_) {}
+    triggerToast(isAr ? '🗑️ تم حذف الدراسة المحفوظة.' : '🗑️ Étude supprimée.');
+  };
+
+  const filteredSavedProductions = savedProductions.filter(p => {
+    if (!savedSearchQuery.trim()) return true;
+    const q = savedSearchQuery.toLowerCase();
+    return (p.name || '').toLowerCase().includes(q) || (p.displayDate || '').toLowerCase().includes(q);
+  });
+
   return (
     <div 
       className={`atelier-calc-root w-full print:p-0 print:m-0 print:bg-white print:gap-0 ${isModal ? 'p-3' : 'p-3 md:px-5 md:py-3.5 flex flex-col gap-3 bg-slate-50/50'}`} 
@@ -707,6 +941,33 @@ function isSupportRole(e: Employe): boolean {
 
         {/* Smart Actions Icon Buttons Toolbar ("ICON BOTON HSN HIT JAIN MABAYNINCH") */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* 0. Save Calculation Button (Red Boxed in User Screenshot) */}
+          <button
+            type="button"
+            onClick={handleSaveCurrentProduction}
+            title={isAr ? '💾 حفظ هذا الحساب والدراسة للرجوع إليها لاحقاً' : '💾 Sauvegarder ce calcul'}
+            className="relative group px-2.5 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white flex flex-col items-center justify-center shadow-sm transition-all active:scale-95 shrink-0"
+          >
+            <Save className="w-4 h-4" />
+            <span className="text-[8px] font-black leading-none mt-0.5">{isAr ? 'حفظ' : 'Save'}</span>
+          </button>
+
+          {/* 0.1 Saved Productions Library Button ("page nbda lqa fiha les prod kandihom save") */}
+          <button
+            type="button"
+            onClick={() => setShowSavedProdModal(true)}
+            title={isAr ? `📂 الإنتاجات والدراسات المحفوظة (${savedProductions.length})` : `📂 Productions Sauvegardées (${savedProductions.length})`}
+            className="relative group px-2.5 h-10 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-400/50 flex flex-col items-center justify-center shadow-sm transition-all active:scale-95 shrink-0"
+          >
+            <FolderOpen className="w-4 h-4 text-amber-400" />
+            <span className="text-[8px] font-black leading-none mt-0.5">{isAr ? 'المحفوظات' : 'Dossiers'}</span>
+            {savedProductions.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black flex items-center justify-center border-2 border-white shadow-2xs">
+                {savedProductions.length}
+              </span>
+            )}
+          </button>
+
           {/* 1. 4 Essential Questions Box Icon Button */}
           <button
             type="button"
@@ -1118,8 +1379,82 @@ function isSupportRole(e: Employe): boolean {
                 <ShoppingCart className="w-3.5 h-3.5" />
                 {isAr ? '✓ اعتماد الحساب وإطلاق الطلبية الآن' : '✓ Valider le calcul et créer la commande'}
               </button>
+
+              {/* Row 6: Quick Access to Saved Productions & Save Action (Red Underlined in User Screenshot) */}
+              <div className="pt-2 border-t border-black/10 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={handleSaveCurrentProduction}
+                  className="flex-1 py-2 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{isAr ? 'حفظ هذه الدراسة 💾' : 'Sauvegarder 💾'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowSavedProdModal(true)}
+                  className="flex-1 py-2 px-3 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-400/50 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                >
+                  <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{isAr ? `المحفوظات (${savedProductions.length}) 📂` : `Sauvegardes (${savedProductions.length}) 📂`}</span>
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Recent Saved Productions Quick-Load Strip (Directly in empty area drawn by user) */}
+          {savedProductions.length > 0 && (
+            <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-slate-700 flex items-center gap-1">
+                  <span>📁</span>
+                  {isAr ? 'آخر الإنتاجات المحفوظة:' : 'Dernières productions :'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowSavedProdModal(true)}
+                  className="text-[10px] font-black text-indigo-600 hover:underline"
+                >
+                  {isAr ? 'عرض الكل ↗' : 'Voir tout ↗'}
+                </button>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {savedProductions.slice(0, 3).map((p) => (
+                  <div
+                    key={p.id}
+                    onClick={() => handleLoadProduction(p)}
+                    className="p-2 rounded-xl border border-slate-100 hover:border-amber-400 hover:bg-amber-50/40 cursor-pointer transition-all flex items-center justify-between gap-2 group"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <img
+                        src={p.photo || FALLBACK_GARMENT_SVG}
+                        alt={p.name}
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
+                        className="w-7 h-7 rounded-lg object-cover bg-slate-100 border border-slate-200 shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <span className="text-xs font-black text-slate-800 truncate block group-hover:text-amber-800">
+                          {p.name}
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-400 block truncate">
+                          {p.quantity.toLocaleString()} pcs • {p.pricePerPiece} DH • {p.displayDate}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <strong className="text-xs font-black text-emerald-600 block">
+                        +{Number(p.netProfit).toFixed(0)} DH
+                      </strong>
+                      <span className="text-[9px] text-slate-400 font-bold block">
+                        {p.costPerPiece} DH/pc
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* COLUMN 2 (Left in RTL): ORGANIZED 3-PAGE STEP WIZARD ("MAYCHTCH L3NION + NO SCROLL + NEXT PAGE") */}
@@ -3927,6 +4262,260 @@ function isSupportRole(e: Employe): boolean {
           </div>
         );
       })()}
+
+      {/* MODAL: SAVED PRODUCTIONS LIBRARY ("PAGE NBDA LQA FIHA LES PROD KANDIHOM SAVE") */}
+      {showSavedProdModal && (
+        <div className="no-print fixed inset-0 z-[1400] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
+          <div className="bg-slate-900 text-white rounded-3xl max-w-5xl w-full shadow-2xl overflow-hidden border border-amber-500/30 flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-b border-slate-800 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center shrink-0 shadow-md">
+                  <FolderOpen className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-base sm:text-lg font-black text-white truncate">
+                      {isAr ? '📁 مكتبة الإنتاجات والدراسات المحفوظة' : '📁 Bibliothèque des Productions Sauvegardées'}
+                    </h2>
+                    <span className="px-2 py-0.5 bg-amber-500 text-slate-950 rounded-full text-[10px] font-black">
+                      {savedProductions.length} {isAr ? 'دراسة' : 'études'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-bold mt-0.5 truncate">
+                    {isAr ? 'كل إنتاج درتي ليه Save كتلقاه هنا كيفما خليتيه، تقدر ترجع ليه وتعدل عليه أو تطبعو' : 'Retrouvez toutes vos productions enregistrées et restaurez vos calculs en 1 clic'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleSaveCurrentProduction}
+                  className="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-1.5 active:scale-95"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{isAr ? '+ حفظ الحساب الحالي' : '+ Sauvegarder Actuel'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowSavedProdModal(false)}
+                  className="p-2 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="p-4 bg-slate-900/90 border-b border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 rtl:right-3 rtl:left-auto top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={savedSearchQuery}
+                  onChange={(e) => setSavedSearchQuery(e.target.value)}
+                  placeholder={isAr ? '🔍 ابحث باسم الموديل أو التاريخ...' : '🔍 Rechercher un modèle sauvegardé...'}
+                  className="w-full bg-slate-800/80 border border-slate-700 focus:border-amber-500/80 rounded-xl ps-9 pe-9 py-2 text-xs text-white placeholder-slate-400 font-bold outline-none transition-all"
+                />
+                {savedSearchQuery && (
+                  <button
+                    onClick={() => setSavedSearchQuery('')}
+                    className="absolute right-3 rtl:left-3 rtl:right-auto top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {savedProductions.length > 0 && (
+                <div className="flex items-center gap-3 text-xs text-slate-400 font-bold self-end sm:self-center">
+                  <span>
+                    {isAr ? 'إجمالي القطع:' : 'Total pièces :'} <strong className="text-white">{savedProductions.reduce((s, p) => s + (Number(p.quantity) || 0), 0).toLocaleString()} pcs</strong>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    {isAr ? 'إجمالي الأرباح:' : 'Total profits :'} <strong className="text-emerald-400">{savedProductions.reduce((s, p) => s + (Number(p.netProfit) || 0), 0).toFixed(2)} DH</strong>
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Saved Productions Grid */}
+            <div className="p-4 sm:p-5 overflow-y-auto flex-1">
+              {filteredSavedProductions.length === 0 ? (
+                <div className="p-10 text-center max-w-md mx-auto space-y-4">
+                  <div className="w-16 h-16 rounded-3xl bg-slate-800 text-amber-400 border border-slate-700 flex items-center justify-center mx-auto shadow-inner">
+                    <FolderOpen className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-white text-base">
+                      {savedSearchQuery
+                        ? (isAr ? 'لا توجد نتائج مطابقة لبحثك' : 'Aucun résultat trouvé')
+                        : (isAr ? 'مازال ما سجلتي حتى دراسة إنتاج دابا' : 'Aucune production sauvegardée')}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-bold mt-1">
+                      {isAr
+                        ? 'فاش تسالي الحساب ديال أي موديل، اضغط على زر [حفظ الحساب 💾] باش تلقاها مسجلة هنا ديما وتقدر ترجع ليها وتعدل عليها فوقتما بغيتي.'
+                        : 'Sauvegardez vos études de rentabilité pour les retrouver et les charger à tout moment.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSaveCurrentProduction}
+                    className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white rounded-xl text-xs font-black transition-all shadow-md active:scale-95 inline-flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{isAr ? '💾 حفظ الحساب الحالي الآن' : '💾 Sauvegarder ce calcul maintenant'}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {filteredSavedProductions.map((prod) => {
+                    const isProfit = (prod.netProfit || 0) >= 0;
+                    return (
+                      <div
+                        key={prod.id}
+                        className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500/50 rounded-2xl p-4 flex flex-col justify-between transition-all group shadow-sm hover:shadow-md space-y-3"
+                      >
+                        {/* Top: Photo + Name + Date */}
+                        <div className="flex items-start gap-3">
+                          <img
+                            src={prod.photo || FALLBACK_GARMENT_SVG}
+                            alt={prod.name}
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
+                            className="w-13 h-13 rounded-xl object-cover bg-slate-900 border border-slate-700 shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-black text-sm text-white truncate group-hover:text-amber-300 transition-colors">
+                              {prod.name}
+                            </h4>
+                            <div className="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 mt-0.5">
+                              <span>📅 {prod.displayDate}</span>
+                            </div>
+                            <div className="text-[10px] font-bold text-slate-400 mt-1">
+                              <span>📦 {Number(prod.quantity).toLocaleString()} pcs</span>
+                              <span className="mx-1">•</span>
+                              <span>💵 {Number(prod.pricePerPiece).toFixed(2)} DH</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Financial Box */}
+                        <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
+                          isProfit ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'
+                        }`}>
+                          <div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase block">
+                              {isAr ? 'صافي الربح / الخسارة:' : 'Bénéfice Net :'}
+                            </span>
+                            <strong className={`text-base font-black ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {isProfit ? '+' : ''}{Number(prod.netProfit).toFixed(2)} DH
+                            </strong>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[9px] font-bold text-slate-400 block">
+                              {isAr ? 'الهامش الصافي:' : 'Marge :'}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-black ${
+                              isProfit ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                            }`}>
+                              {Number(prod.netMarginPct || 0).toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Specs Mini Chips */}
+                        <div className="grid grid-cols-3 gap-1 text-center text-[10px]">
+                          <div className="bg-slate-900/60 p-1.5 rounded-lg border border-slate-700/60">
+                            <span className="text-slate-400 block text-[9px]">{isAr ? 'العمال' : 'Ouvriers'}</span>
+                            <strong className="text-white font-black">{prod.workers}</strong>
+                          </div>
+                          <div className="bg-slate-900/60 p-1.5 rounded-lg border border-slate-700/60">
+                            <span className="text-slate-400 block text-[9px]">{isAr ? 'المدة' : 'Durée'}</span>
+                            <strong className="text-white font-black">{Number(prod.days).toFixed(1)} j</strong>
+                          </div>
+                          <div className="bg-slate-900/60 p-1.5 rounded-lg border border-slate-700/60">
+                            <span className="text-slate-400 block text-[9px]">{isAr ? 'تكلفة البياسة' : 'Coût/pc'}</span>
+                            <strong className="text-amber-300 font-black">{Number(prod.costPerPiece || 0).toFixed(2)} DH</strong>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleLoadProduction(prod)}
+                            className="flex-1 py-2 px-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                          >
+                            <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" />
+                            <span>{isAr ? 'استرجاع وتعديل' : 'Charger'}</span>
+                          </button>
+
+                          {deleteConfirmId === prod.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteProduction(prod.id)}
+                                className="px-2.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black rounded-lg transition-all"
+                              >
+                                {isAr ? 'تأكيد' : 'Oui'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeleteConfirmId(null)}
+                                className="px-2.5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-[10px] font-bold rounded-lg transition-all"
+                              >
+                                {isAr ? 'إلغاء' : 'Non'}
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setDeleteConfirmId(prod.id)}
+                              title={isAr ? 'حذف هذه الدراسة' : 'Supprimer'}
+                              className="p-2 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700 hover:border-rose-500/40 rounded-xl transition-all"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
+              <span className="text-xs text-slate-400 font-bold">
+                {isAr
+                  ? `💡 تم حفظ ${savedProductions.length} دراسة في ذاكرة المتصفح والسحابة`
+                  : `💡 ${savedProductions.length} études synchronisées`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowSavedProdModal(false)}
+                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700 transition-all"
+              >
+                {isAr ? 'إغلاق' : 'Fermer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notification */}
+      {toastMessage && (
+        <div className="no-print fixed bottom-6 left-1/2 -translate-x-1/2 z-[2000] bg-slate-900/95 text-white border border-emerald-500/50 shadow-2xl px-5 py-3 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200 backdrop-blur-md">
+          <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+          <span className="text-xs font-black">{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }
