@@ -1775,62 +1775,6 @@ export default function AtelierCalculator({
                       }`}
                     />
                   )}
-
-                  {/* Human-Friendly Explanatory Pill (e.g. "⏱️ ساعتان (2h)") */}
-                  <div className="mt-1 text-center">
-                    <div className={`px-1.5 py-0.5 rounded-md font-black text-[10.5px] inline-flex items-center justify-center gap-1 w-full ${
-                      currentTotalDays < 1
-                        ? 'bg-amber-200/90 text-amber-950 border border-amber-400/80 shadow-xs'
-                        : 'bg-slate-100 text-slate-800 border border-slate-200'
-                    }`}>
-                      <span>⏱️</span>
-                      <strong className="truncate">{currentHumanDur.mainText}</strong>
-                    </div>
-
-                    {/* Quick 1-Click Durations Preset Row */}
-                    <div className="flex items-center justify-center gap-1 mt-1 pt-0.5 border-t border-amber-200/50 text-[9px] font-black">
-                      <button
-                        type="button"
-                        onClick={() => { setExtraHours(0); setDays(1 / 8); }}
-                        title={isAr ? 'ساعة واحدة' : '1 heure'}
-                        className={`px-1 py-0.2 rounded hover:bg-amber-300 text-slate-700 transition-all ${Math.abs(currentTotalDays - 0.125) < 0.02 ? 'bg-amber-400 font-black' : 'bg-slate-100'}`}
-                      >
-                        1h
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setExtraHours(0); setDays(2 / 8); }}
-                        title={isAr ? 'ساعتان' : '2 heures'}
-                        className={`px-1 py-0.2 rounded hover:bg-amber-300 text-slate-700 transition-all ${Math.abs(currentTotalDays - 0.25) < 0.02 ? 'bg-amber-400 font-black' : 'bg-slate-100'}`}
-                      >
-                        2h
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setExtraHours(0); setDays(4 / 8); }}
-                        title={isAr ? 'نصف يوم (4 سوايع)' : 'Demi-journée (4h)'}
-                        className={`px-1 py-0.2 rounded hover:bg-amber-300 text-slate-700 transition-all ${Math.abs(currentTotalDays - 0.5) < 0.02 ? 'bg-amber-400 font-black' : 'bg-slate-100'}`}
-                      >
-                        4h
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setExtraHours(0); setDays(1); }}
-                        title={isAr ? 'نهار واحد (8 سوايع)' : '1 jour (8h)'}
-                        className={`px-1 py-0.2 rounded hover:bg-amber-300 text-slate-700 transition-all ${Math.abs(currentTotalDays - 1) < 0.02 ? 'bg-amber-400 font-black' : 'bg-slate-100'}`}
-                      >
-                        1j
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setExtraHours(0); setDays(2); }}
-                        title={isAr ? 'يومان (16 ساعة)' : '2 jours (16h)'}
-                        className={`px-1 py-0.2 rounded hover:bg-amber-300 text-slate-700 transition-all ${Math.abs(currentTotalDays - 2) < 0.02 ? 'bg-amber-400 font-black' : 'bg-slate-100'}`}
-                      >
-                        2j
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
 
