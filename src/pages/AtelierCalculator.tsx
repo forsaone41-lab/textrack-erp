@@ -2969,16 +2969,41 @@ export default function AtelierCalculator({
                   <span>{isAr ? `مجموع وقت خياطة البياسة: ${fmtNum(activeGammeMinutes, 2)} دقيقة (${activeGammeSeconds} ثانية)` : `Temps total : ${fmtNum(activeGammeMinutes, 2)} min (${activeGammeSeconds} sec)`}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-0">
-                  {activePostesList.slice(0, 10).map((p, idx) => (
-                    <div key={idx} className="px-3 py-1.5 border-b border-e border-slate-200 flex items-center justify-between text-[10px]">
-                      <div className="flex items-center gap-1.5 min-w-0 truncate">
-                        <span className="px-1.5 py-0.2 bg-slate-900 text-white rounded text-[9px] font-black shrink-0" dir="ltr">#{idx + 1}</span>
-                        <span className="font-black text-slate-800 truncate">{isAr ? p.nomAr : p.nomFr}</span>
-                        <span className="text-slate-500 font-bold text-[9px] shrink-0" dir="ltr">[{p.machine}]</span>
+                  {activePostesList.map((p, idx) => (
+                    <div key={idx} className="px-3 py-2 border-b border-e border-slate-200 flex items-start justify-between gap-2.5 text-[10px] bg-white hover:bg-slate-50/60 transition-colors">
+                      {/* Left Side: Step Number + Operation Full Title (No truncate) + Machine Badge */}
+                      <div className="flex items-start gap-1.5 min-w-0 flex-1">
+                        <span className="px-1.5 py-0.5 bg-slate-900 text-white rounded text-[8.5px] font-black shrink-0 mt-0.5" dir="ltr">
+                          #{idx + 1}
+                        </span>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          {/* Full Operation Writing - Complete Text with Break Words */}
+                          <span className="font-black text-slate-900 leading-snug break-words">
+                            {isAr ? p.nomAr : p.nomFr}
+                          </span>
+                          {/* Machine & Worker Sub-line Badge */}
+                          <div className="flex flex-wrap items-center gap-1 mt-1 text-[8.5px] font-bold">
+                            <span className="text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded" dir="ltr">
+                              ⚙️ {p.machine}
+                            </span>
+                            {p.workerName && (
+                              <span className="text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded">
+                                👤 {p.workerName}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <strong dir="ltr" className="font-black text-indigo-700 ms-2 shrink-0">
-                        {fmtNum(p.tempsMin, 2)} min ({Math.round((Number(p.tempsMin) || 0) * 60)} s)
-                      </strong>
+
+                      {/* Right Side: Step Duration (Minutes & Seconds) */}
+                      <div className="flex flex-col items-end shrink-0 text-right ms-1 pt-0.5">
+                        <strong dir="ltr" className="font-black text-indigo-700 text-[10.5px] leading-tight whitespace-nowrap">
+                          {fmtNum(p.tempsMin, 2)} min
+                        </strong>
+                        <span dir="ltr" className="text-[9px] font-bold text-slate-500 whitespace-nowrap leading-tight mt-0.5">
+                          ({Math.round((Number(p.tempsMin) || 0) * 60)} s)
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
