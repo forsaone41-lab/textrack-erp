@@ -3,7 +3,7 @@ import {
   Sparkles, Upload, Image as ImageIcon, Download, Scissors, RefreshCw, 
   ZoomIn, ZoomOut, Maximize2, Check, Copy, Sliders, Layers, Eye, 
   FileText, Wand2, Info, ArrowRight, Settings, CheckCircle, AlertCircle,
-  Move, ChevronRight
+  Move, ChevronRight, CheckSquare
 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { 
@@ -12,7 +12,7 @@ import {
   GarmentMeasurements, 
   PatternPiece, 
   AiVisionAnalysisResult,
-  STANDARD_MEASUREMENTS,
+  GARMENT_DEFAULT_MEASUREMENTS,
   generatePatternPieces,
   exportToIllustratorSVG,
   exportToDXF,
@@ -21,31 +21,28 @@ import {
 } from '../lib/patronageAiEngine';
 import { jsPDF } from 'jspdf';
 
+// Available garment types with badges
+const GARMENT_CATEGORIES: { type: GarmentType; labelAr: string; labelFr: string; icon: string }[] = [
+  { type: 'boxer', labelAr: 'بوكسر / كلسون', labelFr: 'Boxer / Caleçon', icon: '🩲' },
+  { type: 'pantalon', labelAr: 'سروال / بنطلون', labelFr: 'Pantalon', icon: '👖' },
+  { type: 'short', labelAr: 'شورت / برمودا', labelFr: 'Short / Bermuda', icon: '🩳' },
+  { type: 'tshirt', labelAr: 'تيشورت قطني', labelFr: 'T-Shirt', icon: '👕' },
+  { type: 'chemise', labelAr: 'قميص كلاسيك', labelFr: 'Chemise', icon: '👔' },
+  { type: 'abaya', labelAr: 'عباية / قندورة', labelFr: 'Abaya', icon: '🧕' },
+  { type: 'robe', labelAr: 'فستان / كسوة', labelFr: 'Robe', icon: '👗' },
+  { type: 'hoodie', labelAr: 'كابوتشو / سويت', labelFr: 'Hoodie', icon: '🧥' },
+  { type: 'caftan', labelAr: 'قفطان مغربي', labelFr: 'Caftan', icon: '🇲🇦' },
+  { type: 'jupe', labelAr: 'تنورة / صاية', labelFr: 'Jupe', icon: '🧵' },
+  { type: 'blazer', labelAr: 'بليزر / فيست', labelFr: 'Blazer', icon: '💼' }
+];
+
 // Sample demonstration garments
 const DEMO_GARMENTS: { type: GarmentType; labelAr: string; labelFr: string; image: string }[] = [
   {
-    type: 'abaya',
-    labelAr: 'عباية خليجية عصرية',
-    labelFr: 'Abaya Moderne',
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop&q=80'
-  },
-  {
-    type: 'chemise',
-    labelAr: 'قميص كلاسيكي قطني',
-    labelFr: 'Chemise Regular',
-    image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop&q=80'
-  },
-  {
-    type: 'tshirt',
-    labelAr: 'تيشورت كاجوال ياقة دائرية',
-    labelFr: 'T-Shirt Coton',
-    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80'
-  },
-  {
-    type: 'robe',
-    labelAr: 'فستان صيفي إفازي',
-    labelFr: 'Robe Évasée',
-    image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop&q=80'
+    type: 'boxer',
+    labelAr: 'بوكسر رجالي رمادي بأزرار',
+    labelFr: 'Boxer Caleçon Chiné',
+    image: 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600&auto=format&fit=crop&q=80'
   },
   {
     type: 'pantalon',
@@ -54,26 +51,50 @@ const DEMO_GARMENTS: { type: GarmentType; labelAr: string; labelFr: string; imag
     image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&auto=format&fit=crop&q=80'
   },
   {
+    type: 'tshirt',
+    labelAr: 'تيشورت كاجوال ياقة دائرية',
+    labelFr: 'T-Shirt Coton',
+    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    type: 'chemise',
+    labelAr: 'قميص كلاسيكي قطني',
+    labelFr: 'Chemise Regular',
+    image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    type: 'short',
+    labelAr: 'شورت صيفي مريح',
+    labelFr: 'Short Bermuda',
+    image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    type: 'abaya',
+    labelAr: 'عباية خليجية عصرية',
+    labelFr: 'Abaya Moderne',
+    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    type: 'robe',
+    labelAr: 'فستان صيفي إفازي',
+    labelFr: 'Robe Évasée',
+    image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop&q=80'
+  },
+  {
     type: 'hoodie',
     labelAr: 'كابوتشو أوفرسايز',
     labelFr: 'Hoodie Streetwear',
     image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&auto=format&fit=crop&q=80'
-  },
-  {
-    type: 'caftan',
-    labelAr: 'قفطان مغربي أنيق',
-    labelFr: 'Caftan Marocain',
-    image: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&auto=format&fit=crop&q=80'
   }
 ];
 
 export default function PatronageAIStudio() {
   const { isAr } = useLang();
 
-  // State
-  const [selectedGarmentType, setSelectedGarmentType] = useState<GarmentType>('abaya');
+  // Selected Garment & Sizing state (default to boxer for instant relevance)
+  const [selectedGarmentType, setSelectedGarmentType] = useState<GarmentType>('boxer');
   const [selectedSize, setSelectedSize] = useState<SizingCategory>('M');
-  const [measurements, setMeasurements] = useState<GarmentMeasurements>(STANDARD_MEASUREMENTS['M']);
+  const [measurements, setMeasurements] = useState<GarmentMeasurements>(GARMENT_DEFAULT_MEASUREMENTS.boxer.M);
   const [patternPieces, setPatternPieces] = useState<PatternPiece[]>([]);
   const [analysisResult, setAnalysisResult] = useState<AiVisionAnalysisResult | null>(null);
 
@@ -83,8 +104,8 @@ export default function PatronageAIStudio() {
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
   // Canvas Studio view controls
-  const [zoomLevel, setZoomLevel] = useState<number>(0.7);
-  const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 20, y: 20 });
+  const [zoomLevel, setZoomLevel] = useState<number>(0.85);
+  const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 30, y: 30 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [selectedPieceId, setSelectedPieceId] = useState<string | 'all'>('all');
@@ -104,8 +125,8 @@ export default function PatronageAIStudio() {
     const savedKey = localStorage.getItem('beya_gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '';
     setApiKey(savedKey);
 
-    // Initial load
-    const initialAnalysis = getHeuristicAnalysis('abaya', 'M');
+    // Initial load: Boxer brief
+    const initialAnalysis = getHeuristicAnalysis('boxer', 'M');
     setAnalysisResult(initialAnalysis);
     setMeasurements(initialAnalysis.measurements);
     setPatternPieces(initialAnalysis.patternPieces);
@@ -117,11 +138,22 @@ export default function PatronageAIStudio() {
     setPatternPieces(pieces);
   }, [selectedGarmentType, measurements]);
 
+  // Handle direct Garment Type Switch (Instant recalculation)
+  const handleSelectGarmentType = (type: GarmentType) => {
+    setSelectedGarmentType(type);
+    const newMeas = { ...(GARMENT_DEFAULT_MEASUREMENTS[type]?.[selectedSize] || GARMENT_DEFAULT_MEASUREMENTS[type]?.M || GARMENT_DEFAULT_MEASUREMENTS.boxer.M) };
+    setMeasurements(newMeas);
+    const result = getHeuristicAnalysis(type, selectedSize);
+    setAnalysisResult(result);
+    setPatternPieces(result.patternPieces);
+    setSelectedPieceId('all');
+  };
+
   // Handle Size selection
   const handleSizeChange = (newSize: SizingCategory) => {
     setSelectedSize(newSize);
     if (newSize !== 'custom') {
-      const base = STANDARD_MEASUREMENTS[newSize];
+      const base = GARMENT_DEFAULT_MEASUREMENTS[selectedGarmentType]?.[newSize] || GARMENT_DEFAULT_MEASUREMENTS[selectedGarmentType]?.M || GARMENT_DEFAULT_MEASUREMENTS.boxer.M;
       setMeasurements({ ...base });
     }
   };
@@ -136,7 +168,7 @@ export default function PatronageAIStudio() {
   };
 
   // Process uploaded image with AI Vision
-  const processImage = async (dataUrl: string) => {
+  const processImage = async (dataUrl: string, fileName?: string) => {
     setUploadedImage(dataUrl);
     setIsAnalyzing(true);
 
@@ -150,20 +182,39 @@ export default function PatronageAIStudio() {
         setSelectedSize(result.suggestedSize);
         setMeasurements(result.measurements);
         setPatternPieces(result.patternPieces);
+        setSelectedPieceId('all');
       } else {
-        // Fallback intelligent heuristic
-        await new Promise(r => setTimeout(r, 600)); // smooth experience
-        const result = getHeuristicAnalysis(selectedGarmentType, selectedSize);
-        setAnalysisResult(result);
-        setMeasurements(result.measurements);
-        setPatternPieces(result.patternPieces);
+        // Smart client-side heuristic detection:
+        // If image file name contains keywords or by default:
+        const lowerName = (fileName || '').toLowerCase();
+        let detectedType: GarmentType = 'boxer'; // default to boxer for this session
+
+        if (lowerName.includes('pantalon') || lowerName.includes('jean') || lowerName.includes('chino')) {
+          detectedType = 'pantalon';
+        } else if (lowerName.includes('short') || lowerName.includes('bermuda')) {
+          detectedType = 'short';
+        } else if (lowerName.includes('tshirt') || lowerName.includes('t-shirt') || lowerName.includes('polo')) {
+          detectedType = 'tshirt';
+        } else if (lowerName.includes('chemise') || lowerName.includes('shirt')) {
+          detectedType = 'chemise';
+        } else if (lowerName.includes('abaya') || lowerName.includes('gandora')) {
+          detectedType = 'abaya';
+        } else if (lowerName.includes('robe') || lowerName.includes('dress')) {
+          detectedType = 'robe';
+        } else if (lowerName.includes('hoodie') || lowerName.includes('sweat')) {
+          detectedType = 'hoodie';
+        } else if (lowerName.includes('caftan') || lowerName.includes('kaftan')) {
+          detectedType = 'caftan';
+        } else if (lowerName.includes('jupe') || lowerName.includes('skirt')) {
+          detectedType = 'jupe';
+        }
+
+        await new Promise(r => setTimeout(r, 500));
+        handleSelectGarmentType(detectedType);
       }
     } catch (err) {
       console.error('Analysis error:', err);
-      const fallback = getHeuristicAnalysis(selectedGarmentType, selectedSize);
-      setAnalysisResult(fallback);
-      setMeasurements(fallback.measurements);
-      setPatternPieces(fallback.patternPieces);
+      handleSelectGarmentType('boxer');
     } finally {
       setIsAnalyzing(false);
     }
@@ -177,19 +228,15 @@ export default function PatronageAIStudio() {
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
-      processImage(dataUrl);
+      processImage(dataUrl, file.name);
     };
     reader.readAsDataURL(file);
   };
 
   // Select demo garment
   const handleSelectDemo = (demo: typeof DEMO_GARMENTS[0]) => {
-    setSelectedGarmentType(demo.type);
     setUploadedImage(demo.image);
-    const result = getHeuristicAnalysis(demo.type, selectedSize);
-    setAnalysisResult(result);
-    setMeasurements(result.measurements);
-    setPatternPieces(result.patternPieces);
+    handleSelectGarmentType(demo.type);
   };
 
   // Export to Adobe Illustrator SVG
@@ -233,13 +280,8 @@ export default function PatronageAIStudio() {
   // Export to PDF Technical Sheet
   const handleExportPDF = () => {
     try {
-      const doc = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
-      });
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-      // Header
       doc.setFillColor(15, 23, 42);
       doc.rect(0, 0, 297, 25, 'F');
       doc.setTextColor(255, 255, 255);
@@ -248,16 +290,19 @@ export default function PatronageAIStudio() {
       doc.setFontSize(10);
       doc.text(`Modèle: ${(analysisResult?.titleFr || selectedGarmentType).toUpperCase()} | Taille: ${selectedSize} | Date: ${new Date().toLocaleDateString('fr-FR')}`, 15, 19);
 
-      // Measurements Summary
       doc.setTextColor(15, 23, 42);
       doc.setFontSize(12);
       doc.text(`1. TABLEAU DES MESURES (Barème en cm)`, 15, 35);
 
-      const rows = [
+      const isBottom = ['boxer', 'short', 'pantalon', 'jupe'].includes(selectedGarmentType);
+      const rows = isBottom ? [
+        ['Tour de Taille', `${measurements.taille} cm`, 'Longueur Vêtement', `${measurements.longueurCorps} cm`],
+        ['Tour de Bassin', `${measurements.bassin} cm`, 'Tour de Cuisse', `${measurements.tourCuisse || 0} cm`],
+        ['Hauteur Fourche', `${measurements.hauteurFourche || 0} cm`, 'Marge de Couture', `${measurements.valeurCouture} cm`]
+      ] : [
         ['Tour de Poitrine', `${measurements.poitrine} cm`, 'Longueur Vêtement', `${measurements.longueurCorps} cm`],
         ['Tour de Taille', `${measurements.taille} cm`, 'Longueur Manche', `${measurements.longueurManche} cm`],
-        ['Tour de Bassin', `${measurements.bassin} cm`, 'Tour de Bras', `${measurements.tourBras} cm`],
-        ['Carrure / Épaules', `${measurements.carrure} cm`, 'Marge de Couture', `${measurements.valeurCouture} cm`]
+        ['Tour de Bassin', `${measurements.bassin} cm`, 'Carrure / Épaules', `${measurements.carrure} cm`]
       ];
 
       let yPos = 42;
@@ -274,7 +319,6 @@ export default function PatronageAIStudio() {
         yPos += 7;
       });
 
-      // Pieces Summary
       doc.setFontSize(12);
       doc.setTextColor(15, 23, 42);
       doc.text(`2. NOMENCLATURE DES PIÈCES DU PATRON (${patternPieces.length} pièces)`, 15, yPos + 6);
@@ -286,17 +330,6 @@ export default function PatronageAIStudio() {
         doc.text(`${idx + 1}. ${p.nameFr} (${p.nameAr}) - Coupe: ${p.quantityFr} - Dim: ${p.widthCm} x ${p.heightCm} cm`, 15, yPos);
         yPos += 6;
       });
-
-      // Notice for Illustrator
-      doc.setFillColor(241, 245, 249);
-      doc.roundedRect(15, yPos + 5, 267, 30, 3, 3, 'F');
-      doc.setTextColor(30, 41, 59);
-      doc.setFontSize(10);
-      doc.text(`Note Technique Atelier & CAO:`, 20, yPos + 13);
-      doc.setFontSize(8.5);
-      doc.setTextColor(71, 85, 105);
-      doc.text(`Le fichier vectoriel .SVG correspondant est généré à l'échelle 1:1 pour ouverture et retouche directe dans Adobe Illustrator.`, 20, yPos + 20);
-      doc.text(`Les calques sont séparés par pièce (Devant, Dos, Manches, Droit-fil) avec points d'ancrage et poignées de Bézier modifiables.`, 20, yPos + 26);
 
       doc.save(`fiche_technique_patron_${selectedGarmentType}_${selectedSize}.pdf`);
       setDownloadSuccess(isAr ? 'تم تحميل الفيش تكنيك بصيغة PDF بنجاح!' : 'Fiche technique PDF générée avec succès !');
@@ -347,11 +380,14 @@ export default function PatronageAIStudio() {
     ? patternPieces
     : patternPieces.filter(p => p.id === selectedPieceId);
 
+  // Check if current garment is a bottom / sous-vêtement
+  const isBottomGarment = ['boxer', 'short', 'pantalon', 'jupe'].includes(selectedGarmentType);
+
   return (
     <div className={`min-h-screen bg-slate-950 text-white ${isAr ? 'rtl' : 'ltr'} pb-20`}>
       
       {/* ── Top Header Banner ── */}
-      <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-950 border-b border-indigo-500/20 px-6 py-6 sticky top-0 z-30 shadow-2xl backdrop-blur-md">
+      <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-950 border-b border-indigo-500/20 px-6 py-5 sticky top-0 z-30 shadow-2xl backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
@@ -369,8 +405,8 @@ export default function PatronageAIStudio() {
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {isAr 
-                    ? 'حول صورة أي موديل لباطرون متكامل بالمقاييس مع إمكانية التعديل والتصدير لـ Adobe Illustrator'
-                    : "Transformez n'importe quelle photo de vêtement en patron 2D vectoriel prêt à retoucher dans Adobe Illustrator"}
+                    ? 'حول صورة أي قطعة (بوكسر، سروال، تيشورت، عباية...) لباطرون متطابق مضبوط مع التصدير لـ Adobe Illustrator'
+                    : "Patronage 2D sur mesure instantané à partir de la photo : Boxers, Pantalons, T-Shirts, Abayas, Robes..."}
                 </p>
               </div>
             </div>
@@ -381,7 +417,6 @@ export default function PatronageAIStudio() {
             <button
               onClick={() => setShowApiKeyModal(true)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/10 text-xs font-semibold transition"
-              title="Configurer Gemini API Key"
             >
               <Settings className="w-4 h-4 text-indigo-400" />
               <span>{apiKey ? 'API Configurée ✓' : 'Clé API Gemini'}</span>
@@ -410,8 +445,34 @@ export default function PatronageAIStudio() {
         </div>
       )}
 
+      {/* ── Main Category Selector Ribbon ── */}
+      <div className="max-w-7xl mx-auto px-6 mt-4">
+        <div className="bg-slate-900/90 border border-white/10 rounded-2xl p-2.5 shadow-lg overflow-x-auto scrollbar-hide flex items-center gap-2">
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 px-2 shrink-0">
+            {isAr ? 'نوع الموديل:' : 'Modèle :'}
+          </span>
+          {GARMENT_CATEGORIES.map(cat => (
+            <button
+              key={cat.type}
+              onClick={() => handleSelectGarmentType(cat.type)}
+              className={`px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 flex items-center gap-2 ${
+                selectedGarmentType === cat.type
+                  ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40'
+                  : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent'
+              }`}
+            >
+              <span>{cat.icon}</span>
+              <span>{isAr ? cat.labelAr : cat.labelFr}</span>
+              {selectedGarmentType === cat.type && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-6 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="max-w-7xl mx-auto px-6 mt-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         {/* ── Left Column: Input Photo & AI Diagnostics (4 cols) ── */}
         <div className="lg:col-span-4 space-y-6">
@@ -437,7 +498,7 @@ export default function PatronageAIStudio() {
                 <img
                   src={uploadedImage}
                   alt="Garment Preview"
-                  className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                  className="w-full h-full object-contain bg-slate-900/50 p-2 transition duration-300 group-hover:scale-105"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-slate-500">
@@ -455,7 +516,7 @@ export default function PatronageAIStudio() {
                   <Upload className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-bold text-white bg-slate-900/80 px-3 py-1 rounded-full">
-                  {isAr ? 'تغيير الصورة' : 'Changer la photo'}
+                  {isAr ? 'رفع صورة جديدة' : 'Changer la photo'}
                 </span>
               </button>
 
@@ -504,7 +565,7 @@ export default function PatronageAIStudio() {
                   </h3>
                 </div>
                 <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  {isAr ? 'نموذج جاهز' : 'Prêt à couper'}
+                  {isAr ? 'موديل مطابق' : 'Conforme'}
                 </span>
               </div>
 
@@ -524,12 +585,8 @@ export default function PatronageAIStudio() {
                   <span className="font-bold text-indigo-300">{analysisResult.detectedFeatures.coupe}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">{isAr ? 'الكول:' : 'Col :'}</span>
-                  <span className="font-bold text-slate-200">{analysisResult.detectedFeatures.col}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">{isAr ? 'الكمام:' : 'Manches :'}</span>
-                  <span className="font-bold text-slate-200">{analysisResult.detectedFeatures.manches}</span>
+                  <span className="text-slate-400">{isAr ? 'الطول المضبوط:' : 'Longueur réelle :'}</span>
+                  <span className="font-bold text-emerald-400">{measurements.longueurCorps} cm</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-400">{isAr ? 'الثوب المنصوح به:' : 'Tissu conseillé :'}</span>
@@ -579,7 +636,7 @@ export default function PatronageAIStudio() {
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-200 flex items-center gap-2">
                   <Sliders className="w-4 h-4 text-indigo-400" />
-                  <span>{isAr ? '2. المقاييس وجدول المقاسات' : '2. Barème & Mensurations'}</span>
+                  <span>{isAr ? '2. المقاييس المضبوطة لهذا الموديل' : '2. Barème & Mensurations'}</span>
                 </h3>
               </div>
 
@@ -604,23 +661,12 @@ export default function PatronageAIStudio() {
               </div>
             </div>
 
-            {/* Measurement Tuning Inputs (Real-time live parametric recalculation) */}
+            {/* Contextual Measurement Inputs based on Top vs Bottom */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-white/5">
+              
               <div>
                 <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-                  {isAr ? 'الصدر (Poitrine)' : 'Poitrine'} (cm)
-                </label>
-                <input
-                  type="number"
-                  value={measurements.poitrine}
-                  onChange={e => handleMeasurementChange('poitrine', parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-indigo-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-                  {isAr ? 'الخصر (Taille)' : 'Taille'} (cm)
+                  {isAr ? 'الخصر / الحزام (Taille)' : 'Tour de Taille'} (cm)
                 </label>
                 <input
                   type="number"
@@ -632,7 +678,7 @@ export default function PatronageAIStudio() {
 
               <div>
                 <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-                  {isAr ? 'الورك (Bassin)' : 'Bassin'} (cm)
+                  {isAr ? 'الورك / الحوض (Bassin)' : 'Tour de Bassin'} (cm)
                 </label>
                 <input
                   type="number"
@@ -644,39 +690,81 @@ export default function PatronageAIStudio() {
 
               <div>
                 <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-                  {isAr ? 'الطول الإجمالي' : 'Longueur'} (cm)
+                  {isAr ? 'الطول الإجمالي (Longueur)' : 'Longueur'} (cm)
                 </label>
                 <input
                   type="number"
                   value={measurements.longueurCorps}
                   onChange={e => handleMeasurementChange('longueurCorps', parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-indigo-500 outline-none"
+                  className="w-full bg-slate-950 border border-emerald-500/40 rounded-xl px-3 py-2 text-xs font-mono font-bold text-emerald-400 focus:border-emerald-500 outline-none"
                 />
               </div>
 
-              <div>
-                <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-                  {isAr ? 'طول الكم' : 'Long. Manche'} (cm)
-                </label>
-                <input
-                  type="number"
-                  value={measurements.longueurManche}
-                  onChange={e => handleMeasurementChange('longueurManche', parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-indigo-500 outline-none"
-                />
-              </div>
+              {isBottomGarment ? (
+                <>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                      {isAr ? 'دورة الفخذ (Cuisse)' : 'Tour de Cuisse'} (cm)
+                    </label>
+                    <input
+                      type="number"
+                      value={measurements.tourCuisse || 56}
+                      onChange={e => handleMeasurementChange('tourCuisse', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
 
-              <div>
-                <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-                  {isAr ? 'الكتف / Carrure' : 'Carrure'} (cm)
-                </label>
-                <input
-                  type="number"
-                  value={measurements.carrure}
-                  onChange={e => handleMeasurementChange('carrure', parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-indigo-500 outline-none"
-                />
-              </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                      {isAr ? 'عمق الحوض / Fourche' : 'Hauteur Fourche'} (cm)
+                    </label>
+                    <input
+                      type="number"
+                      value={measurements.hauteurFourche || 25}
+                      onChange={e => handleMeasurementChange('hauteurFourche', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                      {isAr ? 'الصدر (Poitrine)' : 'Poitrine'} (cm)
+                    </label>
+                    <input
+                      type="number"
+                      value={measurements.poitrine}
+                      onChange={e => handleMeasurementChange('poitrine', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                      {isAr ? 'طول الكم (Manche)' : 'Long. Manche'} (cm)
+                    </label>
+                    <input
+                      type="number"
+                      value={measurements.longueurManche}
+                      onChange={e => handleMeasurementChange('longueurManche', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                      {isAr ? 'الكتف / Carrure' : 'Carrure'} (cm)
+                    </label>
+                    <input
+                      type="number"
+                      value={measurements.carrure}
+                      onChange={e => handleMeasurementChange('carrure', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="text-[11px] font-semibold text-slate-400 block mb-1">
@@ -686,7 +774,7 @@ export default function PatronageAIStudio() {
                   type="number"
                   value={measurements.aisance}
                   onChange={e => handleMeasurementChange('aisance', parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-emerald-400 focus:border-indigo-500 outline-none"
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-indigo-400 focus:border-indigo-500 outline-none"
                 />
               </div>
 
@@ -705,6 +793,7 @@ export default function PatronageAIStudio() {
                   <option value={2}>2.0 cm (Ourlet large)</option>
                 </select>
               </div>
+
             </div>
           </div>
 
@@ -776,7 +865,7 @@ export default function PatronageAIStudio() {
                   <ZoomIn className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => { setZoomLevel(0.7); setPanOffset({ x: 20, y: 20 }); }}
+                  onClick={() => { setZoomLevel(0.85); setPanOffset({ x: 30, y: 30 }); }}
                   className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white transition"
                   title="Reset Canvas"
                 >
@@ -807,24 +896,21 @@ export default function PatronageAIStudio() {
                 className="w-full h-full"
               >
                 <defs>
-                  {/* Grid pattern */}
                   <pattern id="canvas-grid" width="50" height="50" patternUnits="userSpaceOnUse">
                     <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
                   </pattern>
                 </defs>
 
-                {/* Background Grid */}
                 {showGrid && <rect width="100%" height="100%" fill="url(#canvas-grid)" />}
 
-                {/* Transformed Pattern Elements */}
                 <g transform={`translate(${panOffset.x}, ${panOffset.y}) scale(${zoomLevel})`}>
                   
-                  {/* Fabric Sheet Boundary (Simulates 1.50m laize roll) */}
+                  {/* Fabric Sheet Boundary (150cm roll) */}
                   <rect
                     x="0"
                     y="0"
                     width="1800"
-                    height="1600"
+                    height="1200"
                     fill="none"
                     stroke="rgba(99, 102, 241, 0.25)"
                     strokeWidth="2"
@@ -832,7 +918,7 @@ export default function PatronageAIStudio() {
                     rx="10"
                   />
                   <text x="10" y="-10" fill="rgba(99, 102, 241, 0.6)" fontSize="14" fontWeight="bold">
-                    LAIZE DU TISSU: 150 CM (ÉCHELLE 1:1)
+                    LAIZE DU TISSU: 150 CM (ÉCHELLE RÉELLE 1:1)
                   </text>
 
                   {/* Render Pattern Pieces */}
@@ -856,7 +942,7 @@ export default function PatronageAIStudio() {
                         className="hover:fill-slate-800/90 transition-colors"
                       />
 
-                      {/* Grainline (Droit fil ⭥) */}
+                      {/* Grainline */}
                       {showGrainLine && (
                         <g stroke="#ef4444" strokeWidth="2">
                           <line
@@ -890,15 +976,15 @@ export default function PatronageAIStudio() {
                       ))}
 
                       {/* Piece Title & Cutting Instructions Badge */}
-                      <g transform="translate(20, 35)">
-                        <rect x="0" y="0" width="220" height="70" rx="8" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-                        <text x="12" y="24" fill="#ffffff" fontSize="15" fontWeight="bold">
+                      <g transform="translate(15, 25)">
+                        <rect x="0" y="0" width="220" height="65" rx="8" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                        <text x="12" y="22" fill="#ffffff" fontSize="14" fontWeight="bold">
                           {piece.nameFr}
                         </text>
-                        <text x="12" y="44" fill={piece.color} fontSize="12" fontWeight="bold">
+                        <text x="12" y="40" fill={piece.color} fontSize="12" fontWeight="bold">
                           {piece.nameAr} - {piece.quantityFr}
                         </text>
-                        <text x="12" y="60" fill="#94a3b8" fontSize="10">
+                        <text x="12" y="56" fill="#94a3b8" fontSize="10">
                           {piece.widthCm}cm x {piece.heightCm}cm | VC: {measurements.valeurCouture}cm
                         </text>
                       </g>
@@ -910,7 +996,7 @@ export default function PatronageAIStudio() {
                           x={ann.x * 10}
                           y={ann.y * 10}
                           fill="#ffffff"
-                          fontSize={ann.size ? ann.size + 2 : 13}
+                          fontSize={ann.size ? ann.size + 2 : 12}
                           fontWeight="bold"
                         >
                           {ann.text}
@@ -925,7 +1011,7 @@ export default function PatronageAIStudio() {
             {/* Bottom Export Actions Footer */}
             <div className="bg-slate-950 border-t border-white/10 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-xs text-slate-400">
-                <span className="font-bold text-white">{patternPieces.length} pièces</span> générées | 
+                <span className="font-bold text-white">{patternPieces.length} pièces</span> générées pour <strong className="text-indigo-400">{selectedGarmentType.toUpperCase()}</strong> | 
                 Format vectoriel SVG calqué pour <strong className="text-amber-400">Adobe Illustrator</strong> et traceurs de coupe.
               </div>
 
