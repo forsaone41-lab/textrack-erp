@@ -873,32 +873,32 @@ export default function SuiviRH() {
         const loc = localEmps.find(l => l.id === rem.id);
         if (!loc) return rem;
         return {
-          ...loc,
           ...rem,
-          // Preserve local RH values if remote is empty/missing
-          cin: rem.cin || loc.cin || '',
-          telephone: rem.telephone || loc.telephone || '',
-          adresse: rem.adresse || loc.adresse || '',
-          nom: rem.nom || loc.nom || '',
-          prenom: rem.prenom || loc.prenom || '',
-          poste: rem.poste || loc.poste || '',
-          type: rem.type || loc.type || 'atelier',
-          banque: rem.banque || loc.banque || '',
-          rib: rem.rib || loc.rib || '',
-          salaireMensuel: rem.salaireMensuel !== undefined && rem.salaireMensuel !== null ? rem.salaireMensuel : (loc.salaireMensuel || 0),
-          remunerationType: rem.remunerationType || loc.remunerationType || 'mensuel',
-          pin_code: rem.pin_code || loc.pin_code || '',
-          photo: rem.photo || loc.photo || '',
+          ...loc,
+          // Local edits take priority over remote so user edits never revert
+          cin: (loc.cin !== undefined && loc.cin !== null) ? loc.cin : (rem.cin || ''),
+          telephone: (loc.telephone !== undefined && loc.telephone !== null) ? loc.telephone : (rem.telephone || ''),
+          adresse: (loc.adresse !== undefined && loc.adresse !== null) ? loc.adresse : (rem.adresse || ''),
+          nom: loc.nom || rem.nom || '',
+          prenom: (loc.prenom !== undefined && loc.prenom !== null) ? loc.prenom : (rem.prenom || ''),
+          poste: loc.poste || rem.poste || '',
+          type: loc.type || rem.type || 'atelier',
+          banque: (loc.banque !== undefined && loc.banque !== null) ? loc.banque : (rem.banque || ''),
+          rib: (loc.rib !== undefined && loc.rib !== null) ? loc.rib : (rem.rib || ''),
+          salaireMensuel: (loc.salaireMensuel !== undefined && loc.salaireMensuel !== null) ? loc.salaireMensuel : (rem.salaireMensuel || 0),
+          remunerationType: loc.remunerationType || rem.remunerationType || 'mensuel',
+          pin_code: (loc.pin_code !== undefined && loc.pin_code !== null) ? loc.pin_code : (rem.pin_code || ''),
+          photo: loc.photo || rem.photo || '',
           matricule: loc.matricule || rem.matricule || '',
           dateExpiration: loc.dateExpiration || rem.dateExpiration || '',
           signature: loc.signature || rem.signature || '',
-          dateEmbauche: rem.dateEmbauche || loc.dateEmbauche || rem.dateEntree || '',
-          dateNaissance: rem.dateNaissance || loc.dateNaissance || '',
-          cnss: rem.cnss || loc.cnss || '',
-          dossierValide: rem.dossierValide !== undefined ? rem.dossierValide : (loc.dossierValide || false),
-          fautes: (rem.fautes && rem.fautes.length > 0) ? rem.fautes : (loc.fautes || []),
-          documents: (rem.documents && rem.documents.length > 0) ? rem.documents : (loc.documents || []),
-          notesRH: rem.notesRH || loc.notesRH || '',
+          dateEmbauche: loc.dateEmbauche || rem.dateEmbauche || rem.dateEntree || '',
+          dateNaissance: loc.dateNaissance || rem.dateNaissance || '',
+          cnss: loc.cnss || rem.cnss || '',
+          dossierValide: loc.dossierValide !== undefined ? loc.dossierValide : (rem.dossierValide || false),
+          fautes: (loc.fautes && loc.fautes.length > 0) ? loc.fautes : (rem.fautes || []),
+          documents: (loc.documents && loc.documents.length > 0) ? loc.documents : (rem.documents || []),
+          notesRH: (loc.notesRH !== undefined && loc.notesRH !== null) ? loc.notesRH : (rem.notesRH || ''),
         };
       });
       // Keep any local-only employees
@@ -1409,8 +1409,15 @@ export default function SuiviRH() {
       setSelectedContractEmp(empData);
     }
 
+    // 0ms instant UI response: close modal immediately
+    setShowModal(false);
+
     // Sync with Supabase so other modules (like Commandes) can see them
-    await saveRecord('employes', empData, true);
+    try {
+      await saveRecord('employes', empData, true);
+    } catch (e) {
+      console.warn("Background saveRecord employes warning:", e);
+    }
 
     // ✅ AUTO-CREATE USER ACCOUNT for new employees
     if (isNew) {
@@ -1458,8 +1465,6 @@ export default function SuiviRH() {
         }
       } catch {}
     }
-
-    setShowModal(false);
   }
 
   async function syncAll() {
