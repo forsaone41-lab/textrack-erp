@@ -797,7 +797,7 @@ function getDossierStats(emp: Employe) {
 
 export default function SuiviRH() {
   const { isAr } = useLang();
-  const [employes, setEmployes] = useState<Employe[]>([]);
+  const [employes, setEmployes] = useState<Employe[]>(() => getLocalRH<Employe>('employes'));
   const [paiements, setPaiements] = useState<PaiementSalaire[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [search, setSearch] = useState('');
@@ -871,17 +871,34 @@ export default function SuiviRH() {
       const localEmps = getLocalRH<Employe>('employes');
       const merged = (remoteEmps || []).map(rem => {
         const loc = localEmps.find(l => l.id === rem.id);
+        if (!loc) return rem;
         return {
+          ...loc,
           ...rem,
-          dateEmbauche: rem.dateEmbauche || loc?.dateEmbauche || rem.dateEntree || '',
-          dateNaissance: rem.dateNaissance || loc?.dateNaissance || '',
-          cnss: rem.cnss || loc?.cnss || '',
-          dossierValide: rem.dossierValide !== undefined ? rem.dossierValide : (loc?.dossierValide || false),
-          fautes: rem.fautes || loc?.fautes || [],
-          documents: rem.documents || loc?.documents || [],
-          notesRH: rem.notesRH || loc?.notesRH || '',
-          photo: rem.photo || loc?.photo || '',
-          signature: rem.signature || loc?.signature || '',
+          // Preserve local RH values if remote is empty/missing
+          cin: rem.cin || loc.cin || '',
+          telephone: rem.telephone || loc.telephone || '',
+          adresse: rem.adresse || loc.adresse || '',
+          nom: rem.nom || loc.nom || '',
+          prenom: rem.prenom || loc.prenom || '',
+          poste: rem.poste || loc.poste || '',
+          type: rem.type || loc.type || 'atelier',
+          banque: rem.banque || loc.banque || '',
+          rib: rem.rib || loc.rib || '',
+          salaireMensuel: rem.salaireMensuel !== undefined && rem.salaireMensuel !== null ? rem.salaireMensuel : (loc.salaireMensuel || 0),
+          remunerationType: rem.remunerationType || loc.remunerationType || 'mensuel',
+          pin_code: rem.pin_code || loc.pin_code || '',
+          photo: rem.photo || loc.photo || '',
+          matricule: loc.matricule || rem.matricule || '',
+          dateExpiration: loc.dateExpiration || rem.dateExpiration || '',
+          signature: loc.signature || rem.signature || '',
+          dateEmbauche: rem.dateEmbauche || loc.dateEmbauche || rem.dateEntree || '',
+          dateNaissance: rem.dateNaissance || loc.dateNaissance || '',
+          cnss: rem.cnss || loc.cnss || '',
+          dossierValide: rem.dossierValide !== undefined ? rem.dossierValide : (loc.dossierValide || false),
+          fautes: (rem.fautes && rem.fautes.length > 0) ? rem.fautes : (loc.fautes || []),
+          documents: (rem.documents && rem.documents.length > 0) ? rem.documents : (loc.documents || []),
+          notesRH: rem.notesRH || loc.notesRH || '',
         };
       });
       // Keep any local-only employees
@@ -892,6 +909,10 @@ export default function SuiviRH() {
       });
       setEmployes(merged);
       saveLocalRH('employes', merged);
+      try {
+        localStorage.setItem('textrack_data_employes', JSON.stringify(merged));
+      } catch {}
+      setSelectedDossierEmp(prev => prev ? (merged.find(m => m.id === prev.id) || prev) : null);
     }).catch(() => {
       setEmployes(getLocalRH<Employe>('employes'));
     });
@@ -972,8 +993,9 @@ export default function SuiviRH() {
   }, [location.search, location.hash, employes]);
 
   const openDossierPage = (emp: Employe) => {
-    setSelectedDossierEmp(emp);
-    window.location.hash = `#/rh?emp=${encodeURIComponent(emp.id)}`;
+    const fresh = employes.find(e => e.id === emp.id) || emp;
+    setSelectedDossierEmp(fresh);
+    window.location.hash = `#/rh?emp=${encodeURIComponent(fresh.id)}`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -1007,9 +1029,18 @@ export default function SuiviRH() {
     setEmployes(prev => {
       const next = prev.map(e => e.id === updated.id ? updated : e);
       saveLocalRH('employes', next);
+      try {
+        localStorage.setItem('textrack_data_employes', JSON.stringify(next));
+      } catch {}
       return next;
     });
     setSelectedDossierEmp(updated);
+    if (selectedBadge && selectedBadge.id === updated.id) {
+      setSelectedBadge(updated);
+    }
+    if (selectedContractEmp && selectedContractEmp.id === updated.id) {
+      setSelectedContractEmp(updated);
+    }
     saveRecord('employes', updated, true).catch(() => {});
   };
 
@@ -1345,8 +1376,9 @@ export default function SuiviRH() {
   }
 
   function openEdit(e: Employe) {
-    setEditId(e.id);
-    setForm({ ...e });
+    const fresh = employes.find(emp => emp.id === e.id) || e;
+    setEditId(fresh.id);
+    setForm({ ...fresh });
     setShowModal(true);
   }
 
@@ -1362,6 +1394,20 @@ export default function SuiviRH() {
 
     setEmployes(updated);
     saveLocalRH('employes', updated);
+    try {
+      localStorage.setItem('textrack_data_employes', JSON.stringify(updated));
+    } catch {}
+
+    // ✅ Update active views immediately so UI never reverts to old state
+    if (selectedDossierEmp && selectedDossierEmp.id === eId) {
+      setSelectedDossierEmp(empData);
+    }
+    if (selectedBadge && selectedBadge.id === eId) {
+      setSelectedBadge(empData);
+    }
+    if (selectedContractEmp && selectedContractEmp.id === eId) {
+      setSelectedContractEmp(empData);
+    }
 
     // Sync with Supabase so other modules (like Commandes) can see them
     await saveRecord('employes', empData, true);
@@ -2362,6 +2408,7 @@ export default function SuiviRH() {
                       </label>
                       <input
                         type="date"
+                        key={'dateEmbauche_' + selectedDossierEmp.id + '_' + (selectedDossierEmp.dateEmbauche || '')}
                         defaultValue={selectedDossierEmp.dateEmbauche || ''}
                         onBlur={e => handleUpdateDateEmbauche(e.target.value)}
                         className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-3.5 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 ${isAr ? 'text-right' : ''}`}
@@ -2377,6 +2424,7 @@ export default function SuiviRH() {
                       </label>
                       <input
                         type="text"
+                        key={'cnss_' + selectedDossierEmp.id + '_' + (selectedDossierEmp.cnss || '')}
                         defaultValue={selectedDossierEmp.cnss || ''}
                         onBlur={e => updateEmpDossier({ ...selectedDossierEmp, cnss: e.target.value })}
                         placeholder={isAr ? 'مثال: 123456789' : 'Ex: 123456789'}
@@ -2442,6 +2490,7 @@ export default function SuiviRH() {
                   </label>
                   <textarea
                     rows={3}
+                    key={'notesRH_' + selectedDossierEmp.id + '_' + (selectedDossierEmp.notesRH || '')}
                     defaultValue={selectedDossierEmp.notesRH || ''}
                     onBlur={e => updateEmpDossier({ ...selectedDossierEmp, notesRH: e.target.value })}
                     placeholder={isAr ? 'سجل هنا أي ملاحظة خاصة بسلوك الأجير، مهاراته، تدريباته أو وعود الترقية...' : 'Notes internes pour la direction et les RH...'}

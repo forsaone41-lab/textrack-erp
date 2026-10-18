@@ -1364,44 +1364,44 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           }
         }
         
-        const newCols = [
-          'documents', 'fautes', 'dossierValide', 'dateEmbauche', 'dateNaissance', 'notesRH', 'cnss',
-          'dossier_valide', 'date_embauche', 'date_naissance', 'notes_rh',
-          'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
-          'tissuConsommation', 'fournisseurTel', 'fournisseurEmail',
-          'pinCode',
-          'retouche', 'lastActive',
-          'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
-          'cin', 'rib', 'salaireMensuel', 'remunerationType', 'actif',
-          'matricule', 'dateExpiration', 'signature',
-          'dateEntree', 'contrat', 'mutuelle', 'enfants', 'situation_familiale',
-          'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus',
-          'partenaireId', 'externalTasks', 'typeDossier',
-          'adresse', 'notes',
-          'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority',
-          'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy',
-          'tissuRecommande', 'aiNotes', 'fit', 'complexity', 'patronageFileName', 'modelisteId', 'costEstimate', 'tissuPhoto'
-        ];
-        newCols.forEach(col => delete fallbackRecord[col]);
-        
-        let { error: retryError } = await supabase.from(table).upsert(fallbackRecord);
-        
-        // Dynamic retry loop: automatically strip any column that Supabase complains about
+        // Dynamic retry loop: automatically strip ONLY the specific missing column that Supabase complains about
+        let retryError: any = error;
         let attempts = 0;
-        while (retryError && attempts < 10) {
+        while (retryError && attempts < 15) {
           attempts++;
           const colMatch = retryError.message.match(/Could not find the '([^']+)' column/i)
             || retryError.message.match(/column "?([^"\s]+)"? of relation/i)
             || retryError.message.match(/column "?([^"\s]+)"? does not exist/i);
             
           if (colMatch && colMatch[1]) {
-            const badCol = colMatch[1];
+            const rawCol = colMatch[1].trim();
+            const badCol = rawCol.includes('.') ? rawCol.split('.').pop()!.replace(/["']/g, '') : rawCol.replace(/["']/g, '');
             delete fallbackRecord[badCol];
             const res = await supabase.from(table).upsert(fallbackRecord);
             retryError = res.error;
           } else {
             break;
           }
+        }
+
+        // Secondary fallback if dynamic strip still fails: strip only true non-schema columns (never strip cin, documents, etc.)
+        if (retryError) {
+          const nonSchemaCols = [
+            'matricule', 'dateExpiration', 'signature',
+            'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
+            'tissuConsommation', 'fournisseurTel', 'fournisseurEmail',
+            'retouche', 'lastActive',
+            'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
+            'dateEntree', 'contrat', 'mutuelle', 'enfants', 'situation_familiale',
+            'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'tailles', 'rejectionNote', 'tissus',
+            'partenaireId', 'externalTasks', 'typeDossier',
+            'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority',
+            'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy',
+            'tissuRecommande', 'aiNotes', 'fit', 'complexity', 'patronageFileName', 'modelisteId', 'costEstimate', 'tissuPhoto'
+          ];
+          nonSchemaCols.forEach(col => delete fallbackRecord[col]);
+          const res = await supabase.from(table).upsert(fallbackRecord);
+          retryError = res.error;
         }
 
         if (!retryError) {
