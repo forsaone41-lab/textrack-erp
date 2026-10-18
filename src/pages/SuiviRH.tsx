@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Employe, EmployeFaute, EmployeDocument, PaiementSalaire, Commande, loadData, genId, loadCompanyProfile, saveRecord, safeStorage } from '../types';
-import { generatePDF, printElement } from '../utils/pdf';
+import { generatePDF, printElement, generateBadgePDF, printBadgeElement, downloadBadgeImage } from '../utils/pdf';
 import { PageLoader } from '../components/PageLoader';
 
 // Local storage helpers for RH specifically to avoid Supabase schema mismatch
@@ -136,7 +136,7 @@ function SmartChip() {
 function BarcodeGraphic({ value }: { value: string }) {
   return (
     <div className="flex flex-col items-start w-full">
-      <svg className="h-5 w-full max-w-[200px] text-slate-900" viewBox="0 0 200 24" fill="currentColor" preserveAspectRatio="none">
+      <svg className="h-5 w-full max-w-[200px] text-black" viewBox="0 0 200 24" fill="#000000" preserveAspectRatio="none">
         <rect x="0" y="0" width="3" height="24" />
         <rect x="5" y="0" width="1.5" height="24" />
         <rect x="8" y="0" width="4" height="24" />
@@ -245,11 +245,11 @@ export const BADGE_THEMES: Record<BadgeTheme, {
     headerGradient: 'from-[#030712] via-[#0f172a] to-[#1e293b]',
     nameColor: 'text-white drop-shadow-sm',
     rolePillClass: 'bg-amber-500/20 border-amber-400/50 text-amber-300 shadow-2xs font-black',
-    labelColor: 'text-slate-400 font-bold',
+    labelColor: 'text-amber-200/90 font-black',
     valueColor: 'text-white font-black',
     matriculeColor: 'text-amber-300 font-mono font-black',
-    subtextColor: 'text-slate-300 font-medium',
-    dividerBorder: 'border-white/10',
+    subtextColor: 'text-slate-200 font-bold',
+    dividerBorder: 'border-white/20',
     photoBorder: 'border-2 border-amber-400/80 shadow-lg shadow-amber-500/10',
     photoBg: 'bg-slate-900',
     signatureColor: 'text-amber-300',
@@ -413,7 +413,11 @@ function BadgeFront({
     <div
       dir="ltr"
       className={`wallet-card-standard relative w-[370px] h-[234px] ${cfg.cardOuterBg} rounded-2xl overflow-hidden border ${cfg.cardBorder} flex flex-col justify-between select-none print:shadow-none print:border-slate-400 break-inside-avoid text-left transition-all shrink-0`}
-      style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+      style={{
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        imageRendering: '-webkit-optimize-contrast',
+        WebkitFontSmoothing: 'antialiased',
+      }}
     >
       {/* Top Corporate Header Banner */}
       <div className={`relative bg-gradient-to-r ${cfg.headerGradient} px-3.5 py-2 text-white flex items-center justify-between shadow-sm overflow-hidden shrink-0 z-10`}>
@@ -515,20 +519,20 @@ function BadgeFront({
             {/* Info Grid (CIN, MATRICULE, VALIDITÉ, TEL) */}
             <div className={`grid grid-cols-2 gap-x-2 gap-y-1 mt-1.5 pt-1.5 border-t ${cfg.dividerBorder}`}>
               <div>
-                <span className={`block text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>CIN</span>
-                <span className={`text-[9.5px] font-black ${cfg.valueColor} uppercase tracking-wider`}>{emp.cin || '—'}</span>
+                <span className={`block text-[7px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>CIN</span>
+                <span className={`text-[10px] font-black ${cfg.valueColor} uppercase tracking-wider`}>{emp.cin || '—'}</span>
               </div>
               <div>
-                <span className={`block text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>MATRICULE</span>
-                <span className={`text-[9.5px] font-black ${cfg.matriculeColor} uppercase tracking-wider font-mono`}>{matricule}</span>
+                <span className={`block text-[7px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>MATRICULE</span>
+                <span className={`text-[10px] font-black ${cfg.matriculeColor} uppercase tracking-wider font-mono`}>{matricule}</span>
               </div>
               <div>
-                <span className={`block text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>VALIDITÉ</span>
-                <span className={`text-[9px] font-black uppercase tracking-wider ${emp.dateExpiration ? (cfg.isDark ? 'text-amber-400 font-mono' : 'text-amber-800 font-mono') : cfg.valueColor}`}>{validite}</span>
+                <span className={`block text-[7px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>VALIDITÉ</span>
+                <span className={`text-[9.5px] font-black uppercase tracking-wider ${emp.dateExpiration ? (cfg.isDark ? 'text-amber-400 font-mono' : 'text-amber-800 font-mono') : cfg.valueColor}`}>{validite}</span>
               </div>
               <div>
-                <span className={`block text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>TÉLÉPHONE</span>
-                <span className={`text-[9px] font-black ${cfg.valueColor} tracking-wider tabular-nums`}>{emp.telephone || '—'}</span>
+                <span className={`block text-[7px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>TÉLÉPHONE</span>
+                <span className={`text-[9.5px] font-black ${cfg.valueColor} tracking-wider tabular-nums`}>{emp.telephone || '—'}</span>
               </div>
             </div>
           </div>
@@ -536,8 +540,8 @@ function BadgeFront({
           {/* Signature & Contract Status Row */}
           <div className={`flex items-end justify-between mt-1 pt-1 border-t ${cfg.dividerBorder}`}>
             <div className="flex flex-col">
-              <span className={`text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>CONTRAT</span>
-              <span className={`text-[8px] font-bold ${cfg.subtextColor} uppercase mt-0.5`}>
+              <span className={`text-[7px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>CONTRAT</span>
+              <span className={`text-[8.5px] font-bold ${cfg.subtextColor} uppercase mt-0.5`}>
                 {emp.type === 'atelier' ? 'Interne (Atelier)' : 'Sous-traitance'}
               </span>
             </div>
@@ -582,7 +586,11 @@ function BadgeBack({
     <div
       dir="ltr"
       className={`wallet-card-standard relative w-[370px] h-[234px] ${cfg.cardOuterBg} rounded-2xl overflow-hidden border ${cfg.cardBorder} flex flex-col justify-between select-none print:shadow-none print:border-slate-400 break-inside-avoid text-left transition-all shrink-0`}
-      style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+      style={{
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        imageRendering: '-webkit-optimize-contrast',
+        WebkitFontSmoothing: 'antialiased',
+      }}
     >
       {/* Top Magnetic Stripe Graphic */}
       <div className="h-[26px] bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex items-center justify-between px-3 text-slate-400 text-[6.5px] font-mono tracking-widest uppercase shrink-0 z-10">
@@ -626,7 +634,7 @@ function BadgeBack({
               </div>
               
               <div className={`mt-1 pt-1 border-t ${cfg.dividerBorder}`}>
-                <span className={`block text-[6px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>
+                <span className={`block text-[7px] font-black ${cfg.labelColor} uppercase tracking-widest leading-none`}>
                   IDENTIFIANT SCANNER & MATRICULE
                 </span>
                 <div className="flex items-center justify-between mt-0.5">
@@ -643,14 +651,14 @@ function BadgeBack({
         </div>
 
         {/* Security Legal Notice */}
-        <div className={`px-1 text-[6.5px] ${cfg.subtextColor} leading-tight relative z-10`}>
+        <div className={`px-1 text-[7.5px] ${cfg.subtextColor} leading-tight relative z-10`}>
           <p className="line-clamp-2">
             Cette carte est strictement personnelle et demeure la propriété de {company.name || 'BEYA CREATIVE'}. Elle doit être présentée à toute réquisition du contrôle. En cas de perte, merci de la retourner au service RH.
           </p>
         </div>
 
         {/* Footer Contact & Validation Stamp */}
-        <div className={`flex items-center justify-between pt-1 border-t ${cfg.dividerBorder} text-[7px] ${cfg.subtextColor} font-bold relative z-10`}>
+        <div className={`flex items-center justify-between pt-1 border-t ${cfg.dividerBorder} text-[7.5px] ${cfg.subtextColor} font-bold relative z-10`}>
           <div className="flex items-center gap-1">
             <Phone className={`w-2.5 h-2.5 ${cfg.labelColor}`} />
             <span>Tél RH : {company.phone || '06 73 43 79 08'}</span>
@@ -3370,9 +3378,9 @@ export default function SuiviRH() {
 
                 {/* Print button */}
                 <button
-                  onClick={() => printElement('badge-capture')}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 font-black text-xs uppercase tracking-wider shadow-md transition"
-                  title={isAr ? 'طباعة مباشرة' : 'Imprimer'}
+                  onClick={() => printBadgeElement('badge-capture')}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 font-black text-xs uppercase tracking-wider shadow-md transition active:scale-95"
+                  title={isAr ? 'طباعة مباشرة عالية الدقة' : 'Imprimer HD'}
                 >
                   <Printer className="w-4 h-4" />
                   <span className="hidden sm:inline">{isAr ? 'طباعة مباشرة' : 'Imprimer'}</span>
@@ -3423,9 +3431,15 @@ export default function SuiviRH() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-800 text-[10.5px] font-black">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>{isAr ? '🛡️ علامة مائية BEYA CREATIVE مدمجة' : '🛡️ Filigrane BEYA CREATIVE actif'}</span>
+              <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-1 px-2.5 py-1 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-900 text-[10.5px] font-black">
+                  <span>⚡</span>
+                  <span>{isAr ? 'طباعة فائقة الدقة 350+ DPI (واضحة 100% بدون ضبابية)' : 'Ultra-HD 350+ DPI Net & Précis'}</span>
+                </div>
+                <div className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-800 text-[10.5px] font-black">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>{isAr ? '🛡️ علامة مائية BEYA CREATIVE مدمجة' : '🛡️ Filigrane BEYA CREATIVE actif'}</span>
+                </div>
               </div>
             </div>
 
@@ -3556,14 +3570,51 @@ export default function SuiviRH() {
                 )}
               </div>
 
-              {/* PDF Download Button */}
-              <button
-                onClick={() => handleDownloadPDF('badge-capture', `Badge_${selectedBadge.nom}_Wallet`)}
-                disabled={isGenerating}
-                className={`h-11 px-6 text-white rounded-xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg transition-all ${isGenerating ? 'bg-slate-400' : 'bg-slate-900 hover:bg-indigo-600'}`}
-              >
-                {isGenerating ? <RotateCw className="w-4 h-4 animate-spin" /> : <><Download className="w-4 h-4" /> {isAr ? 'تحميل PDF (للطباعة)' : 'Télécharger PDF'}</>}
-              </button>
+              {/* Export Buttons: High-Res PNG + Ultra-HD CR-80 PDF */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => downloadBadgeImage('badge-capture', `Badge_${selectedBadge.nom || 'Employe'}`)}
+                  className="h-11 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl flex items-center justify-center gap-1.5 font-black text-xs uppercase tracking-wider transition active:scale-95 border border-slate-300"
+                  title={isAr ? 'تحميل كصورة فائقة الدقة 400 DPI للطباعة على بطاقات PVC' : 'Télécharger Image HD 400 DPI'}
+                >
+                  <ImageIcon className="w-4 h-4 text-emerald-600" />
+                  <span className="hidden sm:inline">{isAr ? 'صورة HD (400 DPI)' : 'Image HD'}</span>
+                </button>
+
+                <button
+                  onClick={async () => {
+                    if (isGenerating) return;
+                    setIsGenerating(true);
+                    try {
+                      await generateBadgePDF('badge-capture', `Badge_${selectedBadge.nom || 'Employe'}_CR80`, {
+                        viewMode: badgeViewFace,
+                        companyName: company.name,
+                        empName: empName(selectedBadge),
+                      });
+                    } catch (e) {
+                      console.error(e);
+                      await handleDownloadPDF('badge-capture', `Badge_${selectedBadge.nom}_Wallet`);
+                    } finally {
+                      setIsGenerating(false);
+                    }
+                  }}
+                  disabled={isGenerating}
+                  className={`h-11 px-6 text-white rounded-xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 ${
+                    isGenerating ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-indigo-600 shadow-slate-900/20'
+                  }`}
+                  title={isAr ? 'تحميل ملف PDF فائق الدقة 350 DPI ومقاس المحفظة القياسي' : 'Télécharger PDF HD 350 DPI'}
+                >
+                  {isGenerating ? (
+                    <RotateCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      <span>{isAr ? 'تحميل PDF عالي الدقة (350 DPI)' : 'Télécharger PDF HD'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
