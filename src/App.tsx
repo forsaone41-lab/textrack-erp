@@ -16,6 +16,7 @@ const Demandes         = lazy(() => import('./pages/Demandes'));
 const Pipeline         = lazy(() => import('./pages/Pipeline'));
 const FichesTechniques = lazy(() => import('./pages/FichesTechniques'));
 const EvaluationPatronage = lazy(() => import('./pages/EvaluationPatronage'));
+const PatronageAIStudio   = lazy(() => import('./pages/PatronageAIStudio'));
 const OrdresDeCoupe    = lazy(() => import('./pages/OrdresDeCoupe'));
 const ChaineDeMontage  = lazy(() => import('./pages/ChaineDeMontage'));
 const ChaineDetaillee  = lazy(() => import('./pages/ChaineDetaillee'));
@@ -808,7 +809,8 @@ function AppContent() {
         <Route path="tarifs" element={can('tarifs') ? <Tarifs /> : <Navigate to="/" replace />} />
         <Route path="echantillons" element={can('demandes') ? <Echantillons /> : <Navigate to="/" replace />} />
         <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />
-              <Route path="evaluation-patronage" element={can('evaluation_patronage') ? <EvaluationPatronage /> : <Navigate to="/" replace />} />
+        <Route path="evaluation-patronage" element={can('evaluation_patronage') ? <EvaluationPatronage /> : <Navigate to="/" replace />} />
+        <Route path="patronage-ai" element={(can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin') ? <PatronageAIStudio /> : <Navigate to="/" replace />} />
         <Route path="ordres-de-coupe" element={can('ordres') ? <OrdresDeCoupe /> : <Navigate to="/" replace />} />
         <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />
         <Route path="pilotage-chaine" element={can('pilotage') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />

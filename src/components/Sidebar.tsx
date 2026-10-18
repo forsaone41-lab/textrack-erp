@@ -399,6 +399,9 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('evaluation_patronage') && (
               <NavItem to="/evaluation-patronage" icon={Scissors} label={isAr ? 'تسعير الباترون' : 'Prix Patronage'} />
             )}
+            {(can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin') && (
+              <NavItem to="/patronage-ai" icon={Sparkles} label={isAr ? 'استوديو الباترون (AI)' : 'Patronage Studio (AI)'} pro />
+            )}
             {can('ai_space') && (
               <>
                 <NavItem to="/ai-space" icon={Sparkles} label={isAr ? 'المساعد الذكي' : 'Assistant IA'} pro />
