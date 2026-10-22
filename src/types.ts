@@ -1027,7 +1027,7 @@ export async function loadLeads(): Promise<Lead[]> {
       if (raw) deletedIds = JSON.parse(raw) || [];
     } catch (_) {}
 
-    // 1. Load from Supabase — lightweight columns (exclude massive base64 photo blobs)
+    // 1. Load from Supabase — lightweight columns (exclude massive base64 photo blobs and filter out heavy system config rows to avoid statement timeout)
     const LEADS_COLS = 'id, name, phone, phone2, ville, type, quantity, details, tailles, date, status, email, contactedAt, contactedType, contactedBy, crmStage, crmContactMethod, crmRdvDate, crmNotes, crmPrice, crmPriceConfirmed, photoCount, crmDevisMode, crmPriority, rejectedAt';
     let supaData: any[] | null = null;
     let error: any = null;
@@ -1035,15 +1035,17 @@ export async function loadLeads(): Promise<Lead[]> {
     const res = await supabase
       .from('leads')
       .select(LEADS_COLS)
+      .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__)')
       .order('date', { ascending: false });
 
     if (res.error) {
-      console.warn('[loadLeads] Light select failed, trying fallback limit query:', res.error.message);
+      console.warn('[loadLeads] Direct select failed, trying fallback range query:', res.error.message);
       const fallbackRes = await supabase
         .from('leads')
-        .select('*')
+        .select(LEADS_COLS)
+        .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__)')
         .order('date', { ascending: false })
-        .limit(200);
+        .range(0, 499);
       if (!fallbackRes.error && fallbackRes.data) {
         supaData = fallbackRes.data;
         error = null;

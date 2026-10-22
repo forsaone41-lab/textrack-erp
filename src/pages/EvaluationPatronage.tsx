@@ -24,7 +24,12 @@ export default function EvaluationPatronage() {
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('leads').select('*').order('date', { ascending: false });
+      const { data, error } = await supabase
+        .from('leads')
+        .select('id, name, phone, ville, type, quantity, status, date, details, photo')
+        .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__)')
+        .order('date', { ascending: false })
+        .limit(200);
       if (error) throw error;
       if (data) {
         const filtered = data.filter(l => {
