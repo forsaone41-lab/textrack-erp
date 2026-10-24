@@ -7,6 +7,7 @@ import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile,
 import { printElement } from '../utils/pdf';
 import { printRapportIA } from '../utils/print';
 import { PosteTravail, getGarmentTechnicalBreakdown, parseGammeText } from '../lib/atelierAi';
+import { ClientQuoteModal } from '../components/ClientQuoteModal';
 
 export const ATELIER_MACHINES_PRESETS = [
   { id: 'piqueuse', machine: 'Piqueuse Plate', labelAr: 'بيكوز سامبل', defaultNomAr: 'خياطة وتجميع الأجزاء (بيكوز)', defaultNomFr: 'Assemblage Piqueuse Plate', defaultMin: 3.5, role: 'خياط رئيسي' },
@@ -672,6 +673,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [activePieceIdx, setActivePieceIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<'fiche' | 'mesures' | 'chat' | 'photo' | 'gamme'>('chat');
   const [showDispatchModal, setShowDispatchModal] = useState(false);
+  const [showClientQuoteModal, setShowClientQuoteModal] = useState(false);
   const [chat, setChat] = useState<{ role: 'ai' | 'user'; text: string }[]>([
     { role: 'ai', text: isAr ? 'مرحباً بك في المستشار الذكي لتحليل الموديلات. ارفع صورة الموديل للبدء في التحليل الفوري للثوب والتكلفة والقياسات.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }
   ]);
@@ -1698,6 +1700,24 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
       return speakAr
         ? `✅ تم تحويل الموديل إلى قطعة واحدة منفردة (سويت شيرت) باستهلاك 1.50 متر وتكلفة 50 - 65 درهم.`
         : `✅ Modèle mis à jour en 1 Pièce simple avec 1.50m de consommation.`;
+    }
+
+    // 0. CLIENT QUOTE & PDF PROPOSAL INTENTS (Devis & Fiche Client B2B)
+    if (/(client|clian|clien|زبون|كليان|devis.*(client|clian|clien|زبون|كليان)|(pdf|fiche|warqa|ملف|ورقة|عرض.*سعر).*(client|clian|clien|زبون|كليان)|devis.*pro|عرض.*سعر|estimasion)/i.test(m) && /(pdf|devis|fiche|warqa|ملف|ورقة|عرض|prix|taman|toub|ثوب|ثمن)/i.test(m)) {
+      setTimeout(() => setShowClientQuoteModal(true), 300);
+      return speakAr
+        ? `📄 فتحت لك الآن نافذة **[ملف ودوڤي الزبون الاحترافي (PDF & WhatsApp)]**!
+✨ تما تقدر:
+1. تبدل اسم ونوع الثوب اللي غادي يشوفو الزبون (بدون أسرار درب عمر وثمن الجملة).
+2. تعدل ثمن البيع اللي بغيتي للبياسة (بهامش ربح مثلا +50% أو ثمن محدد).
+3. تحدد الكمية والمدة وشروط التسليم.
+4. طبع Devis A4 نقي بزاف كـ PDF أو تصيفطو بـ WhatsApp للزبون بنقرة واحدة! 🚀`
+        : `📄 J'ai ouvert pour vous la fenêtre **[Générateur Fiche & Devis Client B2B]** !
+✨ Vous pouvez y :
+1. Modifier le tissu commercial proposé au client (sans mentionner vos prix de gros internes).
+2. Définir votre prix de vente unitaire en MAD (marge +50%, +80% ou prix personnalisé).
+3. Ajuster les quantités et délais de fabrication.
+4. Télécharger le Devis en PDF A4 ou le partager instantanément sur WhatsApp au client ! 🚀`;
     }
 
     // 0. DIRECT PIECE COST & PRODUCTION DEVIS (شحال كتقام البياسة / Prix de revient unitaire & Devis)
@@ -3021,6 +3041,27 @@ ${userMessage}
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
+          {/* NOUVEAU: BOUTON DEVIS & FICHE CLIENT B2B (Emplacement exact encerclé en rouge par l'utilisateur) */}
+          <button
+            onClick={() => {
+              if (!analysisResult) {
+                setCustomAlert({
+                  title: isAr ? 'تنبيه' : 'Attention',
+                  message: isAr ? 'يرجى تحليل موديل أولاً من الصورة لتجهيز ملف ودوڤي الزبون!' : 'Veuillez analyser un modèle d\'abord pour générer le devis client !',
+                  isError: true
+                });
+                return;
+              }
+              setShowClientQuoteModal(true);
+            }}
+            className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-xs uppercase shadow-md hover:shadow-indigo-500/25 active:scale-95 transition-all ring-1 ring-white/20"
+            title={isAr ? 'إنشاء ملف الزبون وعرض السعر مع إمكانية تعديل الأثواب والأسعار (PDF Client)' : 'Fiche & Devis Client B2B (PDF & WhatsApp)'}
+          >
+            <FileText className="w-3.5 h-3.5 text-blue-200" />
+            <span className="font-black">{isAr ? 'ملف ودوڤي الزبون' : 'Devis & Fiche Client'}</span>
+            <span className="bg-amber-400 text-slate-950 text-[9px] px-1.5 py-0.2 rounded-full font-black tracking-wider shadow-xs">PRO</span>
+          </button>
+
           {/* Top Header Export/Send Button (Red boxed in user diagram 1) */}
           <button
             onClick={() => {
@@ -3249,20 +3290,19 @@ ${userMessage}
                 <button
                   onClick={() => {
                     if (analysisResult) {
-                      const chatHistory = chat.map(c => c.text).join('\n');
-                      sendToDevis(chatHistory + '\n\n' + (analysisResult.rawAnalysis || JSON.stringify(analysisResult)));
+                      setShowClientQuoteModal(true);
                     } else {
                       setCustomAlert({
                         title: isAr ? 'تنبيه' : 'Attention',
-                        message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                        message: isAr ? 'يرجى تحليل موديل أولاً من الصورة لتجهيز ملف ودوڤي الزبون!' : 'Veuillez analyser un modèle d\'abord !',
                         isError: true
                       });
                     }
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200/60 text-emerald-700 rounded-xl font-black text-xs transition-all shadow-sm group"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-indigo-200/80 text-indigo-700 rounded-xl font-black text-xs transition-all shadow-sm group"
                 >
-                  <DollarSign className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                  <span>{isAr ? 'تسعير Devis PRO' : 'Devis PRO'}</span>
+                  <FileText className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-indigo-600" />
+                  <span>{isAr ? 'ملف Devis الزبون PRO' : 'Devis & Fiche Client'}</span>
                 </button>
 
                 <button
@@ -5053,19 +5093,21 @@ ${userMessage}
               <button
                 onClick={() => {
                   setShowDispatchModal(false);
-                  const chatHistory = chat.map(c => c.text).join('\n');
-                  sendToDevis(chatHistory + '\n\n' + (analysisResult?.rawAnalysis || JSON.stringify(analysisResult)));
+                  setShowClientQuoteModal(true);
                 }}
-                className={`flex items-center justify-between p-3.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 text-emerald-800 rounded-2xl font-black text-xs transition-all shadow-sm group ${isAr ? 'flex-row-reverse' : ''}`}
+                className={`flex items-center justify-between p-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-indigo-200/80 text-indigo-900 rounded-2xl font-black text-xs transition-all shadow-sm group ${isAr ? 'flex-row-reverse' : ''}`}
               >
                 <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                  <DollarSign className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <FileText className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform flex-shrink-0" />
                   <div>
-                    <div className="font-black">{isAr ? 'تسعير Devis PRO' : 'Devis PRO'}</div>
-                    <div className="text-[10px] font-bold text-emerald-600/80">{isAr ? 'إنشاء حساب وتكلفة للزبون' : 'Calcul de devis client'}</div>
+                    <div className="font-black flex items-center gap-1.5">
+                      <span>{isAr ? 'ملف ودوڤي الزبون B2B' : 'Devis & Fiche Client B2B'}</span>
+                      <span className="bg-amber-400 text-slate-950 text-[8px] px-1.5 py-0.2 rounded font-black">PDF</span>
+                    </div>
+                    <div className="text-[10px] font-bold text-indigo-600/80">{isAr ? 'تخصيص الأثواب والأسعار وتصدير PDF / واتساب فوري' : 'Personnaliser tissus, prix et export PDF / WhatsApp'}</div>
                   </div>
                 </div>
-                <ChevronRight className={`w-4 h-4 text-emerald-600 ${isAr ? 'rotate-180' : ''}`} />
+                <ChevronRight className={`w-4 h-4 text-indigo-600 ${isAr ? 'rotate-180' : ''}`} />
               </button>
 
               <button
@@ -5130,6 +5172,22 @@ ${userMessage}
           </div>
         </div>
       )}
+
+      {/* NOUVEAU: MODAL DEVIS & FICHE CLIENT B2B */}
+      <ClientQuoteModal
+        isOpen={showClientQuoteModal}
+        onClose={() => setShowClientQuoteModal(false)}
+        analysisResult={analysisResult}
+        modelImage={image}
+        isAr={isAr}
+        onNotify={(title, message) => {
+          setCustomAlert({
+            title,
+            message,
+            isError: false
+          });
+        }}
+      />
 
       {/* MOBILE APP FIXED BOTTOM NAVIGATION BAR (FIX BOTTOM) */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[150] bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-2xl px-2 py-1.5 flex items-center justify-around">
