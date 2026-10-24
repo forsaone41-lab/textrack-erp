@@ -65,6 +65,13 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
     { nom: 'الورك (Hanches)', valeurs: { S: 86, M: 90, L: 94, XL: 98, XXL: 102 } },
     { nom: 'طول الساق (Longueur)', valeurs: { S: 26, M: 28, L: 30, XL: 32, XXL: 34 } },
     { nom: 'محيط الفخذ (Cuisse)', valeurs: { S: 46, M: 49, L: 52, XL: 55, XXL: 58 } }
+  ],
+  ManteauLong: [
+    { nom: 'الصدر (Poitrine)', valeurs: { S: 102, M: 108, L: 114, XL: 120, XXL: 126 } },
+    { nom: 'الكتف (Épaules)', valeurs: { S: 42, M: 44, L: 46, XL: 48, XXL: 50 } },
+    { nom: 'الورك (Hanches)', valeurs: { S: 110, M: 116, L: 122, XL: 128, XXL: 134 } },
+    { nom: 'الطول الكامل (Longueur)', valeurs: { S: 115, M: 118, L: 120, XL: 122, XXL: 125 } },
+    { nom: 'طول الكم (Manche)', valeurs: { S: 61, M: 62, L: 63, XL: 64, XXL: 65 } }
   ]
 };
 
@@ -347,7 +354,7 @@ function buildRapportText(result: any, arLang: boolean): string {
 
 
 // Internal Expert Technical Analysis Engine (Fallback when external API key has limit: 0 or fails)
-function buildFallbackAnalysis(contextText: string, isAr: boolean) {
+function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCount?: number) {
   const breakdown = getGarmentTechnicalBreakdown(contextText);
   const text = (contextText || '').toLowerCase();
 
@@ -355,7 +362,61 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean) {
   let piecesList: any[] = [];
   let defaultMesures: any[] = [];
 
-  if (text.includes('boxer') || text.includes('كالسون') || text.includes('بوكسر') || text.includes('slip') || text.includes('داخلي')) {
+  const isThreePieces = (
+    forcePiecesCount === 3 ||
+    text.includes('3 pièces') || text.includes('3 pieces') || text.includes('3 قطع') || text.includes('3 articles') ||
+    text.includes('3 dial') || text.includes('3dial') || text.includes('trois') || text.includes('3articles') ||
+    ((text.includes('manteau') || text.includes('veste') || text.includes('gilet') || text.includes('cardigan') || text.includes('مانطو') || text.includes('سترة') || text.includes('فيست')) && (text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('pantalon') || text.includes('سروال') || text.includes('jogging')))
+  );
+
+  if (isThreePieces) {
+    pieceName = isAr ? 'طقم سبوروار 3 قطع (مانطو طويل + سويت + سروال)' : 'Ensemble 3 Pièces Sportswear (Manteau + Sweat + Pantalon)';
+    const mesuresManteau = JSON.parse(JSON.stringify(STANDARD_MESURES['ManteauLong'] || STANDARD_MESURES['Robe']));
+    const mesuresSweat = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
+    const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
+    piecesList = [
+      {
+        name: isAr ? 'مانطو / سترة طويلة سبور بكابوش وسحاب (Manteau Long Zippé)' : 'Manteau Long Sportswear à Capuche Zippée',
+        consumption: '2.40m',
+        fit: isAr ? 'واسع مريح مستور (Coupe Longue & Ample)' : 'Coupe Longue & Ample',
+        complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
+        costEstimate: `75 - 95 MAD`,
+        components: isAr ? ['صدر أمامي بسحاب طويل كامل', 'ظهر طويل مريح', 'كابوش مزدوج مبطن', 'أكمام طويلة مع أساور بورد كوت', 'جيوب جانبية مدمجة', 'فتحات جانبية للحركة'] : ['Devants zippés pleine hauteur', 'Dos long confort', 'Capuche doublée', 'Manches avec bord-côte', 'Poches passepoilées/italiennes', 'Fentes latérales'],
+        fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك 280g' : 'Molleton Gratté / Interlock Coton 280g',
+        fabricAlternatives: [
+          { name: isAr ? 'إنترلوك قطن دبل كنيت فاخر' : 'Interlock Double Knit 280g', pros: isAr ? 'وجهين ناعمين وقوام ثابت وممتاز' : 'Double face doux et excellente tenue', cons: isAr ? 'ثمن الكيلو أعلى' : 'Prix au kilo supérieur' },
+          { name: isAr ? 'فرينش تيري قطن ربيعي' : 'French Terry Coton', pros: isAr ? 'خفيف ومرن ومناسب لجميع الفصول' : 'Polyvalent toutes saisons', cons: isAr ? 'أقل دفئاً في البرد الشديد' : 'Moins chaud en grand froid' }
+        ],
+        mesures: mesuresManteau
+      },
+      {
+        name: isAr ? 'سويت شيرت / تيشيرت داخلي متناسق (Sweat / Haut Confort)' : 'Sweatshirt / Haut Confort Assorti',
+        consumption: '1.40m',
+        fit: isAr ? 'عادي مريح (Regular Fit)' : 'Regular Fit',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: `40 - 55 MAD`,
+        components: isAr ? ['صدر أمامي مع طباعة/شعار', 'ظهر متناسق', 'أكمام طويلة', 'ياقة دائرية مطاطية مع شريط نظافة'] : ['Buste devant avec logo', 'Dos droit', 'Manches longues avec finitions', 'Col rond bord-côte avec bande de propreté'],
+        fabricSuggested: isAr ? 'إنترلوك قطن ممتاز 100% (Interlock 240g)' : 'Interlock 100% Coton 240g',
+        fabricAlternatives: [
+          { name: isAr ? 'جيرسي قطن ليكرا' : 'Jersey Coton Lycra', pros: isAr ? 'مرونة عالية وملمس ناعم جداً' : 'Grande élasticité et confort', cons: isAr ? 'أخف في الوزن' : 'Plus léger' }
+        ],
+        mesures: mesuresSweat
+      },
+      {
+        name: isAr ? 'سروال رياضي مريح (Pantalon Jogging Confort)' : 'Pantalon Jogging Confort',
+        consumption: '1.40m',
+        fit: isAr ? 'مريح عادي مع أساور كاحل (Jogger Fit)' : 'Jogger Fit',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: `45 - 55 MAD`,
+        components: isAr ? ['أرجل أمامية وخلفية', 'حزام خصر مطاطي عريض مع كوردون سحب', 'جيوب جانبية إيطالية', 'أساور كاحل مطاطية'] : ['Jambes devant et dos', 'Ceinture élastiquée large avec cordon', 'Poches italiennes latérales', 'Bord-côte bas de jambe'],
+        fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك 280g' : 'Molleton Gratté / Interlock Coton 280g',
+        fabricAlternatives: [
+          { name: isAr ? 'فرينش تيري (French Terry)' : 'French Terry', pros: isAr ? 'مرونة ممتازة وتحمل للغسيل' : 'Résistant et confortable', cons: isAr ? 'أخف وزناً' : 'Plus léger' }
+        ],
+        mesures: mesuresPantalon
+      }
+    ];
+  } else if (text.includes('boxer') || text.includes('كالسون') || text.includes('بوكسر') || text.includes('slip') || text.includes('داخلي')) {
     pieceName = isAr ? 'بوكسر قطن جيرسي (Boxer Coton)' : 'Boxer Coton Lycra';
     defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Boxer'] || STANDARD_MESURES['Pantalon']));
     piecesList = [{
@@ -372,7 +433,7 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean) {
       ],
       mesures: defaultMesures
     }];
-  } else if (text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('سيرفيت') || ((text.includes('sweat') || text.includes('hoodie') || text.includes('هودي')) && (text.includes('jogging') || text.includes('سروال') || text.includes('pantalon')))) {
+  } else if (forcePiecesCount === 2 || text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('سيرفيت') || ((text.includes('sweat') || text.includes('hoodie') || text.includes('هودي')) && (text.includes('jogging') || text.includes('سروال') || text.includes('pantalon')))) {
     pieceName = isAr ? 'طقم رياضي هودي وسروال (Ensemble Survêtement)' : 'Ensemble Survêtement Hoodie & Jogging';
     const mesuresHoodie = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']));
     const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
@@ -527,15 +588,22 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean) {
     }];
   }
 
+  const totalConsoNum = piecesList.reduce((acc, p) => acc + (parseFloat(p.consumption) || 0), 0);
+  const totalConsoStr = totalConsoNum > 0 ? `${totalConsoNum.toFixed(2)}m` : (piecesList[0]?.consumption || `${breakdown.consommationMetrage}m`);
+
+  const totalCostStr = isThreePieces
+    ? '160 - 205 MAD'
+    : (piecesList.length > 1 ? '115 - 135 MAD' : (piecesList[0]?.costEstimate || `${Math.round(breakdown.coutRevientEstime)} - ${Math.round(breakdown.prixVenteConseille)} MAD`));
+
   const result: any = {
     category: pieceName,
-    consumption: piecesList[0].consumption || `${breakdown.consommationMetrage}m`,
-    fit: piecesList[0].fit,
-    complexity: piecesList[0].complexity,
-    costEstimate: piecesList[0].costEstimate,
-    components: piecesList[0].components,
-    fabricSuggested: piecesList[0].fabricSuggested,
-    fabricAlternatives: piecesList[0].fabricAlternatives,
+    consumption: totalConsoStr,
+    fit: piecesList[0]?.fit || (isAr ? 'عادي' : 'Regular'),
+    complexity: isThreePieces ? (isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée') : (piecesList[0]?.complexity || (isAr ? 'متوسطة' : 'Moyenne')),
+    costEstimate: totalCostStr,
+    components: piecesList.flatMap((p: any) => p.components || []),
+    fabricSuggested: piecesList[0]?.fabricSuggested,
+    fabricAlternatives: piecesList[0]?.fabricAlternatives,
     pieces: piecesList,
     gammeMontage: breakdown.postesTravail,
     rawAnalysis: ''
@@ -950,6 +1018,31 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }));
   };
 
+  const applyPiecePreset = (count: 1 | 2 | 3) => {
+    const ctx = count === 3 ? '3 pièces ensemble manteau sweat pantalon' : count === 2 ? 'ensemble survet hoodie pantalon' : 'sweatshirt';
+    const fallbackResult = buildFallbackAnalysis(ctx, isAr, count);
+    if (analysisResult?.tissuPhoto) {
+      fallbackResult.tissuPhoto = analysisResult.tissuPhoto;
+    }
+    setAnalysisResult(fallbackResult);
+    setActivePieceIdx(0);
+    if (fallbackResult.pieces && fallbackResult.pieces.length > 0) {
+      setCustomMesures(fallbackResult.pieces[0].mesures || []);
+      setPiecesMesures(fallbackResult.pieces.map((p: any) => JSON.parse(JSON.stringify(p.mesures || []))));
+    }
+    setActiveTab('fiche');
+    const reportText = buildRapportText(fallbackResult, isAr);
+    setChat(prev => [
+      ...prev,
+      {
+        role: 'ai',
+        text: isAr
+          ? `✅ تم تحديث التحليل لـ [ ${count === 3 ? 'طقم 3 قطع (مانطو سبور طويل + سويت داخلي + سروال جوغينغ)' : count === 2 ? 'طقم قطعتين (هودي + سروال)' : 'قطعة واحدة'} ] بنجاح!\n\n${reportText}`
+          : `✅ Analyse mise à jour pour [ ${count === 3 ? 'Ensemble 3 Pièces (Manteau long + Sweat + Pantalon)' : count === 2 ? 'Ensemble 2 Pièces' : '1 Pièce'} ] avec succès !\n\n${reportText}`
+      }
+    ]);
+  };
+
   const exportToFicheTechnique = async (mode: 'current' | 'complete' = 'current') => {
     setActiveTab('fiche');
     setExporting(true);
@@ -1280,80 +1373,123 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       const mimeType = image.split(';')[0].split(':')[1];
 
       const analysisPrompt = isAr
-        ? `أنت خبير نسيج وخياطة محترف في مصنع مغربي. حلل هذه الصورة بدقة عالية جداً.
+        ? `أنت خبير نسيج وخياطة محترف في مصنع مغربي للألبسة الجاهزة. حلل هذه الصورة بدقة تقنية عالية جداً.
 
-أريد منك تحليل كل قطعة ملابس في الصورة بشكل منفصل (مثلاً إذا في الصورة تيشرت وسروال، حلل كل واحد لوحدو).
+⚠️ تنبيه حاسم وإلزامي بخصوص الأطقم متعددة القطع (Ensembles Multi-Pièces):
+- انظر بعناية تامة إلى الصورة المرفقة: إذا كان الشخص يرتدي طقماً مكوناً من أكثر من قطعة، مثل:
+  1. طقم 3 قطع (مثال: مانطو أو سترة/فيست طويلة بكابوش وسحاب + سويت شيرت أو تيشيرت داخلي + سروال رياضي أو ليجينغ كما في ملابس المحجبات والسبوروار الحديثة).
+  2. طقم قطعتين (مثال: هودي وسروال، أو قميص وبنطلون، أو بلوزة وتنورة).
+- في هذه الحالة، يجب عليك إرجاع كاااافة القطع بشكل منفصل في مصفوفة "pieces" (عنصر مستقل لكل قطعة، يعني 3 عناصر إذا كان هناك 3 قطع).
+- ممنوع دمج قطع الطقم في قطعة واحدة!
+- استهلاك الثوب الإجمالي (totalConsumption) يجب أن يكون مجموع استهلاك كل القطع معاً (مثلاً: 2.40m + 1.40m + 1.40m = 5.20m لعرض 1.50م).
+- التكلفة الإجمالية (totalCost) يجب أن تكون مجموع تكلفة كافة القطع معاً.
 
-لكل قطعة أعطيني:
-1. اسم القطعة (بالعربية والفرنسية)
-2. كمية الثوب المطلوبة بالمتر، لعرض ثوب واحد فقط 1.50م (أعطني رقم دقيق فقط مثلاً "1.80m"، بدون أي نص إضافي).
-3. نوع الفيت (لاصق/ضيق، عادي/ريكيلار، واسع/لارج) - حلل من الصورة واش الموديل لاصق ولا واسع
-4. مستوى التعقيد (بسيط، متوسط، معقد)
-5. التكلفة التقديرية للخياطة بالدرهم
-6. مكونات القطعة (الأجزاء: صدر، ظهر، أكمام، ياقة، جيوب...)
-7. جدول القياسات لكل مقاس (S, M, L, XL, XXL) - أعطي قياسات واقعية:
-   - للجزء العلوي: الصدر، الكتف، الطول، الكم، الخصر.
-   - تنبيه هام جداً: إذا كانت القطعة العلوية طويلة (تصل أو تتجاوز منطقة الأرداف/الورك، مثل الفستان، الجلابة، القفطان، أو البلوزة الطويلة Tunique)، يجب عليك إضافة قياس "الورك (Hanches)" كقياس سادس أساسي في جدول هذه القطعة!
-   - للسروال أو البوكسر: الخصر، الورك، الطول، الفخذ، أسفل الرجل.
-8. نوع الثوب الرئيسي المقترح لصناعة هذه القطعة مع اقتراحين بديلين للثوب، مع ذكر المزايا والعيوب لكل بديل بالدارجة المغربية بشكل مختصر ومفيد للمصنع.
-9. لاغام ديال الخياطة وبوستات العمل (gammeMontage): أعطني سلسلة مراحل الخياطة الدقيقة الخاصة بهذا الموديل في مصنع ملابس حقيقي:
-   - هام جداً بخصوص الفصالة: الفصالة في المعمل تكون بالمطلوة الصناعية (Coupe Matelas) وليس بياسة ببياسة، والوقت المحسوب هو وقت إطلاق المطلوة مقسوم على عدد البياسات (حوالي 0.8 إلى 1.2 دقيقة للبياسة فقط).
-   - أوقات الخياطة (Piqueuse, Surjeteuse, Finition...): يجب أن تكون أوقات عمال محترفين حرافيين (Cadence Pro) بحيث يكون الوقت الإجمالي للموديل (SAM) واقعياً للإنتاج السريع (مثلاً بين 9 و 18 دقيقة للموديل الكامل).
-   - لكل مرحلة حدد: الآلة، وقت الحرافيين (tempsPro)، وقت ستاندار (tempsStandard)، ووقت المبتدئين (tempsDebutant).
+لكل قطعة في مصفوفة "pieces" أعطيني بدقة:
+1. اسم القطعة (name): مثلاً "مانطو / سترة طويلة سبور بكابوش وسحاب"، "سويت شيرت داخلي"، "سروال رياضي جوغينغ".
+2. كمية الثوب بالمتر (consumption): لعرض 1.50م (مثلاً "2.40m").
+3. نوع القصة (fit): لاصق/سليم، عادي/ريغولار، واسع/أوفرسايز.
+4. مستوى التعقيد (complexity): بسيط، متوسط، معقد.
+5. التكلفة التقديرية (costEstimate): بالدرهم المغربي MAD.
+6. مكونات القطعة (components): أجزاء الباترون (صدر، ظهر، أكمام، كابوش، جيوب، سحاب...).
+7. جدول المقاسات (mesures) لكل مقاس (S, M, L, XL, XXL):
+   - للقطعة العلوية الطويلة (المانطو): الصدر، الكتف، الورك (Hanches)، الطول الكامل، طول الكم.
+   - للسويت أو التيشيرت: الصدر، الكتف، الطول، طول الكم، الخصر.
+   - للسروال: الخصر، الورك، الطول، الفخذ، أسفل الرجل.
+8. الثوب المقترح (fabricSuggested) مع البدائل (fabricAlternatives).
+9. لاغام ديال الخياطة وبوستات العمل (gammeMontage): مراحل الخياطة الدقيقة في المصنع مع الآلات وأوقات الحرافيين (tempsPro).
 
 أجب بصيغة JSON فقط بدون أي نص إضافي، بهذا الشكل:
 {
-  "category": "اسم عام للموديل",
-  "totalConsumption": "1.50m",
-  "totalCost": "35 - 55 MAD",
+  "category": "طقم رياضي 3 قطع (مانطو طويل + سويت + سروال)",
+  "totalConsumption": "5.20m",
+  "totalCost": "165 - 215 MAD",
   "complexity": "متوسطة",
-  "fabricSuggested": "نوع الثوب الرئيسي المقترح للموديل",
+  "fabricSuggested": "إنترلوك قطن ممتاز 100% / مولتون 280g",
   "fabricAlternatives": [
     {
-      "name": "اسم الثوب البديل",
-      "pros": "المزايا",
-      "cons": "العيوب"
+      "name": "فرينش تيري قطن",
+      "pros": "خفيف ومريح لجميع الفصول",
+      "cons": "أقل دفئاً في الشتاء"
     }
   ],
   "gammeMontage": [
     {
-      "nomAr": "فصالة القماش بالمطلوة الصناعية وتحضير الرزم",
-      "nomFr": "Coupe Matelas & Préparation Paquets",
+      "nomAr": "فصالة الطقم الكامل (3 قطع) بالمطلوة الصناعية وتحضير الرزم",
+      "nomFr": "Coupe Matelas 3 Pièces & Paquets",
       "machine": "Table de Coupe / Ciseaux",
-      "tempsMin": 0.8,
-      "tempsPro": 0.8,
-      "tempsStandard": 1.2,
-      "tempsDebutant": 2.0,
+      "tempsMin": 1.8,
+      "tempsPro": 1.8,
+      "tempsStandard": 3.0,
+      "tempsDebutant": 5.0,
       "roleOuvrier": "فصالة وباترون"
     }
   ],
   "pieces": [
     {
-      "name": "تيشرت / سويت شيرت",
-      "consumption": "1.50m",
-      "fit": "عادي (Regular)",
-      "complexity": "متوسط",
-      "costEstimate": "35 - 55 MAD",
-      "components": ["صدر أمامي", "ظهر", "أكمام طويلة", "ياقة دائرية"],
+      "name": "مانطو / سترة طويلة سبور بكابوش وسحاب",
+      "consumption": "2.40m",
+      "fit": "واسع مريح (Coupe Longue)",
+      "complexity": "متوسطة إلى معقدة",
+      "costEstimate": "75 - 95 MAD",
+      "components": ["صدر أمامي بسحاب كامل", "ظهر طويل", "كابوش مبطن مزدوج", "أكمام طويلة مع أساور", "جيوب جانبية", "فتحات جانبية"],
+      "fabricSuggested": "مولتون قطن مبطن / إنترلوك 280g",
+      "fabricAlternatives": [],
+      "mesures": [
+        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 102, "M": 108, "L": 114, "XL": 120, "XXL": 126}},
+        {"nom": "الكتف (Épaules)", "valeurs": {"S": 42, "M": 44, "L": 46, "XL": 48, "XXL": 50}},
+        {"nom": "الورك (Hanches)", "valeurs": {"S": 110, "M": 116, "L": 122, "XL": 128, "XXL": 134}},
+        {"nom": "الطول الكامل (Longueur)", "valeurs": {"S": 115, "M": 118, "L": 120, "XL": 122, "XXL": 125}},
+        {"nom": "طول الكم (Manche)", "valeurs": {"S": 61, "M": 62, "L": 63, "XL": 64, "XXL": 65}}
+      ]
+    },
+    {
+      "name": "سويت شيرت / تيشيرت داخلي",
+      "consumption": "1.40m",
+      "fit": "عادي مريح (Regular)",
+      "complexity": "متوسطة",
+      "costEstimate": "40 - 55 MAD",
+      "components": ["صدر أمامي", "ظهر متناسق", "أكمام طويلة", "ياقة دائرية مطاطية"],
       "fabricSuggested": "إنترلوك قطن 100%",
       "fabricAlternatives": [],
       "mesures": [
-        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 96, "M": 102, "L": 108, "XL": 114, "XXL": 120}}
+        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 96, "M": 102, "L": 108, "XL": 114, "XXL": 120}},
+        {"nom": "الكتف (Épaules)", "valeurs": {"S": 42, "M": 44, "L": 46, "XL": 48, "XXL": 50}},
+        {"nom": "الطول (Longueur)", "valeurs": {"S": 68, "M": 70, "L": 72, "XL": 74, "XXL": 76}},
+        {"nom": "طول الكم (Manche)", "valeurs": {"S": 61, "M": 62, "L": 63, "XL": 64, "XXL": 65}}
+      ]
+    },
+    {
+      "name": "سروال رياضي مريح (Pantalon Jogging)",
+      "consumption": "1.40m",
+      "fit": "مريح عادي مع أساور (Jogger)",
+      "complexity": "متوسطة",
+      "costEstimate": "45 - 55 MAD",
+      "components": ["أرجل أمامية وخلفية", "حزام خصر مطاطي مع كوردون", "جيوب جانبية إيطالية", "أساور كاحل"],
+      "fabricSuggested": "مولتون قطن مبطن / إنترلوك 280g",
+      "fabricAlternatives": [],
+      "mesures": [
+        {"nom": "الخصر (Taille)", "valeurs": {"S": 72, "M": 76, "L": 80, "XL": 84, "XXL": 88}},
+        {"nom": "الورك (Hanches)", "valeurs": {"S": 94, "M": 98, "L": 102, "XL": 106, "XXL": 110}},
+        {"nom": "الطول (Longueur)", "valeurs": {"S": 100, "M": 102, "L": 104, "XL": 106, "XXL": 108}},
+        {"nom": "الفخذ (Cuisse)", "valeurs": {"S": 58, "M": 60, "L": 62, "XL": 64, "XXL": 66}},
+        {"nom": "أسفل الرجل (Cheville)", "valeurs": {"S": 26, "M": 27, "L": 28, "XL": 29, "XXL": 30}}
       ]
     }
   ]
 }`
         : `Tu es un expert textile et confection en atelier industriel marocain. Analyse cette image avec une très haute précision.
-Consignes pour la gamme de montage :
-- Coupe industrielle : calculée impérativement en coupe matelas par pli amorti (0.8 à 1.2 min/pièce, jamais du sur-mesure pièce par pièce).
-- Cadence ateliers pro : temps de couture et finition réalistes pour ouvriers qualifiés (total SAM 10 à 18 min pour le vêtement complet).
-- Fournir pour chaque opération : nomAr, nomFr, machine, tempsMin, tempsPro, tempsStandard, tempsDebutant, roleOuvrier.
+Consignes impératives pour les ensembles multi-pièces :
+- Si l'image montre un ensemble de plusieurs pièces (ex: Ensemble 3 pièces composé d'un Manteau/Veste longue zippée à capuche + Sweat/Haut intérieur + Pantalon de jogging/legging, ou ensemble 2 pièces), vous DEVEZ obligatoirement décomposer chaque vêtement dans le tableau "pieces" (un élément distinct par pièce).
+- Ne jamais fusionner un ensemble multi-pièces en un seul article !
+- La consommation totale (totalConsumption) doit être la somme des consommations de chaque pièce (ex: 2.40m + 1.40m + 1.40m = 5.20m).
+- Le coût total (totalCost) doit être la somme des coûts de chaque pièce.
+- Fournir les mesures S-XXL pour chaque pièce dans son entrée "mesures".
 Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
       const candidateModels = [
-        'gemini-2.5-flash',
         'gemini-2.0-flash',
-        'gemini-1.5-flash'
+        'gemini-1.5-flash',
+        'gemini-1.5-pro'
       ];
 
       let data: any = null;
@@ -1528,6 +1664,41 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
     }
 
     const speakAr = aiLangOverride === 'ar' || (aiLangOverride === null && isAr);
+
+    // 0. MULTI-PIECE ENSEMBLE SWITCHING INTENTS
+    if (/(3.*(piece|article|lpiasa|pieces|articles|dial|l9ta3|قطع|بياسات)|trois|طقم.*3|مكون.*من.*3|فيه.*3)/i.test(m)) {
+      setTimeout(() => applyPiecePreset(3), 100);
+      return speakAr
+        ? `✅ تم التعرف على أن الموديل يتكون من 3 قطع:
+1. 🧥 مانطو / سترة طويلة سبور بكابوش وسحاب (استهلاك: 2.40م — تكلفة: 75-95 درهم)
+2. 👕 سويت شيرت / تيشيرت داخلي (استهلاك: 1.40م — تكلفة: 40-55 درهم)
+3. 👖 سروال رياضي مريح جوغينغ (استهلاك: 1.40م — تكلفة: 45-55 درهم)
+
+📊 الإجمالي للطقم الكامل (Ensemble 3 Pièces):
+• استهلاك الثوب الإجمالي: 5.20 متر (لعرض 1.50م)
+• التكلفة الإجمالية المقترحة: 160 - 205 درهم
+• تم الآن تحديث البطاقة التقنية، جدول المقاسات S-XXL لكل قطعة، وسلسلة الخياطة (Gamme de Montage) لجميع القطع الثلاثة بنجاح!`
+        : `✅ Modèle identifié et mis à jour comme Ensemble 3 Pièces :
+1. 🧥 Manteau / Veste longue à capuche zippée (Conso: 2.40m — Coût: 75-95 MAD)
+2. 👕 Sweatshirt / Haut intérieur (Conso: 1.40m — Coût: 40-55 MAD)
+3. 👖 Pantalon jogging confort (Conso: 1.40m — Coût: 45-55 MAD)
+
+📊 Total ensemble complet : 5.20m de métrage, coût de revient estimé 160 - 205 MAD. Fiche technique et tableaux S-XXL actualisés.`;
+    }
+
+    if (/(2.*(piece|article|lpiasa|pieces|articles|dial|l9ta3|قطع|بياسات)|deux|طقم.*2|طقم.*قطعتين|فيه.*2)/i.test(m)) {
+      setTimeout(() => applyPiecePreset(2), 100);
+      return speakAr
+        ? `✅ تم تحويل الموديل إلى طقم قطعتين (هودي أوفر سايز + سروال جوغينغ) باستهلاك إجمالي 3.10 متر وتكلفة 115 - 135 درهم.`
+        : `✅ Modèle mis à jour en Ensemble 2 Pièces (Hoodie + Jogging) avec 3.10m de consommation totale.`;
+    }
+
+    if (/(1.*(piece|article|lpiasa|pieces|articles|dial|l9ta3|قطع|بياسات)|une.*piece|قطعة.*واحدة|بياسة.*وحدة)/i.test(m)) {
+      setTimeout(() => applyPiecePreset(1), 100);
+      return speakAr
+        ? `✅ تم تحويل الموديل إلى قطعة واحدة منفردة (سويت شيرت) باستهلاك 1.50 متر وتكلفة 50 - 65 درهم.`
+        : `✅ Modèle mis à jour en 1 Pièce simple avec 1.50m de consommation.`;
+    }
 
     // 0. DIRECT PIECE COST & PRODUCTION DEVIS (شحال كتقام البياسة / Prix de revient unitaire & Devis)
     const asksPieceCost = /(chehal.*(tqam|tsqam|lpiasa|piasa|piece|cout|prix|taman|flous|cost|revient)|tqam|tsqam|شحال.*(كتقام|كتقامش|تقام|تسقام|البياسة|القطعة|الموديل|التكلفة|الثمن|نبيع|نربح)|بشحال.*(كتقام|تقام|البياسة|القطعة|نبيع|نبيعها)|(prix|cout|coût|cost).*(revient|piece|unitaire|fabrication|total|modele|modèle)|ثمن.*(البياسة|القطعة|الموديل|الإنتاج)|تكلفة.*(البياسة|القطعة|الموديل|الإنتاج)|كلفة.*(البياسة|القطعة)|bchhal.*(tqam|lpiasa|nbi3)|chehal.*(lcost|flous|nbi3)|(devis|تسعير|حساب التكلفة|شحال غادي تقام|شحال كتقام)|^(prix|cout|coût|cost|taman|ثمن|سعر|تكلفة|كلفة|devis|فلوس)$)/i.test(m);
@@ -3037,9 +3208,18 @@ ${userMessage}
                   <button onClick={() => setShowFullImage(true)} className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-xl text-slate-700 hover:bg-white hover:scale-105 transition-all shadow-md border border-slate-100" title={isAr ? 'تكبير الصورة' : 'Agrandir'}>
                     <Eye className="w-4 h-4" />
                   </button>
-                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                    <button onClick={() => setImage(null)} className="bg-white/90 p-3 rounded-xl text-rose-600 hover:bg-white transition-all shadow-xl" title="حذف الصورة"><RefreshCw className="w-5 h-5" /></button>
-                    {!analysisResult && <button onClick={startAnalysis} className="bg-indigo-600 text-white px-5 py-3 rounded-xl font-black text-xs uppercase shadow-xl flex items-center gap-2 hover:bg-indigo-700"><Sparkles className="w-4 h-4" /> {isAr ? 'بدء التحليل الفوري' : 'Lancer l\'analyse'}</button>}
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 flex-wrap p-2">
+                    <button onClick={() => setImage(null)} className="bg-white/90 p-2.5 rounded-xl text-rose-600 hover:bg-white transition-all shadow-xl" title={isAr ? 'حذف الصورة' : 'Supprimer'}><RefreshCw className="w-4 h-4" /></button>
+                    <button onClick={startAnalysis} className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase shadow-xl flex items-center gap-1.5 hover:bg-indigo-700 active:scale-95 transition-all">
+                      <Sparkles className="w-4 h-4" />
+                      <span>{analysisResult ? (isAr ? 'إعادة التحليل' : 'Re-analyser') : (isAr ? 'بدء التحليل الفوري' : 'Lancer l\'analyse')}</span>
+                    </button>
+                    {analysisResult && (
+                      <button onClick={() => applyPiecePreset(3)} className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2.5 rounded-xl font-black text-xs shadow-xl flex items-center gap-1 active:scale-95 transition-all" title="Ensemble 3 Pièces">
+                        <span>🧥</span>
+                        <span>{isAr ? 'طقم 3 قطع' : '3 Pièces'}</span>
+                      </button>
+                    )}
                   </div>
                   {analyzing && (
                     <div className="absolute inset-0 bg-indigo-900/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-20">
@@ -3252,6 +3432,67 @@ ${userMessage}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
               {analysisResult ? (
                 <>
+                  {/* Multi-Piece Switcher Toolbar (1-Click Preset Switcher) */}
+                  <div className={`p-3 bg-gradient-to-r from-indigo-50/90 via-sky-50/50 to-slate-50 border border-indigo-100 rounded-2xl flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                      <div className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-xs">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-black text-slate-900 block leading-tight">
+                          {isAr ? 'تركيبة وتفصيل الموديل (Composition) :' : 'Composition du Modèle :'}
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-bold">
+                          {isAr ? 'اختر عدد القطع لإظهار استهلاك ومقاسات كل قطعة بوحدها' : 'Basculez entre 1, 2 ou 3 pièces en un clic'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => applyPiecePreset(3)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                          analysisResult.pieces && analysisResult.pieces.length === 3
+                            ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600'
+                        }`}
+                        title={isAr ? 'طقم 3 قطع: مانطو سبور طويل + سويت داخلي + سروال جوغينغ' : 'Ensemble 3 pièces'}
+                      >
+                        <span>🧥</span>
+                        <span>{isAr ? 'طقم 3 قطع (مانطو + سويت + سروال)' : '3 Pièces (Manteau+Sweat+Pantalon)'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyPiecePreset(2)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                          analysisResult.pieces && analysisResult.pieces.length === 2
+                            ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600'
+                        }`}
+                        title={isAr ? 'طقم قطعتين: هودي + سروال' : 'Ensemble 2 pièces'}
+                      >
+                        <span>👕👖</span>
+                        <span>{isAr ? 'طقم قطعتين (هودي + سروال)' : '2 Pièces (Hoodie+Jogging)'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyPiecePreset(1)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                          !analysisResult.pieces || analysisResult.pieces.length === 1
+                            ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600'
+                        }`}
+                        title={isAr ? 'قطعة واحدة منفردة' : '1 Pièce'}
+                      >
+                        <span>👕</span>
+                        <span>{isAr ? 'قطعة واحدة' : '1 Pièce'}</span>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Piece selector tabs if multiple pieces */}
                   {analysisResult.pieces && analysisResult.pieces.length > 1 && (
                     <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-slate-100">
@@ -3617,7 +3858,34 @@ ${userMessage}
               </div>
 
               {/* Chat Input Bar */}
-              <div className="p-4 bg-white border-t border-slate-200/80 flex-shrink-0">
+              <div className="p-3 bg-white border-t border-slate-200/80 flex-shrink-0 space-y-2">
+                <div className={`flex items-center gap-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'تحويل فوري:' : 'Preset :'}</span>
+                  <button
+                    type="button"
+                    onClick={() => applyPiecePreset(3)}
+                    className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-black rounded-lg border border-indigo-200/60 transition-all active:scale-95 flex items-center gap-1"
+                  >
+                    <span>🧥</span>
+                    <span>{isAr ? 'طقم 3 قطع (مانطو + سويت + سروال)' : 'Ensemble 3 Pièces'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPiecePreset(2)}
+                    className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-black rounded-lg border border-slate-200 transition-all active:scale-95 flex items-center gap-1"
+                  >
+                    <span>👕👖</span>
+                    <span>{isAr ? 'طقم قطعتين' : '2 Pièces'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPiecePreset(1)}
+                    className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-black rounded-lg border border-slate-200 transition-all active:scale-95 flex items-center gap-1"
+                  >
+                    <span>👕</span>
+                    <span>{isAr ? 'قطعة واحدة' : '1 Pièce'}</span>
+                  </button>
+                </div>
                 <form onSubmit={(e) => { e.preventDefault(); sendMsg(); }} className="flex gap-2">
                   <input
                     type="text"

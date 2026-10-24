@@ -181,6 +181,12 @@ export const getGarmentTechnicalBreakdown = (
   let catKey = categoryOverride;
   if (!catKey) {
     if (
+      text.includes('3 pièces') || text.includes('3 pieces') || text.includes('3 قطع') || text.includes('3 articles') ||
+      text.includes('3 dial') || text.includes('3dial') || text.includes('trois') || text.includes('3articles') ||
+      ((text.includes('manteau') || text.includes('veste') || text.includes('gilet') || text.includes('cardigan') || text.includes('مانطو') || text.includes('سترة') || text.includes('فيست')) && (text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('pantalon') || text.includes('سروال') || text.includes('jogging')))
+    ) {
+      catKey = 'ensemble_3_pieces';
+    } else if (
       text.includes('boxer') ||
       text.includes('caleçon') ||
       text.includes('calecon') ||
@@ -214,6 +220,7 @@ export const getGarmentTechnicalBreakdown = (
   }
 
   const consommation = customConsommation || (
+    catKey === 'ensemble_3_pieces' ? 5.2 :
     catKey === 'boxer_sous_vetement' ? 0.35 :
     catKey === 'abaya_beldi' ? 3.2 :
     catKey === 'chemise_blouse' ? 1.5 :
@@ -225,6 +232,7 @@ export const getGarmentTechnicalBreakdown = (
   );
 
   const prixMetre = customPrice || (
+    catKey === 'ensemble_3_pieces' ? 22.0 :
     catKey === 'boxer_sous_vetement' ? 18.0 :
     catKey === 'abaya_beldi' ? 15.0 :
     catKey === 'chemise_blouse' ? 18.0 :
@@ -241,7 +249,26 @@ export const getGarmentTechnicalBreakdown = (
   let categorieName = '';
   let tissuName = '';
 
-  if (catKey === 'boxer_sous_vetement') {
+  if (catKey === 'ensemble_3_pieces') {
+    categorieName = 'طقم سبوروار 3 قطع (مانطو طويل + سويت + سروال)';
+    tissuName = 'مولتون قطن مبطن / إنترلوك 280g (Molleton / Interlock)';
+    fournitures = 18.0;
+    postes = [
+      { nomAr: 'فصالة الطقم الكامل (3 قطع) بالمطلوة الصناعية وتحضير الرزم', nomFr: 'Coupe Matelas 3 Pièces & Paquets', machine: 'Table de Coupe / Ciseaux', tempsMin: 1.8, tempsPro: 1.8, tempsStandard: 3.2, tempsDebutant: 5.5, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'لصق الفيزلين للجيوب والسحاب وأطراف المانطو', nomFr: 'Thermocollage Poches, Zip & Revers', machine: 'Presse à Thermocoller', tempsMin: 1.2, tempsPro: 1.2, tempsStandard: 2.2, tempsDebutant: 4.0, roleOuvrier: 'مساعد فصالة' },
+      { nomAr: 'خياطة وتبطين كابوش المانطو الطويل وتركيب العيون', nomFr: 'Montage Capuche Doublée & Œillets', machine: 'Piqueuse Plate', tempsMin: 2.0, tempsPro: 2.0, tempsStandard: 3.5, tempsDebutant: 6.5, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب السحاب الطويل الأمامي للمانطو (Zip séparable)', nomFr: 'Montage Fermeture Éclair Séparable Manteau', machine: 'Piqueuse Plate', tempsMin: 2.5, tempsPro: 2.5, tempsStandard: 4.5, tempsDebutant: 8.0, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع أكمام وهيكل المانطو مع الفتحات الجانبية', nomFr: 'Assemblage Corps Manteau & Fentes Latérales', machine: 'Surjeteuse 4 Fils', tempsMin: 3.2, tempsPro: 3.2, tempsStandard: 5.5, tempsDebutant: 9.5, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تجميع السويت شيرت الداخلي (أكتاف، أكمام وجوانب)', nomFr: 'Assemblage T-shirt/Sweat (Épaules & Côtés)', machine: 'Surjeteuse 4 Fils', tempsMin: 2.0, tempsPro: 2.0, tempsStandard: 3.5, tempsDebutant: 6.0, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تركيب ياقة السويت شيرت مع شريط النظافة الداخلي', nomFr: 'Pose Col Rond & Bande de Propreté', machine: 'Piqueuse Plate', tempsMin: 1.4, tempsPro: 1.4, tempsStandard: 2.4, tempsDebutant: 4.2, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع ساقي السروال الرياضي (Jogging)', nomFr: 'Assemblage Jambes Jogging (Overlock)', machine: 'Surjeteuse 4 Fils', tempsMin: 2.2, tempsPro: 2.2, tempsStandard: 3.8, tempsDebutant: 6.5, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'خياطة الجيوب الجانبية الإيطالية للسروال', nomFr: 'Montage Poches Italiennes Jogging', machine: 'Piqueuse Plate', tempsMin: 2.0, tempsPro: 2.0, tempsStandard: 3.5, tempsDebutant: 6.0, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب حزام الخصر المطاطي مع الكوردون (Ceinture)', nomFr: 'Pose Ceinture Élastiquée avec Cordon', machine: 'Recouvreuse', tempsMin: 1.8, tempsPro: 1.8, tempsStandard: 3.0, tempsDebutant: 5.0, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'ثني أطراف المانطو، أساور السويت وأسفل السروال (Ourlets)', nomFr: 'Ourlets & Bord-Côte Manches/Chevilles', machine: 'Recouvreuse', tempsMin: 2.5, tempsPro: 2.5, tempsStandard: 4.2, tempsDebutant: 7.5, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'مراقبة الجودة للطقم الكامل، كيّ بالبخار وتغليف ثلاثي', nomFr: 'Contrôle Qualité 3 Pièces, Repassage & Pack', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 2.4, tempsPro: 2.4, tempsStandard: 4.0, tempsDebutant: 6.5, roleOuvrier: 'مراقب جودة وتشطيب' }
+    ];
+    recommendation = 'طقم متكامل من 3 قطع (مانطو طويل + سويت + سروال). وقت الورشة الإجمالي للحرافيين حوالي 25 دقيقة للطقم الكامل.';
+  } else if (catKey === 'boxer_sous_vetement') {
     categorieName = 'بوكسر / ملابس داخلية رجالية (Boxer / Sous-vêtement)';
     tissuName = 'قطن جيرسي ليكرا (Jersey Coton 95% + Élasthanne 5%)';
     fournitures = 3.5;
