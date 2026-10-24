@@ -3432,100 +3432,114 @@ ${userMessage}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
               {analysisResult ? (
                 <>
-                  {/* Multi-Piece Switcher Toolbar (1-Click Preset Switcher) */}
-                  <div className={`p-3 bg-gradient-to-r from-indigo-50/90 via-sky-50/50 to-slate-50 border border-indigo-100 rounded-2xl flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                      <div className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-xs">
-                        <Sparkles className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-black text-slate-900 block leading-tight">
-                          {isAr ? 'تركيبة وتفصيل الموديل (Composition) :' : 'Composition du Modèle :'}
-                        </span>
-                        <span className="text-[10px] text-slate-500 font-bold">
-                          {isAr ? 'اختر عدد القطع لإظهار استهلاك ومقاسات كل قطعة بوحدها' : 'Basculez entre 1, 2 ou 3 pièces en un clic'}
-                        </span>
-                      </div>
+                  {/* Unified Sleek Navigation Bar (Zero Duplication!) */}
+                  <div className={`p-2 sm:p-2.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    {/* Pieces Selection Tabs */}
+                    <div className={`flex items-center gap-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
+                      <span className="text-[10px] font-black text-slate-400 uppercase px-1">{isAr ? 'القطع:' : 'Pièces :'}</span>
+                      {(analysisResult.pieces && analysisResult.pieces.length > 0 ? analysisResult.pieces : [{ name: analysisResult.category }]).map((p: any, idx: number) => {
+                        const icon = idx === 0 ? '🧥' : idx === 1 ? '👕' : '👖';
+                        const isSelected = activePieceIdx === idx;
+                        const shortName = (p.name || '').split('(')[0].trim();
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setActivePieceIdx(idx);
+                              if (p.mesures?.length) setCustomMesures(p.mesures);
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                              isSelected
+                                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
+                                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                            }`}
+                          >
+                            <span>{icon}</span>
+                            <span>{shortName}</span>
+                          </button>
+                        );
+                      })}
                     </div>
 
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    {/* Compact Mode Switcher (1, 2, or 3 pieces) */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
                       <button
                         type="button"
                         onClick={() => applyPiecePreset(3)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
                           analysisResult.pieces && analysisResult.pieces.length === 3
-                            ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300'
-                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600'
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                         }`}
-                        title={isAr ? 'طقم 3 قطع: مانطو سبور طويل + سويت داخلي + سروال جوغينغ' : 'Ensemble 3 pièces'}
+                        title={isAr ? 'طقم 3 قطع (مانطو + سويت + سروال)' : '3 Pièces'}
                       >
-                        <span>🧥</span>
-                        <span>{isAr ? 'طقم 3 قطع (مانطو + سويت + سروال)' : '3 Pièces (Manteau+Sweat+Pantalon)'}</span>
+                        3 قطع
                       </button>
-
                       <button
                         type="button"
                         onClick={() => applyPiecePreset(2)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
                           analysisResult.pieces && analysisResult.pieces.length === 2
-                            ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300'
-                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600'
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                         }`}
-                        title={isAr ? 'طقم قطعتين: هودي + سروال' : 'Ensemble 2 pièces'}
+                        title={isAr ? 'طقم قطعتين (هودي + سروال)' : '2 Pièces'}
                       >
-                        <span>👕👖</span>
-                        <span>{isAr ? 'طقم قطعتين (هودي + سروال)' : '2 Pièces (Hoodie+Jogging)'}</span>
+                        قطعتين
                       </button>
-
                       <button
                         type="button"
                         onClick={() => applyPiecePreset(1)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
                           !analysisResult.pieces || analysisResult.pieces.length === 1
-                            ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300'
-                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600'
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                         }`}
-                        title={isAr ? 'قطعة واحدة منفردة' : '1 Pièce'}
+                        title={isAr ? 'قطعة واحدة' : '1 Pièce'}
                       >
-                        <span>👕</span>
-                        <span>{isAr ? 'قطعة واحدة' : '1 Pièce'}</span>
+                        قطعة 1
                       </button>
                     </div>
                   </div>
 
-                  {/* Piece selector tabs if multiple pieces */}
-                  {analysisResult.pieces && analysisResult.pieces.length > 1 && (
-                    <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-slate-100">
-                      <span className="text-xs font-black text-slate-400 uppercase">{isAr ? 'القطع المحللة:' : 'Pièces :'}</span>
-                      {analysisResult.pieces.map((p, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            setActivePieceIdx(idx);
-                            if (p.mesures?.length) setCustomMesures(p.mesures);
-                          }}
-                          className={`px-3 py-1 rounded-xl text-xs font-black transition-all ${
-                            activePieceIdx === idx
-                              ? 'bg-indigo-600 text-white shadow-sm'
-                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                          }`}
-                        >
-                          📦 {p.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Fabric & Cost Cards — one block per piece so info is shown for ALL pieces, not just the active one */}
-                  {(analysisResult.pieces && analysisResult.pieces.length > 0 ? analysisResult.pieces : [{ ...analysisResult, name: analysisResult.category }]).map((p, pIdx) => {
+                  {/* ACTIVE PIECE DISPLAY (Renders ONCE for the currently active tab — No Duplicate Cards!) */}
+                  {(() => {
+                    const pieces = analysisResult.pieces && analysisResult.pieces.length > 0
+                      ? analysisResult.pieces
+                      : [{ ...analysisResult, name: analysisResult.category }];
+                    const safeIdx = Math.min(activePieceIdx, pieces.length - 1);
+                    const p = pieces[safeIdx] || pieces[0];
                     const pFabInfo = getFabricInfo(p.fabricSuggested || analysisResult.fabricSuggested || '');
+
                     return (
-                      <div key={pIdx} className="space-y-3">
-                        {analysisResult.pieces && analysisResult.pieces.length > 1 && (
-                          <h4 className="text-sm font-black text-indigo-700 flex items-center gap-2">📦 {p.name}</h4>
+                      <div className="space-y-4">
+                        {/* Active Piece Header Callout (if multiple pieces) */}
+                        {pieces.length > 1 && (
+                          <div className={`flex items-center justify-between p-3 bg-indigo-50/90 rounded-2xl border border-indigo-100 ${isAr ? 'flex-row-reverse' : ''}`}>
+                            <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                              <span className="text-xl">{safeIdx === 0 ? '🧥' : safeIdx === 1 ? '👕' : '👖'}</span>
+                              <div>
+                                <h4 className="text-xs sm:text-sm font-black text-indigo-950 leading-tight">
+                                  {p.name}
+                                </h4>
+                                <span className="text-[10px] text-indigo-600 font-bold">
+                                  {isAr ? `عرض تفاصيل القطعة (${safeIdx + 1} من ${pieces.length})` : `Affichage de la pièce ${safeIdx + 1}/${pieces.length}`}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="px-2.5 py-1 bg-white text-indigo-700 text-xs font-black rounded-xl border border-indigo-200/80 shadow-xs">
+                                ✂️ {p.consumption || '1.50m'}
+                              </span>
+                              <span className="px-2.5 py-1 bg-emerald-600 text-white text-xs font-black rounded-xl shadow-xs">
+                                💰 {p.costEstimate || '—'}
+                              </span>
+                            </div>
+                          </div>
                         )}
 
-                        {/* Moroccan Fabric & Sourcing Card (كتالوج الأثواب المغربي) */}
+                        {/* Moroccan Fabric & Sourcing Card for the Active Piece */}
                         <div className="bg-gradient-to-br from-indigo-950/5 to-slate-50 rounded-3xl p-5 border border-indigo-100/60 shadow-sm space-y-4">
                           <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
                             <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
@@ -3635,8 +3649,8 @@ ${userMessage}
                         {/* Cost Breakdown & Complexity Card */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-                            <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">{isAr ? 'استهلاك الثوب (لعرض 1.50م)' : 'Consommation (laize 1.50m)'}</span>
-                            <p className="text-sm font-black text-slate-900">{p.consumption || '2.00 - 2.50m'}</p>
+                            <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">{isAr ? 'استهلاك الثوب للقطعة (لعرض 1.50م)' : 'Consommation (laize 1.50m)'}</span>
+                            <p className="text-sm font-black text-slate-900">{p.consumption || '1.50m'}</p>
                           </div>
                           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
                             <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">{isAr ? 'نوع القصة (Fit)' : 'Coupe & Fit'}</span>
@@ -3653,7 +3667,7 @@ ${userMessage}
                           <div className="bg-white p-4 rounded-2xl border border-slate-200">
                             <span className="text-xs font-black text-slate-500 uppercase block mb-2">{isAr ? 'مكونات وأجزاء البياسة:' : 'Composants :'}</span>
                             <div className="flex flex-wrap gap-2">
-                              {p.components.map((comp, ci) => (
+                              {p.components.map((comp: string, ci: number) => (
                                 <span key={ci} className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200/60">
                                   ✂️ {comp}
                                 </span>
@@ -3661,9 +3675,64 @@ ${userMessage}
                             </div>
                           </div>
                         )}
+
+                        {/* Clean Ensemble Summary Card (Only shown if multiple pieces exist) */}
+                        {pieces.length > 1 && (
+                          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-3xl p-4 sm:p-5 shadow-sm border border-indigo-900/60 space-y-3">
+                            <div className={`flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                              <div className={`flex items-center gap-2.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                <div className="p-2 bg-indigo-500 text-white rounded-xl shadow-xs">
+                                  <Package className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <h4 className="font-black text-xs sm:text-sm">{isAr ? 'ملخص الطقم الكامل (Ensemble 3 Pièces)' : 'Récapitulatif Ensemble Complet'}</h4>
+                                  <p className="text-[10px] text-slate-300 font-bold">{isAr ? `مجموع ${pieces.length} قطع متناسقة` : `Total des ${pieces.length} pièces réunies`}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="px-3 py-1 bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 rounded-xl text-xs font-black">
+                                  {isAr ? 'إجمالي الثوب:' : 'Métrage total:'} {analysisResult.consumption || '5.20m'}
+                                </span>
+                                <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-xl text-xs font-black">
+                                  {isAr ? 'التكلفة الإجمالية:' : 'Coût total:'} {analysisResult.costEstimate || '160 - 205 MAD'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-white/10">
+                              {pieces.map((item: any, iIdx: number) => {
+                                const iIcon = iIdx === 0 ? '🧥' : iIdx === 1 ? '👕' : '👖';
+                                const isCurrent = safeIdx === iIdx;
+                                return (
+                                  <div 
+                                    key={iIdx}
+                                    onClick={() => {
+                                      setActivePieceIdx(iIdx);
+                                      if (item.mesures?.length) setCustomMesures(item.mesures);
+                                    }}
+                                    className={`p-2.5 rounded-xl border cursor-pointer transition-all ${
+                                      isCurrent 
+                                        ? 'bg-white/20 border-indigo-400 ring-2 ring-indigo-400' 
+                                        : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between text-xs font-black">
+                                      <span className="truncate">{iIcon} {item.name.split('(')[0]}</span>
+                                      <span className="text-indigo-300 text-[11px]">{item.consumption}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] text-slate-300 font-bold mt-1">
+                                      <span>{item.fit}</span>
+                                      <span className="text-emerald-400 font-black">{item.costEstimate}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
-                  })}
+                  })()}
 
                   {/* Compact Gamme Callout Banner (Clickable to switch to the dedicated Gamme tab) */}
                   {(() => {
