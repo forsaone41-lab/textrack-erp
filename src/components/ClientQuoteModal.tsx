@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Printer, Download, Send, MessageCircle, FileText, Check, Plus, Trash2, 
   Sparkles, DollarSign, Clock, ShieldCheck, Ruler, Building, Phone, MapPin, 
-  Percent, Copy, CheckCircle2, ChevronRight, Layers, Tag
+  Percent, Copy, CheckCircle2, ChevronRight, Layers, Tag, Eye
 } from 'lucide-react';
 import { loadCompanyProfile, saveRecord, genId, Facture } from '../types';
 import { printElement } from '../utils/pdf';
@@ -39,6 +39,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
   const company = loadCompanyProfile();
 
   // ─── STATE ──────────────────────────────────────────────────────────
+  const [docMode, setDocMode] = useState<'devis' | 'fiche' | 'both'>('devis');
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [clientCity, setClientCity] = useState('');
@@ -47,7 +48,6 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
   const [validityDays, setValidityDays] = useState(30);
   const [delaiConfection, setDelaiConfection] = useState('');
   const [conditions, setConditions] = useState('');
-  const [showMesuresGuide, setShowMesuresGuide] = useState(true);
   const [showTva, setShowTva] = useState(false);
   const [tvaRate, setTvaRate] = useState(20);
   const [articles, setArticles] = useState<ClientQuoteArticle[]>([]);
@@ -63,6 +63,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
     const dateToday = new Date().toISOString().split('T')[0];
     const refCode = `DEV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    setDocMode('devis'); // Default to clean, un-cluttered 1-page Devis
     setDevisRef(refCode);
     setDevisDate(dateToday);
     setClientName(isAr ? 'الزبون / العلامة التجارية' : 'Client / Marque Partenaire');
@@ -80,7 +81,6 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
       if (analysisResult.pieces && analysisResult.pieces.length > 0) {
         const loaded = analysisResult.pieces.map((p: any, idx: number) => {
           let cleanFabric = p.fabricSuggested || '';
-          // Strip internal addresses / phone numbers / raw cost hints for client presentation
           cleanFabric = cleanFabric
             .replace(/\(.*?\)/g, '')
             .replace(/درب عمر|القريعة|المسيرة|Derb Omar|Griaa/gi, '')
@@ -90,7 +90,6 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
           }
 
           const rawCost = parseFloat(String(p.costEstimate || '0').match(/[\d.]+/)?.[0] || '70') || 70;
-          // Apply 50% margin rounded to 5 MAD
           const sellingPrice = Math.max(20, Math.round((rawCost * 1.5) / 5) * 5);
 
           return {
@@ -180,14 +179,13 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
 
   // ─── PRINT / PDF EXPORT ─────────────────────────────────────────────
   const handlePrintPDF = () => {
-    // Uses the robust printElement utility
     printElement('beya-client-proposal-a4');
   };
 
   // ─── WHATSAPP SHARING ───────────────────────────────────────────────
   const handleShareWhatsApp = () => {
-    const piecesSummary = articles.map((a, i) => 
-      `• *${a.name}*: ${a.quantity} pcs × ${a.unitPrice} MAD (Thoub: ${a.fabricCommercial}) = ${(a.quantity * a.unitPrice).toLocaleString()} MAD`
+    const piecesSummary = articles.map(a => 
+      `• *${a.name}*: ${a.quantity} pcs × ${a.unitPrice} MAD (Tissu: ${a.fabricCommercial}) = ${(a.quantity * a.unitPrice).toLocaleString()} MAD`
     ).join('\n');
 
     const msg = isAr
@@ -279,8 +277,8 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
               </div>
               <p className="text-xs text-slate-400 font-medium">
                 {isAr
-                  ? 'تخصيص كامل للأثواب والأسعار التجارية مع حجب أسرار التكلفة والورشة عن الزبون'
-                  : 'Fiche commerciale épurée sans révéler vos marges, prix de gros ou SAM internes'}
+                  ? 'فصل ورقة الدوڤي المالي على ورقة المقاسات والفيش تكنيك بوضوح تام'
+                  : 'Séparation nette du Devis commercial et de la Fiche Technique / Mesures'}
               </p>
             </div>
           </div>
@@ -336,10 +334,52 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
         <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 bg-slate-950">
           
           {/* ── LEFT PANEL: LIVE CONTROLS & CUSTOMIZATION (5 cols) ── */}
-          <div className="lg:col-span-5 p-4 md:p-6 overflow-y-auto border-b lg:border-b-0 lg:border-r border-slate-800 space-y-5 custom-scrollbar">
+          <div className="lg:col-span-5 p-4 md:p-6 overflow-y-auto border-b lg:border-b-0 lg:border-r border-slate-800 space-y-4 custom-scrollbar">
             
+            {/* Document Mode Selector in Left Panel */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-2">
+              <label className="block text-[10px] font-black uppercase text-indigo-400 tracking-wider">
+                {isAr ? 'نوع الوثيقة المراد تجهيزها للزبون:' : 'Type de document pour le client :'}
+              </label>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setDocMode('devis')}
+                  className={`py-2 px-2 text-center rounded-xl text-xs font-black transition-all ${
+                    docMode === 'devis'
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-white/20'
+                      : 'bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  {isAr ? '📄 دوڤي فقط' : '📄 Devis Seul'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDocMode('fiche')}
+                  className={`py-2 px-2 text-center rounded-xl text-xs font-black transition-all ${
+                    docMode === 'fiche'
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-1 ring-white/20'
+                      : 'bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  {isAr ? '📐 مقاسات فقط' : '📐 Fiche Tailles'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDocMode('both')}
+                  className={`py-2 px-2 text-center rounded-xl text-xs font-black transition-all ${
+                    docMode === 'both'
+                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 ring-1 ring-white/20'
+                      : 'bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  {isAr ? '📑 ملف كامل' : '📑 Pack 2 Pages'}
+                </button>
+              </div>
+            </div>
+
             {/* Quick Margin Presets Banner */}
-            <div className="p-3.5 bg-gradient-to-r from-indigo-950/70 to-slate-900 border border-indigo-800/40 rounded-2xl">
+            <div className="p-3 bg-gradient-to-r from-indigo-950/70 to-slate-900 border border-indigo-800/40 rounded-2xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5 text-xs font-black text-indigo-300">
                   <Percent className="w-3.5 h-3.5" />
@@ -575,18 +615,8 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
                 />
               </div>
 
-              {/* Toggles */}
-              <div className="pt-2 border-t border-slate-800 space-y-2">
-                <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-300 font-medium select-none">
-                  <input
-                    type="checkbox"
-                    checked={showMesuresGuide}
-                    onChange={e => setShowMesuresGuide(e.target.checked)}
-                    className="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 bg-slate-950"
-                  />
-                  <span>{isAr ? 'إدراج جدول المقاسات S إلى XXL في الوثيقة' : 'Inclure le Guide des Tailles (S à XXL)'}</span>
-                </label>
-
+              {/* TVA Toggle */}
+              <div className="pt-2 border-t border-slate-800">
                 <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-300 font-medium select-none">
                   <input
                     type="checkbox"
@@ -602,210 +632,392 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
           </div>
 
           {/* ── RIGHT PANEL: LIVE LUXURY A4 DOCUMENT PREVIEW (7 cols) ── */}
-          <div className="lg:col-span-7 bg-slate-950 p-4 md:p-6 overflow-y-auto flex justify-center custom-scrollbar">
+          <div className="lg:col-span-7 bg-slate-950 p-4 md:p-6 overflow-y-auto flex flex-col items-center custom-scrollbar">
             
+            {/* Quick Document View Mode Selector Tab Bar */}
+            <div className="w-full max-w-2xl mb-4 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl flex items-center justify-between gap-1 shadow-lg">
+              <button
+                type="button"
+                onClick={() => setDocMode('devis')}
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                  docMode === 'devis'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>{isAr ? '1. ورقة الدوڤي المالي فقط (Page 1)' : '1. Devis Chiffré Seul (Page 1)'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDocMode('fiche')}
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                  docMode === 'fiche'
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <Ruler className="w-3.5 h-3.5" />
+                <span>{isAr ? '2. ورقة المقاسات فقط (Page 2)' : '2. Fiche Tailles Seule (Page 2)'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDocMode('both')}
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                  docMode === 'both'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>{isAr ? '3. الملف الكامل (صفحتين A4)' : '3. Dossier Complet (2 Pages)'}</span>
+              </button>
+            </div>
+
             {/* The printable A4 Container */}
             <div 
               id="beya-client-proposal-a4" 
-              className="bg-white text-slate-900 rounded-xl shadow-2xl p-6 sm:p-8 w-full max-w-2xl font-sans text-xs border border-slate-200"
-              style={{ minHeight: '800px' }}
+              className="w-full max-w-2xl font-sans text-xs space-y-6"
             >
               
-              {/* Document Header */}
-              <div className="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-5">
-                <div>
-                  {(company.logoInvoice || company.logoUrl) ? (
-                    <img src={company.logoInvoice || company.logoUrl} alt={company.name} className="h-10 object-contain mb-2" />
-                  ) : (
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-sm">
-                        B
+              {/* ══════════════════════════════════════════════════════════════
+                  PAGE 1: LE DEVIS COMMERCIAL & ESTIMATIF PUR (1 PAGE PRO)
+                  ══════════════════════════════════════════════════════════════ */}
+              {(docMode === 'devis' || docMode === 'both') && (
+                <div className="bg-white text-slate-900 rounded-xl shadow-2xl p-6 sm:p-8 w-full border border-slate-200" style={{ minHeight: '800px' }}>
+                  {/* Document Header */}
+                  <div className="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-5">
+                    <div>
+                      {(company.logoInvoice || company.logoUrl) ? (
+                        <img src={company.logoInvoice || company.logoUrl} alt={company.name} className="h-10 object-contain mb-2" />
+                      ) : (
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-sm">
+                            B
+                          </div>
+                          <span className="text-base font-black tracking-tight text-slate-900 uppercase">
+                            {company.name || 'BEYA ATELIER'}
+                          </span>
+                        </div>
+                      )}
+                      <p className="text-[11px] font-bold text-slate-600">{company.subtitle || 'Atelier de Modélisme & Confection Textile'}</p>
+                      <p className="text-[10px] text-slate-500">{company.address || 'Casablanca, Maroc'}</p>
+                      <p className="text-[10px] text-slate-500">Tél: {company.phone || '0661000000'} | {company.email || 'contact@beya.ma'}</p>
+                      {(company.ice || company.rc) && (
+                        <p className="text-[9px] text-slate-400 font-mono mt-0.5">
+                          {company.ice ? `ICE: ${company.ice}` : ''} {company.rc ? `| RC: ${company.rc}` : ''}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="text-right">
+                      <span className="inline-block px-3 py-1 bg-slate-900 text-white text-[10px] font-black rounded-md tracking-wider uppercase mb-2">
+                        {isAr ? 'عرض سعر تجاري' : 'DEVIS ESTIMATIF'}
+                      </span>
+                      <div className="text-sm font-black text-slate-900 font-mono">{devisRef}</div>
+                      <div className="text-[10px] text-slate-500 mt-1">Date: {devisDate}</div>
+                      <div className="text-[10px] text-slate-500">Validité: {validityDays} jours</div>
+                    </div>
+                  </div>
+
+                  {/* Client & Reference Info Box */}
+                  <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200 mb-5">
+                    <div>
+                      <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Destinataire / Client :</div>
+                      <div className="font-black text-slate-900 text-xs">{clientName || 'Client Partenaire'}</div>
+                      {clientPhone && <div className="text-[10px] text-slate-600 font-mono">{clientPhone}</div>}
+                      {clientCity && <div className="text-[10px] text-slate-500">{clientCity}</div>}
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Projet & Modèle :</div>
+                      <div className="font-black text-indigo-700 text-xs">{analysisResult?.category || 'Ensemble Confection'}</div>
+                      <div className="text-[10px] text-slate-600 font-bold">{totalPiecesCount} pièces au total</div>
+                      <div className="text-[10px] text-emerald-700 font-bold">{delaiConfection}</div>
+                    </div>
+                  </div>
+
+                  {/* Garment Visual & Compact Presentation */}
+                  {modelImage && (
+                    <div className="flex gap-4 p-3 bg-white rounded-xl border border-slate-200 mb-5 items-center">
+                      <div className="w-18 h-22 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 bg-slate-100 relative">
+                        <img src={modelImage} alt="Modèle" className="w-full h-full object-cover" />
+                        <div className="absolute top-1 left-1 bg-slate-900/80 text-white text-[7px] font-black px-1 py-0.2 rounded">
+                          RÉF
+                        </div>
                       </div>
-                      <span className="text-base font-black tracking-tight text-slate-900 uppercase">
-                        {company.name || 'BEYA ATELIER'}
-                      </span>
+                      <div className="flex-1 text-left">
+                        <div className="text-xs font-black text-slate-900 uppercase">
+                          {analysisResult?.category || 'Modèle Référence Confection'}
+                        </div>
+                        <p className="text-[10px] text-slate-600 mt-1 leading-relaxed">
+                          Confection soignée en atelier professionnel : patronage industriel assisté par IA, finitions soignées, surpiqûres de renfort et repassage vapeur sous pli.
+                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
+                            <ShieldCheck className="w-3 h-3 text-indigo-600" />
+                            Qualité Contrôlée
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            Échantillon Prototype Validé
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   )}
-                  <p className="text-[11px] font-bold text-slate-600">{company.subtitle || 'Atelier de Modélisme & Confection Textile'}</p>
-                  <p className="text-[10px] text-slate-500">{company.address || 'Casablanca, Maroc'}</p>
-                  <p className="text-[10px] text-slate-500">Tél: {company.phone || '0661000000'} | {company.email || 'contact@beya.ma'}</p>
-                  {(company.ice || company.rc) && (
-                    <p className="text-[9px] text-slate-400 font-mono mt-0.5">
-                      {company.ice ? `ICE: ${company.ice}` : ''} {company.rc ? `| RC: ${company.rc}` : ''}
-                    </p>
-                  )}
-                </div>
 
-                <div className="text-right">
-                  <span className="inline-block px-3 py-1 bg-slate-900 text-white text-[10px] font-black rounded-md tracking-wider uppercase mb-2">
-                    {isAr ? 'عرض سعر تجاري' : 'DEVIS ESTIMATIF'}
-                  </span>
-                  <div className="text-sm font-black text-slate-900 font-mono">{devisRef}</div>
-                  <div className="text-[10px] text-slate-500 mt-1">Date: {devisDate}</div>
-                  <div className="text-[10px] text-slate-500">Validité: {validityDays} jours</div>
-                </div>
-              </div>
+                  {/* Items Quotation Table */}
+                  <div className="mb-5 overflow-hidden rounded-xl border border-slate-200">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-900 text-white text-[9px] uppercase tracking-wider">
+                          <th className="py-2.5 px-3 font-black">#</th>
+                          <th className="py-2.5 px-3 font-black">Désignation / Article</th>
+                          <th className="py-2.5 px-3 font-black">Tissu Recommandé</th>
+                          <th className="py-2.5 px-3 font-black text-center">Quantité</th>
+                          <th className="py-2.5 px-3 font-black text-right">P.U (MAD)</th>
+                          <th className="py-2.5 px-3 font-black text-right">Total (MAD)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 text-[10px]">
+                        {articles.map((art, idx) => (
+                          <tr key={art.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
+                            <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
+                            <td className="py-2.5 px-3 font-black text-slate-900">{art.name}</td>
+                            <td className="py-2.5 px-3 text-slate-700 font-medium">{art.fabricCommercial}</td>
+                            <td className="py-2.5 px-3 text-center font-bold text-slate-900">{art.quantity}</td>
+                            <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-700">{art.unitPrice}</td>
+                            <td className="py-2.5 px-3 text-right font-mono font-black text-slate-900">
+                              {((art.quantity || 0) * (art.unitPrice || 0)).toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-              {/* Client & Reference Info Box */}
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200 mb-5">
-                <div>
-                  <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Destinataire / Client :</div>
-                  <div className="font-black text-slate-900 text-xs">{clientName || 'Client Partenaire'}</div>
-                  {clientPhone && <div className="text-[10px] text-slate-600 font-mono">{clientPhone}</div>}
-                  {clientCity && <div className="text-[10px] text-slate-500">{clientCity}</div>}
-                </div>
-
-                <div className="text-right">
-                  <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Projet & Modèle :</div>
-                  <div className="font-black text-indigo-700 text-xs">{analysisResult?.category || 'Ensemble Confection'}</div>
-                  <div className="text-[10px] text-slate-600 font-bold">{totalPiecesCount} pièces au total</div>
-                  <div className="text-[10px] text-emerald-700 font-bold">{delaiConfection}</div>
-                </div>
-              </div>
-
-              {/* Garment Visual & Presentation Card */}
-              {modelImage && (
-                <div className="flex gap-4 p-3 bg-white rounded-xl border border-slate-200 mb-5 items-center">
-                  <div className="w-20 h-24 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 bg-slate-100 relative">
-                    <img src={modelImage} alt="Modèle" className="w-full h-full object-cover" />
-                    <div className="absolute top-1 left-1 bg-slate-900/80 text-white text-[7px] font-black px-1 py-0.2 rounded">
-                      RÉF
+                  {/* Totals Summary */}
+                  <div className="flex justify-end mb-5">
+                    <div className="w-64 space-y-1.5 text-right text-[11px]">
+                      <div className="flex justify-between text-slate-600">
+                        <span className="font-bold">Sous-Total HT :</span>
+                        <span className="font-mono font-black text-slate-900">{totalHT.toLocaleString()} MAD</span>
+                      </div>
+                      {showTva ? (
+                        <div className="flex justify-between text-slate-600">
+                          <span className="font-bold">TVA ({tvaRate}%) :</span>
+                          <span className="font-mono font-black text-slate-900">{totalTVA.toLocaleString()} MAD</span>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between text-[10px] text-slate-400">
+                          <span>Régime TVA :</span>
+                          <span>Exonéré / Franchise</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center pt-2 border-t-2 border-slate-900 text-sm font-black text-slate-900">
+                        <span>NET À PAYER :</span>
+                        <span className="text-base text-emerald-700 font-mono font-black">
+                          {totalTTC.toLocaleString()} MAD
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex-1 text-left">
-                    <div className="text-xs font-black text-slate-900 uppercase">
-                      {analysisResult?.category || 'Modèle Référence'}
+
+                  {/* Conditions & Terms */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 mb-6 space-y-1 text-[10px] text-slate-600">
+                    <div><strong>Délai de Confection :</strong> {delaiConfection}</div>
+                    <div><strong>Conditions :</strong> {conditions}</div>
+                    <div><strong>Validité du Devis :</strong> {validityDays} jours à compter de la date d'émission.</div>
+                  </div>
+
+                  {/* Signatures & Seal Box */}
+                  <div className="grid grid-cols-2 gap-8 pt-4 border-t border-slate-200 text-[10px]">
+                    <div className="border border-dashed border-slate-300 rounded-xl p-3 h-24 flex flex-col justify-between">
+                      <span className="font-bold text-slate-500">Cachet & Signature de l'Atelier :</span>
+                      <span className="text-[9px] text-slate-400 font-mono">{company.name || 'BEYA ATELIER'}</span>
                     </div>
-                    <p className="text-[10px] text-slate-600 mt-1 leading-relaxed">
-                      Confection soignée en atelier professionnel : assemblage haute résistance, surpiqûres de renfort, finitions soignées et repassage vapeur avant emballage sous pli.
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
-                        <ShieldCheck className="w-3 h-3 text-indigo-600" />
-                        Qualité Contrôlée
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                        <Check className="w-3 h-3 text-emerald-600" />
-                        Échantillon Prototype Validé
-                      </span>
+
+                    <div className="border border-dashed border-slate-300 rounded-xl p-3 h-24 flex flex-col justify-between text-right">
+                      <span className="font-bold text-slate-500">Bon pour Accord & Commande :</span>
+                      <span className="text-[9px] text-slate-400">Date & Signature du Client</span>
                     </div>
+                  </div>
+
+                  {/* Footer Note */}
+                  <div className="mt-6 pt-3 border-t border-slate-100 flex justify-between text-[8px] text-slate-400">
+                    <span>Document officiel de chiffrage commercial · BEYA TACTICAL HUD ERP</span>
+                    <span>Page 1/1</span>
                   </div>
                 </div>
               )}
 
-              {/* Items Quotation Table */}
-              <div className="mb-5 overflow-hidden rounded-xl border border-slate-200">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-900 text-white text-[9px] uppercase tracking-wider">
-                      <th className="py-2.5 px-3 font-black">#</th>
-                      <th className="py-2.5 px-3 font-black">Désignation / Article</th>
-                      <th className="py-2.5 px-3 font-black">Tissu Recommandé</th>
-                      <th className="py-2.5 px-3 font-black text-center">Quantité</th>
-                      <th className="py-2.5 px-3 font-black text-right">P.U (MAD)</th>
-                      <th className="py-2.5 px-3 font-black text-right">Total (MAD)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 text-[10px]">
-                    {articles.map((art, idx) => (
-                      <tr key={art.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
-                        <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-black text-slate-900">{art.name}</td>
-                        <td className="py-2.5 px-3 text-slate-700 font-medium">{art.fabricCommercial}</td>
-                        <td className="py-2.5 px-3 text-center font-bold text-slate-900">{art.quantity}</td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-700">{art.unitPrice}</td>
-                        <td className="py-2.5 px-3 text-right font-mono font-black text-slate-900">
-                          {((art.quantity || 0) * (art.unitPrice || 0)).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Totals Summary */}
-              <div className="flex justify-end mb-5">
-                <div className="w-64 space-y-1.5 text-right text-[11px]">
-                  <div className="flex justify-between text-slate-600">
-                    <span className="font-bold">Sous-Total HT :</span>
-                    <span className="font-mono font-black text-slate-900">{totalHT.toLocaleString()} MAD</span>
-                  </div>
-                  {showTva ? (
-                    <div className="flex justify-between text-slate-600">
-                      <span className="font-bold">TVA ({tvaRate}%) :</span>
-                      <span className="font-mono font-black text-slate-900">{totalTVA.toLocaleString()} MAD</span>
+              {/* ══════════════════════════════════════════════════════════════
+                  PAGE 2: LA FICHE TECHNIQUE & GUIDE DES TAILLES CLIENT
+                  ══════════════════════════════════════════════════════════════ */}
+              {(docMode === 'fiche' || docMode === 'both') && (
+                <div 
+                  className="bg-white text-slate-900 rounded-xl shadow-2xl p-6 sm:p-8 w-full border border-slate-200" 
+                  style={{ minHeight: '800px', pageBreakBefore: docMode === 'both' ? 'always' : 'auto' }}
+                >
+                  {/* Header Fiche Technique */}
+                  <div className="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-5">
+                    <div>
+                      {(company.logoInvoice || company.logoUrl) ? (
+                        <img src={company.logoInvoice || company.logoUrl} alt={company.name} className="h-10 object-contain mb-2" />
+                      ) : (
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-sm">
+                            B
+                          </div>
+                          <span className="text-base font-black tracking-tight text-slate-900 uppercase">
+                            {company.name || 'BEYA ATELIER'}
+                          </span>
+                        </div>
+                      )}
+                      <p className="text-[11px] font-bold text-slate-600">{company.subtitle || 'Atelier de Modélisme & Confection Textile'}</p>
+                      <p className="text-[10px] text-slate-500">{company.address || 'Casablanca, Maroc'}</p>
                     </div>
-                  ) : (
-                    <div className="flex justify-between text-[10px] text-slate-400">
-                      <span>Régime TVA :</span>
-                      <span>Exonéré / Franchise</span>
+
+                    <div className="text-right">
+                      <span className="inline-block px-3 py-1 bg-indigo-700 text-white text-[10px] font-black rounded-md tracking-wider uppercase mb-2">
+                        {isAr ? 'بطاقة المواصفات والمقاسات' : 'FICHE TECHNIQUE & TAILLES'}
+                      </span>
+                      <div className="text-sm font-black text-slate-900 font-mono">FT-{devisRef}</div>
+                      <div className="text-[10px] text-slate-500 mt-1">Date: {devisDate}</div>
+                      <div className="text-[10px] text-slate-500">Client: {clientName || 'Client Partenaire'}</div>
                     </div>
-                  )}
-                  <div className="flex justify-between items-center pt-2 border-t-2 border-slate-900 text-sm font-black text-slate-900">
-                    <span>NET À PAYER :</span>
-                    <span className="text-base text-emerald-700 font-mono font-black">
-                      {totalTTC.toLocaleString()} MAD
-                    </span>
                   </div>
-                </div>
-              </div>
 
-              {/* Standard Size Guide Table (if enabled) */}
-              {showMesuresGuide && (
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 mb-5">
-                  <div className="text-[9px] font-black uppercase tracking-wider text-slate-600 mb-2 flex items-center gap-1.5">
-                    <Ruler className="w-3 h-3 text-indigo-600" />
-                    <span>Guide des Mensurations Standards Prêt-à-Porter (Pour Validation Client) :</span>
+                  {/* Main Product Showcase Block */}
+                  <div className="grid grid-cols-12 gap-5 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div className="col-span-4 flex justify-center">
+                      {modelImage ? (
+                        <div className="w-full h-52 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+                          <img src={modelImage} alt="Modèle" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-full h-52 rounded-xl bg-slate-200 flex items-center justify-center text-slate-400 font-bold text-xs">
+                          Photo Modèle
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="col-span-8 space-y-3">
+                      <div>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-indigo-600">Désignation du Modèle :</span>
+                        <h3 className="text-sm font-black text-slate-900 uppercase">{analysisResult?.category || 'Modèle Confection'}</h3>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-[10px]">
+                        <div className="p-2 bg-white rounded-lg border border-slate-200">
+                          <span className="text-[9px] font-bold text-slate-400 block">Tissus Sélectionnés :</span>
+                          <span className="font-black text-slate-800">{articles.map(a => a.fabricCommercial).filter(Boolean).join(' + ') || 'Tissu Supérieur'}</span>
+                        </div>
+                        <div className="p-2 bg-white rounded-lg border border-slate-200">
+                          <span className="text-[9px] font-bold text-slate-400 block">Type de Coupe :</span>
+                          <span className="font-black text-slate-800">{analysisResult?.fit || 'Coupe Régulière / Standard'}</span>
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 bg-white rounded-lg border border-slate-200 text-[10px]">
+                        <span className="text-[9px] font-bold text-slate-400 block mb-1">Finitions & Confection Atelier :</span>
+                        <p className="text-slate-600 leading-relaxed">
+                          • Assemblage haute précision par piqueuse plate et surjeteuse safety 5 fils.<br />
+                          • Surpiqûres doubles aiguilles sur les zones de tension et poches.<br />
+                          • Repassage vapeur professionnel et contrôle qualité avant mise sous pli individuelle.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-6 gap-1 text-center text-[9px]">
-                    <div className="bg-slate-200 text-slate-700 font-black py-1 rounded">Taille</div>
-                    <div className="bg-slate-200 text-slate-700 font-black py-1 rounded">S (36-38)</div>
-                    <div className="bg-slate-200 text-slate-700 font-black py-1 rounded">M (38-40)</div>
-                    <div className="bg-slate-200 text-slate-700 font-black py-1 rounded">L (42-44)</div>
-                    <div className="bg-slate-200 text-slate-700 font-black py-1 rounded">XL (46)</div>
-                    <div className="bg-slate-200 text-slate-700 font-black py-1 rounded">XXL (48)</div>
 
-                    <div className="bg-white font-bold py-1 border border-slate-200 text-slate-500">Poitrine</div>
-                    <div className="bg-white font-mono py-1 border border-slate-200">88-92 cm</div>
-                    <div className="bg-white font-mono py-1 border border-slate-200">94-98 cm</div>
-                    <div className="bg-white font-mono py-1 border border-slate-200">100-104 cm</div>
-                    <div className="bg-white font-mono py-1 border border-slate-200">106-110 cm</div>
-                    <div className="bg-white font-mono py-1 border border-slate-200">112-116 cm</div>
+                  {/* Standard Size Guide Table */}
+                  <div className="p-4 bg-white rounded-xl border border-slate-200 mb-6 shadow-xs">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-800 mb-2.5 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Ruler className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Barème des Mensurations du Vêtement (En Centimètres) :</span>
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-bold font-mono">Tolérance: +/- 1.5 cm</span>
+                    </div>
 
-                    <div className="bg-white font-bold py-1 border border-slate-200 text-slate-500">Bassin</div>
-                    <div className="bg-white font-mono py-1 border border-slate-200">92-96 cm</div>
-                    <div className="bg-white font-mono py-1 border border-slate-200">98-102 cm</div>
-                    <div className="bg-white font-mono py-1 border border-slate-200">104-108 cm</div>
-                    <div className="bg-white font-mono py-1 border border-slate-200">110-114 cm</div>
-                    <div className="bg-white font-mono py-1 border border-slate-200">116-120 cm</div>
+                    <div className="overflow-hidden rounded-lg border border-slate-200">
+                      <table className="w-full text-center border-collapse text-[10px]">
+                        <thead>
+                          <tr className="bg-slate-900 text-white font-black text-[9px] uppercase tracking-wider">
+                            <th className="py-2 px-2 text-left">Point de Mesure</th>
+                            <th className="py-2 px-2">S (36-38)</th>
+                            <th className="py-2 px-2">M (38-40)</th>
+                            <th className="py-2 px-2">L (42-44)</th>
+                            <th className="py-2 px-2">XL (46)</th>
+                            <th className="py-2 px-2">XXL (48)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          <tr>
+                            <td className="py-2 px-2 text-left font-bold text-slate-700 bg-slate-50">Tour de Poitrine</td>
+                            <td className="py-2 px-2 font-mono">88 - 92 cm</td>
+                            <td className="py-2 px-2 font-mono">94 - 98 cm</td>
+                            <td className="py-2 px-2 font-mono">100 - 104 cm</td>
+                            <td className="py-2 px-2 font-mono">106 - 110 cm</td>
+                            <td className="py-2 px-2 font-mono">112 - 116 cm</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-2 text-left font-bold text-slate-700 bg-slate-50">Tour de Taille</td>
+                            <td className="py-2 px-2 font-mono">70 - 74 cm</td>
+                            <td className="py-2 px-2 font-mono">76 - 80 cm</td>
+                            <td className="py-2 px-2 font-mono">82 - 86 cm</td>
+                            <td className="py-2 px-2 font-mono">88 - 92 cm</td>
+                            <td className="py-2 px-2 font-mono">94 - 98 cm</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-2 text-left font-bold text-slate-700 bg-slate-50">Tour de Bassin / Hanche</td>
+                            <td className="py-2 px-2 font-mono">92 - 96 cm</td>
+                            <td className="py-2 px-2 font-mono">98 - 102 cm</td>
+                            <td className="py-2 px-2 font-mono">104 - 108 cm</td>
+                            <td className="py-2 px-2 font-mono">110 - 114 cm</td>
+                            <td className="py-2 px-2 font-mono">116 - 120 cm</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-2 text-left font-bold text-slate-700 bg-slate-50">Longueur Totale du Vêtement</td>
+                            <td className="py-2 px-2 font-mono">68 - 70 cm</td>
+                            <td className="py-2 px-2 font-mono">70 - 72 cm</td>
+                            <td className="py-2 px-2 font-mono">72 - 74 cm</td>
+                            <td className="py-2 px-2 font-mono">74 - 76 cm</td>
+                            <td className="py-2 px-2 font-mono">76 - 78 cm</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Validation Agreement */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 mb-6 text-[10px] text-slate-600 leading-relaxed">
+                    <strong>Validation du Modèle :</strong> La signature de cette fiche technique atteste de la validation définitive des spécifications tissu, des matières et du barème des mensurations pour le lancement en confection industrielle.
+                  </div>
+
+                  {/* Signatures & Seal Box */}
+                  <div className="grid grid-cols-2 gap-8 pt-4 border-t border-slate-200 text-[10px]">
+                    <div className="border border-dashed border-slate-300 rounded-xl p-3 h-24 flex flex-col justify-between">
+                      <span className="font-bold text-slate-500">Validation Modéliste Atelier :</span>
+                      <span className="text-[9px] text-slate-400 font-mono">Conforme aux spécifications · BEYA</span>
+                    </div>
+
+                    <div className="border border-dashed border-slate-300 rounded-xl p-3 h-24 flex flex-col justify-between text-right">
+                      <span className="font-bold text-slate-500">Bon pour Coupe & Confection :</span>
+                      <span className="text-[9px] text-slate-400">Date & Signature du Client</span>
+                    </div>
+                  </div>
+
+                  {/* Footer Note */}
+                  <div className="mt-6 pt-3 border-t border-slate-100 flex justify-between text-[8px] text-slate-400">
+                    <span>Fiche Technique & Barème Tailles · BEYA TACTICAL HUD ERP</span>
+                    <span>Page {docMode === 'both' ? '2/2' : '1/1'}</span>
                   </div>
                 </div>
               )}
-
-              {/* Conditions & Terms */}
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 mb-6 space-y-1 text-[10px] text-slate-600">
-                <div><strong>Délai de Confection :</strong> {delaiConfection}</div>
-                <div><strong>Conditions :</strong> {conditions}</div>
-                <div><strong>Validité du Devis :</strong> {validityDays} jours à compter de la date d'émission.</div>
-              </div>
-
-              {/* Signatures & Seal Box */}
-              <div className="grid grid-cols-2 gap-8 pt-4 border-t border-slate-200 text-[10px]">
-                <div className="border border-dashed border-slate-300 rounded-xl p-3 h-24 flex flex-col justify-between">
-                  <span className="font-bold text-slate-500">Cachet & Signature de l'Atelier :</span>
-                  <span className="text-[9px] text-slate-400 font-mono">{company.name || 'BEYA ATELIER'}</span>
-                </div>
-
-                <div className="border border-dashed border-slate-300 rounded-xl p-3 h-24 flex flex-col justify-between text-right">
-                  <span className="font-bold text-slate-500">Bon pour Accord & Commande :</span>
-                  <span className="text-[9px] text-slate-400">Date & Signature du Client</span>
-                </div>
-              </div>
-
-              {/* Footer Note */}
-              <div className="mt-6 pt-3 border-t border-slate-100 text-center text-[8px] text-slate-400">
-                Document commercial généré par BEYA TACTICAL HUD ERP · Confection & Modélisme Professionnel
-              </div>
 
             </div>
 
