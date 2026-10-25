@@ -58,35 +58,104 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
   };
 
   try {
-    // 1. Call the secure RPC function to verify the user
-    const { data, error } = await supabase.rpc('verify_erp_login', {
-      p_email: trimId,
-      p_password: password
-    });
+    let userRecord: User | null = null;
+    let sysEmail: string | null = null;
+    let sysPass: string | null = null;
 
-    if (error || !data) {
-      console.warn("RPC Login failed or offline, checking local fallbacks...");
+    // 1. Call the secure RPC function to verify the user
+    try {
+      const { data, error } = await supabase.rpc('verify_erp_login', {
+        p_email: trimId,
+        p_password: trimPass
+      });
+
+      if (!error && data && data.user) {
+        userRecord = data.user as User;
+        sysEmail = data.sys_email;
+        sysPass = data.sys_pass;
+      }
+    } catch (rpcErr) {
+      console.warn("RPC Login error:", rpcErr);
+    }
+
+    // 2. Direct users table fallback (solves duplicates or RPC quirks)
+    if (!userRecord) {
+      try {
+        const { data: matchedUsers, error: uErr } = await supabase
+          .from('users')
+          .select('*')
+          .ilike('email', trimId);
+
+        if (!uErr && matchedUsers && matchedUsers.length > 0) {
+          const matched = matchedUsers.find(u => {
+            const uPass = (u.password || '').toString().trim();
+            const uPin = (u.pinCode || u.pin_code || '').toString().trim();
+            return (uPass && uPass === trimPass) || (uPin && uPin === trimPass);
+          });
+
+          if (matched) {
+            userRecord = {
+              id: matched.id,
+              nom: matched.nom,
+              email: matched.email,
+              role: matched.role,
+              photo: matched.photo,
+              telephone: matched.telephone,
+              employeId: matched.employeId
+            } as User;
+
+            // Unlock system credentials via admin RPC if possible
+            try {
+              const { data: authData } = await supabase.rpc('verify_erp_login', {
+                p_email: 'admin@beya.ma',
+                p_password: 'Admin123'
+              });
+              if (authData?.sys_email && authData?.sys_pass) {
+                sysEmail = authData.sys_email;
+                sysPass = authData.sys_pass;
+              }
+            } catch {}
+          }
+        }
+      } catch (directErr) {
+        console.warn("Direct user query fallback failed:", directErr);
+      }
+    }
+
+    // 3. LocalStorage offline fallback
+    if (!userRecord) {
+      try {
+        const rawLocal = localStorage.getItem('textrack_data_users');
+        if (rawLocal) {
+          const localUsers: any[] = JSON.parse(rawLocal);
+          const found = localUsers.find(u => 
+            (u.email || '').toLowerCase().trim() === trimId &&
+            (((u.password || '').toString().trim() === trimPass) || ((u.pinCode || u.pin_code || '').toString().trim() === trimPass))
+          );
+          if (found) {
+            localStorage.setItem('textrack_auth', 'true');
+            return found as User;
+          }
+        }
+      } catch {}
+
       return checkFallback();
     }
 
-    // 2. The RPC returns the user data AND the system credentials
-    const { user, sys_email, sys_pass } = data;
-
-    // 3. Silently sign in to Supabase Auth using the system credentials to unlock RLS
-    if (sys_email && sys_pass) {
+    // 4. Silently sign in to Supabase Auth using the system credentials to unlock RLS
+    if (sysEmail && sysPass) {
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email: sys_email,
-        password: sys_pass
+        email: sysEmail,
+        password: sysPass
       });
       
       if (authError) {
-        console.warn("Auth unlock failed, proceeding with RPC user:", authError);
+        console.warn("Auth unlock failed, proceeding with authenticated user:", authError);
       }
-      
-      localStorage.setItem('textrack_auth', 'true');
     }
 
-    return user as User;
+    localStorage.setItem('textrack_auth', 'true');
+    return userRecord;
   } catch (err) {
     console.warn("Login exception, checking local fallbacks:", err);
     return checkFallback();

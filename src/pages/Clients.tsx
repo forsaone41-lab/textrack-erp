@@ -146,31 +146,38 @@ export default function Clients() {
 
   async function save() {
     if (!form.nom) return;
+    const cleanEmail = (form.email || '').toLowerCase().trim();
     const isNew = !editId;
-    const cId = editId || genId();
+    let cId = editId;
+    if (!cId && cleanEmail) {
+      const existing = clients.find(c => (c.email || '').toLowerCase().trim() === cleanEmail);
+      if (existing) {
+        cId = existing.id;
+      }
+    }
+    if (!cId) cId = genId();
+
     // Map Client form to User interface
     const clientData = { 
       id: cId, 
       nom: form.nom, 
       telephone: form.telephone || '',
-      email: (form.email || '').toLowerCase().trim(),
+      email: cleanEmail,
       adresse: form.adresse || '',
       ville: form.ville || '',
       notes: form.notes || '',
       role: 'client',
-      pinCode: isNew ? Math.floor(100000 + Math.random() * 900000).toString() : ((form as any).pinCode || (form as any).password),
-      password: isNew ? '' : ((form as any).password !== 'client_default_pass' ? (form as any).password : (form as any).pinCode)
+      pinCode: (form as any).pinCode || (form as any).password || Math.floor(100000 + Math.random() * 900000).toString(),
+      password: (form as any).password && (form as any).password !== 'client_default_pass' ? (form as any).password : ((form as any).pinCode || Math.floor(100000 + Math.random() * 900000).toString())
     };
-    if (isNew) {
-      clientData.password = clientData.pinCode;
-    } else if (clientData.password === 'client_default_pass') {
+    if (!clientData.password || clientData.password === 'client_default_pass') {
       clientData.password = clientData.pinCode;
     }
 
     // Save to local for UI responsiveness
-    const updated = isNew
+    const updated = (isNew && !clients.some(c => c.id === cId))
       ? [...clients, clientData as any]
-      : clients.map(c => c.id === editId ? clientData as any : c);
+      : clients.map(c => c.id === cId ? clientData as any : c);
     setClients(updated);
     saveLocalClients(updated);
 

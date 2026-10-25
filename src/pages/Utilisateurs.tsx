@@ -223,7 +223,7 @@ export default function Utilisateurs() {
           emailLower === '00.belbachir@gmail.com' ||
           emailLower === '00.emaily.zero@gmail.com' ||
           emailLower === 'fashlow@gmail.com' ||
-          nomLower.includes('belbachir')
+          (u.role === 'admin' && (nomLower.includes('belbachir') || emailLower.includes('belbachir')))
         ) {
           return false;
         }
@@ -255,10 +255,21 @@ export default function Utilisateurs() {
   }
   async function save() {
     if (!form.nom || !form.email) return;
+    const cleanEmail = (form.email || '').toLowerCase().trim();
     const isNew = !editId;
-    const uId = editId || genId();
-    const uData = { id: uId, ...form, email: (form.email || '').toLowerCase().trim() } as User;
-    const updated = isNew ? [...users, uData] : users.map(u => (u.id === editId ? uData : u));
+    let uId = editId;
+    if (!uId && cleanEmail) {
+      const existing = users.find(u => (u.email || '').toLowerCase().trim() === cleanEmail);
+      if (existing) {
+        uId = existing.id;
+      }
+    }
+    if (!uId) uId = genId();
+
+    const uData = { id: uId, ...form, email: cleanEmail } as User;
+    const updated = (isNew && !users.some(u => u.id === uId))
+      ? [...users, uData]
+      : users.map(u => (u.id === uId ? uData : u));
     setUsers(updated);
     setShowModal(false);
     await saveRecord('users', uData);

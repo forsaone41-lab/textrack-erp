@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beya-v3';
+const CACHE_NAME = 'beya-v4';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {
