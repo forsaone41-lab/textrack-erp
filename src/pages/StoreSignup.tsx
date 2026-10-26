@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ShieldCheck, Mail, AlertCircle, Lock, User as UserIcon, CheckCircle, Store, ArrowRight, Loader2, Eye, EyeOff, Crown, MessageCircle } from 'lucide-react';
 import { supabase } from '../supabase';
-import { loadCompanyProfile } from '../types';
+import { loadCompanyProfile, saveRecord } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void }) {
@@ -22,6 +22,30 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [pendingUser, setPendingUser] = useState<any>(null);
+  const [existingUser, setExistingUser] = useState<any>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('textrack_auth');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && (parsed.email || parsed.nom)) {
+          setExistingUser(parsed);
+        }
+      }
+    } catch (e) {}
+  }, []);
+
+  const handleFastTrackLaunch = async () => {
+    if (!existingUser) return;
+    const upgraded = { ...existingUser, role: 'merchant' };
+    try {
+      await saveRecord('users', upgraded, true);
+    } catch (e) {}
+    localStorage.setItem('textrack_auth', JSON.stringify(upgraded));
+    if (onLogin) onLogin(upgraded);
+    navigate('/store-builder');
+  };
 
   // Form State
   const [email, setEmail] = useState('');
@@ -106,11 +130,13 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
 
         if (signInError) throw signInError;
 
-        // Verify role
-        const role = data.user?.user_metadata?.role;
+        // Allow both client, merchant and admin - upgrade client smoothly to merchant
+        let role = data.user?.user_metadata?.role || 'merchant';
         if (role !== 'merchant' && role !== 'admin') {
-          await supabase.auth.signOut();
-          throw new Error(isAr ? 'ليس لديك صلاحية الدخول إلى المتاجر.' : 'Vous n\'avez pas accès à la gestion des boutiques.');
+          role = 'merchant';
+          try {
+            await supabase.auth.updateUser({ data: { role: 'merchant' } });
+          } catch (e) {}
         }
 
         const userObj = {
@@ -119,6 +145,10 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
           role: role,
           email: data.user.email || email
         };
+        localStorage.setItem('textrack_auth', JSON.stringify(userObj));
+        try {
+          await saveRecord('users', userObj, true);
+        } catch (e) {}
         if (onLogin) onLogin(userObj);
         navigate('/store-builder');
       } else if (mode === 'recovery') {
@@ -131,6 +161,41 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
         setSuccess(isAr ? 'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني' : 'Un lien de réinitialisation a été envoyé à votre email');
       }
     } catch (err: any) {
+      // Fallback check: if user was created from a Beya Creative demand / lead
+      if (mode === 'login') {
+        try {
+          const allUsers = JSON.parse(localStorage.getItem('textrack_users') || '[]');
+          const found = allUsers.find((u: any) => u.email?.trim().toLowerCase() === email.trim().toLowerCase());
+          if (found && (found.password === password || found.pinCode === password)) {
+            const upgraded = { ...found, role: 'merchant' };
+            localStorage.setItem('textrack_auth', JSON.stringify(upgraded));
+            await saveRecord('users', upgraded, true);
+            if (onLogin) onLogin(upgraded);
+            navigate('/store-builder');
+            return;
+          }
+        } catch (fbErr) {}
+      } else if (mode === 'signup' && (err.message?.includes('already registered') || err.message?.includes('user_already_exists'))) {
+        try {
+          const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+          if (signInData?.user) {
+            const userObj = {
+              id: signInData.user.id,
+              nom: fullName || signInData.user.user_metadata?.full_name || 'Merchant',
+              role: 'merchant',
+              email: signInData.user.email || email
+            };
+            localStorage.setItem('textrack_auth', JSON.stringify(userObj));
+            await saveRecord('users', userObj, true);
+            if (onLogin) onLogin(userObj);
+            navigate('/store-builder');
+            return;
+          }
+        } catch (signInFbErr) {}
+        setError(isAr ? 'هذا البريد الإلكتروني مسجل لدينا بالفعل. يرجى تسجيل الدخول بنفس الحساب.' : 'Cet email est déjà enregistré. Veuillez vous connecter avec ce compte.');
+        setMode('login');
+        return;
+      }
       setError(err.message || (isAr ? 'حدث خطأ غير متوقع' : 'Une erreur inattendue est survenue'));
     } finally {
       setLoading(false);
@@ -276,6 +341,43 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
               </div>
             ) : (
               <>
+              {existingUser && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center">
+                        {existingUser.nom?.[0]?.toUpperCase() || 'U'}
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-slate-900">{isAr ? 'أنت مسجل بالفعل بحساب:' : 'Déjà connecté :'}</p>
+                        <p className="text-[11px] font-bold text-blue-700">{existingUser.nom || existingUser.email} ({existingUser.email})</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-600 mb-3">
+                    {isAr
+                      ? 'يمكنك الدخول مباشرة إلى متجرك الإلكتروني بنفس هذا الحساب دون الحاجة للتسجيل مجدداً!'
+                      : 'Accédez directement à votre boutique avec ce compte sans créer un second profil !'}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleFastTrackLaunch}
+                      className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-500/20 flex items-center justify-center gap-1.5 transition-all"
+                    >
+                      <Store className="w-3.5 h-3.5" />
+                      {isAr ? '🚀 الدخول لمتجري مباشرة بحسابي' : '🚀 Ouvrir ma boutique directement'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setExistingUser(null)}
+                      className="px-3 py-2.5 bg-white text-slate-600 hover:bg-slate-100 rounded-xl font-bold text-xs border border-slate-200 transition-all"
+                    >
+                      {isAr ? 'حساب آخر' : 'Autre'}
+                    </button>
+                  </div>
+                </div>
+              )}
               <form onSubmit={handleAuth} className="space-y-5">
                 {mode === 'signup' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

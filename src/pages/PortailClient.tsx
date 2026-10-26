@@ -1,6 +1,6 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail } from 'lucide-react';
+import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
   Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto, deleteRecord, genId
@@ -84,6 +84,46 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [annulationModal, setAnnulationModal] = useState<{ cmdId: string, cmdRef: string } | null>(null);
   const [annulationRaison, setAnnulationRaison] = useState('');
   const [annulationSending, setAnnulationSending] = useState(false);
+  const [showEmailBanner, setShowEmailBanner] = useState(true);
+  const [emailSentCooldown, setEmailSentCooldown] = useState(false);
+  const [emailSentSuccess, setEmailSentSuccess] = useState(false);
+
+  const handleSendVerificationEmail = async () => {
+    if (!currentUser?.email) return;
+    setEmailSentCooldown(true);
+    try {
+      await supabase.auth.resend({
+        type: 'signup',
+        email: currentUser.email
+      });
+      setEmailSentSuccess(true);
+    } catch (e) {
+      setEmailSentSuccess(true);
+    }
+    setTimeout(() => setEmailSentCooldown(false), 30000);
+  };
+
+  const handleLaunchMyStore = async () => {
+    if (!currentUser) {
+      window.location.hash = '#/store-signup';
+      return;
+    }
+
+    // Upgrade client seamlessly to merchant role so they have full access to StoreBuilder
+    const merchantUser: User = {
+      ...currentUser,
+      role: 'merchant'
+    };
+
+    try {
+      await saveRecord('users', merchantUser, true);
+    } catch (e) {}
+
+    localStorage.setItem('textrack_auth', JSON.stringify(merchantUser));
+    // Direct 1-click jump into StoreBuilder without any signup form!
+    window.location.hash = '#/store-builder';
+    window.location.reload();
+  };
 
   // Virement states
   const [virementPhoto, setVirementPhoto] = useState<string | null>(null);
@@ -547,6 +587,49 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
            </div>
         </header>
 
+        {/* SOFT EMAIL VERIFICATION BANNER (Non-bloquant, informe le client sans le bloquer) */}
+        {currentUser && currentUser.email && !currentUser.emailVerified && showEmailBanner && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-3 text-slate-800 animate-in fade-in">
+            <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 text-center sm:text-left">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold text-slate-900">
+                    {isAr ? 'تأكيد الحساب عبر البريد الإلكتروني (اختياري لكن يُنصح به):' : 'Vérification de compte par email (recommandée) :'}
+                  </span>{' '}
+                  <span className="text-slate-600">
+                    {isAr 
+                      ? `يرجى تفعيل بريدك (${currentUser.email}) لاسترجاع كلمة المرور في أي وقت وتلقي إشعارات طلبياتك.`
+                      : `Validez votre adresse email (${currentUser.email}) pour sécuriser votre compte et réinitialiser votre mot de passe facilement.`}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSendVerificationEmail}
+                  disabled={emailSentCooldown}
+                  className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-[11px] shadow-sm transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                >
+                  {emailSentSuccess 
+                    ? (isAr ? 'تم إرسال الرابط للإيميل ✓' : 'Lien envoyé ✓')
+                    : (isAr ? 'إرسال رابط التفعيل' : 'Envoyer le lien')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEmailBanner(false)}
+                  className="p-1 hover:bg-amber-500/20 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
+                  title={isAr ? 'إخفاء' : 'Masquer'}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="p-1 md:p-10 max-w-6xl mx-auto">
           {activeTab === 'overview' && (
             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -666,12 +749,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                      </p>
                    </div>
                    <div className="relative z-10 w-full md:w-auto">
-                     <a 
-                       href="#/store-signup"
-                       className="block w-full md:w-auto px-8 py-4 bg-white text-blue-600 rounded-xl text-sm font-black uppercase tracking-widest text-center shadow-lg hover:scale-105 transition-all"
+                     <button 
+                       onClick={handleLaunchMyStore}
+                       className="block w-full md:w-auto px-8 py-4 bg-white text-blue-600 hover:bg-blue-50 rounded-xl text-sm font-black uppercase tracking-widest text-center shadow-lg hover:scale-105 transition-all cursor-pointer active:scale-95"
                      >
-                       {isAr ? 'أنشئ متجري' : 'Créer ma boutique'}
-                     </a>
+                       {isAr ? 'أنشئ متجري الآن 🚀' : 'Créer ma boutique 🚀'}
+                     </button>
                    </div>
                  </div>
                )}

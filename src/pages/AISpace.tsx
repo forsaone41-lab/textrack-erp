@@ -367,11 +367,12 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
     forcePiecesCount === 3 ||
     text.includes('3 pièces') || text.includes('3 pieces') || text.includes('3 قطع') || text.includes('3 articles') ||
     text.includes('3 dial') || text.includes('3dial') || text.includes('trois') || text.includes('3articles') ||
+    text.includes('fairouz') || text.includes('kalai') ||
     ((text.includes('manteau') || text.includes('veste') || text.includes('gilet') || text.includes('cardigan') || text.includes('مانطو') || text.includes('سترة') || text.includes('فيست')) && (text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('pantalon') || text.includes('سروال') || text.includes('jogging')))
   );
 
   if (isThreePieces) {
-    pieceName = isAr ? 'طقم سبوروار 3 قطع (مانطو طويل + سويت + سروال)' : 'Ensemble 3 Pièces Sportswear (Manteau + Sweat + Pantalon)';
+    pieceName = isAr ? 'طقم سبوروار 3 قطع (مانطو طويل + هودي + سروال)' : 'Ensemble 3 Pièces Sportswear (Manteau + Hoodie + Pantalon)';
     const mesuresManteau = JSON.parse(JSON.stringify(STANDARD_MESURES['ManteauLong'] || STANDARD_MESURES['Robe']));
     const mesuresSweat = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
     const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
@@ -391,17 +392,18 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
         mesures: mesuresManteau
       },
       {
-        name: isAr ? 'سويت شيرت / تيشيرت داخلي متناسق (Sweat / Haut Confort)' : 'Sweatshirt / Haut Confort Assorti',
+        name: isAr ? 'هودي أوفرسايز بكابوش (Hoodie à Capuche Oversize)' : 'Hoodie à Capuche Oversize',
         consumption: '1.40m',
-        fit: isAr ? 'عادي مريح (Regular Fit)' : 'Regular Fit',
+        fit: isAr ? 'أوفرسايز مريح (Over-size / Relaxed)' : 'Over-size / Relaxed',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: `40 - 55 MAD`,
-        components: isAr ? ['صدر أمامي مع طباعة/شعار', 'ظهر متناسق', 'أكمام طويلة', 'ياقة دائرية مطاطية مع شريط نظافة'] : ['Buste devant avec logo', 'Dos droit', 'Manches longues avec finitions', 'Col rond bord-côte avec bande de propreté'],
-        fabricSuggested: isAr ? 'إنترلوك قطن ممتاز 100% (Interlock 240g)' : 'Interlock 100% Coton 240g',
+        costEstimate: `50 - 65 MAD`,
+        components: isAr ? ['صدر أمامي مع طباعة/شعار أو سحاب', 'ظهر كامل مريح', 'كابوش مزدوج مبطن', 'أكمام طويلة مع أساور بورد كوت', 'جيب كنغر أمامي'] : ['Buste devant avec logo', 'Dos confort', 'Capuche doublée', 'Manches longues avec finitions', 'Poche kangourou'],
+        fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك 280g' : 'Molleton Gratté / Interlock 280g',
         fabricAlternatives: [
-          { name: isAr ? 'جيرسي قطن ليكرا' : 'Jersey Coton Lycra', pros: isAr ? 'مرونة عالية وملمس ناعم جداً' : 'Grande élasticité et confort', cons: isAr ? 'أخف في الوزن' : 'Plus léger' }
+          { name: isAr ? 'فرينش تيري قطن ربيعي' : 'French Terry Coton', pros: isAr ? 'خفيف ومرن ومناسب لجميع الفصول' : 'Polyvalent toutes saisons', cons: isAr ? 'أقل دفئاً في البرد الشديد' : 'Moins chaud en grand froid' },
+          { name: isAr ? 'إنترلوك قطن فاخر' : 'Interlock Coton 240g', pros: isAr ? 'وجهين ناعمين وقوام ثابت' : 'Toucher soyeux double face', cons: isAr ? 'أخف وزناً' : 'Plus léger' }
         ],
-        mesures: mesuresSweat
+        mesures: JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']))
       },
       {
         name: isAr ? 'سروال رياضي مريح (Pantalon Jogging Confort)' : 'Pantalon Jogging Confort',
@@ -1004,6 +1006,96 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   };
 
   const [piecesMesures, setPiecesMesures] = useState<any[][]>([]);
+  const [editingPieceNameIdx, setEditingPieceNameIdx] = useState<number | null>(null);
+  const [tempPieceName, setTempPieceName] = useState('');
+
+  const handleRenamePiece = (pieceIdx: number, newName: string) => {
+    if (!analysisResult?.pieces) return;
+    const updatedPieces = [...analysisResult.pieces];
+    if (updatedPieces[pieceIdx]) {
+      updatedPieces[pieceIdx] = { ...updatedPieces[pieceIdx], name: newName };
+      setAnalysisResult({ ...analysisResult, pieces: updatedPieces });
+    }
+  };
+
+  const handleAddPiece = (templateType?: 'manteau' | 'hoodie' | 'pantalon' | 'autre') => {
+    if (!analysisResult) return;
+    const currentPieces = analysisResult.pieces || [];
+    let newPiece: any;
+    if (templateType === 'manteau') {
+      newPiece = {
+        name: isAr ? 'مانطو طويل سبور (Manteau Long)' : 'Manteau Long Sportswear',
+        consumption: '2.40m',
+        fit: isAr ? 'واسع مريح (Coupe Longue)' : 'Coupe Longue & Ample',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: '75 - 95 MAD',
+        components: isAr ? ['صدر أمامي بسحاب', 'ظهر طويل', 'كابوش مزدوج', 'أكمام طويلة', 'جيوب جانبية'] : ['Devants zippés', 'Dos long', 'Capuche doublée', 'Manches', 'Poches'],
+        fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك' : 'Molleton Gratté / Interlock',
+        fabricAlternatives: [],
+        mesures: JSON.parse(JSON.stringify(STANDARD_MESURES['ManteauLong'] || STANDARD_MESURES['Robe']))
+      };
+    } else if (templateType === 'hoodie') {
+      newPiece = {
+        name: isAr ? 'هودي أوفرسايز بكابوش (Hoodie à Capuche)' : 'Hoodie à Capuche Oversize',
+        consumption: '1.40m',
+        fit: isAr ? 'أوفرسايز واسع (Over-size / Relaxed)' : 'Over-size / Relaxed',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: '50 - 65 MAD',
+        components: isAr ? ['صدر أمامي', 'ظهر كامل', 'كابوش مزدوج', 'جيب كنغر', 'أكمام مع بورد-كوت'] : ['Devant', 'Dos', 'Capuche doublée', 'Poche kangourou', 'Manches'],
+        fabricSuggested: isAr ? 'ميلتون قطن ممشوط' : 'Molleton Gratté 320g',
+        fabricAlternatives: [],
+        mesures: JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']))
+      };
+    } else if (templateType === 'pantalon') {
+      newPiece = {
+        name: isAr ? 'سروال جوغينغ مريح (Pantalon Jogging)' : 'Pantalon Jogging Confort',
+        consumption: '1.40m',
+        fit: isAr ? 'مريح عادي (Regular Jogger)' : 'Regular Jogger',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: '45 - 55 MAD',
+        components: isAr ? ['أرجل أمامية وخلفية', 'حزام خصر مطاطي', 'جيوب جانبية', 'أساور كاحل'] : ['Jambes devant/dos', 'Ceinture élastique', 'Poches', 'Bord-côte chevilles'],
+        fabricSuggested: isAr ? 'ميلتون قطن ممشوط' : 'Molleton Gratté 320g',
+        fabricAlternatives: [],
+        mesures: JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']))
+      };
+    } else {
+      newPiece = {
+        name: isAr ? `قطعة ${currentPieces.length + 1}` : `Pièce ${currentPieces.length + 1}`,
+        consumption: '1.50m',
+        fit: isAr ? 'عادي (Regular)' : 'Regular',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: '40 - 60 MAD',
+        components: isAr ? ['أجزاء تفصيل أساسية'] : ['Composants de base'],
+        fabricSuggested: analysisResult.fabricSuggested || '',
+        fabricAlternatives: [],
+        mesures: JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Robe']))
+      };
+    }
+
+    const updated = [...currentPieces, newPiece];
+    const parseNum = (c: string) => parseFloat((c || '').replace(/[^0-9.]/g, '')) || 0;
+    const totConso = updated.reduce((acc: number, it: any) => acc + parseNum(it.consumption), 0);
+    
+    setAnalysisResult({
+      ...analysisResult,
+      pieces: updated,
+      consumption: `${totConso.toFixed(2)}m`
+    });
+    setActivePieceIdx(updated.length - 1);
+  };
+
+  const handleDeletePiece = (idxToDelete: number) => {
+    if (!analysisResult?.pieces || analysisResult.pieces.length <= 1) return;
+    const updated = analysisResult.pieces.filter((_: any, i: number) => i !== idxToDelete);
+    const parseNum = (c: string) => parseFloat((c || '').replace(/[^0-9.]/g, '')) || 0;
+    const totConso = updated.reduce((acc: number, it: any) => acc + parseNum(it.consumption), 0);
+    setAnalysisResult({
+      ...analysisResult,
+      pieces: updated,
+      consumption: `${totConso.toFixed(2)}m`
+    });
+    setActivePieceIdx(Math.max(0, idxToDelete - 1));
+  };
 
   const handleCellChange = (rowIndex: number, size: string, value: number) => {
     const updated = [...customMesures];
@@ -1345,7 +1437,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
     const allChatText = chat.map(c => c.text).join('\n');
     const userChatText = chat.filter(c => c.role === 'user').map(c => c.text).join(' ');
-    const combinedContext = `${userChatText} ${allChatText} ${selectedLead?.type || ''} ${selectedLead?.name || ''}`;
+    const combinedContext = `${userChatText} ${allChatText} ${selectedLead?.type || ''} ${selectedLead?.name || ''} ${selectedLead?.details || ''}`;
 
     const executeFallbackAnalysis = (noticeMsg?: string) => {
       const fallbackResult = buildFallbackAnalysis(combinedContext, isAr);
@@ -3474,11 +3566,11 @@ ${userMessage}
                 <>
                   {/* Unified Sleek Navigation Bar (Zero Duplication!) */}
                   <div className={`p-2 sm:p-2.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                    {/* Pieces Selection Tabs */}
+                    {/* Pieces Selection Tabs with Icons & Real Garment Names */}
                     <div className={`flex items-center gap-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
                       <span className="text-[10px] font-black text-slate-400 uppercase px-1">{isAr ? 'القطع:' : 'Pièces :'}</span>
                       {(analysisResult.pieces && analysisResult.pieces.length > 0 ? analysisResult.pieces : [{ name: analysisResult.category }]).map((p: any, idx: number) => {
-                        const icon = idx === 0 ? '🧥' : idx === 1 ? '👕' : '👖';
+                        const icon = idx === 0 ? '🧥' : idx === 1 ? '👕' : idx === 2 ? '👖' : '✂️';
                         const isSelected = activePieceIdx === idx;
                         const shortName = (p.name || '').split('(')[0].trim();
                         return (
@@ -3500,45 +3592,59 @@ ${userMessage}
                           </button>
                         );
                       })}
+
+                      {/* Quick Add Piece Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleAddPiece()}
+                        className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-black transition-all flex items-center gap-1"
+                        title={isAr ? 'إضافة قطعة جديدة للطقم' : 'Ajouter une pièce'}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">{isAr ? 'إضافة قطعة' : 'Ajouter'}</span>
+                      </button>
                     </div>
 
-                    {/* Compact Mode Switcher (1, 2, or 3 pieces) */}
-                    <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
+                    {/* Mode Switcher with Explicit Garment Names */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs flex-wrap">
                       <button
                         type="button"
                         onClick={() => applyPiecePreset(3)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
                           analysisResult.pieces && analysisResult.pieces.length === 3
                             ? 'bg-indigo-600 text-white shadow-xs'
                             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                         }`}
-                        title={isAr ? 'طقم 3 قطع (مانطو + سويت + سروال)' : '3 Pièces'}
+                        title={isAr ? 'طقم 3 قطع (مانطو طويل + هودي + سروال)' : '3 Pièces (Manteau + Hoodie + Pantalon)'}
                       >
-                        3 قطع
+                        <span>🧥</span>
+                        <span>{isAr ? '3 قطع (مانطو + هودي + سروال)' : '3 Pièces (Manteau + Hoodie + Pantalon)'}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => applyPiecePreset(2)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
                           analysisResult.pieces && analysisResult.pieces.length === 2
                             ? 'bg-indigo-600 text-white shadow-xs'
                             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                         }`}
-                        title={isAr ? 'طقم قطعتين (هودي + سروال)' : '2 Pièces'}
+                        title={isAr ? 'طقم قطعتين (هودي + سروال)' : '2 Pièces (Hoodie + Pantalon)'}
                       >
-                        قطعتين
+                        <span>👕👖</span>
+                        <span>{isAr ? 'قطعتين (هودي + سروال)' : '2 Pièces (Hoodie + Pantalon)'}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => applyPiecePreset(1)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
                           !analysisResult.pieces || analysisResult.pieces.length === 1
                             ? 'bg-indigo-600 text-white shadow-xs'
                             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                         }`}
                         title={isAr ? 'قطعة واحدة' : '1 Pièce'}
                       >
-                        قطعة 1
+                        <span>👕</span>
+                        <span>{isAr ? 'قطعة 1' : '1 Pièce'}</span>
                       </button>
                     </div>
                   </div>
@@ -3554,20 +3660,75 @@ ${userMessage}
 
                     return (
                       <div className="space-y-4">
-                        {/* Active Piece Header Callout (if multiple pieces) */}
-                        {pieces.length > 1 && (
-                          <div className={`flex items-center justify-between p-3 bg-indigo-50/90 rounded-2xl border border-indigo-100 ${isAr ? 'flex-row-reverse' : ''}`}>
-                            <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                              <span className="text-xl">{safeIdx === 0 ? '🧥' : safeIdx === 1 ? '👕' : '👖'}</span>
-                              <div>
-                                <h4 className="text-xs sm:text-sm font-black text-indigo-950 leading-tight">
-                                  {p.name}
-                                </h4>
-                                <span className="text-[10px] text-indigo-600 font-bold">
+                        {/* Active Piece Header Callout with INLINE EDITING & PRESET NAMES */}
+                        <div className={`p-3 bg-indigo-50/90 rounded-2xl border border-indigo-100 space-y-2`}>
+                          <div className={`flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                            <div className={`flex items-center gap-2 flex-1 min-w-[200px] ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                              <span className="text-xl shrink-0">{safeIdx === 0 ? '🧥' : safeIdx === 1 ? '👕' : safeIdx === 2 ? '👖' : '✂️'}</span>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  {editingPieceNameIdx === safeIdx ? (
+                                    <div className="flex items-center gap-1.5 flex-1 max-w-md">
+                                      <input
+                                        type="text"
+                                        autoFocus
+                                        value={tempPieceName}
+                                        onChange={(e) => setTempPieceName(e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            handleRenamePiece(safeIdx, tempPieceName);
+                                            setEditingPieceNameIdx(null);
+                                          } else if (e.key === 'Escape') {
+                                            setEditingPieceNameIdx(null);
+                                          }
+                                        }}
+                                        className="px-2.5 py-1 bg-white border border-indigo-300 rounded-lg text-xs font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 flex-1"
+                                        placeholder={isAr ? 'اكتب اسم القطعة...' : 'Nom de la pièce...'}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          handleRenamePiece(safeIdx, tempPieceName);
+                                          setEditingPieceNameIdx(null);
+                                        }}
+                                        className="p-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                                        title={isAr ? 'حفظ الاسم' : 'Enregistrer'}
+                                      >
+                                        <Check className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingPieceNameIdx(null)}
+                                        className="p-1 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 transition-colors"
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h4 className="text-xs sm:text-sm font-black text-indigo-950 leading-tight">
+                                        {p.name}
+                                      </h4>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setEditingPieceNameIdx(safeIdx);
+                                          setTempPieceName(p.name);
+                                        }}
+                                        className="p-1 text-indigo-500 hover:text-indigo-800 hover:bg-indigo-100 rounded-md transition-colors"
+                                        title={isAr ? 'تعديل اسم هذه القطعة' : 'Modifier le nom de cette pièce'}
+                                      >
+                                        <SlidersHorizontal className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-indigo-600 font-bold block mt-0.5">
                                   {isAr ? `عرض تفاصيل القطعة (${safeIdx + 1} من ${pieces.length})` : `Affichage de la pièce ${safeIdx + 1}/${pieces.length}`}
                                 </span>
                               </div>
                             </div>
+
                             <div className="flex items-center gap-2">
                               <span className="px-2.5 py-1 bg-white text-indigo-700 text-xs font-black rounded-xl border border-indigo-200/80 shadow-xs">
                                 ✂️ {p.consumption || '1.50m'}
@@ -3575,9 +3736,47 @@ ${userMessage}
                               <span className="px-2.5 py-1 bg-emerald-600 text-white text-xs font-black rounded-xl shadow-xs">
                                 💰 {p.costEstimate || '—'}
                               </span>
+                              {/* Delete piece button (only if > 1 piece) */}
+                              {pieces.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeletePiece(safeIdx)}
+                                  className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors border border-rose-200/60"
+                                  title={isAr ? 'حذف هذه القطعة من الطقم' : 'Supprimer cette pièce'}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </div>
                           </div>
-                        )}
+
+                          {/* Quick Rename Chips for Any Article Type */}
+                          <div className={`flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-indigo-100/80 ${isAr ? 'flex-row-reverse' : ''}`}>
+                            <span className="text-[9px] font-black uppercase text-indigo-400">{isAr ? 'تسميات سريعة للقطعة:' : 'Noms rapides :'}</span>
+                            {[
+                              { ar: 'مانطو طويل سبور', fr: 'Manteau Long Sportswear' },
+                              { ar: 'هودي أوفرسايز بكابوش', fr: 'Hoodie à Capuche Oversize' },
+                              { ar: 'سروال جوغينغ مريح', fr: 'Pantalon Jogging Confort' },
+                              { ar: 'فيست سبور قصيرة', fr: 'Veste Sportswear' },
+                              { ar: 'سويت شيرت داخلي', fr: 'Sweatshirt Confort' },
+                              { ar: 'تيشيرت قطن', fr: 'T-Shirt Coton' },
+                              { ar: 'ليجينغ سبور', fr: 'Legging Stretch' },
+                              { ar: 'عباية كاجوال', fr: 'Abaya Casual' }
+                            ].map((chip, chipIdx) => {
+                              const chipLabel = isAr ? chip.ar : chip.fr;
+                              return (
+                                <button
+                                  key={chipIdx}
+                                  type="button"
+                                  onClick={() => handleRenamePiece(safeIdx, chipLabel)}
+                                  className="px-2 py-0.5 bg-white hover:bg-indigo-100 text-indigo-800 text-[10px] font-bold rounded-md border border-indigo-200/80 transition-all hover:scale-105 active:scale-95"
+                                >
+                                  {chipLabel}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
 
                         {/* Moroccan Fabric & Sourcing Card for the Active Piece */}
                         <div className="bg-gradient-to-br from-indigo-950/5 to-slate-50 rounded-3xl p-5 border border-indigo-100/60 shadow-sm space-y-4">
@@ -3974,22 +4173,25 @@ ${userMessage}
                     type="button"
                     onClick={() => applyPiecePreset(3)}
                     className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-black rounded-lg border border-indigo-200/60 transition-all active:scale-95 flex items-center gap-1"
+                    title={isAr ? 'طقم 3 قطع (مانطو طويل + هودي + سروال)' : 'Ensemble 3 Pièces (Manteau + Hoodie + Pantalon)'}
                   >
                     <span>🧥</span>
-                    <span>{isAr ? 'طقم 3 قطع (مانطو + سويت + سروال)' : 'Ensemble 3 Pièces'}</span>
+                    <span>{isAr ? 'طقم 3 قطع (مانطو + هودي + سروال)' : 'Ensemble 3 Pièces (Manteau + Hoodie + Pantalon)'}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPiecePreset(2)}
                     className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-black rounded-lg border border-slate-200 transition-all active:scale-95 flex items-center gap-1"
+                    title={isAr ? 'طقم قطعتين (هودي + سروال)' : 'Ensemble 2 Pièces (Hoodie + Pantalon)'}
                   >
                     <span>👕👖</span>
-                    <span>{isAr ? 'طقم قطعتين' : '2 Pièces'}</span>
+                    <span>{isAr ? 'طقم قطعتين (هودي + سروال)' : 'Ensemble 2 Pièces (Hoodie + Pantalon)'}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPiecePreset(1)}
                     className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-black rounded-lg border border-slate-200 transition-all active:scale-95 flex items-center gap-1"
+                    title={isAr ? 'قطعة واحدة منفردة' : 'Pièce Unique'}
                   >
                     <span>👕</span>
                     <span>{isAr ? 'قطعة واحدة' : '1 Pièce'}</span>
