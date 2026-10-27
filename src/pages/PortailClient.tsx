@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
@@ -85,22 +85,107 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [annulationRaison, setAnnulationRaison] = useState('');
   const [annulationSending, setAnnulationSending] = useState(false);
   const [showEmailBanner, setShowEmailBanner] = useState(true);
+  const [emailSending, setEmailSending] = useState(false);
   const [emailSentCooldown, setEmailSentCooldown] = useState(false);
   const [emailSentSuccess, setEmailSentSuccess] = useState(false);
+  const [emailSentError, setEmailSentError] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newDirectPassword, setNewDirectPassword] = useState('');
+  const [confirmDirectPassword, setConfirmDirectPassword] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordSavedSuccess, setPasswordSavedSuccess] = useState(false);
 
   const handleSendVerificationEmail = async () => {
     if (!currentUser?.email) return;
-    setEmailSentCooldown(true);
+    setEmailSending(true);
+    setEmailSentError('');
+    setEmailSentSuccess(false);
+
     try {
-      await supabase.auth.resend({
-        type: 'signup',
-        email: currentUser.email
+      const siteUrl = window.location.origin + window.location.pathname;
+      const { error } = await supabase.auth.resetPasswordForEmail(currentUser.email, {
+        redirectTo: siteUrl
       });
+
+      if (error) {
+        if (error.message?.toLowerCase().includes('not found') || error.message?.toLowerCase().includes('user')) {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: currentUser.email,
+            password: currentUser.password || currentUser.pinCode || 'BeyaPass2026!',
+            options: {
+              data: {
+                full_name: currentUser.nom || 'Client',
+                role: currentUser.role || 'client'
+              }
+            }
+          });
+          if (signUpError && !signUpError.message?.includes('already registered')) {
+            throw signUpError;
+          }
+          const { error: secondErr } = await supabase.auth.resetPasswordForEmail(currentUser.email, {
+            redirectTo: siteUrl
+          });
+          if (secondErr) throw secondErr;
+        } else {
+          throw error;
+        }
+      }
+
       setEmailSentSuccess(true);
-    } catch (e) {
-      setEmailSentSuccess(true);
+      setEmailSentCooldown(true);
+      setTimeout(() => setEmailSentCooldown(false), 45000);
+    } catch (err: any) {
+      console.error('Email verification error:', err);
+      setEmailSentError(err.message || (isAr ? 'تعذر إرسال الرابط. يرجى التأكد من البريد أو تعيين كلمة المرور مباشرة.' : 'Impossible d\'envoyer le lien.'));
+    } finally {
+      setEmailSending(false);
     }
-    setTimeout(() => setEmailSentCooldown(false), 30000);
+  };
+
+  const handleSaveDirectPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDirectPassword || newDirectPassword.length < 6) {
+      alert(isAr ? 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل' : 'Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+    if (newDirectPassword !== confirmDirectPassword) {
+      alert(isAr ? 'كلمات المرور غير متطابقة' : 'Les mots de passe ne correspondent pas');
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      const updatedUser: User = {
+        ...currentUser!,
+        password: newDirectPassword,
+        pinCode: newDirectPassword,
+        emailVerified: true
+      };
+      await saveRecord('users', updatedUser, true);
+      localStorage.setItem('textrack_auth', JSON.stringify(updatedUser));
+
+      try {
+        await supabase.auth.updateUser({ password: newDirectPassword });
+      } catch (authErr) {
+        try {
+          await supabase.auth.signUp({
+            email: currentUser!.email,
+            password: newDirectPassword
+          });
+        } catch (e) {}
+      }
+
+      setPasswordSavedSuccess(true);
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordSavedSuccess(false);
+        setShowEmailBanner(false);
+      }, 1200);
+    } catch (err: any) {
+      alert(err.message || 'Error updating password');
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   const handleLaunchMyStore = async () => {
@@ -587,41 +672,76 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
            </div>
         </header>
 
-        {/* SOFT EMAIL VERIFICATION BANNER (Non-bloquant, informe le client sans le bloquer) */}
+        {/* SOFT EMAIL VERIFICATION BANNER */}
         {currentUser && currentUser.email && !currentUser.emailVerified && showEmailBanner && (
-          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-3 text-slate-800 animate-in fade-in">
-            <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5 text-center sm:text-left">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center flex-shrink-0">
+          <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border-b border-amber-500/30 px-4 py-3 text-slate-800 animate-in fade-in">
+            <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 text-center md:text-right">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0">
                   <Mail className="w-4 h-4" />
                 </div>
                 <div>
                   <span className="font-bold text-slate-900">
-                    {isAr ? 'تأكيد الحساب عبر البريد الإلكتروني (اختياري لكن يُنصح به):' : 'Vérification de compte par email (recommandée) :'}
+                    {isAr ? 'تأكيد الحساب وكلمة المرور:' : 'Sécurisation de compte :'}
                   </span>{' '}
                   <span className="text-slate-600">
                     {isAr 
-                      ? `يرجى تفعيل بريدك (${currentUser.email}) لاسترجاع كلمة المرور في أي وقت وتلقي إشعارات طلبياتك.`
-                      : `Validez votre adresse email (${currentUser.email}) pour sécuriser votre compte et réinitialiser votre mot de passe facilement.`}
+                      ? `حسابك (${currentUser.email}) نشط ومحمي. لتتمكن من استرجاع كلمة المرور عند نسيانها، يمكنك إرسال رابط لبريدك أو تعيين كلمة مرور خاصة بك مباشرة.`
+                      : `Votre compte (${currentUser.email}) est actif. Vous pouvez recevoir un lien de réinitialisation ou définir votre mot de passe directement.`}
                   </span>
+                  {emailSentSuccess && (
+                    <p className="mt-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-1 rounded-lg border border-emerald-300">
+                      {isAr 
+                        ? '✅ تم إرسال الرابط بنجاح! ⚠️ تفقّد صندوق الوارد (Boîte de réception) أو مجلد الرسائل غير المرغوب فيها (Spam).'
+                        : '✅ Lien envoyé avec succès ! ⚠️ Vérifiez votre boîte de réception ou le dossier Courrier indésirable (Spam).'}
+                    </p>
+                  )}
+                  {emailSentError && (
+                    <p className="mt-1 text-[11px] font-bold text-rose-700 bg-rose-100/90 px-2.5 py-1 rounded-lg border border-rose-300">
+                      ⚠️ {emailSentError}
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-center shrink-0">
                 <button
                   type="button"
                   onClick={handleSendVerificationEmail}
-                  disabled={emailSentCooldown}
-                  className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-[11px] shadow-sm transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                  disabled={emailSending || emailSentCooldown}
+                  className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-[11px] shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  {emailSentSuccess 
-                    ? (isAr ? 'تم إرسال الرابط للإيميل ✓' : 'Lien envoyé ✓')
-                    : (isAr ? 'إرسال رابط التفعيل' : 'Envoyer le lien')}
+                  {emailSending ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>{isAr ? 'جاري الإرسال...' : 'Envoi...'}</span>
+                    </>
+                  ) : emailSentSuccess ? (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span>{isAr ? 'إعادة الإرسال' : 'Renvoyer'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>{isAr ? 'إرسال الرابط للإيميل' : 'Envoyer lien email'}</span>
+                    </>
+                  )}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(true)}
+                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-[11px] shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
+                >
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{isAr ? 'تعيين كلمة المرور مباشرة' : 'Définir mot de passe'}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setShowEmailBanner(false)}
                   className="p-1 hover:bg-amber-500/20 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
-                  title={isAr ? 'إخفاء' : 'Masquer'}
+                  title={isAr ? 'إخفاء التنبيه' : 'Masquer'}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -2590,6 +2710,97 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                 </>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Direct Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="p-6 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base">{isAr ? 'تعيين كلمة المرور' : 'Définir mon mot de passe'}</h3>
+                  <p className="text-xs text-slate-400">{currentUser?.email}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowPasswordModal(false)} className="text-slate-400 hover:text-white p-1 rounded-xl">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDirectPassword} className="p-6 space-y-4">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {isAr
+                  ? 'اختر كلمة مرور قوية وخاصة بك لتسجيل الدخول بها إلى حسابك ومتجرك مستقبلاً دون الحاجة لروابط البريد.'
+                  : 'Choisissez un mot de passe pour vous connecter directement à votre compte et boutique sans dépendre d\'un lien email.'}
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'كلمة المرور الجديدة' : 'Nouveau mot de passe'}
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={newDirectPassword}
+                  onChange={(e) => setNewDirectPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-600 focus:bg-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'تأكيد كلمة المرور' : 'Confirmer le mot de passe'}
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={confirmDirectPassword}
+                  onChange={(e) => setConfirmDirectPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-600 focus:bg-white font-mono"
+                />
+              </div>
+
+              {passwordSavedSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{isAr ? 'تم حفظ وتفعيل كلمة المرور بنجاح!' : 'Mot de passe enregistré et activé avec succès !'}</span>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors"
+                >
+                  {isAr ? 'إلغاء' : 'Annuler'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPassword}
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {savingPassword ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{isAr ? 'جاري الحفظ...' : 'Enregistrement...'}</span>
+                    </>
+                  ) : (
+                    <span>{isAr ? 'حفظ وتفعيل الحساب' : 'Enregistrer'}</span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -352,6 +352,7 @@ export interface User {
   ville?: string;
   adresse?: string;
   notes?: string;
+  emailVerified?: boolean;
 }
 
 // ─── Affiliate Program ────────────────────────────────────────
