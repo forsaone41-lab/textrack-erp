@@ -4,12 +4,21 @@ import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp,
 import { supabase } from '../../supabase';
 import CreateStoreWizardModal from './CreateStoreWizardModal';
 
-export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr, appCurrentUser }: any) {
+export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr, isAr, appCurrentUser }: any) {
    const [stores, setStores] = useState<any[]>([]);
    const [isLoading, setIsLoading] = useState(true);
+   const [loadingStoreId, setLoadingStoreId] = useState<string | null>(null);
    const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
    const [isDeleting, setIsDeleting] = useState(false);
-   const [currentUser, setCurrentUser] = useState<any>(null);
+   const [currentUser, setCurrentUser] = useState<any>(() => {
+      if (appCurrentUser) return appCurrentUser;
+      try {
+         const saved = localStorage.getItem('textrack_auth');
+         return saved ? JSON.parse(saved) : null;
+      } catch {
+         return null;
+      }
+   });
    const [userProfile, setUserProfile] = useState<any>(null);
    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
    const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
@@ -18,7 +27,7 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
    const [dashLang, setDashLang] = useState<'fr' | 'en' | 'ar'>(() => {
       const saved = localStorage.getItem('beya_dash_lang');
       if (saved === 'fr' || saved === 'en' || saved === 'ar') return saved;
-      return storeIsAr ? 'ar' : 'fr';
+      return (storeIsAr || isAr) ? 'ar' : 'fr';
    });
    const isRtl = dashLang === 'ar';
    const t = (fr: string, en: string, ar: string) => (dashLang === 'ar' ? ar : dashLang === 'en' ? en : fr);
@@ -27,98 +36,137 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
       setDashLang(l);
    };
 
-   useEffect(() => {
-      const fetchStores = async () => {
-         try {
-            // Get current user to enforce Multi-Tenant isolation.
-            // Two identity systems coexist in this app: the real Supabase Auth session (used by
-            // merchants who signed up via /store-signup) and the app-level custom `users` table
-            // session (appCurrentUser, used by the rest of the ERP). A merchant can be logged in
-            // at the app level while their Supabase Auth session has silently expired/never existed
-            // in this tab - without this fallback their own stores would wrongly appear to vanish.
-            const { data: sessionData } = await supabase.auth.getSession();
-            const user = sessionData?.session?.user;
-            const effectiveEmail = user?.email || appCurrentUser?.email;
-            const effectiveId = user?.id || appCurrentUser?.id;
-            let userRole = user?.user_metadata?.role || appCurrentUser?.role || 'merchant';
-            const isAdminOrOwner =
-               effectiveEmail === '00.emaily.zero@gmail.com' ||
-               effectiveEmail === 'fashlow@gmail.com' ||
-               userRole === 'admin';
-
-            if (isAdminOrOwner) {
-               userRole = 'admin';
+   const fetchStores = async () => {
+      setIsLoading(true);
+      try {
+         // Get current user to enforce Multi-Tenant isolation.
+         // Two identity systems coexist in this app: the real Supabase Auth session (used by
+         // merchants who signed up via /store-signup) and the app-level custom `users` table
+         // session (appCurrentUser / textrack_auth, used by the rest of the ERP).
+         const { data: sessionData } = await supabase.auth.getSession();
+         const user = sessionData?.session?.user;
+         const localAuth = (() => {
+            try {
+               const saved = localStorage.getItem('textrack_auth');
+               return saved ? JSON.parse(saved) : null;
+            } catch {
+               return null;
             }
-            if (user) setCurrentUser(user);
-            else if (appCurrentUser) setCurrentUser(appCurrentUser);
-            const userId = effectiveId;
+         })();
+         const effectiveUser = user || appCurrentUser || localAuth;
+         const effectiveEmail = effectiveUser?.email;
+         const effectiveId = effectiveUser?.id;
+         let userRole = effectiveUser?.user_metadata?.role || effectiveUser?.role || 'merchant';
+         const isAdminOrOwner =
+            effectiveEmail === '00.emaily.zero@gmail.com' ||
+            effectiveEmail === 'fashlow@gmail.com' ||
+            userRole === 'admin' ||
+            userRole === 'superadmin';
 
-            // Fetch the profile and the stores list in parallel instead of one-after-another -
-            // sequential awaits here were roughly doubling the perceived loading time.
-            const [profileResult, storesResult] = await Promise.all([
-               effectiveId
-                  ? Promise.resolve(supabase.from('users').select('*').eq('id', effectiveId).single()).catch(() => ({ data: null } as any))
-                  : Promise.resolve({ data: null } as any),
-               supabase.from('stores').select('*').order('created_at', { ascending: false })
-            ]);
+         if (isAdminOrOwner) {
+            userRole = 'admin';
+         }
+         if (effectiveUser) setCurrentUser(effectiveUser);
+         const userId = effectiveId;
 
-            if (profileResult?.data) setUserProfile(profileResult.data);
-            const { data, error } = storesResult;
+         // Fetch the profile and the stores list in parallel.
+         // CRITICAL FIX: We select lightweight columns + JSON extracted fields instead of select('*').
+         // Selecting entire config_json across all platform stores transfers tens of megabytes of raw image data,
+         // causing Postgres statement timeouts (error 57014) which resulted in stores disappearing.
+         const [profileResult, storesResult] = await Promise.all([
+            effectiveId
+               ? Promise.resolve(supabase.from('users').select('*').eq('id', effectiveId).single()).catch(() => ({ data: null } as any))
+               : Promise.resolve({ data: null } as any),
+            supabase
+               .from('stores')
+               .select('id, name, domain, subscription_tier, created_at, updated_at, owner_email:config_json->owner_email, owner_id:config_json->owner_id, stats:config_json->stats, plan:config_json->plan')
+               .order('created_at', { ascending: false })
+         ]);
 
-            if (data) {
-               // Map real data or mix with mock stats if stats are missing
-               let realStores = data
-                  .filter((st: any) => st.domain !== 'latest_saved_store')
-                  .map((st: any) => ({
+         if (profileResult?.data) setUserProfile(profileResult.data);
+         const { data, error } = storesResult;
+
+         if (error) {
+            console.error("Supabase fetch stores error:", error);
+         }
+
+         if (data) {
+            let realStores = data
+               .filter((st: any) => st.domain !== 'latest_saved_store')
+               .map((st: any) => {
+                  const rawOwnerEmail = st.owner_email ? String(st.owner_email).replace(/^"|"$/g, '').trim() : '';
+                  const rawOwnerId = st.owner_id ? String(st.owner_id).replace(/^"|"$/g, '').trim() : '';
+                  return {
                      id: st.id,
                      name: st.name || 'Boutique Sans Nom',
                      url: st.domain || `${st.id}.beyacreative.com`,
                      plan: (isAdminOrOwner && localStorage.getItem('beya_godmode_simulated_plan'))
                            ? localStorage.getItem('beya_godmode_simulated_plan')!
-                           : (st.subscription_tier || st.config_json?.plan || 'NORMAL'),
+                           : (st.subscription_tier || st.plan || 'NORMAL'),
                      status: 'Active',
-                     visitors: st.config_json?.stats?.visitors || 0,
-                     revenue: st.config_json?.stats?.revenue ? `${st.config_json.stats.revenue} MAD` : '0 MAD',
-                     config_json: st.config_json,
-                     owner_id: st.config_json?.owner_id
-                  }));
+                     visitors: st.stats?.visitors || 0,
+                     revenue: st.stats?.revenue ? `${st.stats.revenue} MAD` : '0 MAD',
+                     owner_id: rawOwnerId,
+                     owner_email: rawOwnerEmail,
+                     config_json: null
+                  };
+               });
 
-               // STRICT MULTI-TENANT DATA ISOLATION (SECURITY HARDENED):
-               // 1. System administrators (00.emaily.zero@gmail.com, fashlow@gmail.com, role='admin') see all stores.
-               // 2. Logged-in merchants MUST ONLY see stores matching their email or user ID.
-               // 3. Anonymous/Local users (not logged in) MUST NEVER see other merchants' stores! They only see stores with no owner (local draft stores).
-               if (!isAdminOrOwner) {
-                  if (effectiveEmail || userId) {
-                     const userEmailLower = effectiveEmail ? effectiveEmail.toLowerCase() : '';
-                     realStores = realStores.filter((st: any) => {
-                        const stEmailLower = st.config_json?.owner_email ? st.config_json.owner_email.toLowerCase() : '';
-                        const isOwnerByEmail = userEmailLower && stEmailLower && stEmailLower === userEmailLower;
-                        const isOwnerById = userId && ((st.owner_id && st.owner_id === userId) || (st.config_json?.owner_id && st.config_json?.owner_id === userId));
-                        return isOwnerByEmail || isOwnerById;
-                     });
-                  } else {
-                     // Anonymous / Local account: ONLY show stores where owner_email is undefined/null and owner_id is undefined/null (local draft stores)
-                     realStores = realStores.filter((st: any) =>
-                        !st.owner_id && !st.config_json?.owner_id && !st.config_json?.owner_email
-                     );
-                  }
+            // STRICT MULTI-TENANT DATA ISOLATION (SECURITY HARDENED):
+            if (!isAdminOrOwner) {
+               if (effectiveEmail || userId) {
+                  const userEmailLower = effectiveEmail ? effectiveEmail.toLowerCase().trim() : '';
+                  const userIdStr = userId ? String(userId).trim() : '';
+                  realStores = realStores.filter((st: any) => {
+                     const stEmailLower = st.owner_email ? st.owner_email.toLowerCase().trim() : '';
+                     const isOwnerByEmail = userEmailLower && stEmailLower && stEmailLower === userEmailLower;
+                     const isOwnerById = userIdStr && st.owner_id && String(st.owner_id).trim() === userIdStr;
+                     return isOwnerByEmail || isOwnerById;
+                  });
+               } else {
+                  // Anonymous / Local account: ONLY show stores where owner_email is undefined/null and owner_id is undefined/null
+                  realStores = realStores.filter((st: any) =>
+                     !st.owner_id && !st.owner_email
+                  );
                }
-
-               // Set to realStores.
-               setStores(realStores);
-            } else {
-                setStores([]);
             }
-         } catch (err) {
-            console.warn("Supabase fetch failed", err);
-            setStores([]);
-         } finally {
-            setIsLoading(false);
-         }
-      };
 
+            setStores(realStores);
+         } else {
+             setStores([]);
+         }
+      } catch (err) {
+         console.warn("Supabase fetch failed", err);
+         setStores([]);
+      } finally {
+         setIsLoading(false);
+      }
+   };
+
+   useEffect(() => {
       fetchStores();
    }, []);
+
+   const handleManageStore = async (store: any) => {
+      if (store.config_json && Object.keys(store.config_json).length > 0) {
+         onSelectStore(store);
+         return;
+      }
+      setLoadingStoreId(store.id);
+      try {
+         const { data, error } = await supabase.from('stores').select('config_json').eq('id', store.id).single();
+         if (error) throw error;
+         onSelectStore({
+            ...store,
+            config_json: data?.config_json || {}
+         });
+      } catch (err) {
+         console.warn("Could not fetch full store config, fallback to basic:", err);
+         onSelectStore(store);
+      } finally {
+         setLoadingStoreId(null);
+      }
+   };
 
    const handleDeleteStore = async () => {
       if (!deleteTarget) return;
@@ -301,6 +349,31 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                   <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
                   <p className="text-slate-500 font-medium">{t('Chargement des boutiques...', 'Loading stores...', 'جاري تحميل المتاجر...')}</p>
                </div>
+            ) : stores.length === 0 ? (
+               <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm text-center">
+                  <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+                     <LayoutDashboard className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-xl font-bold text-slate-900 mb-2">
+                     {t('Aucune boutique trouvée', 'No store found', 'لم يتم العثور على أي متجر')}
+                  </h4>
+                  <p className="text-slate-500 text-sm max-w-md mb-6 leading-relaxed">
+                     {t(
+                        'Vous n\'avez pas encore créé de boutique ou aucune boutique n\'est associée à ce compte.',
+                        'You haven\'t created a store yet or no store is linked to this account.',
+                        'لم تقم بإنشاء أي متجر بعد أو لا يوجد متجر مرتبط بهذا الحساب.'
+                     )}
+                  </p>
+                  {canCreateStore && (
+                     <button
+                        onClick={handleCreateStoreClick}
+                        className="flex items-center gap-2 px-6 py-3.5 bg-indigo-600 text-white hover:bg-indigo-700 font-bold rounded-xl transition-all shadow-lg shadow-indigo-200 active:scale-95"
+                     >
+                        <Plus className="w-5 h-5" />
+                        <span>{t('Créer ma boutique', 'Create my store', 'إنشاء متجري')}</span>
+                     </button>
+                  )}
+               </div>
             ) : (
                <div className="grid md:grid-cols-2 gap-6">
                   {stores.map(store => (
@@ -312,7 +385,7 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                               </div>
                               <div>
                                  <h4 className="text-lg font-bold text-slate-900">{store.name}</h4>
-                                 <a href={`https://${store.url}`} target="_blank" className="text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1 mt-1 transition-colors">
+                                 <a href={`https://${store.url}`} target="_blank" rel="noreferrer" className="text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1 mt-1 transition-colors">
                                     {store.url} <ExternalLink className="w-3 h-3" />
                                  </a>
                               </div>
@@ -344,10 +417,25 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                         </div>
 
                         <div className="flex gap-3">
-                           <button onClick={() => onSelectStore(store)} className="flex-1 bg-indigo-50 text-indigo-700 font-bold py-3 rounded-xl hover:bg-indigo-600 hover:text-white transition-colors active:scale-95">
-                              {t('Gérer la boutique', 'Manage store', 'إدارة المتجر')}
+                           <button 
+                              onClick={() => handleManageStore(store)} 
+                              disabled={loadingStoreId === store.id}
+                              className="flex-1 bg-indigo-50 text-indigo-700 font-bold py-3 rounded-xl hover:bg-indigo-600 hover:text-white transition-colors active:scale-95 flex items-center justify-center gap-2"
+                           >
+                              {loadingStoreId === store.id ? (
+                                 <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span>{t('Ouverture...', 'Opening...', 'جاري الفتح...')}</span>
+                                 </>
+                              ) : (
+                                 t('Gérer la boutique', 'Manage store', 'إدارة المتجر')
+                              )}
                            </button>
-                           <button onClick={() => onSelectStore(store)} className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors active:scale-95">
+                           <button 
+                              onClick={() => handleManageStore(store)} 
+                              disabled={loadingStoreId === store.id}
+                              className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors active:scale-95"
+                           >
                               <Settings className="w-5 h-5" />
                            </button>
                            <button onClick={() => setDeleteTarget({ id: store.id, name: store.name })} className="w-12 h-12 flex items-center justify-center bg-white border border-rose-200 text-rose-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors active:scale-95" title={t('Supprimer la boutique', 'Delete store', 'حذف المتجر')}>

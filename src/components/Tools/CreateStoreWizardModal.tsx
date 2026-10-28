@@ -248,6 +248,26 @@ export default function CreateStoreWizardModal({
       const cleanSub = slugify(subdomain);
       const fullDomain = customDomain.trim() ? customDomain.trim().toLowerCase() : `${cleanSub}.beyacreative.com`;
 
+      // Resolve effective user from prop, Supabase auth session, or textrack_auth localStorage
+      let effectiveUser = currentUser;
+      if (!effectiveUser?.id || !effectiveUser?.email) {
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData?.session?.user) {
+            effectiveUser = { ...sessionData.session.user, ...effectiveUser };
+          }
+        } catch (e) { /* ignore */ }
+      }
+      if (!effectiveUser?.id || !effectiveUser?.email) {
+        try {
+          const s = localStorage.getItem('textrack_auth');
+          if (s) {
+            const parsed = JSON.parse(s);
+            effectiveUser = { ...parsed, ...effectiveUser };
+          }
+        } catch (e) { /* ignore */ }
+      }
+
       const initialConfig = {
         storeName: storeName.trim(),
         subdomain: cleanSub,
@@ -266,10 +286,10 @@ export default function CreateStoreWizardModal({
         secondaryColor: '#ffffff',
         fontFamily: selectedTheme.defaultFont,
         currency: 'MAD',
-        owner_id: currentUser?.id,
-        owner_email: currentUser?.email,
-        contactEmail: currentUser?.email || 'contact@store.ma',
-        contactPhone: currentUser?.phone || '0661000000',
+        owner_id: effectiveUser?.id,
+        owner_email: effectiveUser?.email,
+        contactEmail: effectiveUser?.email || 'contact@store.ma',
+        contactPhone: effectiveUser?.phone || '0661000000',
         createdAt: new Date().toISOString(),
         stats: {
           visitors: 0,

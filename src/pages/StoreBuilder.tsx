@@ -1504,9 +1504,16 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
     // Add owner details for Multi-Tenant Data Isolation
     try {
        const { data: sessionData } = await supabase.auth.getSession();
-       if (sessionData?.session?.user) {
-          (storeConfig as any).owner_id = sessionData.session.user.id;
-          (storeConfig as any).owner_email = sessionData.session.user.email;
+       const localAuth = (() => {
+          try {
+             const s = localStorage.getItem('textrack_auth');
+             return s ? JSON.parse(s) : null;
+          } catch { return null; }
+       })();
+       const effectiveUser = sessionData?.session?.user || appCurrentUser || localAuth;
+       if (effectiveUser) {
+          (storeConfig as any).owner_id = (storeConfig as any).owner_id || effectiveUser.id;
+          (storeConfig as any).owner_email = (storeConfig as any).owner_email || effectiveUser.email;
        }
     } catch(e) {
        console.error("Could not fetch session for owner_id", e);
