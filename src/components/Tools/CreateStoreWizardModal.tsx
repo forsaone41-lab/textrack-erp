@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Check, ArrowRight, ArrowLeft, Store, Globe, 
-  Palette, Sparkles, CheckCircle2, ShieldCheck, 
+  Palette, CheckCircle2, ShieldCheck, 
   ExternalLink, AlertCircle, Loader2, Lock, Eye
 } from 'lucide-react';
 import { supabase } from '../../supabase';
@@ -329,10 +329,6 @@ export default function CreateStoreWizardModal({
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2 mb-2 text-indigo-400 text-xs font-black uppercase tracking-widest">
-            <Sparkles className="w-4 h-4" />
-            <span>{isAr ? 'مساعد إنشاء المتجر الاحترافي' : 'Assistant Création de Boutique'}</span>
-          </div>
           <h2 className="text-xl sm:text-2xl font-black tracking-tight">
             {isAr ? 'إطلاق متجرك الإلكتروني في دقائق' : 'Créez votre boutique en quelques clics'}
           </h2>
@@ -688,9 +684,9 @@ export default function CreateStoreWizardModal({
                     <ShieldCheck className="w-4 h-4" /> SSL Gratuit & Sécurisé
                   </span>
                   <span>•</span>
-                  <span>🚀 Hébergement CDN Ultra-rapide</span>
+                  <span>Hébergement CDN Rapide</span>
                   <span>•</span>
-                  <span>📦 Paiement à la livraison (COD) Activé</span>
+                  <span>Paiement à la livraison (COD) Activé</span>
                 </div>
               </div>
             </div>
@@ -739,10 +735,7 @@ export default function CreateStoreWizardModal({
                   <span>{isAr ? 'جاري تجهيز المتجر...' : 'Initialisation en cours...'}</span>
                 </>
               ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>{isAr ? 'إطلاق المتجر الآن 🚀' : 'Lancer ma boutique maintenant 🚀'}</span>
-                </>
+                <span>{isAr ? 'إطلاق المتجر الآن' : 'Lancer ma boutique maintenant'}</span>
               )}
             </button>
           )}
