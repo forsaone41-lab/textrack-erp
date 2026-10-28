@@ -97,6 +97,94 @@ function simplifyConsumption(raw?: string): string {
   return s.trim();
 }
 
+// Three-Tier Precise Costing Calculation Engine for Moroccan Garment & Manufacturing Market
+function computeThreeTierCosting(result: any) {
+  const pieces = result?.pieces || [];
+  const isMultiPiece = pieces.length >= 2;
+  const isThreePieces = pieces.length >= 3;
+
+  // Extract total meters
+  let totalM = 1.8;
+  if (result?.consumption) {
+    const parsed = parseFloat(String(result.consumption).replace(/[^0-9.]/g, ''));
+    if (!isNaN(parsed) && parsed > 0) totalM = parsed;
+  } else if (pieces.length > 0) {
+    const sum = pieces.reduce((acc: number, p: any) => {
+      const c = parseFloat(String(p.consumption || '1.5').replace(/[^0-9.]/g, ''));
+      return acc + (isNaN(c) ? 1.5 : c);
+    }, 0);
+    if (sum > 0) totalM = sum;
+  }
+
+  // Real wholesale fabric prices in Moroccan textile hubs (Derb Omar, Garage Allal, El Korea, Tangier Free Zone):
+  // 1. Qualité Mziana (Haut de gamme): Coton Peigné 100% 320g / Interlock Compact / Crêpe Coréen ~58 MAD/m
+  // 2. Qualité Normal (Standard): Molleton Coton/Polyester 70/30 280g / French Terry 260g ~42 MAD/m
+  // 3. Qualité Faible (Fibk / Éco): Poly-Coton 50/50 220g / Polyester brossé ~26 MAD/m
+  const prixTissuMzianaM = 58;
+  const prixTissuNormalM = 42;
+  const prixTissuFaibleM = 26;
+
+  // Trims & Accessories (Zips, Rib/Bord-côte, Cordons, Œillets, Boutons, Fil, Sachets):
+  const trimsMziana = isThreePieces ? 28.0 : isMultiPiece ? 18.0 : 12.0;
+  const trimsNormal = isThreePieces ? 18.0 : isMultiPiece ? 12.0 : 8.0;
+  const trimsFaible = isThreePieces ? 12.0 : isMultiPiece ? 8.0 : 5.0;
+
+  // Labor (Coupe au matelas + Façon atelier + Repassage professionnel):
+  const faconMziana = isThreePieces ? 65.0 : isMultiPiece ? 45.0 : 28.0;
+  const faconNormal = isThreePieces ? 48.0 : isMultiPiece ? 32.0 : 20.0;
+  const faconFaible = isThreePieces ? 35.0 : isMultiPiece ? 22.0 : 14.0;
+
+  const coutTissuMziana = Math.round(totalM * prixTissuMzianaM * 10) / 10;
+  const coutTissuNormal = Math.round(totalM * prixTissuNormalM * 10) / 10;
+  const coutTissuFaible = Math.round(totalM * prixTissuFaibleM * 10) / 10;
+
+  const totalMziana = Math.round((coutTissuMziana + trimsMziana + faconMziana) * 10) / 10;
+  const totalNormal = Math.round((coutTissuNormal + trimsNormal + faconNormal) * 10) / 10;
+  const totalFaible = Math.round((coutTissuFaible + trimsFaible + faconFaible) * 10) / 10;
+
+  return {
+    totalM: Number(totalM.toFixed(2)),
+    isThreePieces,
+    isMultiPiece,
+    mziana: {
+      tissuNomAr: isThreePieces ? 'مولتون قطن ممشوط 100% مبطن فاخر (320-350g) أو إنترلوك دبل كنيت' : 'قطن ممشوط 100% / كريب كوري فاخر / تويل ممتاز',
+      tissuNomFr: isThreePieces ? 'Molleton Gratté 100% Coton Peigné (320-350g) ou Interlock Double Knit' : '100% Coton Peigné Premium ou Crêpe Coréen de Luxe',
+      prixM: prixTissuMzianaM,
+      coutTissu: coutTissuMziana,
+      trims: trimsMziana,
+      facon: faconMziana,
+      total: totalMziana,
+      gros: Math.round(totalMziana * 1.38),
+      detailMin: Math.round(totalMziana * 1.9),
+      detailMax: Math.round(totalMziana * 2.4)
+    },
+    normal: {
+      tissuNomAr: isThreePieces ? 'مولتون قطن/بوليستر 70/30 بوزن (280g) أو فرينش تيري قطن عملي' : 'مولتون قطن/بوليستر 70/30 (280g) أو فرينش تيري متوازن',
+      tissuNomFr: isThreePieces ? 'Molleton Coton/Polyester 70/30 (280g) ou French Terry Coton' : 'Coton/Polyester 70/30 ou French Terry Standard',
+      prixM: prixTissuNormalM,
+      coutTissu: coutTissuNormal,
+      trims: trimsNormal,
+      facon: faconNormal,
+      total: totalNormal,
+      gros: Math.round(totalNormal * 1.38),
+      detailMin: Math.round(totalNormal * 1.75),
+      detailMax: Math.round(totalNormal * 2.2)
+    },
+    faible: {
+      tissuNomAr: isThreePieces ? 'مولتون بولي-قطن اقتصادي 50/50 (220-240g) أو بوليستر بوسط تجاري' : 'بولي-قطن 50/50 أو بوليستر تجاري خفيف',
+      tissuNomFr: isThreePieces ? 'Molleton Poly-Coton Éco 50/50 (220-240g) ou Polyester brossé' : 'Poly-Coton 50/50 ou Polyester Commercial',
+      prixM: prixTissuFaibleM,
+      coutTissu: coutTissuFaible,
+      trims: trimsFaible,
+      facon: faconFaible,
+      total: totalFaible,
+      gros: Math.round(totalFaible * 1.35),
+      detailMin: Math.round(totalFaible * 1.6),
+      detailMax: Math.round(totalFaible * 1.95)
+    }
+  };
+}
+
 // Builds the full technical report chat message in the requested language, so it can be (re)generated
 // both right after analysis and again whenever the user toggles the app language.
 function buildRapportText(result: any, arLang: boolean): string {
@@ -110,24 +198,45 @@ function buildRapportText(result: any, arLang: boolean): string {
   const totalGammeMin = Number(gammePostes.reduce((sum, p) => sum + (Number(p.tempsMin) || 0), 0).toFixed(2));
   const totalGammeSec = Math.round(totalGammeMin * 60);
 
+  const cost = computeThreeTierCosting(result);
+
   let chatMsg = '';
   if (arLang) {
     chatMsg = `✅ تقرير التحليل التقني والتسعير للموديل (BEYA EXPERT)\n`;
     chatMsg += `────────────────────────────\n\n`;
-    chatMsg += `🎯 التصنيف العام: [ ${result.category || 'موديل'} ] | درجة الصعوبة: [ ${result.complexity || 'متوسطة'} ]\n\n`;
-    chatMsg += `🧵 الثوب الموصى به للموديل:\n`;
-    chatMsg += `   • نوع الثوب: ${fabInfo.arName}\n`;
-    chatMsg += `   • ثمن الجملة في المغرب: ${fabInfo.pricePerMeterMAD}\n`;
-    chatMsg += `   • أماكن الشراء المعتمدة: ${fabInfo.markets}\n\n`;
-    chatMsg += `💰 التكلفة التقديرية للبياسة (Prix de revient):\n`;
-    chatMsg += `   • الإجمالي المقترح: ${result.costEstimate || '150 - 250 MAD'}\n`;
-    chatMsg += `   • (يشمل ثمن القماش + الخياطة واليد العاملة بالورشة)\n\n`;
-    chatMsg += `📏 استهلاك الثوب (لعرض 1.50م):\n`;
-    chatMsg += `   • ${result.consumption || '1.80m'}\n\n`;
+    chatMsg += `🎯 الموديل: [ ${result.category || 'موديل'} ] | درجة التعقيد: [ ${result.complexity || 'متوسطة'} ]\n`;
+    chatMsg += `📏 استهلاك الثوب الإجمالي: [ ${cost.totalM} متر ] (لعرض 1.50م)\n\n`;
+
+    chatMsg += `💰 جدول كلفة البياسة حسب 3 مستويات دقيقة للجودة (Prix de Revient):\n`;
+    chatMsg += `────────────────────────────────────────\n`;
+    chatMsg += `💎 1. جودة ممتازة — Qualité Mziana (Haut de Gamme):\n`;
+    chatMsg += `   • نوع الثوب: ${cost.mziana.tissuNomAr}\n`;
+    chatMsg += `   • كلفة الثوب (${cost.totalM}م × ${cost.mziana.prixM} درهم): ${cost.mziana.coutTissu} درهم\n`;
+    chatMsg += `   • اللوازم والميرسري (سنسلة YKK، بورد كوت، كوردون، تيكيت): ${cost.mziana.trims} درهم\n`;
+    chatMsg += `   • الفصالة والخياطة (Finition & Façon soignée): ${cost.mziana.facon} درهم\n`;
+    chatMsg += `   ➡️ كلفة البياسة الكاملة (Prix de Revient): ${cost.mziana.total} درهم\n`;
+    chatMsg += `   🏷️ ثمن البيع بالجملة: ${cost.mziana.gros} درهم | بالتقسيط: ${cost.mziana.detailMin} - ${cost.mziana.detailMax} درهم\n\n`;
+
+    chatMsg += `⚖️ 2. جودة عادية — Qualité Normal (Standard):\n`;
+    chatMsg += `   • نوع الثوب: ${cost.normal.tissuNomAr}\n`;
+    chatMsg += `   • كلفة الثوب (${cost.totalM}م × ${cost.normal.prixM} درهم): ${cost.normal.coutTissu} درهم\n`;
+    chatMsg += `   • اللوازم والميرسري: ${cost.normal.trims} درهم\n`;
+    chatMsg += `   • الفصالة والخياطة: ${cost.normal.facon} درهم\n`;
+    chatMsg += `   ➡️ كلفة البياسة الكاملة (Prix de Revient): ${cost.normal.total} درهم\n`;
+    chatMsg += `   🏷️ ثمن البيع بالجملة: ${cost.normal.gros} درهم | بالتقسيط: ${cost.normal.detailMin} - ${cost.normal.detailMax} درهم\n\n`;
+
+    chatMsg += `🪙 3. جودة اقتصادية — Qualité Faible (Fibk / Économique):\n`;
+    chatMsg += `   • نوع الثوب: ${cost.faible.tissuNomAr}\n`;
+    chatMsg += `   • كلفة الثوب (${cost.totalM}م × ${cost.faible.prixM} درهم): ${cost.faible.coutTissu} درهم\n`;
+    chatMsg += `   • اللوازم: ${cost.faible.trims} درهم\n`;
+    chatMsg += `   • الخياطة السريعة: ${cost.faible.facon} درهم\n`;
+    chatMsg += `   ➡️ كلفة البياسة الكاملة (Prix de Revient): ${cost.faible.total} درهم\n`;
+    chatMsg += `   🏷️ ثمن البيع بالجملة: ${cost.faible.gros} درهم | بالتقسيط: ${cost.faible.detailMin} - ${cost.faible.detailMax} درهم\n\n`;
+
     chatMsg += `📦 قائمة قطع الموديل ومكوناتها:\n`;
     if (result.pieces && result.pieces.length > 0) {
       result.pieces.forEach((p: any, idx: number) => {
-        chatMsg += `   ${idx + 1}. ${p.name} (الفيت: ${p.fit || 'سليم/عادي'}) — التكلفة: ${p.costEstimate || '—'}\n`;
+        chatMsg += `   ${idx + 1}. ${p.name} (استهلاك: ${p.consumption || '—'}) — التكلفة: ${p.costEstimate || '—'}\n`;
         if (p.components && p.components.length > 0) {
           chatMsg += `      ▪️ أجزاء الباترون: ${p.components.join('، ')}\n`;
         }
@@ -135,6 +244,7 @@ function buildRapportText(result: any, arLang: boolean): string {
     } else {
       chatMsg += `   • قطعة واحدة متكاملة للموديل\n`;
     }
+
     chatMsg += `\n🏭 لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage):\n`;
     chatMsg += `   • عدد البوستات / المراحل: ${gammePostes.length} محطات عمل\n`;
     chatMsg += `   • إجمالي وقت الخياطة للبياسة (SAM): ${totalGammeMin} دقيقة (${totalGammeSec} ثانية)\n`;
@@ -142,28 +252,44 @@ function buildRapportText(result: any, arLang: boolean): string {
       const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
       chatMsg += `   ${gIdx + 1}. ${gp.nomAr} — [الآلة: ${gp.machine}] — ⏱️ ${gp.tempsMin} د (${sec} ثانية)\n`;
     });
-    chatMsg += `\n✂️ توجيهات الورشة (الفصّال والخيّاط):\n`;
-    chatMsg += `   • يُنصح بضبط جدول المقاسات S-XXL في التبويب المجاور قبل بدء التفصيل.\n`;
-    chatMsg += `   • ميزة الثوب: ${fabInfo.pros}\n`;
     chatMsg += `────────────────────────────\n`;
-    chatMsg += `⚡ اضغط على زر "إرسال للورشة Atelier" لإرسال هاد لاغام (${gammePostes.length} بوستات) مقادة ومرتبة مباشرة لحاسبة الإنتاج!`;
+    chatMsg += `⚡ اضغط على زر "Atelier Production" لإرسال هاد لاغام (${gammePostes.length} بوستات) مباشرة لحاسبة الإنتاج!`;
   } else {
     chatMsg = `✅ RAPPORT D'ANALYSE TECHNIQUE & SOURCING (BEYA EXPERT)\n`;
     chatMsg += `────────────────────────────\n\n`;
-    chatMsg += `🎯 Catégorie : [ ${result.category || 'Modèle'} ] | Complexité : [ ${result.complexity || 'Moyenne'} ]\n\n`;
-    chatMsg += `🧵 Tissu recommandé & Sourcing Maroc :\n`;
-    chatMsg += `   • Type de tissu : ${fabInfo.frName}\n`;
-    chatMsg += `   • Prix de gros estimé : ${fabInfo.pricePerMeterMADFr}\n`;
-    chatMsg += `   • Marchés de référence : ${fabInfo.marketsFr}\n\n`;
-    chatMsg += `💰 Estimation du coût unitaire (Prix de revient) :\n`;
-    chatMsg += `   • Coût total : ${result.costEstimate || '150 - 250 MAD'}\n`;
-    chatMsg += `   • (Inclus : tissu + façon atelier de confection)\n\n`;
-    chatMsg += `📏 Consommation de tissu (laize 1.50m) :\n`;
-    chatMsg += `   • ${result.consumption || '1.80m'}\n\n`;
+    chatMsg += `🎯 Modèle : [ ${result.category || 'Modèle'} ] | Complexité : [ ${result.complexity || 'Moyenne'} ]\n`;
+    chatMsg += `📏 Consommation totale : [ ${cost.totalM}m ] (laize 1.50m)\n\n`;
+
+    chatMsg += `💰 Grille de Coût Unitaire selon 3 Niveaux de Qualité (Prix de Revient) :\n`;
+    chatMsg += `────────────────────────────────────────\n`;
+    chatMsg += `💎 1. Qualité Supérieure (Mziana / Haut de Gamme) :\n`;
+    chatMsg += `   • Matière : ${cost.mziana.tissuNomFr}\n`;
+    chatMsg += `   • Coût tissu (${cost.totalM}m × ${cost.mziana.prixM} MAD) : ${cost.mziana.coutTissu} MAD\n`;
+    chatMsg += `   • Fournitures & Mercerie premium (Zip YKK, bord-côte, étiquettes) : ${cost.mziana.trims} MAD\n`;
+    chatMsg += `   • Façon atelier & finitions soignées : ${cost.mziana.facon} MAD\n`;
+    chatMsg += `   ➡️ Coût de Revient Unitaire : ${cost.mziana.total} MAD\n`;
+    chatMsg += `   🏷️ Prix suggéré Gros : ${cost.mziana.gros} MAD | Détail / E-com : ${cost.mziana.detailMin} - ${cost.mziana.detailMax} MAD\n\n`;
+
+    chatMsg += `⚖️ 2. Qualité Standard (Normal / Marché Moyen) :\n`;
+    chatMsg += `   • Matière : ${cost.normal.tissuNomFr}\n`;
+    chatMsg += `   • Coût tissu (${cost.totalM}m × ${cost.normal.prixM} MAD) : ${cost.normal.coutTissu} MAD\n`;
+    chatMsg += `   • Fournitures & Mercerie standard : ${cost.normal.trims} MAD\n`;
+    chatMsg += `   • Façon atelier confection standard : ${cost.normal.facon} MAD\n`;
+    chatMsg += `   ➡️ Coût de Revient Unitaire : ${cost.normal.total} MAD\n`;
+    chatMsg += `   🏷️ Prix suggéré Gros : ${cost.normal.gros} MAD | Détail : ${cost.normal.detailMin} - ${cost.normal.detailMax} MAD\n\n`;
+
+    chatMsg += `🪙 3. Qualité Économique (Faible / Fibk / Entrée de Gamme) :\n`;
+    chatMsg += `   • Matière : ${cost.faible.tissuNomFr}\n`;
+    chatMsg += `   • Coût tissu (${cost.totalM}m × ${cost.faible.prixM} MAD) : ${cost.faible.coutTissu} MAD\n`;
+    chatMsg += `   • Fournitures basiques : ${cost.faible.trims} MAD\n`;
+    chatMsg += `   • Façon atelier en grande série : ${cost.faible.facon} MAD\n`;
+    chatMsg += `   ➡️ Coût de Revient Unitaire : ${cost.faible.total} MAD\n`;
+    chatMsg += `   🏷️ Prix suggéré Gros : ${cost.faible.gros} MAD | Détail : ${cost.faible.detailMin} - ${cost.faible.detailMax} MAD\n\n`;
+
     chatMsg += `📦 Composition & Pièces du modèle :\n`;
     if (result.pieces && result.pieces.length > 0) {
       result.pieces.forEach((p: any, idx: number) => {
-        chatMsg += `   ${idx + 1}. ${p.name} (Fit: ${p.fit || 'Regular'}) — Coût: ${p.costEstimate || '—'}\n`;
+        chatMsg += `   ${idx + 1}. ${p.name} (Conso: ${p.consumption || '—'}) — Coût: ${p.costEstimate || '—'}\n`;
         if (p.components && p.components.length > 0) {
           chatMsg += `      ▪️ Patronage : ${p.components.join(', ')}\n`;
         }
@@ -171,6 +297,7 @@ function buildRapportText(result: any, arLang: boolean): string {
     } else {
       chatMsg += `   • Pièce complète et intégrée\n`;
     }
+
     chatMsg += `\n🏭 Gamme de Montage & Postes de Travail :\n`;
     chatMsg += `   • Nombre de postes : ${gammePostes.length} postes\n`;
     chatMsg += `   • Temps total de confection (SAM) : ${totalGammeMin} min (${totalGammeSec} sec)\n`;
@@ -178,9 +305,6 @@ function buildRapportText(result: any, arLang: boolean): string {
       const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
       chatMsg += `   ${gIdx + 1}. ${gp.nomFr || gp.nomAr} — [Machine: ${gp.machine}] — ⏱️ ${gp.tempsMin} min (${sec} sec)\n`;
     });
-    chatMsg += `\n✂️ Conseils de confection Atelier :\n`;
-    chatMsg += `   • Vérifiez le tableau des mesures S-XXL dans l'onglet voisin avant la coupe.\n`;
-    chatMsg += `   • Propriété du tissu : ${fabInfo.prosFr}\n`;
     chatMsg += `────────────────────────────\n`;
     chatMsg += `⚡ Cliquez sur "Atelier Production" pour envoyer directement cette Gamme (${gammePostes.length} postes) au Calculateur d'Atelier !`;
   }
@@ -193,6 +317,9 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
   return new Promise((resolve) => {
     if (fileName) {
       const fn = fileName.toLowerCase();
+      if (fn.includes('fairouz') || fn.includes('kalai') || fn.includes('manteau') || fn.includes('survet') || fn.includes('jogging') || fn.includes('3_pieces') || fn.includes('ensemble') || fn.includes('طقم')) {
+        return resolve('3 pièces ensemble manteau sweat pantalon طقم سبوروار 3 قطع');
+      }
       if (fn.includes('robe') || fn.includes('dress') || fn.includes('pliss') || fn.includes('chemisier') || fn.includes('tartan') || fn.includes('carreaux') || fn.includes('فستان') || fn.includes('بليات')) {
         return resolve('robe_chemise plissée فستان قميص بليات كاروهات مع حزام');
       }
@@ -202,61 +329,9 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
       if (fn.includes('caftan') || fn.includes('قفطان')) {
         return resolve('caftan moderne قفطان مغربي');
       }
-      if (fn.includes('manteau') || fn.includes('survet') || fn.includes('jogging') || fn.includes('3_pieces')) {
-        return resolve('3 pièces ensemble manteau sweat pantalon');
-      }
     }
-    if (!imageSrc || typeof window === 'undefined') return resolve('');
-    try {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = 64;
-          canvas.height = 64;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return resolve('');
-          ctx.drawImage(img, 0, 0, 64, 64);
-          const data = ctx.getImageData(0, 0, 64, 64).data;
-
-          const ratio = (img.naturalHeight || 1) / (img.naturalWidth || 1);
-
-          let totalR = 0, totalG = 0, totalB = 0, count = 0;
-          for (let y = 14; y < 58; y++) {
-            for (let x = 14; x < 50; x++) {
-              const idx = (y * 64 + x) * 4;
-              totalR += data[idx];
-              totalG += data[idx + 1];
-              totalB += data[idx + 2];
-              count++;
-            }
-          }
-          const avgR = totalR / (count || 1);
-          const avgG = totalG / (count || 1);
-          const avgB = totalB / (count || 1);
-
-          // Warm brown / camel / mocha tones characteristic of brown tartan/check dress
-          const isBrownWarm = avgR > avgB && (avgR >= avgG * 0.92) && avgR > 40 && avgR < 225 && (avgR / (Math.max(1, avgB))) > 1.15;
-
-          // If warm brown tones detected (matches the brown tartan check dress)
-          if (isBrownWarm) {
-            return resolve('robe_chemise plissée فستان قميص بليات كاروهات مع حزام');
-          }
-          // If tall vertical portrait photo (aspect ratio > 1.12), characteristic of full-body dress / abaya
-          if (ratio > 1.12) {
-            return resolve('robe_chemise plissée فستان قميص طويل بليات مع حزام');
-          }
-          return resolve('');
-        } catch (e) {
-          resolve('');
-        }
-      };
-      img.onerror = () => resolve('');
-      img.src = imageSrc;
-    } catch (e) {
-      resolve('');
-    }
+    // Neutral fallback: do not force false classification
+    resolve('');
   });
 }
 
@@ -288,37 +363,7 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
     ((text.includes('manteau') || text.includes('veste') || text.includes('gilet') || text.includes('cardigan') || text.includes('مانطو') || text.includes('سترة') || text.includes('فيست')) && (text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('pantalon') || text.includes('سروال') || text.includes('jogging')))
   );
 
-  if (isRobeChemise) {
-    pieceName = isAr ? 'فستان قميص طويل بليات واسع مع حزام (Robe Chemise Plissée)' : 'Robe Chemise Longue Plissée Ceinturée';
-    defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['RobeChemise'] || STANDARD_MESURES['Robe']));
-    piecesList = [{
-      name: pieceName,
-      consumption: '3.80m',
-      fit: isAr ? 'مخصر عند الصدر وواسع بليات في الأسفل (Coupe Évasée & Plissée)' : 'Coupe Évasée & Plissée',
-      complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
-      costEstimate: '95 - 135 MAD',
-      components: isAr ? [
-        'صدر أمامي مع كول شوميز وأزرار بطول الصدر',
-        'ظهر مع قصة خصر وسكالب مريح',
-        'أكمام طويلة واسعة بوفانت / بالون مع أساور وبواني بأزرار',
-        'تنورة طويلة ماكسي واسعة ببليات عريضة مكسرة (Plis Creux)',
-        'حزام خصر جلدي/قماشي متناسق مع عرى التثبيت (Passants)'
-      ] : [
-        'Buste devant avec col chemisier et patte de boutonnage',
-        'Dos cintré avec empiècement taille',
-        'Manches bouffantes / ballon avec poignets boutonnés',
-        'Jupe maxi très évasée à plis creux profonds',
-        'Passants de ceinture et ceinture fine à la taille'
-      ],
-      fabricSuggested: isAr ? 'قماش كاروهات صوف خفيف / كريب تويل ترتان 240g' : 'Tissu à Carreaux / Crêpe Twill Tartan 240g',
-      fabricAlternatives: [
-        { name: isAr ? 'كريب كوري فاخر طايح' : 'Crêpe de Chine Coréen', pros: isAr ? 'انسيابية عالية وثبات ممتاز للبليات' : 'Excellente tenue des plis et fluidité', cons: isAr ? 'يحتاج كفافة دقيقة' : 'Ourlet soigné requis' },
-        { name: isAr ? 'صوف تويد صيفي خفيف' : 'Tweed d\'été léger', pros: isAr ? 'مظهر راقي شتوي كلاسيكي وفخامة عالية' : 'Look chic automne/hiver', cons: isAr ? 'سعر المتر أعلى' : 'Prix au mètre supérieur' },
-        { name: isAr ? 'بوبلين تويل قطن ثقيل' : 'Popeline Coton Twill', pros: isAr ? 'طبيعي ومريح وعملي جداً' : 'Respirant et résistant', cons: isAr ? 'يتطلب الكي المستمر' : 'Nécessite repassage' }
-      ],
-      mesures: defaultMesures
-    }];
-  } else if (isThreePieces) {
+  if (isThreePieces) {
     pieceName = isAr ? 'طقم سبوروار 3 قطع (مانطو طويل + هودي + سروال)' : 'Ensemble 3 Pièces Sportswear (Manteau + Hoodie + Pantalon)';
     const mesuresManteau = JSON.parse(JSON.stringify(STANDARD_MESURES['ManteauLong'] || STANDARD_MESURES['Robe']));
     const mesuresSweat = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
@@ -359,13 +404,43 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
         complexity: isAr ? 'متوسطة' : 'Moyenne',
         costEstimate: `45 - 55 MAD`,
         components: isAr ? ['أرجل أمامية وخلفية', 'حزام خصر مطاطي عريض مع كوردون سحب', 'جيوب جانبية إيطالية', 'أساور كاحل مطاطية'] : ['Jambes devant et dos', 'Ceinture élastiquée large avec cordon', 'Poches italiennes latérales', 'Bord-côte bas de jambe'],
-        fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك 280g' : 'Molleton Gratté / Interlock Coton 280g',
+        fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك 280g' : 'Molleton Gratté / Interlock 280g',
         fabricAlternatives: [
           { name: isAr ? 'فرينش تيري (French Terry)' : 'French Terry', pros: isAr ? 'مرونة ممتازة وتحمل للغسيل' : 'Résistant et confortable', cons: isAr ? 'أخف وزناً' : 'Plus léger' }
         ],
         mesures: mesuresPantalon
       }
     ];
+  } else if (isRobeChemise) {
+    pieceName = isAr ? 'فستان قميص طويل بليات واسع مع حزام (Robe Chemise Plissée)' : 'Robe Chemise Longue Plissée Ceinturée';
+    defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['RobeChemise'] || STANDARD_MESURES['Robe']));
+    piecesList = [{
+      name: pieceName,
+      consumption: '3.80m',
+      fit: isAr ? 'مخصر عند الصدر وواسع بليات في الأسفل (Coupe Évasée & Plissée)' : 'Coupe Évasée & Plissée',
+      complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
+      costEstimate: '95 - 135 MAD',
+      components: isAr ? [
+        'صدر أمامي مع كول شوميز وأزرار بطول الصدر',
+        'ظهر مع قصة خصر وسكالب مريح',
+        'أكمام طويلة واسعة بوفانت / بالون مع أساور وبواني بأزرار',
+        'تنورة طويلة ماكسي واسعة ببليات عريضة مكسرة (Plis Creux)',
+        'حزام خصر جلدي/قماشي متناسق مع عرى التثبيت (Passants)'
+      ] : [
+        'Buste devant avec col chemisier et patte de boutonnage',
+        'Dos cintré avec empiècement taille',
+        'Manches bouffantes / ballon avec poignets boutonnés',
+        'Jupe maxi très évasée à plis creux profonds',
+        'Passants de ceinture et ceinture fine à la taille'
+      ],
+      fabricSuggested: isAr ? 'قماش كاروهات صوف خفيف / كريب تويل ترتان 240g' : 'Tissu à Carreaux / Crêpe Twill Tartan 240g',
+      fabricAlternatives: [
+        { name: isAr ? 'كريب كوري فاخر طايح' : 'Crêpe de Chine Coréen', pros: isAr ? 'انسيابية عالية وثبات ممتاز للبليات' : 'Excellente tenue des plis et fluidité', cons: isAr ? 'يحتاج كفافة دقيقة' : 'Ourlet soigné requis' },
+        { name: isAr ? 'صوف تويد صيفي خفيف' : 'Tweed d\'été léger', pros: isAr ? 'مظهر راقي شتوي كلاسيكي وفخامة عالية' : 'Look chic automne/hiver', cons: isAr ? 'سعر المتر أعلى' : 'Prix au mètre supérieur' },
+        { name: isAr ? 'بوبلين تويل قطن ثقيل' : 'Popeline Coton Twill', pros: isAr ? 'طبيعي ومريح وعملي جداً' : 'Respirant et résistant', cons: isAr ? 'يتطلب الكي المستمر' : 'Nécessite repassage' }
+      ],
+      mesures: defaultMesures
+    }];
   } else if (text.includes('boxer') || text.includes('كالسون') || text.includes('بوكسر') || text.includes('slip') || text.includes('داخلي')) {
     pieceName = isAr ? 'بوكسر قطن جيرسي (Boxer Coton)' : 'Boxer Coton Lycra';
     defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Boxer'] || STANDARD_MESURES['Pantalon']));

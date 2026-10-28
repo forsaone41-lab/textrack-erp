@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { Search, Save, Package, Phone, CheckCircle, ChevronDown, Check, Scissors, AlertCircle, X, ShieldAlert } from 'lucide-react';
-import { Lead, saveRecord } from '../types';
+import { Lead, saveRecord, User } from '../types';
 import { useLang } from '../contexts/LangContext';
 
+interface EvaluationPatronageProps {
+  currentUser?: User;
+}
 
-export default function EvaluationPatronage() {
+export default function EvaluationPatronage({ currentUser }: EvaluationPatronageProps) {
   const { isAr } = useLang();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +85,10 @@ export default function EvaluationPatronage() {
         ...(selectedLead as any),
         patronageStatus: 'priced',
         patronagePrice: Number(priceInput),
-        patronageNotes: notesInput
+        patronageNotes: notesInput,
+        modelisteId: currentUser?.id,
+        modelisteName: currentUser?.nom,
+        patronagePricedAt: new Date().toISOString()
       };
       
       const dbLead = {
