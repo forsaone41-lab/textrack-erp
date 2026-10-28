@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  FileText, CheckCircle2, Clock, Search, 
-  RefreshCw, MessageCircle, Printer, 
-  Scissors, Tag, Calendar, User as UserIcon, Eye, X, 
-  Check, DollarSign, Wallet, ShieldCheck,
-  ChevronRight, Sparkles, Filter
+  CheckCircle2, Clock, Search, 
+  RefreshCw, MessageCircle, 
+  Scissors, Calendar, User as UserIcon, Eye, X, 
+  Check, DollarSign, Wallet, RotateCcw
 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { 
@@ -12,7 +11,6 @@ import {
   loadData, saveRecord 
 } from '../types';
 import { supabase } from '../supabase';
-import { printFacture } from '../utils/print';
 
 interface ModelisteSuiviProps {
   currentUser: User;
@@ -30,20 +28,12 @@ export interface ModelItem {
   patronagePrice: number;
   patronageStatus: 'requested' | 'priced';
   patronageNotes?: string;
+  patronagePaid: boolean;
   isValidatedByClient: boolean;
-  validationStatus: 'valide' | 'echantillon_en_cours' | 'attente';
-  paymentStatus: 'payee' | 'partiel' | 'en_attente' | 'non_facture';
-  montantDevis: number;
-  montantFacture: number;
-  montantPaye: number;
-  resteAPayer: number;
   modelisteId?: string;
   modelisteName?: string;
   lead?: Lead;
   fiche?: FicheTechnique;
-  commande?: Commande;
-  devis?: Facture;
-  facture?: Facture;
 }
 
 export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
@@ -61,7 +51,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'en_attente_client' | 'payes' | 'en_attente_paiement'>('all');
   const [selectedModelisteId, setSelectedModelisteId] = useState<string>(isAdmin ? 'all' : currentUser.id);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
-  const [validatingId, setValidatingId] = useState<string | null>(null);
+  const [actionPendingId, setActionPendingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -100,7 +90,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     return users.filter(u => u.role === 'modeliste');
   }, [users]);
 
-  // Correlate Patronage Leads, Fiches, Commandes, Devis and Factures
+  // Correlate Patronage Leads and Fiches
   const modelItems: ModelItem[] = useMemo(() => {
     const items: ModelItem[] = [];
 
@@ -118,7 +108,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       const normClient = (lead.name || '').toLowerCase().trim();
       const normModele = (lead.type || '').toLowerCase().trim();
 
-      // Find matching Commande for this client/model
+      // Check if order exists for client validation
       const cmd = commandes.find(c => {
         const cClient = (c.client || '').toLowerCase().trim();
         const cModele = (c.modele || '').toLowerCase().trim();
@@ -126,25 +116,19 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                (cModele && normModele && (cModele === normModele || cModele.includes(normModele) || normModele.includes(cModele)));
       });
 
-      // Find matching Devis (typeDoc === 'devis')
       const devis = factures.find(f => {
         if (f.typeDoc !== 'devis') return false;
-        if (cmd && f.commandeId === cmd.id) return true;
         const fClient = (f.client || '').toLowerCase().trim();
         return fClient && (fClient === normClient || fClient.includes(normClient) || normClient.includes(fClient));
       });
 
-      // Find matching Facture (typeDoc !== 'devis' && typeDoc !== 'recu')
       const facture = factures.find(f => {
         if (f.typeDoc === 'devis' || f.typeDoc === 'recu') return false;
-        if (cmd && f.commandeId === cmd.id) return true;
         const fClient = (f.client || '').toLowerCase().trim();
         return fClient && (fClient === normClient || fClient.includes(normClient) || normClient.includes(fClient));
       });
 
-      // Client validation status:
-      // Validated when client accepted, crmStage is 'confirme', status is 'completed', crmPriceConfirmed is true,
-      // or cmd status is echantillon_valide/en_cours/terminé/livré, or facture exists/paid
+      // Validated when client accepted
       const isValidated = Boolean(
         ext.clientValidated === true ||
         lead.crmStage === 'confirme' ||
@@ -155,38 +139,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         (devis && devis.statut === 'payée')
       );
 
-      const valStatus: 'valide' | 'echantillon_en_cours' | 'attente' = isValidated 
-        ? 'valide' 
-        : (cmd?.statut === 'echantillon_en_cours' ? 'echantillon_en_cours' : 'attente');
-
       const patPrice = Number(ext.patronagePrice) || 0;
-      const mDevis = devis ? devis.montant : 0;
-      const mFacture = facture ? facture.montant : (cmd ? (cmd.prix * (cmd.quantite || 1)) : patPrice);
-      let mPaye = 0;
-      let pStatus: 'payee' | 'partiel' | 'en_attente' | 'non_facture' = 'non_facture';
-
-      if (facture) {
-        if (facture.statut === 'payée') {
-          pStatus = 'payee';
-          mPaye = facture.montant;
-        } else if (facture.avance && facture.avance > 0) {
-          pStatus = 'partiel';
-          mPaye = facture.avance;
-        } else {
-          pStatus = 'en_attente';
-          mPaye = 0;
-        }
-      } else if (cmd && cmd.avance && cmd.avance > 0) {
-        mPaye = cmd.avance;
-        pStatus = (cmd.avance >= mFacture && mFacture > 0) ? 'payee' : 'partiel';
-      } else if (ext.patronagePaid === true) {
-        pStatus = 'payee';
-        mPaye = patPrice;
-      } else if (isValidated) {
-        pStatus = 'en_attente';
-      }
-
-      const mReste = Math.max(0, mFacture - mPaye);
+      const isPaid = Boolean(ext.patronagePaid === true);
 
       items.push({
         id: lead.id,
@@ -200,19 +154,11 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         patronagePrice: patPrice,
         patronageStatus: ext.patronageStatus || (patPrice > 0 ? 'priced' : 'requested'),
         patronageNotes: ext.patronageNotes || '',
+        patronagePaid: isPaid,
         isValidatedByClient: isValidated,
-        validationStatus: valStatus,
-        paymentStatus: pStatus,
-        montantDevis: mDevis,
-        montantFacture: mFacture,
-        montantPaye: mPaye,
-        resteAPayer: mReste,
         modelisteId: ext.modelisteId,
         modelisteName: ext.modelisteName,
-        lead,
-        commande: cmd,
-        devis,
-        facture
+        lead
       });
     });
 
@@ -235,32 +181,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         return (cClient === normFicheClient) && (cModele === normFicheModele || cModele.includes(normFicheModele));
       });
 
-      const devis = factures.find(f => f.typeDoc === 'devis' && (f.client || '').toLowerCase().trim() === normFicheClient);
-      const facture = factures.find(f => f.typeDoc !== 'devis' && f.typeDoc !== 'recu' && (f.client || '').toLowerCase().trim() === normFicheClient);
-
       const isValidated = Boolean(cmd && ['echantillon_valide', 'en_cours', 'terminé', 'livré'].includes(cmd.statut));
-      const valStatus: 'valide' | 'echantillon_en_cours' | 'attente' = isValidated ? 'valide' : (cmd?.statut === 'echantillon_en_cours' ? 'echantillon_en_cours' : 'attente');
-
-      const mDevis = devis ? devis.montant : 0;
-      let mFacture = facture ? facture.montant : (cmd ? (cmd.prix * (cmd.quantite || 1)) : 0);
-      let mPaye = 0;
-      let pStatus: 'payee' | 'partiel' | 'en_attente' | 'non_facture' = 'non_facture';
-
-      if (facture) {
-        if (facture.statut === 'payée') {
-          pStatus = 'payee';
-          mPaye = facture.montant;
-        } else if (facture.avance && facture.avance > 0) {
-          pStatus = 'partiel';
-          mPaye = facture.avance;
-        } else {
-          pStatus = 'en_attente';
-        }
-      } else if (cmd && cmd.avance && cmd.avance > 0) {
-        mPaye = cmd.avance;
-        pStatus = (cmd.avance >= mFacture && mFacture > 0) ? 'payee' : 'partiel';
-      }
-
       const modUser = users.find(u => u.id === fiche.modelisteId);
 
       items.push({
@@ -272,19 +193,11 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         date: fiche.createdAt || '—',
         patronagePrice: 0,
         patronageStatus: 'priced',
+        patronagePaid: false,
         isValidatedByClient: isValidated,
-        validationStatus: valStatus,
-        paymentStatus: pStatus,
-        montantDevis: mDevis,
-        montantFacture: mFacture,
-        montantPaye: mPaye,
-        resteAPayer: Math.max(0, mFacture - mPaye),
         modelisteId: fiche.modelisteId,
         modelisteName: modUser?.nom,
-        fiche,
-        commande: cmd,
-        devis,
-        facture
+        fiche
       });
     });
 
@@ -305,26 +218,32 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     });
   }, [modelItems, isAdmin, selectedModelisteId, currentUser.id]);
 
-  // Summary Metrics
+  // Summary Metrics strictly focused on Patronage Fees
   const stats = useMemo(() => {
     const pricedModels = filteredByRole.filter(i => i.patronageStatus === 'priced');
     const validesClient = pricedModels.filter(i => i.isValidatedByClient);
     const enAttenteClient = pricedModels.filter(i => !i.isValidatedByClient);
-    const payes = validesClient.filter(i => i.paymentStatus === 'payee');
-    const totalPayeMAD = validesClient.reduce((sum, i) => sum + i.montantPaye, 0);
-    const totalResteMAD = validesClient.reduce((sum, i) => sum + i.resteAPayer, 0);
+
+    // Patronage Earnings (strictly the modeliste's price):
+    const totalPatronageMAD = validesClient.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
+    const payesList = validesClient.filter(i => i.patronagePaid);
+    const totalPayeMAD = payesList.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
+    const totalResteMAD = Math.max(0, totalPatronageMAD - totalPayeMAD);
+    const enAttentePayCount = validesClient.filter(i => !i.patronagePaid).length;
 
     return {
       totalValides: validesClient.length,
       enAttenteClientCount: enAttenteClient.length,
-      payesCount: payes.length,
+      totalPatronageMAD,
+      payesCount: payesList.length,
+      enAttentePayCount,
       totalPayeMAD,
       totalResteMAD
     };
   }, [filteredByRole]);
 
   // Filtered by Tab and Search Query
-  // CRITICAL RULE: "Tous" displays ONLY models priced and accepted by client!
+  // CRITICAL: "Tous" displays ONLY models priced and accepted by client!
   const displayedItems = useMemo(() => {
     return filteredByRole.filter(item => {
       // Must have been priced by modeliste
@@ -338,11 +257,11 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         // Models waiting for client confirmation
         if (item.isValidatedByClient) return false;
       } else if (activeTab === 'payes') {
-        // Models paid
-        if (!item.isValidatedByClient || item.paymentStatus !== 'payee') return false;
+        // Models where patronage fee is paid
+        if (!item.isValidatedByClient || !item.patronagePaid) return false;
       } else if (activeTab === 'en_attente_paiement') {
-        // Validated by client but payment is pending
-        if (!item.isValidatedByClient || item.paymentStatus === 'payee' || item.resteAPayer <= 0) return false;
+        // Validated by client but patronage fee is pending
+        if (!item.isValidatedByClient || item.patronagePaid) return false;
       }
 
       // Search filter
@@ -350,9 +269,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         const q = search.toLowerCase().trim();
         const matchModele = (item.modele || '').toLowerCase().includes(q);
         const matchClient = (item.client || '').toLowerCase().includes(q);
-        const matchDevis = (item.devis?.numero || '').toLowerCase().includes(q);
-        const matchFac = (item.facture?.numero || '').toLowerCase().includes(q);
-        return matchModele || matchClient || matchDevis || matchFac;
+        return matchModele || matchClient;
       }
 
       return true;
@@ -362,7 +279,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
   // One-click validation: confirm that client accepted the model
   const handleValidateClient = async (item: ModelItem) => {
     if (!item.lead) return;
-    setValidatingId(item.id);
+    setActionPendingId(item.id);
     try {
       let ext: any = {};
       try { ext = JSON.parse(item.lead.details || '{}'); } catch(e) {}
@@ -384,7 +301,34 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     } catch (e) {
       console.error('Erreur validation client:', e);
     } finally {
-      setValidatingId(null);
+      setActionPendingId(null);
+    }
+  };
+
+  // Toggle Patronage Paid / Pending (خلاص الباترون للمودليست)
+  const handleTogglePatronagePaid = async (item: ModelItem) => {
+    if (!item.lead) return;
+    setActionPendingId(item.id);
+    try {
+      let ext: any = {};
+      try { ext = JSON.parse(item.lead.details || '{}'); } catch(e) {}
+      const newPaid = !ext.patronagePaid;
+      const newDetails = {
+        ...ext,
+        patronagePaid: newPaid,
+        patronagePaidAt: newPaid ? new Date().toISOString() : null,
+        patronagePaidBy: newPaid ? (currentUser?.nom || 'Atelier') : null
+      };
+      const updatedLead = {
+        ...item.lead,
+        details: JSON.stringify(newDetails)
+      };
+      await saveRecord('leads', updatedLead, true);
+      await fetchData();
+    } catch (e) {
+      console.error('Erreur toggle règlement:', e);
+    } finally {
+      setActionPendingId(null);
     }
   };
 
@@ -415,15 +359,15 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-bold">
               <Scissors className="w-3.5 h-3.5" />
-              <span>{isAr ? 'الموديلات المصادق عليها والمدفوعات' : 'Modèles Validés Client & Règlements'}</span>
+              <span>{isAr ? 'مستحقات وأجرة الباترون' : 'Honoraires & Règlements Patronage'}</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black tracking-tight">
-              {isAr ? 'موديلاتي والمدفوعات (Modèles & Règlements)' : 'Mes Modèles & Règlements Clients'}
+              {isAr ? 'موديلاتي وأجرة الباترون' : 'Mes Modèles & Rémunération Patronage'}
             </h1>
             <p className="text-slate-300 text-xs md:text-sm max-w-2xl leading-relaxed">
               {isAr 
-                ? 'عرض الموديلات التي سُعِّرت وقَبِلها الزبون حصراً، مع متابعة الدوڤيات والفواتير والمدفوعات المحصلة والمتبقية.'
-                : 'Consultez exclusivement les modèles chiffrés et acceptés par le client, ainsi que les devis, factures et paiements encaissés.'
+                ? 'متابعة أتعاب وخلاص الباترون للموديلات المسعرة والمقبولة من الزبون، بالأرقام المحددة الخاصة بك حصراً.'
+                : 'Suivez exclusivement vos honoraires de patronage fixés pour les modèles validés par le client.'
               }
             </p>
           </div>
@@ -457,7 +401,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         </div>
       </div>
 
-      {/* ─── Metrics Bar ────────────────────────────────────────── */}
+      {/* ─── Metrics Bar: Focused Strictly on Patronage Fees ──────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Metric 1: Validated Models */}
@@ -484,26 +428,19 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           </div>
         </div>
 
-        {/* Metric 2: Awaiting Client Confirmation */}
-        <div 
-          onClick={() => setActiveTab('en_attente_client')}
-          className={`bg-white rounded-2xl p-5 border cursor-pointer transition-all ${
-            activeTab === 'en_attente_client' 
-              ? 'border-amber-500 shadow-md ring-2 ring-amber-500/20' 
-              : 'border-slate-200/80 hover:border-slate-300 shadow-xs'
-          }`}
-        >
+        {/* Metric 2: Total Patronage Earnings */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? 'في انتظار موافقة الزبون' : 'En Attente Client'}
+              {isAr ? 'مجموع أتعاب الباترون' : 'Total Patronage Dû'}
             </span>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-              <Clock className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+              <Scissors className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-3xl font-black text-amber-600">{stats.enAttenteClientCount}</div>
-          <div className="text-xs text-amber-700/80 mt-1 font-medium">
-            {isAr ? 'حُدِّد ثمنها، قيد تأكيد الزبون' : 'Prix fixé, en attente accord'}
+          <div className="text-2xl font-black text-indigo-600">{stats.totalPatronageMAD.toLocaleString('fr-MA')} <span className="text-sm font-bold">MAD</span></div>
+          <div className="text-xs text-indigo-700/80 mt-1 font-medium">
+            {isAr ? 'إجمالي مستحقات الباترون المحددة' : 'Montant total fixé en patronage'}
           </div>
         </div>
 
@@ -518,15 +455,15 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? 'الخلاص داز (مدفوع)' : 'Khlas Daz (Payé)'}
+              {isAr ? 'الخلاص داز (مؤدى)' : 'Patronage Payé (Khlas Daz)'}
             </span>
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
               <Wallet className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-2xl font-black text-blue-600">{stats.totalPayeMAD.toLocaleString('fr-MA')} <span className="text-sm font-bold">MAD</span></div>
-          <div className="text-xs text-blue-700/80 mt-1 font-medium">
-            {stats.payesCount} {isAr ? 'ملف مسوى بالكامل' : 'dossier(s) réglé(s)'}
+          <div className="text-2xl font-black text-emerald-600">{stats.totalPayeMAD.toLocaleString('fr-MA')} <span className="text-sm font-bold">MAD</span></div>
+          <div className="text-xs text-emerald-700/80 mt-1 font-medium">
+            {stats.payesCount} {isAr ? 'موديل مؤدى بالكامل' : 'modèle(s) réglé(s)'}
           </div>
         </div>
 
@@ -535,21 +472,21 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           onClick={() => setActiveTab('en_attente_paiement')}
           className={`bg-white rounded-2xl p-5 border cursor-pointer transition-all ${
             activeTab === 'en_attente_paiement' 
-              ? 'border-rose-500 shadow-md ring-2 ring-rose-500/20' 
+              ? 'border-amber-500 shadow-md ring-2 ring-amber-500/20' 
               : 'border-slate-200/80 hover:border-slate-300 shadow-xs'
           }`}
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? 'الخلاص باقي (معلق)' : 'Khlas Baqi (En Attente)'}
+              {isAr ? 'الخلاص باقي (معلق)' : 'Patronage En Attente'}
             </span>
-            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
               <DollarSign className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-2xl font-black text-rose-600">{stats.totalResteMAD.toLocaleString('fr-MA')} <span className="text-sm font-bold">MAD</span></div>
-          <div className="text-xs text-rose-700/80 mt-1 font-medium">
-            {isAr ? 'مستحقات قيد التحصيل' : 'Montant restant à encaisser'}
+          <div className="text-2xl font-black text-amber-600">{stats.totalResteMAD.toLocaleString('fr-MA')} <span className="text-sm font-bold">MAD</span></div>
+          <div className="text-xs text-amber-700/80 mt-1 font-medium">
+            {stats.enAttentePayCount} {isAr ? 'موديل قيد انتظار الخلاص' : 'modèle(s) à régler'}
           </div>
         </div>
 
@@ -591,7 +528,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             onClick={() => setActiveTab('payes')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
               activeTab === 'payes' 
-                ? 'bg-blue-600 text-white shadow-sm' 
+                ? 'bg-emerald-600 text-white shadow-sm' 
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -604,12 +541,12 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             onClick={() => setActiveTab('en_attente_paiement')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
               activeTab === 'en_attente_paiement' 
-                ? 'bg-rose-600 text-white shadow-sm' 
+                ? 'bg-amber-600 text-white shadow-sm' 
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <DollarSign className="w-3.5 h-3.5" />
-            <span>{isAr ? 'الخلاص باقي' : 'Khlas Baqi'}</span>
+            <span>{isAr ? `الخلاص باقي (${stats.enAttentePayCount})` : `Khlas Baqi (${stats.enAttentePayCount})`}</span>
           </button>
         </div>
 
@@ -620,7 +557,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={isAr ? 'بحث بالموديل، الزبون، الفاتورة...' : 'Recherche modèle, client, devis...'}
+            placeholder={isAr ? 'بحث بالموديل أو الزبون...' : 'Recherche modèle ou client...'}
             className={`w-full ${isAr ? 'pr-9 pl-4' : 'pl-9 pr-4'} py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all`}
           />
         </div>
@@ -654,14 +591,14 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {displayedItems.map((item, idx) => {
-            const { isValidatedByClient, validationStatus, paymentStatus } = item;
+            const { isValidatedByClient } = item;
 
             return (
               <div 
                 key={item.id || idx}
                 className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all space-y-4"
               >
-                {/* Upper Row: Photo, Modele, Client, Prix Patronage, and Validation Badge */}
+                {/* Upper Row: Photo, Modele, Client, and Validation Badge */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
                   
                   <div className="flex items-center gap-4">
@@ -690,14 +627,6 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                         <h3 className="text-base font-black text-slate-900 tracking-tight">
                           {item.modele}
                         </h3>
-
-                        {/* Patronage Price Badge */}
-                        {item.patronagePrice > 0 && (
-                          <span className="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-black flex items-center gap-1 shadow-xs">
-                            <Scissors className="w-3 h-3 text-emerald-600" />
-                            <span>{isAr ? 'أجرة الباترون:' : 'Patronage:'} {item.patronagePrice} MAD</span>
-                          </span>
-                        )}
 
                         {item.modelisteName && isAdmin && (
                           <span className="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-[11px] font-bold border border-indigo-100 flex items-center gap-1">
@@ -734,7 +663,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                     {isValidatedByClient ? (
                       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black shadow-xs">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span>{isAr ? 'مقبول من طرف الزبون ✅' : 'Validé par le client ✅'}</span>
+                        <span>{isAr ? 'مقبول من طرف الزبون ✅' : 'Client Validé (Accepté) ✅'}</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -746,7 +675,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                         {/* One-click validate client acceptance button */}
                         <button
                           onClick={() => handleValidateClient(item)}
-                          disabled={validatingId === item.id}
+                          disabled={actionPendingId === item.id}
                           className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs transition-all active:scale-95 disabled:opacity-50"
                           title={isAr ? 'تأكيد موافقة وقبول الزبون لهذا الموديل' : 'Confirmer l\'accord du client'}
                         >
@@ -770,123 +699,70 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
                 </div>
 
-                {/* Lower Row: Devis, Facture, and Payment Status */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+                {/* ─── Lower Section: PRIX PATRONAGE & RÈGLEMENT MODÉLISTE (NO INVOICE OR FACTORY NUMBERS) ─── */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80">
                   
-                  {/* Devis (Quote) Box */}
-                  <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                      <span className="flex items-center gap-1.5">
-                        <Tag className="w-3.5 h-3.5 text-indigo-500" />
-                        {isAr ? 'عرض السعر (Devis)' : 'Devis Associé'}
-                      </span>
-                      {item.devis && (
-                        <button
-                          onClick={() => printFacture(item.devis!, item.commande)}
-                          className="flex items-center gap-1 text-[11px] text-indigo-600 hover:text-indigo-800 font-bold underline"
-                        >
-                          <Printer className="w-3 h-3" />
-                          <span>{isAr ? 'طباعة / عرض' : 'Voir'}</span>
-                        </button>
-                      )}
+                  {/* Left: Patronage Price Fixed By Him */}
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-black shadow-xs">
+                      <Scissors className="w-6 h-6" />
                     </div>
-
-                    {item.devis ? (
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
-                          {item.devis.numero}
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-0.5">
+                        {isAr ? 'ثمن وأجرة الباترون المسجلة (Prix Patronage)' : 'Prix de Patronage Fixé'}
+                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-black text-slate-900 font-mono">
+                          {item.patronagePrice > 0 ? item.patronagePrice : '—'}
                         </span>
-                        <span className="text-sm font-black text-slate-900">
-                          {item.devis.montant.toLocaleString('fr-MA')} MAD
-                        </span>
+                        <span className="text-xs font-black text-indigo-600">MAD</span>
+                        {item.patronageNotes && (
+                          <span className="text-[11px] text-slate-500 font-medium mr-2 max-w-xs truncate">
+                            ({item.patronageNotes})
+                          </span>
+                        )}
                       </div>
-                    ) : (
-                      <div className="text-xs text-slate-400 italic">
-                        {isAr ? 'لا يوجد عرض سعر مرتبط' : 'Aucun devis lié'}
-                      </div>
-                    )}
+                    </div>
                   </div>
 
-                  {/* Facture (Invoice) Box */}
-                  <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                      <span className="flex items-center gap-1.5">
-                        <FileText className="w-3.5 h-3.5 text-blue-500" />
-                        {isAr ? 'الفاتورة (Facture)' : 'Facture Associée'}
-                      </span>
-                      {item.facture && (
-                        <button
-                          onClick={() => printFacture(item.facture!, item.commande)}
-                          className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 font-bold underline"
-                        >
-                          <Printer className="w-3 h-3" />
-                          <span>{isAr ? 'طباعة / عرض' : 'Voir'}</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {item.facture ? (
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
-                          {item.facture.numero}
-                        </span>
-                        <span className="text-sm font-black text-slate-900">
-                          {item.facture.montant.toLocaleString('fr-MA')} MAD
-                        </span>
+                  {/* Right: Payment Status of Patronage Fee */}
+                  <div className="flex items-center gap-3 justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200/60">
+                    {item.patronagePaid ? (
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black shadow-xs">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <span>{isAr ? 'خلاص الباترون داز ✅' : 'Patronage Réglé (Payé) ✅'}</span>
+                        </div>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleTogglePatronagePaid(item)}
+                            disabled={actionPendingId === item.id}
+                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-all"
+                            title={isAr ? 'إلغاء التأشير' : 'Annuler'}
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     ) : (
-                      <div className="text-xs text-slate-400 italic">
-                        {isAr ? 'في انتظار إصدار الفاتورة' : 'Pas de facture émise'}
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
+                          <Clock className="w-4 h-4 text-amber-600" />
+                          <span>{isAr ? 'الخلاص باقي ⏳' : 'En attente de paiement ⏳'}</span>
+                        </div>
+
+                        {/* Action button to mark as paid */}
+                        <button
+                          onClick={() => handleTogglePatronagePaid(item)}
+                          disabled={actionPendingId === item.id}
+                          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-sm transition-all active:scale-95 disabled:opacity-50"
+                          title={isAr ? 'تأكيد استلام خلاص أتعاب الباترون لهذا الموديل' : 'Marquer comme réglé'}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>{isAr ? 'تأكيد الخلاص ✓' : 'Marquer Payé'}</span>
+                        </button>
                       </div>
                     )}
-                  </div>
-
-                  {/* Payment Status Box (Khlas Daz / Khlas Baqi) */}
-                  <div className={`p-3.5 rounded-xl border space-y-2 ${
-                    paymentStatus === 'payee'
-                      ? 'bg-emerald-50/60 border-emerald-100'
-                      : paymentStatus === 'partiel'
-                      ? 'bg-blue-50/60 border-blue-100'
-                      : paymentStatus === 'en_attente'
-                      ? 'bg-amber-50/60 border-amber-100'
-                      : 'bg-slate-50 border-slate-100'
-                  }`}>
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-slate-600 flex items-center gap-1.5">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-                        {isAr ? 'حالة الخلاص' : 'Statut Paiement'}
-                      </span>
-
-                      {/* Payment Badge */}
-                      {paymentStatus === 'payee' ? (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-black uppercase">
-                          {isAr ? 'الخلاص داز ✅' : 'Payé (Khlas Daz) ✅'}
-                        </span>
-                      ) : paymentStatus === 'partiel' ? (
-                        <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-black uppercase">
-                          {isAr ? 'تسبيق مؤدى ⚡' : 'Avance Réglée'}
-                        </span>
-                      ) : paymentStatus === 'en_attente' ? (
-                        <span className="px-2 py-0.5 rounded-md bg-amber-500 text-white text-[10px] font-black uppercase">
-                          {isAr ? 'الخلاص باقي ⏳' : 'En Attente (Khlas Baqi) ⏳'}
-                        </span>
-                      ) : (
-                        <span className="text-[11px] text-slate-400 font-medium">
-                          {isAr ? 'غير مفوتر' : 'Non facturé'}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs font-semibold">
-                      <span className="text-slate-500">
-                        {isAr ? 'المؤدى:' : 'Réglé:'} <b className="text-slate-800">{item.montantPaye.toLocaleString('fr-MA')} MAD</b>
-                      </span>
-                      {item.resteAPayer > 0 && (
-                        <span className="text-amber-700">
-                          {isAr ? 'الباقي:' : 'Reste:'} <b className="font-bold">{item.resteAPayer.toLocaleString('fr-MA')} MAD</b>
-                        </span>
-                      )}
-                    </div>
                   </div>
 
                 </div>

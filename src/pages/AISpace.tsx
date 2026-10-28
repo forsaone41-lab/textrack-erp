@@ -1888,229 +1888,268 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
     }
 
     // 0. DIRECT PIECE COST & PRODUCTION DEVIS (شحال كتقام البياسة / Prix de revient unitaire & Devis)
-    const asksPieceCost = /(chehal.*(tqam|tsqam|lpiasa|piasa|piece|cout|prix|taman|flous|cost|revient)|tqam|tsqam|شحال.*(كتقام|كتقامش|تقام|تسقام|البياسة|القطعة|الموديل|التكلفة|الثمن|نبيع|نربح)|بشحال.*(كتقام|تقام|البياسة|القطعة|نبيع|نبيعها)|(prix|cout|coût|cost).*(revient|piece|unitaire|fabrication|total|modele|modèle)|ثمن.*(البياسة|القطعة|الموديل|الإنتاج)|تكلفة.*(البياسة|القطعة|الموديل|الإنتاج)|كلفة.*(البياسة|القطعة)|bchhal.*(tqam|lpiasa|nbi3)|chehal.*(lcost|flous|nbi3)|(devis|تسعير|حساب التكلفة|شحال غادي تقام|شحال كتقام)|^(prix|cout|coût|cost|taman|ثمن|سعر|تكلفة|كلفة|devis|فلوس)$)/i.test(m);
+    const asksPieceCost = /(chehal.*(tqam|tsqam|lpiasa|piasa|piece|cout|prix|taman|flous|cost|revient)|tqam|tsqam|شحال.*(كتقام|كتقامش|تقام|تسقام|البياسة|القطعة|الموديل|التكلفة|الثمن|نبيع|نربح)|بشحال.*(كتقام|تقام|البياسة|القطعة|نبيع|نبيعها)|(prix|cout|coût|cost).*(revient|piece|unitaire|fabrication|total|modele|modèle)|ثمن.*(البياسة|القطعة|الموديل|الإنتاج)|تكلفة.*(البياسة|القطعة|الموديل|الإنتاج)|كلفة.*(البياسة|القطعة)|bchhal.*(tqam|lpiasa|nbi3)|chehal.*(lcost|flous|nbi3)|(devis|تسعير|حساب التكلفة|شحال غادي تقام|شحال كتقام)|^(prix|cout|coût|cost|taman|ثمن|سعر|تكلفة|كلفة|devis|فلوس)$|now3.*(toub|tob)|نوع.*(الثوب|التوب)|(mziana|normal|fibk|faible|qualit[eé]|جودة|مزيانة|ممتازة|عادية|اقتصادية|فيبك))/i.test(m);
 
     if (asksPieceCost) {
+      const cost = computeThreeTierCosting(analysisResult);
       const pieces = analysisResult?.pieces || [];
-      const hasMultiplePieces = pieces.length > 1;
-      const modelTitle = analysisResult?.category || (image ? 'طقم هودي وسروال رياضي (Survêtement)' : 'الموديل');
-      const suggestedFab = analysisResult?.fabricSuggested || pieces[0]?.fabricSuggested || 'ميلتون قطن ممشوط (Molleton Gratté 320g)';
+      const modelTitle = analysisResult?.category || (pieces.length === 3 ? 'طقم سبوروار مستور 3 قطع' : 'الموديل');
 
-      if (hasMultiplePieces) {
-        const p1 = pieces[0];
-        const p1Name = p1.name || 'هودي أوفر سايز (Hoodie à Capuche)';
-        const p1Conso = parseFloat(String(p1.consumption || '1.65').replace(',', '.')) || 1.65;
-        const p1FabCost = Math.round(p1Conso * 26 * 10) / 10;
-        const p1Trims = 8.5; // cordon, oeillets, bord-côte, fil, sachet
-        const p1Labor = 14.0; // façon atelier SAM ~7 min
-        const p1Charges = 4.5; // coupe & frais généraux
-        const p1Total = Math.round((p1FabCost + p1Trims + p1Labor + p1Charges) * 10) / 10;
-
-        const p2 = pieces[1];
-        const p2Name = p2.name || 'سروال رياضي (Pantalon Jogging)';
-        const p2Conso = parseFloat(String(p2.consumption || '1.35').replace(',', '.')) || 1.35;
-        const p2FabCost = Math.round(p2Conso * 26 * 10) / 10;
-        const p2Trims = 6.5; // élastique 4cm, cordon, fil, étiquette
-        const p2Labor = 11.0; // façon atelier SAM ~5.5 min
-        const p2Charges = 3.5; // coupe & frais généraux
-        const p2Total = Math.round((p2FabCost + p2Trims + p2Labor + p2Charges) * 10) / 10;
-
-        const totalFabMeters = Math.round((p1Conso + p2Conso) * 100) / 100;
-        const totalFabCost = Math.round((p1FabCost + p2FabCost) * 10) / 10;
-        const totalTrims = Math.round((p1Trims + p2Trims) * 10) / 10;
-        const totalLabor = Math.round((p1Labor + p2Labor) * 10) / 10;
-        const totalCharges = Math.round((p1Charges + p2Charges) * 10) / 10;
-        const totalEnsembleCost = Math.round((p1Total + p2Total) * 10) / 10;
-
-        const wholesalePrice = Math.round(totalEnsembleCost * 1.38); // +38% margin ~175 MAD
-        const retailMin = Math.round(totalEnsembleCost * 2.1); // ~265 MAD
-        const retailMax = Math.round(totalEnsembleCost * 2.5); // ~315 MAD
-
-        if (speakAr) {
-          return `💰 حساب تكلفة البياسة المباشر والدقيق (Prix de Revient بالتدقيق):
-
-🎯 الموديل: ${modelTitle}
-🧵 الثوب المقترح: ${suggestedFab} (ثمن الجملة فدرب عمر / القريعة: ~26 درهم للمتر / 55 درهم للكيلو)
-
-────────────────────────────────────────
-🧥 1. تكلفة القطعة الأولى (${p1Name}):
-• ثوب الميلتون (${p1Conso}م × 26 درهم): ${p1FabCost.toFixed(2)} درهم
-• اللوازم (كوردون كابوش + ليزويي + ريب كوتلي + خيط + تيكيت): ${p1Trims.toFixed(2)} درهم
-• الفصالة فالمطلة (Coupe en matelas): 2.00 درهم
-• خياطة الورشة (اليد العاملة Façon - SAM ~7 دقائق): ${p1Labor.toFixed(2)} درهم
-• مصاريف عامة واستهلاك الطاقة: 2.50 درهم
-👉 تكلفة الهودي بوحدو: ${p1Total.toFixed(2)} درهم
-
-👖 2. تكلفة القطعة الثانية (${p2Name}):
-• ثوب الميلتون (${p2Conso}م × 26 درهم): ${p2FabCost.toFixed(2)} درهم
-• اللوازم (لاستيك 4سم عريض + كوردون + ليزويي + خيط): ${p2Trims.toFixed(2)} درهم
-• الفصالة فالمطلة (Coupe en matelas): 1.50 درهم
-• خياطة الورشة (اليد العاملة Façon - SAM ~5.5 دقائق): ${p2Labor.toFixed(2)} درهم
-• مصاريف عامة واستهلاك الطاقة: 2.00 درهم
-👉 تكلفة السروال بوحدو: ${p2Total.toFixed(2)} درهم
-
-────────────────────────────────────────
-💵 التكلفة الإجمالية للطقم كامل (Prix de Revient Complet):
-• إجمالي الثوب (${totalFabMeters}م): ${totalFabCost.toFixed(2)} درهم
-• إجمالي اللوازم (Fournitures): ${totalTrims.toFixed(2)} درهم
-• إجمالي اليد العاملة فالخياطة والفصالة: ${(totalLabor + 3.5).toFixed(2)} درهم
-• مصاريف ثابتة وتغليف: 4.50 درهم
-🔥 المجموع النهائي لتكلفة الطقم: ${totalEnsembleCost.toFixed(2)} درهم للبياسة!
-────────────────────────────────────────
-
-📈 3. أثمنة البيع المقترحة والأرباح الصافية فالمغرب:
-• 🏢 سعر البيع بالجملة (Grossiste): ${wholesalePrice} درهم
-  ➔ ربح صافي بالجملة: +${(wholesalePrice - totalEnsembleCost).toFixed(2)} درهم في كل طقم!
-• 🛍️ سعر البيع بالتقسيط / المتاجر الإلكترونية (Détail / E-commerce): من ${retailMin} إلى ${retailMax} درهم
-  ➔ ربح صافي بالتقسيط: من +${(retailMin - totalEnsembleCost).toFixed(2)} إلى +${(retailMax - totalEnsembleCost).toFixed(2)} درهم في كل طقم (أكثر من 100% هامش ربح)!
-
-📦 4. دراسة رأس المال والأرباح للكميات:
-• سيرية ديال 500 طقم:
-  - الثوب المطلوب: ${Math.round(totalFabMeters * 500)} متر (حوالي ${Math.ceil((totalFabMeters * 500) / 50)} رولو ديال 50م)
-  - رأس المال المطلوب للإنتاج: ${(totalEnsembleCost * 500).toLocaleString('fr-FR')} درهم
-  - المداخيل المتوقعة بالجملة: ${(wholesalePrice * 500).toLocaleString('fr-FR')} درهم
-  - 💵 صافي الأرباح بالجملة: +${((wholesalePrice - totalEnsembleCost) * 500).toLocaleString('fr-FR')} درهم!
-• سيرية ديال 1000 طقم:
-  - الثوب المطلوب: ${Math.round(totalFabMeters * 1000)} متر (حوالي ${Math.ceil((totalFabMeters * 1000) / 50)} رولو)
-  - رأس المال المطلوب: ${(totalEnsembleCost * 1000).toLocaleString('fr-FR')} درهم
-  - 💵 صافي الأرباح بالجملة: +${((wholesalePrice - totalEnsembleCost) * 1000).toLocaleString('fr-FR')} درهم (أو أكثر من ${Math.round((retailMin - totalEnsembleCost) * 1000).toLocaleString('fr-FR')} درهم في التجارة الإلكترونية)!`;
-        } else {
-          return `💰 Calcul Direct et Précis du Coût de Revient (Prix de Revient) :
-
-🎯 Modèle : ${modelTitle}
-🧵 Tissu conseillé : ${suggestedFab} (~26 MAD/mètre chez grossistes Derb Omar & El Korea)
-
-────────────────────────────────────────
-🧥 1. Détail Pièce 1 (${p1Name}) :
-• Tissu (${p1Conso}m × 26 MAD) : ${p1FabCost.toFixed(2)} MAD
-• Fournitures (cordon, œillets, bord-côte, fil, sachet) : ${p1Trims.toFixed(2)} MAD
-• Façon atelier & Coupe (SAM ~7 min) : ${(p1Labor + 2.0).toFixed(2)} MAD
-• Charges fixes atelier : 2.50 MAD
-👉 Coût unitaire Hoodie : ${p1Total.toFixed(2)} MAD
-
-👖 2. Détail Pièce 2 (${p2Name}) :
-• Tissu (${p2Conso}m × 26 MAD) : ${p2FabCost.toFixed(2)} MAD
-• Fournitures (élastique 4cm, cordon, fil, étiquette) : ${p2Trims.toFixed(2)} MAD
-• Façon atelier & Coupe (SAM ~5.5 min) : ${(p2Labor + 1.5).toFixed(2)} MAD
-• Charges fixes atelier : 2.00 MAD
-👉 Coût unitaire Jogging : ${p2Total.toFixed(2)} MAD
-
-────────────────────────────────────────
-💵 PRIX DE REVIENT TOTAL DE L'ENSEMBLE :
-• Total Tissu (${totalFabMeters}m) : ${totalFabCost.toFixed(2)} MAD
-• Total Fournitures : ${totalTrims.toFixed(2)} MAD
-• Total Façon & Coupe : ${(totalLabor + 3.5).toFixed(2)} MAD
-• Charges fixes : 4.50 MAD
-🔥 Total Coût de Revient : ${totalEnsembleCost.toFixed(2)} MAD / pièce !
-────────────────────────────────────────
-
-📈 3. Prix de Vente Conseillés et Marges :
-• 🏢 Prix de Vente Gros : ${wholesalePrice} MAD (Marge nette : +${(wholesalePrice - totalEnsembleCost).toFixed(2)} MAD/pièce)
-• 🛍️ Prix de Vente Détail / E-commerce : ${retailMin} - ${retailMax} MAD (Marge nette : +${(retailMin - totalEnsembleCost).toFixed(2)} à +${(retailMax - totalEnsembleCost).toFixed(2)} MAD)
-
-📦 4. Budget de Production Série :
-• Série de 500 ensembles :
-  - Métrage : ${Math.round(totalFabMeters * 500)}m (~${Math.ceil((totalFabMeters * 500) / 50)} rouleaux)
-  - Capital requis : ${(totalEnsembleCost * 500).toLocaleString('fr-FR')} MAD
-  - Bénéfice net en Gros : +${((wholesalePrice - totalEnsembleCost) * 500).toLocaleString('fr-FR')} MAD !
-• Série de 1000 ensembles :
-  - Métrage : ${Math.round(totalFabMeters * 1000)}m (~${Math.ceil((totalFabMeters * 1000) / 50)} rouleaux)
-  - Bénéfice net en Gros : +${((wholesalePrice - totalEnsembleCost) * 1000).toLocaleString('fr-FR')} MAD !`;
-        }
-      }
-
-      // Single piece calculation
-      let unitConso = 1.5;
-      if (analysisResult?.consumption) {
-        const parsed = parseFloat(String(analysisResult.consumption).replace(',', '.'));
-        if (parsed > 0) unitConso = parsed;
-      }
-      let fabPriceM = 26;
-      let trimsCost = 5.0;
-      let laborCost = 12.0;
-      let overhead = 3.5;
-
-      const lowerCat = (analysisResult?.category || '').toLowerCase();
-      if (lowerCat.includes('tshirt') || lowerCat.includes('t-shirt') || lowerCat.includes('تيشرت')) {
-        unitConso = 0.95; fabPriceM = 22; trimsCost = 3.5; laborCost = 6.5; overhead = 2.0;
-      } else if (lowerCat.includes('boxer') || lowerCat.includes('بوكسر') || lowerCat.includes('slip')) {
-        unitConso = 0.35; fabPriceM = 22; trimsCost = 3.5; laborCost = 4.5; overhead = 1.5;
-      } else if (lowerCat.includes('chemise') || lowerCat.includes('قميص')) {
-        unitConso = 1.50; fabPriceM = 24; trimsCost = 6.5; laborCost = 16.0; overhead = 4.0;
-      } else if (lowerCat.includes('robe') || lowerCat.includes('djellaba') || lowerCat.includes('فستان') || lowerCat.includes('جلابة')) {
-        unitConso = 2.80; fabPriceM = 28; trimsCost = 14.0; laborCost = 22.0; overhead = 5.5;
-      } else if (lowerCat.includes('pantalon') || lowerCat.includes('jogging') || lowerCat.includes('سروال')) {
-        unitConso = 1.35; fabPriceM = 26; trimsCost = 6.5; laborCost = 11.0; overhead = 3.5;
-      } else if (lowerCat.includes('hoodie') || lowerCat.includes('sweat') || lowerCat.includes('هودي')) {
-        unitConso = 1.70; fabPriceM = 26; trimsCost = 9.0; laborCost = 14.5; overhead = 4.5;
-      }
-
-      const fabCost = Math.round(unitConso * fabPriceM * 10) / 10;
-      const unitTotal = Math.round((fabCost + trimsCost + laborCost + overhead) * 10) / 10;
-      const grossiste = Math.round(unitTotal * 1.38);
-      const retailMin = Math.round(unitTotal * 2.1);
-      const retailMax = Math.round(unitTotal * 2.6);
+      const isMzianaFocus = /(mziana|مزيانة|ممتازة|haut.*de.*gamme|premium|luxe)/i.test(m) && !/(normal|fibk|faible|عادية|اقتصادية)/i.test(m);
+      const isNormalFocus = /(normal|نورمال|عادية|standard)/i.test(m) && !/(mziana|fibk|faible|مزيانة|اقتصادية)/i.test(m);
+      const isFaibleFocus = /(fibk|faible|فيبك|ضعيفة|اقتصادية|eco|éco)/i.test(m) && !/(mziana|normal|مزيانة|عادية)/i.test(m);
 
       if (speakAr) {
-        return `💰 حساب تكلفة البياسة المباشر والدقيق (Prix de Revient بالتدقيق):
+        if (isMzianaFocus) {
+          return `💎 تفاصيل تكلفة البياسة — الجودة الممتازة (Qualité Mziana / Haut de Gamme):
 
 🎯 الموديل: ${modelTitle}
-🧵 الثوب المقترح: ${suggestedFab} (~${fabPriceM} درهم للمتر بالجملة)
+📏 استهلاك الثوب الإجمالي: ${cost.totalM} متر (عرض Laize 1.50م)
 
-📊 1. تفصيل تكلفة البياسة الواحدة (Prix Unitaire):
-• 🧵 ثوب البياسة (${unitConso}م × ${fabPriceM} درهم): ${fabCost.toFixed(2)} درهم
-• 🪡 لوازم الخياطة (Fournitures - خيط، أزرار/سحاب، لاستيك، تيكيت، تغليف): ${trimsCost.toFixed(2)} درهم
-• ✂️ الفصالة فالمطلة (Coupe en matelas): 1.50 درهم
-• 🏭 خياطة الورشة (اليد العاملة Façon): ${laborCost.toFixed(2)} درهم
-• 💡 مصاريف عامة واستهلاك الورشة: ${overhead.toFixed(2)} درهم
+🧵 نوع الثوب المعتمد (درب عمر / القريعة / طنجة):
+• النوع: ${cost.mziana.tissuNomAr}
+• ثمن المتر بالجملة: ${cost.mziana.prixM} درهم/متر
+• كلفة الثوب الإجمالية: ${cost.totalM}م × ${cost.mziana.prixM} درهم = ${cost.mziana.coutTissu.toFixed(2)} درهم
+
+🪡 اللوازم والميرسري الفاخرة (Fournitures Haut de Gamme):
+• سنسلة نحاسية أو YKK أصلية + كوردون قطن ممشوط + ريب كوتلي 1x1 + خيط دوراك بوليستر + تيكيت منسوجة وساشي إيكو: ${cost.mziana.trims.toFixed(2)} درهم
+
+✂️ الفصالة والخياطة الراقية (Façon Atelier Soignée):
+• فصالة دقيقة بالمطلة + خياطة بدرزة مدعمة (Surpiqûre) + فينيسيون وفحص جودة صارم + حديد بخار: ${cost.mziana.facon.toFixed(2)} درهم
 
 ────────────────────────────────────────
-💵 التكلفة الإجمالية للبياسة (Prix de Revient): ${unitTotal.toFixed(2)} درهم
+💵 التكلفة الإجمالية للبياسة (Prix de Revient): ${cost.mziana.total.toFixed(2)} درهم
 ────────────────────────────────────────
 
-📈 2. أثمنة البيع وهامش الربح فالسوق المغربي:
-• 🏢 سعر البيع بالجملة (Grossiste): ${grossiste} درهم (ربح صافي: +${(grossiste - unitTotal).toFixed(2)} درهم/بياسة)
-• 🛍️ سعر البيع بالتقسيط / المتاجر الإلكترونية: من ${retailMin} إلى ${retailMax} درهم (ربح صافي يتجاوز 100%)
+📈 أثمنة البيع وهوامش الأرباح:
+• 🏢 سعر البيع بالجملة (Grossiste): ${cost.mziana.gros} درهم (ربح صافي: +${(cost.mziana.gros - cost.mziana.total).toFixed(2)} درهم/بياسة)
+• 🛍️ سعر البيع بالتقسيط / المتاجر والبراندات: من ${cost.mziana.detailMin} إلى ${cost.mziana.detailMax} درهم (أكثر من 100% هامش ربح)
 
-📦 3. دراسة رأس المال والإنتاج للكميات:
+📊 مقارنة مع باقي المستويات:
+• الجودة العادية (Normal): كلفة ${cost.normal.total.toFixed(2)} درهم (ثوب ${cost.normal.prixM} درهم/م)
+• الجودة الاقتصادية (Fibk): كلفة ${cost.faible.total.toFixed(2)} درهم (ثوب ${cost.faible.prixM} درهم/م)`;
+        }
+
+        if (isNormalFocus) {
+          return `⚖️ تفاصيل تكلفة البياسة — الجودة العادية (Qualité Normal / Standard):
+
+🎯 الموديل: ${modelTitle}
+📏 استهلاك الثوب الإجمالي: ${cost.totalM} متر (عرض Laize 1.50م)
+
+🧵 نوع الثوب المعتمد (الأسواق المغربية):
+• النوع: ${cost.normal.tissuNomAr}
+• ثمن المتر بالجملة: ${cost.normal.prixM} درهم/متر
+• كلفة الثوب الإجمالية: ${cost.totalM}م × ${cost.normal.prixM} درهم = ${cost.normal.coutTissu.toFixed(2)} درهم
+
+🪡 اللوازم والميرسري (Fournitures Standard):
+• سنسلة عادية + كوردون + ليزويي + ريب بولي-قطن + خيط + تيكيت وساشي: ${cost.normal.trims.toFixed(2)} درهم
+
+✂️ الفصالة وخياطة الورشة (Façon Atelier Standard):
+• فصالة بالمطلة + تجميع بالسيرجي والبيكوز + تنقية خيوط وحديد عادي: ${cost.normal.facon.toFixed(2)} درهم
+
+────────────────────────────────────────
+💵 التكلفة الإجمالية للبياسة (Prix de Revient): ${cost.normal.total.toFixed(2)} درهم
+────────────────────────────────────────
+
+📈 أثمنة البيع وهوامش الأرباح:
+• 🏢 سعر البيع بالجملة (Grossiste): ${cost.normal.gros} درهم (ربح صافي: +${(cost.normal.gros - cost.normal.total).toFixed(2)} درهم/بياسة)
+• 🛍️ سعر البيع بالتقسيط: من ${cost.normal.detailMin} إلى ${cost.normal.detailMax} درهم
+
+📊 مقارنة مع باقي المستويات:
+• الجودة الممتازة (Mziana): كلفة ${cost.mziana.total.toFixed(2)} درهم (ثوب ${cost.mziana.prixM} درهم/م)
+• الجودة الاقتصادية (Fibk): كلفة ${cost.faible.total.toFixed(2)} درهم (ثوب ${cost.faible.prixM} درهم/م)`;
+        }
+
+        if (isFaibleFocus) {
+          return `🪙 تفاصيل تكلفة البياسة — الجودة الاقتصادية (Qualité Faible / Fibk / Éco):
+
+🎯 الموديل: ${modelTitle}
+📏 استهلاك الثوب الإجمالي: ${cost.totalM} متر (عرض Laize 1.50م)
+
+🧵 نوع الثوب المعتمد (سوق القريعة / الجملة):
+• النوع: ${cost.faible.tissuNomAr}
+• ثمن المتر بالجملة: ${cost.faible.prixM} درهم/متر
+• كلفة الثوب الإجمالية: ${cost.totalM}م × ${cost.faible.prixM} درهم = ${cost.faible.coutTissu.toFixed(2)} درهم
+
+🪡 اللوازم والميرسري الاقتصادية (Fournitures Éco):
+• سنسلة نايلون خفيفة + كوردون بسيط + خيط تجاري + كيس بلاستيك عادي: ${cost.faible.trims.toFixed(2)} درهم
+
+✂️ الفصالة والخياطة السريعة (Façon Rapide):
+• فصالة سريعة + تجميع ورشة إنتاج كمي بدون تعقيدات: ${cost.faible.facon.toFixed(2)} درهم
+
+────────────────────────────────────────
+💵 التكلفة الإجمالية للبياسة (Prix de Revient): ${cost.faible.total.toFixed(2)} درهم
+────────────────────────────────────────
+
+📈 أثمنة البيع وهوامش الأرباح:
+• 🏢 سعر البيع بالجملة (Grossiste): ${cost.faible.gros} درهم (ربح صافي: +${(cost.faible.gros - cost.faible.total).toFixed(2)} درهم/بياسة)
+• 🛍️ سعر البيع بالتقسيط: من ${cost.faible.detailMin} إلى ${cost.faible.detailMax} درهم
+
+📊 مقارنة مع باقي المستويات:
+• الجودة الممتازة (Mziana): كلفة ${cost.mziana.total.toFixed(2)} درهم (ثوب ${cost.mziana.prixM} درهم/م)
+• الجودة العادية (Normal): كلفة ${cost.normal.total.toFixed(2)} درهم (ثوب ${cost.normal.prixM} درهم/م)`;
+        }
+
+        // General 3-Tier Quality Breakdown
+        let piecesText = '';
+        if (pieces.length > 0) {
+          piecesText = `\n📦 تفصيل قطع الموديل واستهلاك كل قطعة:\n` + pieces.map((p, idx) => `• قطعة ${idx + 1} (${p.name}): استهلاك ~${p.consumption || '1.5م'} (كلفة تقديرية: ${p.costEstimate || '—'})`).join('\n') + '\n';
+        }
+
+        return `💰 دراسة تكلفة البياسة بالتدقيق حسب 3 مستويات دقيقة للجودة (Prix de Revient):
+
+🎯 الموديل: ${modelTitle}
+📏 إجمالي استهلاك الثوب: ${cost.totalM} متر (عرض 1.50م)${piecesText}
+────────────────────────────────────────
+💎 1. جودة ممتازة (Qualité Mziana / Haut de Gamme):
+• نوع الثوب: ${cost.mziana.tissuNomAr} (~${cost.mziana.prixM} درهم/متر فدرب عمر والقريعة)
+• كلفة الثوب (${cost.totalM}م): ${cost.mziana.coutTissu.toFixed(2)} درهم
+• اللوازم والميرسري الفاخرة (Fournitures YKK/Coton): ${cost.mziana.trims.toFixed(2)} درهم
+• الفصالة والخياطة الراقية (Façon soignée): ${cost.mziana.facon.toFixed(2)} درهم
+👉 🔥 كلفة البياسة الكاملة: ${cost.mziana.total.toFixed(2)} درهم
+🏷️ سعر البيع بالجملة: ${cost.mziana.gros} درهم | بالتقسيط: من ${cost.mziana.detailMin} إلى ${cost.mziana.detailMax} درهم
+
+────────────────────────────────────────
+⚖️ 2. جودة عادية (Qualité Normal / Standard):
+• نوع الثوب: ${cost.normal.tissuNomAr} (~${cost.normal.prixM} درهم/متر)
+• كلفة الثوب (${cost.totalM}م): ${cost.normal.coutTissu.toFixed(2)} درهم
+• اللوازم والميرسري العادية: ${cost.normal.trims.toFixed(2)} درهم
+• الفصالة والخياطة المعيارية: ${cost.normal.facon.toFixed(2)} درهم
+👉 🔥 كلفة البياسة الكاملة: ${cost.normal.total.toFixed(2)} درهم
+🏷️ سعر البيع بالجملة: ${cost.normal.gros} درهم | بالتقسيط: من ${cost.normal.detailMin} إلى ${cost.normal.detailMax} درهم
+
+────────────────────────────────────────
+🪙 3. جودة اقتصادية (Qualité Faible / Fibk / Éco):
+• نوع الثوب: ${cost.faible.tissuNomAr} (~${cost.faible.prixM} درهم/متر)
+• كلفة الثوب (${cost.totalM}م): ${cost.faible.coutTissu.toFixed(2)} درهم
+• اللوازم البسيطة: ${cost.faible.trims.toFixed(2)} درهم
+• الخياطة السريعة: ${cost.faible.facon.toFixed(2)} درهم
+👉 🔥 كلفة البياسة الكاملة: ${cost.faible.total.toFixed(2)} درهم
+🏷️ سعر البيع بالجملة: ${cost.faible.gros} درهم | بالتقسيط: من ${cost.faible.detailMin} إلى ${cost.faible.detailMax} درهم
+────────────────────────────────────────
+
+📦 دراسة رأس المال والإنتاج للكميات (سيريات بالجودة الممتازة Mziana):
 • سيرية 500 بياسة:
-  - الثوب المطلوب: ${Math.round(unitConso * 500)} متر (حوالي ${Math.ceil((unitConso * 500) / 50)} رولو ديال 50م)
-  - رأس المال المطلوب: ${(unitTotal * 500).toLocaleString('fr-FR')} درهم
-  - 💵 صافي الربح بالجملة: +${((grossiste - unitTotal) * 500).toLocaleString('fr-FR')} درهم!
+  - الثوب المطلوب: ${Math.round(cost.totalM * 500)} متر (~${Math.ceil((cost.totalM * 500) / 50)} رولو ديال 50م)
+  - رأس المال المطلوب: ${(cost.mziana.total * 500).toLocaleString('fr-FR')} درهم
+  - 💵 صافي الأرباح بالجملة: +${((cost.mziana.gros - cost.mziana.total) * 500).toLocaleString('fr-FR')} درهم!
 • سيرية 1000 بياسة:
-  - الثوب المطلوب: ${Math.round(unitConso * 1000)} متر (حوالي ${Math.ceil((unitConso * 1000) / 50)} رولو)
-  - رأس المال المطلوب: ${(unitTotal * 1000).toLocaleString('fr-FR')} درهم
-  - 💵 صافي الربح بالجملة: +${((grossiste - unitTotal) * 1000).toLocaleString('fr-FR')} درهم!`;
+  - الثوب المطلوب: ${Math.round(cost.totalM * 1000)} متر (~${Math.ceil((cost.totalM * 1000) / 50)} رولو)
+  - رأس المال المطلوب: ${(cost.mziana.total * 1000).toLocaleString('fr-FR')} درهم
+  - 💵 صافي الأرباح بالجملة: +${((cost.mziana.gros - cost.mziana.total) * 1000).toLocaleString('fr-FR')} درهم!`;
       } else {
-        return `💰 Calcul Direct et Précis du Coût de Revient Unitaire (Prix de Revient) :
+        if (isMzianaFocus) {
+          return `💎 Coût de Revient Unitaire — Qualité Mziana (Haut de Gamme) :
 
 🎯 Modèle : ${modelTitle}
-🧵 Tissu conseillé : ${suggestedFab} (~${fabPriceM} MAD/mètre chez grossistes)
+📏 Métrage total tissu : ${cost.totalM} m (laize 1.50m)
 
-📊 1. Décomposition du Coût Unitaire :
-• 🧵 Tissu (${unitConso}m × ${fabPriceM} MAD) : ${fabCost.toFixed(2)} MAD
-• 🪡 Fournitures (fil, étiquettes, élastique/boutons, sachet) : ${trimsCost.toFixed(2)} MAD
-• ✂️ Coupe au matelas : 1.50 MAD
-• 🏭 Façon confection atelier : ${laborCost.toFixed(2)} MAD
-• 💡 Charges fixes atelier : ${overhead.toFixed(2)} MAD
+🧵 Matière sélectionnée :
+• Tissu : ${cost.mziana.tissuNomFr} (~${cost.mziana.prixM} MAD/m chez grossistes)
+• Coût tissu unitaire : ${cost.totalM}m × ${cost.mziana.prixM} MAD = ${cost.mziana.coutTissu.toFixed(2)} MAD
+
+🪡 Fournitures Premium (Zip YKK, bord-côte coton peigné, cordons, sachet) : ${cost.mziana.trims.toFixed(2)} MAD
+✂️ Façon atelier & Coupe soignée : ${cost.mziana.facon.toFixed(2)} MAD
 
 ────────────────────────────────────────
-💵 PRIX DE REVIENT TOTAL : ${unitTotal.toFixed(2)} MAD / pièce
+💵 PRIX DE REVIENT TOTAL : ${cost.mziana.total.toFixed(2)} MAD / pièce
 ────────────────────────────────────────
 
-📈 2. Prix de Vente Conseillés :
-• 🏢 Vente en Gros : ${grossiste} MAD (Marge nette : +${(grossiste - unitTotal).toFixed(2)} MAD/pièce)
-• 🛍️ Vente en Détail / E-commerce : ${retailMin} - ${retailMax} MAD (Marge brute > 100%)
+📈 Prix de Vente Conseillés :
+• 🏢 Vente en Gros : ${cost.mziana.gros} MAD (Marge nette : +${(cost.mziana.gros - cost.mziana.total).toFixed(2)} MAD/pièce)
+• 🛍️ Vente au Détail / E-commerce : ${cost.mziana.detailMin} - ${cost.mziana.detailMax} MAD
 
-📦 3. Budget Série de Production :
-• Série 500 pièces :
-  - Métrage nécessaire : ${Math.round(unitConso * 500)}m (~${Math.ceil((unitConso * 500) / 50)} rouleaux)
-  - Capital requis : ${(unitTotal * 500).toLocaleString('fr-FR')} MAD
-  - Bénéfice net en Gros : +${((grossiste - unitTotal) * 500).toLocaleString('fr-FR')} MAD !
-• Série 1000 pièces :
-  - Métrage : ${Math.round(unitConso * 1000)}m (~${Math.ceil((unitConso * 1000) / 50)} rouleaux)
-  - Capital : ${(unitTotal * 1000).toLocaleString('fr-FR')} MAD
-  - Bénéfice net en Gros : +${((grossiste - unitTotal) * 1000).toLocaleString('fr-FR')} MAD !`;
+📊 Comparatif : Normal = ${cost.normal.total.toFixed(2)} MAD | Éco/Fibk = ${cost.faible.total.toFixed(2)} MAD`;
+        }
+
+        if (isNormalFocus) {
+          return `⚖️ Coût de Revient Unitaire — Qualité Normal (Standard) :
+
+🎯 Modèle : ${modelTitle}
+📏 Métrage total tissu : ${cost.totalM} m (laize 1.50m)
+
+🧵 Matière sélectionnée :
+• Tissu : ${cost.normal.tissuNomFr} (~${cost.normal.prixM} MAD/m)
+• Coût tissu unitaire : ${cost.totalM}m × ${cost.normal.prixM} MAD = ${cost.normal.coutTissu.toFixed(2)} MAD
+
+🪡 Fournitures Standard : ${cost.normal.trims.toFixed(2)} MAD
+✂️ Façon atelier & Coupe standard : ${cost.normal.facon.toFixed(2)} MAD
+
+────────────────────────────────────────
+💵 PRIX DE REVIENT TOTAL : ${cost.normal.total.toFixed(2)} MAD / pièce
+────────────────────────────────────────
+
+📈 Prix de Vente Conseillés :
+• 🏢 Vente en Gros : ${cost.normal.gros} MAD (Marge nette : +${(cost.normal.gros - cost.normal.total).toFixed(2)} MAD/pièce)
+• 🛍️ Vente au Détail : ${cost.normal.detailMin} - ${cost.normal.detailMax} MAD
+
+📊 Comparatif : Mziana = ${cost.mziana.total.toFixed(2)} MAD | Éco/Fibk = ${cost.faible.total.toFixed(2)} MAD`;
+        }
+
+        if (isFaibleFocus) {
+          return `🪙 Coût de Revient Unitaire — Qualité Faible (Fibk / Économique) :
+
+🎯 Modèle : ${modelTitle}
+📏 Métrage total tissu : ${cost.totalM} m (laize 1.50m)
+
+🧵 Matière sélectionnée :
+• Tissu : ${cost.faible.tissuNomFr} (~${cost.faible.prixM} MAD/m)
+• Coût tissu unitaire : ${cost.totalM}m × ${cost.faible.prixM} MAD = ${cost.faible.coutTissu.toFixed(2)} MAD
+
+🪡 Fournitures Éco : ${cost.faible.trims.toFixed(2)} MAD
+✂️ Façon atelier rapide : ${cost.faible.facon.toFixed(2)} MAD
+
+────────────────────────────────────────
+💵 PRIX DE REVIENT TOTAL : ${cost.faible.total.toFixed(2)} MAD / pièce
+────────────────────────────────────────
+
+📈 Prix de Vente Conseillés :
+• 🏢 Vente en Gros : ${cost.faible.gros} MAD (Marge nette : +${(cost.faible.gros - cost.faible.total).toFixed(2)} MAD/pièce)
+• 🛍️ Vente au Détail : ${cost.faible.detailMin} - ${cost.faible.detailMax} MAD
+
+📊 Comparatif : Mziana = ${cost.mziana.total.toFixed(2)} MAD | Normal = ${cost.normal.total.toFixed(2)} MAD`;
+        }
+
+        let piecesTextFr = '';
+        if (pieces.length > 0) {
+          piecesTextFr = `\n📦 Détail des pièces :\n` + pieces.map((p, idx) => `• Pièce ${idx + 1} (${p.name}) : conso ~${p.consumption || '1.5m'}`).join('\n') + '\n';
+        }
+
+        return `💰 Analyse Précise du Coût de Revient selon 3 Niveaux de Qualité :
+
+🎯 Modèle : ${modelTitle}
+📏 Métrage total tissu : ${cost.totalM} m (laize 1.50m)${piecesTextFr}
+────────────────────────────────────────
+💎 1. Qualité Mziana (Haut de Gamme) :
+• Matière : ${cost.mziana.tissuNomFr} (~${cost.mziana.prixM} MAD/m)
+• Coût tissu (${cost.totalM}m) : ${cost.mziana.coutTissu.toFixed(2)} MAD
+• Fournitures Premium : ${cost.mziana.trims.toFixed(2)} MAD
+• Façon confection soignée : ${cost.mziana.facon.toFixed(2)} MAD
+👉 🔥 Total Coût de Revient : ${cost.mziana.total.toFixed(2)} MAD / pièce
+🏷️ Prix Vente Gros : ${cost.mziana.gros} MAD | Détail : ${cost.mziana.detailMin} - ${cost.mziana.detailMax} MAD
+
+────────────────────────────────────────
+⚖️ 2. Qualité Normal (Standard) :
+• Matière : ${cost.normal.tissuNomFr} (~${cost.normal.prixM} MAD/m)
+• Coût tissu (${cost.totalM}m) : ${cost.normal.coutTissu.toFixed(2)} MAD
+• Fournitures Standard : ${cost.normal.trims.toFixed(2)} MAD
+• Façon confection : ${cost.normal.facon.toFixed(2)} MAD
+👉 🔥 Total Coût de Revient : ${cost.normal.total.toFixed(2)} MAD / pièce
+🏷️ Prix Vente Gros : ${cost.normal.gros} MAD | Détail : ${cost.normal.detailMin} - ${cost.normal.detailMax} MAD
+
+────────────────────────────────────────
+🪙 3. Qualité Faible (Fibk / Économique) :
+• Matière : ${cost.faible.tissuNomFr} (~${cost.faible.prixM} MAD/m)
+• Coût tissu (${cost.totalM}m) : ${cost.faible.coutTissu.toFixed(2)} MAD
+• Fournitures Éco : ${cost.faible.trims.toFixed(2)} MAD
+• Façon rapide : ${cost.faible.facon.toFixed(2)} MAD
+👉 🔥 Total Coût de Revient : ${cost.faible.total.toFixed(2)} MAD / pièce
+🏷️ Prix Vente Gros : ${cost.faible.gros} MAD | Détail : ${cost.faible.detailMin} - ${cost.faible.detailMax} MAD
+────────────────────────────────────────
+
+📦 Budget Série de Production (Qualité Mziana) :
+• Série 500 pcs : Métrage ${Math.round(cost.totalM * 500)}m (~${Math.ceil((cost.totalM * 500) / 50)} rouleaux), Capital ${(cost.mziana.total * 500).toLocaleString('fr-FR')} MAD, Bénéfice gros +${((cost.mziana.gros - cost.mziana.total) * 500).toLocaleString('fr-FR')} MAD !
+• Série 1000 pcs : Métrage ${Math.round(cost.totalM * 1000)}m (~${Math.ceil((cost.totalM * 1000) / 50)} rouleaux), Capital ${(cost.mziana.total * 1000).toLocaleString('fr-FR')} MAD, Bénéfice gros +${((cost.mziana.gros - cost.mziana.total) * 1000).toLocaleString('fr-FR')} MAD !`;
       }
     }
 
@@ -2185,29 +2224,48 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
       }
     }
 
-    // 0.2 DIRECT FABRIC SELECTION (أشمن ثوب ندير / Choix du Tissu)
+    // 0.2 DIRECT FABRIC SELECTION (أشمن ثوب ندير / Choix du Tissu selon les 3 qualités)
     const asksFabricChoice = /(achmen toub|chmen toub|ina toub|ina toub ndir|quel tissu|choix tissu|tissu conseille|tissu conseillé|شنو الثوب|اشمن ثوب|اشمن توب|شنو ندير ثوب|أفضل ثوب|احسن ثوب)/i.test(m);
     if (asksFabricChoice) {
+      const cost = computeThreeTierCosting(analysisResult);
       const cat = analysisResult?.category || 'الموديل';
-      const fab = analysisResult?.fabricSuggested || 'ميلتون قطن ممشوط (Molleton Gratté 320g)';
       if (speakAr) {
-        return `🧵 أحسن ثوب مقترح لهاد الموديل (${cat}):
+        return `🧵 أنواع الثوب المناسبة لهاد الموديل (${cat}) حسب 3 مستويات الجودة:
 
-1️⃣ الاختيار الأول (الأفضل والأكثر طلباً فالسوق المغربي):
-• ${fab}
-• المميزات: دافي، ملمس ناعم وفاخر، مكيكمشش، ومقاوم للغسيل المتكرر.
-• الثمن فدرب عمر والقريعة: ما بين 48 إلى 65 درهم للكيلو (أو 26-34 درهم للمتر لعرض 1.80م).
+💎 1. جودة ممتازة (Qualité Mziana / Haut de Gamme):
+• الثوب: ${cost.mziana.tissuNomAr}
+• المميزات: ملمس ناعم وفاخر، دافي، مكيحببش ومكيكمشش، ممتاز للبراندات والمتاجر الراقية.
+• ثمن الجملة فدرب عمر والقريعة: ~${cost.mziana.prixM} درهم للمتر (أو 75-85 درهم للكيلو).
 
-2️⃣ بدائل ممتازة حسب الموسم ومستوى الجودة:
-• فرينش تيري (French Terry Coton 280g): ممتاز للربيع والصيف، فيه حلقات قطنية خفيفة من الداخل.
-• إنترلوك قطن فاخر (Interlock Double Face 260g): وجهين ناعمين، أنيق جداً للقطع الكلاسيكية والرياضية الراقية.
+⚖️ 2. جودة عادية (Qualité Normal / Standard):
+• الثوب: ${cost.normal.tissuNomAr}
+• المميزات: عملي، متوازن، مناسب جداً للاستعمال اليومي ويباع بكميات كبيرة.
+• ثمن الجملة: ~${cost.normal.prixM} درهم للمتر (أو 55-65 درهم للكيلو).
 
-📍 فين تشريه: سوق القريعة (جناح التريكو بالكيلو) أو شارع ستراسبورغ بدرب عمر بالدار البيضاء.`;
+🪙 3. جودة اقتصادية (Qualité Faible / Fibk / Éco):
+• الثوب: ${cost.faible.tissuNomAr}
+• المميزات: ثوب اقتصادي خفيف، مخصص للأسواق الشعبية والتوزيع السريع.
+• ثمن الجملة: ~${cost.faible.prixM} درهم للمتر (أو 35-42 درهم للكيلو).
+
+📍 أسواق الشراء بالجملة فالمغرب:
+• الدار البيضاء: سوق القريعة (جناح التريكو والمولتون) وشارع ستراسبورغ بدرب عمر.
+• طنجة: المنطقة الصناعية المجد ومحلات الأقمشة بالجملة.`;
       } else {
-        return `🧵 Tissu Recommandé pour ce modèle (${cat}) :
-1. Choix Principal : ${fab} (Prix : 48 - 65 MAD/kg ou ~26 MAD/m).
-2. Alternatives : French Terry (280g) pour mi-saison, ou Interlock Coton (260g) pour haut de gamme.
-📍 Sourcing : Marché El Koréa (au kilo) et Derb Omar à Casablanca.`;
+        return `🧵 Choix des Tissus pour (${cat}) selon les 3 Niveaux de Qualité :
+
+💎 1. Qualité Mziana (Haut de Gamme) :
+• Tissu : ${cost.mziana.tissuNomFr} (~${cost.mziana.prixM} MAD/m chez grossistes).
+• Toucher luxe, très bonne tenue, anti-boulochage, idéal pour marques premium.
+
+⚖️ 2. Qualité Normal (Standard) :
+• Tissu : ${cost.normal.tissuNomFr} (~${cost.normal.prixM} MAD/m).
+• Bon équilibre confort/durabilité, prêt-à-porter standard.
+
+🪙 3. Qualité Faible (Fibk / Économique) :
+• Tissu : ${cost.faible.tissuNomFr} (~${cost.faible.prixM} MAD/m).
+• Matière économique pour marché d'entrée de gamme.
+
+📍 Sourcing : Souk El Koréa & Derb Omar à Casablanca.`;
       }
     }
 
@@ -3089,9 +3147,12 @@ ${modelContextPrompt}
 ${userMessage}
 
 تنبيه تقني إلزامي:
-1. أجب المستخدم فوراً وبشكل مباشر، تقني، وواضح جداً وبدون أي لف أو دوران، ولا تحله على أزرار أخرى أبداً!
-2. إذا سألك عن "شحال كتقام البياسة" أو عن التكلفة أو الثمن أو الأرباح، احسب له التكلفة فوراً بالأرقام المحددة بناءً على الموديل الحالي وأسعار السوق المغربي (درب عمر والقريعة): ثمن الثوب بالدرهم، لوازم الخياطة، تكلفة اليد العاملة والورشة، وثمن البياسة النهائي Prix de revient، وسعر الجملة وسعر التقسيط المقترح، وتكلفة 500 أو 1000 بياسة.
-3. إذا سألك عن الثوب، الوقت، الفصالة، أو مراحل الخياطة، أجب فوراً بأرقام ومعلومات تقنية عملية بالدارجة المغربية المفهومة للحرفيين.`;
+1. حلل فقط الموديل الحقيقي الظاهر في الصورة المرفقة بدقة بدون أي تخمين أو عشوائية (Modèle réel de l'image).
+2. إذا سألك عن "شحال كتقام البياسة" أو عن التكلفة، الثمن، الأرباح، نوع الثوب، أو الجودة، قدم له تفصيلاً دقيقاً ومضبوطاً مبنياً على 3 مستويات جودة واقعية بأسعار أسواق الجملة المغربية (درب عمر، سوق القريعة، كراج علال، طنجة):
+   - 💎 جودة ممتازة (Qualité Mziana / Haut de gamme): نوع الثوب بالتفصيل (مثل ميلتون 100% قطن ممشوط فاخر 320-350g بـ ~58 درهم/متر)، اللوازم الممتازة، كلفة اليد العاملة والورشة، كلفة البياسة الإجمالية (Prix de Revient)، وسعر الجملة والتقسيط.
+   - ⚖️ جودة عادية (Qualité Normal / Standard): نوع الثوب (مثل قطن/بوليستر 70/30 بـ ~42 درهم/متر)، اللوازم، الصنعة، والكلفة الإجمالية، وسعر الجملة والتقسيط.
+   - 🪙 جودة اقتصادية (Qualité Faible / Fibk / Éco): نوع الثوب (بولي-قطن 50/50 بـ ~26 درهم/متر)، اللوازم، الصنعة، والكلفة الإجمالية، وسعر الجملة والتقسيط.
+3. إذا سألك عن الثوب، الميتراج، الفصالة، أو مراحل الخياطة، أجب فوراً بأرقام ومعلومات تقنية عملية ومباشرة بالدارجة المغربية المفهومة للحرفيين.`;
 
       const contents: any[] = [
         {
@@ -3444,16 +3505,17 @@ ${userMessage}
                       <span>{analysisResult ? (isAr ? 'إعادة التحليل' : 'Re-analyser') : (isAr ? 'بدء التحليل الفوري' : 'Lancer l\'analyse')}</span>
                     </button>
                     {analysisResult && (
-                      <>
-                        <button onClick={() => applyPiecePreset('robe_chemise')} className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-2.5 rounded-xl font-black text-xs shadow-xl flex items-center gap-1 active:scale-95 transition-all" title={isAr ? 'فستان قميص بليات' : 'Robe Chemise Plissée'}>
-                          <span>👗</span>
-                          <span>{isAr ? 'فستان بليات' : 'Robe Chemise'}</span>
-                        </button>
-                        <button onClick={() => applyPiecePreset(3)} className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2.5 rounded-xl font-black text-xs shadow-xl flex items-center gap-1 active:scale-95 transition-all" title="Ensemble 3 Pièces">
-                          <span>🧥</span>
-                          <span>{isAr ? 'طقم 3 قطع' : '3 Pièces'}</span>
-                        </button>
-                      </>
+                      <button 
+                        onClick={() => {
+                          setQuoteInitialMode('chiffrage');
+                          setShowClientQuoteModal(true);
+                        }} 
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 rounded-xl font-black text-xs shadow-xl flex items-center gap-1.5 active:scale-95 transition-all" 
+                        title={isAr ? 'كلفة السلعة وتفاصيل 3 مستويات جودة' : 'Coût de revient 3 niveaux'}
+                      >
+                        <DollarSign className="w-3.5 h-3.5" />
+                        <span>{isAr ? 'كلفة 3 مستويات' : 'Costing 3 Niveaux'}</span>
+                      </button>
                     )}
                   </div>
                   {analyzing && (
@@ -4306,51 +4368,51 @@ ${userMessage}
               {/* Chat Input Bar */}
               <div className="p-3 bg-white border-t border-slate-200/80 flex-shrink-0 space-y-2">
                 <div className={`flex items-center gap-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
-                  <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'تحويل فوري:' : 'Preset :'}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'تحليل وتسعير:' : 'Actions :'}</span>
                   <button
                     type="button"
-                    onClick={() => applyPiecePreset('robe_chemise')}
-                    className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-black rounded-lg border border-rose-200/60 transition-all active:scale-95 flex items-center gap-1"
-                    title={isAr ? 'فستان قميص طويل بليات واسع مع حزام' : 'Robe Chemise Plissée Ceinturée'}
+                    onClick={startAnalysis}
+                    className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-black rounded-lg border border-indigo-200/60 transition-all active:scale-95 flex items-center gap-1 shadow-xs"
+                    title={isAr ? 'تحليل الموديل في الصورة مباشرة وحساب المقاسات والأثواب' : 'Analyser directement le modèle de la photo'}
                   >
-                    <span>👗</span>
-                    <span>{isAr ? 'فستان قميص بليات' : 'Robe Chemise'}</span>
+                    <span>🎯</span>
+                    <span>{isAr ? 'تحليل موديل الصورة' : 'Analyser l\'image'}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyPiecePreset('abaya')}
-                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-black rounded-lg border border-amber-200/60 transition-all active:scale-95 flex items-center gap-1"
-                    title={isAr ? 'عباية / فستان طويل' : 'Abaya / Robe'}
+                    onClick={() => sendDirect(isAr ? 'شحال كتقام البياسة فـ الجودة الممتازة (Qualité Mziana) ونوع الثوب والأرباح؟' : 'Détail du coût et tissu en Qualité Mziana (Haut de gamme) ?')}
+                    className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-black rounded-lg border border-emerald-200/60 transition-all active:scale-95 flex items-center gap-1 shadow-xs"
+                    title={isAr ? 'تفاصيل التكلفة وثمن البيع ونوع الثوب في الجودة الممتازة' : 'Qualité Mziana (Haut de gamme)'}
                   >
-                    <span>👘</span>
-                    <span>{isAr ? 'عباية / فستان' : 'Abaya / Robe'}</span>
+                    <span>💎</span>
+                    <span>{isAr ? 'جودة مزيانة (Mziana)' : 'Qualité Mziana'}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyPiecePreset(3)}
-                    className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-black rounded-lg border border-indigo-200/60 transition-all active:scale-95 flex items-center gap-1"
-                    title={isAr ? 'طقم 3 قطع (مانطو طويل + هودي + سروال)' : 'Ensemble 3 Pièces (Manteau + Hoodie + Pantalon)'}
+                    onClick={() => sendDirect(isAr ? 'شحال كتقام البياسة فـ الجودة العادية (Qualité Normal) ونوع الثوب؟' : 'Détail du coût et tissu en Qualité Normal (Standard) ?')}
+                    className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 text-[11px] font-black rounded-lg border border-blue-200/60 transition-all active:scale-95 flex items-center gap-1 shadow-xs"
+                    title={isAr ? 'تفاصيل التكلفة ونوع الثوب في الجودة العادية' : 'Qualité Normal (Standard)'}
                   >
-                    <span>🧥</span>
-                    <span>{isAr ? 'طقم 3 قطع' : 'Ensemble 3 Pièces'}</span>
+                    <span>⚖️</span>
+                    <span>{isAr ? 'جودة عادية (Normal)' : 'Qualité Normal'}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyPiecePreset(2)}
-                    className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-black rounded-lg border border-slate-200 transition-all active:scale-95 flex items-center gap-1"
-                    title={isAr ? 'طقم قطعتين (هودي + سروال)' : 'Ensemble 2 Pièces (Hoodie + Pantalon)'}
+                    onClick={() => sendDirect(isAr ? 'شحال كتقام البياسة فـ الجودة الاقتصادية (Qualité Faible / Fibk) ونوع الثوب؟' : 'Détail du coût et tissu en Qualité Faible / Économique ?')}
+                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-black rounded-lg border border-amber-200/60 transition-all active:scale-95 flex items-center gap-1 shadow-xs"
+                    title={isAr ? 'تفاصيل التكلفة ونوع الثوب في الجودة الاقتصادية' : 'Qualité Faible (Fibk)'}
                   >
-                    <span>👕👖</span>
-                    <span>{isAr ? 'طقم قطعتين' : '2 Pièces'}</span>
+                    <span>🪙</span>
+                    <span>{isAr ? 'جودة اقتصادية (Fibk)' : 'Qualité Faible'}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyPiecePreset('hoodie')}
-                    className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-black rounded-lg border border-slate-200 transition-all active:scale-95 flex items-center gap-1"
-                    title={isAr ? 'هودي أوفرسايز' : 'Hoodie'}
+                    onClick={() => sendDirect(isAr ? 'شنو أنواع الثوب المناسبة لهاد الموديل وثمن المتر فدرب عمر والقريعة؟' : 'Quels tissus et prix au mètre pour ce modèle ?')}
+                    className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-800 text-[11px] font-black rounded-lg border border-purple-200/60 transition-all active:scale-95 flex items-center gap-1 shadow-xs"
+                    title={isAr ? 'أنواع الأقمشة وسورسينغ الموديل' : 'Sourcing tissus & Prix'}
                   >
-                    <span>👕</span>
-                    <span>{isAr ? 'هودي' : 'Hoodie'}</span>
+                    <span>🧵</span>
+                    <span>{isAr ? 'أنواع الثوب' : 'Tissus'}</span>
                   </button>
                 </div>
                 <form onSubmit={(e) => { e.preventDefault(); sendMsg(); }} className="flex gap-2">
