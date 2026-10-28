@@ -298,6 +298,9 @@ export default function CreateStoreWizardModal({
         }
       };
 
+      // Pre-save to localStorage so user doesn't lose their configured store
+      localStorage.setItem('beya_store_config', JSON.stringify(initialConfig));
+
       // Insert into Supabase stores table
       const { data: insertedStore, error } = await supabase
         .from('stores')
@@ -320,15 +323,21 @@ export default function CreateStoreWizardModal({
         throw error;
       }
 
-      // Save to localStorage as active store config
-      localStorage.setItem('beya_store_config', JSON.stringify(initialConfig));
-
       // Call parent callback
       onStoreCreated(insertedStore || { config_json: initialConfig, name: storeName.trim(), domain: fullDomain });
       onClose();
     } catch (e: any) {
       console.error('Erreur création boutique:', e);
-      setErrorMessage(e.message || (isAr ? 'حدث خطأ أثناء إنشاء المتجر.' : 'Erreur lors de la création de la boutique.'));
+      const isFetchError = e.message?.toLowerCase().includes('fetch') || e.name === 'TypeError';
+      if (isFetchError) {
+        setErrorMessage(
+          isAr
+            ? 'تعذر الاتصال بقاعدة البيانات (سيرفر Supabase متوقف مؤقتاً "Paused" أو يواجه انقطاع في الاتصال 522). يرجى فتح لوحة تحكم Supabase والضغط على "Restore project".'
+            : 'Impossible de contacter le serveur (Le projet Supabase est actuellement en pause ou inaccessible - Erreur 522). Rendez-vous sur votre tableau de bord Supabase et cliquez sur "Restore project".'
+        );
+      } else {
+        setErrorMessage(e.message || (isAr ? 'حدث خطأ أثناء إنشاء المتجر.' : 'Erreur lors de la création de la boutique.'));
+      }
     } finally {
       setIsSubmitting(false);
     }
