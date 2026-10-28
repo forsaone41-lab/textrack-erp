@@ -162,13 +162,6 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
          {/* Header */}
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse text-right' : 'text-left'}`}>
-               <button
-                  onClick={() => window.location.href = '/'}
-                  className="p-3 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-sm active:scale-95 flex-shrink-0"
-                  title={t('Retour à l\'accueil', 'Back to home', 'الرجوع للرئيسية')}
-               >
-                  {isRtl ? <ArrowRight className="w-6 h-6" /> : <ArrowLeft className="w-6 h-6" />}
-               </button>
                <div>
                   <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('Mes Boutiques', 'My Stores', 'متاجري')}</h1>
                   <p className="text-slate-500 mt-1">{t('Gérez vos boutiques, abonnements et outils avancés.', 'Manage your stores, subscriptions and advanced tools.', 'إدارة المتاجر الخاصة بك، والاشتراكات، والأدوات المتقدمة.')}</p>

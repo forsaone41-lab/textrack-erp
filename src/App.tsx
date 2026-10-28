@@ -786,22 +786,31 @@ function AppContent() {
     );
   }
 
-  if (currentUser.role === 'client' || currentUser.role === 'merchant') {
+  if (currentUser.role === 'client') {
+    return (
+      <Routes>
+        <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
+        <Route path="*" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
+      </Routes>
+    );
+  }
+
+  if (currentUser.role === 'merchant') {
     return (
       <>
         {recoveryModal}
         <Routes>
           <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
-          <Route path="/store-dashboard" element={
-            <Suspense fallback={<PageLoader />}>
-              <MerchantDashboard currentUser={currentUser} onLogout={handleLogout} />
-            </Suspense>
-          } />
           <Route path="/store-builder" element={
             <Suspense fallback={<PageLoader />}>
               <div className="min-h-screen bg-white">
                 <StoreBuilder appCurrentUser={currentUser} />
               </div>
+            </Suspense>
+          } />
+          <Route path="/store-dashboard" element={
+            <Suspense fallback={<PageLoader />}>
+              <MerchantDashboard currentUser={currentUser} onLogout={handleLogout} />
             </Suspense>
           } />
           <Route path="/store-analytics" element={
@@ -814,6 +823,11 @@ function AppContent() {
               <BeyaDesignerPage />
             </Suspense>
           } />
+          <Route path="/portal" element={
+            <Suspense fallback={<PageLoader />}>
+              <PortailClient currentUser={currentUser} onLogout={handleLogout} />
+            </Suspense>
+          } />
           <Route path="/saas-admin" element={
             <Suspense fallback={<PageLoader />}>
               <SaaSAdminPage />
@@ -824,7 +838,14 @@ function AppContent() {
               <SaaSAdminPage />
             </Suspense>
           } />
-          <Route path="*" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
+          <Route path="/" element={
+            <Suspense fallback={<PageLoader />}>
+              <div className="min-h-screen bg-white">
+                <StoreBuilder appCurrentUser={currentUser} />
+              </div>
+            </Suspense>
+          } />
+          <Route path="*" element={<Navigate to="/store-builder" replace />} />
         </Routes>
       </>
     );

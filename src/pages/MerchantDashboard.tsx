@@ -474,7 +474,7 @@ export default function GZeedDashboard({ currentUser, onLogout }: { currentUser?
       {/* Sidebar - Apple Style Minimalist */}
       <aside className="w-64 bg-[#F5F5F7] text-slate-900 flex flex-col hidden md:flex transition-all duration-300 relative border-r border-slate-200" dir={lang === 'ar' ? 'rtl' : lang === 'en' ? 'ltr' : 'ltr'}>
         {/* Logo Area */}
-        <div className="h-16 flex items-center px-6 border-b border-slate-200 bg-[#F5F5F7]/80 backdrop-blur-xl sticky top-0 z-10 cursor-pointer" onClick={() => navigate('/')}>
+        <div className="h-16 flex items-center px-6 border-b border-slate-200 bg-[#F5F5F7]/80 backdrop-blur-xl sticky top-0 z-10 cursor-pointer" onClick={() => setActiveTab('home')}>
           <div className="flex items-center gap-2" dir="ltr">
             <div className="w-8 h-8 bg-[#0071e3] rounded-xl flex items-center justify-center font-black text-white text-sm shadow-md">
               <img src="/logo-blue.png" alt="BEYA" className="w-5 h-5 rounded-sm invert brightness-0" />
@@ -687,7 +687,7 @@ export default function GZeedDashboard({ currentUser, onLogout }: { currentUser?
                   {lang === 'ar' ? 'مرحباً بك في BEYA 👋' : lang === 'en' ? 'Welcome to BEYA 👋' : 'Bienvenue sur BEYA 👋'}
                 </h1>
                 <p className="text-slate-500 font-medium">
-                  {lang === 'ar' ? 'لنقم بإعداد مشروعك وإطلاقه للعالم.' : lang === 'en' ? "Let's set up your project for launch." : "Configurons votre projet pour le lancer."}
+                  {lang === 'ar' ? 'لوحة تحكم المتجر والطلبيات' : lang === 'en' ? "Your store and orders dashboard" : "Tableau de bord de votre boutique"}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -697,6 +697,13 @@ export default function GZeedDashboard({ currentUser, onLogout }: { currentUser?
                 >
                   <MonitorPlay className="w-4 h-4" />
                   {lang === 'ar' ? 'عرض الواجهة' : lang === 'en' ? 'View Site' : 'Voir le site'}
+                </button>
+                <button 
+                  onClick={() => navigate('/store-builder')}
+                  className="flex-1 md:flex-none justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md flex items-center gap-2"
+                >
+                  <Palette className="w-4 h-4" />
+                  {lang === 'ar' ? 'تعديل المتجر (Builder)' : lang === 'en' ? 'Store Builder' : 'Éditeur Visuel PRO'}
                 </button>
                 {projectType === 'store' && (
                   <button 
@@ -710,112 +717,82 @@ export default function GZeedDashboard({ currentUser, onLogout }: { currentUser?
               </div>
             </div>
 
-            {/* Setup Progress */}
-            <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
-              <div className="absolute right-0 top-0 w-64 h-64 bg-cyan-50 rounded-full blur-[100px] pointer-events-none" />
-              
-              <div className="relative z-10 flex flex-col md:flex-row justify-between gap-8">
-                <div className="flex-1">
-                  <h2 className="text-xl font-black text-slate-900 mb-2">
-                    {lang === 'ar' ? 'دليل الإعداد السريع' : lang === 'en' ? 'Quick Setup Guide' : 'Guide de configuration rapide'}
-                  </h2>
-                  <p className="text-slate-500 text-sm font-medium mb-6">
-                    {lang === 'ar' ? 'أكمل هذه الخطوات لبدء البيع واستقبال الزوار.' : lang === 'en' ? 'Complete these steps to start selling.' : 'Complétez ces étapes pour commencer à vendre.'}
-                  </p>
-                  
-                  <div className="space-y-4">
-                    {/* Task 1 */}
-                    <div onClick={() => setActiveTab('settings')} className={`flex items-start gap-4 p-4 rounded-xl border transition-colors cursor-pointer group ${tasksCompleted.name ? 'border-emerald-100 bg-emerald-50/50' : 'border-cyan-100 bg-cyan-50/50 hover:bg-cyan-50'}`}>
-                      {tasksCompleted.name ? (
-                        <div className="w-6 h-6 rounded-full border-2 border-emerald-500 bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5"><Check className="w-3.5 h-3.5" /></div>
-                      ) : (
-                        <div className="w-6 h-6 rounded-full border-2 border-cyan-500 flex items-center justify-center shrink-0 mt-0.5 bg-white"><div className="w-2 h-2 rounded-full bg-cyan-500" /></div>
-                      )}
-                      <div>
-                        <h3 className="font-bold text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">
-                          {lang === 'ar' ? 'اختر اسماً لمشروعك' : lang === 'en' ? 'Choose a name for your project' : 'Choisissez un nom pour votre projet'}
-                        </h3>
-                        <p className="text-sm text-slate-600 font-medium">
-                          {lang === 'ar' ? 'لم تقم بتسمية متجرك بعد. اختر اسماً يمثل علامتك التجارية.' : lang === 'en' ? "You haven't named your store yet." : "Vous n'avez pas encore nommé votre boutique."}
-                        </p>
-                        <button className="mt-3 text-sm font-bold text-cyan-600 hover:text-cyan-700">
-                          {lang === 'ar' ? 'إضافة اسم →' : lang === 'en' ? 'Add name →' : 'Ajouter un nom →'}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Task 2 */}
-                    <div onClick={() => setActiveTab('themes')} className={`flex items-start gap-4 p-4 rounded-xl border transition-colors cursor-pointer group ${tasksCompleted.theme ? 'border-emerald-100 bg-emerald-50/50' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'}`}>
-                      {tasksCompleted.theme ? (
-                        <div className="w-6 h-6 rounded-full border-2 border-emerald-500 bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5"><Check className="w-3.5 h-3.5" /></div>
-                      ) : (
-                        <div className="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 mt-0.5 bg-white" />
-                      )}
-                      <div>
-                        <h3 className="font-bold text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">
-                          {lang === 'ar' ? 'تخصيص الواجهة والقوالب' : lang === 'en' ? "Customize appearance" : "Personnaliser l'apparence"}
-                        </h3>
-                        <p className="text-sm text-slate-600 font-medium">
-                          {lang === 'ar' ? 'اختر قالباً يناسبك وعدله بسهولة باستخدام أداة السحب والإفلات.' : lang === 'en' ? 'Choose a theme and customize it easily.' : 'Choisissez un thème et modifiez-le facilement.'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Task 3 */}
-                    <div onClick={() => setActiveTab('products')} className={`flex items-start gap-4 p-4 rounded-xl border transition-colors cursor-pointer group ${tasksCompleted.product ? 'border-emerald-100 bg-emerald-50/50' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'}`}>
-                      {tasksCompleted.product ? (
-                        <div className="w-6 h-6 rounded-full border-2 border-emerald-500 bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5"><Check className="w-3.5 h-3.5" /></div>
-                      ) : (
-                        <div className="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 mt-0.5 bg-white" />
-                      )}
-                      <div>
-                        <h3 className="font-bold text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">
-                          {lang === 'ar' ? 'أضف أول منتج لك' : lang === 'en' ? 'Add your first product' : 'Ajoutez votre premier produit'}
-                        </h3>
-                        <p className="text-sm text-slate-600 font-medium">
-                          {lang === 'ar' ? 'ارفع صوراً ووصفاً لمنتجك ليراه عملاؤك.' : lang === 'en' ? 'Upload images and a description.' : 'Téléchargez des images et une description.'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Task 4 */}
-                    <div onClick={() => setActiveTab('settings')} className={`flex items-start gap-4 p-4 rounded-xl border transition-colors cursor-pointer group ${tasksCompleted.domain ? 'border-emerald-100 bg-emerald-50/50' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'}`}>
-                      {tasksCompleted.domain ? (
-                        <div className="w-6 h-6 rounded-full border-2 border-emerald-500 bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5"><Check className="w-3.5 h-3.5" /></div>
-                      ) : (
-                        <div className="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 mt-0.5 bg-white" />
-                      )}
-                      <div>
-                        <h3 className="font-bold text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">
-                          {lang === 'ar' ? 'ربط اسم النطاق' : lang === 'en' ? 'Connect a domain' : 'Connecter un domaine'}
-                        </h3>
-                        <p className="text-sm text-slate-600 font-medium">
-                          {lang === 'ar' ? 'قم بربط نطاقك الخاص للبدء في استقبال الزوار.' : lang === 'en' ? 'Connect your custom domain to start receiving visitors.' : 'Connectez votre domaine personnalisé pour commencer à recevoir des visiteurs.'}
-                        </p>
-                      </div>
-                    </div>
+            {/* Quick Metrics Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{lang === 'ar' ? 'إجمالي الطلبات' : 'Total Commandes'}</span>
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <ShoppingBag className="w-4 h-4" />
                   </div>
                 </div>
-
-                {/* Progress Circle Visual */}
-                <div className="w-full md:w-64 flex flex-col justify-center items-center bg-slate-50 rounded-2xl p-6 border border-slate-100">
-                  <div className="relative w-32 h-32 flex items-center justify-center mb-4">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="64" cy="64" r="60" className="stroke-slate-200 fill-none" strokeWidth="8" />
-                      <circle cx="64" cy="64" r="60" className="stroke-cyan-500 fill-none stroke-[8px] transition-all duration-1000 ease-out" strokeDasharray="377" strokeDashoffset={progressOffset} strokeLinecap="round" />
-                    </svg>
-                    <div className="absolute text-3xl font-black text-slate-900">
-                      {completedCount}<span className="text-xl text-slate-400">/4</span>
-                    </div>
-                  </div>
-                  <h4 className="font-bold text-slate-900 text-center mb-1">
-                    {lang === 'ar' ? 'أنت في الطريق الصحيح!' : lang === 'en' ? 'You are on the right track!' : 'Vous êtes sur la bonne voie !'}
-                  </h4>
-                  <p className="text-xs font-medium text-slate-500 text-center">
-                    {lang === 'ar' ? 'أكمل الإعداد لإطلاق مشروعك' : lang === 'en' ? 'Finish setup to launch your project' : 'Terminez la configuration pour lancer votre projet'}
-                  </p>
-                </div>
+                <p className="text-2xl font-black text-slate-900">{orders.length}</p>
+                <p className="text-[11px] font-bold text-slate-400 mt-1">{lang === 'ar' ? 'طلب مسجل' : 'commandes enregistrées'}</p>
               </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{lang === 'ar' ? 'رقم المعاملات' : "Chiffre d'Affaires"}</span>
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <ShoppingBag className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-slate-900">{orders.reduce((sum, o) => sum + (o.prix || 0), 0).toLocaleString()} <span className="text-sm font-bold text-slate-500">MAD</span></p>
+                <p className="text-[11px] font-bold text-emerald-600 mt-1">{lang === 'ar' ? 'مداخيل المبيعات' : 'Revenus générés'}</p>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{lang === 'ar' ? 'المنتجات النشطة' : 'Produits'}</span>
+                  <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center">
+                    <Box className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-slate-900">{storeProducts.length}</p>
+                <p className="text-[11px] font-bold text-slate-400 mt-1">{lang === 'ar' ? 'منتج في المتجر' : 'produits en ligne'}</p>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{lang === 'ar' ? 'النطاق' : 'Domaine'}</span>
+                  <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-sm font-black text-slate-900 truncate" title={domainName}>{domainName}</p>
+                <p className="text-[11px] font-bold text-emerald-600 mt-1">{lang === 'ar' ? 'متصل وجاهز' : 'Actif et connecté'}</p>
+              </div>
+            </div>
+
+            {/* Recent Orders Overview */}
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-black text-slate-900">{lang === 'ar' ? 'آخر الطلبات' : 'Commandes Récentes'}</h3>
+                  <p className="text-xs font-medium text-slate-500">{lang === 'ar' ? 'متابعة الطلبيات الأخيرة لمتجرك' : 'Suivi des dernières ventes de votre boutique'}</p>
+                </div>
+                <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-indigo-600 hover:text-indigo-700">
+                  {lang === 'ar' ? 'عرض الكل →' : 'Voir tout →'}
+                </button>
+              </div>
+              {orders.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-sm font-medium">
+                  {lang === 'ar' ? 'لا توجد طلبات بعد' : 'Aucune commande enregistrée pour le moment.'}
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {orders.slice(0, 5).map((o) => (
+                    <div key={o.id} className="p-4 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-slate-900 text-sm truncate">{o.clientName || 'Client'}</p>
+                        <p className="text-xs text-slate-500 font-medium truncate">{o.modele} · {o.quantite} pcs {o.city ? `· ${o.city}` : ''}</p>
+                      </div>
+                      <div className="text-xs font-black text-slate-900 shrink-0">{o.prix} MAD</div>
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ${o.statusColor}`}>{o.statut}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             </>
           )}
@@ -1024,7 +1001,7 @@ export default function GZeedDashboard({ currentUser, onLogout }: { currentUser?
                 {lang === 'ar' ? 'قم بتعديل كل جزء من موقعك باستخدام أداة السحب والإفلات السهلة. لا تحتاج لأي خبرة في البرمجة!' : lang === 'en' ? 'Edit every part of your site with our drag-and-drop tool. No experience required!' : 'Modifiez chaque partie de votre site avec notre outil glisser-déposer. Aucune expérience requise !'}
               </p>
               <button 
-                onClick={() => navigate('/gzeed-builder')}
+                onClick={() => navigate('/store-builder')}
                 className="px-8 py-4 bg-slate-900 text-white rounded-xl font-black text-lg shadow-xl shadow-slate-900/20 hover:scale-105 transition-all flex items-center gap-3"
               >
                 <MonitorPlay className="w-6 h-6" />
