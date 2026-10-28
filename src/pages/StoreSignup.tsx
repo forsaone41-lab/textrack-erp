@@ -167,9 +167,8 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
           const allUsers = JSON.parse(localStorage.getItem('textrack_users') || '[]');
           const found = allUsers.find((u: any) => u.email?.trim().toLowerCase() === email.trim().toLowerCase());
           if (found && (found.password === password || found.pinCode === password)) {
-            const upgraded = { ...found, role: 'merchant' };
-            localStorage.setItem('textrack_auth', JSON.stringify(upgraded));
-            await saveRecord('users', upgraded, true);
+            const sessionUser = { ...found };
+            localStorage.setItem('textrack_auth', JSON.stringify(sessionUser));
             if (onLogin) onLogin(upgraded);
             navigate('/store-builder');
             return;

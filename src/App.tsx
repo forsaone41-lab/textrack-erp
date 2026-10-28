@@ -786,12 +786,47 @@ function AppContent() {
     );
   }
 
-  if (currentUser.role === 'client') {
+  if (currentUser.role === 'client' || currentUser.role === 'merchant') {
     return (
-      <Routes>
-        <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
-        <Route path="*" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
-      </Routes>
+      <>
+        {recoveryModal}
+        <Routes>
+          <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
+          <Route path="/store-dashboard" element={
+            <Suspense fallback={<PageLoader />}>
+              <MerchantDashboard currentUser={currentUser} onLogout={handleLogout} />
+            </Suspense>
+          } />
+          <Route path="/store-builder" element={
+            <Suspense fallback={<PageLoader />}>
+              <div className="min-h-screen bg-white">
+                <StoreBuilder appCurrentUser={currentUser} />
+              </div>
+            </Suspense>
+          } />
+          <Route path="/store-analytics" element={
+            <Suspense fallback={<PageLoader />}>
+              <StoreAnalytics currentUser={currentUser} />
+            </Suspense>
+          } />
+          <Route path="/beya-designer" element={
+            <Suspense fallback={<PageLoader />}>
+              <BeyaDesignerPage />
+            </Suspense>
+          } />
+          <Route path="/saas-admin" element={
+            <Suspense fallback={<PageLoader />}>
+              <SaaSAdminPage />
+            </Suspense>
+          } />
+          <Route path="/godmode" element={
+            <Suspense fallback={<PageLoader />}>
+              <SaaSAdminPage />
+            </Suspense>
+          } />
+          <Route path="*" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
+        </Routes>
+      </>
     );
   }
 
@@ -809,58 +844,6 @@ function AppContent() {
 
   if (currentUser.role === 'affiliate') {
     return <Suspense fallback={<PageLoader />}><AffiliatePortal currentUser={currentUser} onLogout={handleLogout} /></Suspense>;
-  }
-
-
-
-  // ?? Dedicated Merchant Portal (SaaS Dashboard)
-  if (currentUser.role === 'merchant') {
-    return (
-      <>
-        {recoveryModal}
-        <Routes>
-        <Route path="/" element={
-          <Suspense fallback={<PageLoader />}>
-            <MerchantDashboard currentUser={currentUser} onLogout={handleLogout} />
-          </Suspense>
-        } />
-        {/* They can also access the builder */}
-        <Route path="/store-builder" element={
-          <Suspense fallback={<PageLoader />}>
-            <div className="min-h-screen bg-white">
-              <StoreBuilder appCurrentUser={currentUser} />
-            </div>
-          </Suspense>
-        } />
-        <Route path="/portal" element={
-          <Suspense fallback={<PageLoader />}>
-            <PortailClient currentUser={currentUser} onLogout={handleLogout} />
-          </Suspense>
-        } />
-        <Route path="/store-analytics" element={
-          <Suspense fallback={<PageLoader />}>
-            <StoreAnalytics currentUser={currentUser} />
-          </Suspense>
-        } />
-        <Route path="/beya-designer" element={
-          <Suspense fallback={<PageLoader />}>
-            <BeyaDesignerPage />
-          </Suspense>
-        } />
-        <Route path="/saas-admin" element={
-          <Suspense fallback={<PageLoader />}>
-            <SaaSAdminPage />
-          </Suspense>
-        } />
-        <Route path="/godmode" element={
-          <Suspense fallback={<PageLoader />}>
-            <SaaSAdminPage />
-          </Suspense>
-        } />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      </>
-    );
   }
 
   const permissions = loadPermissions();

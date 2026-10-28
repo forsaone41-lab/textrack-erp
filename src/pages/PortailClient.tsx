@@ -194,20 +194,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       return;
     }
 
-    // Upgrade client seamlessly to merchant role so they have full access to StoreBuilder
-    const merchantUser: User = {
-      ...currentUser,
-      role: 'merchant'
-    };
-
-    try {
-      await saveRecord('users', merchantUser, true);
-    } catch (e) {}
-
-    localStorage.setItem('textrack_auth', JSON.stringify(merchantUser));
-    // Direct 1-click jump into StoreBuilder without any signup form!
+    // Direct 1-click jump into StoreBuilder without modifying core role
     window.location.hash = '#/store-builder';
-    window.location.reload();
   };
 
   // Virement states

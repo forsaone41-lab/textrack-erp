@@ -70,6 +70,7 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
 
       if (!error && data && data.user) {
         userRecord = data.user as User;
+        if (userRecord && userRecord.role === "merchant") userRecord.role = "client";
         sysEmail = data.sys_email;
         sysPass = data.sys_pass;
       }
@@ -97,7 +98,7 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
               id: matched.id,
               nom: matched.nom,
               email: matched.email,
-              role: matched.role,
+              role: matched.role === 'merchant' ? 'client' : matched.role,
               photo: matched.photo,
               telephone: matched.telephone,
               employeId: matched.employeId
@@ -376,6 +377,7 @@ export default function Login({ onLogin }: LoginProps) {
       }
 
       if (user) {
+        if (user.role === "merchant") user.role = "client";
         onLogin(user);
       } else {
         setError(isAr ? '❌ المعلومات غير صحيحة.' : '❌ Informations incorrectes.');
