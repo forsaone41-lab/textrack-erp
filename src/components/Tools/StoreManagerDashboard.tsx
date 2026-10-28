@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 // Vercel deployment trigger
 import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock, User, LogOut, Globe } from 'lucide-react';
 import { supabase } from '../../supabase';
+import CreateStoreWizardModal from './CreateStoreWizardModal';
 
 export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr, appCurrentUser }: any) {
    const [stores, setStores] = useState<any[]>([]);
@@ -11,6 +12,7 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
    const [currentUser, setCurrentUser] = useState<any>(null);
    const [userProfile, setUserProfile] = useState<any>(null);
    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+   const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
 
    // Self-contained dashboard language (FR/EN/AR), independent of the storefront's own language config.
    const [dashLang, setDashLang] = useState<'fr' | 'en' | 'ar'>(() => {
@@ -152,7 +154,7 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
          ));
          return;
       }
-      onSelectStore();
+      setIsCreateWizardOpen(true);
    };
 
    return (
@@ -502,6 +504,18 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                </div>
             </div>
          )}
+
+         {/* Step-by-Step Store Creation Wizard */}
+         <CreateStoreWizardModal
+            isOpen={isCreateWizardOpen}
+            onClose={() => setIsCreateWizardOpen(false)}
+            onStoreCreated={(createdStore) => {
+               setIsCreateWizardOpen(false);
+               onSelectStore(createdStore);
+            }}
+            currentUser={currentUser || appCurrentUser}
+            isAr={isRtl}
+         />
 
       </div>
    );
