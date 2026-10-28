@@ -3147,12 +3147,11 @@ ${userMessage}
               setQuoteInitialMode('chiffrage');
               setShowClientQuoteModal(true);
             }}
-            className="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 hover:from-amber-700 hover:to-rose-700 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-xs uppercase shadow-md hover:shadow-amber-500/25 active:scale-95 transition-all ring-1 ring-white/20"
+            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200/90 px-3 py-1.5 md:py-2 rounded-xl font-bold text-xs uppercase shadow-xs active:scale-95 transition-all"
             title={isAr ? 'كلفة السلعة، أسواق الشراء بالجملة، ثمن المتر، وكلفة البياسة بالكامل (PDF Sourcing)' : 'Chiffrage Sourcing & Coût de Revient (PDF)'}
           >
-            <DollarSign className="w-3.5 h-3.5 text-amber-200" />
-            <span className="font-black">{isAr ? 'كلفة السلعة والتوريد' : 'Chiffrage Sourcing'}</span>
-            <span className="bg-emerald-400 text-slate-950 text-[9px] px-1.5 py-0.2 rounded-full font-black tracking-wider shadow-xs">ECO</span>
+            <DollarSign className="w-3.5 h-3.5 text-amber-600" />
+            <span>{isAr ? 'كلفة السلعة والتوريد' : 'Chiffrage Sourcing'}</span>
           </button>
 
           {/* NOUVEAU: BOUTON DEVIS & FICHE CLIENT B2B */}
@@ -3169,12 +3168,11 @@ ${userMessage}
               setQuoteInitialMode('devis');
               setShowClientQuoteModal(true);
             }}
-            className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-xs uppercase shadow-md hover:shadow-indigo-500/25 active:scale-95 transition-all ring-1 ring-white/20"
+            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200/90 px-3 py-1.5 md:py-2 rounded-xl font-bold text-xs uppercase shadow-xs active:scale-95 transition-all"
             title={isAr ? 'إنشاء ملف الزبون وعرض السعر مع إمكانية تعديل الأثواب والأسعار (PDF Client)' : 'Fiche & Devis Client B2B (PDF & WhatsApp)'}
           >
-            <FileText className="w-3.5 h-3.5 text-blue-200" />
-            <span className="font-black">{isAr ? 'ملف ودوڤي الزبون' : 'Devis & Fiche Client'}</span>
-            <span className="bg-amber-400 text-slate-950 text-[9px] px-1.5 py-0.2 rounded-full font-black tracking-wider shadow-xs">PRO</span>
+            <FileText className="w-3.5 h-3.5 text-indigo-600" />
+            <span>{isAr ? 'ملف ودوڤي الزبون' : 'Devis & Fiche Client'}</span>
           </button>
 
           {/* Top Header Export/Send Button (Red boxed in user diagram 1) */}
@@ -3190,11 +3188,11 @@ ${userMessage}
               }
               setShowDispatchModal(true);
             }}
-            className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-xs uppercase hover:brightness-110 transition-all shadow-md active:scale-95"
+            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 md:py-2 rounded-xl font-bold text-xs uppercase shadow-xs active:scale-95 transition-all"
             title={isAr ? 'تصدير البيانات وإرسالها إلى Devis, Atelier, Achats...' : 'Exporter vers les modules'}
           >
             <Send className="w-3.5 h-3.5" />
-            <span className="font-black">{isAr ? 'تصدير 🚀' : 'Exporter'}</span>
+            <span>{isAr ? 'تصدير' : 'Exporter'}</span>
           </button>
 
           {/* Language Switcher Button (Moved to top header as requested) */}
@@ -4090,19 +4088,19 @@ ${userMessage}
                         setQuoteInitialMode('chiffrage');
                         setShowClientQuoteModal(true);
                       }}
-                      className="flex items-center gap-2 bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:brightness-110 transition-all shadow-md active:scale-95"
+                      className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase shadow-xs active:scale-95 transition-all"
                     >
                       <DollarSign className="w-4 h-4" /> <span>{isAr ? 'كلفة السلعة وتفاصيل الشراء (Chiffrage Sourcing PDF)' : 'Chiffrage Sourcing & Coût Revient PDF'}</span>
                     </button>
                     <button
                       onClick={() => exportToFicheTechnique()}
-                      className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:bg-indigo-700 transition-all shadow-md hover:shadow-indigo-200"
+                      className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase shadow-xs active:scale-95 transition-all"
                     >
                       <FileText className="w-4 h-4" /> <span>{isAr ? 'إرسال وفتح في صفحة البطاقات التقنية' : 'Ouvrir dans Fiches Techniques'}</span>
                     </button>
                     <button
                       onClick={() => printRapportIA(analysisResult, image, isAr)}
-                      className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:bg-slate-800 transition-all shadow-sm"
+                      className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase shadow-xs active:scale-95 transition-all"
                     >
                       <Printer className="w-4 h-4" /> <span>{isAr ? 'طباعة تقرير التحليل الكامل A4' : 'Imprimer Rapport A4'}</span>
                     </button>

@@ -399,7 +399,10 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('evaluation_patronage') && (
               <NavItem to="/evaluation-patronage" icon={Scissors} label={isAr ? 'تسعير الباترون' : 'Prix Patronage'} />
             )}
-            {(can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin') && (
+            {(can('suivi_modeliste') || currentUser?.role === 'modeliste' || currentUser?.role === 'admin') && (
+              <NavItem to="/suivi-modeliste" icon={CheckCircle} label={isAr ? 'موديلاتي والمدفوعات' : 'Modèles & Règlements'} />
+            )}
+            {currentUser?.role !== 'modeliste' && (can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin') && (
               <NavItem to="/patronage-ai" icon={Sparkles} label={isAr ? 'استوديو الباترون (AI)' : 'Patronage Studio (AI)'} pro />
             )}
             {can('ai_space') && (
@@ -413,7 +416,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             )}
             {can('ordres') && <NavItem to="/ordres-de-coupe" icon={Scissors} label={isAr ? 'أوامر القص' : 'Ordres de Coupe'} />}
             {(can('ordres') || can('fiches')) && <NavItem to="/hpgl-viewer" icon={Scissors} label={isAr ? 'قارئ الباتروناج' : 'Visionneuse HPGL'} />}
-            {(can('ordres') || can('fiches')) && <NavItem to="/kml-viewer" icon={Globe} label={isAr ? 'قارئ الخرائط (KML)' : 'Visionneuse KML / Géo'} />}
+            {currentUser?.role !== 'modeliste' && (can('ordres') || can('fiches')) && <NavItem to="/kml-viewer" icon={Globe} label={isAr ? 'قارئ الخرائط (KML)' : 'Visionneuse KML / Géo'} />}
             {can('chaine') && (
               <>
                 <NavItem to="/chaine-montage" icon={Activity} label={isAr ? 'تتبع التركيب' : 'Suivi Montage'} />

@@ -238,6 +238,11 @@ export function estimateSourcingBreakdown(params: {
   } else if (pLower.includes('pantalon') || pLower.includes('سروال') || pLower.includes('jogging') || pLower.includes('جوغينغ') || pLower.includes('short')) {
     fournitures = 12;
     detailsFournitures = isAr ? 'لاستيك عريض 4cm + كوردون خصر + سحاب جيب خفي + خيط مرن' : 'Élastique large 4cm + cordon ceinture + zips poches invisibles';
+  } else if (pLower.includes('robe_chemise') || (pLower.includes('robe') && pLower.includes('chemise')) || pLower.includes('pliss') || pLower.includes('بليات') || pLower.includes('tartan') || pLower.includes('كاروهات')) {
+    fournitures = 18;
+    detailsFournitures = isAr
+      ? 'أزرار كول شوميز وأساور (12 حبة) + فيزلين ياقة وبوانيات + حزام خصر جلدي/قماشي + خيط دي ام سي + إتيكيت وبولي باݣ'
+      : 'Boutons col & poignets (x12) + thermocollant col & poignets + ceinture fine avec boucle + fil 120 + étiquettes & polybag';
   } else if (pLower.includes('robe') || pLower.includes('كسوة') || pLower.includes('فستان') || pLower.includes('abaya') || pLower.includes('عباية')) {
     fournitures = 15;
     detailsFournitures = isAr ? 'سحاب مخفي 60cm + أزرار لؤلؤية/كبس + شريط تنظيف + سفيفة خفيفة' : 'Zip invisible 60cm + boutons finition + biais propreté';
@@ -246,19 +251,31 @@ export function estimateSourcingBreakdown(params: {
     detailsFournitures = isAr ? 'أزرار صدفية (10 قطع) + فيزلين كول وأساور + خيط تطريز عروة' : 'Boutons nacrés (x10) + triplure thermocollante col & poignets';
   }
 
-  // Façon / Labor atelier
+  // Façon / Labor atelier & confection operations (المعدات ومصاريف الأتوليه)
   let facon = 25;
-  if (pLower.includes('manteau') || pLower.includes('مانطو') || pLower.includes('معطف')) {
+  let detailsFacon = isAr ? 'فصالة المطلوة الصناعية + تجميع الأجزاء بالماكينة + فينيسيون وكيّ بالبخار' : 'Coupe matelas + piquage assemblage + finitions & repassage';
+
+  if (pLower.includes('robe_chemise') || (pLower.includes('robe') && pLower.includes('chemise')) || pLower.includes('pliss') || pLower.includes('بليات') || pLower.includes('tartan') || pLower.includes('كاروهات')) {
+    facon = 35;
+    detailsFacon = isAr
+      ? 'فصالة مطلوة + تركيب كول شوميز وبوانيات الأكمام + تكسير وتثبيت بليات التنورة بالمكواة البخارية (Plissage) + عرى الحزام والفينيسيون'
+      : 'Coupe matelas + montage col chemisier & poignets ballon + plissage vapeur jupe + passants ceinture & finitions';
+  } else if (pLower.includes('manteau') || pLower.includes('مانطو') || pLower.includes('معطف')) {
     facon = 38;
+    detailsFacon = isAr ? 'فصالة مانطو طويل + تركيب سحاب كامل + تبطين كابوش وجيوب + خياطة وتشطيب' : 'Coupe long manteau + zip séparable + doublure capuche + poches & finitions';
   } else if (pLower.includes('hoodie') || pLower.includes('هودي') || pLower.includes('sweat')) {
     facon = 24;
+    detailsFacon = isAr ? 'فصالة هودي + تركيب جيب كنغر + كابوش مزدوج + بورد-كوت أساور وحزام' : 'Coupe hoodie + poche kangourou + capuche doublée + bord-côte poignets';
   } else if (pLower.includes('pantalon') || pLower.includes('سروال') || pLower.includes('jogging')) {
     facon = 20;
+    detailsFacon = isAr ? 'فصالة سروال + تجميع الأرجل بسورجي 4 خيوط + تركيب حزام مطاطي وجيوب' : 'Coupe jogging + surjet 4 fils + ceinture élastique + poches';
   } else if (pLower.includes('robe') || pLower.includes('فستان') || pLower.includes('abaya')) {
     facon = 32;
+    detailsFacon = isAr ? 'فصالة فستان ماكسي + تجميع الهيكل والأكمام + كفافة عريضة + كيّ بخاري' : 'Coupe robe maxi + assemblage manches fluides + ourlet bas + repassage';
   } else if (pLower.includes('t-shirt') || pLower.includes('تيشرت') || pLower.includes('تي شيرت')) {
     facon = 12;
     fournitures = 6;
+    detailsFacon = isAr ? 'فصالة سريعة بالمطلوة + تجميع الأكتاف والسورجي + خياطة الروكوفروز' : 'Coupe matelas + assemblage surjet + recouvreuse';
   }
 
   // Total fabrication cost per piece (L'Oco de revient)
@@ -277,6 +294,7 @@ export function estimateSourcingBreakdown(params: {
     fournitures,
     detailsFournitures,
     facon,
+    detailsFacon,
     coutRevientTotal,
     sellingPrice,
     fabricPros: isAr ? fab.pros : fab.prosFr,

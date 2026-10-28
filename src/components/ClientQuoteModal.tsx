@@ -26,6 +26,7 @@ export interface ClientQuoteArticle {
   coutFournitures: number;
   detailsFournitures?: string;
   coutFacon: number;
+  detailsFacon?: string;
   coutRevientTotal: number;
   fabricPros?: string;
   fabricCons?: string;
@@ -133,6 +134,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
             coutFournitures: sourcing.fournitures,
             detailsFournitures: sourcing.detailsFournitures,
             coutFacon: sourcing.facon,
+            detailsFacon: sourcing.detailsFacon,
             coutRevientTotal: sourcing.coutRevientTotal,
             fabricPros: sourcing.fabricPros,
             fabricCons: sourcing.fabricCons
@@ -174,6 +176,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
           coutFournitures: sourcing.fournitures,
           detailsFournitures: sourcing.detailsFournitures,
           coutFacon: sourcing.facon,
+          detailsFacon: sourcing.detailsFacon,
           coutRevientTotal: sourcing.coutRevientTotal,
           fabricPros: sourcing.fabricPros,
           fabricCons: sourcing.fabricCons
@@ -249,6 +252,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
       coutFournitures: 8,
       detailsFournitures: isAr ? 'خيط بوليستر + أزرار/سحاب' : 'Fil polyester + accessoires',
       coutFacon: 15,
+      detailsFacon: isAr ? 'فصالة مطلوة + تجميع الأجزاء + فينيسيون' : 'Coupe matelas + assemblage + finitions',
       coutRevientTotal: 58
     };
     setArticles(prev => [...prev, newArt]);
@@ -803,6 +807,20 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
                             />
                           </div>
 
+                          {/* Confection & Labor details text field */}
+                          <div>
+                            <label className="block text-[8px] font-black text-slate-500 uppercase mb-0.5">
+                              {isAr ? 'تفاصيل الصنعة والمعدات (فصالة، خياطة الأجزاء، بليات، كفافة، مكواة...):' : 'Détail des opérations atelier & façon :'}
+                            </label>
+                            <input
+                              type="text"
+                              value={art.detailsFacon || ''}
+                              onChange={e => handleUpdateArticle(art.id, 'detailsFacon', e.target.value)}
+                              placeholder="Ex: Coupe matelas + plissage vapeur + montage col & boutons"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-slate-700"
+                            />
+                          </div>
+
                           {/* Commercial Pricing row: Quantity, Selling Price, Total & Net Margin */}
                           <div className="grid grid-cols-4 gap-2 pt-1 border-t border-slate-800/80">
                             <div>
@@ -1048,58 +1066,183 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
                     </div>
                   </div>
 
-                  {/* GRANULAR RAW MATERIALS & SOURCING TABLE */}
-                  <div className="mb-5 overflow-hidden rounded-xl border border-slate-200 shadow-xs">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-slate-900 text-white text-[8px] uppercase tracking-wider">
-                          <th className="py-2 px-2 font-black">#</th>
-                          <th className="py-2 px-2 font-black">Article & Matière</th>
-                          <th className="py-2 px-2 font-black">Marché Gros (فين نشريها)</th>
-                          <th className="py-2 px-1.5 font-black text-center">Métrage</th>
-                          <th className="py-2 px-1.5 font-black text-center">Prix/m</th>
-                          <th className="py-2 px-1.5 font-black text-right">Tissu</th>
-                          <th className="py-2 px-1.5 font-black text-right">Fourn.</th>
-                          <th className="py-2 px-1.5 font-black text-right">Façon</th>
-                          <th className="py-2 px-2 font-black text-right bg-rose-950 text-rose-200">L'Oco</th>
-                          <th className="py-2 px-2 font-black text-right">P. Vente</th>
-                          <th className="py-2 px-2 font-black text-right text-emerald-400">Marge</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 text-[9px]">
-                        {articles.map((art, idx) => {
-                          const coutTissuPiece = Math.round((art.tissuMetrage || 0) * (art.tissuPrixMetre || 0));
-                          const margeUnit = (art.unitPrice || 0) - (art.coutRevientTotal || 0);
+                  {/* TABLEAU 1: SOURCING TISSUS & MATIÈRES PREMIÈRES */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-600 inline-block"></span>
+                        <h4 className="text-[10px] font-black uppercase text-slate-900 tracking-wider">
+                          1. Sourcing Tissus & Matières Premières (شراء الأثواب ومصادر الجملة)
+                        </h4>
+                      </div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase">Marchés Gros Maroc</span>
+                    </div>
 
-                          return (
-                            <tr key={art.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
-                              <td className="py-2 px-2 font-bold text-slate-400">{idx + 1}</td>
-                              <td className="py-2 px-2 font-black text-slate-900">
-                                <div>{art.name}</div>
-                                <div className="text-[8px] text-slate-500 font-normal">{art.fabricCommercial}</div>
-                              </td>
-                              <td className="py-2 px-2 text-indigo-700 font-medium max-w-[140px] truncate" title={art.marcheSourcing}>
-                                {art.marcheSourcing || 'Derb Omar, Casablanca'}
-                              </td>
-                              <td className="py-2 px-1.5 text-center font-mono font-bold text-slate-700">{art.tissuMetrage}m</td>
-                              <td className="py-2 px-1.5 text-center font-mono font-bold text-amber-700">{art.tissuPrixMetre} DH</td>
-                              <td className="py-2 px-1.5 text-right font-mono text-slate-700">{coutTissuPiece} DH</td>
-                              <td className="py-2 px-1.5 text-right font-mono text-slate-600">{art.coutFournitures} DH</td>
-                              <td className="py-2 px-1.5 text-right font-mono text-slate-600">{art.coutFacon} DH</td>
-                              <td className="py-2 px-2 text-right font-mono font-black text-rose-700 bg-rose-50">
-                                {art.coutRevientTotal} DH
-                              </td>
-                              <td className="py-2 px-2 text-right font-mono font-bold text-slate-900">
-                                {art.unitPrice} DH
-                              </td>
-                              <td className="py-2 px-2 text-right font-mono font-black text-emerald-700 bg-emerald-50/50">
-                                +{margeUnit} DH
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                    <div className="overflow-hidden rounded-xl border border-slate-200 shadow-xs">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-900 text-white text-[8px] uppercase tracking-wider">
+                            <th className="py-2 px-2.5 font-black w-6">#</th>
+                            <th className="py-2 px-2.5 font-black">Article & Modèle</th>
+                            <th className="py-2 px-2.5 font-black">Tissu Recommandé</th>
+                            <th className="py-2 px-2.5 font-black">Marché de Gros (فين نشريها)</th>
+                            <th className="py-2 px-2 font-black text-center">Métrage / Pc</th>
+                            <th className="py-2 px-2 font-black text-center">Prix / Mètre</th>
+                            <th className="py-2 px-2.5 font-black text-right text-amber-300">Coût Tissu / Pc</th>
+                            <th className="py-2 px-2.5 font-black text-right">Total Lot ({totalPiecesCount} pcs)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 text-[9px]">
+                          {articles.map((art, idx) => {
+                            const coutTissuPiece = Math.round((art.tissuMetrage || 0) * (art.tissuPrixMetre || 0));
+                            const totalTissuLot = coutTissuPiece * (art.quantity || 1);
+
+                            return (
+                              <tr key={art.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
+                                <td className="py-2 px-2.5 font-bold text-slate-400">{idx + 1}</td>
+                                <td className="py-2 px-2.5 font-black text-slate-900">{art.name}</td>
+                                <td className="py-2 px-2.5 text-slate-700 font-medium">
+                                  <div className="font-bold text-slate-900">{art.tissuNom || art.fabricCommercial}</div>
+                                  {art.fabricPros && <div className="text-[8px] text-emerald-700 truncate max-w-[200px]">✓ {art.fabricPros}</div>}
+                                </td>
+                                <td className="py-2 px-2.5 text-indigo-700 font-bold">
+                                  {art.marcheSourcing || 'درب عمر (سوق المسيرة)، الدار البيضاء'}
+                                </td>
+                                <td className="py-2 px-2 text-center font-mono font-bold text-slate-800">{art.tissuMetrage}m</td>
+                                <td className="py-2 px-2 text-center font-mono font-bold text-amber-700">{art.tissuPrixMetre} DH</td>
+                                <td className="py-2 px-2.5 text-right font-mono font-black text-amber-800 bg-amber-50/50">
+                                  {coutTissuPiece} DH
+                                </td>
+                                <td className="py-2 px-2.5 text-right font-mono font-bold text-slate-900">
+                                  {totalTissuLot.toLocaleString()} DH
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* TABLEAU 2: FOURNITURES, ACCESSOIRES & FAÇON ATELIER (TABLEAU SÉPARÉ CLAIR) */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-indigo-600 inline-block"></span>
+                        <h4 className="text-[10px] font-black uppercase text-slate-900 tracking-wider">
+                          2. Fournitures, Accessoires & Façon Atelier (اللوازم، الإكسسوارات ومصاريف الصنعة)
+                        </h4>
+                      </div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase">Détails Unitaire & Confection</span>
+                    </div>
+
+                    <div className="overflow-hidden rounded-xl border border-slate-200 shadow-xs">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-800 text-white text-[8px] uppercase tracking-wider">
+                            <th className="py-2 px-2.5 font-black w-6">#</th>
+                            <th className="py-2 px-2.5 font-black">Article</th>
+                            <th className="py-2 px-2.5 font-black">Détail des Fournitures & Accessoires (اللوازم)</th>
+                            <th className="py-2 px-2 font-black text-right">Coût Fourn.</th>
+                            <th className="py-2 px-2.5 font-black">Opérations Confection & Façon Atelier (الصنعة)</th>
+                            <th className="py-2 px-2 font-black text-right">Coût Façon</th>
+                            <th className="py-2 px-2.5 font-black text-right text-indigo-300 bg-slate-900">Sous-Total / Pc</th>
+                            <th className="py-2 px-2.5 font-black text-right bg-slate-900">Total Lot</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 text-[9px]">
+                          {articles.map((art, idx) => {
+                            const sousTotalFournFacon = (Number(art.coutFournitures) || 0) + (Number(art.coutFacon) || 0);
+                            const totalLotFournFacon = sousTotalFournFacon * (art.quantity || 1);
+
+                            return (
+                              <tr key={art.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
+                                <td className="py-2 px-2.5 font-bold text-slate-400">{idx + 1}</td>
+                                <td className="py-2 px-2.5 font-black text-slate-900">{art.name}</td>
+                                <td className="py-2 px-2.5 text-slate-700 leading-snug">
+                                  <div className="font-medium">{art.detailsFournitures || 'خيط بوليستر، أزرار، فيزلين، إتيكيت وبولي باݣ'}</div>
+                                </td>
+                                <td className="py-2 px-2 text-right font-mono font-bold text-slate-800">
+                                  {art.coutFournitures} DH
+                                </td>
+                                <td className="py-2 px-2.5 text-slate-700 leading-snug">
+                                  <div className="font-medium">{art.detailsFacon || 'فصالة مطلوة + خياطة الأجزاء + فينيسيون وكيّ بالبخار'}</div>
+                                </td>
+                                <td className="py-2 px-2 text-right font-mono font-bold text-slate-800">
+                                  {art.coutFacon} DH
+                                </td>
+                                <td className="py-2 px-2.5 text-right font-mono font-black text-indigo-700 bg-indigo-50/60">
+                                  {sousTotalFournFacon} DH
+                                </td>
+                                <td className="py-2 px-2.5 text-right font-mono font-bold text-slate-900">
+                                  {totalLotFournFacon.toLocaleString()} DH
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* TABLEAU 3: RÉCAPITULATIF COÛT DE REVIENT (L'OCO) & RENTABILITÉ */}
+                  <div className="mb-5">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-rose-600 inline-block"></span>
+                        <h4 className="text-[10px] font-black uppercase text-slate-900 tracking-wider">
+                          3. Bilan de Revient Unitaire (L'OCO) & Marge Commerciale
+                        </h4>
+                      </div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase">Calcul de la Marge Nette</span>
+                    </div>
+
+                    <div className="overflow-hidden rounded-xl border border-slate-200 shadow-xs">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-900 text-white text-[8px] uppercase tracking-wider">
+                            <th className="py-2 px-2.5 font-black">Article</th>
+                            <th className="py-2 px-2 font-black text-right">Tissu / Pc</th>
+                            <th className="py-2 px-2 font-black text-right">Fournitures</th>
+                            <th className="py-2 px-2 font-black text-right">Façon Atelier</th>
+                            <th className="py-2 px-2.5 font-black text-right bg-rose-950 text-rose-200">
+                              Coût Revient (L'OCO)
+                            </th>
+                            <th className="py-2 px-2.5 font-black text-right">Prix Vente Conseillé</th>
+                            <th className="py-2 px-2.5 font-black text-right text-emerald-400">Marge Nette / Pc</th>
+                            <th className="py-2 px-2 font-black text-right text-emerald-400">Rentabilité %</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 text-[9px]">
+                          {articles.map((art, idx) => {
+                            const coutTissuPiece = Math.round((art.tissuMetrage || 0) * (art.tissuPrixMetre || 0));
+                            const margeUnit = (art.unitPrice || 0) - (art.coutRevientTotal || 0);
+                            const margePct = art.unitPrice > 0 ? Math.round((margeUnit / art.unitPrice) * 100) : 0;
+
+                            return (
+                              <tr key={art.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
+                                <td className="py-2.5 px-2.5 font-black text-slate-900">{art.name}</td>
+                                <td className="py-2.5 px-2 text-right font-mono text-slate-700">{coutTissuPiece} DH</td>
+                                <td className="py-2.5 px-2 text-right font-mono text-slate-700">{art.coutFournitures} DH</td>
+                                <td className="py-2.5 px-2 text-right font-mono text-slate-700">{art.coutFacon} DH</td>
+                                <td className="py-2.5 px-2.5 text-right font-mono font-black text-rose-700 bg-rose-50 text-[10px]">
+                                  {art.coutRevientTotal} DH
+                                </td>
+                                <td className="py-2.5 px-2.5 text-right font-mono font-bold text-slate-900 text-[10px]">
+                                  {art.unitPrice} DH
+                                </td>
+                                <td className="py-2.5 px-2.5 text-right font-mono font-black text-emerald-700 bg-emerald-50/60 text-[10px]">
+                                  +{margeUnit} DH
+                                </td>
+                                <td className="py-2.5 px-2 text-right font-mono font-black text-emerald-700">
+                                  {margePct}%
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
 
                   {/* Financial Breakdown Cards For Total Batch */}

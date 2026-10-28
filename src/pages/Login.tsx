@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import { Eye, EyeOff, AlertCircle, UserCircle, ShieldCheck } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Eye, EyeOff, AlertCircle, UserCircle, ShieldCheck, KeyRound, Mail, CheckCircle2, Loader2, X } from 'lucide-react';
 import { User, Employe, loadData, loadCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 
-// Fallback passwords for existing installs
 // Fallback passwords for existing installs
 const DEFAULT_PASSWORDS: Record<string, string> = {
   'admin@beya.ma': 'Admin123',
@@ -247,6 +246,115 @@ export default function Login({ onLogin }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const [logoError, setLogoError] = useState(false);
 
+  // Mot de passe oublié states
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetStatus, setResetStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [resetMsg, setResetMsg] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => setCooldown(c => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  async function handleSendResetEmail(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (cooldown > 0 || resetLoading) return;
+
+    const email = resetEmail.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      setResetStatus('error');
+      setResetMsg(isAr ? 'يرجى إدخال بريد إلكتروني صحيح.' : 'Veuillez saisir une adresse email valide.');
+      return;
+    }
+
+    setResetLoading(true);
+    setResetStatus('idle');
+    setResetMsg('');
+
+    try {
+      const siteUrl = window.location.origin + window.location.pathname;
+
+      // 1. Envoyer le lien de réinitialisation sécurisé via Supabase Auth
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: siteUrl
+      });
+
+      if (error) {
+        const errLower = (error.message || '').toLowerCase();
+        if (errLower.includes('not found') || errLower.includes('user') || error.status === 400) {
+          let foundNom = '';
+          let foundRole = 'worker';
+
+          // Recherche dans la table users
+          const { data: matchedUsers } = await supabase
+            .from('users')
+            .select('*')
+            .ilike('email', email);
+
+          if (matchedUsers && matchedUsers.length > 0) {
+            foundNom = matchedUsers[0].nom || 'Employé BEYA';
+            foundRole = matchedUsers[0].role || 'worker';
+          } else {
+            // Recherche dans la table employes
+            const { data: matchedEmp } = await supabase
+              .from('employes')
+              .select('*')
+              .ilike('email', email);
+
+            if (matchedEmp && matchedEmp.length > 0) {
+              foundNom = `${matchedEmp[0].prenom || ''} ${matchedEmp[0].nom || ''}`.trim() || 'Employé BEYA';
+              foundRole = 'worker';
+            }
+          }
+
+          if (foundNom) {
+            // Provisionner temporairement dans Supabase Auth pour permettre l'envoi du mail officiel
+            const tempPass = 'Beya@' + Math.random().toString(36).slice(-8) + 'A1!';
+            await supabase.auth.signUp({
+              email: email,
+              password: tempPass,
+              options: {
+                data: {
+                  full_name: foundNom,
+                  role: foundRole
+                }
+              }
+            }).catch(() => {});
+
+            // Réessayer l'envoi de réinitialisation
+            const { error: retryErr } = await supabase.auth.resetPasswordForEmail(email, {
+              redirectTo: siteUrl
+            });
+            if (retryErr) throw retryErr;
+          }
+        } else {
+          throw error;
+        }
+      }
+
+      setResetStatus('success');
+      setResetMsg(
+        isAr
+          ? `تم إرسال رابط استعادة كلمة المرور بنجاح إلى: ${email}`
+          : `Un lien sécurisé de réinitialisation a été envoyé à : ${email}`
+      );
+      setCooldown(60);
+    } catch (err: any) {
+      console.error('Password reset request error:', err);
+      setResetStatus('error');
+      setResetMsg(
+        err?.message || (isAr ? 'تعذر إرسال رابط الاستعادة. يرجى التأكد من البريد أو المحاولة لاحقاً.' : 'Impossible d\'envoyer le lien de réinitialisation.')
+      );
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
   async function handleLogin() {
     setError('');
     setLoading(true);
@@ -372,6 +480,23 @@ export default function Login({ onLogin }: LoginProps) {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {/* Mot de passe oublié */}
+                <div className="flex justify-end pt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (identifier && identifier.includes('@')) {
+                        setResetEmail(identifier.trim());
+                      }
+                      setShowResetModal(true);
+                      setResetStatus('idle');
+                      setResetMsg('');
+                    }}
+                    className="text-xs font-semibold text-slate-500 hover:text-indigo-600 hover:underline transition-colors focus:outline-none"
+                  >
+                    {isAr ? 'نسيت كلمة المرور ؟' : 'Mot de passe oublié ?'}
+                  </button>
+                </div>
               </div>
 
               {error && (
@@ -398,9 +523,150 @@ export default function Login({ onLogin }: LoginProps) {
           </div>
         </div>
 
-
         <p className="text-center text-slate-600 text-xs mt-6">© {new Date().getFullYear()} {company.name}</p>
       </div>
+
+      {/* Modal Mot de passe oublié */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden relative animate-in zoom-in-95 duration-200" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600" />
+            
+            <button
+              type="button"
+              onClick={() => {
+                setShowResetModal(false);
+                setResetStatus('idle');
+                setResetMsg('');
+              }}
+              className={`absolute top-4 ${isAr ? 'left-4' : 'right-4'} p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition`}
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="p-6 md:p-8">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4 text-indigo-600 shadow-sm shadow-indigo-100">
+                <KeyRound className="w-6 h-6" />
+              </div>
+
+              <h3 className="text-xl font-bold text-slate-900 mb-1.5">
+                {isAr ? 'استعادة كلمة المرور' : 'Mot de passe oublié ?'}
+              </h3>
+              <p className="text-slate-500 text-xs leading-relaxed mb-6 font-medium">
+                {isAr
+                  ? 'أدخل بريدك الإلكتروني المسجل في النظام. سنرسل لك رابطاً مشفراً وآمناً لتغيير كلمة المرور.'
+                  : 'Entrez l\'adresse email associée à votre compte. Un lien sécurisé de réinitialisation vous sera envoyé par email.'}
+              </p>
+
+              {resetStatus === 'success' ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3 text-emerald-800 text-xs leading-relaxed">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-emerald-950 mb-1">
+                        {isAr ? 'تم إرسال الرابط بنجاح!' : 'Lien envoyé avec succès !'}
+                      </p>
+                      <p>{resetMsg}</p>
+                      <p className="mt-2 text-emerald-700 font-medium">
+                        {isAr
+                          ? 'يرجى مراجعة بريدك الإلكتروني (بما في ذلك مجلد Spams) والضغط على الرابط لتعيين كلمة مرور جديدة.'
+                          : 'Veuillez vérifier votre boîte de réception (ainsi que vos courriers indésirables / spams) puis cliquez sur le lien.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      disabled={cooldown > 0 || resetLoading}
+                      onClick={handleSendResetEmail}
+                      className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition disabled:opacity-50"
+                    >
+                      {cooldown > 0
+                        ? (isAr ? `إعادة الإرسال (${cooldown})` : `Renvoyer (${cooldown}s)`)
+                        : (isAr ? 'إعادة الإرسال' : 'Renvoyer')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowResetModal(false);
+                        setResetStatus('idle');
+                        setResetMsg('');
+                      }}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-black transition"
+                    >
+                      {isAr ? 'إغلاق' : 'Fermer'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSendResetEmail} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      {isAr ? 'البريد الإلكتروني' : 'Adresse Email'}
+                    </label>
+                    <div className="relative">
+                      <Mail className={`absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'} w-4 h-4 text-slate-400`} />
+                      <input
+                        type="email"
+                        required
+                        autoFocus
+                        value={resetEmail}
+                        onChange={e => setResetEmail(e.target.value)}
+                        placeholder="example@beyacreative.com"
+                        className={`w-full ${isAr ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4 text-left'} py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all`}
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
+
+                  {resetStatus === 'error' && (
+                    <div className="flex items-start gap-2 bg-rose-50 text-rose-600 p-3 rounded-xl text-xs border border-rose-100 font-medium">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>{resetMsg}</span>
+                    </div>
+                  )}
+
+                  <div className="pt-2 flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowResetModal(false);
+                        setResetStatus('idle');
+                        setResetMsg('');
+                      }}
+                      className="py-3 px-4 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition"
+                    >
+                      {isAr ? 'إلغاء' : 'Annuler'}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={resetLoading || cooldown > 0}
+                      className="flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2 disabled:opacity-60"
+                    >
+                      {resetLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>{isAr ? 'جاري الإرسال...' : 'Envoi en cours...'}</span>
+                        </>
+                      ) : cooldown > 0 ? (
+                        <span>{isAr ? `انتظر ${cooldown} ثانية` : `Patientez ${cooldown}s`}</span>
+                      ) : (
+                        <span>{isAr ? 'إرسال رابط الاستعادة' : 'Envoyer le lien'}</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-400 font-medium">
+                <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+                <span>{isAr ? 'نظام استعادة آمن ومشفّر' : 'Système de récupération sécurisé et chiffré'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

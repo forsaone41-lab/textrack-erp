@@ -1,7 +1,7 @@
 import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import * as React from 'react';
 import { useState, useEffect, Component, ReactNode, lazy, Suspense } from 'react';
-import { Menu, Package, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Menu, Package, Lock, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from './supabase';
 import Sidebar from './components/Sidebar';
 import Calculator from './components/Tools/Calculator';
@@ -79,6 +79,7 @@ const Reglement       = lazy(() => import('./pages/Reglement'));
 const ValidationBoard = lazy(() => import('./pages/ValidationBoard'));
 const HPGLViewer      = lazy(() => import('./pages/HPGLViewer'));
 const KMLViewer       = lazy(() => import('./pages/KMLViewer'));
+const ModelisteSuivi  = lazy(() => import('./pages/ModelisteSuivi'));
 const AtelierCalculator = lazy(() => import('./pages/AtelierCalculator'));
 const AtelierAiExpert = lazy(() => import('./pages/AtelierAiExpert'));
 const BeyaVirtualTryOn = lazy(() => import('./pages/BeyaVirtualTryOn'));
@@ -277,11 +278,15 @@ function ClientInfoRoute() {
 }
 
 function AppContent() {
+  const { isAr } = useLang();
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [recoveryError, setRecoveryError] = useState('');
+  const [recoverySuccess, setRecoverySuccess] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
 
   useEffect(() => {
     // Listen for Supabase auth events (specifically PASSWORD_RECOVERY)
@@ -322,7 +327,11 @@ function AppContent() {
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 8) {
-      setRecoveryError('???? ?????? ??? ?? ????? ?? 8 ???? ??? ?????');
+      setRecoveryError(isAr ? 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.' : 'Le mot de passe doit comporter au moins 8 caractères.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setRecoveryError(isAr ? 'كلمتا المرور غير متطابقتين.' : 'Les deux mots de passe ne correspondent pas.');
       return;
     }
     
@@ -330,14 +339,56 @@ function AppContent() {
     setRecoveryError('');
     
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      // 1. Mettre à jour dans Supabase Auth
+      const { data: updateData, error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       
-      alert('?? ????? ???? ?????? ?????! ????? ???? ????? ??????.');
-      setShowRecoveryModal(false);
-      handleLogout();
+      // 2. Récupérer l'email de l'utilisateur
+      let userEmail = updateData?.user?.email;
+      if (!userEmail) {
+        const { data: userData } = await supabase.auth.getUser();
+        userEmail = userData?.user?.email;
+      }
+
+      if (userEmail) {
+        const cleanEmail = userEmail.toLowerCase().trim();
+        // 3. Mettre à jour la table users de l'ERP
+        try {
+          await supabase
+            .from('users')
+            .update({ password: newPassword })
+            .ilike('email', cleanEmail);
+        } catch (uErr) {
+          console.warn('Sync to users table error:', uErr);
+        }
+
+        // 4. Mettre à jour la table employes si présent
+        try {
+          await supabase
+            .from('employes')
+            .update({ pin_code: newPassword })
+            .ilike('email', cleanEmail);
+        } catch (eErr) {
+          console.warn('Sync to employes table error:', eErr);
+        }
+
+        // Nettoyer les caches locaux pour forcer le rechargement
+        localStorage.removeItem('textrack_data_users');
+        localStorage.removeItem('textrack_data_employes');
+      }
+
+      setRecoverySuccess(true);
+      setTimeout(() => {
+        setShowRecoveryModal(false);
+        setRecoverySuccess(false);
+        setNewPassword('');
+        setConfirmPassword('');
+        handleLogout();
+        window.location.hash = '#/login';
+      }, 2200);
     } catch (err: any) {
-      setRecoveryError(err.message);
+      console.error('Password update error:', err);
+      setRecoveryError(err.message || (isAr ? 'تعذر تحديث كلمة المرور.' : 'Impossible de mettre à jour le mot de passe.'));
     } finally {
       setIsUpdatingPassword(false);
     }
@@ -517,53 +568,108 @@ function AppContent() {
   }
 
   const recoveryModal = showRecoveryModal ? (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm" dir="rtl">
-      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-8 border border-slate-200 animate-in fade-in zoom-in duration-300">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm shadow-blue-500/20">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md" dir={isAr ? 'rtl' : 'ltr'}>
+      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-8 border border-slate-100 animate-in fade-in zoom-in duration-300 relative overflow-hidden">
+        <div className="h-1.5 absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600" />
+        
+        <div className="w-16 h-16 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm shadow-blue-500/10">
           <Lock className="w-8 h-8 text-blue-600" />
         </div>
-        <h2 className="text-2xl font-black text-center text-slate-900 mb-2 tracking-tight">????? ???? ???? ?????</h2>
-        <p className="text-center text-slate-500 mb-8 font-medium">?????? ????? ???? ?????? ??????? ?????? ????? ??.</p>
         
-        <form onSubmit={handleUpdatePassword} className="space-y-6">
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">???? ?????? ???????</label>
-            <div className="relative">
-              <Lock className="absolute top-1/2 -translate-y-1/2 right-4 w-5 h-5 text-slate-400" />
-              <input
-                type={showPwd ? 'text' : 'password'}
-                required
-                minLength={8}
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                className="w-full pr-12 pl-12 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-bold text-slate-900 text-left"
-                placeholder="��������"
-                dir="ltr"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPwd(!showPwd)}
-                className="absolute top-1/2 -translate-y-1/2 left-4 p-1 text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                {showPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
+        <h2 className="text-2xl font-black text-center text-slate-900 mb-2 tracking-tight">
+          {isAr ? 'تعيين كلمة المرور الجديدة' : 'Nouveau mot de passe'}
+        </h2>
+        <p className="text-center text-slate-500 mb-6 font-medium text-xs leading-relaxed">
+          {isAr
+            ? 'يرجى إدخال وتأكيد كلمة المرور الجديدة لحسابك. يجب أن تتكون من 8 أحرف على الأقل.'
+            : 'Veuillez saisir et confirmer votre nouveau mot de passe sécurisé (au moins 8 caractères).'}
+        </p>
+
+        {recoverySuccess ? (
+          <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
+            <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
+            <h4 className="font-bold text-emerald-950 text-sm">
+              {isAr ? 'تم تحديث كلمة المرور بنجاح!' : 'Mot de passe mis à jour avec succès !'}
+            </h4>
+            <p className="text-emerald-700 text-xs">
+              {isAr ? 'جاري تحويلك إلى صفحة تسجيل الدخول...' : 'Redirection vers la page de connexion...'}
+            </p>
           </div>
-
-          {recoveryError && (
-            <div className="p-3 bg-rose-50 text-rose-600 text-sm font-bold rounded-xl border border-rose-100">
-              {recoveryError}
+        ) : (
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                {isAr ? 'كلمة المرور الجديدة' : 'Nouveau mot de passe'}
+              </label>
+              <div className="relative">
+                <input
+                  type={showPwd ? 'text' : 'password'}
+                  required
+                  minLength={8}
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  className={`w-full ${isAr ? 'pr-11 pl-11 text-right' : 'pl-4 pr-11 text-left'} py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all font-semibold text-slate-900 text-sm`}
+                  placeholder="••••••••"
+                  dir="ltr"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(!showPwd)}
+                  className={`absolute top-1/2 -translate-y-1/2 ${isAr ? 'left-3' : 'right-3'} p-1 text-slate-400 hover:text-slate-600 transition-colors`}
+                >
+                  {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={isUpdatingPassword}
-            className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
-          >
-            {isUpdatingPassword ? <Loader2 className="w-5 h-5 animate-spin" /> : '??? ???? ??????'}
-          </button>
-        </form>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                {isAr ? 'تأكيد كلمة المرور' : 'Confirmer le mot de passe'}
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPwd ? 'text' : 'password'}
+                  required
+                  minLength={8}
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  className={`w-full ${isAr ? 'pr-11 pl-11 text-right' : 'pl-4 pr-11 text-left'} py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all font-semibold text-slate-900 text-sm`}
+                  placeholder="••••••••"
+                  dir="ltr"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPwd(!showConfirmPwd)}
+                  className={`absolute top-1/2 -translate-y-1/2 ${isAr ? 'left-3' : 'right-3'} p-1 text-slate-400 hover:text-slate-600 transition-colors`}
+                >
+                  {showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {recoveryError && (
+              <div className="p-3 bg-rose-50 text-rose-600 text-xs font-semibold rounded-xl border border-rose-100 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{recoveryError}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isUpdatingPassword}
+              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-70 mt-2"
+            >
+              {isUpdatingPassword ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>{isAr ? 'جاري الحفظ...' : 'Enregistrement...'}</span>
+                </>
+              ) : (
+                <span>{isAr ? 'تحديث كلمة المرور' : 'Enregistrer le mot de passe'}</span>
+              )}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   ) : null;
@@ -810,13 +916,14 @@ function AppContent() {
         <Route path="echantillons" element={can('demandes') ? <Echantillons /> : <Navigate to="/" replace />} />
         <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />
         <Route path="evaluation-patronage" element={can('evaluation_patronage') ? <EvaluationPatronage /> : <Navigate to="/" replace />} />
-        <Route path="patronage-ai" element={(can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin') ? <PatronageAIStudio /> : <Navigate to="/" replace />} />
+        <Route path="suivi-modeliste" element={(can('suivi_modeliste') || currentUser?.role === 'modeliste' || currentUser?.role === 'admin') ? <ModelisteSuivi currentUser={currentUser} /> : <Navigate to="/" replace />} />
+        <Route path="patronage-ai" element={(currentUser?.role !== 'modeliste' && (can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin')) ? <PatronageAIStudio /> : <Navigate to="/" replace />} />
         <Route path="ordres-de-coupe" element={can('ordres') ? <OrdresDeCoupe /> : <Navigate to="/" replace />} />
         <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />
         <Route path="pilotage-chaine" element={can('pilotage') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />
         <Route path="scan-production" element={can('scan_production') ? <ProductionScanner /> : <Navigate to="/" replace />} />
         <Route path="hpgl-viewer" element={(can('ordres') || can('fiches')) ? <HPGLViewer /> : <Navigate to="/" replace />} />
-        <Route path="kml-viewer" element={(can('ordres') || can('fiches')) ? <KMLViewer /> : <Navigate to="/" replace />} />
+        <Route path="kml-viewer" element={(currentUser?.role !== 'modeliste' && (can('ordres') || can('fiches'))) ? <KMLViewer /> : <Navigate to="/" replace />} />
         <Route path="atelier-calculator" element={(can('atelier_calculator') || can('fiches') || can('ai_space') || currentUser?.role === 'admin') ? <AtelierCalculator /> : <Navigate to="/" replace />} />
         <Route path="atelier-ai-expert" element={(can('atelier_calculator') || can('fiches') || can('ai_space') || currentUser?.role === 'admin') ? <AtelierAiExpert /> : <Navigate to="/" replace />} />
         <Route path="beya-studio-tryon" element={currentUser?.role === 'admin' ? <BeyaVirtualTryOn /> : <Navigate to="/" replace />} />

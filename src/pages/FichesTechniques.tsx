@@ -523,7 +523,19 @@ export default function FichesTechniques() {
 
   function openCreate() {
     setEditId(null);
-    setForm({ modele: '', description: '', client: '', clientId: undefined, tailles: [], type: '', tissuConsommation: 0, mesures: [], fit: '', complexity: '' });
+    setForm({ 
+      modele: '', 
+      description: '', 
+      client: '', 
+      clientId: undefined, 
+      modelisteId: currentUser?.role === 'modeliste' ? currentUser.id : undefined,
+      tailles: [], 
+      type: '', 
+      tissuConsommation: 0, 
+      mesures: [], 
+      fit: '', 
+      complexity: '' 
+    });
     setShowModal(true);
   }
 
@@ -573,6 +585,9 @@ export default function FichesTechniques() {
       description: form.description || '',
       client: form.client || '', 
       clientId: finalClientId,
+      modelisteId: currentUser?.role === 'modeliste'
+        ? (form.modelisteId || currentUser.id)
+        : (form.modelisteId || undefined),
       tailles: form.tailles || [], 
       mesures: form.mesures || [],
       tissuConsommation: form.tissuConsommation || 0,
