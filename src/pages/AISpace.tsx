@@ -76,182 +76,8 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
   ]
 };
 
-export const FABRIC_CATALOG: Record<string, {
-  arName: string;
-  frName: string;
-  pricePerMeterMAD: string;
-  pricePerMeterMADFr: string;
-  markets: string;
-  marketsFr: string;
-  pros: string;
-  prosFr: string;
-  cons: string;
-  consFr: string;
-}> = {
-  'interlock': {
-    arName: 'إنترلوك قطن ممتاز 100% (Interlock Double Knit)',
-    frName: 'Interlock 100% Coton Double Knit',
-    pricePerMeterMAD: '32 - 48 درهم/متر (أو 75 - 90 درهم/كيلو جملة)',
-    pricePerMeterMADFr: '32 - 48 MAD/mètre (ou 75 - 90 MAD/kg)',
-    markets: 'درب عمر (سوق المسيرة)، سوق القريعة، درب السلطان (الدار البيضاء)',
-    marketsFr: 'Derb Omar, Souk Griaa, Derb Sultan (Casablanca)',
-    pros: 'ما كيتلواش في الفصالة نهائياً (نهائي الرولاج)، وجهين متطابقين، ناعم وثقيل ومثالي للتيشرتات والسويت شيرت الراقية',
-    prosFr: 'Ne roule pas sur les bords à la coupe, double face identique, dense et doux, parfait pour t-shirts et sweats premium',
-    cons: 'أثقل من الجيرسي العادي وكيتطلب إبرة Ball Point (Stretch) باش ما يتقبش الثوب',
-    consFr: 'Plus lourd que le jersey simple, nécessite une aiguille pointe boule (stretch) en machine'
-  },
-  'molleton': {
-    arName: 'مولتون شتوي مبطن / قطن فليس (Molleton / Cotton Fleece)',
-    frName: 'Molleton Coton / Fleece Gratté',
-    pricePerMeterMAD: '38 - 60 درهم/متر (أو 80 - 110 درهم/كيلو)',
-    pricePerMeterMADFr: '38 - 60 MAD/mètre (ou 80 - 110 MAD/kg)',
-    markets: 'درب عمر، سوق القريعة، المنطقة الصناعية عين السبع',
-    marketsFr: 'Derb Omar, Souk Griaa, Aïn Sebaâ',
-    pros: 'دافي بزاف، ملمس قطني مريح، قوام واقف للهودي والسويت شيرت أوفر سايز',
-    prosFr: 'Très chaud, toucher doux molletonné, excellente tenue pour hoodies et sweats oversize',
-    cons: 'كيحتاج شفرات مقص حادة في الفصالة وماكينة سورجي 4 خيوط قوية',
-    consFr: 'Nécessite des lames affûtées pour la coupe et une surjeteuse 4 fils robuste'
-  },
-  'jersey': {
-    arName: 'جيرسي قطن ليكرا (Jersey Coton 95% + Élasthanne 5%)',
-    frName: 'Jersey Coton Lycra / Spandex',
-    pricePerMeterMAD: '24 - 42 درهم/متر (أو 65 - 80 درهم/كيلو جملة)',
-    pricePerMeterMADFr: '24 - 42 MAD/mètre (ou 65 - 80 MAD/kg)',
-    markets: 'درب عمر، سوق القريعة، درب السلطان',
-    marketsFr: 'Derb Omar, Souk Griaa, Derb Sultan',
-    pros: 'مطاطي ومريح جداً على الجسم، مثالي للبوكسرات، الملابس الداخلية، والتيشرتات الصيفية',
-    prosFr: 'Extensible et très confortable, idéal pour sous-vêtements, boxers et t-shirts',
-    cons: 'كيرولي في الجوانب وقت الفصالة وكيتطلب ماكينات السورجي والروكوفروز لمرونة الخياطة',
-    consFr: 'Tendance à rouler sur les bords à la coupe, nécessite surjeteuse et recouvreuse'
-  },
-  'gabardine': {
-    arName: 'جاباردين كوتون متين (Gabardine Coton / Stretch)',
-    frName: 'Gabardine Coton / Stretch',
-    pricePerMeterMAD: '28 - 50 درهم/متر',
-    pricePerMeterMADFr: '28 - 50 MAD/mètre',
-    markets: 'درب عمر، سوق القريعة',
-    marketsFr: 'Derb Omar, Souk Griaa',
-    pros: 'متين، واقف، ما كيتقطعش بسهولة، ممتاز للسراويل الكارجو والفيستات',
-    prosFr: 'Robuste, bonne tenue, indéchirable, excellent pour pantalons cargo et vestes',
-    cons: 'قاصح شوية في الفصالة وكيحتاج إبر سميكة 90/14 أو 100/16',
-    consFr: 'Plus rigide à la coupe, nécessite des aiguilles fortes 90/14 ou 100/16'
-  },
-  'popeline': {
-    arName: 'بوبلين قطن ناعم 100% (Popeline Coton)',
-    frName: 'Popeline 100% Coton',
-    pricePerMeterMAD: '22 - 38 درهم/متر',
-    pricePerMeterMADFr: '22 - 38 MAD/mètre',
-    markets: 'درب عمر، سوق القريعة، القيساريات',
-    marketsFr: 'Derb Omar, Souk Griaa, Kissariat',
-    pros: 'خفيف وناعم وتنفس عالي، كلاسيكي ومثالي للقمصان والشوميزات',
-    prosFr: 'Léger, doux, très respirant, classique parfait pour chemises et blouses',
-    cons: 'كيبغي التحديد بالحديد والمصلوح بانتظام',
-    consFr: 'Nécessite repassage régulier'
-  },
-  'crêpe': {
-    arName: 'كريب دي شين / كريب جورجيت (Crêpe)',
-    frName: 'Crêpe de Chine / Georgette',
-    pricePerMeterMAD: '25 - 45 درهم/متر (جملة)',
-    pricePerMeterMADFr: '25 - 45 MAD/mètre (gros)',
-    markets: 'درب عمر (الدار البيضاء)، سوق القريعة، القيساريات الكبرى',
-    marketsFr: 'Derb Omar (Casablanca), Souk Griaa, grandes Kissariat',
-    pros: 'طايح وخفيف، مريح في اللبس، ما كيتكمش بسهولة، ممتاز للفساتين والعبايات',
-    prosFr: 'Fluide et léger, confortable, ne se froisse pas facilement, excellent pour robes et abayas',
-    cons: 'كيتطلب عناية خاصة في الخياطة باش ما يزلقش في الماكينة',
-    consFr: 'Nécessite un soin particulier à la couture pour éviter le glissement sous la machine'
-  },
-  'satin': {
-    arName: 'ساتان حرير / ساتان دوتشيس (Satin)',
-    frName: 'Satin de Soie / Satin Duchesse',
-    pricePerMeterMAD: '30 - 65 درهم/متر (جملة)',
-    pricePerMeterMADFr: '30 - 65 MAD/mètre (gros)',
-    markets: 'درب عمر (الدار البيضاء)، سوق القريعة، سوق الأثواب',
-    marketsFr: 'Derb Omar (Casablanca), Souk Griaa, Souk des tissus',
-    pros: 'لمعة فاخرة، ملمس ناعم، يعطي قيمة عالية للبياسة في السهرات والمناسبات',
-    prosFr: 'Brillance luxueuse, toucher doux, apporte une haute valeur pour les tenues de soirée',
-    cons: 'حساس للحرارة والماء، كيبين عيوب الخياطة إذا ما كانتش متقنة 100%',
-    consFr: 'Sensible à la chaleur et à l\'eau, révèle les défauts de couture si non parfaitement exécutée'
-  },
-  'dentelle': {
-    arName: 'دانتيلا / كيبير فرنسي (Dentelle / Guipure)',
-    frName: 'Dentelle / Guipure de luxe',
-    pricePerMeterMAD: '60 - 180 درهم/متر',
-    pricePerMeterMADFr: '60 - 180 MAD/mètre',
-    markets: 'درب عمر (شارع القصور)، محلات الأثواب المستوردة',
-    marketsFr: 'Derb Omar (rue des palais), boutiques de tissus importés',
-    pros: 'مظهر راقي جداً، يضيف لمسة كوتور (Couture) وتفاصيل فاخرة للبياسة',
-    prosFr: 'Aspect très raffiné, apporte une touche couture et des détails luxueux',
-    cons: 'سعر مرتفع، يحتاج تبطين (Doublure) ودقة عالية في التفصيل والقص',
-    consFr: 'Prix élevé, nécessite une doublure et une grande précision de coupe'
-  },
-  'lin': {
-    arName: 'كتان طبيعي / لينن ممتاز (Lin)',
-    frName: 'Lin naturel de qualité',
-    pricePerMeterMAD: '40 - 75 درهم/متر (جملة)',
-    pricePerMeterMADFr: '40 - 75 MAD/mètre (gros)',
-    markets: 'درب عمر، القيساريات التجارية بالمغرب',
-    marketsFr: 'Derb Omar, Kissariat commerciales du Maroc',
-    pros: 'بارد وممتاز للصيف، متين جداً، موضة مطلوبة بكثرة في السوق المغربي',
-    prosFr: 'Frais et idéal pour l\'été, très résistant, forte demande sur le marché marocain',
-    cons: 'كيتكمش بسرعة وكيتطلب التحديد (الحديد) المستمر',
-    consFr: 'Se froisse rapidement et nécessite un repassage fréquent'
-  },
-  'brocart': {
-    arName: 'بروكار مغربي / بهجة ملكية (Brocart)',
-    frName: 'Brocart / Bahja Traditionnelle',
-    pricePerMeterMAD: '120 - 350 درهم/متر',
-    pricePerMeterMADFr: '120 - 350 MAD/mètre',
-    markets: 'سوق الغزل بفاس، درب السلطان والدرب الكبير بالدار البيضاء',
-    marketsFr: 'Souk Ghezel à Fès, Derb Sultan et Derb Kebir à Casablanca',
-    pros: 'فخامة مغربية أصيلة، قوام واقف ومناسب للقفطان والتكشيطة والمناسبات الكبرى',
-    prosFr: 'Luxe marocain authentique, tenue rigide idéale pour caftan, takchita et grandes occasions',
-    cons: 'ثقيل في اللبس، مكلف من ناحية السلع والخياطة اليدوية (المعلم)',
-    consFr: 'Lourd à porter, coûteux en matière et en couture artisanale (maalem)'
-  },
-  'mousseline': {
-    arName: 'موسلين / شيفون شفاف (Mousseline / Chiffon)',
-    frName: 'Mousseline / Chiffon',
-    pricePerMeterMAD: '15 - 35 درهم/متر (جملة)',
-    pricePerMeterMADFr: '15 - 35 MAD/mètre (gros)',
-    markets: 'درب عمر، القريعة، قيسارية الأثواب',
-    marketsFr: 'Derb Omar, Griaa, Kissariat des tissus',
-    pros: 'خفيف جداً، انسيابي ورومانسي، رائع للطبقات والفساتين الصيفية',
-    prosFr: 'Très léger, fluide et romantique, parfait pour les superpositions et robes d\'été',
-    cons: 'شفاف يحتاج بطانة، حساس جداً للتمزق في الخياطة',
-    consFr: 'Transparent, nécessite une doublure, très sensible à la déchirure à la couture'
-  }
-};
-
-export function getFabricInfo(fabricName: string = '') {
-  const lower = fabricName.toLowerCase();
-  for (const key of Object.keys(FABRIC_CATALOG)) {
-    if (
-      lower.includes(key) ||
-      (key === 'crêpe' && (lower.includes('crepe') || lower.includes('كريب'))) ||
-      (key === 'satin' && (lower.includes('satin') || lower.includes('ساتان'))) ||
-      (key === 'dentelle' && (lower.includes('dentelle') || lower.includes('lace') || lower.includes('دانتيلا'))) ||
-      (key === 'interlock' && (lower.includes('interlock') || lower.includes('انترلوك') || lower.includes('إنترلوك'))) ||
-      (key === 'molleton' && (lower.includes('molleton') || lower.includes('مولتون') || lower.includes('ميلتون') || lower.includes('fleece'))) ||
-      (key === 'jersey' && (lower.includes('jersey') || lower.includes('جيرسي') || lower.includes('جيرزي'))) ||
-      (key === 'gabardine' && (lower.includes('gabardine') || lower.includes('جاباردين') || lower.includes('كاباردين'))) ||
-      (key === 'popeline' && (lower.includes('popeline') || lower.includes('بوبلين')))
-    ) {
-      return FABRIC_CATALOG[key];
-    }
-  }
-  return {
-    arName: fabricName || 'ثوب مناسب للموديل (توصية عامة)',
-    frName: fabricName || 'Tissu adapté au modèle',
-    pricePerMeterMAD: '25 - 55 درهم/متر (تقديري حسب الجودة)',
-    pricePerMeterMADFr: '25 - 55 MAD/mètre (estimatif selon qualité)',
-    markets: 'درب عمر (الدار البيضاء)، سوق القريعة، القيساريات المحلية',
-    marketsFr: 'Derb Omar (Casablanca), Souk Griaa, Kissariat locales',
-    pros: 'جودة ممتازة وسهل في التفصيل والخياطة بالورشة',
-    prosFr: 'Excellente qualité et facile à travailler à l\'atelier',
-    cons: 'يجب التأكد من جودة الغزل وغسله أو تجربته قبل القص النهائي',
-    consFr: 'Vérifier la qualité du fil et le tester avant la coupe finale'
-  };
-}
+export { FABRIC_CATALOG, getFabricInfo } from '../lib/fabricCatalog';
+export type { FabricInfo } from '../lib/fabricCatalog';
 
 // Keeps only the fabric consumption for a single 1.50m laize (drops any "Laize 1.50m: X | Laize 1.80m: Y" style label/alt-width text the AI may still return)
 function simplifyConsumption(raw?: string): string {
@@ -676,6 +502,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [activeTab, setActiveTab] = useState<'fiche' | 'mesures' | 'chat' | 'photo' | 'gamme'>('chat');
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [showClientQuoteModal, setShowClientQuoteModal] = useState(false);
+  const [quoteInitialMode, setQuoteInitialMode] = useState<'devis' | 'fiche' | 'chiffrage' | 'both'>('devis');
   const [chat, setChat] = useState<{ role: 'ai' | 'user'; text: string }[]>([
     { role: 'ai', text: isAr ? 'مرحباً بك في المستشار الذكي لتحليل الموديلات. ارفع صورة الموديل للبدء في التحليل الفوري للثوب والتكلفة والقياسات.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }
   ]);
@@ -1794,22 +1621,22 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
         : `✅ Modèle mis à jour en 1 Pièce simple avec 1.50m de consommation.`;
     }
 
-    // 0. CLIENT QUOTE & PDF PROPOSAL INTENTS (Devis & Fiche Client B2B)
-    if (/(client|clian|clien|زبون|كليان|devis.*(client|clian|clien|زبون|كليان)|(pdf|fiche|warqa|ملف|ورقة|عرض.*سعر).*(client|clian|clien|زبون|كليان)|devis.*pro|عرض.*سعر|estimasion)/i.test(m) && /(pdf|devis|fiche|warqa|ملف|ورقة|عرض|prix|taman|toub|ثوب|ثمن)/i.test(m)) {
+    // 0. CLIENT QUOTE & PDF PROPOSAL INTENTS (Devis & Fiche Client B2B / Chiffrage Sourcing)
+    if (/(client|clian|clien|زبون|كليان|devis.*(client|clian|clien|زبون|كليان)|(pdf|fiche|warqa|ملف|ورقة|عرض.*سعر).*(client|clian|clien|زبون|كليان)|devis.*pro|عرض.*سعر|estimasion|chiffrage|sourcing|سلعة|شراء|ثمن.*متر|كلفة.*بياسة|oco)/i.test(m) && /(pdf|devis|fiche|warqa|ملف|ورقة|عرض|prix|taman|toub|ثوب|ثمن|سلعة|شراء|كلفة|oco|chiffrage|sourcing)/i.test(m)) {
+      const isSourcing = /(sourcing|سلعة|شراء|فين نشري|شحال نشري|كلفة.*بياسة|oco|chiffrage|تكلفة|تفاصيل السلعة)/i.test(m);
+      setQuoteInitialMode(isSourcing ? 'chiffrage' : 'devis');
       setTimeout(() => setShowClientQuoteModal(true), 300);
       return speakAr
-        ? `📄 فتحت لك الآن نافذة **[ملف ودوڤي الزبون الاحترافي (PDF & WhatsApp)]**!
+        ? `📄 فتحت لك الآن نافذة **[${isSourcing ? 'كلفة السلعة وتفاصيل التوريد وهوامش الربح (Chiffrage Sourcing)' : 'ملف ودوڤي الزبون الاحترافي (PDF & WhatsApp)'}]**!
 ✨ تما تقدر:
-1. تبدل اسم ونوع الثوب اللي غادي يشوفو الزبون (بدون أسرار درب عمر وثمن الجملة).
-2. تعدل ثمن البيع اللي بغيتي للبياسة (بهامش ربح مثلا +50% أو ثمن محدد).
-3. تحدد الكمية والمدة وشروط التسليم.
-4. طبع Devis A4 نقي بزاف كـ PDF أو تصيفطو بـ WhatsApp للزبون بنقرة واحدة! 🚀`
-        : `📄 J'ai ouvert pour vous la fenêtre **[Générateur Fiche & Devis Client B2B]** !
+1. تعرف نوع الثوب المناسب للموديل، أسواق الشراء بالجملة (درب عمر، سوق القريعة...) وثمن المتر.
+2. تتبع كلفة السلعة، اللوازم، الصنعة، وكلفة البياسة بالكامل (L'Oco) وهامش الربح الصافي.
+3. تعدل أي ثمن، استهلاك، أو سوق مباشرة وتطبع الوثيقة كـ PDF A4 رسمي أو تشاركها عبر واتساب! 🚀`
+        : `📄 J'ai ouvert pour vous la fenêtre **[${isSourcing ? 'Fiche de Chiffrage Sourcing & Coût de Revient' : 'Générateur Fiche & Devis Client B2B'}]** !
 ✨ Vous pouvez y :
-1. Modifier le tissu commercial proposé au client (sans mentionner vos prix de gros internes).
-2. Définir votre prix de vente unitaire en MAD (marge +50%, +80% ou prix personnalisé).
-3. Ajuster les quantités et délais de fabrication.
-4. Télécharger le Devis en PDF A4 ou le partager instantanément sur WhatsApp au client ! 🚀`;
+1. Découvrir la matière recommandée, les marchés de gros (Derb Omar, Souk Griaa...) et le prix au mètre.
+2. Analyser le coût de revient unitaire (tissu + fournitures + façon atelier) et votre marge nette.
+3. Modifier chaque paramètre en direct et télécharger le PDF A4 officiel ou l'envoyer sur WhatsApp ! 🚀`;
     }
 
     // 0. DIRECT PIECE COST & PRODUCTION DEVIS (شحال كتقام البياسة / Prix de revient unitaire & Devis)
@@ -3133,7 +2960,29 @@ ${userMessage}
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
-          {/* NOUVEAU: BOUTON DEVIS & FICHE CLIENT B2B (Emplacement exact encerclé en rouge par l'utilisateur) */}
+          {/* NOUVEAU: BOUTON CHIFFRAGE SOURCING & COÛT DE REVIENT (DÉTAILS SL3A) */}
+          <button
+            onClick={() => {
+              if (!analysisResult) {
+                setCustomAlert({
+                  title: isAr ? 'تنبيه' : 'Attention',
+                  message: isAr ? 'يرجى تحليل موديل أولاً من الصورة لتجهيز كلفة السلعة والتوريد!' : 'Veuillez analyser un modèle d\'abord pour calculer le coût de revient !',
+                  isError: true
+                });
+                return;
+              }
+              setQuoteInitialMode('chiffrage');
+              setShowClientQuoteModal(true);
+            }}
+            className="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 hover:from-amber-700 hover:to-rose-700 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-xs uppercase shadow-md hover:shadow-amber-500/25 active:scale-95 transition-all ring-1 ring-white/20"
+            title={isAr ? 'كلفة السلعة، أسواق الشراء بالجملة، ثمن المتر، وكلفة البياسة بالكامل (PDF Sourcing)' : 'Chiffrage Sourcing & Coût de Revient (PDF)'}
+          >
+            <DollarSign className="w-3.5 h-3.5 text-amber-200" />
+            <span className="font-black">{isAr ? 'كلفة السلعة والتوريد' : 'Chiffrage Sourcing'}</span>
+            <span className="bg-emerald-400 text-slate-950 text-[9px] px-1.5 py-0.2 rounded-full font-black tracking-wider shadow-xs">ECO</span>
+          </button>
+
+          {/* NOUVEAU: BOUTON DEVIS & FICHE CLIENT B2B */}
           <button
             onClick={() => {
               if (!analysisResult) {
@@ -3144,6 +2993,7 @@ ${userMessage}
                 });
                 return;
               }
+              setQuoteInitialMode('devis');
               setShowClientQuoteModal(true);
             }}
             className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-xs uppercase shadow-md hover:shadow-indigo-500/25 active:scale-95 transition-all ring-1 ring-white/20"
@@ -4029,6 +3879,15 @@ ${userMessage}
 
                   {/* Print / Export Report Button */}
                   <div className="pt-4 flex flex-wrap items-center justify-end gap-3 border-t border-slate-100">
+                    <button
+                      onClick={() => {
+                        setQuoteInitialMode('chiffrage');
+                        setShowClientQuoteModal(true);
+                      }}
+                      className="flex items-center gap-2 bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:brightness-110 transition-all shadow-md active:scale-95"
+                    >
+                      <DollarSign className="w-4 h-4" /> <span>{isAr ? 'كلفة السلعة وتفاصيل الشراء (Chiffrage Sourcing PDF)' : 'Chiffrage Sourcing & Coût Revient PDF'}</span>
+                    </button>
                     <button
                       onClick={() => exportToFicheTechnique()}
                       className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:bg-indigo-700 transition-all shadow-md hover:shadow-indigo-200"
@@ -5375,13 +5234,14 @@ ${userMessage}
         </div>
       )}
 
-      {/* NOUVEAU: MODAL DEVIS & FICHE CLIENT B2B */}
+      {/* NOUVEAU: MODAL DEVIS & FICHE CLIENT B2B / CHIFFRAGE SOURCING */}
       <ClientQuoteModal
         isOpen={showClientQuoteModal}
         onClose={() => setShowClientQuoteModal(false)}
         analysisResult={analysisResult}
         modelImage={image}
         isAr={isAr}
+        initialDocMode={quoteInitialMode}
         onNotify={(title, message) => {
           setCustomAlert({
             title,

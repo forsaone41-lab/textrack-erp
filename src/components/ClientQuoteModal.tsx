@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Printer, Download, Send, MessageCircle, FileText, Check, Plus, Trash2, 
   Sparkles, DollarSign, Clock, ShieldCheck, Ruler, Building, Phone, MapPin, 
-  Percent, Copy, CheckCircle2, ChevronRight, Layers, Tag, Eye
+  Percent, Copy, CheckCircle2, ChevronRight, Layers, Tag, Eye, ShoppingBag, 
+  TrendingUp, Compass, AlertCircle, Edit3, Store, Scissors, Package
 } from 'lucide-react';
 import { loadCompanyProfile, saveRecord, genId, Facture } from '../types';
 import { printElement } from '../utils/pdf';
+import { getFabricInfo, estimateSourcingBreakdown } from '../lib/fabricCatalog';
 
 export interface ClientQuoteArticle {
   id: string;
@@ -15,6 +17,18 @@ export interface ClientQuoteArticle {
   quantity: number;
   baseCost?: number;
   notes?: string;
+
+  // ── SOURCING & CHIFFRAGE MATIÈRES (DÉTAILS SL3A) ──
+  tissuNom?: string;
+  tissuMetrage: number;
+  tissuPrixMetre: number;
+  marcheSourcing: string;
+  coutFournitures: number;
+  detailsFournitures?: string;
+  coutFacon: number;
+  coutRevientTotal: number;
+  fabricPros?: string;
+  fabricCons?: string;
 }
 
 export interface ClientQuoteModalProps {
@@ -23,6 +37,7 @@ export interface ClientQuoteModalProps {
   analysisResult: any;
   modelImage: string | null;
   isAr: boolean;
+  initialDocMode?: 'devis' | 'fiche' | 'chiffrage' | 'both';
   onSaved?: () => void;
   onNotify?: (title: string, message: string) => void;
 }
@@ -33,13 +48,14 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
   analysisResult,
   modelImage,
   isAr,
+  initialDocMode = 'devis',
   onSaved,
   onNotify
 }) => {
   const company = loadCompanyProfile();
 
   // ─── STATE ──────────────────────────────────────────────────────────
-  const [docMode, setDocMode] = useState<'devis' | 'fiche' | 'both'>('devis');
+  const [docMode, setDocMode] = useState<'devis' | 'fiche' | 'chiffrage' | 'both'>(initialDocMode || 'devis');
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [clientCity, setClientCity] = useState('');
@@ -55,15 +71,19 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
   const [bulkQty, setBulkQty] = useState(50);
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [expandedArticleId, setExpandedArticleId] = useState<string | null>(null);
 
   // ─── INITIALIZATION ON OPEN ─────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
 
+    if (initialDocMode) {
+      setDocMode(initialDocMode);
+    }
+
     const dateToday = new Date().toISOString().split('T')[0];
     const refCode = `DEV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    setDocMode('devis'); // Default to clean, un-cluttered 1-page Devis
     setDevisRef(refCode);
     setDevisDate(dateToday);
     setClientName(isAr ? 'الزبون / العلامة التجارية' : 'Client / Marque Partenaire');
@@ -79,7 +99,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
     // Build articles from analysis
     if (analysisResult) {
       if (analysisResult.pieces && analysisResult.pieces.length > 0) {
-        const loaded = analysisResult.pieces.map((p: any, idx: number) => {
+        const loaded: ClientQuoteArticle[] = analysisResult.pieces.map((p: any, idx: number) => {
           let cleanFabric = p.fabricSuggested || '';
           cleanFabric = cleanFabric
             .replace(/\(.*?\)/g, '')
@@ -90,19 +110,36 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
           }
 
           const rawCost = parseFloat(String(p.costEstimate || '0').match(/[\d.]+/)?.[0] || '70') || 70;
-          const sellingPrice = Math.max(20, Math.round((rawCost * 1.5) / 5) * 5);
+          const sourcing = estimateSourcingBreakdown({
+            pieceName: p.name || (isAr ? `قطعة ${idx + 1}` : `Pièce ${idx + 1}`),
+            fabricName: p.fabricSuggested || '',
+            consumptionStr: p.consumption || '',
+            baseCost: rawCost,
+            isAr
+          });
 
           return {
             id: `art-${idx}-${Date.now()}`,
             name: p.name || (isAr ? `قطعة ${idx + 1}` : `Pièce ${idx + 1}`),
             fabricCommercial: cleanFabric,
-            unitPrice: sellingPrice,
-            baseCost: rawCost,
+            unitPrice: sourcing.sellingPrice,
             quantity: 50,
-            notes: p.fit || ''
+            baseCost: rawCost,
+            notes: p.fit || '',
+            tissuNom: p.fabricSuggested || cleanFabric,
+            tissuMetrage: sourcing.metrage,
+            tissuPrixMetre: sourcing.prixMetre,
+            marcheSourcing: sourcing.marche,
+            coutFournitures: sourcing.fournitures,
+            detailsFournitures: sourcing.detailsFournitures,
+            coutFacon: sourcing.facon,
+            coutRevientTotal: sourcing.coutRevientTotal,
+            fabricPros: sourcing.fabricPros,
+            fabricCons: sourcing.fabricCons
           };
         });
         setArticles(loaded);
+        if (loaded.length > 0) setExpandedArticleId(loaded[0].id);
       } else {
         let cleanFabric = analysisResult.fabricSuggested || '';
         cleanFabric = cleanFabric
@@ -114,22 +151,39 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
         }
 
         const rawCost = parseFloat(String(analysisResult.costEstimate || '0').match(/[\d.]+/)?.[0] || '120') || 120;
-        const sellingPrice = Math.max(30, Math.round((rawCost * 1.6) / 5) * 5);
+        const sourcing = estimateSourcingBreakdown({
+          pieceName: analysisResult.category || (isAr ? 'موديل تفصيل راقي' : 'Modèle Confection'),
+          fabricName: analysisResult.fabricSuggested || '',
+          consumptionStr: analysisResult.consumption || '2.0m',
+          baseCost: rawCost,
+          isAr
+        });
 
-        setArticles([
-          {
-            id: `single-${Date.now()}`,
-            name: analysisResult.category || (isAr ? 'موديل تفصيل راقي' : 'Modèle Confection'),
-            fabricCommercial: cleanFabric,
-            unitPrice: sellingPrice,
-            baseCost: rawCost,
-            quantity: 50,
-            notes: analysisResult.fit || ''
-          }
-        ]);
+        const singleArt: ClientQuoteArticle = {
+          id: `single-${Date.now()}`,
+          name: analysisResult.category || (isAr ? 'موديل تفصيل راقي' : 'Modèle Confection'),
+          fabricCommercial: cleanFabric,
+          unitPrice: sourcing.sellingPrice,
+          quantity: 50,
+          baseCost: rawCost,
+          notes: analysisResult.fit || '',
+          tissuNom: analysisResult.fabricSuggested || cleanFabric,
+          tissuMetrage: sourcing.metrage,
+          tissuPrixMetre: sourcing.prixMetre,
+          marcheSourcing: sourcing.marche,
+          coutFournitures: sourcing.fournitures,
+          detailsFournitures: sourcing.detailsFournitures,
+          coutFacon: sourcing.facon,
+          coutRevientTotal: sourcing.coutRevientTotal,
+          fabricPros: sourcing.fabricPros,
+          fabricCons: sourcing.fabricCons
+        };
+
+        setArticles([singleArt]);
+        setExpandedArticleId(singleArt.id);
       }
     }
-  }, [isOpen, analysisResult, isAr]);
+  }, [isOpen, analysisResult, isAr, initialDocMode]);
 
   if (!isOpen) return null;
 
@@ -139,15 +193,36 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
   const totalTTC = totalHT + totalTVA;
   const totalPiecesCount = articles.reduce((sum, a) => sum + (Number(a.quantity) || 0), 0);
 
+  // Financial Sourcing & Costing Summaries (L'oco global dial sl3a)
+  const totalCoutTissus = articles.reduce((sum, a) => sum + (Number(a.tissuMetrage) || 0) * (Number(a.tissuPrixMetre) || 0) * (Number(a.quantity) || 0), 0);
+  const totalCoutFournitures = articles.reduce((sum, a) => sum + (Number(a.coutFournitures) || 0) * (Number(a.quantity) || 0), 0);
+  const totalCoutFacon = articles.reduce((sum, a) => sum + (Number(a.coutFacon) || 0) * (Number(a.quantity) || 0), 0);
+  const totalCoutRevientGlobal = articles.reduce((sum, a) => sum + (Number(a.coutRevientTotal) || 0) * (Number(a.quantity) || 0), 0);
+  const totalBeneficeBrut = totalHT - totalCoutRevientGlobal;
+  const margeGlobalePct = totalHT > 0 ? Math.round((totalBeneficeBrut / totalHT) * 100) : 0;
+
   // ─── HANDLERS ───────────────────────────────────────────────────────
   const handleUpdateArticle = (id: string, field: keyof ClientQuoteArticle, value: any) => {
-    setArticles(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+    setArticles(prev => prev.map(a => {
+      if (a.id !== id) return a;
+      const updated = { ...a, [field]: value };
+
+      // Recalculate Coût de Revient Unitaire automatically if any component changes
+      if (field === 'tissuMetrage' || field === 'tissuPrixMetre' || field === 'coutFournitures' || field === 'coutFacon') {
+        const tm = field === 'tissuMetrage' ? Number(value) || 0 : Number(a.tissuMetrage) || 0;
+        const tp = field === 'tissuPrixMetre' ? Number(value) || 0 : Number(a.tissuPrixMetre) || 0;
+        const cf = field === 'coutFournitures' ? Number(value) || 0 : Number(a.coutFournitures) || 0;
+        const cfac = field === 'coutFacon' ? Number(value) || 0 : Number(a.coutFacon) || 0;
+        updated.coutRevientTotal = Math.round((tm * tp) + cf + cfac);
+      }
+      return updated;
+    }));
   };
 
   const handleApplyMargin = (marginPct: number) => {
     setActiveMargin(marginPct);
     setArticles(prev => prev.map(a => {
-      const base = a.baseCost || a.unitPrice;
+      const base = a.coutRevientTotal || a.baseCost || a.unitPrice;
       const newPrice = Math.max(10, Math.round((base * (1 + marginPct / 100)) / 5) * 5);
       return { ...a, unitPrice: newPrice };
     }));
@@ -159,23 +234,40 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
   };
 
   const handleAddArticle = () => {
-    setArticles(prev => [
-      ...prev,
-      {
-        id: `extra-${Date.now()}`,
-        name: isAr ? 'قطعة إضافية / إكسسوار' : 'Article Supplémentaire',
-        fabricCommercial: isAr ? 'حسب الاختيار' : 'Au choix',
-        unitPrice: 50,
-        baseCost: 35,
-        quantity: bulkQty || 50
-      }
-    ]);
+    const newId = `extra-${Date.now()}`;
+    const newArt: ClientQuoteArticle = {
+      id: newId,
+      name: isAr ? 'قطعة إضافية / إكسسوار' : 'Article Supplémentaire',
+      fabricCommercial: isAr ? 'حسب الاختيار' : 'Au choix',
+      unitPrice: 50,
+      baseCost: 32,
+      quantity: bulkQty || 50,
+      tissuNom: isAr ? 'قماش مخصص' : 'Tissu Personnalisé',
+      tissuMetrage: 1.0,
+      tissuPrixMetre: 35,
+      marcheSourcing: isAr ? 'درب عمر، سوق القريعة، الدار البيضاء' : 'Derb Omar, Souk Griaa, Casablanca',
+      coutFournitures: 8,
+      detailsFournitures: isAr ? 'خيط بوليستر + أزرار/سحاب' : 'Fil polyester + accessoires',
+      coutFacon: 15,
+      coutRevientTotal: 58
+    };
+    setArticles(prev => [...prev, newArt]);
+    setExpandedArticleId(newId);
   };
 
   const handleRemoveArticle = (id: string) => {
     if (articles.length <= 1) return;
     setArticles(prev => prev.filter(a => a.id !== id));
   };
+
+  // Quick preset markets chips
+  const MOROCCAN_MARKETS = [
+    { ar: 'درب عمر (سوق المسيرة)', fr: 'Derb Omar (Souk Al Massira)' },
+    { ar: 'سوق القريعة (شارع الأثواب)', fr: 'Souk Griaa (Avenue des tissus)' },
+    { ar: 'عين السبع (المنطقة الصناعية)', fr: 'Aïn Sebaâ (Zone Industrielle)' },
+    { ar: 'درب السلطان (الكبير)', fr: 'Derb Sultan (Derb Kebir)' },
+    { ar: 'سوق الغزل (فاس)', fr: 'Souk Ghezel (Fès)' }
+  ];
 
   // ─── PRINT / PDF EXPORT ─────────────────────────────────────────────
   const handlePrintPDF = () => {
@@ -219,7 +311,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
         typeDoc: 'devis',
         articles: articles.map(a => ({
           id: genId(),
-          designation: `${a.name} [Tissu: ${a.fabricCommercial}]`,
+          designation: `${a.name} [Tissu: ${a.fabricCommercial} | Sourcing: ${a.marcheSourcing || 'Marché'}]`,
           type: 'matiere',
           quantite: a.quantity,
           prixUnitaire: a.unitPrice,
@@ -246,8 +338,10 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
 
   // ─── COPY TEXT SUMMARY ──────────────────────────────────────────────
   const handleCopySummary = async () => {
-    const text = articles.map(a => `${a.name} - ${a.fabricCommercial} | ${a.quantity} pcs x ${a.unitPrice} MAD = ${a.quantity * a.unitPrice} MAD`).join('\n');
-    const full = `DEVIS ${devisRef} - ${clientName}\nDate: ${devisDate}\nTotal: ${totalTTC} MAD\n${text}\nDélai: ${delaiConfection}`;
+    const text = articles.map(a => 
+      `${a.name}: ${a.quantity} pcs x ${a.unitPrice} DH [Coût Revient: ${a.coutRevientTotal} DH | Tissu: ${a.tissuPrixMetre}DH/m x ${a.tissuMetrage}m @ ${a.marcheSourcing}]`
+    ).join('\n');
+    const full = `CHIFFRAGE & DEVIS ${devisRef} - ${clientName}\nDate: ${devisDate}\nTotal Vente: ${totalTTC} MAD\nCoût Revient Total: ${totalCoutRevientGlobal} MAD\nBénéfice Prévisionnel: ${totalBeneficeBrut} MAD (${margeGlobalePct}%)\n\n${text}\nDélai: ${delaiConfection}`;
     try {
       await navigator.clipboard.writeText(full);
       setCopied(true);
@@ -257,28 +351,28 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
 
   // ─── RENDER ─────────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-[250] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[250] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl md:rounded-3xl w-full max-w-7xl max-h-[96vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* ── TOP HEADER / TOOLBAR ── */}
         <div className={`p-4 md:p-5 border-b border-slate-800/80 bg-slate-900/90 flex flex-wrap items-center justify-between gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
           <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white flex-shrink-0">
-              <FileText className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 via-orange-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-amber-500/20 text-white flex-shrink-0">
+              <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base md:text-lg font-black text-white tracking-tight">
-                  {isAr ? 'منشئ عرض السعر وملف الزبون الاحترافي (PDF Client)' : 'Générateur Fiche & Devis Client B2B'}
+                  {isAr ? 'منشئ كلفة السلعة وتفاصيل الشراء وعرض السعر (PDF & Sourcing)' : 'Chiffrage Sourcing Matières & Devis Atelier'}
                 </h2>
-                <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  B2B Pro
+                <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Sourcing Maroc
                 </span>
               </div>
               <p className="text-xs text-slate-400 font-medium">
                 {isAr
-                  ? 'فصل ورقة الدوڤي المالي على ورقة المقاسات والفيش تكنيك بوضوح تام'
-                  : 'Séparation nette du Devis commercial et de la Fiche Technique / Mesures'}
+                  ? 'معرفة ثمن السلعة، فين تشريها، ثمن المتر، الصنعة، وكلفة البياسة (L\'Oco) مع إمكانية تعديل كل شيء'
+                  : 'Détails des tissus, marchés de gros (Derb Omar...), coût de revient unitaire et devis personnalisable'}
               </p>
             </div>
           </div>
@@ -316,7 +410,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
             <button
               onClick={handleCopySummary}
               className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-all"
-              title={isAr ? 'نسخ ملخص العرض' : 'Copier le résumé'}
+              title={isAr ? 'نسخ ملخص كلفة السلعة والعرض' : 'Copier le résumé chiffrage & devis'}
             >
               {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
             </button>
@@ -338,55 +432,100 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
             
             {/* Document Mode Selector in Left Panel */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-2">
-              <label className="block text-[10px] font-black uppercase text-indigo-400 tracking-wider">
-                {isAr ? 'نوع الوثيقة المراد تجهيزها للزبون:' : 'Type de document pour le client :'}
+              <label className="block text-[10px] font-black uppercase text-amber-400 tracking-wider">
+                {isAr ? 'نوع الوثيقة المراد تجهيزها وطباعتها:' : 'Type de document à afficher / exporter :'}
               </label>
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setDocMode('chiffrage')}
+                  className={`py-2 px-1.5 text-center rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center gap-0.5 ${
+                    docMode === 'chiffrage'
+                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-md shadow-amber-600/30 ring-1 ring-white/20'
+                      : 'bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span>{isAr ? '📊 كلفة السلعة' : '📊 Chiffrage'}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setDocMode('devis')}
-                  className={`py-2 px-2 text-center rounded-xl text-xs font-black transition-all ${
+                  className={`py-2 px-1.5 text-center rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center gap-0.5 ${
                     docMode === 'devis'
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-white/20'
                       : 'bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
-                  {isAr ? '📄 دوڤي فقط' : '📄 Devis Seul'}
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{isAr ? '📄 دوڤي البيع' : '📄 Devis Client'}</span>
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setDocMode('fiche')}
-                  className={`py-2 px-2 text-center rounded-xl text-xs font-black transition-all ${
+                  className={`py-2 px-1.5 text-center rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center gap-0.5 ${
                     docMode === 'fiche'
                       ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-1 ring-white/20'
                       : 'bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
-                  {isAr ? '📐 مقاسات فقط' : '📐 Fiche Tailles'}
+                  <Ruler className="w-3.5 h-3.5" />
+                  <span>{isAr ? '📐 مقاسات فقط' : '📐 Tailles'}</span>
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setDocMode('both')}
-                  className={`py-2 px-2 text-center rounded-xl text-xs font-black transition-all ${
+                  className={`py-2 px-1.5 text-center rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center gap-0.5 ${
                     docMode === 'both'
                       ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 ring-1 ring-white/20'
                       : 'bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
-                  {isAr ? '📑 ملف كامل' : '📑 Pack 2 Pages'}
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>{isAr ? '📑 الملف الشامل' : '📑 Dossier Pro'}</span>
                 </button>
               </div>
             </div>
 
+            {/* Quick Sourcing KPI Summary Banner */}
+            <div className="p-3.5 bg-gradient-to-r from-amber-950/60 via-slate-900 to-indigo-950/60 border border-amber-800/40 rounded-2xl">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-xs font-black text-amber-300">
+                  <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{isAr ? 'مؤشرات الكلفة والربح الإجمالي (L\'Oco & Marge)' : 'Rentabilité & Coût de Revient'}</span>
+                </div>
+                <span className="text-[10px] text-emerald-400 font-black">
+                  +{margeGlobalePct}% {isAr ? 'هامش ربح' : 'marge'}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                <div className="p-2 bg-slate-950/80 rounded-xl border border-slate-800">
+                  <span className="text-slate-400 block text-[9px]">{isAr ? 'كلفة السلعة والصنعة' : 'Coût Fabrication'}</span>
+                  <span className="text-rose-400 font-mono font-black text-xs">{totalCoutRevientGlobal.toLocaleString()} DH</span>
+                </div>
+                <div className="p-2 bg-slate-950/80 rounded-xl border border-slate-800">
+                  <span className="text-slate-400 block text-[9px]">{isAr ? 'إجمالي البيع (Devis)' : 'Total Vente'}</span>
+                  <span className="text-indigo-300 font-mono font-black text-xs">{totalHT.toLocaleString()} DH</span>
+                </div>
+                <div className="p-2 bg-slate-950/80 rounded-xl border border-slate-800">
+                  <span className="text-slate-400 block text-[9px]">{isAr ? 'الربح الصافي المتوقع' : 'Bénéfice Net'}</span>
+                  <span className="text-emerald-400 font-mono font-black text-xs">+{totalBeneficeBrut.toLocaleString()} DH</span>
+                </div>
+              </div>
+            </div>
+
             {/* Quick Margin Presets Banner */}
-            <div className="p-3 bg-gradient-to-r from-indigo-950/70 to-slate-900 border border-indigo-800/40 rounded-2xl">
+            <div className="p-3 bg-slate-900 border border-slate-800 rounded-2xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5 text-xs font-black text-indigo-300">
                   <Percent className="w-3.5 h-3.5" />
-                  <span>{isAr ? 'معامل الربح السريع للمصنع' : 'Marge Rapide Atelier'}</span>
+                  <span>{isAr ? 'إعادة تسعير البيع تلقائياً بهامش ربح:' : 'Ajustement rapide de la marge :'}</span>
                 </div>
                 <span className="text-[10px] text-slate-400 font-bold">
-                  {isAr ? 'إعادة حساب أسعار القطع فورا' : 'Recalcul automatique'}
+                  {isAr ? 'حساب مبني على كلفة البياسة' : 'Sur Coût de Revient'}
                 </span>
               </div>
               <div className="grid grid-cols-4 gap-1.5">
@@ -467,12 +606,12 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
               </div>
             </div>
 
-            {/* Section 2: Articles & Fabric Customization */}
+            {/* Section 2: GRANULAR SOURCING & RAW MATERIALS EDITOR (LES DÉTAILS DIAL SL3A) */}
             <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <div className="flex items-center gap-2 text-xs font-black text-white">
-                  <Tag className="w-4 h-4 text-emerald-400" />
-                  <span>{isAr ? '2. تخصيص الأثواب والأسعار للقطع' : '2. Pièces, Tissus & Tarification'}</span>
+                <div className="flex items-center gap-2 text-xs font-black text-amber-400">
+                  <Tag className="w-4 h-4 text-amber-400" />
+                  <span>{isAr ? '2. تفاصيل السلعة، التوريد، وكلفة البياسة (تعديل مباشر)' : '2. Détails Sourcing, Matières & Coût de Revient'}</span>
                 </div>
                 <button
                   onClick={handleAddArticle}
@@ -486,7 +625,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
               {/* Bulk Quantity Setter */}
               <div className="flex items-center gap-2 p-2 bg-slate-950/60 rounded-xl border border-slate-800 text-xs">
                 <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap">
-                  {isAr ? 'توحيد الكمية:' : 'Quantité groupée :'}
+                  {isAr ? 'توحيد كمية البياسات:' : 'Quantité groupée :'}
                 </span>
                 <input
                   type="number"
@@ -502,84 +641,219 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
                 </button>
               </div>
 
-              {/* Articles List */}
-              <div className="space-y-3">
-                {articles.map((art, idx) => (
-                  <div key={art.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800/90 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 flex-1">
-                        <span className="w-5 h-5 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-[10px] font-black">
-                          {idx + 1}
-                        </span>
-                        <input
-                          type="text"
-                          value={art.name}
-                          onChange={e => handleUpdateArticle(art.id, 'name', e.target.value)}
-                          placeholder="Nom de l'article"
-                          className="bg-transparent font-black text-xs text-white focus:outline-none focus:border-b border-indigo-500 flex-1"
-                        />
-                      </div>
-                      {articles.length > 1 && (
-                        <button
-                          onClick={() => handleRemoveArticle(art.id)}
-                          className="text-slate-500 hover:text-red-400 p-1 transition-colors"
-                          title={isAr ? 'حذف هذه القطعة' : 'Supprimer'}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
+              {/* Articles & Granular Sourcing List */}
+              <div className="space-y-3.5">
+                {articles.map((art, idx) => {
+                  const isExpanded = expandedArticleId === art.id || articles.length === 1;
+                  const coutTissuTotalPiece = Math.round((Number(art.tissuMetrage) || 0) * (Number(art.tissuPrixMetre) || 0));
+                  const margeUnit = (Number(art.unitPrice) || 0) - (Number(art.coutRevientTotal) || 0);
 
-                    {/* Fabric description editable by user */}
-                    <div>
-                      <label className="block text-[9px] font-black text-amber-400 uppercase mb-0.5">
-                        {isAr ? 'اسم الثوب التجاري الظاهر للزبون (قابلة للتعديل):' : 'Tissu commercial proposé au client :'}
-                      </label>
-                      <input
-                        type="text"
-                        value={art.fabricCommercial}
-                        onChange={e => handleUpdateArticle(art.id, 'fabricCommercial', e.target.value)}
-                        placeholder="Ex: Coton Molleton 100% Gratté 320g - Haute Qualité"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 font-medium"
-                      />
-                    </div>
+                  return (
+                    <div key={art.id} className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800/90 space-y-3 shadow-sm">
+                      
+                      {/* Header row with piece name & quick summary */}
+                      <div className="flex items-center justify-between gap-2 border-b border-slate-800/60 pb-2">
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xs font-black">
+                            {idx + 1}
+                          </span>
+                          <input
+                            type="text"
+                            value={art.name}
+                            onChange={e => handleUpdateArticle(art.id, 'name', e.target.value)}
+                            placeholder="Nom de la pièce"
+                            className="bg-transparent font-black text-xs text-white focus:outline-none focus:border-b border-amber-500 flex-1"
+                          />
+                        </div>
 
-                    <div className="grid grid-cols-3 gap-2 pt-1">
-                      <div>
-                        <label className="block text-[9px] font-black text-slate-400 uppercase mb-0.5">
-                          {isAr ? 'الكمية' : 'Quantité'}
-                        </label>
-                        <input
-                          type="number"
-                          value={art.quantity}
-                          onChange={e => handleUpdateArticle(art.id, 'quantity', Number(e.target.value) || 0)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-center text-white font-black focus:outline-none focus:border-indigo-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[9px] font-black text-emerald-400 uppercase mb-0.5">
-                          {isAr ? 'ثمن البيع (درهم)' : 'Prix Vente (MAD)'}
-                        </label>
-                        <input
-                          type="number"
-                          value={art.unitPrice}
-                          onChange={e => handleUpdateArticle(art.id, 'unitPrice', Number(e.target.value) || 0)}
-                          className="w-full bg-slate-900 border border-emerald-900/60 rounded-lg px-2 py-1 text-xs text-center text-emerald-400 font-black focus:outline-none focus:border-emerald-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[9px] font-black text-slate-400 uppercase mb-0.5">
-                          {isAr ? 'الإجمالي' : 'Total HT'}
-                        </label>
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-lg px-2 py-1 text-xs text-center text-white font-mono font-bold">
-                          {((art.quantity || 0) * (art.unitPrice || 0)).toLocaleString()} DH
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono font-black text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20" title="Coût de revient unitaire">
+                            L'Oco: {art.coutRevientTotal} DH
+                          </span>
+                          <button
+                            onClick={() => setExpandedArticleId(isExpanded ? null : art.id)}
+                            className="text-slate-400 hover:text-white p-1 text-[10px] font-bold"
+                          >
+                            {isExpanded ? '▲' : '▼'}
+                          </button>
+                          {articles.length > 1 && (
+                            <button
+                              onClick={() => handleRemoveArticle(art.id)}
+                              className="text-slate-500 hover:text-red-400 p-1 transition-colors"
+                              title={isAr ? 'حذف هذه القطعة' : 'Supprimer'}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
+
+                      {/* Expandable Granular Sourcing Fields */}
+                      {isExpanded && (
+                        <div className="space-y-3 pt-1 text-xs">
+                          
+                          {/* Commercial Fabric Name */}
+                          <div>
+                            <label className="block text-[9px] font-black text-amber-400 uppercase mb-0.5">
+                              {isAr ? 'اسم الثوب ونوعه التجاري (المقترح في الوثيقة):' : 'Tissu commercial recommandé :'}
+                            </label>
+                            <input
+                              type="text"
+                              value={art.fabricCommercial}
+                              onChange={e => handleUpdateArticle(art.id, 'fabricCommercial', e.target.value)}
+                              placeholder="Ex: Molleton Coton 100% Gratté 320g"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 font-medium"
+                            />
+                          </div>
+
+                          {/* Sourcing Market (فين نشريها) */}
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-[9px] font-black text-indigo-300 uppercase flex items-center gap-1">
+                                <Store className="w-3 h-3 text-indigo-400" />
+                                <span>{isAr ? 'سوق الشراء بالجملة (فين نشريها):' : 'Marché de sourcing gros (Où acheter) :'}</span>
+                              </label>
+                              <span className="text-[8px] text-slate-500">{isAr ? 'اضغط لاختيار سوق سريع' : 'Presets rapides'}</span>
+                            </div>
+                            <input
+                              type="text"
+                              value={art.marcheSourcing}
+                              onChange={e => handleUpdateArticle(art.id, 'marcheSourcing', e.target.value)}
+                              placeholder="Ex: درب عمر (سوق المسيرة)، سوق القريعة، الدار البيضاء"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-indigo-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-medium"
+                            />
+                            {/* Market quick chips */}
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {MOROCCAN_MARKETS.map((m, mIdx) => (
+                                <button
+                                  key={mIdx}
+                                  type="button"
+                                  onClick={() => handleUpdateArticle(art.id, 'marcheSourcing', isAr ? m.ar : m.fr)}
+                                  className="text-[9px] px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-indigo-300 rounded-md border border-slate-800 transition-colors"
+                                >
+                                  {isAr ? m.ar.split('(')[0] : m.fr.split('(')[0]}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Raw Materials Calculation Grid: Métrage, Prix Tissu, Fournitures, Façon */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 bg-slate-900/90 rounded-xl border border-slate-800">
+                            <div>
+                              <label className="block text-[8px] font-black text-slate-400 uppercase mb-0.5">
+                                {isAr ? 'استهلاك الثوب (m)' : 'Métrage (m)'}
+                              </label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                value={art.tissuMetrage}
+                                onChange={e => handleUpdateArticle(art.id, 'tissuMetrage', parseFloat(e.target.value) || 0)}
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-center text-white font-mono font-black focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[8px] font-black text-amber-400 uppercase mb-0.5">
+                                {isAr ? 'ثمن الثوب/متر (DH)' : 'Prix/m Tissu'}
+                              </label>
+                              <input
+                                type="number"
+                                value={art.tissuPrixMetre}
+                                onChange={e => handleUpdateArticle(art.id, 'tissuPrixMetre', parseFloat(e.target.value) || 0)}
+                                className="w-full bg-slate-950 border border-amber-900/60 rounded-lg px-2 py-1 text-xs text-center text-amber-400 font-mono font-black focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[8px] font-black text-slate-400 uppercase mb-0.5">
+                                {isAr ? 'اللوازم والإكسسوار (DH)' : 'Fournitures (DH)'}
+                              </label>
+                              <input
+                                type="number"
+                                value={art.coutFournitures}
+                                onChange={e => handleUpdateArticle(art.id, 'coutFournitures', parseFloat(e.target.value) || 0)}
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-center text-white font-mono font-black focus:outline-none focus:border-indigo-500"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[8px] font-black text-slate-400 uppercase mb-0.5">
+                                {isAr ? 'الصنعة والخياطة (DH)' : 'Façon Atelier (DH)'}
+                              </label>
+                              <input
+                                type="number"
+                                value={art.coutFacon}
+                                onChange={e => handleUpdateArticle(art.id, 'coutFacon', parseFloat(e.target.value) || 0)}
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-center text-white font-mono font-black focus:outline-none focus:border-indigo-500"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Accessories details text field */}
+                          <div>
+                            <label className="block text-[8px] font-black text-slate-500 uppercase mb-0.5">
+                              {isAr ? 'تفاصيل اللوازم (سنسلة، خيط، لاستيك، كوردون، إتيكيت...):' : 'Détail des accessoires & fournitures :'}
+                            </label>
+                            <input
+                              type="text"
+                              value={art.detailsFournitures || ''}
+                              onChange={e => handleUpdateArticle(art.id, 'detailsFournitures', e.target.value)}
+                              placeholder="Ex: Zip métal 70cm + fil polyester + étiquette tissée"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-slate-700"
+                            />
+                          </div>
+
+                          {/* Commercial Pricing row: Quantity, Selling Price, Total & Net Margin */}
+                          <div className="grid grid-cols-4 gap-2 pt-1 border-t border-slate-800/80">
+                            <div>
+                              <label className="block text-[8px] font-black text-slate-400 uppercase mb-0.5">
+                                {isAr ? 'الكمية' : 'Quantité'}
+                              </label>
+                              <input
+                                type="number"
+                                value={art.quantity}
+                                onChange={e => handleUpdateArticle(art.id, 'quantity', Number(e.target.value) || 0)}
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-center text-white font-black focus:outline-none focus:border-indigo-500"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[8px] font-black text-rose-400 uppercase mb-0.5">
+                                {isAr ? 'كلفة البياسة (L\'Oco)' : 'Coût Revient'}
+                              </label>
+                              <div className="bg-rose-950/40 border border-rose-900/60 rounded-lg px-2 py-1 text-xs text-center text-rose-400 font-mono font-black">
+                                {art.coutRevientTotal} DH
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[8px] font-black text-emerald-400 uppercase mb-0.5">
+                                {isAr ? 'ثمن البيع (DH)' : 'Prix Vente (DH)'}
+                              </label>
+                              <input
+                                type="number"
+                                value={art.unitPrice}
+                                onChange={e => handleUpdateArticle(art.id, 'unitPrice', Number(e.target.value) || 0)}
+                                className="w-full bg-slate-900 border border-emerald-900/60 rounded-lg px-2 py-1 text-xs text-center text-emerald-400 font-black focus:outline-none focus:border-emerald-500 font-mono"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[8px] font-black text-emerald-400 uppercase mb-0.5">
+                                {isAr ? 'الربح في البياسة' : 'Marge / pc'}
+                              </label>
+                              <div className="bg-emerald-950/40 border border-emerald-900/60 rounded-lg px-2 py-1 text-xs text-center text-emerald-400 font-mono font-black">
+                                +{margeUnit} DH
+                              </div>
+                            </div>
+                          </div>
+
+                        </div>
+                      )}
+
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -638,41 +912,54 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
             <div className="w-full max-w-2xl mb-4 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl flex items-center justify-between gap-1 shadow-lg">
               <button
                 type="button"
+                onClick={() => setDocMode('chiffrage')}
+                className={`flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                  docMode === 'chiffrage'
+                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <DollarSign className="w-3.5 h-3.5" />
+                <span>{isAr ? '1. كلفة السلعة والتوريد' : '1. Chiffrage Sourcing'}</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setDocMode('devis')}
-                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
                   docMode === 'devis'
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>{isAr ? '1. ورقة الدوڤي المالي فقط (Page 1)' : '1. Devis Chiffré Seul (Page 1)'}</span>
+                <span>{isAr ? '2. دوڤي البيع للزبون' : '2. Devis Client'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setDocMode('fiche')}
-                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
                   docMode === 'fiche'
                     ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
                 <Ruler className="w-3.5 h-3.5" />
-                <span>{isAr ? '2. ورقة المقاسات فقط (Page 2)' : '2. Fiche Tailles Seule (Page 2)'}</span>
+                <span>{isAr ? '3. المقاسات' : '3. Tailles'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setDocMode('both')}
-                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
                   docMode === 'both'
                     ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>{isAr ? '3. الملف الكامل (صفحتين A4)' : '3. Dossier Complet (2 Pages)'}</span>
+                <span>{isAr ? '4. الملف الشامل' : '4. Dossier Complet'}</span>
               </button>
             </div>
 
@@ -683,10 +970,220 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
             >
               
               {/* ══════════════════════════════════════════════════════════════
-                  PAGE 1: LE DEVIS COMMERCIAL & ESTIMATIF PUR (1 PAGE PRO)
+                  PAGE SOURCING & CHIFFRAGE: DÉTAILS SL3A, FIN NCHRIHA, LOCO
+                  ══════════════════════════════════════════════════════════════ */}
+              {(docMode === 'chiffrage' || docMode === 'both') && (
+                <div className="bg-white text-slate-900 rounded-xl shadow-2xl p-6 sm:p-8 w-full border border-slate-200" style={{ minHeight: '800px' }}>
+                  
+                  {/* Document Header */}
+                  <div className="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-5">
+                    <div>
+                      {(company.logoInvoice || company.logoUrl) ? (
+                        <img src={company.logoInvoice || company.logoUrl} alt={company.name} className="h-10 object-contain mb-2" />
+                      ) : (
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center font-black text-sm">
+                            B
+                          </div>
+                          <span className="text-base font-black tracking-tight text-slate-900 uppercase">
+                            {company.name || 'BEYA ATELIER'}
+                          </span>
+                        </div>
+                      )}
+                      <p className="text-[11px] font-bold text-slate-600">{company.subtitle || 'Atelier de Modélisme & Confection Textile'}</p>
+                      <p className="text-[10px] text-slate-500">{company.address || 'Casablanca, Maroc'}</p>
+                      <p className="text-[10px] text-slate-500">Tél: {company.phone || '0661000000'} | {company.email || 'contact@beya.ma'}</p>
+                      {(company.ice || company.rc) && (
+                        <p className="text-[9px] text-slate-400 font-mono mt-0.5">
+                          {company.ice ? `ICE: ${company.ice}` : ''} {company.rc ? `| RC: ${company.rc}` : ''}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="text-right">
+                      <span className="inline-block px-3 py-1 bg-amber-600 text-white text-[10px] font-black rounded-md tracking-wider uppercase mb-2">
+                        {isAr ? 'كلفة السلعة وتفاصيل التوريد' : 'FICHE CHIFFRAGE & SOURCING'}
+                      </span>
+                      <div className="text-sm font-black text-slate-900 font-mono">SOURC-{devisRef}</div>
+                      <div className="text-[10px] text-slate-500 mt-1">Date: {devisDate}</div>
+                      <div className="text-[10px] text-amber-700 font-bold">{totalPiecesCount} pièces commandées</div>
+                    </div>
+                  </div>
+
+                  {/* Model & Recommendation Showcase */}
+                  <div className="flex gap-4 p-3.5 bg-amber-50/60 rounded-xl border border-amber-200 mb-5 items-center">
+                    {modelImage && (
+                      <div className="w-20 h-24 rounded-lg overflow-hidden border border-amber-300 flex-shrink-0 bg-white relative shadow-xs">
+                        <img src={modelImage} alt="Modèle" className="w-full h-full object-cover" />
+                        <div className="absolute top-1 left-1 bg-slate-900/80 text-white text-[7px] font-black px-1 py-0.2 rounded">
+                          RÉF
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex-1 text-left">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-black uppercase text-amber-800 tracking-wider">
+                          Étude Technique des Matières & Sourcing Maroc
+                        </span>
+                        <span className="text-[9px] font-mono font-bold text-slate-500">
+                          {articles.length} pièce(s)
+                        </span>
+                      </div>
+                      <h3 className="text-xs font-black text-slate-900 uppercase mt-0.5">
+                        {analysisResult?.category || 'Modèle Référence Confection'}
+                      </h3>
+                      <p className="text-[10px] text-slate-700 mt-1 leading-relaxed">
+                        <strong>Tissu Recommandé :</strong> {articles.map(a => a.tissuNom || a.fabricCommercial).join(' + ')}
+                      </p>
+                      {articles[0]?.fabricPros && (
+                        <p className="text-[9px] text-emerald-800 mt-1">
+                          ✓ <strong>Avantages :</strong> {articles[0].fabricPros}
+                        </p>
+                      )}
+                      {articles[0]?.fabricCons && (
+                        <p className="text-[9px] text-amber-800 mt-0.5">
+                          ⚠ <strong>Recommandation coupe :</strong> {articles[0].fabricCons}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* GRANULAR RAW MATERIALS & SOURCING TABLE */}
+                  <div className="mb-5 overflow-hidden rounded-xl border border-slate-200 shadow-xs">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-900 text-white text-[8px] uppercase tracking-wider">
+                          <th className="py-2 px-2 font-black">#</th>
+                          <th className="py-2 px-2 font-black">Article & Matière</th>
+                          <th className="py-2 px-2 font-black">Marché Gros (فين نشريها)</th>
+                          <th className="py-2 px-1.5 font-black text-center">Métrage</th>
+                          <th className="py-2 px-1.5 font-black text-center">Prix/m</th>
+                          <th className="py-2 px-1.5 font-black text-right">Tissu</th>
+                          <th className="py-2 px-1.5 font-black text-right">Fourn.</th>
+                          <th className="py-2 px-1.5 font-black text-right">Façon</th>
+                          <th className="py-2 px-2 font-black text-right bg-rose-950 text-rose-200">L'Oco</th>
+                          <th className="py-2 px-2 font-black text-right">P. Vente</th>
+                          <th className="py-2 px-2 font-black text-right text-emerald-400">Marge</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 text-[9px]">
+                        {articles.map((art, idx) => {
+                          const coutTissuPiece = Math.round((art.tissuMetrage || 0) * (art.tissuPrixMetre || 0));
+                          const margeUnit = (art.unitPrice || 0) - (art.coutRevientTotal || 0);
+
+                          return (
+                            <tr key={art.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
+                              <td className="py-2 px-2 font-bold text-slate-400">{idx + 1}</td>
+                              <td className="py-2 px-2 font-black text-slate-900">
+                                <div>{art.name}</div>
+                                <div className="text-[8px] text-slate-500 font-normal">{art.fabricCommercial}</div>
+                              </td>
+                              <td className="py-2 px-2 text-indigo-700 font-medium max-w-[140px] truncate" title={art.marcheSourcing}>
+                                {art.marcheSourcing || 'Derb Omar, Casablanca'}
+                              </td>
+                              <td className="py-2 px-1.5 text-center font-mono font-bold text-slate-700">{art.tissuMetrage}m</td>
+                              <td className="py-2 px-1.5 text-center font-mono font-bold text-amber-700">{art.tissuPrixMetre} DH</td>
+                              <td className="py-2 px-1.5 text-right font-mono text-slate-700">{coutTissuPiece} DH</td>
+                              <td className="py-2 px-1.5 text-right font-mono text-slate-600">{art.coutFournitures} DH</td>
+                              <td className="py-2 px-1.5 text-right font-mono text-slate-600">{art.coutFacon} DH</td>
+                              <td className="py-2 px-2 text-right font-mono font-black text-rose-700 bg-rose-50">
+                                {art.coutRevientTotal} DH
+                              </td>
+                              <td className="py-2 px-2 text-right font-mono font-bold text-slate-900">
+                                {art.unitPrice} DH
+                              </td>
+                              <td className="py-2 px-2 text-right font-mono font-black text-emerald-700 bg-emerald-50/50">
+                                +{margeUnit} DH
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Financial Breakdown Cards For Total Batch */}
+                  <div className="grid grid-cols-4 gap-2 mb-5">
+                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                      <span className="text-[8px] font-bold text-slate-400 uppercase block">Total Tissus Gros</span>
+                      <span className="text-xs font-black font-mono text-slate-800">{totalCoutTissus.toLocaleString()} DH</span>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                      <span className="text-[8px] font-bold text-slate-400 uppercase block">Total Fournitures</span>
+                      <span className="text-xs font-black font-mono text-slate-800">{totalCoutFournitures.toLocaleString()} DH</span>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                      <span className="text-[8px] font-bold text-slate-400 uppercase block">Total Façon Atelier</span>
+                      <span className="text-xs font-black font-mono text-slate-800">{totalCoutFacon.toLocaleString()} DH</span>
+                    </div>
+
+                    <div className="p-2.5 bg-rose-50 rounded-xl border border-rose-200 text-center">
+                      <span className="text-[8px] font-bold text-rose-600 uppercase block">Total Coût Fabrication</span>
+                      <span className="text-xs font-black font-mono text-rose-700">{totalCoutRevientGlobal.toLocaleString()} DH</span>
+                    </div>
+                  </div>
+
+                  {/* Totals & Net Profit Summary Banner */}
+                  <div className="p-3 bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-xl mb-5 flex justify-between items-center">
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider text-indigo-300 font-bold">
+                        Bilan Financier & Rentabilité Estimée :
+                      </div>
+                      <div className="text-xs text-slate-300 mt-0.5">
+                        Chiffre d'Affaires : <strong>{totalHT.toLocaleString()} MAD</strong> | Coût Revient : <strong>{totalCoutRevientGlobal.toLocaleString()} MAD</strong>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-[9px] uppercase tracking-wider text-emerald-400 font-black">
+                        Bénéfice Brut Prévisionnel :
+                      </div>
+                      <div className="text-base font-black text-emerald-400 font-mono">
+                        +{totalBeneficeBrut.toLocaleString()} MAD ({margeGlobalePct}%)
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Moroccan Wholesale Sourcing Practical Guide Notes */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 mb-5 space-y-1 text-[9px] text-slate-600 leading-relaxed">
+                    <div className="font-bold text-slate-800 mb-0.5">💡 Recommandations Achat & Sourcing Maroc :</div>
+                    <div>• <strong>Marché de référence :</strong> درب عمر (سوق المسيرة) وسوق القريعة بالدار البيضاء توفر أفضل أسعار الجملة للرولو الكامل (Rouleau).</div>
+                    <div>• <strong>عرض الثوب (Laize) :</strong> تأكد من عرض الثوب (1.50m أو 1.80m) لضبط استهلاك الباترون بدقة قبل القص.</div>
+                    <div>• <strong>اختبار الغسيل (Rétrécissement) :</strong> ينصح بغسل عينة 10x10 سم من الثوب قبل إطلاق الفصالة للتأكد من نسبة التمدد والانكماش.</div>
+                  </div>
+
+                  {/* Signatures & Seal Box */}
+                  <div className="grid grid-cols-2 gap-8 pt-3 border-t border-slate-200 text-[10px]">
+                    <div className="border border-dashed border-slate-300 rounded-xl p-3 h-20 flex flex-col justify-between">
+                      <span className="font-bold text-slate-500">Responsable Achats & Sourcing :</span>
+                      <span className="text-[8px] text-slate-400 font-mono">Validation Marché & Matières</span>
+                    </div>
+
+                    <div className="border border-dashed border-slate-300 rounded-xl p-3 h-20 flex flex-col justify-between text-right">
+                      <span className="font-bold text-slate-500">Chef de Production Atelier :</span>
+                      <span className="text-[8px] text-slate-400">Date & Bon pour Lancement</span>
+                    </div>
+                  </div>
+
+                  {/* Footer Note */}
+                  <div className="mt-5 pt-2 border-t border-slate-100 flex justify-between text-[8px] text-slate-400">
+                    <span>Fiche Interne de Chiffrage & Sourcing Matières · BEYA TACTICAL HUD ERP</span>
+                    <span>Document Confidentiel Atelier</span>
+                  </div>
+
+                </div>
+              )}
+
+              {/* ══════════════════════════════════════════════════════════════
+                  PAGE 1: LE DEVIS COMMERCIAL & ESTIMATIF PUR (POUR LE CLIENT)
                   ══════════════════════════════════════════════════════════════ */}
               {(docMode === 'devis' || docMode === 'both') && (
-                <div className="bg-white text-slate-900 rounded-xl shadow-2xl p-6 sm:p-8 w-full border border-slate-200" style={{ minHeight: '800px' }}>
+                <div 
+                  className="bg-white text-slate-900 rounded-xl shadow-2xl p-6 sm:p-8 w-full border border-slate-200" 
+                  style={{ minHeight: '800px', pageBreakBefore: docMode === 'both' ? 'always' : 'auto' }}
+                >
                   {/* Document Header */}
                   <div className="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-5">
                     <div>
@@ -769,7 +1266,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
                     </div>
                   )}
 
-                  {/* Items Quotation Table */}
+                  {/* Items Quotation Table (Commercial only: clean, no secret costs) */}
                   <div className="mb-5 overflow-hidden rounded-xl border border-slate-200">
                     <table className="w-full text-left border-collapse">
                       <thead>
@@ -849,7 +1346,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
                   {/* Footer Note */}
                   <div className="mt-6 pt-3 border-t border-slate-100 flex justify-between text-[8px] text-slate-400">
                     <span>Document officiel de chiffrage commercial · BEYA TACTICAL HUD ERP</span>
-                    <span>Page 1/1</span>
+                    <span>Page {docMode === 'both' ? '2/3' : '1/1'}</span>
                   </div>
                 </div>
               )}
@@ -1014,7 +1511,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
                   {/* Footer Note */}
                   <div className="mt-6 pt-3 border-t border-slate-100 flex justify-between text-[8px] text-slate-400">
                     <span>Fiche Technique & Barème Tailles · BEYA TACTICAL HUD ERP</span>
-                    <span>Page {docMode === 'both' ? '2/2' : '1/1'}</span>
+                    <span>Page {docMode === 'both' ? '3/3' : '1/1'}</span>
                   </div>
                 </div>
               )}
