@@ -339,9 +339,25 @@ function AppContent() {
     setRecoveryError('');
     
     try {
-      // 1. Mettre à jour dans Supabase Auth
-      const { data: updateData, error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      // 1. Mettre à jour dans Supabase Auth (avec réessai automatique si conflit)
+      let updateData: any = null;
+      let lastError: any = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const res = await supabase.auth.updateUser({ password: newPassword });
+        if (!res.error) {
+          updateData = res.data;
+          lastError = null;
+          break;
+        }
+        lastError = res.error;
+        const msg = String(res.error.message || '').toLowerCase();
+        if (msg.includes('lock') || msg.includes('stole') || msg.includes('abort') || msg.includes('network')) {
+          await new Promise(r => setTimeout(r, 350 * attempt));
+          continue;
+        }
+        break;
+      }
+      if (lastError) throw lastError;
       
       // 2. Récupérer l'email de l'utilisateur
       let userEmail = updateData?.user?.email;
@@ -388,7 +404,14 @@ function AppContent() {
       }, 2200);
     } catch (err: any) {
       console.error('Password update error:', err);
-      setRecoveryError(err.message || (isAr ? 'تعذر تحديث كلمة المرور.' : 'Impossible de mettre à jour le mot de passe.'));
+      let errorMsg = err?.message || '';
+      const lower = errorMsg.toLowerCase();
+      if (lower.includes('lock') || lower.includes('stole')) {
+        errorMsg = isAr ? 'حدث تضارب مؤقت في المتصفح. يرجى إعادة المحاولة الآن.' : 'Un conflit temporaire est survenu dans le navigateur. Veuillez réessayer maintenant.';
+      } else if (lower.includes('expired') || lower.includes('invalid') || lower.includes('jwt')) {
+        errorMsg = isAr ? 'انتهت صلاحية الرابط، يرجى طلب رابط استعادة جديد.' : 'Le lien de réinitialisation a expiré, veuillez demander un nouveau lien.';
+      }
+      setRecoveryError(errorMsg || (isAr ? 'تعذر تحديث كلمة المرور.' : 'Impossible de mettre à jour le mot de passe.'));
     } finally {
       setIsUpdatingPassword(false);
     }
