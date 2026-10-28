@@ -76,7 +76,8 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
   ]
 };
 
-export { FABRIC_CATALOG, getFabricInfo } from '../lib/fabricCatalog';
+import { FABRIC_CATALOG, getFabricInfo } from '../lib/fabricCatalog';
+export { FABRIC_CATALOG, getFabricInfo };
 export type { FabricInfo } from '../lib/fabricCatalog';
 
 // Keeps only the fabric consumption for a single 1.50m laize (drops any "Laize 1.50m: X | Laize 1.80m: Y" style label/alt-width text the AI may still return)
