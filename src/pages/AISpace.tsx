@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown, ArrowUpDown, Plus, GripVertical, ClipboardPaste, ClipboardCopy } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown, ArrowUpDown, Plus, GripVertical, ClipboardPaste, ClipboardCopy, SlidersHorizontal } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
