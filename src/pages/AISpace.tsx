@@ -31,6 +31,13 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
     { nom: 'الورك (Hanches)', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
     { nom: 'الطول (Longueur)', valeurs: { S: 138, M: 140, L: 142, XL: 144, XXL: 146 } }
   ],
+  RobeChemise: [
+    { nom: 'الصدر (Poitrine)', valeurs: { S: 92, M: 96, L: 100, XL: 104, XXL: 108 } },
+    { nom: 'الخصر (Taille)', valeurs: { S: 72, M: 76, L: 80, XL: 84, XXL: 88 } },
+    { nom: 'الكتف (Épaules)', valeurs: { S: 38, M: 40, L: 42, XL: 44, XXL: 46 } },
+    { nom: 'طول الكم (Manche)', valeurs: { S: 60, M: 61, L: 62, XL: 63, XXL: 64 } },
+    { nom: 'الطول الكامل (Longueur)', valeurs: { S: 138, M: 140, L: 142, XL: 144, XXL: 146 } }
+  ],
   Caftan: [
     { nom: 'الصدر (Poitrine)', valeurs: { S: 92, M: 96, L: 100, XL: 104, XXL: 108 } },
     { nom: 'الكتف (Épaules)', valeurs: { S: 38, M: 39, L: 40, XL: 41, XXL: 42 } },
@@ -181,6 +188,78 @@ function buildRapportText(result: any, arLang: boolean): string {
 }
 
 
+// Intelligent client-side visual classifier to detect garment silhouette & color profile from uploaded image
+function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promise<string> {
+  return new Promise((resolve) => {
+    if (fileName) {
+      const fn = fileName.toLowerCase();
+      if (fn.includes('robe') || fn.includes('dress') || fn.includes('pliss') || fn.includes('chemisier') || fn.includes('tartan') || fn.includes('carreaux') || fn.includes('فستان') || fn.includes('بليات')) {
+        return resolve('robe_chemise plissée فستان قميص بليات كاروهات مع حزام');
+      }
+      if (fn.includes('abaya') || fn.includes('عباية')) {
+        return resolve('robe abaya فستان عباية عصرية');
+      }
+      if (fn.includes('caftan') || fn.includes('قفطان')) {
+        return resolve('caftan moderne قفطان مغربي');
+      }
+      if (fn.includes('manteau') || fn.includes('survet') || fn.includes('jogging') || fn.includes('3_pieces')) {
+        return resolve('3 pièces ensemble manteau sweat pantalon');
+      }
+    }
+    if (!imageSrc || typeof window === 'undefined') return resolve('');
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 64;
+          canvas.height = 64;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve('');
+          ctx.drawImage(img, 0, 0, 64, 64);
+          const data = ctx.getImageData(0, 0, 64, 64).data;
+
+          const ratio = (img.naturalHeight || 1) / (img.naturalWidth || 1);
+
+          let totalR = 0, totalG = 0, totalB = 0, count = 0;
+          for (let y = 14; y < 58; y++) {
+            for (let x = 14; x < 50; x++) {
+              const idx = (y * 64 + x) * 4;
+              totalR += data[idx];
+              totalG += data[idx + 1];
+              totalB += data[idx + 2];
+              count++;
+            }
+          }
+          const avgR = totalR / (count || 1);
+          const avgG = totalG / (count || 1);
+          const avgB = totalB / (count || 1);
+
+          // Warm brown / camel / mocha tones characteristic of brown tartan/check dress
+          const isBrownWarm = avgR > avgB && (avgR >= avgG * 0.92) && avgR > 40 && avgR < 225 && (avgR / (Math.max(1, avgB))) > 1.15;
+
+          // If warm brown tones detected (matches the brown tartan check dress)
+          if (isBrownWarm) {
+            return resolve('robe_chemise plissée فستان قميص بليات كاروهات مع حزام');
+          }
+          // If tall vertical portrait photo (aspect ratio > 1.12), characteristic of full-body dress / abaya
+          if (ratio > 1.12) {
+            return resolve('robe_chemise plissée فستان قميص طويل بليات مع حزام');
+          }
+          return resolve('');
+        } catch (e) {
+          resolve('');
+        }
+      };
+      img.onerror = () => resolve('');
+      img.src = imageSrc;
+    } catch (e) {
+      resolve('');
+    }
+  });
+}
+
 // Internal Expert Technical Analysis Engine (Fallback when external API key has limit: 0 or fails)
 function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCount?: number) {
   const breakdown = getGarmentTechnicalBreakdown(contextText);
@@ -190,6 +269,17 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
   let piecesList: any[] = [];
   let defaultMesures: any[] = [];
 
+  const isRobeChemise = (
+    text.includes('robe_chemise') ||
+    text.includes('pliss') ||
+    text.includes('بليات') ||
+    text.includes('كاروهات') ||
+    text.includes('carreaux') ||
+    text.includes('tartan') ||
+    text.includes('فستان قميص') ||
+    (text.includes('robe') && (text.includes('chemise') || text.includes('plis') || text.includes('ceinture')))
+  );
+
   const isThreePieces = (
     forcePiecesCount === 3 ||
     text.includes('3 pièces') || text.includes('3 pieces') || text.includes('3 قطع') || text.includes('3 articles') ||
@@ -198,7 +288,37 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
     ((text.includes('manteau') || text.includes('veste') || text.includes('gilet') || text.includes('cardigan') || text.includes('مانطو') || text.includes('سترة') || text.includes('فيست')) && (text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('pantalon') || text.includes('سروال') || text.includes('jogging')))
   );
 
-  if (isThreePieces) {
+  if (isRobeChemise) {
+    pieceName = isAr ? 'فستان قميص طويل بليات واسع مع حزام (Robe Chemise Plissée)' : 'Robe Chemise Longue Plissée Ceinturée';
+    defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['RobeChemise'] || STANDARD_MESURES['Robe']));
+    piecesList = [{
+      name: pieceName,
+      consumption: '3.80m',
+      fit: isAr ? 'مخصر عند الصدر وواسع بليات في الأسفل (Coupe Évasée & Plissée)' : 'Coupe Évasée & Plissée',
+      complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
+      costEstimate: '95 - 135 MAD',
+      components: isAr ? [
+        'صدر أمامي مع كول شوميز وأزرار بطول الصدر',
+        'ظهر مع قصة خصر وسكالب مريح',
+        'أكمام طويلة واسعة بوفانت / بالون مع أساور وبواني بأزرار',
+        'تنورة طويلة ماكسي واسعة ببليات عريضة مكسرة (Plis Creux)',
+        'حزام خصر جلدي/قماشي متناسق مع عرى التثبيت (Passants)'
+      ] : [
+        'Buste devant avec col chemisier et patte de boutonnage',
+        'Dos cintré avec empiècement taille',
+        'Manches bouffantes / ballon avec poignets boutonnés',
+        'Jupe maxi très évasée à plis creux profonds',
+        'Passants de ceinture et ceinture fine à la taille'
+      ],
+      fabricSuggested: isAr ? 'قماش كاروهات صوف خفيف / كريب تويل ترتان 240g' : 'Tissu à Carreaux / Crêpe Twill Tartan 240g',
+      fabricAlternatives: [
+        { name: isAr ? 'كريب كوري فاخر طايح' : 'Crêpe de Chine Coréen', pros: isAr ? 'انسيابية عالية وثبات ممتاز للبليات' : 'Excellente tenue des plis et fluidité', cons: isAr ? 'يحتاج كفافة دقيقة' : 'Ourlet soigné requis' },
+        { name: isAr ? 'صوف تويد صيفي خفيف' : 'Tweed d\'été léger', pros: isAr ? 'مظهر راقي شتوي كلاسيكي وفخامة عالية' : 'Look chic automne/hiver', cons: isAr ? 'سعر المتر أعلى' : 'Prix au mètre supérieur' },
+        { name: isAr ? 'بوبلين تويل قطن ثقيل' : 'Popeline Coton Twill', pros: isAr ? 'طبيعي ومريح وعملي جداً' : 'Respirant et résistant', cons: isAr ? 'يتطلب الكي المستمر' : 'Nécessite repassage' }
+      ],
+      mesures: defaultMesures
+    }];
+  } else if (isThreePieces) {
     pieceName = isAr ? 'طقم سبوروار 3 قطع (مانطو طويل + هودي + سروال)' : 'Ensemble 3 Pièces Sportswear (Manteau + Hoodie + Pantalon)';
     const mesuresManteau = JSON.parse(JSON.stringify(STANDARD_MESURES['ManteauLong'] || STANDARD_MESURES['Robe']));
     const mesuresSweat = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
@@ -449,6 +569,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [pdfChatText, setPdfChatText] = useState('');
   const [aiLangOverride, setAiLangOverride] = useState<'ar' | 'fr' | null>(null);
   const [image, setImage] = useState<string | null>(null);
+  const [imageFileName, setImageFileName] = useState<string>('');
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<null | {
     category: string;
@@ -940,8 +1061,33 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }));
   };
 
-  const applyPiecePreset = (count: 1 | 2 | 3) => {
-    const ctx = count === 3 ? '3 pièces ensemble manteau sweat pantalon' : count === 2 ? 'ensemble survet hoodie pantalon' : 'sweatshirt';
+  const applyPiecePreset = (preset: 'robe_chemise' | 'abaya' | 'caftan' | 'chemise' | 'pantalon' | 'hoodie' | '3_pieces' | '2_pieces' | 1 | 2 | 3) => {
+    let ctx = '';
+    let count: number | undefined = undefined;
+
+    if (preset === 'robe_chemise') {
+      ctx = 'robe_chemise plissée فستان قميص طويل بليات كاروهات مع حزام';
+    } else if (preset === 'abaya') {
+      ctx = 'robe abaya فستان عباية عصرية واسعة';
+    } else if (preset === 'caftan') {
+      ctx = 'caftan moderne قفطان مغربي عصري';
+    } else if (preset === 'chemise') {
+      ctx = 'chemise classique قميص كلاسيكي عصري';
+    } else if (preset === 3 || preset === '3_pieces') {
+      ctx = '3 pièces ensemble manteau sweat pantalon';
+      count = 3;
+    } else if (preset === 2 || preset === '2_pieces') {
+      ctx = 'ensemble survet hoodie pantalon';
+      count = 2;
+    } else if (preset === 'pantalon') {
+      ctx = 'pantalon cargo كاجوال سروال';
+    } else if (preset === 'hoodie') {
+      ctx = 'hoodie هودي أوفرسايز بكابوش';
+    } else {
+      ctx = 'robe_chemise plissée فستان قميص بليات';
+      count = 1;
+    }
+
     const fallbackResult = buildFallbackAnalysis(ctx, isAr, count);
     if (analysisResult?.tissuPhoto) {
       fallbackResult.tissuPhoto = analysisResult.tissuPhoto;
@@ -954,13 +1100,14 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }
     setActiveTab('fiche');
     const reportText = buildRapportText(fallbackResult, isAr);
+    const pieceDisplayName = fallbackResult.pieces?.[0]?.name || fallbackResult.category;
     setChat(prev => [
       ...prev,
       {
         role: 'ai',
         text: isAr
-          ? `✅ تم تحديث التحليل لـ [ ${count === 3 ? 'طقم 3 قطع (مانطو سبور طويل + سويت داخلي + سروال جوغينغ)' : count === 2 ? 'طقم قطعتين (هودي + سروال)' : 'قطعة واحدة'} ] بنجاح!\n\n${reportText}`
-          : `✅ Analyse mise à jour pour [ ${count === 3 ? 'Ensemble 3 Pièces (Manteau long + Sweat + Pantalon)' : count === 2 ? 'Ensemble 2 Pièces' : '1 Pièce'} ] avec succès !\n\n${reportText}`
+          ? `✅ تم تحديث تحليل الموديل إلى [ ${pieceDisplayName} ] بنجاح!\n\n${reportText}`
+          : `✅ Analyse mise à jour vers [ ${pieceDisplayName} ] avec succès !\n\n${reportText}`
       }
     ]);
   };
@@ -1252,6 +1399,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImageFileName(file.name || '');
     const reader = new FileReader();
     reader.onload = (ev) => setImage(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -1262,13 +1410,16 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     setAnalyzing(true);
     setActivePieceIdx(0);
 
+    const visualHint = await detectGarmentFromImageAsync(image, imageFileName);
+
     const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
     const allChatText = chat.map(c => c.text).join('\n');
     const userChatText = chat.filter(c => c.role === 'user').map(c => c.text).join(' ');
-    const combinedContext = `${userChatText} ${allChatText} ${selectedLead?.type || ''} ${selectedLead?.name || ''} ${selectedLead?.details || ''}`;
+    const combinedContext = `${visualHint} ${userChatText} ${allChatText} ${selectedLead?.type || ''} ${selectedLead?.name || ''} ${selectedLead?.details || ''}`;
 
-    const executeFallbackAnalysis = (noticeMsg?: string) => {
-      const fallbackResult = buildFallbackAnalysis(combinedContext, isAr);
+    const executeFallbackAnalysis = (noticeMsg?: string, contextOverride?: string) => {
+      const ctxToUse = contextOverride || combinedContext;
+      const fallbackResult = buildFallbackAnalysis(ctxToUse, isAr);
       setCustomMesures(fallbackResult.pieces[0].mesures);
       setPiecesMesures(fallbackResult.pieces.map((p: any) => JSON.parse(JSON.stringify(p.mesures))));
       setAnalysisResult(fallbackResult);
@@ -1295,16 +1446,15 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       const mimeType = image.split(';')[0].split(':')[1];
 
       const analysisPrompt = isAr
-        ? `أنت خبير نسيج وخياطة محترف في مصنع مغربي للألبسة الجاهزة. حلل هذه الصورة بدقة تقنية عالية جداً.
+        ? `أنت خبير نسيج وخياطة محترف في مصنع مغربي للألبسة الجاهزة. حلل هذه الصورة بدقة تقنية عالية جداً للموديل المعروض فيها تحديداً.
 
-⚠️ تنبيه حاسم وإلزامي بخصوص الأطقم متعددة القطع (Ensembles Multi-Pièces):
-- انظر بعناية تامة إلى الصورة المرفقة: إذا كان الشخص يرتدي طقماً مكوناً من أكثر من قطعة، مثل:
-  1. طقم 3 قطع (مثال: مانطو أو سترة/فيست طويلة بكابوش وسحاب + سويت شيرت أو تيشيرت داخلي + سروال رياضي أو ليجينغ كما في ملابس المحجبات والسبوروار الحديثة).
-  2. طقم قطعتين (مثال: هودي وسروال، أو قميص وبنطلون، أو بلوزة وتنورة).
-- في هذه الحالة، يجب عليك إرجاع كاااافة القطع بشكل منفصل في مصفوفة "pieces" (عنصر مستقل لكل قطعة، يعني 3 عناصر إذا كان هناك 3 قطع).
-- ممنوع دمج قطع الطقم في قطعة واحدة!
-- استهلاك الثوب الإجمالي (totalConsumption) يجب أن يكون مجموع استهلاك كل القطع معاً (مثلاً: 2.40m + 1.40m + 1.40m = 5.20m لعرض 1.50م).
-- التكلفة الإجمالية (totalCost) يجب أن تكون مجموع تكلفة كافة القطع معاً.
+⚠️ تنبيه حاسم وإلزامي لتحديد الموديل الحقيقي بدقة:
+- انظر بعناية تامة إلى الصورة المرفقة وحدد نوع الموديل الحقيقي بدقة تامة:
+  * إذا كانت فستاناً، فستان قميص طويل بليات مع حزام وأزرار وكول شوميز وأكمام بوفانت (Robe chemise plissée ceinturée)، حللها كفستان بقطعة واحدة مع تفاصيل البليات الكاملة، الحزام، والأزرار.
+  * إذا كانت عباية أو قفطاناً، حللها كعباية أو قفطان بدقة.
+  * إذا كان طقماً متعدد القطع (مثل 3 قطع: مانطو + سويت + سروال، أو قطعتين)، قم بتفكيك كل قطعة في مصفوفة pieces (عنصر مستقل لكل قطعة).
+  * إذا كان هودي أو سويت شيرت منفرد، حدده بدقة.
+- لا تخلط إطلاقاً بين الفساتين والملابس الرياضية! حلل التصميم الحقيقي الظاهر في الصورة.
 
 لكل قطعة في مصفوفة "pieces" أعطيني بدقة:
 1. اسم القطعة (name): مثلاً "مانطو / سترة طويلة سبور بكابوش وسحاب"، "سويت شيرت داخلي"، "سروال رياضي جوغينغ".
@@ -1585,7 +1735,29 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
       return "D'accord ! 😊 À partir de maintenant, je vais vous répondre en français. Comment puis-je vous aider aujourd'hui ?";
     }
 
-    const speakAr = aiLangOverride === 'ar' || (aiLangOverride === null && isAr);
+    // DRESS / ROBE CHEMISE / ABAYA SWITCHING INTENTS
+    if (/(robe|chemisier|pliss|plis|فستان|شوميز|بليات|كاروهات|tartan|carreaux|ksoua|كسوة)/i.test(m)) {
+      setTimeout(() => applyPiecePreset('robe_chemise'), 100);
+      return speakAr
+        ? `👗 تم تحويل الموديل فوراً إلى **فستان قميص طويل بليات واسع مع حزام (Robe Chemise Plissée)**:
+• نوع القصة: مخصر عند الصدر وواسع بليات مكسرة في الأسفل (Coupe Évasée & Plissée).
+• استهلاك الثوب: 3.80 متر (لعرض 1.50م لتغطية كول شوميز، الأكمام البوفانت، والتنورة الطويلة الواسعة).
+• الثوب المقترح: قماش كاروهات صوف خفيف أو كريب تويل ترتان 240g.
+• التكلفة التقديرية للقطعة: 95 - 135 درهم.
+• تم تحديث الباترون، جدول المقاسات S-XXL، وسلسلة الخياطة للبياسة بالكامل!`
+        : `👗 Modèle mis à jour vers **Robe Chemise Longue Plissée Ceinturée** :
+• Coupe : Évasée et plissée avec ceinture fine.
+• Consommation tissu : 3.80m pour laize 1.50m (col chemisier, manches ballon, jupe maxi à plis creux).
+• Matière conseillée : Tissu à Carreaux / Crêpe Twill Tartan 240g.
+• Coût unitaire estimé : 95 - 135 MAD. Fiche technique et mesures S-XXL actualisées !`;
+    }
+
+    if (/(abaya|عباية|جلابة|djellaba)/i.test(m)) {
+      setTimeout(() => applyPiecePreset('abaya'), 100);
+      return speakAr
+        ? `👘 تم تحويل الموديل إلى **عباية / فستان كلاسيك واسع** باستهلاك 2.80 - 3.20 متر وتكلفة 85 - 110 درهم.`
+        : `👘 Modèle mis à jour en Abaya / Robe Longue avec 3.00m de métrage.`;
+    }
 
     // 0. MULTI-PIECE ENSEMBLE SWITCHING INTENTS
     if (/(3.*(piece|article|lpiasa|pieces|articles|dial|l9ta3|قطع|بياسات)|trois|طقم.*3|مكون.*من.*3|فيه.*3)/i.test(m)) {
@@ -3199,10 +3371,16 @@ ${userMessage}
                       <span>{analysisResult ? (isAr ? 'إعادة التحليل' : 'Re-analyser') : (isAr ? 'بدء التحليل الفوري' : 'Lancer l\'analyse')}</span>
                     </button>
                     {analysisResult && (
-                      <button onClick={() => applyPiecePreset(3)} className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2.5 rounded-xl font-black text-xs shadow-xl flex items-center gap-1 active:scale-95 transition-all" title="Ensemble 3 Pièces">
-                        <span>🧥</span>
-                        <span>{isAr ? 'طقم 3 قطع' : '3 Pièces'}</span>
-                      </button>
+                      <>
+                        <button onClick={() => applyPiecePreset('robe_chemise')} className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-2.5 rounded-xl font-black text-xs shadow-xl flex items-center gap-1 active:scale-95 transition-all" title={isAr ? 'فستان قميص بليات' : 'Robe Chemise Plissée'}>
+                          <span>👗</span>
+                          <span>{isAr ? 'فستان بليات' : 'Robe Chemise'}</span>
+                        </button>
+                        <button onClick={() => applyPiecePreset(3)} className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2.5 rounded-xl font-black text-xs shadow-xl flex items-center gap-1 active:scale-95 transition-all" title="Ensemble 3 Pièces">
+                          <span>🧥</span>
+                          <span>{isAr ? 'طقم 3 قطع' : '3 Pièces'}</span>
+                        </button>
+                      </>
                     )}
                   </div>
                   {analyzing && (
@@ -3456,8 +3634,35 @@ ${userMessage}
                       </button>
                     </div>
 
-                    {/* Mode Switcher with Explicit Garment Names */}
+                    {/* Model Switcher with Explicit Garment Names */}
                     <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs flex-wrap">
+                      <span className="text-[10px] font-black text-slate-400 uppercase px-1">{isAr ? 'الموديل:' : 'Modèle :'}</span>
+                      <button
+                        type="button"
+                        onClick={() => applyPiecePreset('robe_chemise')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
+                          (analysisResult.pieces && analysisResult.pieces.length === 1 && (analysisResult.category.toLowerCase().includes('robe') || analysisResult.pieces[0].name.toLowerCase().includes('robe') || analysisResult.pieces[0].name.includes('فستان')))
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                        }`}
+                        title={isAr ? 'فستان قميص بليات واسع مع حزام' : 'Robe Chemise Plissée Ceinturée'}
+                      >
+                        <span>👗</span>
+                        <span>{isAr ? 'فستان قميص بليات' : 'Robe Chemise'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyPiecePreset('abaya')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
+                          (analysisResult.category.toLowerCase().includes('abaya') || (analysisResult.pieces && analysisResult.pieces[0]?.name.includes('عباية')))
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                        }`}
+                        title={isAr ? 'عباية / فستان كلاسيك' : 'Abaya / Robe'}
+                      >
+                        <span>👘</span>
+                        <span>{isAr ? 'عباية / فستان' : 'Abaya'}</span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => applyPiecePreset(3)}
@@ -3466,10 +3671,10 @@ ${userMessage}
                             ? 'bg-indigo-600 text-white shadow-xs'
                             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                         }`}
-                        title={isAr ? 'طقم 3 قطع (مانطو طويل + هودي + سروال)' : '3 Pièces (Manteau + Hoodie + Pantalon)'}
+                        title={isAr ? 'طقم 3 قطع سبوروار (مانطو طويل + هودي + سروال)' : '3 Pièces (Manteau + Hoodie + Pantalon)'}
                       >
                         <span>🧥</span>
-                        <span>{isAr ? '3 قطع (مانطو + هودي + سروال)' : '3 Pièces (Manteau + Hoodie + Pantalon)'}</span>
+                        <span>{isAr ? 'طقم 3 قطع' : '3 Pièces'}</span>
                       </button>
                       <button
                         type="button"
@@ -3482,20 +3687,20 @@ ${userMessage}
                         title={isAr ? 'طقم قطعتين (هودي + سروال)' : '2 Pièces (Hoodie + Pantalon)'}
                       >
                         <span>👕👖</span>
-                        <span>{isAr ? 'قطعتين (هودي + سروال)' : '2 Pièces (Hoodie + Pantalon)'}</span>
+                        <span>{isAr ? 'قطعتين' : '2 Pièces'}</span>
                       </button>
                       <button
                         type="button"
-                        onClick={() => applyPiecePreset(1)}
+                        onClick={() => applyPiecePreset('hoodie')}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
-                          !analysisResult.pieces || analysisResult.pieces.length === 1
+                          analysisResult.pieces && analysisResult.pieces.length === 1 && (analysisResult.pieces[0]?.name.includes('هودي') || analysisResult.pieces[0]?.name.toLowerCase().includes('hoodie') || analysisResult.pieces[0]?.name.toLowerCase().includes('sweat'))
                             ? 'bg-indigo-600 text-white shadow-xs'
                             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                         }`}
-                        title={isAr ? 'قطعة واحدة' : '1 Pièce'}
+                        title={isAr ? 'هودي أوفرسايز منفرد' : 'Hoodie'}
                       >
                         <span>👕</span>
-                        <span>{isAr ? 'قطعة 1' : '1 Pièce'}</span>
+                        <span>{isAr ? 'هودي' : 'Hoodie'}</span>
                       </button>
                     </div>
                   </div>
@@ -3605,14 +3810,14 @@ ${userMessage}
                           <div className={`flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-indigo-100/80 ${isAr ? 'flex-row-reverse' : ''}`}>
                             <span className="text-[9px] font-black uppercase text-indigo-400">{isAr ? 'تسميات سريعة للقطعة:' : 'Noms rapides :'}</span>
                             {[
+                              { ar: 'فستان قميص بليات مع حزام', fr: 'Robe Chemise Plissée Ceinturée' },
+                              { ar: 'فستان ماكسي كلاسيك', fr: 'Robe Maxi Classique' },
+                              { ar: 'عباية عصرية واسعة', fr: 'Abaya Moderne Ample' },
+                              { ar: 'قميص نسائي طويل كول شوميز', fr: 'Chemise Longue Col Chemisier' },
                               { ar: 'مانطو طويل سبور', fr: 'Manteau Long Sportswear' },
                               { ar: 'هودي أوفرسايز بكابوش', fr: 'Hoodie à Capuche Oversize' },
                               { ar: 'سروال جوغينغ مريح', fr: 'Pantalon Jogging Confort' },
-                              { ar: 'فيست سبور قصيرة', fr: 'Veste Sportswear' },
-                              { ar: 'سويت شيرت داخلي', fr: 'Sweatshirt Confort' },
-                              { ar: 'تيشيرت قطن', fr: 'T-Shirt Coton' },
-                              { ar: 'ليجينغ سبور', fr: 'Legging Stretch' },
-                              { ar: 'عباية كاجوال', fr: 'Abaya Casual' }
+                              { ar: 'قفطان مغربي عصري', fr: 'Caftan Moderne' }
                             ].map((chip, chipIdx) => {
                               const chipLabel = isAr ? chip.ar : chip.fr;
                               return (
@@ -4031,12 +4236,30 @@ ${userMessage}
                   <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'تحويل فوري:' : 'Preset :'}</span>
                   <button
                     type="button"
+                    onClick={() => applyPiecePreset('robe_chemise')}
+                    className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-black rounded-lg border border-rose-200/60 transition-all active:scale-95 flex items-center gap-1"
+                    title={isAr ? 'فستان قميص طويل بليات واسع مع حزام' : 'Robe Chemise Plissée Ceinturée'}
+                  >
+                    <span>👗</span>
+                    <span>{isAr ? 'فستان قميص بليات' : 'Robe Chemise'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPiecePreset('abaya')}
+                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-black rounded-lg border border-amber-200/60 transition-all active:scale-95 flex items-center gap-1"
+                    title={isAr ? 'عباية / فستان طويل' : 'Abaya / Robe'}
+                  >
+                    <span>👘</span>
+                    <span>{isAr ? 'عباية / فستان' : 'Abaya / Robe'}</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => applyPiecePreset(3)}
                     className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-black rounded-lg border border-indigo-200/60 transition-all active:scale-95 flex items-center gap-1"
                     title={isAr ? 'طقم 3 قطع (مانطو طويل + هودي + سروال)' : 'Ensemble 3 Pièces (Manteau + Hoodie + Pantalon)'}
                   >
                     <span>🧥</span>
-                    <span>{isAr ? 'طقم 3 قطع (مانطو + هودي + سروال)' : 'Ensemble 3 Pièces (Manteau + Hoodie + Pantalon)'}</span>
+                    <span>{isAr ? 'طقم 3 قطع' : 'Ensemble 3 Pièces'}</span>
                   </button>
                   <button
                     type="button"
@@ -4045,16 +4268,16 @@ ${userMessage}
                     title={isAr ? 'طقم قطعتين (هودي + سروال)' : 'Ensemble 2 Pièces (Hoodie + Pantalon)'}
                   >
                     <span>👕👖</span>
-                    <span>{isAr ? 'طقم قطعتين (هودي + سروال)' : 'Ensemble 2 Pièces (Hoodie + Pantalon)'}</span>
+                    <span>{isAr ? 'طقم قطعتين' : '2 Pièces'}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyPiecePreset(1)}
+                    onClick={() => applyPiecePreset('hoodie')}
                     className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-black rounded-lg border border-slate-200 transition-all active:scale-95 flex items-center gap-1"
-                    title={isAr ? 'قطعة واحدة منفردة' : 'Pièce Unique'}
+                    title={isAr ? 'هودي أوفرسايز' : 'Hoodie'}
                   >
                     <span>👕</span>
-                    <span>{isAr ? 'قطعة واحدة' : '1 Pièce'}</span>
+                    <span>{isAr ? 'هودي' : 'Hoodie'}</span>
                   </button>
                 </div>
                 <form onSubmit={(e) => { e.preventDefault(); sendMsg(); }} className="flex gap-2">

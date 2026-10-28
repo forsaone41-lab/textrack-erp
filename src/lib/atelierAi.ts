@@ -200,6 +200,17 @@ export const getGarmentTechnicalBreakdown = (
       text.includes('ملابس داخلية')
     ) {
       catKey = 'boxer_sous_vetement';
+    } else if (
+      text.includes('robe_chemise') ||
+      text.includes('pliss') ||
+      text.includes('بليات') ||
+      text.includes('كاروهات') ||
+      text.includes('carreaux') ||
+      text.includes('tartan') ||
+      text.includes('فستان قميص') ||
+      (text.includes('robe') && (text.includes('chemise') || text.includes('plis') || text.includes('ceinture')))
+    ) {
+      catKey = 'robe_chemise';
     } else if (text.includes('abaya') || text.includes('caftan') || text.includes('robe') || text.includes('djellaba') || text.includes('عباية') || text.includes('قفطان') || text.includes('جلابة') || text.includes('فستان') || text.includes('تكشيطة')) {
       catKey = 'abaya_beldi';
     } else if (text.includes('chemise') || text.includes('blouse') || text.includes('قميص') || text.includes('شوميز')) {
@@ -220,6 +231,7 @@ export const getGarmentTechnicalBreakdown = (
   }
 
   const consommation = customConsommation || (
+    catKey === 'robe_chemise' ? 3.8 :
     catKey === 'ensemble_3_pieces' ? 5.2 :
     catKey === 'boxer_sous_vetement' ? 0.35 :
     catKey === 'abaya_beldi' ? 3.2 :
@@ -232,6 +244,7 @@ export const getGarmentTechnicalBreakdown = (
   );
 
   const prixMetre = customPrice || (
+    catKey === 'robe_chemise' ? 24.0 :
     catKey === 'ensemble_3_pieces' ? 22.0 :
     catKey === 'boxer_sous_vetement' ? 18.0 :
     catKey === 'abaya_beldi' ? 15.0 :
@@ -249,7 +262,22 @@ export const getGarmentTechnicalBreakdown = (
   let categorieName = '';
   let tissuName = '';
 
-  if (catKey === 'ensemble_3_pieces') {
+  if (catKey === 'robe_chemise') {
+    categorieName = 'فستان قميص طويل بليات واسع مع حزام (Robe Chemise Plissée)';
+    tissuName = 'قماش كاروهات صوف خفيف / كريب تويل ترتان 240g';
+    fournitures = 12.0;
+    postes = [
+      { nomAr: 'فصالة الفستان والأكمام البوفانت بالمطلوة الصناعية', nomFr: 'Coupe Matelas Robe & Manches Bouffantes', machine: 'Table de Coupe / Ciseaux', tempsMin: 1.5, tempsPro: 1.5, tempsStandard: 2.8, tempsDebutant: 4.5, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'لصق الفيزلين لكول شوميز، بوانيات الأكمام ومرد الأزرار', nomFr: 'Thermocollage Col, Poignets & Patte', machine: 'Presse à Thermocoller', tempsMin: 1.0, tempsPro: 1.0, tempsStandard: 1.8, tempsDebutant: 3.0, roleOuvrier: 'مساعد فصالة' },
+      { nomAr: 'تكسير وتثبيت بليات التنورة الواسعة بالمكواة البخارية (Plissage)', nomFr: 'Plissage & Fixation Plis Creux Jupe', machine: 'Presse Plisseuse / Fer Vapeur', tempsMin: 2.8, tempsPro: 2.8, tempsStandard: 4.5, tempsDebutant: 7.0, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'تحضير وخياطة كول شوميز مع مرد الأزرار الأمامي', nomFr: 'Montage Col Chemisier & Patte Boutonnée', machine: 'Piqueuse Plate', tempsMin: 2.5, tempsPro: 2.5, tempsStandard: 4.2, tempsDebutant: 6.5, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع الصدر مع التنورة البليات وتثبيت عرى الحزام (Passants)', nomFr: 'Montage Buste sur Jupe Plissée & Passants', machine: 'Piqueuse Plate', tempsMin: 2.2, tempsPro: 2.2, tempsStandard: 3.8, tempsDebutant: 6.0, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع الأكمام البوفانت مع البوانيات وتركيبها على الكتف', nomFr: 'Montage Manches Ballon avec Poignets', machine: 'Piqueuse Plate / Surjeteuse', tempsMin: 2.4, tempsPro: 2.4, tempsStandard: 4.0, tempsDebutant: 6.5, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'فتح العيون وتركيب الأزرار الكاملة أمامية وبوانيات', nomFr: 'Boutonnières & Pose Boutons Robe', machine: 'Boutonnière / Pose Bouton', tempsMin: 1.6, tempsPro: 1.6, tempsStandard: 2.6, tempsDebutant: 4.0, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'ثني ذيل التنورة الواسعة، كيّ بالبخار كامل وتغليف', nomFr: 'Ourlet Bas Jupe Évasée, Repassage & Pack', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 2.0, tempsPro: 2.0, tempsStandard: 3.5, tempsDebutant: 5.5, roleOuvrier: 'مراقب جودة وتشطيب' }
+    ];
+    recommendation = 'فستان قميص طويل أنيق مع بليات وأكمام بوفانت وحزام. استهلاك الثوب 3.80م لتغطية كول شوميز، وسع التنورة والبليات العريضة.';
+  } else if (catKey === 'ensemble_3_pieces') {
     categorieName = 'طقم سبوروار 3 قطع (مانطو طويل + سويت + سروال)';
     tissuName = 'مولتون قطن مبطن / إنترلوك 280g (Molleton / Interlock)';
     fournitures = 18.0;

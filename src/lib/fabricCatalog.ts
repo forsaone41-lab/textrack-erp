@@ -155,6 +155,19 @@ export const FABRIC_CATALOG: Record<string, FabricInfo> = {
     cons: 'شفاف يحتاج بطانة، حساس جداً للتمزق في الخياطة',
     consFr: 'Transparent, nécessite une doublure, très sensible à la déchirure à la couture',
     avgPricePerMeter: 24
+  },
+  'tartan': {
+    arName: 'قماش كاروهات صوف خفيف / كريب تويل ترتان 240g (Tartan / Carreaux)',
+    frName: 'Tissu à Carreaux / Crêpe Twill Tartan 240g',
+    pricePerMeterMAD: '28 - 48 درهم/متر (جملة)',
+    pricePerMeterMADFr: '28 - 48 MAD/mètre (gros)',
+    markets: 'درب عمر (سوق المسيرة)، سوق القريعة، القيساريات التجارية (الدار البيضاء)',
+    marketsFr: 'Derb Omar (Souk Al Massira), Souk Griaa (Casablanca)',
+    pros: 'ثبات ممتاز للكسرات والبليات (Plis Creux)، مظهر شتوي وخريفي راقي، انسيابية عالية ولا يتجعد بسرعة',
+    prosFr: 'Excellente tenue des plis creux, look chic automne/hiver, grande fluidité et infroissable',
+    cons: 'يتطلب ضبط تطابق الكاروهات (Raccord des Carreaux) في خطوط الفصالة بالمطلوة',
+    consFr: 'Nécessite le raccord minutieux des carreaux lors de la coupe au matelas',
+    avgPricePerMeter: 36
   }
 };
 
@@ -163,6 +176,7 @@ export function getFabricInfo(fabricName: string = ''): FabricInfo {
   for (const key of Object.keys(FABRIC_CATALOG)) {
     if (
       lower.includes(key) ||
+      (key === 'tartan' && (lower.includes('tartan') || lower.includes('carreaux') || lower.includes('كاروهات') || lower.includes('كارو') || lower.includes('ترتان'))) ||
       (key === 'crêpe' && (lower.includes('crepe') || lower.includes('كريب'))) ||
       (key === 'satin' && (lower.includes('satin') || lower.includes('ساتان'))) ||
       (key === 'dentelle' && (lower.includes('dentelle') || lower.includes('lace') || lower.includes('دانتيلا'))) ||
