@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -35,6 +35,7 @@ import CheckoutForm from '../components/CheckoutForm';
 import AuthForm from '../components/AuthForm';
 import { supabase } from '../supabase';
 import { loadData, FicheTechnique } from '../types';
+import StoreNotFoundView from '../components/Store/StoreNotFoundView';
 
 const THEMES = [
   // Normal (free) tier - only these 2 stay unlocked for every store
@@ -992,43 +993,76 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   }, [isLiveStore, storeName, storeLogo, storeFavicon, seoDescription, storeIsAr]);
 
   const [isLoadingLiveConfig, setIsLoadingLiveConfig] = useState(isLiveStore);
+  const [isStoreNotFound, setIsStoreNotFound] = useState(false);
+  const [resolvedDomain, setResolvedDomain] = useState('');
 
   // Fetch from Supabase for live store to handle cross-domain loading
   useEffect(() => {
      const fetchLiveConfig = async () => {
         try {
-           const currentDomain = window.location.hostname;
-           // Fetch the exact domain config first, OR by storeName if provided via url parameter
-           let query = supabase.from('stores').select('config_json');
-           if (storeNameUrl) {
-              query = query.eq('domain', `${storeNameUrl}.beyacreative.com`);
-           } else {
-              query = query.eq('domain', currentDomain);
-           }
-           let { data, error } = await query.single();
+           const rawHostname = (window.location.hostname || '').toLowerCase().trim();
+           const cleanHostname = rawHostname.replace(/^www\./, '');
            
-           // Fallback for SaaS local previews ONLY: if domain not found and NOT a production domain, grab the latest saved store
-           const isCustomProductionDomain = currentDomain !== 'localhost' && !currentDomain.includes('vercel.app') && !currentDomain.includes('127.0.0.1');
-           if (!data && !isCustomProductionDomain) {
-              const fallback = await supabase
-                 .from('stores')
-                 .select('config_json')
-                 .eq('domain', 'latest_saved_store')
-                 .single();
-              
-              if (fallback.data) {
-                  data = fallback.data;
-              } else {
-                  // Final fallback
-                  const lastResort = await supabase
-                     .from('stores')
-                     .select('config_json')
-                     .order('updated_at', { ascending: false })
-                     .limit(1)
-                     .single();
-                  data = lastResort.data;
+           let targetCandidates: string[] = [];
+
+           if (storeNameUrl) {
+              const param = storeNameUrl.toLowerCase().trim();
+              targetCandidates = [
+                 `${param}.beyacreative.com`,
+                 `${param}.gzeed.com`,
+                 param
+              ];
+              setResolvedDomain(`${param}.beyacreative.com`);
+           } else {
+              targetCandidates = [cleanHostname, rawHostname];
+              if (cleanHostname.endsWith('.beyacreative.com')) {
+                 const sub = cleanHostname.replace('.beyacreative.com', '').trim();
+                 if (sub && sub !== 'www' && sub !== 'app' && sub !== 'ecosystem') {
+                    targetCandidates.push(sub);
+                 }
+              } else if (cleanHostname.endsWith('.gzeed.com')) {
+                 const sub = cleanHostname.replace('.gzeed.com', '').trim();
+                 if (sub && sub !== 'www' && sub !== 'app') {
+                    targetCandidates.push(sub);
+                 }
               }
+              setResolvedDomain(rawHostname);
            }
+
+           // Query Supabase strictly for the registered store
+           let { data: storeData } = await supabase
+              .from('stores')
+              .select('id, name, domain, config_json, subscription_tier')
+              .in('domain', targetCandidates)
+              .neq('domain', 'latest_saved_store')
+              .limit(1)
+              .maybeSingle();
+
+           // Case-insensitive fallback if not found directly
+           if (!storeData && targetCandidates.length > 0) {
+              const primarySearch = targetCandidates[0];
+              const { data: fallbackData } = await supabase
+                 .from('stores')
+                 .select('id, name, domain, config_json, subscription_tier')
+                 .ilike('domain', primarySearch)
+                 .neq('domain', 'latest_saved_store')
+                 .limit(1)
+                 .maybeSingle();
+              storeData = fallbackData;
+           }
+
+           if (!storeData || !storeData.config_json) {
+              // Store was NOT created or does not exist in DB!
+              setIsStoreNotFound(true);
+              return;
+           }
+
+           setIsStoreNotFound(false);
+           if (storeData.subscription_tier) {
+              setSubscriptionTier(storeData.subscription_tier);
+           }
+
+           const data = storeData;
            
            if (data && data.config_json) {
               const conf = data.config_json;
@@ -5188,6 +5222,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
              <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
           </div>
        );
+    }
+
+    if (isStoreNotFound) {
+       return <StoreNotFoundView requestedDomain={resolvedDomain || window.location.hostname} />;
     }
 
     if (comingSoonMode) {
