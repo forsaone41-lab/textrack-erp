@@ -765,6 +765,18 @@ export default function SaaSGodModeAdminModal({
                         >
                           +30j
                         </button>
+
+                        {store.domain && (
+                          <a
+                            href={store.domain.startsWith('http') ? store.domain : `https://${store.domain}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`p-2 rounded-lg border text-xs font-bold transition-colors flex items-center justify-center ${c.chipInactive} hover:text-indigo-400`}
+                            title={lang === 'ar' ? 'فتح المتجر في نافذة جديدة' : 'Ouvrir la boutique'}
+                          >
+                            <ArrowUpRight className="w-4 h-4" />
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>
