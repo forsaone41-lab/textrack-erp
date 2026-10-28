@@ -31,9 +31,16 @@ import { useLang } from '../contexts/LangContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 
-export default function GZeedDashboard() {
+export default function GZeedDashboard({ currentUser, onLogout }: { currentUser?: any; onLogout?: () => void }) {
   const { isAr, toggle, lang } = useLang();
   const navigate = useNavigate();
+  const storedUser = (() => {
+    try {
+      const raw = localStorage.getItem('textrack_auth');
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  })();
+  const user = currentUser || storedUser;
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const [themeFilter, setThemeFilter] = useState('all');
@@ -576,8 +583,8 @@ export default function GZeedDashboard() {
             {showUserMenu && (
               <div className="absolute top-12 left-0 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 animate-fade-in z-50">
                 <div className="px-4 py-3 border-b border-slate-100 mb-2">
-                  <p className="text-sm font-bold text-slate-900">Admin</p>
-                  <p className="text-xs font-medium text-slate-500">admin@beyacreative.com</p>
+                  <p className="text-sm font-bold text-slate-900">{user?.nom || user?.name || (lang === 'ar' ? 'مستخدم' : 'Utilisateur')}</p>
+                  <p className="text-xs font-medium text-slate-500 truncate">{user?.email || 'user@beyacreative.com'}</p>
                 </div>
                 <button 
                   onClick={() => {
