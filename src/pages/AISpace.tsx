@@ -3,7 +3,7 @@ import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, R
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile, loadLeadPhoto } from '../types';
+import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch } from '../types';
 import { printElement } from '../utils/pdf';
 import { printRapportIA } from '../utils/print';
 import { PosteTravail, getGarmentTechnicalBreakdown, parseGammeText } from '../lib/atelierAi';
@@ -1275,13 +1275,15 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       // Photos are stripped from the bulk load for performance; fetch them progressively.
       const missing = validLeads.filter(l => !l.photo);
       (async () => {
-        for (let i = 0; i < missing.length; i += 5) {
-          const batch = missing.slice(i, i + 5);
-          const results = await Promise.allSettled(batch.map(l => loadLeadPhoto(l.id).then(photo => ({ id: l.id, photo }))));
+        for (let i = 0; i < missing.length; i += 25) {
+          const batch = missing.slice(i, i + 25);
+          const batchMap = await loadLeadPhotosBatch(batch.map(l => l.id));
           const updates: Record<string, string> = {};
-          results.forEach(r => { if (r.status === 'fulfilled' && r.value.photo) updates[r.value.id] = r.value.photo; });
+          Object.entries(batchMap).forEach(([id, data]) => {
+            if (data.photo) updates[id] = data.photo;
+          });
           if (Object.keys(updates).length > 0) {
-            setLeads(prev => prev.map(l => updates[l.id] ? { ...l, photo: updates[l.id] } : l));
+            setLeads(prev => prev.map(l => updates[l.id] ? { ...l, photo: updates[l.id], photos: batchMap[l.id]?.photos || (updates[l.id] ? [updates[l.id]] : undefined) } : l));
           }
         }
       })();

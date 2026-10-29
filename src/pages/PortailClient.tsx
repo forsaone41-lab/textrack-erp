@@ -1308,7 +1308,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                    </button>
                  </div>
                ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className={`grid gap-6 ${(currentUser?.email === "forsaone41@gmail.com" || currentUser?.role === "admin" || currentUser?.role === "manager") ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"}`}>
                     {trueDemandes.map(d => {
                       const isAccepted = d.crmStage === 'confirme';
                       const isRejected = d.crmStage === 'annule';
@@ -1318,6 +1318,73 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                       const hasCustomSizes = Object.keys(sizes).length > 0;
                       
                       const isTestAccount = currentUser?.email === 'forsaone41@gmail.com' || currentUser?.role === 'admin' || currentUser?.role === 'manager';
+
+                      // For all other clients, keep the standard card until testing is complete
+                      if (!isTestAccount) {
+                        return (
+                          <div key={d.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden group">
+                            <div className="h-48 bg-slate-100 relative overflow-hidden">
+                              {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
+                                <img src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} alt={d.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                              ) : (
+                                <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-50 text-slate-300">
+                                  <Camera className="w-10 h-10" />
+                                  <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
+                                </div>
+                              )}
+                              <div className="absolute top-4 left-4 flex gap-2">
+                                {isAccepted && <span className="px-3 py-1 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
+                                {isRejected && <span className="px-3 py-1 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
+                                {isPending && <span className="px-3 py-1 bg-amber-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'قيد المراجعة ⏳' : 'En attente ⏳'}</span>}
+                              </div>
+                              {isPending && (
+                                <div className={`absolute top-4 right-4 flex flex-col gap-2 z-10`}>
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingDemandeId(d.id);
+                                      let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
+                                      if (d.tailles) {
+                                         (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                      } else if (d.sizes) {
+                                         try {
+                                           const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
+                                           Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                         } catch(e) {}
+                                      }
+                                      setNewOrderForm({
+                                        modele: d.type || '',
+                                        quantite: d.quantity?.toString() || '',
+                                        photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
+                                        details: d.details || '',
+                                        telephone: d.phone || currentUser?.telephone || '',
+                                        tailles: parsedTailles
+                                      });
+                                      setShowNewOrderModal(true);
+                                    }}
+                                    className="w-8 h-8 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                    onClick={(e) => handleDeleteDemande(d.id, e)}
+                                    className="w-8 h-8 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                            <div className="p-6">
+                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">REF: {d.id.substring(0, 8)}</div>
+                              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2 truncate" title={d.type}>{d.type}</h3>
+                              <div className="text-sm font-bold text-slate-500 bg-slate-50 px-4 py-2 rounded-xl inline-block">
+                                {isAr ? 'الكمية:' : 'Quantité :'} <span className="text-indigo-600">{d.quantity}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
 
                       const stepOrder: Array<'reception' | 'etude' | 'echantillon' | 'production' | 'pret'> = ['reception', 'etude', 'echantillon', 'production', 'pret'];
                       const currentStepIdx = stepOrder.indexOf(analysis.statusProgression) >= 0 ? stepOrder.indexOf(analysis.statusProgression) : 1;

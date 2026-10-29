@@ -1215,24 +1215,47 @@ export async function loadLeadPhotos(leadId: string): Promise<{photo: string | n
 
 export async function loadLeadPhotosBatch(leadIds: string[]): Promise<Record<string, { photo: string | null, photos: string[] | null }>> {
   if (!leadIds || leadIds.length === 0) return {};
+  const map: Record<string, { photo: string | null, photos: string[] | null }> = {};
+
+  // 1. First check localStorage for any of these leads
+  try {
+    const localRaw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
+    if (localRaw) {
+      const parsed = JSON.parse(localRaw);
+      if (Array.isArray(parsed)) {
+        parsed.forEach((l: any) => {
+          if (l && leadIds.includes(l.id) && (l.photo || (Array.isArray(l.photos) && l.photos.length > 0))) {
+            const photo = l.photo || l.photos[0] || null;
+            map[l.id] = {
+              photo,
+              photos: l.photos || (photo ? [photo] : null)
+            };
+          }
+        });
+      }
+    }
+  } catch {}
+
+  const remainingIds = leadIds.filter(id => !map[id]?.photo);
+  if (remainingIds.length === 0) return map;
+
+  // 2. Fetch remaining from Supabase
   try {
     const { data, error } = await supabase
       .from('leads')
       .select('id, photo, photos')
-      .in('id', leadIds);
-    if (error || !data) return {};
-    const map: Record<string, { photo: string | null, photos: string[] | null }> = {};
-    data.forEach((item: any) => {
-      const photo = item.photo || (Array.isArray(item.photos) && item.photos.length > 0 ? item.photos[0] : null);
-      map[item.id] = {
-        photo,
-        photos: item.photos || (photo ? [photo] : null)
-      };
-    });
-    return map;
-  } catch {
-    return {};
-  }
+      .in('id', remainingIds);
+    if (!error && data) {
+      data.forEach((item: any) => {
+        const photo = item.photo || (Array.isArray(item.photos) && item.photos.length > 0 ? item.photos[0] : null);
+        map[item.id] = {
+          photo,
+          photos: item.photos || (photo ? [photo] : null)
+        };
+      });
+    }
+  } catch {}
+  return map;
 }
 
 export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
