@@ -1213,6 +1213,28 @@ export async function loadLeadPhotos(leadId: string): Promise<{photo: string | n
   } catch { return {photo: null, photos: null}; }
 }
 
+export async function loadLeadPhotosBatch(leadIds: string[]): Promise<Record<string, { photo: string | null, photos: string[] | null }>> {
+  if (!leadIds || leadIds.length === 0) return {};
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('id, photo, photos')
+      .in('id', leadIds);
+    if (error || !data) return {};
+    const map: Record<string, { photo: string | null, photos: string[] | null }> = {};
+    data.forEach((item: any) => {
+      const photo = item.photo || (Array.isArray(item.photos) && item.photos.length > 0 ? item.photos[0] : null);
+      map[item.id] = {
+        photo,
+        photos: item.photos || (photo ? [photo] : null)
+      };
+    });
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
   const newLead: Lead = {
     ...lead,

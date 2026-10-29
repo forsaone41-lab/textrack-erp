@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, Fragment, type ReactElement } from 'react';
+import { useState, useEffect, useMemo, useRef, Fragment, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight, UserCheck, ChevronDown, ChevronUp, Layers } from 'lucide-react';
-import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, StockTissu } from '../types';
+import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, StockTissu } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
 import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
@@ -146,7 +146,17 @@ export default function Demandes() {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   const toggleGroupExpanded = (key: string) => {
-    setExpandedGroups(prev => ({ ...prev, [key]: !prev[key] }));
+    setExpandedGroups(prev => {
+      const willExpand = !prev[key];
+      if (willExpand) {
+        // When expanding group, instantly fetch photos for all requests in this group
+        const groupRequests = leads.filter(l => (l.phone || l.name).trim().toLowerCase() === key);
+        if (groupRequests.length > 0) {
+          loadPhotosForLeads(groupRequests);
+        }
+      }
+      return { ...prev, [key]: willExpand };
+    });
   };
   const [filterStarred, setFilterStarred] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
@@ -172,19 +182,78 @@ export default function Demandes() {
     email: l.email || '',
   });
 
-  const loadPhotosInBackground = async (leadsArr: Lead[]) => {
-    const withoutPhoto = leadsArr.filter(l => !l.photo);
-    if (!withoutPhoto.length) return;
-    for (let i = 0; i < withoutPhoto.length; i += 5) {
-      const batch = withoutPhoto.slice(i, i + 5);
-      const results = await Promise.allSettled(
-        batch.map(l => loadLeadPhoto(l.id).then(photo => ({ id: l.id, photo })))
-      );
-      const updates: Record<string, string> = {};
-      results.forEach(r => { if (r.status === 'fulfilled' && r.value.photo) updates[r.value.id] = r.value.photo; });
-      if (Object.keys(updates).length > 0) {
-        setLeads(prev => prev.map(l => updates[l.id] ? { ...l, photo: updates[l.id] } : l));
+  // Persistent photo cache for instant rendering
+  const [photoCache, setPhotoCache] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem('textrack_lead_photos_cache');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const savePhotosToCache = (newPhotos: Record<string, string>) => {
+    if (!newPhotos || Object.keys(newPhotos).length === 0) return;
+    setPhotoCache(prev => {
+      const updated = { ...prev, ...newPhotos };
+      try {
+        const entries = Object.entries(updated);
+        const trimmed = entries.length > 100 ? Object.fromEntries(entries.slice(-100)) : updated;
+        localStorage.setItem('textrack_lead_photos_cache', JSON.stringify(trimmed));
+        return trimmed;
+      } catch {
+        return updated;
       }
+    });
+  };
+
+  const pendingPhotoFetches = useRef<Set<string>>(new Set());
+
+  // High-performance batch photo loader using single Supabase .in() queries
+  const loadPhotosForLeads = async (targetLeads: Lead[]) => {
+    if (!targetLeads || !targetLeads.length) return;
+    
+    const toFetch = targetLeads.filter(l => {
+      if (l.photo || (l.photos && l.photos.length > 0)) return false;
+      if (photoCache[l.id]) return false;
+      if (pendingPhotoFetches.current.has(l.id)) return false;
+      return true;
+    });
+
+    if (!toFetch.length) return;
+
+    toFetch.forEach(l => pendingPhotoFetches.current.add(l.id));
+
+    try {
+      const ids = toFetch.map(l => l.id);
+      // Fetch in chunks of 25 using high-speed Supabase .in() query
+      for (let i = 0; i < ids.length; i += 25) {
+        const chunk = ids.slice(i, i + 25);
+        const photosMap = await loadLeadPhotosBatch(chunk);
+        
+        const photoUpdates: Record<string, string> = {};
+        Object.entries(photosMap).forEach(([id, data]) => {
+          if (data.photo) photoUpdates[id] = data.photo;
+        });
+
+        if (Object.keys(photoUpdates).length > 0) {
+          savePhotosToCache(photoUpdates);
+          setLeads(prev => prev.map(l => {
+            if (photoUpdates[l.id]) {
+              return { 
+                ...l, 
+                photo: photoUpdates[l.id], 
+                photos: photosMap[l.id]?.photos || (photoUpdates[l.id] ? [photoUpdates[l.id]] : undefined) 
+              };
+            }
+            return l;
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('Batch photo fetch error:', err);
+    } finally {
+      toFetch.forEach(l => pendingPhotoFetches.current.delete(l.id));
     }
   };
 
@@ -218,7 +287,8 @@ export default function Demandes() {
         }
 
         setLeads(validLeads);
-        loadPhotosInBackground(validLeads);
+        // Fast batch load for the first 30 leads
+        loadPhotosForLeads(validLeads.slice(0, 30));
       }
       if (usersData) setUsers((usersData as User[]) || []);
     } catch (e) {
@@ -235,7 +305,9 @@ export default function Demandes() {
       if (cachedLeads) {
         const parsed = JSON.parse(cachedLeads);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setLeads(parsed.filter((l: any) => l && !l.name?.startsWith('__') && (l.type === '__FOURNISSEUR__' || !l.type?.startsWith('__'))).map(sanitizeLead));
+          const sanitized = parsed.filter((l: any) => l && !l.name?.startsWith('__') && (l.type === '__FOURNISSEUR__' || !l.type?.startsWith('__'))).map(sanitizeLead);
+          setLeads(sanitized);
+          loadPhotosForLeads(sanitized.slice(0, 30));
         }
       }
       const cachedUsers = localStorage.getItem('textrack_data_users');
@@ -259,22 +331,29 @@ export default function Demandes() {
     setZoomLevel(1);
     setLensEnabled(false);
 
+    const cachedPhoto = lead.photo || (lead.photos && lead.photos[0]) || photoCache[lead.id];
+
     if (lead.photoCount && lead.photoCount > 1) {
+      if (cachedPhoto) {
+        setPreviewPhotos([cachedPhoto]);
+        setPreviewPhoto(cachedPhoto);
+      }
       const data = await loadLeadPhotos(lead.id);
       if (data.photos && data.photos.length > 0) {
         setPreviewPhotos(data.photos);
         setPreviewPhoto(data.photos[0]);
+        if (data.photos[0]) savePhotosToCache({ [lead.id]: data.photos[0] });
       } else if (data.photo) {
         setPreviewPhotos([data.photo]);
         setPreviewPhoto(data.photo);
+        savePhotosToCache({ [lead.id]: data.photo });
       }
       return;
     }
 
-    if (lead.photo || (lead.photos && lead.photos.length > 0)) {
-      const photos = lead.photos && lead.photos.length > 0 ? lead.photos : [lead.photo!];
-      setPreviewPhotos(photos);
-      setPreviewPhoto(photos[0]);
+    if (cachedPhoto) {
+      setPreviewPhotos([cachedPhoto]);
+      setPreviewPhoto(cachedPhoto);
       return;
     }
     
@@ -282,6 +361,7 @@ export default function Demandes() {
     if (photo) {
       setPreviewPhotos([photo]);
       setPreviewPhoto(photo);
+      savePhotosToCache({ [lead.id]: photo });
       setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, photo } : l));
     }
   };
@@ -842,6 +922,13 @@ export default function Demandes() {
 
   const visibleLeads = useMemo(() => filteredLeads.slice(0, visibleCount), [filteredLeads, visibleCount]);
   const hasMore = visibleCount < filteredLeads.length;
+
+  // Automatically fetch photos for visible leads as soon as they appear or change!
+  useEffect(() => {
+    if (visibleLeads.length > 0) {
+      loadPhotosForLeads(visibleLeads);
+    }
+  }, [visibleLeads]);
 
   if (loading) {
     return <PageLoader />;
@@ -2183,9 +2270,11 @@ export default function Demandes() {
                           <div className="flex flex-col items-center gap-1.5 shrink-0">
                             <div className="relative cursor-pointer group" onClick={(e) => openPhotoPreview(lead, e)}>
                               <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center text-slate-300 shadow-sm relative transition-all group-hover:border-indigo-300 group-hover:shadow-md">
-                                {(lead.photo || (lead.photos && lead.photos.length > 0))
-                                  ? <>
-                                      <img src={lead.photo || lead.photos![0]} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt="" loading="lazy" />
+                                {(() => {
+                                  const itemPhoto = lead.photo || (lead.photos && lead.photos[0]) || photoCache[lead.id];
+                                  return itemPhoto ? (
+                                    <>
+                                      <img src={itemPhoto} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt="" loading="lazy" />
                                       {(lead.photoCount || 0) > 1 && (
                                         <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[8px] font-black px-1.5 py-0.5 rounded-tl-lg backdrop-blur-sm shadow-sm border-t border-l border-white/10">
                                           +{(lead.photoCount || 0) - 1}
@@ -2195,8 +2284,10 @@ export default function Demandes() {
                                         <Eye className="w-5 h-5 text-white" />
                                       </div>
                                     </>
-                                  : <ImageIcon className="w-6 h-6 opacity-50 group-hover:opacity-100 group-hover:text-indigo-400 transition-all" />
-                                }
+                                  ) : (
+                                    <ImageIcon className="w-6 h-6 opacity-50 group-hover:opacity-100 group-hover:text-indigo-400 transition-all" />
+                                  );
+                                })()}
                               </div>
                             </div>
                             <button 
