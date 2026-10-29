@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2 } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
@@ -1186,77 +1186,306 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                    </button>
                  </div>
                ) : (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                   {trueDemandes.map(d => {
-                     const isAccepted = d.crmStage === 'confirme';
-                     const isRejected = d.crmStage === 'annule';
-                     const isPending = !isAccepted && !isRejected;
-                     
-                     return (
-                       <div key={d.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden group">
-                         <div className="h-48 bg-slate-100 relative overflow-hidden">
-                           {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
-                             <img src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} alt={d.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                           ) : (
-                             <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-50 text-slate-300">
-                               <Camera className="w-10 h-10" />
-                               <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
-                             </div>
-                           )}
-                           <div className="absolute top-4 left-4 flex gap-2">
-                             {isAccepted && <span className="px-3 py-1 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
-                             {isRejected && <span className="px-3 py-1 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
-                             {isPending && <span className="px-3 py-1 bg-amber-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'قيد المراجعة ⏳' : 'En attente ⏳'}</span>}
-                           </div>
-                           {isPending && (
-                             <div className={`absolute top-4 ${isAr ? 'right-4' : 'right-4'} flex flex-col gap-2 z-10`}>
-                               <button 
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   setEditingDemandeId(d.id);
-                                   let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
-                                   if (d.tailles) {
-                                      (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
-                                   } else if (d.sizes) {
-                                      try {
-                                        const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
-                                        Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
-                                      } catch(e) {}
-                                   }
-                                   setNewOrderForm({
-                                     modele: d.type || '',
-                                     quantite: d.quantity?.toString() || '',
-                                     photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
-                                     details: d.details || '',
-                                     telephone: d.phone || currentUser?.telephone || '',
-                                     tailles: parsedTailles
-                                   });
-                                   setShowNewOrderModal(true);
-                                 }}
-                                 className="w-8 h-8 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
-                               >
-                                 <Edit2 className="w-4 h-4" />
-                               </button>
-                               <button 
-                                 onClick={(e) => handleDeleteDemande(d.id, e)}
-                                 className="w-8 h-8 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
-                               >
-                                 <Trash2 className="w-4 h-4" />
-                               </button>
-                             </div>
-                           )}
-                         </div>
-                         <div className="p-6">
-                           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">REF: {d.id.substring(0, 8)}</div>
-                           <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2 truncate" title={d.type}>{d.type}</h3>
-                           <div className="text-sm font-bold text-slate-500 bg-slate-50 px-4 py-2 rounded-xl inline-block">
-                             {isAr ? 'الكمية:' : 'Quantité :'} <span className="text-indigo-600">{d.quantity}</span>
-                           </div>
-                         </div>
-                       </div>
-                     );
-                   })}
-                 </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {trueDemandes.map(d => {
+                      const isAccepted = d.crmStage === 'confirme';
+                      const isRejected = d.crmStage === 'annule';
+                      const isPending = !isAccepted && !isRejected;
+                      const analysis = getDemandeAnalysis(d, isAr);
+                      const sizes = getLeadSizes(d);
+                      const hasCustomSizes = Object.keys(sizes).length > 0;
+                      
+                      const isTestAccount = currentUser?.email === 'forsaone41@gmail.com' || currentUser?.role === 'admin' || currentUser?.role === 'manager';
+
+                      const stepOrder: Array<'reception' | 'etude' | 'echantillon' | 'production' | 'pret'> = ['reception', 'etude', 'echantillon', 'production', 'pret'];
+                      const currentStepIdx = stepOrder.indexOf(analysis.statusProgression) >= 0 ? stepOrder.indexOf(analysis.statusProgression) : 1;
+
+                      const stepLabels = [
+                        { key: 'reception', fr: '1. Reçu', ar: '١. تم الاستلام', icon: '⏳' },
+                        { key: 'etude', fr: '2. Étude & Devis', ar: '٢. دراسة وتحديد السعر', icon: '📋' },
+                        { key: 'echantillon', fr: '3. Échantillon', ar: '٣. إعداد العينة', icon: '✂️' },
+                        { key: 'production', fr: '4. Production', ar: '٤. قيد الإنتاج', icon: '🏭' },
+                      ];
+
+                      const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
+                      const waText = isAr
+                        ? `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي رقم REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${analysis.qty} قطعة\n- السعر التقديري: ${analysis.unitPrice} درهم (المجموع: ${analysis.totalPrice.toLocaleString()} درهم)\n- الثوب: ${analysis.tissuSuggere}\nبغيت نأكد الدوفيس ونبداو العينة التقنية. شكراً!`
+                        : `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, je consulte ma demande REF: #${d.id.substring(0, 8).toUpperCase()} sur le portail :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Prix Estimé : ${analysis.unitPrice} MAD/pc (Total : ${analysis.totalPrice.toLocaleString()} MAD)\n- Tissu : ${analysis.tissuSuggere}\nJe souhaite valider ce devis et lancer l'échantillon. Merci !`;
+                      const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
+
+                      return (
+                        <div key={d.id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-indigo-100/80 hover:border-indigo-100">
+                          <div>
+                            {/* Image & Header Overlay */}
+                            <div className="h-64 sm:h-72 bg-slate-900 relative overflow-hidden">
+                              {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
+                                <img 
+                                  src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} 
+                                  alt={analysis.modeleReel} 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-95 group-hover:opacity-100" 
+                                />
+                              ) : (
+                                <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-800 text-slate-400">
+                                  <Camera className="w-12 h-12" />
+                                  <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
+                                </div>
+                              )}
+
+                              {/* Top Badges */}
+                              <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10 items-center">
+                                <span className="px-3 py-1.5 bg-slate-950/80 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg border border-white/10">
+                                  REF: #{d.id.substring(0, 8).toUpperCase()}
+                                </span>
+                                {isAccepted && <span className="px-3 py-1.5 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
+                                {isRejected && <span className="px-3 py-1.5 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
+                                {isPending && <span className="px-3 py-1.5 bg-indigo-600/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'دراسة تقنية 📋' : 'Étude Technique 📋'}</span>}
+                              </div>
+
+                              {/* Top Right Action Buttons */}
+                              <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+                                {isTestAccount && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAtelierQuickEditLead(d);
+                                      setQuickEditForm({
+                                        modeleReel: analysis.modeleReel,
+                                        unitPrice: analysis.unitPrice,
+                                        totalPrice: analysis.totalPrice,
+                                        tissuSuggere: analysis.tissuSuggere,
+                                        techDetails: analysis.techDetails,
+                                        delaiEstime: analysis.delaiEstime,
+                                        statusProgression: analysis.statusProgression,
+                                        reponseAtelier: analysis.reponseAtelier
+                                      });
+                                    }}
+                                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer backdrop-blur-sm"
+                                    title="Tester la réponse atelier pour ce compte"
+                                  >
+                                    <span>⚙️ {isAr ? 'رد الورشة (تجريبي)' : 'Réponse Atelier (Test)'}</span>
+                                  </button>
+                                )}
+                                {isPending && (
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingDemandeId(d.id);
+                                      let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
+                                      if (d.tailles) {
+                                         (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                      } else if (d.sizes) {
+                                         try {
+                                           const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
+                                           Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                         } catch(e) {}
+                                      }
+                                      setNewOrderForm({
+                                        modele: d.type || '',
+                                        quantite: d.quantity?.toString() || '',
+                                        photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
+                                        details: d.details || '',
+                                        telephone: d.phone || currentUser?.telephone || '',
+                                        tailles: parsedTailles
+                                      });
+                                      setShowNewOrderModal(true);
+                                    }}
+                                    className="w-8 h-8 bg-white/90 hover:bg-white text-slate-800 rounded-xl shadow-lg flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
+                                    title="Modifier"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={(e) => handleDeleteDemande(d.id, e)}
+                                  className="w-8 h-8 bg-rose-500/90 hover:bg-rose-600 text-white rounded-xl shadow-lg flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
+                                  title="Supprimer"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+
+                              {/* Bottom Dark Gradient Shadow */}
+                              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent flex items-end p-5">
+                                <span className="text-white/90 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                                  {d.type && d.type !== analysis.modeleReel ? `${d.type} • ` : ''}{isAr ? 'تصنيع عالي الجودة' : 'Confection Premium'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Card Content */}
+                            <div className="p-6 md:p-7 space-y-5">
+                              {/* Title & Delay */}
+                              <div>
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1.5">
+                                  <h3 className="text-xl md:text-2xl font-black text-slate-900 leading-snug">
+                                    {analysis.modeleReel}
+                                  </h3>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500">
+                                  <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-lg">
+                                    {isAr ? 'الكمية المطلوبة :' : 'Quantité :'} <strong className="text-indigo-600 font-black">{analysis.qty} pcs</strong>
+                                  </span>
+                                  <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg flex items-center gap-1">
+                                    <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                                    {analysis.delaiEstime}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Financial Estimations Box */}
+                              <div className="p-4 md:p-5 bg-gradient-to-br from-indigo-50/90 via-white to-slate-50/80 rounded-2xl border border-indigo-100 shadow-xs">
+                                <div className="flex items-center justify-between gap-4 mb-3 pb-3 border-b border-indigo-100/60">
+                                  <div>
+                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-0.5">
+                                      {isAr ? 'السعر التقديري للقطعة' : 'Prix Unitaire Estimé'}
+                                    </span>
+                                    <div className="flex items-baseline gap-1.5">
+                                      <span className="text-3xl font-black text-indigo-950 tracking-tight">{analysis.unitPrice}</span>
+                                      <span className="text-xs font-black text-indigo-600">MAD / pc</span>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">
+                                      {isAr ? 'الإجمالي التقديري للطلبية' : 'Total Estimé Commande'}
+                                    </span>
+                                    <span className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
+                                      {analysis.totalPrice.toLocaleString()} <span className="text-xs font-bold text-slate-500">MAD</span>
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-semibold text-slate-500 flex items-center gap-1">
+                                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                    {isAr ? 'يشمل الثوب، الفصالة، الخياطة والتطريز/الطباعة' : 'Inclus tissu, coupe, confection et sérigraphie'}
+                                  </span>
+                                  <span className="font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md text-[10px] uppercase">
+                                    {isAr ? 'دوفيس أولي معتمد' : 'Devis Échantillon'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Technical Specs: Fabric & Finitions */}
+                              <div className="space-y-2.5">
+                                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-3">
+                                  <div className="w-8 h-8 rounded-xl bg-indigo-100/70 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <Scissors className="w-4 h-4" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{isAr ? 'الثوب المقترح والوزن' : 'Tissu & Matière Recommandée'}</p>
+                                    <p className="text-xs font-bold text-slate-800 leading-snug">{analysis.tissuSuggere}</p>
+                                  </div>
+                                </div>
+
+                                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-3">
+                                  <div className="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <Sparkles className="w-4 h-4" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{isAr ? 'الفصالة والتشطيبات' : 'Finitions & Sérigraphie'}</p>
+                                    <p className="text-xs font-bold text-slate-700 leading-snug">{analysis.techDetails}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Size breakdown */}
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'توزيع المقاسات المطلوبة' : 'Répartition des Tailles'}</span>
+                                  <span className="text-[10px] font-bold text-slate-400">{hasCustomSizes ? (isAr ? 'حسب اختيارك' : 'Selon votre sélection') : (isAr ? 'توزيع حر عند التأكيد' : 'Répartition libre au choix')}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {hasCustomSizes ? (
+                                    Object.entries(sizes).map(([sz, qty]) => (
+                                      <div key={sz} className="px-3 py-1.5 bg-slate-100 rounded-xl text-xs font-black text-slate-800 border border-slate-200/60">
+                                        {sz} : <span className="text-indigo-600">{qty} pcs</span>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    ['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
+                                      <div key={sz} className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold border border-slate-100">
+                                        {sz}
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* 4-Step Production Tracker */}
+                              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-400 mb-3">
+                                  <span>{isAr ? 'مراحل التتبع' : 'Progression de la Demande'}</span>
+                                  <span className="text-indigo-600">
+                                    {stepLabels[Math.min(currentStepIdx, 3)] ? (isAr ? stepLabels[Math.min(currentStepIdx, 3)].ar : stepLabels[Math.min(currentStepIdx, 3)].fr) : 'Étude'}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-4 gap-2">
+                                  {stepLabels.map((st, sIdx) => {
+                                    const isDone = currentStepIdx > sIdx;
+                                    const isCurrent = currentStepIdx === sIdx;
+                                    return (
+                                      <div key={st.key} className="flex flex-col items-center text-center">
+                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs mb-1.5 transition-all ${
+                                          isDone 
+                                            ? 'bg-emerald-500 text-white shadow-sm' 
+                                            : isCurrent 
+                                              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-300 ring-2 ring-indigo-200 scale-105' 
+                                              : 'bg-white text-slate-300 border border-slate-200'
+                                        }`}>
+                                          {isDone ? '✓' : st.icon}
+                                        </div>
+                                        <span className={`text-[9px] font-black leading-tight line-clamp-1 ${isCurrent ? 'text-indigo-600' : isDone ? 'text-emerald-700' : 'text-slate-400'}`}>
+                                          {isAr ? st.ar.split('. ')[1] : st.fr.split('. ')[1]}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Atelier Note */}
+                              <div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                                  <MessageCircle className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] font-black text-indigo-700 uppercase tracking-wider mb-0.5">
+                                    {isAr ? 'ملاحظة ورشة BEYA للزبون' : "Note de l'Atelier BEYA"}
+                                  </p>
+                                  <p className="text-xs font-semibold text-slate-700 italic leading-relaxed">
+                                    "{analysis.reponseAtelier}"
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Bottom Action Buttons */}
+                          <div className="p-6 md:p-7 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button 
+                              type="button"
+                              onClick={() => setSelectedDemandeFiche(d)}
+                              className="w-full py-4 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 hover:shadow-xl cursor-pointer"
+                            >
+                              <FileText className="w-4 h-4 text-indigo-400" />
+                              <span>{isAr ? 'الملف التقني والتسعير' : 'Fiche Technique & Devis'}</span>
+                            </button>
+                            
+                            <a 
+                              href={waUrl}
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="w-full py-4 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 hover:shadow-xl cursor-pointer text-center"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span>{isAr ? 'تأكيد عبر واتساب' : 'Valider sur WhatsApp'}</span>
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                )}
             </div>
           );})()}
@@ -2873,6 +3102,349 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                   </button>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Fiche Technique & Devis Estimatif Modal */}
+      {selectedDemandeFiche && (() => {
+        const d = selectedDemandeFiche;
+        const analysis = getDemandeAnalysis(d, isAr);
+        const sizes = getLeadSizes(d);
+        const hasCustomSizes = Object.keys(sizes).length > 0;
+        const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
+        const waText = isAr
+          ? `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص الملف التقني للطلب REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${analysis.qty} pcs\n- السعر: ${analysis.unitPrice} MAD/pc (الإجمالي: ${analysis.totalPrice.toLocaleString()} MAD)\nبغيت نأكد الدوفيس ونبداو العينة. شكراً!`
+          : `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, concernant la Fiche Technique REF: #${d.id.substring(0, 8).toUpperCase()} :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Prix : ${analysis.unitPrice} MAD/pc (Total : ${analysis.totalPrice.toLocaleString()} MAD)\nJe valide ce devis pour lancer le prototypage.`;
+        const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-y-auto animate-in fade-in">
+            <div className="bg-white rounded-[2rem] max-w-3xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col my-auto" dir={isAr ? 'rtl' : 'ltr'}>
+              {/* Header */}
+              <div className="p-6 bg-slate-950 text-white flex items-center justify-between sticky top-0 z-20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-base uppercase tracking-wider">{isAr ? 'الملف التقني وعرض السعر' : 'Fiche Technique & Devis Estimatif'}</h3>
+                    <p className="text-xs text-slate-400">REF: #{d.id.substring(0, 8).toUpperCase()} • {company.name || 'BEYA CREATIVE'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => window.print()}
+                    className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+                    title={isAr ? 'طباعة' : 'Imprimer'}
+                  >
+                    <Printer className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={() => setSelectedDemandeFiche(null)}
+                    className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Printable Body */}
+              <div className="p-6 md:p-8 space-y-6 flex-1 text-slate-800">
+                {/* Top Info Banner */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-4">
+                    {(d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]) && (
+                      <img 
+                        src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} 
+                        alt={analysis.modeleReel} 
+                        className="w-20 h-20 rounded-2xl object-cover border border-slate-200 shadow-sm"
+                      />
+                    )}
+                    <div>
+                      <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-0.5">{isAr ? 'الموديل المعتمد' : 'Modèle Technique'}</span>
+                      <h4 className="text-lg font-black text-slate-900">{analysis.modeleReel}</h4>
+                      <p className="text-xs text-slate-500 font-bold">{isAr ? 'الزبون :' : 'Client :'} {d.name || currentUser?.nom || 'Client'} {d.phone ? `(${d.phone})` : ''}</p>
+                    </div>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">{isAr ? 'تاريخ الإصدار' : 'Date d\'émission'}</span>
+                    <span className="text-xs font-black text-slate-700">{d.date ? new Date(d.date).toLocaleDateString() : new Date().toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                {/* Technical Specifications */}
+                <div>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Scissors className="w-3.5 h-3.5 text-indigo-600" />
+                    {isAr ? 'المواصفات التقنية والمواد' : 'Cahier des Charges & Matières'}
+                  </h4>
+                  <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-xs">
+                    <table className="w-full text-xs">
+                      <tbody>
+                        <tr className="border-b border-slate-100 bg-slate-50/50">
+                          <td className="p-3.5 font-bold text-slate-500 w-1/3">{isAr ? 'القماش الرئيسي' : 'Matière Principale'}</td>
+                          <td className="p-3.5 font-black text-slate-900">{analysis.tissuSuggere}</td>
+                        </tr>
+                        <tr className="border-b border-slate-100">
+                          <td className="p-3.5 font-bold text-slate-500">{isAr ? 'الفصالة والباترون' : 'Patronage & Modélisme'}</td>
+                          <td className="p-3.5 font-bold text-slate-700">{isAr ? 'باترون احترافي رقمي بمقاسات مظبوطة (Coupe Numérique Haute Précision)' : 'Patronage industriel numérique avec gradation normée'}</td>
+                        </tr>
+                        <tr className="border-b border-slate-100 bg-slate-50/50">
+                          <td className="p-3.5 font-bold text-slate-500">{isAr ? 'التشطيبات والإكسسوارات' : 'Finitions & Fournitures'}</td>
+                          <td className="p-3.5 font-bold text-slate-700">{analysis.techDetails}</td>
+                        </tr>
+                        <tr className="border-b border-slate-100">
+                          <td className="p-3.5 font-bold text-slate-500">{isAr ? 'الطباعة / التطريز' : 'Marquage / Sérigraphie'}</td>
+                          <td className="p-3.5 font-bold text-slate-700">{isAr ? 'سيريغرافي عالي الجودة أو تطريز بارز على الصدر' : 'Sérigraphie textile haute tenue / Broderie relief poitrine'}</td>
+                        </tr>
+                        <tr className="bg-slate-50/50">
+                          <td className="p-3.5 font-bold text-slate-500">{isAr ? 'مدة الإنتاج المتوقعة' : 'Délai de Livraison'}</td>
+                          <td className="p-3.5 font-black text-indigo-700">{analysis.delaiEstime}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Sizing Breakdown Table */}
+                <div>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                    {isAr ? 'المقاسات والكميات' : 'Grille des Tailles'}
+                  </h4>
+                  <div className="grid grid-cols-6 gap-2 text-center">
+                    {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
+                      <div key={sz} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span className="block text-[10px] font-black text-slate-400 uppercase mb-1">{sz}</span>
+                        <span className="text-sm font-black text-slate-900">{sizes[sz] ? `${sizes[sz]} pcs` : (hasCustomSizes ? '0' : '—')}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-semibold mt-2 text-center">
+                    {isAr ? `إجمالي الكمية: ${analysis.qty} قطعة` : `Total commande : ${analysis.qty} pièces`}
+                  </p>
+                </div>
+
+                {/* Financial Breakdown Table */}
+                <div>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Receipt className="w-3.5 h-3.5 text-emerald-600" />
+                    {isAr ? 'تفاصيل السعر التقديري (Devis)' : 'Décomposition du Prix (Devis Estimatif)'}
+                  </h4>
+                  <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-xs">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
+                        <tr>
+                          <th className="p-3 text-left">{isAr ? 'البيان' : 'Poste de Coût'}</th>
+                          <th className="p-3 text-right">{isAr ? 'التقدير / القطعة' : 'Estimation / pc'}</th>
+                          <th className="p-3 text-right">{isAr ? 'المجموع' : 'Total'}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium">
+                        <tr>
+                          <td className="p-3 font-bold text-slate-700">{isAr ? 'المادة الأولية (الثوب + البورد كوط + الحبال)' : 'Matières premières (Tissu, bord-côte, cordons)'}</td>
+                          <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.48)} MAD</td>
+                          <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.48 * analysis.qty).toLocaleString()} MAD</td>
+                        </tr>
+                        <tr className="bg-slate-50/40">
+                          <td className="p-3 font-bold text-slate-700">{isAr ? 'الفصالة والخياطة والتركيب' : 'Coupe, confection et assemblage industriel'}</td>
+                          <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.32)} MAD</td>
+                          <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.32 * analysis.qty).toLocaleString()} MAD</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-bold text-slate-700">{isAr ? 'الطباعة / التطريز والفينيسيون' : 'Sérigraphie poitrine & finitions packaging'}</td>
+                          <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.20)} MAD</td>
+                          <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.20 * analysis.qty).toLocaleString()} MAD</td>
+                        </tr>
+                        <tr className="bg-indigo-50/80 font-black text-indigo-950 text-sm">
+                          <td className="p-4">{isAr ? 'السعر الصافي للقطعة' : 'PRIX UNITAIRE HT'}</td>
+                          <td className="p-4 text-right font-mono text-base text-indigo-700">{analysis.unitPrice} MAD</td>
+                          <td className="p-4 text-right font-mono text-base text-indigo-700">{analysis.totalPrice.toLocaleString()} MAD</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Guarantee & Terms */}
+                <div className="p-4 bg-emerald-50/60 border border-emerald-100 rounded-2xl text-xs text-emerald-900 space-y-1">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    {isAr ? 'ضمان ورشة BEYA CREATIVE للمطابقة والجودة' : 'Garantie Conformité & Qualité Atelier BEYA'}
+                  </p>
+                  <p className="text-[11px] text-emerald-800 leading-relaxed font-medium">
+                    {isAr 
+                      ? 'يتم إعداد عينة أولية (Prototype Échantillon) واعتمادها من طرفكم قبل إطلاق الإنتاج الشامل. يتم دفع تسبيق 50% عند انطلاق العينة والباقي عند التسليم النهائي.' 
+                      : 'Un prototype d\'échantillon physique est validé avant le lancement de la production en série. Acompte de 50% au lancement, solde à la livraison après contrôle qualité.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer CTA */}
+              <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
+                <button
+                  onClick={() => setSelectedDemandeFiche(null)}
+                  className="w-full sm:w-auto px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  {isAr ? 'إغلاق' : 'Fermer'}
+                </button>
+                <a
+                  href={waUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>{isAr ? 'تأكيد الطلب والبدء عبر واتساب' : 'Valider et Lancer l\'Échantillon sur WhatsApp'}</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Atelier Response Quick Edit Modal (Test Mode) */}
+      {atelierQuickEditLead && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col my-auto" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="p-6 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <Scissors className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base uppercase tracking-wider">{isAr ? 'رد الورشة (وضع التجربة)' : 'Réponse Atelier (Mode Test)'}</h3>
+                  <p className="text-xs text-slate-400">REF: #{atelierQuickEditLead.id.substring(0, 8).toUpperCase()} • {currentUser?.email}</p>
+                </div>
+              </div>
+              <button onClick={() => setAtelierQuickEditLead(null)} className="text-slate-400 hover:text-white p-1 rounded-xl cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+              <div>
+                <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                  {isAr ? 'اسم الموديل المعتمد' : 'Nom Exact du Modèle'}
+                </label>
+                <input
+                  type="text"
+                  value={quickEditForm.modeleReel}
+                  onChange={(e) => setQuickEditForm(prev => ({ ...prev, modeleReel: e.target.value }))}
+                  placeholder="Ex: Hoodie à Capuche Oversize avec Sérigraphie Poitrine"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-indigo-600 focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                    {isAr ? 'السعر للقطعة (درهم)' : 'Prix Unitaire (MAD)'}
+                  </label>
+                  <input
+                    type="number"
+                    value={quickEditForm.unitPrice}
+                    onChange={(e) => setQuickEditForm(prev => ({ ...prev, unitPrice: Number(e.target.value) }))}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black focus:outline-none focus:border-indigo-600 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                    {isAr ? 'مرحلة التقدم' : 'Étape d\'Avancement'}
+                  </label>
+                  <select
+                    value={quickEditForm.statusProgression}
+                    onChange={(e) => setQuickEditForm(prev => ({ ...prev, statusProgression: e.target.value as any }))}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-indigo-600 focus:bg-white"
+                  >
+                    <option value="reception">1. Reçu (تم الاستلام)</option>
+                    <option value="etude">2. Étude & Devis (دراسة وتحديد السعر)</option>
+                    <option value="echantillon">3. Échantillon (إعداد العينة)</option>
+                    <option value="production">4. Production (قيد الإنتاج)</option>
+                    <option value="pret">5. Prêt (جاهز للتسليم)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                  {isAr ? 'نوع الثوب المقترح' : 'Tissu & Matière Recommandée'}
+                </label>
+                <input
+                  type="text"
+                  value={quickEditForm.tissuSuggere}
+                  onChange={(e) => setQuickEditForm(prev => ({ ...prev, tissuSuggere: e.target.value }))}
+                  placeholder="Ex: Molleton Coton Gratté 320g / French Terry"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-indigo-600 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                  {isAr ? 'الفصالة والتشطيبات' : 'Finitions & Sérigraphie'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={quickEditForm.techDetails}
+                  onChange={(e) => setQuickEditForm(prev => ({ ...prev, techDetails: e.target.value }))}
+                  placeholder="Ex: Capuche doublée avec cordons • Sérigraphie Poitrine • Bord-côte poignets et bas"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-600 focus:bg-white resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                  {isAr ? 'مدة التسليم المقدرة' : 'Délai Estimé'}
+                </label>
+                <input
+                  type="text"
+                  value={quickEditForm.delaiEstime}
+                  onChange={(e) => setQuickEditForm(prev => ({ ...prev, delaiEstime: e.target.value }))}
+                  placeholder="Ex: 7 - 10 jours ouvrables"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-indigo-600 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                  {isAr ? 'رسالة أو ملاحظة الورشة للزبون' : 'Note / Réponse de l\'Atelier pour le Client'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={quickEditForm.reponseAtelier}
+                  onChange={(e) => setQuickEditForm(prev => ({ ...prev, reponseAtelier: e.target.value }))}
+                  placeholder="Ex: Votre modèle Hoodie a été analysé par notre bureau technique..."
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-600 focus:bg-white resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setAtelierQuickEditLead(null)}
+                className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              >
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+              <button
+                type="button"
+                disabled={savingQuickEdit}
+                onClick={handleSaveQuickEdit}
+                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {savingQuickEdit ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>{isAr ? 'جاري الحفظ...' : 'Enregistrement...'}</span>
+                  </>
+                ) : (
+                  <span>{isAr ? '💾 حفظ ونشر في البورتال' : '💾 Publier au Portail'}</span>
+                )}
+              </button>
             </div>
           </div>
         </div>

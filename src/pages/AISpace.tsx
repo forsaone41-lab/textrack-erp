@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown, ArrowUpDown, Plus, GripVertical, ClipboardPaste, ClipboardCopy, SlidersHorizontal } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, RotateCcw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown, ArrowUpDown, Plus, GripVertical, ClipboardPaste, ClipboardCopy, SlidersHorizontal } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -329,21 +329,32 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
     // 1. File name hints (if present)
     if (fileName) {
       const fn = fileName.toLowerCase();
+      // Pants / Joggers check (Single piece priority)
       if (
-        fn.includes('survet') || fn.includes('tracksuit') || fn.includes('jogging') ||
-        (fn.includes('sweat') && fn.includes('pant')) ||
-        (fn.includes('sport') && (fn.includes('set') || fn.includes('ensemble') || fn.includes('طقم')))
+        fn.includes('jogging') || fn.includes('pantalon') || fn.includes('pant') ||
+        fn.includes('cargo') || fn.includes('jean') || fn.includes('jogger') ||
+        fn.includes('trouser') || fn.includes('سروال') || fn.includes('بنطلون') || fn.includes('جوغينغ')
       ) {
-        return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
+        if (
+          (fn.includes('set') || fn.includes('ensemble') || fn.includes('طقم') || fn.includes('survet') || fn.includes('tracksuit') || fn.includes('2 piece') || fn.includes('2_piece') || fn.includes('2piece')) &&
+          (fn.includes('sweat') || fn.includes('hoodie') || fn.includes('pull') || fn.includes('haut'))
+        ) {
+          return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond pantalon jogging طقم رياضي قطعتين');
+        }
+        return resolve('pantalon jogging سروال رياضي جوغينغ كاجوال');
+      }
+      if (
+        fn.includes('survet') || fn.includes('tracksuit') ||
+        ((fn.includes('sweat') || fn.includes('hoodie')) && fn.includes('pant')) ||
+        ((fn.includes('set') || fn.includes('ensemble') || fn.includes('طقم')) && (fn.includes('sport') || fn.includes('2')))
+      ) {
+        return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond pantalon jogging طقم رياضي قطعتين');
       }
       if (fn.includes('sweat') || fn.includes('hoodie') || fn.includes('pull') || fn.includes('سويت') || fn.includes('هودي')) {
-        return resolve('sweatshirt col rond rayé سويت شيرت كول رون مقلم');
+        return resolve('sweatshirt col rond سويت شيرت كول رون');
       }
       if (fn.includes('tshirt') || fn.includes('t-shirt') || fn.includes('tee') || fn.includes('تيشرت')) {
         return resolve('t-shirt premium تيشرت قطني');
-      }
-      if (fn.includes('cargo') || fn.includes('jean') || (fn.includes('pantalon') && !fn.includes('sweat'))) {
-        return resolve('pantalon jogging سروال كاجوال جوغينغ');
       }
       if (fn.includes('robe_chemise') || fn.includes('pliss') || fn.includes('carreaux') || fn.includes('tartan') || fn.includes('بليات')) {
         return resolve('robe_chemise plissée فستان قميص بليات كاروهات مع حزام');
@@ -510,42 +521,34 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           const isAthleticColor = (upperBlueNavy > 20 || upperDark > upperCount * 0.35) && (lowerBlueNavy > 20 || lowerDark > 80);
           const hasStripes = stripeContrast > 28 || (upperLight > 20 && upperDark > 20);
 
-          // 1. Full Body Sportswear Tracksuit (Sweatshirt Col Rond / Hoodie + Pantalon Jogging)
-          if ((aspectRatio > 1.35 && hasPantsLegs) || (isAthleticColor && hasPantsLegs) || (hasStripes && hasPantsLegs)) {
-            return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
+          // 1. Pants / Joggers (Any garment with leg separation analyzed strictly as single piece pantalon/jogging)
+          if (hasPantsLegs) {
+            return resolve('pantalon jogging سروال رياضي جوغينغ كاجوال');
           }
 
           // 2. Full Body Dress / Abaya (No leg gap, elongated flowing silhouette)
-          if (aspectRatio > 1.6 && !hasPantsLegs) {
+          if (aspectRatio > 1.4 && !hasPantsLegs) {
             return resolve('robe abaya فستان عصري أو عباية');
           }
 
-          // 3. Upper body crop only (Sweatshirt / Hoodie / T-shirt)
-          if (bodyH < H * 0.65 && minY < H * 0.4) {
+          // 3. Upper body (Sweatshirt / Hoodie / T-shirt)
+          if (bodyH < H * 0.75 && minY < H * 0.45) {
             if (hasStripes || upperBlueNavy > 20) {
-              return resolve('sweatshirt col rond rayé سويت شيرت كول رون مقلم');
+              return resolve('sweatshirt col rond سويت شيرت كول رون');
             }
-            return resolve('sweatshirt hoodie سويت شيرت هودي كاجوال');
+            return resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
           }
 
-          // 4. Lower body crop only (Pants / Joggers / Boxer)
-          if (minY > H * 0.35) {
-            if (bodyH > H * 0.4) {
-              return resolve('pantalon jogging سروال رياضي جوغينغ');
-            }
-            return resolve('boxer caleçon بوكسر قطن كالسون');
-          }
-
-          // Safe, accurate default: 2-piece sportswear set (matches photo!)
-          return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
+          // Safe, accurate default: single piece garment
+          return resolve('pantalon jogging سروال رياضي جوغينغ');
         } catch {
-          resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
+          resolve('pantalon jogging سروال رياضي جوغينغ');
         }
       };
-      img.onerror = () => resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
+      img.onerror = () => resolve('pantalon jogging سروال رياضي جوغينغ');
       img.src = imageSrc;
     } catch {
-      resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
+      resolve('pantalon jogging سروال رياضي جوغينغ');
     }
   });
 }
@@ -580,13 +583,13 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
 
   // 2 Pieces Sportswear Tracksuit (Sweatshirt Col Rond / Hoodie + Pantalon Jogging)
   const isSurvet2Pieces = (
+    forcePiecesCount !== 1 &&
     !isThreePieces && (
       forcePiecesCount === 2 ||
       text.includes('2 pièces') || text.includes('2 pieces') || text.includes('قطعتين') ||
       text.includes('survet') || text.includes('tracksuit') || text.includes('سيرفيت') ||
-      ((text.includes('sweat') || text.includes('hoodie') || text.includes('سويت') || text.includes('هودي') || text.includes('pull')) && (text.includes('jogging') || text.includes('pantalon') || text.includes('سروال'))) ||
-      (text.includes('sport') && (text.includes('ensemble') || text.includes('طقم'))) ||
-      (text.includes('rayé') && (text.includes('pantalon') || text.includes('jogging') || text.includes('sport')))
+      ((text.includes('sweat') || text.includes('hoodie') || text.includes('سويت') || text.includes('هودي')) && (text.includes('jogging') || text.includes('pantalon') || text.includes('سروال')) && (text.includes('ensemble') || text.includes('طقم') || text.includes('2'))) ||
+      (text.includes('sport') && (text.includes('ensemble') || text.includes('طقم')))
     )
   );
 
@@ -824,7 +827,7 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
       ],
       mesures: defaultMesures
     }];
-  } else if (text.includes('pantalon') || text.includes('سروال') || text.includes('cargo') || text.includes('بنطلون') || text.includes('jean')) {
+  } else if (text.includes('pantalon') || text.includes('سروال') || text.includes('cargo') || text.includes('بنطلون') || text.includes('jean') || text.includes('jogging') || text.includes('jogger') || text.includes('جوغينغ')) {
     const isJog = text.includes('jogging') || text.includes('جوغينغ') || text.includes('sport');
     pieceName = isJog
       ? (isAr ? 'سروال رياضي جوغينغ مريح (Pantalon Jogging)' : 'Pantalon de Jogging Sportswear')
@@ -1488,6 +1491,17 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       ctx = 'pantalon cargo كاجوال سروال';
     } else if (preset === 'hoodie') {
       ctx = 'hoodie هودي أوفرسايز بكابوش';
+    } else if (preset === 1) {
+      if (
+        analysisResult?.category?.toLowerCase().includes('pantalon') ||
+        analysisResult?.category?.toLowerCase().includes('jogging') ||
+        analysisResult?.category?.includes('سروال')
+      ) {
+        ctx = 'pantalon jogging sportswear molleton coton gratté cordon';
+      } else {
+        ctx = 'sweatshirt col rond sportswear molleton coton gratté سويت شيرت';
+      }
+      count = 1;
     } else {
       ctx = 'ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging';
       count = 2;
@@ -1801,15 +1815,50 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }
   };
 
+  const handleResetNewModel = () => {
+    setImage(null);
+    setImageFileName('');
+    setSelectedLead(null);
+    setAnalysisResult(null);
+    setPiecesMesures([]);
+    setCustomMesures([]);
+    setActivePieceIdx(0);
+    setChat([
+      {
+        role: 'ai',
+        text: isAr
+          ? 'مرحباً بك! أنا مستشارك الذكي في الفصالة والخياطة. ارفع صورة أي موديل جديد وسأقوم بتحليله بدقة متناهية وحساب المقاسات واستهلاك الثوب والكلفة.'
+          : 'Bienvenue ! Je suis votre assistant expert en confection. Uploadez la photo de votre nouveau modèle pour une analyse précise des mesures, métrage et coûts.'
+      }
+    ]);
+    setActiveTab('photo');
+  };
+
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImageFileName(file.name || '');
     setSelectedLead(null);
     setAnalysisResult(null);
+    setPiecesMesures([]);
+    setCustomMesures([]);
+    setActivePieceIdx(0);
+    // Clear old chat memory completely on new image upload
+    setChat([
+      {
+        role: 'ai',
+        text: isAr
+          ? `📸 تم تحميل صورة جديدة [ ${file.name} ]. اضغط على "تحليل الموديل بالذكاء الاصطناعي" لبدء التحليل الفوري.`
+          : `📸 Nouvelle image chargée [ ${file.name} ]. Cliquez sur "Analyser le modèle" pour démarrer l'analyse technique.`
+      }
+    ]);
     const reader = new FileReader();
-    reader.onload = (ev) => setImage(ev.target?.result as string);
+    reader.onload = (ev) => {
+      setImage(ev.target?.result as string);
+      setActiveTab('photo');
+    };
     reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const startAnalysis = async () => {
@@ -1820,11 +1869,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     const visualHint = await detectGarmentFromImageAsync(image, imageFileName);
 
     const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
-    const userChatText = chat.filter(c => c.role === 'user').map(c => c.text).join(' ');
-    // Prioritize visual classifier and user instructions; DO NOT contaminate with stale leads or old chats
-    const combinedContext = visualHint
-      ? `${visualHint} ${userChatText}`.trim()
-      : (selectedLead?.type ? `${selectedLead.type} ${userChatText}`.trim() : `t-shirt premium coton col rond ${userChatText}`.trim());
+    // Isolate new analysis: never contaminate new model analysis with old user chats
+    const combinedContext = visualHint || (selectedLead?.type ? selectedLead.type : 'pantalon jogging');
 
     const executeFallbackAnalysis = (noticeMsg?: string, contextOverride?: string) => {
       const ctxToUse = contextOverride || combinedContext;
@@ -1836,7 +1882,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       setAnalyzing(false);
       const reportText = buildRapportText(fallbackResult, isAr);
       const finalMsg = noticeMsg ? `${noticeMsg}\n\n${reportText}` : reportText;
-      setChat(prev => [...prev, { role: 'ai', text: finalMsg }]);
+      setChat([{ role: 'ai', text: finalMsg }]);
     };
 
     if (!apiKey) {
@@ -1859,9 +1905,10 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
 ⚠️ تنبيه حاسم وإلزامي لتحديد الموديل الحقيقي بدقة:
 - انظر بعناية تامة إلى الصورة المرفقة وحدد نوع الموديل الحقيقي بدقة تامة:
-  * إذا كان طقماً رياضياً من قطعتين (سويت شيرت كول رون مقلم + سروال جوغينغ)، حلله بدقة كقطعتين فقط (القطعة 1: سويت شيرت، والقطعة 2: سروال جوغينغ). لا تخترع قطعة ثالثة أو معطفاً غير موجود في الصورة إطلاقاً!
+  * إذا كان سروالاً أو بنطلون جوغينغ فقط (Pantalon / Jogging)، فضعه كقطعة واحدة فقط (سروال رياضي جوغينغ) باستهلاك حوالي 1.40م وتكلفة 40-55 درهم. لا تخترع سويت شيرت أو كول رون غير موجود!
+  * إذا كان تيشيرت أو سويت شيرت فقط، ضعه كقطعة واحدة مطابقة للصورة.
   * إذا كان فستاناً أو عباية أو قفطاناً، حللها كقطعة واحدة مطابقة للصورة.
-  * إذا كان هودي أو سويت شيرت أو سروال منفرد، ضعه كقطعة واحدة فقط في مصفوفة pieces.
+  * إذا كان طقماً رياضياً من قطعتين ظاهرتين معاً في الصورة (سويت شيرت + سروال)، حلله كقطعتين.
   * لا تخترع أي قطع إضافية أو معاطف أو ألبسة لم تظهر في الصورة!
 
 لكل قطعة في مصفوفة "pieces" أعطيني بدقة:
@@ -2092,7 +2139,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
         setAnalyzing(false);
 
         // Build rich chat message
-        setChat(prev => [...prev, { role: 'ai', text: buildRapportText(result, isAr) }]);
+        setChat([{ role: 'ai', text: buildRapportText(result, isAr) }]);
 
       } catch (parseErr) {
         console.warn('JSON parsing failed, falling back:', parseErr);
@@ -3676,6 +3723,14 @@ ${userMessage}
           >
             <Package className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{isAr ? 'اختيار من الطلبات' : 'Demandes Prospects'}</span>
           </button>
+          <button
+            onClick={handleResetNewModel}
+            title={isAr ? 'تحليل موديل جديد ومسح الذاكرة السابقة' : 'Nouveau modèle (Réinitialiser)'}
+            className="flex items-center gap-1 bg-rose-50 border border-rose-200 text-rose-700 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-rose-100 transition-all shadow-sm active:scale-95"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
+            <span className="hidden sm:inline">{isAr ? 'موديل جديد' : 'Nouveau Modèle'}</span>
+          </button>
           <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 bg-indigo-600 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-indigo-700 transition-all shadow-sm">
             <Upload className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{isAr ? 'رفع صورة' : 'Uploader Image'}</span>
           </button>
@@ -4043,124 +4098,52 @@ ${userMessage}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
               {analysisResult ? (
                 <>
-                  {/* Quick Model Presets Bar (Instant One-Tap Switcher for Atelier Confection) */}
-                  <div className={`p-2 bg-gradient-to-r from-slate-50 via-indigo-50/40 to-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between flex-wrap gap-2 text-xs ${isAr ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex items-center gap-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
-                      <span className="text-[10px] font-black text-slate-400 uppercase px-1">
-                        {isAr ? 'تغيير سريع للموديل:' : 'Modèle rapide :'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => applyPiecePreset('survet_2_pieces')}
-                        className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all flex items-center gap-1 border active:scale-95 ${
-                          analysisResult.pieces?.length === 2 && (analysisResult.category.includes('Survêtement') || analysisResult.category.includes('طقم رياضي'))
-                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
-                            : 'bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 border-slate-200'
-                        }`}
-                        title={isAr ? 'طقم رياضي قطعتين (سويت شيرت كول رون مقلم + سروال جوغينغ)' : 'Survêtement sport 2 pièces (Sweat col rond rayé + Jogging)'}
-                      >
-                        <span>🏃</span>
-                        <span>{isAr ? 'طقم رياضي (قطعتين)' : 'Survêtement (2 pcs)'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => applyPiecePreset('sweatshirt')}
-                        className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all flex items-center gap-1 border active:scale-95 ${
-                          analysisResult.pieces?.length === 1 && (analysisResult.category.includes('Sweat') || analysisResult.category.includes('سويت'))
-                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
-                            : 'bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 border-slate-200'
-                        }`}
-                        title={isAr ? 'سويت شيرت كول رون مقلم قطعة واحدة' : 'Sweatshirt col rond 1 pièce'}
-                      >
-                        <span>👕</span>
-                        <span>{isAr ? 'سويت شيرت (قطعة 1)' : 'Sweatshirt (1 pc)'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => applyPiecePreset('jogging')}
-                        className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all flex items-center gap-1 border active:scale-95 ${
-                          analysisResult.pieces?.length === 1 && (analysisResult.category.includes('Jogging') || analysisResult.category.includes('سروال'))
-                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
-                            : 'bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 border-slate-200'
-                        }`}
-                        title={isAr ? 'سروال جوغينغ رياضي مريح قطعة واحدة' : 'Pantalon de jogging 1 pièce'}
-                      >
-                        <span>👖</span>
-                        <span>{isAr ? 'سروال جوغينغ (قطعة 1)' : 'Jogging (1 pc)'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => applyPiecePreset('tshirt')}
-                        className="px-2.5 py-1 bg-white hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200 rounded-lg font-black text-[11px] transition-all flex items-center gap-1 active:scale-95"
-                      >
-                        <span>👕</span>
-                        <span>{isAr ? 'تيشرت قطن' : 'T-Shirt Coton'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => applyPiecePreset('robe_chemise')}
-                        className="px-2.5 py-1 bg-white hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200 rounded-lg font-black text-[11px] transition-all flex items-center gap-1 active:scale-95"
-                      >
-                        <span>👗</span>
-                        <span>{isAr ? 'فستان / عباية' : 'Robe / Abaya'}</span>
-                      </button>
-                    </div>
+                  {/* Pieces Navigation Bar (Rendered ONLY if multi-piece ensemble) */}
+                  {analysisResult.pieces && analysisResult.pieces.length > 1 && (
+                    <div className={`p-2 sm:p-2.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      <div className={`flex items-center gap-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
+                        <span className="text-[10px] font-black text-slate-400 uppercase px-1">{isAr ? 'القطع:' : 'Pièces :'}</span>
+                        {analysisResult.pieces.map((p: any, idx: number) => {
+                          const icon = getPieceIcon(p.name);
+                          const isSelected = activePieceIdx === idx;
+                          const shortName = (p.name || '').split('(')[0].trim();
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                setActivePieceIdx(idx);
+                                if (p.mesures?.length) setCustomMesures(p.mesures);
+                              }}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                                isSelected
+                                  ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
+                                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                              }`}
+                            >
+                              <span>{icon}</span>
+                              <span>{shortName}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
 
-                    <span className="text-[10px] text-slate-400 font-bold px-1 hidden md:inline">
-                      {isAr ? '⚡ تعديل فوري للباترون والقطع' : '⚡ Recalibrage instantané de la coupe'}
-                    </span>
-                  </div>
-
-                  {/* Unified Sleek Navigation Bar (Zero Duplication!) */}
-                  <div className={`p-2 sm:p-2.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                    {/* Pieces Selection Tabs with Icons & Real Garment Names */}
-                    <div className={`flex items-center gap-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
-                      <span className="text-[10px] font-black text-slate-400 uppercase px-1">{isAr ? 'القطع:' : 'Pièces :'}</span>
-                      {(analysisResult.pieces && analysisResult.pieces.length > 0 ? analysisResult.pieces : [{ name: analysisResult.category }]).map((p: any, idx: number) => {
-                        const icon = getPieceIcon(p.name);
-                        const isSelected = activePieceIdx === idx;
-                        const shortName = (p.name || '').split('(')[0].trim();
-                        return (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => {
-                              setActivePieceIdx(idx);
-                              if (p.mesures?.length) setCustomMesures(p.mesures);
-                            }}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
-                              isSelected
-                                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
-                                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-                            }`}
-                          >
-                            <span>{icon}</span>
-                            <span>{shortName}</span>
-                          </button>
-                        );
-                      })}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuoteInitialMode('chiffrage');
+                            setShowClientQuoteModal(true);
+                          }}
+                          className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-black rounded-xl flex items-center gap-1 transition-all active:scale-95 shadow-2xs"
+                          title={isAr ? 'تفاصيل كلفة البياسة حسب 3 مستويات جودة' : 'Coût de revient selon 3 niveaux de qualité'}
+                        >
+                          <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>{isAr ? 'كلفة 3 مستويات' : '3 Niveaux de Coût'}</span>
+                        </button>
+                      </div>
                     </div>
-
-                    {/* Real Detected Model Badge & 3-Tier Costing Access */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-3 py-1 bg-white border border-indigo-200/80 text-indigo-800 text-xs font-black rounded-xl flex items-center gap-1.5 shadow-2xs">
-                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>{analysisResult.category}</span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setQuoteInitialMode('chiffrage');
-                          setShowClientQuoteModal(true);
-                        }}
-                        className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-black rounded-xl flex items-center gap-1 transition-all active:scale-95 shadow-2xs"
-                        title={isAr ? 'تفاصيل كلفة البياسة حسب 3 مستويات جودة' : 'Coût de revient selon 3 niveaux de qualité'}
-                      >
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>{isAr ? 'كلفة 3 مستويات' : '3 Niveaux de Coût'}</span>
-                      </button>
-                    </div>
-                  </div>
+                  )}
 
                   {/* ACTIVE PIECE DISPLAY (Renders ONCE for the currently active tab — No Duplicate Cards!) */}
                   {(() => {
@@ -4249,6 +4232,18 @@ ${userMessage}
                               <span className="px-2.5 py-1 bg-emerald-600 text-white text-xs font-black rounded-xl shadow-xs">
                                 💰 {p.costEstimate || '—'}
                               </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setQuoteInitialMode('chiffrage');
+                                  setShowClientQuoteModal(true);
+                                }}
+                                className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-black rounded-xl flex items-center gap-1 transition-all active:scale-95 shadow-2xs"
+                                title={isAr ? 'تفاصيل كلفة البياسة حسب 3 مستويات جودة' : 'Coût de revient selon 3 niveaux de qualité'}
+                              >
+                                <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>{isAr ? '3 مستويات كلفة' : '3 Niveaux de Coût'}</span>
+                              </button>
                               {/* Delete piece button (only if > 1 piece) */}
                               {pieces.length > 1 && (
                                 <button

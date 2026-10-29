@@ -189,7 +189,7 @@ export const getGarmentTechnicalBreakdown = (
     } else if (
       text.includes('survet') || text.includes('tracksuit') || text.includes('سيرفيت') ||
       text.includes('2 pièces') || text.includes('2 pieces') || text.includes('قطعتين') ||
-      ((text.includes('sweat') || text.includes('pull') || text.includes('هودي') || text.includes('سويت') || text.includes('rayé')) && (text.includes('jogging') || text.includes('pantalon') || text.includes('سروال')))
+      ((text.includes('sweat') || text.includes('pull') || text.includes('هودي') || text.includes('سويت')) && (text.includes('jogging') || text.includes('pantalon') || text.includes('سروال')) && (text.includes('ensemble') || text.includes('طقم') || text.includes('set')))
     ) {
       catKey = 'survetement_2_pieces';
     } else if (
@@ -221,14 +221,18 @@ export const getGarmentTechnicalBreakdown = (
       catKey = 'abaya_beldi';
     } else if (text.includes('chemise') || text.includes('blouse') || text.includes('قميص') || text.includes('شوميز')) {
       catKey = 'chemise_blouse';
+    } else if (
+      text.includes('cargo') || text.includes('pantalon') || text.includes('jogging') ||
+      text.includes('jogger') || text.includes('jean') || text.includes('سروال') ||
+      text.includes('بنطلون') || text.includes('جوغينغ')
+    ) {
+      catKey = 'pantalon_cargo';
     } else if (text.includes('sport') || text.includes('hoodie') || text.includes('over') || text.includes('survêtement') || text.includes('هودي') || text.includes('رياضي') || text.includes('توني')) {
       catKey = 'sportswear_hoodie';
     } else if (text.includes('veste') || text.includes('manteau') || text.includes('gilet') || text.includes('blazer') || text.includes('جاكيت') || text.includes('معطف') || text.includes('فيست')) {
       catKey = 'veste_manteau';
     } else if (text.includes('shirt') || text.includes('short') || text.includes('t-shirt') || text.includes('polo') || text.includes('تيشرت') || text.includes('بولو') || text.includes('صيفي')) {
       catKey = 'tshirt_summer';
-    } else if (text.includes('cargo') || text.includes('pantalon') || text.includes('jean') || text.includes('سروال') || text.includes('بنطلون')) {
-      catKey = 'pantalon_cargo';
     } else if (text.includes('sac') || text.includes('sak') || text.includes('tote') || text.includes('صاك') || text.includes('حقيبة')) {
       catKey = 'sac_tote';
     } else {

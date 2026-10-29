@@ -701,6 +701,16 @@ export interface Lead {
   commercialUnlocked?: boolean;
   prixEchantillon?: number;
   patronageNotes?: string;
+  // Atelier Client Devis & Response fields
+  modeleReel?: string;
+  unitPrice?: number;
+  totalPrice?: number;
+  tissuSuggere?: string;
+  techDetails?: string;
+  delaiEstime?: string;
+  reponseAtelier?: string;
+  reponseAtelierDate?: string;
+  statusProgression?: 'reception' | 'etude' | 'echantillon' | 'production' | 'pret';
 }
 
 export const DEFAULT_COMPANY: CompanyProfile = {

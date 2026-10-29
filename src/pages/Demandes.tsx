@@ -121,6 +121,11 @@ export default function Demandes() {
   const [matierePrice, setMatierePrice] = useState<string>('');
   const [laborPrice, setLaborPrice] = useState<string>('');
   const [fabricType, setFabricType] = useState<string>('');
+  const [devisModeleReel, setDevisModeleReel] = useState<string>('');
+  const [devisDelai, setDevisDelai] = useState<string>('7 - 10 jours ouvrables');
+  const [devisReponse, setDevisReponse] = useState<string>('');
+  const [devisTechDetails, setDevisTechDetails] = useState<string>('');
+  const [devisProgression, setDevisProgression] = useState<'reception' | 'etude' | 'echantillon' | 'production' | 'pret'>('etude');
   const [factureCreated, setFactureCreated] = useState<{numero: string; client: string; montant: number} | null>(null);
   const [pdfProgress, setPdfProgress] = useState<'idle' | 'generating' | 'sharing' | 'done' | 'error'>('idle');
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
@@ -645,6 +650,23 @@ export default function Demandes() {
     }, 800);
   };
 
+  const openDevisModal = (lead: Lead, mode: 'echantillon' | 'commande' = 'commande') => {
+    setDevisLead(lead);
+    setDevisMode(mode);
+    setDevisModeleReel(lead.modeleReel || lead.type || '');
+    setDevisDelai(lead.delaiEstime || '7 - 10 jours ouvrables');
+    setDevisReponse(lead.reponseAtelier || '');
+    setDevisTechDetails(lead.techDetails || '');
+    setDevisProgression(lead.statusProgression || 'etude');
+    setFabricType(lead.tissuSuggere || '');
+    if (lead.unitPrice) {
+      setMatierePrice(String(Math.round(lead.unitPrice * 0.6)));
+      setLaborPrice(String(Math.round(lead.unitPrice * 0.4)));
+    } else {
+      setMatierePrice('');
+      setLaborPrice('');
+    }
+  };
 
   const handleSendToPortail = async () => {
     if (!devisLead || (!matierePrice && !laborPrice)) return;
@@ -673,6 +695,26 @@ export default function Demandes() {
       typeDoc: 'devis',
     };
     await saveRecord('factures', devis);
+
+    // Save full technical & commercial response directly on the Lead so Portail Client gets updated instantly
+    const updatedLead: Lead = {
+      ...devisLead,
+      modeleReel: devisModeleReel.trim() || devisLead.type,
+      unitPrice,
+      totalPrice: total,
+      tissuSuggere: fabricType.trim() || devisLead.tissuSuggere || 'مولتون قطن مبطن 320g / French Terry',
+      delaiEstime: devisDelai.trim() || devisLead.delaiEstime || '7 - 10 jours ouvrables',
+      techDetails: devisTechDetails.trim() || devisLead.techDetails || 'طبعة سيريغرافي فالصدر • كابوش مبطن بكوردون',
+      reponseAtelier: devisReponse.trim() || (isAr ? `تمت دراسة الباترون والثوب متوفر، سنبدأ العينة فور تأكيدكم (ثمن البياسة: ${unitPrice} درهم).` : `Patronage étudié et tissu disponible, prêt pour lancer l'échantillon dès confirmation (${unitPrice} MAD/pc).`),
+      reponseAtelierDate: new Date().toISOString(),
+      crmPrice: unitPrice,
+      crmPriceConfirmed: true,
+      crmDevisMode: devisMode,
+      statusProgression: devisProgression || 'etude'
+    };
+    await saveRecord('leads', updatedLead);
+    setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
+
     setFactureCreated({ numero: devis.numero, client: devisLead.name, montant: total });
     // Push notification to client
     sendPushToClient(
@@ -960,6 +1002,20 @@ export default function Demandes() {
                     </button>
                   </div>
 
+                  {/* Model Real Name Input */}
+                  <div className="mb-2">
+                    <label className={`block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 ${isAr ? 'text-right' : ''}`}>
+                      {isAr ? 'الاسم الحقيقي للموديل للزبون' : 'Nom Réel du Modèle'}
+                    </label>
+                    <input
+                      type="text"
+                      value={devisModeleReel}
+                      onChange={e => setDevisModeleReel(e.target.value)}
+                      placeholder={devisLead.type || (isAr ? 'مثلاً: هودي شتوي بكابوش مع طباعة' : 'Ex: Hoodie à Capuche avec Sérigraphie')}
+                      className={`w-full bg-slate-50 border border-slate-100 rounded-lg py-2 px-3 text-xs font-black text-slate-900 outline-none focus:border-indigo-400 ${isAr ? 'text-right' : ''}`}
+                    />
+                  </div>
+
                   {/* Qty + Unit price row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
@@ -977,15 +1033,15 @@ export default function Demandes() {
                   {/* Fabric Type / Details Input */}
                   <div className="mb-2">
                     <label className={`block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 ${isAr ? 'text-right' : ''}`}>
-                      {isAr ? 'تفاصيل السلعة' : 'Détails Matière'} <span className="text-slate-300 normal-case font-medium">{isAr ? '(اختياري)' : '(Optionnel)'}</span>
+                      {isAr ? 'نوع الثوب والسلعة' : 'Tissu & Détails Matière'} <span className="text-slate-300 normal-case font-medium">{isAr ? '(اختياري)' : '(Optionnel)'}</span>
                     </label>
-                    <input type="text" value={fabricType} onChange={e => setFabricType(e.target.value)} placeholder={isAr ? 'اكتب التفاصيل هنا...' : 'Écrivez les détails ici...'}
+                    <input type="text" value={fabricType} onChange={e => setFabricType(e.target.value)} placeholder={isAr ? 'مثال: مولتون قطن مبطن 320g / فرينش تيري' : 'Ex: Molleton Coton Gratté 320g / French Terry'}
                       dir={isAr ? 'rtl' : 'ltr'}
                       className={`w-full bg-slate-50 border border-slate-100 rounded-lg py-2 px-3 text-xs font-medium text-slate-900 outline-none focus:border-indigo-400 ${isAr ? 'text-right' : ''}`} />
                     <div className={`flex flex-wrap gap-1 mt-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
                       {(isAr 
-                        ? ['الثوب', 'الخيط', 'الطباعة', 'الطرز', 'اللوازم', 'التغليف']
-                        : ['Tissu', 'Fil', 'Impression', 'Broderie', 'Fournitures', 'Packaging']
+                        ? ['مولتون 320g', 'فرينش تيري', 'إنترلوك', 'جيرسي قطن', 'سيريغرافي', 'طرز', 'كوردون']
+                        : ['Molleton 320g', 'French Terry', 'Interlock', 'Jersey', 'Sérigraphie', 'Broderie', 'Cordon']
                       ).map(tag => (
                         <button
                           key={tag}
@@ -1009,7 +1065,7 @@ export default function Demandes() {
                   </div>
 
                   {/* Inputs row */}
-                  <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="grid grid-cols-2 gap-2 mb-2">
                     <div>
                       <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الثوب والسلعة' : 'Matière (MAD)'}</label>
                       <input type="number" value={matierePrice} onChange={e => setMatierePrice(e.target.value)} placeholder="0"
@@ -1020,6 +1076,51 @@ export default function Demandes() {
                       <input type="number" value={laborPrice} onChange={e => setLaborPrice(e.target.value)} placeholder="0"
                         className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2 px-3 text-sm font-black text-slate-900 outline-none focus:border-indigo-400" />
                     </div>
+                  </div>
+
+                  {/* Délai & Progression row */}
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div>
+                      <label className={`block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 ${isAr ? 'text-right' : ''}`}>
+                        {isAr ? 'أجل التسليم التقديري' : 'Délai estimé'}
+                      </label>
+                      <input
+                        type="text"
+                        value={devisDelai}
+                        onChange={e => setDevisDelai(e.target.value)}
+                        placeholder="7 - 10 jours ouvrables"
+                        className={`w-full bg-slate-50 border border-slate-100 rounded-lg py-1.5 px-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 ${isAr ? 'text-right' : ''}`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 ${isAr ? 'text-right' : ''}`}>
+                        {isAr ? 'مرحلة التقدم' : 'Étape Actuelle'}
+                      </label>
+                      <select
+                        value={devisProgression}
+                        onChange={e => setDevisProgression(e.target.value as any)}
+                        className={`w-full bg-slate-50 border border-slate-100 rounded-lg py-1.5 px-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 ${isAr ? 'text-right' : ''}`}
+                      >
+                        <option value="reception">{isAr ? '1. تم استلام الطلب ⏳' : '1. Reçu ⏳'}</option>
+                        <option value="etude">{isAr ? '2. دراسة الدوفي والباترون 📋' : '2. Étude & Devis 📋'}</option>
+                        <option value="echantillon">{isAr ? '3. خياطة العينة ✂️' : '3. Échantillon ✂️'}</option>
+                        <option value="production">{isAr ? '4. الإنتاج بالسلسلة 🏭' : '4. En Production 🏭'}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Note to Client */}
+                  <div className="mb-2">
+                    <label className={`block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 ${isAr ? 'text-right' : ''}`}>
+                      {isAr ? 'رسالة / رد المصنع للزبون بالبورتال' : 'Message / Note au Client'}
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={devisReponse}
+                      onChange={e => setDevisReponse(e.target.value)}
+                      placeholder={isAr ? 'مثال: تمت دراسة الباترون والثوب متوفر، سنبدأ العينة فور تأكيدكم...' : 'Ex: Patronage étudié et tissu disponible, prêt pour lancer l\'échantillon...'}
+                      className={`w-full bg-slate-50 border border-slate-100 rounded-lg py-1.5 px-3 text-xs font-medium text-slate-900 outline-none focus:border-indigo-400 resize-none ${isAr ? 'text-right' : ''}`}
+                    />
                   </div>
 
                   {/* Total */}
@@ -1043,8 +1144,8 @@ export default function Demandes() {
                       <MessageSquare className="w-3.5 h-3.5" /> {isAr ? 'واتساب (نص)' : 'Texte WhatsApp'}
                     </button>
                     <button onClick={handleSendToPortail} disabled={!matierePrice && !laborPrice}
-                      className="h-9 bg-slate-800 text-white rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-slate-700 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shadow-sm">
-                      <Globe className="w-3.5 h-3.5" /> {isAr ? 'للبورتال' : 'Au Portail'}
+                      className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shadow-sm active:scale-95">
+                      <Globe className="w-3.5 h-3.5" /> {isAr ? 'نشر فبوابة الزبون' : 'Publier au Portail'}
                     </button>
                   </div>
 
@@ -2296,7 +2397,7 @@ export default function Demandes() {
                           )}
                           
                           {!lead.type.startsWith('RECRUTEMENT:') && (
-                            <button onClick={() => { setDevisLead(lead); setDevisMode('commande'); }} title="Devis"
+                            <button onClick={() => openDevisModal(lead, 'commande')} title="Devis & Réponse Client"
                               className="w-8 h-8 bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white rounded-lg border border-amber-200 flex items-center justify-center transition-all shadow-sm">
                               <Calculator className="w-3.5 h-3.5" />
                             </button>
