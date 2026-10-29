@@ -63,11 +63,16 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
         2000
       ).catch(() => {});
 
+      const isMasterAdmin = trimId === 'admin@beya.ma' || trimId === 'admin@texttrack.ma' || trimId === 'admin';
+      const savedPhone = localStorage.getItem(`beya_user_phone_${trimId}`) || '+212 600 000 000';
+
       return {
-        id: `${role}-local`,
-        nom,
+        id: isMasterAdmin ? 'master-admin' : `${role}-local`,
+        nom: isMasterAdmin ? 'Admin BEYA' : nom,
         email: trimId.includes('@') ? trimId : 'admin@beya.ma',
         role: role as any,
+        telephone: savedPhone,
+        password: trimPass
       };
     }
     return null;
@@ -110,7 +115,9 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
         );
 
         if (!uErr && matchedUsers && matchedUsers.length > 0) {
-          const matched = matchedUsers.find((u: any) => {
+          // Prefer master-admin over duplicate rows
+          const sortedUsers = [...matchedUsers].sort((a: any, b: any) => (a.id === 'master-admin' ? -1 : 1));
+          const matched = sortedUsers.find((u: any) => {
             const uPass = (u.password || '').toString().trim();
             const uPin = (u.pinCode || u.pin_code || '').toString().trim();
             return (uPass && uPass === trimPass) || (uPin && uPin === trimPass);

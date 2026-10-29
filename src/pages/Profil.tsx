@@ -58,13 +58,45 @@ export default function Profil({ currentUser }: ProfilProps) {
     return { latest, op, cmd, totalDone, target };
   }, [missions, currentUser.id]);
 
+  useEffect(() => {
+    setFormData({
+      nom: currentUser.nom,
+      email: currentUser.email,
+      telephone: currentUser.telephone || '',
+      role: currentUser.role,
+      photo: currentUser.photo || ''
+    });
+  }, [currentUser]);
+
   const handleSave = async () => {
     setLoading(true);
     try {
-      const updatedUser = { ...currentUser, ...formData };
+      const cleanPhone = (formData.telephone || '').trim();
+      const updatedUser = { 
+        ...currentUser, 
+        ...formData, 
+        telephone: cleanPhone,
+        password: currentUser.password || 'HHyassin136'
+      };
+      
+      // 1. Direct update to Supabase users table by email and by id
+      try {
+        const { supabase } = await import('../supabase');
+        if (currentUser.email) {
+          await supabase.from('users').update({
+            nom: updatedUser.nom,
+            telephone: cleanPhone,
+            photo: updatedUser.photo || null
+          }).ilike('email', currentUser.email.toLowerCase().trim());
+        }
+      } catch (err) {
+        console.warn("Direct update users error:", err);
+      }
+
+      // 2. Save via saveRecord
       await saveRecord('users', updatedUser);
       
-      // ✅ Backup save photo to leads table to ensure cross-device sync (bypass users table limits)
+      // 3. Backup save photo to leads table to ensure cross-device sync
       if (formData.photo && formData.photo !== currentUser.photo) {
         try {
           const { supabase } = await import('../supabase');
@@ -86,12 +118,30 @@ export default function Profil({ currentUser }: ProfilProps) {
         }
       }
       
+      // 4. Save to localStorage immediately
       localStorage.setItem('textrack_auth', JSON.stringify(updatedUser));
+      if (currentUser.email) {
+        localStorage.setItem(`beya_user_phone_${currentUser.email.toLowerCase().trim()}`, cleanPhone);
+      }
+
+      // 5. Update local cache of users table
+      try {
+        const localUsersRaw = localStorage.getItem('textrack_data_users');
+        if (localUsersRaw) {
+          const localUsers = JSON.parse(localUsersRaw);
+          const idx = localUsers.findIndex((u: any) => u.id === currentUser.id || (u.email && u.email.toLowerCase() === currentUser.email?.toLowerCase()));
+          if (idx >= 0) {
+            localUsers[idx] = { ...localUsers[idx], ...updatedUser };
+            localStorage.setItem('textrack_data_users', JSON.stringify(localUsers));
+          }
+        }
+      } catch {}
+      
+      setFormData(prev => ({ ...prev, telephone: cleanPhone }));
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        window.location.reload();
-      }, 1000);
+      }, 3000);
     } catch (e) {
       alert('Erreur lors de la sauvegarde');
     } finally {
@@ -116,14 +166,22 @@ export default function Profil({ currentUser }: ProfilProps) {
       return;
     }
     
+    setLoading(true);
     try {
+      const newPass = passForm.new.trim();
       const email = (currentUser.email || '').toLowerCase().trim();
-      const updatedUser = { ...currentUser, password: passForm.new };
+      const updatedUser = { ...currentUser, password: newPass };
 
-      // 1. Update Supabase Auth if session exists
+      // 1. Direct update to Supabase users table by email (updates all matching rows)
       try {
         const { supabase } = await import('../supabase');
-        await supabase.auth.updateUser({ password: passForm.new });
+        await supabase
+          .from('users')
+          .update({ password: newPass })
+          .ilike('email', email);
+
+        // Also update Supabase Auth if session exists
+        await supabase.auth.updateUser({ password: newPass }).catch(() => {});
       } catch (authErr) {
         console.warn('Auth password update:', authErr);
       }
@@ -133,14 +191,27 @@ export default function Profil({ currentUser }: ProfilProps) {
 
       // 3. Save local override so offline/fallback login always recognizes the new password
       if (email) {
-        localStorage.setItem(`beya_override_pass_${email}`, passForm.new);
+        localStorage.setItem(`beya_override_pass_${email}`, newPass);
       }
       if (currentUser.role === 'admin' || email.includes('admin')) {
-        localStorage.setItem('beya_admin_pass', passForm.new);
+        localStorage.setItem('beya_admin_pass', newPass);
       }
 
       // 4. Update current user session in local auth storage
       localStorage.setItem('textrack_auth', JSON.stringify(updatedUser));
+
+      // 5. Update users table in local cache
+      try {
+        const rawUsers = localStorage.getItem('textrack_data_users');
+        if (rawUsers) {
+          const uList = JSON.parse(rawUsers);
+          const uIdx = uList.findIndex((u: any) => u.id === currentUser.id || (u.email && u.email.toLowerCase() === email));
+          if (uIdx >= 0) {
+            uList[uIdx] = { ...uList[uIdx], password: newPass };
+            localStorage.setItem('textrack_data_users', JSON.stringify(uList));
+          }
+        }
+      } catch {}
 
       setShowPasswordModal(false);
       setPassForm({ current: '', new: '', confirm: '' });
@@ -148,6 +219,8 @@ export default function Profil({ currentUser }: ProfilProps) {
       setTimeout(() => setSuccess(false), 3000);
     } catch (e) {
       setPassError(isAr ? 'حدث خطأ أثناء الحفظ' : 'Erreur lors de la sauvegarde');
+    } finally {
+      setLoading(false);
     }
   };
 

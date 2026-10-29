@@ -504,12 +504,16 @@ function AppContent() {
 
     const updateActivity = async () => {
       if (!currentUser || isLiveStore) return;
-      // Skip activity sync for backdoor or default users (not in DB)
-      if (currentUser.id === 'master-admin' || currentUser.id.startsWith('default-')) return;
+      // Skip activity sync for backdoor or local/default users
+      if (currentUser.id === 'master-admin' || currentUser.id.includes('local') || currentUser.id.startsWith('default-')) return;
       
       const now = new Date().toISOString();
       try {
-        await saveRecord('users', { ...currentUser, lastActive: now }, true);
+        const { supabase } = await import('./supabase');
+        await supabase
+          .from('users')
+          .update({ lastActive: now })
+          .eq('id', currentUser.id);
       } catch (e) {
         // Silent fail for background tasks to avoid disturbing the user
         console.warn("Background lastActive update failed:", e);
@@ -538,12 +542,20 @@ function AppContent() {
         
         // ? Sync current user state with database (handles photo persistence)
         if (currentUser) {
-          const latest = users.find(u => u.id === currentUser.id);
+          const latest = users.find(u => u.id === currentUser.id || (u.email && u.email.toLowerCase() === currentUser.email?.toLowerCase()));
           
           if (latest) {
              // Keep local photo if remote doesn't have it (fallback)
              if (!latest.photo && currentUser.photo) {
                 latest.photo = currentUser.photo;
+             }
+             // Keep local telephone if remote has null/empty
+             if (!latest.telephone && currentUser.telephone) {
+                latest.telephone = currentUser.telephone;
+             }
+             // Keep local password if remote has null/empty
+             if (!latest.password && currentUser.password) {
+                latest.password = currentUser.password;
              }
              // Only update if there are actual changes
              if (JSON.stringify(latest) !== JSON.stringify(currentUser)) {
