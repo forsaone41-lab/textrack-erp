@@ -62,7 +62,22 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     };
     sync();
   }, []);
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'demandes' | 'docs' | 'payments' | 'support' | 'info'>('overview');
+
+  const [newSignupCode, setNewSignupCode] = useState<string | null>(() => {
+    try {
+      return sessionStorage.getItem('beya_new_signup_code');
+    } catch {
+      return null;
+    }
+  });
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'demandes' | 'docs' | 'payments' | 'support' | 'info'>(() => {
+    try {
+      if (sessionStorage.getItem('beya_new_signup_code')) {
+        return 'demandes';
+      }
+    } catch {}
+    return 'overview';
+  });
   const [showNotifs, setShowNotifs] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const lastClientMessageCountRef = React.useRef(0);
@@ -103,31 +118,32 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
     try {
       const siteUrl = window.location.origin + window.location.pathname;
-      const { error } = await supabase.auth.resetPasswordForEmail(currentUser.email, {
-        redirectTo: siteUrl
+
+      // 1. Send genuine confirmation email (type: 'signup')
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email: currentUser.email,
+        options: {
+          emailRedirectTo: siteUrl
+        }
       });
 
-      if (error) {
-        if (error.message?.toLowerCase().includes('not found') || error.message?.toLowerCase().includes('user')) {
-          const { error: signUpError } = await supabase.auth.signUp({
-            email: currentUser.email,
-            password: currentUser.password || currentUser.pinCode || 'BeyaPass2026!',
-            options: {
-              data: {
-                full_name: currentUser.nom || 'Client',
-                role: currentUser.role || 'client'
-              }
+      if (resendError) {
+        // If user not in Supabase Auth yet, create auth user to trigger confirmation email
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: currentUser.email,
+          password: currentUser.password || currentUser.pinCode || 'BeyaPass2026!',
+          options: {
+            emailRedirectTo: siteUrl,
+            data: {
+              full_name: currentUser.nom || 'Client',
+              role: currentUser.role || 'client'
             }
-          });
-          if (signUpError && !signUpError.message?.includes('already registered')) {
-            throw signUpError;
           }
-          const { error: secondErr } = await supabase.auth.resetPasswordForEmail(currentUser.email, {
-            redirectTo: siteUrl
-          });
-          if (secondErr) throw secondErr;
-        } else {
-          throw error;
+        });
+
+        if (signUpError && !signUpError.message?.toLowerCase().includes('already registered')) {
+          throw signUpError;
         }
       }
 
@@ -136,7 +152,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       setTimeout(() => setEmailSentCooldown(false), 45000);
     } catch (err: any) {
       console.error('Email verification error:', err);
-      setEmailSentError(err.message || (isAr ? 'تعذر إرسال الرابط. يرجى التأكد من البريد أو تعيين كلمة المرور مباشرة.' : 'Impossible d\'envoyer le lien.'));
+      setEmailSentError(err.message || (isAr ? 'تعذر إرسال رابط تأكيد الحساب. يرجى المحاولة لاحقاً.' : 'Impossible d\'envoyer l\'email de confirmation.'));
     } finally {
       setEmailSending(false);
     }
@@ -443,7 +459,15 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
          await saveRecord('leads', updatedLead);
          setMesDemandes(prev => prev.map(m => m.id === editingDemandeId ? updatedLead : m));
       } else {
-         await saveLead(leadPayload);
+         const newLead = {
+           ...leadPayload,
+           id: `lead-${Date.now()}`,
+           crmStage: 'nouveau',
+           date: new Date().toISOString()
+         };
+         await saveLead(newLead);
+         setMesDemandes(prev => [newLead, ...prev]);
+         setActiveTab('demandes');
       }
 
       // Track Facebook Pixel Lead event
@@ -560,6 +584,13 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                 <Store className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
                 <span>{isAr ? 'العودة إلى BEYA STORE' : 'Retour à BEYA STORE'}</span>
               </button>
+              <button 
+                onClick={() => setShowPasswordModal(true)}
+                className="w-full py-3 mb-2 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-2xl text-xs font-bold transition-all border border-white/5 flex items-center justify-center gap-2"
+              >
+                <Lock className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isAr ? 'تغيير كلمة المرور' : 'Modifier mot de passe'}</span>
+              </button>
              <button 
                onClick={onLogout}
                className="w-full py-4 bg-white/5 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-transparent hover:border-rose-500/20"
@@ -583,6 +614,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
               </button>
               <h2 className="text-base md:text-2xl font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px] md:max-w-none">
                 {activeTab === 'overview' ? (isAr ? 'لوحة التحكم' : 'Tableau de Bord') :
+                 activeTab === 'demandes' ? (isAr ? 'تتبع طلباتي' : 'Mes Demandes') :
                  activeTab === 'orders' ? (isAr ? 'الطلبيات' : 'Commandes') :
                  activeTab === 'payments' ? (isAr ? 'الدفع والأداء' : 'Paiements') :
                  activeTab === 'docs' ? (isAr ? 'الوثائق' : 'Documents') :
@@ -695,18 +727,18 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                 </div>
                 <div>
                   <span className="font-bold text-slate-900">
-                    {isAr ? 'تأكيد الحساب وكلمة المرور:' : 'Sécurisation de compte :'}
+                    {isAr ? 'تأكيد البريد الإلكتروني :' : 'Confirmation d\'email :'}
                   </span>{' '}
                   <span className="text-slate-600">
                     {isAr 
-                      ? `حسابك (${currentUser.email}) نشط ومحمي. لتتمكن من استرجاع كلمة المرور عند نسيانها، يمكنك إرسال رابط لبريدك أو تعيين كلمة مرور خاصة بك مباشرة.`
-                      : `Votre compte (${currentUser.email}) est actif. Vous pouvez recevoir un lien de réinitialisation ou définir votre mot de passe directement.`}
+                      ? `يرجى تأكيد بريدك الإلكتروني (${currentUser.email}) لتفعيل حسابك بالكامل وتلقي إشعارات طلبياتك.`
+                      : `Veuillez confirmer votre adresse email (${currentUser.email}) pour sécuriser votre compte et recevoir vos notifications.`}
                   </span>
                   {emailSentSuccess && (
                     <p className="mt-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-1 rounded-lg border border-emerald-300">
                       {isAr 
-                        ? '✅ تم إرسال الرابط بنجاح! ⚠️ تفقّد صندوق الوارد (Boîte de réception) أو مجلد الرسائل غير المرغوب فيها (Spam).'
-                        : '✅ Lien envoyé avec succès ! ⚠️ Vérifiez votre boîte de réception ou le dossier Courrier indésirable (Spam).'}
+                        ? '✅ تم إرسال رابط تأكيد الحساب بنجاح! تفقّد بريدك الإلكتروني (Boîte de réception) أو مجلد الرسائل غير المرغوب فيها (Spam).'
+                        : '✅ Email de confirmation envoyé avec succès ! Vérifiez votre boîte de réception ou dossier Spam.'}
                     </p>
                   )}
                   {emailSentError && (
@@ -721,7 +753,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                   type="button"
                   onClick={handleSendVerificationEmail}
                   disabled={emailSending || emailSentCooldown}
-                  className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-[11px] shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-black rounded-xl text-[11px] shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {emailSending ? (
                     <>
@@ -731,23 +763,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                   ) : emailSentSuccess ? (
                     <>
                       <CheckCircle className="w-3.5 h-3.5" />
-                      <span>{isAr ? 'إعادة الإرسال' : 'Renvoyer'}</span>
+                      <span>{isAr ? 'إعادة إرسال التأكيد' : 'Renvoyer la confirmation'}</span>
                     </>
                   ) : (
                     <>
                       <Mail className="w-3.5 h-3.5" />
-                      <span>{isAr ? 'إرسال الرابط للإيميل' : 'Envoyer lien email'}</span>
+                      <span>{isAr ? 'تأكيد البريد الإلكتروني' : 'Confirmer mon email'}</span>
                     </>
                   )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordModal(true)}
-                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-[11px] shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
-                >
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{isAr ? 'تعيين كلمة المرور مباشرة' : 'Définir mot de passe'}</span>
                 </button>
 
                 <button
@@ -764,6 +787,53 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         )}
 
         <div className="p-1 md:p-10 max-w-6xl mx-auto">
+          {/* WELCOME NEW SIGNUP CREDENTIALS BANNER */}
+          {newSignupCode && (
+            <div className="mb-8 p-5 md:p-6 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 text-white rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-5 animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-2xl -mr-20 -mt-20 pointer-events-none" />
+              <div className="flex items-center gap-4 text-center md:text-left relative z-10">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
+                  <Sparkles className="w-7 h-7 text-yellow-300" />
+                </div>
+                <div>
+                  <h3 className="text-lg md:text-xl font-black">
+                    {isAr ? '🎉 مرحباً بك! تم تسجيل طلبك وفتح حسابك بنجاح' : '🎉 Bienvenue ! Votre demande et compte sont prêts'}
+                  </h3>
+                  <p className="text-emerald-100 text-xs md:text-sm font-medium mt-1">
+                    {isAr 
+                      ? 'هذا هو الرمز السري (PIN) الخاص بك للدخول إلى حسابك وتتبع طلباتك في أي وقت:' 
+                      : 'Voici votre code PIN secret pour accéder à votre espace et suivre vos demandes :'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 relative z-10 w-full md:w-auto justify-center">
+                <div className="bg-black/30 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl text-center">
+                  <span className="text-[10px] uppercase font-bold text-emerald-200 block">{isAr ? 'رمز الدخول' : 'Code PIN'}</span>
+                  <span className="font-mono text-2xl font-black tracking-widest text-white">{newSignupCode}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText(newSignupCode);
+                    alert(isAr ? 'تم نسخ الرمز السري بنجاح!' : 'Code PIN copié avec succès !');
+                  }}
+                  className="px-4 py-3 bg-white text-emerald-900 font-black text-xs rounded-xl shadow-md hover:bg-emerald-50 transition cursor-pointer"
+                >
+                  {isAr ? 'نسخ الرمز' : 'Copier'}
+                </button>
+                <button
+                  onClick={() => {
+                    sessionStorage.removeItem('beya_new_signup_code');
+                    setNewSignupCode(null);
+                  }}
+                  className="p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition cursor-pointer"
+                  title={isAr ? 'إغلاق التنبيه' : 'Fermer'}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'overview' && (
             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                {/* Welcome Hero */}
@@ -899,6 +969,49 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                      <button onClick={() => setActiveTab('orders')} className="text-xs font-black text-indigo-600 uppercase tracking-widest hover:underline">{isAr ? 'عرض الكل' : 'Voir tout'}</button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {found.length === 0 && (
+                      <div className="md:col-span-2 bg-white/70 backdrop-blur-xl p-8 rounded-3xl border border-slate-100 shadow-xl text-center">
+                        <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600">
+                          <Package className="w-8 h-8" />
+                        </div>
+                        <h4 className="text-lg font-black text-slate-800 mb-1">
+                          {isAr ? 'لا توجد طلبيات مؤكدة في الإنتاج حالياً' : 'Aucune commande en production pour le moment'}
+                        </h4>
+                        <p className="text-slate-500 text-sm max-w-md mx-auto mb-6">
+                          {mesDemandes.length > 0 
+                            ? (isAr ? `لديك ${mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__').length} طلب(ات) موديل قيد الدراسة والمراجعة من فريقنا.` : `Vous avez ${mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__').length} demande(s) en cours d'étude par notre équipe.`)
+                            : (isAr ? 'يمكنك تقديم طلب جديد وتحديد الموديلات التي ترغب في تصنيعها.' : 'Vous pouvez soumettre une nouvelle demande et spécifier vos modèles.')}
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center gap-3">
+                          {mesDemandes.length > 0 && (
+                            <button
+                              onClick={() => setActiveTab('demandes')}
+                              className="px-6 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition cursor-pointer"
+                            >
+                              {isAr ? 'عرض تتبع طلباتي' : 'Voir mes demandes'}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              setEditingDemandeId(null);
+                              setNewOrderForm({
+                                modele: '',
+                                quantite: '',
+                                details: '',
+                                photo: null as string | null,
+                                telephone: currentUser?.telephone || '',
+                                tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
+                              });
+                              setShowNewOrderModal(true);
+                            }}
+                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-500/20 transition flex items-center gap-2 cursor-pointer"
+                          >
+                            <Plus className="w-4 h-4" />
+                            {isAr ? '+ إضافة أرتيكل / موديل جديد' : '+ Nouvel Article / Modèle'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {found.slice(0, 2).map(cmd => {
                       const progress = (getPhaseIndex(cmd.phase) / (PHASE_ORDER.length - 1)) * 100;
                       const isActive = cmd.statut !== 'livré';
@@ -1026,6 +1139,24 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                     <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">{isAr ? 'تتبع طلباتي' : 'Mes Demandes'}</h1>
                     <p className="text-slate-500 font-medium italic">{isAr ? 'حالة الطلبات اللي صيفطتي' : 'Statut de vos demandes envoyées'}</p>
                   </div>
+                  <button 
+                    onClick={() => {
+                      setEditingDemandeId(null);
+                      setNewOrderForm({
+                        modele: '',
+                        quantite: '',
+                        details: '',
+                        photo: null as string | null,
+                        telephone: currentUser?.telephone || '',
+                        tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
+                      });
+                      setShowNewOrderModal(true);
+                    }}
+                    className="px-6 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-sm font-black uppercase tracking-wider shadow-xl shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+                  >
+                    <Plus className="w-5 h-5" />
+                    {isAr ? '+ إضافة أرتيكل / موديل جديد' : '+ Nouvel Article / Modèle'}
+                  </button>
                </div>
 
                {trueDemandes.length === 0 ? (
@@ -1034,7 +1165,25 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                      <MessageCircle className="w-10 h-10 text-indigo-300" />
                    </div>
                    <h3 className="text-xl font-black text-slate-800 mb-2">{isAr ? 'ماكاين حتى طلب' : 'Aucune demande'}</h3>
-                   <p className="text-slate-500">{isAr ? 'باقي ما صيفطتي لينا حتى موديل' : 'Vous n\'avez encore envoyé aucun modèle.'}</p>
+                   <p className="text-slate-500 mb-6">{isAr ? 'باقي ما صيفطتي لينا حتى موديل' : 'Vous n\'avez encore envoyé aucun modèle.'}</p>
+                   <button 
+                     onClick={() => {
+                       setEditingDemandeId(null);
+                       setNewOrderForm({
+                         modele: '',
+                         quantite: '',
+                         details: '',
+                         photo: null as string | null,
+                         telephone: currentUser?.telephone || '',
+                         tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
+                       });
+                       setShowNewOrderModal(true);
+                     }}
+                     className="inline-flex items-center gap-2 px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all cursor-pointer"
+                   >
+                     <Plus className="w-5 h-5" />
+                     {isAr ? '+ إضافة أول موديل ديالك الآن' : '+ Ajouter votre premier modèle'}
+                   </button>
                  </div>
                ) : (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2609,7 +2758,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[200] p-4" dir={isAr ? 'rtl' : 'ltr'}>
           <div className="bg-white rounded-[32px] md:rounded-[40px] w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in duration-300">
             <div className={`p-6 md:p-8 border-b border-slate-100 flex items-center justify-between shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
-              <h3 className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter">{isAr ? 'طلب إنتاج جديد' : 'Nouvelle Commande'}</h3>
+              <h3 className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                {isAr ? (editingDemandeId ? 'تعديل الموديل' : 'إضافة أرتيكل / موديل جديد') : (editingDemandeId ? 'Modifier le Modèle' : 'Nouvel Article / Modèle')}
+              </h3>
               <button onClick={() => setShowNewOrderModal(false)} className="text-slate-400 hover:text-slate-900 transition-colors">
                 <X className="w-6 h-6" />
               </button>

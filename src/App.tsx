@@ -133,6 +133,7 @@ const __INITIAL_URL__ = window.location.href;
 const __INITIAL_HASH__ = window.location.hash || '';
 const __INITIAL_SEARCH__ = window.location.search || '';
 const __IS_RECOVERY_REDIRECT__ = __INITIAL_HASH__.includes('type=recovery') || __INITIAL_SEARCH__.includes('type=recovery') || __INITIAL_URL__.includes('type=recovery');
+const __IS_SIGNUP_CONFIRM__ = __INITIAL_HASH__.includes('type=signup') || __INITIAL_SEARCH__.includes('type=signup') || __INITIAL_URL__.includes('type=signup') || __INITIAL_HASH__.includes('type=email_change');
 
 // If this is a recovery redirect, let Supabase's JS client pick up the tokens from the hash
 // BEFORE we clean the URL. Supabase's createClient auto-detects hash tokens on init.
@@ -289,12 +290,41 @@ function AppContent() {
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
 
   useEffect(() => {
-    // Listen for Supabase auth events (specifically PASSWORD_RECOVERY)
+    // Listen for Supabase auth events (specifically PASSWORD_RECOVERY and verification)
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setShowRecoveryModal(true);
+      } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        if (session?.user?.email_confirmed_at) {
+          try {
+            const stored = localStorage.getItem('textrack_auth');
+            if (stored) {
+              const u = JSON.parse(stored);
+              if (!u.emailVerified) {
+                u.emailVerified = true;
+                localStorage.setItem('textrack_auth', JSON.stringify(u));
+                saveRecord('users', u, true).catch(() => {});
+              }
+            }
+          } catch (e) {}
+        }
       }
     });
+
+    // Handle signup/email confirmation redirects
+    if (__IS_SIGNUP_CONFIRM__) {
+      try {
+        const stored = localStorage.getItem('textrack_auth');
+        if (stored) {
+          const u = JSON.parse(stored);
+          u.emailVerified = true;
+          localStorage.setItem('textrack_auth', JSON.stringify(u));
+          saveRecord('users', u, true).catch(() => {});
+        }
+      } catch (e) {
+        console.error('Failed to confirm email on redirect', e);
+      }
+    }
 
     // Use the module-level flag captured BEFORE HashRouter could wipe the hash.
     // This is the only reliable way to detect recovery redirects with HashRouter.

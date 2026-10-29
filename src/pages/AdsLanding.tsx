@@ -212,9 +212,15 @@ export default function AdsLanding() {
                   Télécharger Welcome PDF
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 </button>
-                <a href="/#/login" className="w-full py-4 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
-                  Se connecter à votre espace
-                </a>
+                <button 
+                  onClick={() => {
+                    window.location.hash = '#/';
+                    window.location.reload();
+                  }} 
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/20"
+                >
+                  🚀 {isAr ? 'الدخول إلى فضاء الزبون وتتبع طلباتي' : 'Accéder à votre espace client'}
+                </button>
               </div>
             </div>
           )}
@@ -576,6 +582,8 @@ export default function AdsLanding() {
                       adresse: ''
                     };
                     await saveRecord('users', newClient);
+                    localStorage.setItem('textrack_auth', JSON.stringify(newClient));
+                    sessionStorage.setItem('beya_new_signup_code', autoCode);
                     setNewClientCode({ name: clientName, code: autoCode, email: newClient.email, phone: fullPhone, id: newId });
                     if (totMin > 0) {
                       setTotalEstimate({ min: totMin, max: totMax });
