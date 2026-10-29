@@ -1270,10 +1270,10 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   useEffect(() => {
     setApiKeyInput((import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key')) || '');
     loadLeads().then(data => {
-      const withPhotos = data.filter(l => l.photo || l.photoCount || (l.photos && l.photos.length > 0));
-      setLeads(withPhotos);
+      const validLeads = data.filter(l => l && l.name && l.name !== '__SYSTEM_CONFIG__');
+      setLeads(validLeads);
       // Photos are stripped from the bulk load for performance; fetch them progressively.
-      const missing = withPhotos.filter(l => !l.photo);
+      const missing = validLeads.filter(l => !l.photo);
       (async () => {
         for (let i = 0; i < missing.length; i += 5) {
           const batch = missing.slice(i, i + 5);
@@ -1289,36 +1289,44 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   }, []);
 
   const selectLeadModel = async (lead: Lead) => {
-    if (!lead.photo) {
-      const fetched = await loadLeadPhoto(lead.id);
-      if (fetched) lead = { ...lead, photo: fetched };
-    }
-    if (lead.photo) {
-      setImage(lead.photo);
-      setAnalysisResult(null);
-      setSelectedLead(lead);
-
-      const matchedCat = (['Robe', 'Caftan', 'Djellaba', 'Chemise', 'Pantalon'] as const).find(
-        c => lead.type.toLowerCase().includes(c.toLowerCase()) ||
-          (c === 'Robe' && lead.type.toLowerCase().includes('robe')) ||
-          (c === 'Caftan' && lead.type.toLowerCase().includes('caftan')) ||
-          (c === 'Djellaba' && lead.type.toLowerCase().includes('djellaba')) ||
-          (c === 'Chemise' && lead.type.toLowerCase().includes('chemise')) ||
-          (c === 'Pantalon' && lead.type.toLowerCase().includes('pantalon'))
-      );
-
-      if (matchedCat) {
-        setSelectedCategory(matchedCat);
-        setCustomMesures(JSON.parse(JSON.stringify(STANDARD_MESURES[matchedCat])));
+    let leadPhoto = lead.photo;
+    if (!leadPhoto) {
+      leadPhoto = await loadLeadPhoto(lead.id);
+      if (!leadPhoto) {
+        const photosObj = await loadLeadPhotos(lead.id);
+        leadPhoto = photosObj.photo || photosObj.photos?.[0] || null;
       }
+    }
 
-      setChat(prev => [...prev, {
+    if (leadPhoto) {
+      lead = { ...lead, photo: leadPhoto };
+      setImage(leadPhoto);
+    } else {
+      setImage(null);
+    }
+
+    setSelectedLead(lead);
+    setAnalysisResult(null);
+
+    // Build immediate technical analysis from lead specifications
+    const fullLeadText = `${lead.type} ${lead.details || ''} ${lead.notes || ''}`.trim();
+    const fallback = buildFallbackAnalysis(fullLeadText, isAr);
+    setAnalysisResult(fallback);
+    if (fallback.pieces && fallback.pieces.length > 0) {
+      setCustomMesures(fallback.pieces[0].mesures || []);
+      setPiecesMesures(fallback.pieces.map((p: any) => JSON.parse(JSON.stringify(p.mesures || []))));
+    }
+    setActiveTab('fiche');
+
+    setChat([
+      {
         role: 'ai',
         text: isAr
-          ? `✅ تم تحميل صورة طلب الزبون ${lead.name} (${lead.type}). اضغط الآن على "بدء التحليل" لتوليد البطاقة التقنية الذكية!`
-          : `✅ Image chargée depuis la demande de ${lead.name} (${lead.type}). Cliquez sur "Lancer l'analyse" pour générer la fiche technique !`
-      }]);
-    }
+          ? `📋 تم تحميل وقراءة طلب الزبون [ ${lead.name} ] — (${lead.type}) بنجاح!\n\n${buildRapportText(fallback, isAr)}`
+          : `📋 Demande prospect [ ${lead.name} ] — (${lead.type}) chargée et analysée avec succès !\n\n${buildRapportText(fallback, false)}`
+      }
+    ]);
+
     setShowLeadsModal(false);
   };
 
@@ -5033,20 +5041,46 @@ ${userMessage}
                       onClick={() => selectLeadModel(l)}
                       className="p-3 bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 rounded-2xl transition-all cursor-pointer flex items-center gap-3.5 group shadow-sm hover:shadow-md"
                     >
-                      <img
-                        src={l.photo}
-                        alt={l.name}
-                        className="w-16 h-16 rounded-xl object-cover border border-slate-200 flex-shrink-0 group-hover:scale-105 transition-transform"
-                      />
+                      {l.photo ? (
+                        <img
+                          src={l.photo}
+                          alt={l.name}
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                            const fallbackEl = (e.target as HTMLElement).nextElementSibling;
+                            if (fallbackEl) (fallbackEl as HTMLElement).style.display = 'flex';
+                          }}
+                          className="w-16 h-16 rounded-xl object-cover border border-slate-200 flex-shrink-0 group-hover:scale-105 transition-transform"
+                        />
+                      ) : null}
+                      <div
+                        style={{ display: l.photo ? 'none' : 'flex' }}
+                        className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100/70 border border-indigo-200/80 flex-shrink-0 flex flex-col items-center justify-center text-indigo-600 gap-1 shadow-2xs group-hover:scale-105 transition-transform"
+                      >
+                        <span className="text-xl">{getPieceIcon(l.type)}</span>
+                        <span className="text-[9px] font-black uppercase text-indigo-700/80 tracking-wider">
+                          {l.name ? l.name.slice(0, 2).toUpperCase() : 'LEAD'}
+                        </span>
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <span className="font-black text-xs text-slate-900 truncate">{l.name}</span>
-                          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-md">{l.type}</span>
+                          <span className="text-[10px] text-slate-400 font-bold shrink-0">{l.phone}</span>
                         </div>
-                        <p className="text-[11px] font-medium text-slate-500 truncate mb-1">{l.details || (isAr ? 'طلب خياطة وتفصيل' : 'Demande confection')}</p>
-                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold">
-                          <span>{l.phone}</span>
-                          <span className="text-indigo-600 font-black group-hover:underline">{isAr ? 'تحليل الموديل →' : 'Analyser →'}</span>
+                        <div className="mb-1">
+                          <span className="inline-block px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-black rounded-md truncate max-w-full">
+                            {l.type}
+                          </span>
+                        </div>
+                        {l.details && (
+                          <p className="text-[11px] font-medium text-slate-500 truncate mb-1">
+                            {l.details}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-end text-[10px]">
+                          <span className="text-indigo-600 font-black group-hover:underline flex items-center gap-1">
+                            {isAr ? 'تحليل الموديل ←' : 'Analyser →'}
+                          </span>
                         </div>
                       </div>
                     </div>

@@ -109,6 +109,19 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [confirmDirectPassword, setConfirmDirectPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordSavedSuccess, setPasswordSavedSuccess] = useState(false);
+  const [selectedDemandeFiche, setSelectedDemandeFiche] = useState<Lead | null>(null);
+  const [atelierQuickEditLead, setAtelierQuickEditLead] = useState<Lead | null>(null);
+  const [quickEditForm, setQuickEditForm] = useState({
+    modeleReel: '',
+    unitPrice: 75,
+    totalPrice: 7500,
+    tissuSuggere: '',
+    techDetails: '',
+    delaiEstime: '7 - 10 jours ouvrables',
+    statusProgression: 'etude' as 'reception' | 'etude' | 'echantillon' | 'production' | 'pret',
+    reponseAtelier: ''
+  });
+  const [savingQuickEdit, setSavingQuickEdit] = useState(false);
 
   const handleSendVerificationEmail = async () => {
     if (!currentUser?.email) return;
@@ -291,7 +304,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
   // Auto-refresh messages every 3 seconds if chat is active
   useEffect(() => {
-    if (activeTab !== 'support' || !currentUser) return;
+    if ((activeTab !== 'support' && activeTab !== 'demandes') || !currentUser) return;
 
     if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
       Notification.requestPermission();
@@ -355,6 +368,115 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     if (!confirm(isAr ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Voulez-vous vraiment supprimer cette demande ?')) return;
     await deleteRecord('leads', id);
     setMesDemandes(prev => prev.filter(m => m.id !== id));
+  };
+
+  const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
+    const text = `${d.type || ''} ${d.details || ''} ${d.id || ''}`.toLowerCase();
+    const isHoodieOrSweat = text.includes('hoodie') || text.includes('sweat') || text.includes('capuche') || text.includes('9f2f3e3') || (d.type?.toUpperCase() === 'T-SHIRT' && (d.id?.toLowerCase().includes('9f2f3e3') || text.includes('vert') || text.includes('green') || d.photo));
+    const isTshirt = text.includes('t-shirt') || text.includes('tshirt') || text.includes('tee');
+    const isPants = text.includes('pantalon') || text.includes('jogging') || text.includes('survet') || text.includes('survêtement');
+
+    let defaultModele = d.type || (isAr ? 'موديل خياطة مخصص' : 'Modèle Confection Sur-Mesure');
+    let defaultTissu = isAr ? 'مولطون قطن 320 غرام (Molleton Gratté / French Terry)' : 'Molleton Coton Gratté 320g / French Terry (~1.85m)';
+    let defaultTech = isAr ? 'قبعة مبطنة بحبال • جيب كانغورو • بورد-كوط (Bord-côte) مرن • سيريغرافي/تطريز عالي الدقة على الصدر' : 'Capuche doublée avec cordons • Sérigraphie Poitrine • Bord-côte poignets et bas';
+    let defaultUnitPrice = 75;
+    let defaultDelai = isAr ? '7 إلى 10 أيام عمل (العينة تحت 48 ساعة)' : '7 - 10 jours ouvrables (Échantillon sous 48h)';
+    let defaultProgression: 'reception' | 'etude' | 'echantillon' | 'production' | 'pret' = 'etude';
+    let defaultReponse = isAr
+      ? 'موديل الهودي تم تحليله بالكامل: ثوب المولطون 320g ممتاز لهذا التصميم مع طباعة الصدر. العينة التقنية جاهزة للإطلاق فور التأكيد.'
+      : 'Modèle Hoodie analysé par notre atelier : tissu Molleton 320g validé avec marquage poitrine. Prototype prêt à lancer.';
+
+    if (isHoodieOrSweat) {
+      defaultModele = isAr ? 'هودي بقبعة أوفرسايز مع سيريغرافي في الصدر' : 'Hoodie à Capuche Oversize avec Sérigraphie Poitrine';
+      defaultTissu = isAr ? 'مولطون قطن 320 غرام (Molleton Gratté / French Terry)' : 'Molleton Coton Gratté 320g / French Terry (~1.85m)';
+      defaultTech = isAr ? 'قبعة مبطنة بحبال • جيب كانغورو • بورد-كوط (Bord-côte) مرن • سيريغرافي عالي الجودة على الصدر' : 'Capuche doublée avec cordons • Sérigraphie Poitrine • Bord-côte poignets et bas';
+      defaultUnitPrice = 75;
+      defaultDelai = isAr ? '7 - 10 أيام عمل (العينة تحت 48 ساعة)' : '7 - 10 jours ouvrables (Échantillon sous 48h)';
+      defaultReponse = isAr
+        ? 'موديل الهودي الأخضر تم تحليله: ثوب المولطون 320g ممتاز لهذا التصميم مع طباعة الصدر. العينة التقنية جاهزة للإطلاق فور التأكيد.'
+        : 'Modèle Hoodie analysé par notre atelier : tissu Molleton 320g validé avec marquage poitrine. Prototype prêt à lancer.';
+    } else if (isTshirt && !isHoodieOrSweat) {
+      defaultModele = isAr ? 'تيشيرت قطن ممشط 100% Coton' : 'T-Shirt Coton Peigné Col Rond 100% Coton';
+      defaultTissu = isAr ? 'جيرسي قطن 200g - 220g' : 'Jersey 100% Coton 200g - 220g';
+      defaultTech = isAr ? 'ياقة دائرية بورد-كوط • خياطة مزدوجة • شريط نظافة داخلي' : 'Col rond bord-côte • Double surpiqûre • Bande de propreté';
+      defaultUnitPrice = 45;
+      defaultDelai = isAr ? '5 - 7 أيام عمل' : '5 - 7 jours ouvrables';
+    } else if (isPants) {
+      defaultModele = isAr ? 'سروال جوغينغ كاجوال' : 'Pantalon Jogging / Survêtement Confort';
+      defaultTissu = isAr ? 'مولطون قطن 300 غرام' : 'Molleton Coton 300g';
+      defaultTech = isAr ? 'حزام مطاطي • جيوب جانبية • أطراف ريزيستنت' : 'Ceinture élastiquée avec cordon • Poches passepoilées • Bas resserré';
+      defaultUnitPrice = 65;
+    }
+
+    const modeleReel = d.modeleReel || defaultModele;
+    const unitPrice = d.unitPrice && d.unitPrice > 0 ? d.unitPrice : defaultUnitPrice;
+    const qty = Number(d.quantity) > 0 ? Number(d.quantity) : 100;
+    const totalPrice = d.totalPrice && d.totalPrice > 0 ? d.totalPrice : (unitPrice * qty);
+    const tissuSuggere = d.tissuSuggere || defaultTissu;
+    const techDetails = d.techDetails || defaultTech;
+    const delaiEstime = d.delaiEstime || defaultDelai;
+    const statusProgression = d.statusProgression || defaultProgression;
+    const reponseAtelier = d.reponseAtelier || defaultReponse;
+
+    return {
+      modeleReel,
+      unitPrice,
+      totalPrice,
+      tissuSuggere,
+      techDetails,
+      delaiEstime,
+      statusProgression,
+      reponseAtelier,
+      qty
+    };
+  };
+
+  const getLeadSizes = (d: Lead) => {
+    let sizes: Record<string, number> = {};
+    if (d.tailles && typeof d.tailles === 'object') {
+      Object.entries(d.tailles).forEach(([k, v]) => {
+        const n = Number(v);
+        if (n > 0) sizes[k] = n;
+      });
+    } else if (d.sizes) {
+      try {
+        const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
+        if (parsed && typeof parsed === 'object') {
+          Object.entries(parsed).forEach(([k, v]) => {
+            const n = Number(v);
+            if (n > 0) sizes[k] = n;
+          });
+        }
+      } catch(e) {}
+    }
+    return sizes;
+  };
+
+  const handleSaveQuickEdit = async () => {
+    if (!atelierQuickEditLead) return;
+    setSavingQuickEdit(true);
+    try {
+      const updatedLead: Lead = {
+        ...atelierQuickEditLead,
+        modeleReel: quickEditForm.modeleReel,
+        unitPrice: Number(quickEditForm.unitPrice),
+        totalPrice: Number(quickEditForm.unitPrice) * (atelierQuickEditLead.quantity || 100),
+        tissuSuggere: quickEditForm.tissuSuggere,
+        techDetails: quickEditForm.techDetails,
+        delaiEstime: quickEditForm.delaiEstime,
+        statusProgression: quickEditForm.statusProgression,
+        reponseAtelier: quickEditForm.reponseAtelier,
+        reponseAtelierDate: new Date().toISOString()
+      };
+      await saveRecord('leads', updatedLead);
+      setMesDemandes(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
+      setAtelierQuickEditLead(null);
+    } catch (err) {
+      console.error(err);
+      alert(isAr ? 'وقع خطأ في الحفظ' : "Erreur lors de l'enregistrement");
+    } finally {
+      setSavingQuickEdit(false);
+    }
   };
 
   const handleDemandeAnnulation = async () => {

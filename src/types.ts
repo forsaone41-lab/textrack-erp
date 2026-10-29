@@ -1162,23 +1162,54 @@ export async function loadLeads(): Promise<Lead[]> {
 
 export async function loadLeadPhoto(leadId: string): Promise<string | null> {
   try {
-    const { data } = await supabase
-      .from('leads')
-      .select('photo')
-      .eq('id', leadId)
-      .single();
-    return data?.photo || null;
-  } catch { return null; }
-}
+    // 1. Try local storage cache first
+    try {
+      const localRaw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
+      if (localRaw) {
+        const parsed = JSON.parse(localRaw);
+        if (Array.isArray(parsed)) {
+          const found = parsed.find((l: any) => l && l.id === leadId);
+          if (found?.photo) return found.photo;
+          if (found?.photos && found.photos.length > 0) return found.photos[0];
+        }
+      }
+    } catch {}
 
-export async function loadLeadPhotos(leadId: string): Promise<{photo: string | null, photos: string[] | null}> {
-  try {
+    // 2. Query Supabase
     const { data } = await supabase
       .from('leads')
       .select('photo, photos')
       .eq('id', leadId)
       .single();
-    return { photo: data?.photo || null, photos: data?.photos || null };
+    return data?.photo || data?.photos?.[0] || null;
+  } catch { return null; }
+}
+
+export async function loadLeadPhotos(leadId: string): Promise<{photo: string | null, photos: string[] | null}> {
+  try {
+    try {
+      const localRaw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
+      if (localRaw) {
+        const parsed = JSON.parse(localRaw);
+        if (Array.isArray(parsed)) {
+          const found = parsed.find((l: any) => l && l.id === leadId);
+          if (found?.photo || (found?.photos && found.photos.length > 0)) {
+            const photo = found.photo || found.photos[0] || null;
+            const photos = found.photos || (photo ? [photo] : null);
+            return { photo, photos };
+          }
+        }
+      }
+    } catch {}
+
+    const { data } = await supabase
+      .from('leads')
+      .select('photo, photos')
+      .eq('id', leadId)
+      .single();
+    const photo = data?.photo || data?.photos?.[0] || null;
+    const photos = data?.photos || (photo ? [photo] : null);
+    return { photo, photos };
   } catch { return {photo: null, photos: null}; }
 }
 
