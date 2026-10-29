@@ -340,6 +340,11 @@ export default function Demandes() {
     }
   };
 
+  const handlePhotoLoaded = (id: string, photo: string, photos?: string[]) => {
+    savePhotosToCache({ [id]: photo });
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, photo, ...(photos ? { photos } : {}) } : l));
+  };
+
   const refreshData = async (forceClearCache = false) => {
     setLoading(true);
     if (forceClearCache) {
@@ -2350,37 +2355,13 @@ export default function Demandes() {
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {/* Photo */}
                           {category !== 'recrutement' && (
-                          <div className="flex flex-col items-center gap-1.5 shrink-0">
-                            <div className="relative cursor-pointer group" onClick={(e) => openPhotoPreview(lead, e)}>
-                              <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center text-slate-300 shadow-sm relative transition-all group-hover:border-indigo-300 group-hover:shadow-md">
-                                {(() => {
-                                  const itemPhoto = lead.photo || (lead.photos && lead.photos[0]) || photoCache[lead.id];
-                                  return itemPhoto ? (
-                                    <>
-                                      <img src={itemPhoto} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt="" loading="lazy" />
-                                      {(lead.photoCount || 0) > 1 && (
-                                        <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[8px] font-black px-1.5 py-0.5 rounded-tl-lg backdrop-blur-sm shadow-sm border-t border-l border-white/10">
-                                          +{(lead.photoCount || 0) - 1}
-                                        </div>
-                                      )}
-                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <Eye className="w-5 h-5 text-white" />
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <ImageIcon className="w-6 h-6 opacity-50 group-hover:opacity-100 group-hover:text-indigo-400 transition-all" />
-                                  );
-                                })()}
-                              </div>
-                            </div>
-                            <button 
-                              onClick={(e) => openPhotoPreview(lead, e)}
-                              className="text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md hover:bg-indigo-100 transition-colors flex items-center gap-1"
-                            >
-                              <Eye className="w-3 h-3" />
-                              {isAr ? 'عرض' : 'Voir'}
-                            </button>
-                          </div>
+                            <LeadThumbnail
+                              lead={lead}
+                              photoCache={photoCache}
+                              onPhotoLoaded={handlePhotoLoaded}
+                              onOpenPreview={openPhotoPreview}
+                              isAr={isAr}
+                            />
                           )}
                           
                           <div className="min-w-0 flex-1">
@@ -2539,7 +2520,7 @@ export default function Demandes() {
                                 <button onClick={() => setConfirmLead(lead)}
                                   className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">✓ {isAr ? 'تأكيد' : 'Valider'}</button>
                               )}
-                              {(lead.photo || (lead.photos && lead.photos.length > 0)) && !lead.type.startsWith('RECRUTEMENT:') && (
+                              {(lead.photo || (lead.photos && lead.photos.length > 0) || photoCache[lead.id]) && !lead.type.startsWith('RECRUTEMENT:') && (
                                 <button onClick={() => setAiAnalysisLead(lead)}
                                   className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-500 hover:text-white transition-all shadow-sm flex items-center gap-1"
                                   title={isAr ? 'تحليل الموديل واستخراج القياسات' : 'Analyser le modèle et extraire les mesures'}>

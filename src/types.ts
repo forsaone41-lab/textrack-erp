@@ -1044,7 +1044,7 @@ export async function loadLeads(): Promise<Lead[]> {
     let supaData: any[] | null = null;
     let error: any = null;
 
-    const res = await supabase
+    let res = await supabase
       .from('leads')
       .select(LEADS_COLS)
       .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__)')
