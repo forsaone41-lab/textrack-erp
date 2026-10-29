@@ -83,6 +83,89 @@ function renderFormattedText(text: string) {
   return blocks;
 }
 
+const LeadThumbnail = ({
+  lead,
+  photoCache,
+  onPhotoLoaded,
+  onOpenPreview,
+  isAr
+}: {
+  lead: Lead;
+  photoCache: Record<string, string>;
+  onPhotoLoaded: (id: string, photo: string, photos?: string[]) => void;
+  onOpenPreview: (lead: Lead, e: React.MouseEvent) => void;
+  isAr: boolean;
+}) => {
+  const currentPhoto = lead.photo || (lead.photos && lead.photos[0]) || photoCache[lead.id];
+  const [photo, setPhoto] = useState<string | null>(currentPhoto || null);
+  const [loading, setLoading] = useState(!currentPhoto);
+
+  useEffect(() => {
+    if (currentPhoto) {
+      setPhoto(currentPhoto);
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    setLoading(true);
+
+    loadLeadPhoto(lead.id).then(loadedPhoto => {
+      if (!isMounted) return;
+      setLoading(false);
+      if (loadedPhoto) {
+        setPhoto(loadedPhoto);
+        onPhotoLoaded(lead.id, loadedPhoto);
+      }
+    }).catch(() => {
+      if (isMounted) setLoading(false);
+    });
+
+    return () => { isMounted = false; };
+  }, [lead.id, currentPhoto]);
+
+  return (
+    <div className="flex flex-col items-center gap-1.5 shrink-0">
+      <div className="relative cursor-pointer group" onClick={(e) => onOpenPreview(lead, e)}>
+        <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center text-slate-300 shadow-sm relative transition-all group-hover:border-indigo-300 group-hover:shadow-md">
+          {photo ? (
+            <>
+              <img
+                src={photo}
+                className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                alt=""
+                loading="lazy"
+              />
+              {(lead.photoCount || 0) > 1 && (
+                <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[8px] font-black px-1.5 py-0.5 rounded-tl-lg backdrop-blur-sm shadow-sm border-t border-l border-white/10">
+                  +{(lead.photoCount || 0) - 1}
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Eye className="w-5 h-5 text-white" />
+              </div>
+            </>
+          ) : loading ? (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 animate-pulse">
+              <ImageIcon className="w-5 h-5 text-slate-300 animate-pulse" />
+            </div>
+          ) : (
+            <ImageIcon className="w-6 h-6 opacity-40 group-hover:opacity-100 group-hover:text-indigo-400 transition-all" />
+          )}
+        </div>
+      </div>
+      <button 
+        type="button"
+        onClick={(e) => onOpenPreview(lead, e)}
+        className="text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md hover:bg-indigo-100 transition-colors flex items-center gap-1"
+      >
+        <Eye className="w-3 h-3" />
+        {isAr ? 'عرض' : 'Voir'}
+      </button>
+    </div>
+  );
+};
+
 export default function Demandes() {
   const { isAr } = useLang();
   const navigate = useNavigate();

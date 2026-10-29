@@ -3,7 +3,7 @@ import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, Messa
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto, deleteRecord, genId
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto, deleteRecord, genId, isJwtExpiredError, recoverExpiredJwt
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { trackPixelEvent } from '../utils/pixel';
@@ -654,6 +654,45 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       }, 2000);
     } catch (err: any) {
       console.error("Order submission failed:", err);
+      if (isJwtExpiredError(err)) {
+        try {
+          console.warn("[submitNewOrder] Recovering expired JWT session and retrying...");
+          await recoverExpiredJwt();
+          if (editingDemandeId) {
+             leadPayload.id = editingDemandeId;
+             const existing = mesDemandes.find(d => d.id === editingDemandeId);
+             const updatedLead = existing ? { ...existing, ...leadPayload } : leadPayload;
+             await saveRecord('leads', updatedLead);
+             setMesDemandes(prev => prev.map(m => m.id === editingDemandeId ? updatedLead : m));
+          } else {
+             const newLead = {
+               ...leadPayload,
+               id: `lead-${Date.now()}`,
+               crmStage: 'nouveau',
+               date: new Date().toISOString()
+             };
+             await saveLead(newLead);
+             setMesDemandes(prev => [newLead, ...prev]);
+             setActiveTab('demandes');
+          }
+          setOrderSent(true);
+          setTimeout(() => {
+            setOrderSent(false);
+            setShowNewOrderModal(false);
+            setNewOrderForm({ 
+              modele: '', 
+              quantite: '', 
+              details: '', 
+              photo: null,
+              telephone: currentUser?.telephone || pastPhone || '',
+              tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' }
+            });
+          }, 2000);
+          return;
+        } catch (retryErr: any) {
+          console.error("Retry after recovery failed:", retryErr);
+        }
+      }
       alert(isAr ? "وقع خطأ فإرسال الطلب: " + err.message : "Erreur lors de l'envoi : " + err.message);
     } finally {
       setSendingOrder(false);

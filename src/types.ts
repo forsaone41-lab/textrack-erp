@@ -1,4 +1,5 @@
-import { supabase } from './supabase';
+import { supabase, isJwtExpiredError, recoverExpiredJwt } from './supabase';
+export { isJwtExpiredError, recoverExpiredJwt };
 
 export function heureNow() {
   return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -1049,6 +1050,16 @@ export async function loadLeads(): Promise<Lead[]> {
       .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__)')
       .order('date', { ascending: false });
 
+    if (res.error && isJwtExpiredError(res.error)) {
+      console.warn('[loadLeads] JWT expired error, recovering session and retrying...');
+      await recoverExpiredJwt();
+      res = await supabase
+        .from('leads')
+        .select(LEADS_COLS)
+        .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__)')
+        .order('date', { ascending: false });
+    }
+
     if (res.error) {
       console.warn('[loadLeads] Direct select failed, trying fallback range query:', res.error.message);
       const fallbackRes = await supabase
@@ -1184,63 +1195,136 @@ export async function loadLeads(): Promise<Lead[]> {
 }
 
 export async function loadLeadPhoto(leadId: string): Promise<string | null> {
-  try {
-    // 1. Try local storage cache first
-    try {
-      const localRaw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
-      if (localRaw) {
-        const parsed = JSON.parse(localRaw);
-        if (Array.isArray(parsed)) {
-          const found = parsed.find((l: any) => l && l.id === leadId);
-          if (found?.photo) return found.photo;
-          if (found?.photos && found.photos.length > 0) return found.photos[0];
-        }
-      }
-    } catch {}
+  if (!leadId) return null;
 
-    // 2. Query Supabase
-    const { data } = await supabase
+  // 1. Try local storage cache first
+  try {
+    const cachedPhotosRaw = localStorage.getItem('textrack_lead_photos_cache');
+    if (cachedPhotosRaw) {
+      const cached = JSON.parse(cachedPhotosRaw);
+      if (cached[leadId]) return cached[leadId];
+    }
+    const localRaw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
+    if (localRaw) {
+      const parsed = JSON.parse(localRaw);
+      if (Array.isArray(parsed)) {
+        const found = parsed.find((l: any) => l && l.id === leadId);
+        if (found?.photo) return found.photo;
+        if (found?.photos && found.photos.length > 0) return found.photos[0];
+      }
+    }
+  } catch {}
+
+  // 2. Query Supabase Client
+  try {
+    const { data, error } = await supabase
       .from('leads')
       .select('photo, photos')
       .eq('id', leadId)
-      .single();
-    return data?.photo || data?.photos?.[0] || null;
-  } catch { return null; }
+      .maybeSingle();
+
+    if (!error && data) {
+      const photo = data.photo || (Array.isArray(data.photos) && data.photos.length > 0 ? data.photos[0] : null);
+      if (photo) return photo;
+    }
+  } catch {}
+
+  // 3. Guaranteed direct REST fetch (bypasses any expired tokens or browser client errors)
+  try {
+    const url = `https://cyduteruvmpefvemeutm.supabase.co/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&select=photo,photos`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr',
+        'Authorization': 'Bearer sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr'
+      }
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        return rows[0].photo || (Array.isArray(rows[0].photos) && rows[0].photos.length > 0 ? rows[0].photos[0] : null);
+      }
+    }
+  } catch {}
+
+  return null;
 }
 
 export async function loadLeadPhotos(leadId: string): Promise<{photo: string | null, photos: string[] | null}> {
+  if (!leadId) return { photo: null, photos: null };
+
   try {
-    try {
-      const localRaw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
-      if (localRaw) {
-        const parsed = JSON.parse(localRaw);
-        if (Array.isArray(parsed)) {
-          const found = parsed.find((l: any) => l && l.id === leadId);
-          if (found?.photo || (found?.photos && found.photos.length > 0)) {
-            const photo = found.photo || found.photos[0] || null;
-            const photos = found.photos || (photo ? [photo] : null);
-            return { photo, photos };
-          }
+    const cachedPhotosRaw = localStorage.getItem('textrack_lead_photos_cache');
+    if (cachedPhotosRaw) {
+      const cached = JSON.parse(cachedPhotosRaw);
+      if (cached[leadId]) return { photo: cached[leadId], photos: [cached[leadId]] };
+    }
+    const localRaw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
+    if (localRaw) {
+      const parsed = JSON.parse(localRaw);
+      if (Array.isArray(parsed)) {
+        const found = parsed.find((l: any) => l && l.id === leadId);
+        if (found?.photo || (found?.photos && found.photos.length > 0)) {
+          const photo = found.photo || found.photos[0] || null;
+          const photos = found.photos || (photo ? [photo] : null);
+          return { photo, photos };
         }
       }
-    } catch {}
+    }
+  } catch {}
 
-    const { data } = await supabase
+  try {
+    const { data, error } = await supabase
       .from('leads')
       .select('photo, photos')
       .eq('id', leadId)
-      .single();
-    const photo = data?.photo || data?.photos?.[0] || null;
-    const photos = data?.photos || (photo ? [photo] : null);
-    return { photo, photos };
-  } catch { return {photo: null, photos: null}; }
+      .maybeSingle();
+
+    if (!error && data) {
+      const photo = data.photo || data.photos?.[0] || null;
+      const photos = data.photos || (photo ? [photo] : null);
+      if (photo) return { photo, photos };
+    }
+  } catch {}
+
+  // Direct REST fetch fallback
+  try {
+    const url = `https://cyduteruvmpefvemeutm.supabase.co/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&select=photo,photos`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr',
+        'Authorization': 'Bearer sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr'
+      }
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const photo = rows[0].photo || rows[0].photos?.[0] || null;
+        const photos = rows[0].photos || (photo ? [photo] : null);
+        return { photo, photos };
+      }
+    }
+  } catch {}
+
+  return { photo: null, photos: null };
 }
 
 export async function loadLeadPhotosBatch(leadIds: string[]): Promise<Record<string, { photo: string | null, photos: string[] | null }>> {
   if (!leadIds || leadIds.length === 0) return {};
   const map: Record<string, { photo: string | null, photos: string[] | null }> = {};
 
-  // 1. First check localStorage for any of these leads
+  // 1. First check localStorage caches
+  try {
+    const cachedPhotosRaw = localStorage.getItem('textrack_lead_photos_cache');
+    if (cachedPhotosRaw) {
+      const cached = JSON.parse(cachedPhotosRaw);
+      leadIds.forEach(id => {
+        if (cached[id]) {
+          map[id] = { photo: cached[id], photos: [cached[id]] };
+        }
+      });
+    }
+  } catch {}
+
   try {
     const localRaw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
     if (localRaw) {
@@ -1249,10 +1333,12 @@ export async function loadLeadPhotosBatch(leadIds: string[]): Promise<Record<str
         parsed.forEach((l: any) => {
           if (l && leadIds.includes(l.id) && (l.photo || (Array.isArray(l.photos) && l.photos.length > 0))) {
             const photo = l.photo || l.photos[0] || null;
-            map[l.id] = {
-              photo,
-              photos: l.photos || (photo ? [photo] : null)
-            };
+            if (photo && !map[l.id]) {
+              map[l.id] = {
+                photo,
+                photos: l.photos || (photo ? [photo] : null)
+              };
+            }
           }
         });
       }
@@ -1262,22 +1348,54 @@ export async function loadLeadPhotosBatch(leadIds: string[]): Promise<Record<str
   const remainingIds = leadIds.filter(id => !map[id]?.photo);
   if (remainingIds.length === 0) return map;
 
-  // 2. Fetch remaining from Supabase
+  // 2. Fetch remaining from Supabase Client
   try {
     const { data, error } = await supabase
       .from('leads')
       .select('id, photo, photos')
       .in('id', remainingIds);
-    if (!error && data) {
+
+    if (!error && data && Array.isArray(data)) {
       data.forEach((item: any) => {
         const photo = item.photo || (Array.isArray(item.photos) && item.photos.length > 0 ? item.photos[0] : null);
-        map[item.id] = {
-          photo,
-          photos: item.photos || (photo ? [photo] : null)
-        };
+        if (photo) {
+          map[item.id] = {
+            photo,
+            photos: item.photos || (photo ? [photo] : null)
+          };
+        }
       });
     }
   } catch {}
+
+  // 3. Direct REST Fetch fallback (completely bypasses broken tokens/CORS/auth session)
+  const stillMissing = leadIds.filter(id => !map[id]?.photo);
+  if (stillMissing.length > 0) {
+    try {
+      const url = `https://cyduteruvmpefvemeutm.supabase.co/rest/v1/leads?id=in.(${stillMissing.join(',')})&select=id,photo,photos`;
+      const res = await fetch(url, {
+        headers: {
+          'apikey': 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr',
+          'Authorization': 'Bearer sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr'
+        }
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows)) {
+          rows.forEach((item: any) => {
+            const photo = item.photo || (Array.isArray(item.photos) && item.photos.length > 0 ? item.photos[0] : null);
+            if (photo) {
+              map[item.id] = {
+                photo,
+                photos: item.photos || (photo ? [photo] : null)
+              };
+            }
+          });
+        }
+      }
+    } catch {}
+  }
+
   return map;
 }
 
@@ -1291,14 +1409,26 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
   };
   
   // Save to Supabase (primary) - Use pure INSERT for public users to respect RLS
-  const { error } = await supabase.from('leads').insert(newLead);
+  let { error } = await supabase.from('leads').insert(newLead);
+  if (isJwtExpiredError(error)) {
+    console.warn('[saveLead] JWT expired, recovering session and retrying insert...');
+    await recoverExpiredJwt();
+    const retry = await supabase.from('leads').insert(newLead);
+    error = retry.error;
+  }
+
   if (error) {
     const errMsg = error.message.toLowerCase();
     if (errMsg.includes('column') || errMsg.includes('not find') || errMsg.includes('schema cache')) {
       const fallbackLead = { ...newLead as any };
       const newCols = ['photo', 'photos', 'photoCount', 'tailles', 'aiNotes', 'adresse', 'notes', 'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority', 'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy'];
       newCols.forEach(col => delete fallbackLead[col]);
-      const { error: retryError } = await supabase.from('leads').insert(fallbackLead);
+      let { error: retryError } = await supabase.from('leads').insert(fallbackLead);
+      if (isJwtExpiredError(retryError)) {
+        await recoverExpiredJwt();
+        const secondRetry = await supabase.from('leads').insert(fallbackLead);
+        retryError = secondRetry.error;
+      }
       if (retryError) throw retryError;
     } else {
       console.error("Erreur d'insertion lead:", error);
@@ -1365,7 +1495,14 @@ export async function loadData<T>(table: string): Promise<T[]> {
     }
 
     // 3. Fetch from Supabase
-    const { data, error } = await supabase.from(table).select('*');
+    let { data, error } = await supabase.from(table).select('*');
+    if (isJwtExpiredError(error)) {
+      console.warn(`[loadData] JWT expired on ${table}, recovering session and retrying...`);
+      await recoverExpiredJwt();
+      const retry = await supabase.from(table).select('*');
+      data = retry.data;
+      error = retry.error;
+    }
     if (error) {
       console.warn(`Failed to load ${table}:`, error.message);
       // Return localStorage fallback if network fails
@@ -1470,7 +1607,14 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
   }
 
   try {
-    const { error } = await supabase.from(table).upsert(payload);
+    let { error } = await supabase.from(table).upsert(payload);
+    if (isJwtExpiredError(error)) {
+      console.warn(`[saveRecord] JWT expired on table ${table}, recovering session and retrying...`);
+      await recoverExpiredJwt();
+      const retry = await supabase.from(table).upsert(payload);
+      error = retry.error;
+    }
+
     if (!error) {
       // ✅ Invalidate both caches on success
       localStorage.removeItem(`textrack_data_${table}`);
@@ -1596,7 +1740,14 @@ export async function deleteRecord(table: string, id: string, email?: string): P
   
   try {
     // Try ID first. We use .select() to check if a row was actually deleted.
-    const { data, error } = await supabase.from(table).delete().eq('id', id).select();
+    let { data, error } = await supabase.from(table).delete().eq('id', id).select();
+    if (isJwtExpiredError(error)) {
+      console.warn(`[deleteRecord] JWT expired on ${table}, recovering session and retrying...`);
+      await recoverExpiredJwt();
+      const retry = await supabase.from(table).delete().eq('id', id).select();
+      data = retry.data;
+      error = retry.error;
+    }
     
     // If no error but 0 rows deleted, it might be an RLS policy blocking DELETE but allowing UPDATE.
     if (!error && data && data.length === 0) {
