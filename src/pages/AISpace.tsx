@@ -372,7 +372,7 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
     }
 
     if (!imageSrc || !imageSrc.startsWith('data:image')) {
-      return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
+      return resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
     }
 
     try {
@@ -383,7 +383,7 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           if (!ctx) {
-            return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
+            return resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
           }
 
           const W = 64;
@@ -600,7 +600,7 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
 
     piecesList = [
       {
-        name: isAr ? 'سويت شيرت كول رون مقلم (Sweatshirt Col Rond Rayé)' : 'Sweatshirt Col Rond Sportswear Rayé',
+        name: isAr ? 'سويت شيرت كول رون (Sweatshirt Col Rond)' : 'Sweatshirt Col Rond Sportswear',
         consumption: '1.50m',
         fit: isAr ? 'مريح عادي كاجوال (Regular Confort)' : 'Coupe Droite & Confort',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
@@ -782,8 +782,31 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
       ],
       mesures: defaultMesures
     }];
+  } else if (
+    text.includes('t-shirt') || text.includes('tshirt') || text.includes('tee') ||
+    text.includes('تيشرت') || text.includes('توب') || text.includes('crop') ||
+    text.includes('short sleeve') || text.includes('manches courtes')
+  ) {
+    pieceName = isAr ? 'تيشرت قطن كول رون (T-Shirt Coton)' : 'T-Shirt Coton Col Rond';
+    defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
+    piecesList = [{
+      name: pieceName,
+      consumption: '0.90m',
+      fit: isAr ? 'عادي مريح / أوفرسايز (Regular / Oversize)' : 'Coupe Droite & Confort (Regular / Oversize)',
+      complexity: isAr ? 'بسيطة' : 'Simple',
+      costEstimate: '22 - 35 MAD',
+      components: isAr
+        ? ['صدر أمامي', 'ظهر متناسق مريح', 'أكمام قصيرة مع كفافة', 'ياقة دائرية كول رون بورد-كوت مع شريط نظافة', 'ثنية سفلية مزدوجة بآلة الروكوفروز']
+        : ['Buste devant', 'Dos uni confortable', 'Manches courtes avec ourlets', 'Col rond bord-côte avec bande de propreté', 'Ourlet bas double aiguille'],
+      fabricSuggested: isAr ? 'جيرسي قطن 100% مُمشط 200g (Jersey Coton Peigné)' : 'Jersey 100% Coton Peigné 200g',
+      fabricAlternatives: [
+        { name: isAr ? 'جيرسي قطن سميك 240g (Heavyweight Streetwear)' : 'Jersey Coton Lourd 240g (Heavyweight)', pros: isAr ? 'قوام واقف وفخم ستايل ستريتوير عالي الجودة' : 'Excellente tenue streetwear premium', cons: isAr ? 'أثقل في الصيف الحار' : 'Plus dense en plein été' },
+        { name: isAr ? 'إنترلوك قطن ناعم دبل فيس 220g' : 'Interlock Coton 220g', pros: isAr ? 'ملمس ناعم جداً من الوجهين ومقاوم للغسيل' : 'Toucher soyeux recto-verso', cons: isAr ? 'سعر الكيلو أعلى' : 'Prix au kilo supérieur' }
+      ],
+      mesures: defaultMesures
+    }];
   } else if (text.includes('sweat') || text.includes('hoodie') || text.includes('سويت') || text.includes('هودي') || text.includes('توني') || text.includes('pull')) {
-    pieceName = isAr ? 'سويت شيرت كول رون مقلم (Sweatshirt Col Rond)' : 'Sweatshirt Col Rond Sportswear';
+    pieceName = isAr ? 'سويت شيرت كول رون (Sweatshirt Col Rond)' : 'Sweatshirt Col Rond Sportswear';
     defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']));
     piecesList = [{
       name: pieceName,
@@ -1442,13 +1465,13 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       ctx = 'ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging molleton gratté';
       count = 2;
     } else if (preset === 'sweatshirt') {
-      ctx = 'sweatshirt col rond rayé sportswear molleton coton gratté';
+      ctx = 'sweatshirt col rond sportswear molleton coton gratté سويت شيرت';
       count = 1;
     } else if (preset === 'jogging') {
       ctx = 'pantalon jogging sportswear molleton coton gratté cordon';
       count = 1;
     } else if (preset === 'tshirt') {
-      ctx = 't-shirt jersey coton col rond basique';
+      ctx = 't-shirt jersey coton col rond basique تيشرت قطن';
       count = 1;
     } else if (preset === 'robe_chemise') {
       ctx = 'robe_chemise plissée فستان قميص طويل بليات كاروهات مع حزام';
@@ -1801,7 +1824,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     // Prioritize visual classifier and user instructions; DO NOT contaminate with stale leads or old chats
     const combinedContext = visualHint
       ? `${visualHint} ${userChatText}`.trim()
-      : (selectedLead?.type ? `${selectedLead.type} ${userChatText}`.trim() : `ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging ${userChatText}`.trim());
+      : (selectedLead?.type ? `${selectedLead.type} ${userChatText}`.trim() : `t-shirt premium coton col rond ${userChatText}`.trim());
 
     const executeFallbackAnalysis = (noticeMsg?: string, contextOverride?: string) => {
       const ctxToUse = contextOverride || combinedContext;
