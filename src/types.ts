@@ -1103,6 +1103,29 @@ export async function loadLeads(): Promise<Lead[]> {
             l.details = parts[0];
             l.aiNotes = parts[1];
           }
+          if (l.details.includes('| ATELIER_DEVIS:')) {
+            try {
+              const parts = l.details.split('| ATELIER_DEVIS:');
+              l.details = parts[0];
+              const parsed = JSON.parse(parts[1]);
+              if (parsed && typeof parsed === 'object') {
+                if (parsed.modeleReel) l.modeleReel = parsed.modeleReel;
+                if (parsed.unitPrice) l.unitPrice = Number(parsed.unitPrice);
+                if (parsed.totalPrice) l.totalPrice = Number(parsed.totalPrice);
+                if (parsed.tissuSuggere) l.tissuSuggere = parsed.tissuSuggere;
+                if (parsed.techDetails) l.techDetails = parsed.techDetails;
+                if (parsed.delaiEstime) l.delaiEstime = parsed.delaiEstime;
+                if (parsed.statusProgression) l.statusProgression = parsed.statusProgression;
+                if (parsed.reponseAtelier) l.reponseAtelier = parsed.reponseAtelier;
+                if (parsed.reponseAtelierDate) l.reponseAtelierDate = parsed.reponseAtelierDate;
+              }
+            } catch (e) {
+              console.error('Error parsing ATELIER_DEVIS:', e);
+            }
+          }
+        }
+        if (!l.unitPrice && l.crmPrice && Number(l.crmPrice) > 0) {
+          l.unitPrice = Number(l.crmPrice);
         }
         return l;
       });
@@ -1402,7 +1425,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
   if (table === 'leads') {
     let baseDetails = payload.details || '';
     if (typeof baseDetails === 'string') {
-      baseDetails = baseDetails.replace('| COM_UNLOCK:true', '').split('| AI_NOTES:')[0];
+      baseDetails = baseDetails.replace('| COM_UNLOCK:true', '').split('| AI_NOTES:')[0].split('| ATELIER_DEVIS:')[0];
     } else {
       baseDetails = '';
     }
@@ -1413,10 +1436,37 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     if (payload.aiNotes) {
       baseDetails += '| AI_NOTES:' + payload.aiNotes;
     }
+
+    const atelierData: any = {};
+    if (payload.modeleReel) atelierData.modeleReel = payload.modeleReel;
+    if (payload.unitPrice) atelierData.unitPrice = Number(payload.unitPrice);
+    if (payload.totalPrice) atelierData.totalPrice = Number(payload.totalPrice);
+    if (payload.tissuSuggere) atelierData.tissuSuggere = payload.tissuSuggere;
+    if (payload.techDetails) atelierData.techDetails = payload.techDetails;
+    if (payload.delaiEstime) atelierData.delaiEstime = payload.delaiEstime;
+    if (payload.statusProgression) atelierData.statusProgression = payload.statusProgression;
+    if (payload.reponseAtelier) atelierData.reponseAtelier = payload.reponseAtelier;
+    if (payload.reponseAtelierDate) atelierData.reponseAtelierDate = payload.reponseAtelierDate;
+
+    if (Object.keys(atelierData).length > 0) {
+      baseDetails += '| ATELIER_DEVIS:' + JSON.stringify(atelierData);
+      if (payload.unitPrice && (!payload.crmPrice || payload.crmPrice === 0)) {
+        payload.crmPrice = Number(payload.unitPrice);
+      }
+    }
     
     payload.details = baseDetails;
     delete payload.aiNotes;
     delete payload.commercialUnlocked;
+    delete payload.modeleReel;
+    delete payload.unitPrice;
+    delete payload.totalPrice;
+    delete payload.tissuSuggere;
+    delete payload.techDetails;
+    delete payload.delaiEstime;
+    delete payload.statusProgression;
+    delete payload.reponseAtelier;
+    delete payload.reponseAtelierDate;
   }
 
   try {

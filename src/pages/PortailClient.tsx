@@ -372,51 +372,90 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
   const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const text = `${d.type || ''} ${d.details || ''} ${d.id || ''}`.toLowerCase();
-    const isHoodieOrSweat = text.includes('hoodie') || text.includes('sweat') || text.includes('capuche') || text.includes('9f2f3e3') || (d.type?.toUpperCase() === 'T-SHIRT' && (d.id?.toLowerCase().includes('9f2f3e3') || text.includes('vert') || text.includes('green') || d.photo));
-    const isTshirt = text.includes('t-shirt') || text.includes('tshirt') || text.includes('tee');
-    const isPants = text.includes('pantalon') || text.includes('jogging') || text.includes('survet') || text.includes('survêtement');
+    
+    // Check custom saved values from database/atelier edit first
+    const savedUnitPrice = (d.unitPrice && Number(d.unitPrice) > 0) ? Number(d.unitPrice) : (d.crmPrice && Number(d.crmPrice) > 0) ? Number(d.crmPrice) : null;
+    const savedModele = (d.modeleReel && d.modeleReel.trim() && d.modeleReel.toUpperCase() !== 'MODEL') ? d.modeleReel.trim() : null;
+    const savedTissu = (d.tissuSuggere && d.tissuSuggere.trim()) ? d.tissuSuggere.trim() : null;
+    const savedTech = (d.techDetails && d.techDetails.trim()) ? d.techDetails.trim() : null;
+    const savedDelai = (d.delaiEstime && d.delaiEstime.trim()) ? d.delaiEstime.trim() : null;
+    const savedProgression = d.statusProgression || 'etude';
+    const savedReponse = (d.reponseAtelier && d.reponseAtelier.trim()) ? d.reponseAtelier.trim() : null;
 
-    let defaultModele = d.type || (isAr ? 'موديل خياطة مخصص' : 'Modèle Confection Sur-Mesure');
-    let defaultTissu = isAr ? 'مولطون قطن 320 غرام (Molleton Gratté / French Terry)' : 'Molleton Coton Gratté 320g / French Terry (~1.85m)';
-    let defaultTech = isAr ? 'قبعة مبطنة بحبال • جيب كانغورو • بورد-كوط (Bord-côte) مرن • سيريغرافي/تطريز عالي الدقة على الصدر' : 'Capuche doublée avec cordons • Sérigraphie Poitrine • Bord-côte poignets et bas';
-    let defaultUnitPrice = 75;
+    // Detect Clothing Categories
+    const isTracksuit = text.includes('survet') || text.includes('survêtement') || text.includes('tracksuit') || text.includes('ensemble') || text.includes('بدلة') || text.includes('طقم') || d.id?.toLowerCase().includes('49606be7');
+    const isHoodieOrSweat = !isTracksuit && (text.includes('hoodie') || text.includes('sweat') || text.includes('capuche') || text.includes('9f2f3e3') || (d.type?.toLowerCase() === 't-shirt' && (d.id?.toLowerCase().includes('9f2f3e3') || text.includes('vert') || text.includes('amour') || text.includes('green'))));
+    const isTshirt = !isTracksuit && !isHoodieOrSweat && (text.includes('t-shirt') || text.includes('tshirt') || text.includes('tee'));
+    const isPolo = !isTracksuit && text.includes('polo');
+    const isPants = !isTracksuit && (text.includes('pantalon') || text.includes('jogging') || text.includes('cargo') || text.includes('سروال'));
+    const isVeste = !isTracksuit && (text.includes('veste') || text.includes('jacket') || text.includes('bomber') || text.includes('جاكيت') || text.includes('فيست'));
+
+    let defaultModele = d.type && d.type.toUpperCase() !== 'MODEL' ? d.type : (isAr ? 'موديل تفصيل وخياطة مخصص' : 'Modèle Confection Sur-Mesure');
+    let defaultTissu = isAr ? 'قماش مخصص ومطابق للمواصفات المطلوبة' : 'Tissu adapté selon cahier des charges';
+    let defaultTech = isAr ? 'قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل' : 'Patronage et confection sur-mesure de haute précision';
+    let defaultUnitPrice = 65;
     let defaultDelai = isAr ? '7 إلى 10 أيام عمل (العينة تحت 48 ساعة)' : '7 - 10 jours ouvrables (Échantillon sous 48h)';
     let defaultProgression: 'reception' | 'etude' | 'echantillon' | 'production' | 'pret' = 'etude';
     let defaultReponse = isAr
-      ? 'موديل الهودي تم تحليله بالكامل: ثوب المولطون 320g ممتاز لهذا التصميم مع طباعة الصدر. العينة التقنية جاهزة للإطلاق فور التأكيد.'
-      : 'Modèle Hoodie analysé par notre atelier : tissu Molleton 320g validé avec marquage poitrine. Prototype prêt à lancer.';
+      ? 'تمت دراسة مواصفات طلبكم بعناية من طرف الورشة: الباترون جاهز للإعداد ونحن رهن إشارتكم لتأكيد العينة الأولية.'
+      : 'Modèle examiné avec soin par notre atelier : prêt pour prototypage dès validation de votre part.';
 
-    if (isHoodieOrSweat) {
+    if (isTracksuit) {
+      defaultModele = isAr ? 'طقم بدلة رياضية (Ensemble Survêtement Veste Zippée + Pantalon)' : 'Ensemble Survêtement Veste Zippée + Pantalon (2 Pièces)';
+      defaultTissu = isAr ? 'مولطون قطن بوليستر 300 غرام مع شريط جانبي أبيض' : 'Molleton Coton/Polyester 300g avec bandes contrastées blanches';
+      defaultTech = isAr ? 'فيست بسحاب معدني وجيوب جانبية • ياقة مرتفعة • سروال بخصر مطاطي وباندات في الأسفل • شريط رياضي جانبي' : 'Veste zippée col montant avec poches • Bandes contrastées • Pantalon taille élastique et chevilles resserrées';
+      defaultUnitPrice = 135;
+      defaultDelai = isAr ? '8 - 12 يوم عمل (العينة تحت 48 ساعة)' : '8 - 12 jours ouvrables (Échantillon sous 48h)';
+      defaultReponse = isAr
+        ? 'تمت دراسة موديل البدلة الرياضية (2 قطع): ثوب المولطون 300g مع السحاب والشرائط الجانبية تم حسابهما بدقة. السعر (135 درهم) يشمل الطقم كاملاً (الفوق والسروال). جاهزون لإطلاق العينة الأولية فور تأكيدكم.'
+        : "Modèle Ensemble Survêtement (2 pièces) étudié par l'atelier : Molleton 300g avec zip et bandes latérales calculés avec précision. Le tarif (135 MAD) comprend l'ensemble complet veste + pantalon. Prototype prêt à lancer.";
+    } else if (isHoodieOrSweat) {
       defaultModele = isAr ? 'هودي بقبعة أوفرسايز مع سيريغرافي في الصدر' : 'Hoodie à Capuche Oversize avec Sérigraphie Poitrine';
       defaultTissu = isAr ? 'مولطون قطن 320 غرام (Molleton Gratté / French Terry)' : 'Molleton Coton Gratté 320g / French Terry (~1.85m)';
       defaultTech = isAr ? 'قبعة مبطنة بحبال • جيب كانغورو • بورد-كوط (Bord-côte) مرن • سيريغرافي عالي الجودة على الصدر' : 'Capuche doublée avec cordons • Sérigraphie Poitrine • Bord-côte poignets et bas';
       defaultUnitPrice = 75;
       defaultDelai = isAr ? '7 - 10 أيام عمل (العينة تحت 48 ساعة)' : '7 - 10 jours ouvrables (Échantillon sous 48h)';
       defaultReponse = isAr
-        ? 'موديل الهودي الأخضر تم تحليله: ثوب المولطون 320g ممتاز لهذا التصميم مع طباعة الصدر. العينة التقنية جاهزة للإطلاق فور التأكيد.'
+        ? 'موديل الهودي الأخضر تم تحليله بالكامل: ثوب المولطون 320g ممتاز لهذا التصميم مع طباعة الصدر. العينة التقنية جاهزة للإطلاق فور التأكيد.'
         : 'Modèle Hoodie analysé par notre atelier : tissu Molleton 320g validé avec marquage poitrine. Prototype prêt à lancer.';
-    } else if (isTshirt && !isHoodieOrSweat) {
-      defaultModele = isAr ? 'تيشيرت قطن ممشط 100% Coton' : 'T-Shirt Coton Peigné Col Rond 100% Coton';
-      defaultTissu = isAr ? 'جيرسي قطن 200g - 220g' : 'Jersey 100% Coton 200g - 220g';
+    } else if (isTshirt) {
+      defaultModele = isAr ? 'تيشيرت قطن ممشط 100% Coton Peigné' : 'T-Shirt Coton Peigné Col Rond 100% Coton';
+      defaultTissu = isAr ? 'جيرسي قطن ممشط 200g - 220g' : 'Jersey 100% Coton Peigné 200g - 220g';
       defaultTech = isAr ? 'ياقة دائرية بورد-كوط • خياطة مزدوجة • شريط نظافة داخلي' : 'Col rond bord-côte • Double surpiqûre • Bande de propreté';
       defaultUnitPrice = 45;
       defaultDelai = isAr ? '5 - 7 أيام عمل' : '5 - 7 jours ouvrables';
+      defaultReponse = isAr
+        ? 'تمت دراسة موديل التيشيرت: ثوب الجيرسي 100% قطن ممشط عالي الجودة، جاهز للخياطة والطباعة.'
+        : 'Modèle T-shirt analysé : jersey 100% coton peigné de qualité supérieure, prêt pour confection.';
+    } else if (isPolo) {
+      defaultModele = isAr ? 'قميص بولو كلاسيك (Polo Piqué Coton)' : 'Polo Piqué Coton Peigné';
+      defaultTissu = isAr ? 'بيكي قطن 220 غرام (Piqué 100% Coton)' : 'Maille Piquée 100% Coton 220g';
+      defaultTech = isAr ? 'ياقة وأساور بورد-كوط منسوجة • فتحة بزرين • شق جانبي سفلي' : 'Col et bas de manches en côte • Patte de boutonnage 2 boutons • Fentes latérales';
+      defaultUnitPrice = 65;
+      defaultDelai = isAr ? '7 - 10 أيام عمل' : '7 - 10 jours ouvrables';
     } else if (isPants) {
       defaultModele = isAr ? 'سروال جوغينغ كاجوال' : 'Pantalon Jogging / Survêtement Confort';
       defaultTissu = isAr ? 'مولطون قطن 300 غرام' : 'Molleton Coton 300g';
       defaultTech = isAr ? 'حزام مطاطي • جيوب جانبية • أطراف ريزيستنت' : 'Ceinture élastiquée avec cordon • Poches passepoilées • Bas resserré';
-      defaultUnitPrice = 65;
+      defaultUnitPrice = 68;
+      defaultDelai = isAr ? '6 - 9 أيام عمل' : '6 - 9 jours ouvrables';
+    } else if (isVeste) {
+      defaultModele = isAr ? 'جاكيت بسحاب كامل (Veste Zippée)' : 'Veste Zippée Streetwear';
+      defaultTissu = isAr ? 'مولطون قطن سميك 340 غرام أو غاباردين' : 'Molleton Épais 340g / Gabardine';
+      defaultTech = isAr ? 'سحاب معدني أمامي كامل • جيوب جانبية مخفية • ياقة مضلعة' : 'Fermeture zippée métallique intégrale • Poches zippées • Col bord-côte';
+      defaultUnitPrice = 95;
+      defaultDelai = isAr ? '8 - 12 يوم عمل' : '8 - 12 jours ouvrables';
     }
 
-    const modeleReel = d.modeleReel || defaultModele;
-    const unitPrice = d.unitPrice && d.unitPrice > 0 ? d.unitPrice : defaultUnitPrice;
+    const modeleReel = savedModele || defaultModele;
+    const unitPrice = savedUnitPrice || defaultUnitPrice;
     const qty = Number(d.quantity) > 0 ? Number(d.quantity) : 100;
     const totalPrice = d.totalPrice && d.totalPrice > 0 ? d.totalPrice : (unitPrice * qty);
-    const tissuSuggere = d.tissuSuggere || defaultTissu;
-    const techDetails = d.techDetails || defaultTech;
-    const delaiEstime = d.delaiEstime || defaultDelai;
-    const statusProgression = d.statusProgression || defaultProgression;
-    const reponseAtelier = d.reponseAtelier || defaultReponse;
+    const tissuSuggere = savedTissu || defaultTissu;
+    const techDetails = savedTech || defaultTech;
+    const delaiEstime = savedDelai || defaultDelai;
+    const statusProgression = savedProgression;
+    const reponseAtelier = savedReponse || defaultReponse;
 
     return {
       modeleReel,
@@ -1498,7 +1537,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                               <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent flex items-end p-5">
                                 <span className="text-white/90 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
                                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                                  {d.type && d.type !== analysis.modeleReel ? `${d.type} • ` : ''}{isAr ? 'تصنيع عالي الجودة' : 'Confection Premium'}
+                                  {d.type && d.type.toUpperCase() !== 'MODEL' && d.type !== analysis.modeleReel ? `${d.type} • ` : ''}{isAr ? 'تصنيع عالي الجودة' : 'Confection Premium'}
                                 </span>
                               </div>
                             </div>
@@ -3434,17 +3473,17 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                       </thead>
                       <tbody className="divide-y divide-slate-100 font-medium">
                         <tr>
-                          <td className="p-3 font-bold text-slate-700">{isAr ? 'المادة الأولية (الثوب + البورد كوط + الحبال)' : 'Matières premières (Tissu, bord-côte, cordons)'}</td>
+                          <td className="p-3 font-bold text-slate-700">{isAr ? 'المواد الأولية (الأقمشة، مستلزمات الخياطة والإكسسوارات)' : 'Matières premières (Tissus, fournitures & accessoires)'}</td>
                           <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.48)} MAD</td>
                           <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.48 * analysis.qty).toLocaleString()} MAD</td>
                         </tr>
                         <tr className="bg-slate-50/40">
-                          <td className="p-3 font-bold text-slate-700">{isAr ? 'الفصالة والخياطة والتركيب' : 'Coupe, confection et assemblage industriel'}</td>
+                          <td className="p-3 font-bold text-slate-700">{isAr ? 'الفصالة والخياطة والتركيب الصناعي' : 'Coupe, confection et assemblage industriel'}</td>
                           <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.32)} MAD</td>
                           <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.32 * analysis.qty).toLocaleString()} MAD</td>
                         </tr>
                         <tr>
-                          <td className="p-3 font-bold text-slate-700">{isAr ? 'الطباعة / التطريز والفينيسيون' : 'Sérigraphie poitrine & finitions packaging'}</td>
+                          <td className="p-3 font-bold text-slate-700">{isAr ? 'الماركينغ، الطباعة/التطريز والفينيسيون' : 'Marquage, finitions & packaging'}</td>
                           <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.20)} MAD</td>
                           <td className="p-3 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.20 * analysis.qty).toLocaleString()} MAD</td>
                         </tr>
