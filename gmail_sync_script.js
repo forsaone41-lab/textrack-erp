@@ -2,67 +2,85 @@ const SUPABASE_URL = 'https://cyduteruvmpefvemeutm.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr';
 
 function syncEmailsToSupabase() {
-  // إنشاء تصنيف باش نعلمو الرسائل لي ديجا دازو للسيت
-  let label = GmailApp.getUserLabelByName("SyncedToERP");
-  if (!label) {
-    label = GmailApp.createLabel("SyncedToERP");
-  }
+  const startTime = new Date().getTime();
   
-  // نقلبوا على الرسائل لي مزال مادازوش للسيت (حد 10 فكل مرة)
-  const threads = GmailApp.search('-label:SyncedToERP in:inbox', 0, 10);
-  
-  if (threads.length === 0) {
-    Logger.log("Aucun nouvel email à synchroniser.");
-    return;
-  }
-  
-  for (let i = 0; i < threads.length; i++) {
-    const messages = threads[i].getMessages();
-    for (let j = 0; j < messages.length; j++) {
-      const msg = messages[j];
-      
-      let fromName = msg.getFrom();
-      let fromEmail = msg.getFrom();
-      
-      // عزل الإسم على الإيميل إذا كانو بجوج (مثلا: "Ahmed <ahmed@gmail.com>")
-      const fromMatch = msg.getFrom().match(/(.*)<(.*)>/);
-      if (fromMatch) {
-        fromName = fromMatch[1].trim() || fromMatch[2].trim();
-        fromEmail = fromMatch[2].trim();
+  try {
+    let label = GmailApp.getUserLabelByName("SyncedToERP");
+    if (!label) {
+      label = GmailApp.createLabel("SyncedToERP");
+    }
+
+    // نأخذ 5 خيوط فقط في كل دفعة لتجنب تجاوز الوقت
+    const threads = GmailApp.search('-label:SyncedToERP in:inbox', 0, 5);
+    if (!threads || threads.length === 0) {
+      Logger.log("✅ Aucun nouvel email à synchroniser.");
+      return;
+    }
+
+    Logger.log("⏳ Nombre de threads trouvés : " + threads.length);
+
+    for (let i = 0; i < threads.length; i++) {
+      // إذا قاربت المدة على 3 دقائق نتوقف لكي يعمل المنبه في المرة القادمة بسلاسة
+      if (new Date().getTime() - startTime > 180000) {
+        Logger.log("⏱️ Pause pour ne pas dépasser le temps, la suite au prochain tour.");
+        break;
       }
 
-      const emailData = {
-        gmail_id: msg.getId(),
-        from_name: fromName,
-        from_email: fromEmail,
-        subject: msg.getSubject(),
-        body: msg.getPlainBody().substring(0, 5000),
-        received_at: msg.getDate().toISOString(),
-        is_read: false
-      };
-      
-      // إرسال البيانات لقاعدة البيانات ديال السيت (Supabase)
-      const url = SUPABASE_URL + '/rest/v1/inbox_emails';
-      const options = {
-        method: 'post',
-        contentType: 'application/json',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Prefer': 'return=minimal'
-        },
-        payload: JSON.stringify(emailData),
-        muteHttpExceptions: true
-      };
-      
+      const thread = threads[i];
       try {
-        const response = UrlFetchApp.fetch(url, options);
-        Logger.log("Sync success: " + msg.getSubject() + " | Status: " + response.getResponseCode());
-      } catch (e) {
-        Logger.log("Error syncing email: " + e.toString());
+        const messages = thread.getMessages();
+        for (let j = 0; j < messages.length; j++) {
+          const msg = messages[j];
+          let fromName = msg.getFrom();
+          let fromEmail = msg.getFrom();
+
+          const fromMatch = msg.getFrom().match(/(.*)<(.*)>/);
+          if (fromMatch) {
+            fromName = fromMatch[1].trim().replace(/^["']|["']$/g, '') || fromMatch[2].trim();
+            fromEmail = fromMatch[2].trim();
+          }
+
+          let bodyContent = '';
+          try {
+            bodyContent = (msg.getPlainBody() || msg.getBody() || '').substring(0, 5000);
+          } catch (eBody) {
+            bodyContent = '(Impossible de lire le contenu)';
+          }
+
+          const emailData = {
+            gmail_id: msg.getId(),
+            from_name: fromName,
+            from_email: fromEmail,
+            subject: msg.getSubject() || '(sans objet)',
+            body: bodyContent,
+            received_at: msg.getDate().toISOString(),
+            is_read: false
+          };
+
+          const url = SUPABASE_URL + '/rest/v1/inbox_emails';
+          const options = {
+            method: 'post',
+            contentType: 'application/json',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY,
+              'Prefer': 'return=minimal'
+            },
+            payload: JSON.stringify(emailData),
+            muteHttpExceptions: true
+          };
+
+          const res = UrlFetchApp.fetch(url, options);
+          Logger.log("Status: " + res.getResponseCode() + " | Email: " + emailData.subject);
+        }
+        thread.addLabel(label);
+      } catch (threadErr) {
+        Logger.log("Erreur thread: " + threadErr.toString());
+        try { thread.addLabel(label); } catch (e) {}
       }
     }
-    // تعليم الرسالة بلي راها دازت باش مانعاودوش نصيفطوها
-    threads[i].addLabel(label);
+    Logger.log("🎉 الدفعة انتهت بنجاح !");
+  } catch (err) {
+    Logger.log("Erreur: " + err.toString());
   }
 }

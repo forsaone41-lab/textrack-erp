@@ -181,7 +181,7 @@ export function getFabricInfo(fabricName: string = ''): FabricInfo {
       (key === 'satin' && (lower.includes('satin') || lower.includes('ساتان'))) ||
       (key === 'dentelle' && (lower.includes('dentelle') || lower.includes('lace') || lower.includes('دانتيلا'))) ||
       (key === 'interlock' && (lower.includes('interlock') || lower.includes('انترلوك') || lower.includes('إنترلوك'))) ||
-      (key === 'molleton' && (lower.includes('molleton') || lower.includes('مولتون') || lower.includes('ميلتون') || lower.includes('fleece'))) ||
+      (key === 'molleton' && (lower.includes('molleton') || lower.includes('مولتون') || lower.includes('ميلتون') || lower.includes('fleece') || lower.includes('french terry') || lower.includes('فرينش تيري'))) ||
       (key === 'jersey' && (lower.includes('jersey') || lower.includes('جيرسي') || lower.includes('جيرزي'))) ||
       (key === 'gabardine' && (lower.includes('gabardine') || lower.includes('جاباردين') || lower.includes('كاباردين'))) ||
       (key === 'popeline' && (lower.includes('popeline') || lower.includes('بوبلين')))

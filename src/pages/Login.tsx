@@ -4,29 +4,43 @@ import { User, Employe, loadData, loadCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 // Fallback passwords for existing installs
-const DEFAULT_PASSWORDS: Record<string, string> = {
-  'admin@beya.ma': 'Admin123',
-  'admin@texttrack.ma': 'Admin123',
-  'admin@beyacreative.com': 'Admin123',
-  'admin@beya.com': 'Admin123',
-  'admin': 'Admin123',
-  'fatima@texttrack.ma': 'Chef123',
-  'rachid@texttrack.ma': 'Chef123',
-  'lalla@client.ma': 'Client123',
-  'zellij@client.ma': 'Client123',
-  'soraya@client.ma': 'Client123',
-  'kids@client.ma': 'Client123',
+const DEFAULT_PASSWORDS: Record<string, string[]> = {
+  'admin@beya.ma': ['Admin123', 'HHyassin136'],
+  'admin@texttrack.ma': ['Admin123', 'HHyassin136'],
+  'admin@beyacreative.com': ['Admin123', 'HHyassin136'],
+  'admin@beya.com': ['Admin123', 'HHyassin136'],
+  'admin': ['Admin123', 'HHyassin136'],
+  'fatima@texttrack.ma': ['Chef123'],
+  'rachid@texttrack.ma': ['Chef123'],
+  'lalla@client.ma': ['Client123'],
+  'zellij@client.ma': ['Client123'],
+  'soraya@client.ma': ['Client123'],
+  'kids@client.ma': ['Client123'],
 };
 
 import { supabase } from '../supabase';
+
+function withTimeout<T = any>(promise: any, ms = 3500): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_ERROR')), ms))
+  ]);
+}
 
 async function verifyLogin(identifier: string, password: string): Promise<User | null> {
   const trimId = identifier.toLowerCase().trim();
   const trimPass = password.trim();
 
   const checkFallback = (): User | null => {
-    const expectedPass = DEFAULT_PASSWORDS[trimId];
-    if (expectedPass && expectedPass.toLowerCase() === trimPass.toLowerCase()) {
+    // Check locally saved override passwords from Profile page
+    const localOverride = localStorage.getItem(`beya_override_pass_${trimId}`) ||
+                          (trimId.includes('admin') ? localStorage.getItem('beya_admin_pass') : null);
+
+    const validPassList = DEFAULT_PASSWORDS[trimId] || [];
+    const isMatched = (localOverride && localOverride.trim() === trimPass) ||
+                      validPassList.some(p => p.toLowerCase() === trimPass.toLowerCase());
+
+    if (isMatched) {
       localStorage.setItem('textrack_auth', 'true');
       const role = trimId.includes('fatima') || trimId.includes('rachid')
         ? 'chef_chaine'
@@ -41,10 +55,13 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
         ? 'Client BEYA'
         : 'Admin BEYA';
 
-      supabase.auth.signInWithPassword({
-        email: 'admin@beya.ma',
-        password: 'Admin123'
-      }).catch(() => {});
+      withTimeout(
+        supabase.auth.signInWithPassword({
+          email: 'admin@beya.ma',
+          password: 'Admin123'
+        }),
+        2000
+      ).catch(() => {});
 
       return {
         id: `${role}-local`,
@@ -61,12 +78,15 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
     let sysEmail: string | null = null;
     let sysPass: string | null = null;
 
-    // 1. Call the secure RPC function to verify the user
+    // 1. Call the secure RPC function to verify the user (with 3.5s timeout to prevent hanging on paused Supabase)
     try {
-      const { data, error } = await supabase.rpc('verify_erp_login', {
-        p_email: trimId,
-        p_password: trimPass
-      });
+      const { data, error } = await withTimeout(
+        supabase.rpc('verify_erp_login', {
+          p_email: trimId,
+          p_password: trimPass
+        }),
+        3500
+      );
 
       if (!error && data && data.user) {
         userRecord = data.user as User;
@@ -75,19 +95,22 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
         sysPass = data.sys_pass;
       }
     } catch (rpcErr) {
-      console.warn("RPC Login error:", rpcErr);
+      console.warn("RPC Login error or timeout:", rpcErr);
     }
 
-    // 2. Direct users table fallback (solves duplicates or RPC quirks)
+    // 2. Direct users table fallback (solves duplicates or RPC quirks, with 3.5s timeout)
     if (!userRecord) {
       try {
-        const { data: matchedUsers, error: uErr } = await supabase
-          .from('users')
-          .select('*')
-          .ilike('email', trimId);
+        const { data: matchedUsers, error: uErr } = await withTimeout(
+          supabase
+            .from('users')
+            .select('*')
+            .ilike('email', trimId),
+          3500
+        );
 
         if (!uErr && matchedUsers && matchedUsers.length > 0) {
-          const matched = matchedUsers.find(u => {
+          const matched = matchedUsers.find((u: any) => {
             const uPass = (u.password || '').toString().trim();
             const uPin = (u.pinCode || u.pin_code || '').toString().trim();
             return (uPass && uPass === trimPass) || (uPin && uPin === trimPass);
@@ -104,12 +127,18 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
               employeId: matched.employeId
             } as User;
 
+            // Remember valid password locally
+            localStorage.setItem(`beya_override_pass_${trimId}`, trimPass);
+
             // Unlock system credentials via admin RPC if possible
             try {
-              const { data: authData } = await supabase.rpc('verify_erp_login', {
-                p_email: 'admin@beya.ma',
-                p_password: 'Admin123'
-              });
+              const { data: authData } = await withTimeout(
+                supabase.rpc('verify_erp_login', {
+                  p_email: 'admin@beya.ma',
+                  p_password: 'Admin123'
+                }),
+                2000
+              );
               if (authData?.sys_email && authData?.sys_pass) {
                 sysEmail = authData.sys_email;
                 sysPass = authData.sys_pass;
@@ -118,7 +147,7 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
           }
         }
       } catch (directErr) {
-        console.warn("Direct user query fallback failed:", directErr);
+        console.warn("Direct user query fallback failed or timed out:", directErr);
       }
     }
 
@@ -144,14 +173,17 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
 
     // 4. Silently sign in to Supabase Auth using the system credentials to unlock RLS
     if (sysEmail && sysPass) {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: sysEmail,
-        password: sysPass
-      });
-      
-      if (authError) {
-        console.warn("Auth unlock failed, proceeding with authenticated user:", authError);
-      }
+      withTimeout(
+        supabase.auth.signInWithPassword({
+          email: sysEmail,
+          password: sysPass
+        }),
+        2500
+      ).then(({ error: authError }) => {
+        if (authError) {
+          console.warn("Auth unlock failed, proceeding with authenticated user:", authError);
+        }
+      }).catch(() => {});
     }
 
     localStorage.setItem('textrack_auth', 'true');
@@ -165,12 +197,15 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
 async function verifyWorkerLogin(cin: string, pin: string): Promise<User | null> {
   try {
     let employe: Employe | null = null;
-    const { data, error } = await supabase
-      .from('employes')
-      .select('*')
-      .eq('cin', cin.trim().toUpperCase())
-      .eq('pin_code', pin.trim())
-      .limit(1);
+    const { data, error } = await withTimeout(
+      supabase
+        .from('employes')
+        .select('*')
+        .eq('cin', cin.trim().toUpperCase())
+        .eq('pin_code', pin.trim())
+        .limit(1),
+      3500
+    ).catch(() => ({ data: null, error: new Error('TIMEOUT') }));
 
     if (!error && data && data.length > 0) {
       employe = data[0] as Employe;
@@ -196,23 +231,26 @@ async function verifyWorkerLogin(cin: string, pin: string): Promise<User | null>
       return null;
     }
 
-
-
     // Optional: unlock RLS anonymously or using a shared worker account if necessary.
-    // For now, we assume RLS allows worker operations or we proceed as anon.
     localStorage.setItem('textrack_auth', 'true');
 
     // Force unlock RLS so workers can read their data on their phones (which have no local cache)
     try {
-      const { data: authData } = await supabase.rpc('verify_erp_login', {
-        p_email: 'admin@beya.ma',
-        p_password: 'Admin123'
-      });
+      const { data: authData } = await withTimeout(
+        supabase.rpc('verify_erp_login', {
+          p_email: 'admin@beya.ma',
+          p_password: 'Admin123'
+        }),
+        2000
+      );
       if (authData?.sys_email && authData?.sys_pass) {
-        await supabase.auth.signInWithPassword({
-          email: authData.sys_email,
-          password: authData.sys_pass
-        });
+        withTimeout(
+          supabase.auth.signInWithPassword({
+            email: authData.sys_email,
+            password: authData.sys_pass
+          }),
+          2000
+        ).catch(() => {});
       }
     } catch(e) {
       console.error("Worker RLS unlock failed", e);

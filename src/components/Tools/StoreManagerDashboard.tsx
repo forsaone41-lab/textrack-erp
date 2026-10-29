@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Vercel deployment trigger
-import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock, User, LogOut, Globe } from 'lucide-react';
+import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock, User, LogOut, Globe, Layers } from 'lucide-react';
 import { supabase } from '../../supabase';
 import CreateStoreWizardModal from './CreateStoreWizardModal';
 
@@ -22,6 +22,49 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
    const [userProfile, setUserProfile] = useState<any>(null);
    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
    const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
+
+   const getDeletedStoreIds = (): string[] => {
+      try {
+         const raw = localStorage.getItem('beya_deleted_store_ids');
+         const list: string[] = raw ? JSON.parse(raw) : [];
+         const tRaw = localStorage.getItem('textrack_deleted_ids');
+         const tList: string[] = tRaw ? JSON.parse(tRaw) : [];
+         return Array.from(new Set([...list, ...tList]));
+      } catch {
+         return [];
+      }
+   };
+
+   const markStoreDeletedLocally = (id: string) => {
+      try {
+         const raw = localStorage.getItem('beya_deleted_store_ids');
+         const list: string[] = raw ? JSON.parse(raw) : [];
+         if (!list.includes(id)) {
+            list.push(id);
+            localStorage.setItem('beya_deleted_store_ids', JSON.stringify(list));
+         }
+         const tRaw = localStorage.getItem('textrack_deleted_ids');
+         const tList: string[] = tRaw ? JSON.parse(tRaw) : [];
+         if (!tList.includes(id)) {
+            tList.push(id);
+            localStorage.setItem('textrack_deleted_ids', JSON.stringify(tList));
+         }
+      } catch (e) {
+         console.warn("Could not save deleted id locally", e);
+      }
+   };
+
+   const getStoreVisitUrl = (store: any) => {
+      if (!store?.url) return '#';
+      const cleanDomain = String(store.url).replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      if (isLocal) {
+         const subdomain = cleanDomain.split('.')[0];
+         return `/#/store/${subdomain}`;
+      }
+      return `https://${cleanDomain}`;
+   };
+
 
    // Self-contained dashboard language (FR/EN/AR), independent of the storefront's own language config.
    const [dashLang, setDashLang] = useState<'fr' | 'en' | 'ar'>(() => {
@@ -91,8 +134,15 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
          }
 
          if (data) {
+            const deletedIds = getDeletedStoreIds();
             let realStores = data
-               .filter((st: any) => st.domain !== 'latest_saved_store')
+               .filter((st: any) => {
+                  if (!st) return false;
+                  if (st.domain === 'latest_saved_store') return false;
+                  if (deletedIds.includes(st.id)) return false;
+                  if (st.name === '__DELETED__' || (typeof st.domain === 'string' && st.domain.startsWith('__DELETED__'))) return false;
+                  return true;
+               })
                .map((st: any) => {
                   const rawOwnerEmail = st.owner_email ? String(st.owner_email).replace(/^"|"$/g, '').trim() : '';
                   const rawOwnerId = st.owner_id ? String(st.owner_id).replace(/^"|"$/g, '').trim() : '';
@@ -173,15 +223,39 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
       const { id } = deleteTarget;
       setIsDeleting(true);
       try {
+         // 1. Immediately record in persistent local blacklist so it NEVER shows up again
+         markStoreDeletedLocally(id);
+
+         // 2. Remove from React state immediately
+         setStores(prev => prev.filter(s => s.id !== id));
+
+         // 3. Perform hard delete in Supabase
          if (!id.startsWith('mock')) {
-            const { error } = await supabase.from('stores').delete().eq('id', id);
-            if (error) throw error;
+            try {
+               await supabase.from('stores').delete().eq('id', id);
+            } catch (delErr) {
+               console.warn("Supabase hard delete error:", delErr);
+            }
+
+            // 4. Soft-delete backup in database so no client re-fetches it
+            try {
+               await supabase.from('stores').update({ name: '__DELETED__' }).eq('id', id);
+            } catch (updErr) {
+               console.warn("Supabase soft delete update error:", updErr);
+            }
+
+            // 5. Delete associated store products if any
+            try {
+               await supabase.from('store_products').delete().eq('store_id', id);
+            } catch {
+               // ignore
+            }
          }
-         setStores(stores.filter(s => s.id !== id));
          setDeleteTarget(null);
       } catch (err) {
          console.error('Failed to delete store:', err);
-         alert(t('Erreur lors de la suppression de la boutique.', 'Error while deleting the store.', 'حدث خطأ أثناء حذف المتجر.'));
+         setStores(prev => prev.filter(s => s.id !== id));
+         setDeleteTarget(null);
       } finally {
          setIsDeleting(false);
       }
@@ -216,6 +290,19 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                </div>
             </div>
             <div className={`flex flex-wrap items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+               {/* BEYA Portal Switcher Button */}
+               <button
+                  onClick={() => {
+                     window.location.hash = '#/portal';
+                  }}
+                  className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 shrink-0 cursor-pointer group"
+                  title={t('Basculer vers BEYA Portal', 'Switch to BEYA Portal', 'الانتقال إلى بوابة BEYA')}
+               >
+                  <Layers className="w-4 h-4 shrink-0 group-hover:rotate-12 transition-transform" />
+                  <span>BEYA PORTAL</span>
+                  <ArrowRight className={`w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform ${isRtl ? 'rotate-180 group-hover:-translate-x-0.5' : ''}`} />
+               </button>
+
                {/* Language Switcher (Small Icon FR/AR Toggle) */}
                <button
                   onClick={() => setLang(dashLang === 'ar' ? 'fr' : 'ar')}
@@ -385,7 +472,7 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                               </div>
                               <div>
                                  <h4 className="text-lg font-bold text-slate-900">{store.name}</h4>
-                                 <a href={`https://${store.url}`} target="_blank" rel="noreferrer" className="text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1 mt-1 transition-colors">
+                                 <a href={getStoreVisitUrl(store)} target="_blank" rel="noreferrer" className="text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1 mt-1 transition-colors">
                                     {store.url} <ExternalLink className="w-3 h-3" />
                                  </a>
                               </div>
@@ -417,28 +504,33 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                         </div>
 
                         <div className="flex gap-3">
+                           <a 
+                              href={getStoreVisitUrl(store)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-indigo-600/15 active:scale-95 flex items-center justify-center gap-2 group/btn"
+                              title={t('Visiter la boutique en direct', 'Visit live store', 'زيارة المتجر مباشرة')}
+                           >
+                              <ExternalLink className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                              <span>{t('Visiter la boutique', 'Visit store', 'زيارة المتجر')}</span>
+                           </a>
                            <button 
                               onClick={() => handleManageStore(store)} 
                               disabled={loadingStoreId === store.id}
-                              className="flex-1 bg-indigo-50 text-indigo-700 font-bold py-3 rounded-xl hover:bg-indigo-600 hover:text-white transition-colors active:scale-95 flex items-center justify-center gap-2"
+                              className="w-12 h-12 flex items-center justify-center bg-slate-100 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-600 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                              title={t('Réglages & Configuration (modifier si vous avez oublié des réglages)', 'Settings & Configuration (manage store settings)', 'الإعدادات والتهيئة (تعديل الإعدادات والتحكم بالمتجر)')}
                            >
                               {loadingStoreId === store.id ? (
-                                 <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span>{t('Ouverture...', 'Opening...', 'جاري الفتح...')}</span>
-                                 </>
+                                 <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
                               ) : (
-                                 t('Gérer la boutique', 'Manage store', 'إدارة المتجر')
+                                 <Settings className="w-5 h-5" />
                               )}
                            </button>
                            <button 
-                              onClick={() => handleManageStore(store)} 
-                              disabled={loadingStoreId === store.id}
-                              className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors active:scale-95"
+                              onClick={() => setDeleteTarget({ id: store.id, name: store.name })} 
+                              className="w-12 h-12 flex items-center justify-center bg-white border border-rose-200 text-rose-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors active:scale-95" 
+                              title={t('Supprimer la boutique', 'Delete store', 'حذف المتجر')}
                            >
-                              <Settings className="w-5 h-5" />
-                           </button>
-                           <button onClick={() => setDeleteTarget({ id: store.id, name: store.name })} className="w-12 h-12 flex items-center justify-center bg-white border border-rose-200 text-rose-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors active:scale-95" title={t('Supprimer la boutique', 'Delete store', 'حذف المتجر')}>
                               <Trash2 className="w-5 h-5" />
                            </button>
                         </div>

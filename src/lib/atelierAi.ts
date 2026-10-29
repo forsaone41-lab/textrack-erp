@@ -182,10 +182,16 @@ export const getGarmentTechnicalBreakdown = (
   if (!catKey) {
     if (
       text.includes('3 pièces') || text.includes('3 pieces') || text.includes('3 قطع') || text.includes('3 articles') ||
-      text.includes('3 dial') || text.includes('3dial') || text.includes('trois') || text.includes('3articles') ||
-      ((text.includes('manteau') || text.includes('veste') || text.includes('gilet') || text.includes('cardigan') || text.includes('مانطو') || text.includes('سترة') || text.includes('فيست')) && (text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('pantalon') || text.includes('سروال') || text.includes('jogging')))
+      text.includes('3 dial') || text.includes('3dial') || text.includes('trois pièces') || text.includes('3articles') ||
+      ((text.includes('manteau') || text.includes('veste') || text.includes('مانطو')) && (text.includes('sweat') || text.includes('t-shirt') || text.includes('top') || text.includes('سويت')) && (text.includes('pantalon') || text.includes('jogging') || text.includes('سروال')))
     ) {
       catKey = 'ensemble_3_pieces';
+    } else if (
+      text.includes('survet') || text.includes('tracksuit') || text.includes('سيرفيت') ||
+      text.includes('2 pièces') || text.includes('2 pieces') || text.includes('قطعتين') ||
+      ((text.includes('sweat') || text.includes('pull') || text.includes('هودي') || text.includes('سويت') || text.includes('rayé')) && (text.includes('jogging') || text.includes('pantalon') || text.includes('سروال')))
+    ) {
+      catKey = 'survetement_2_pieces';
     } else if (
       text.includes('boxer') ||
       text.includes('caleçon') ||
@@ -233,6 +239,7 @@ export const getGarmentTechnicalBreakdown = (
   const consommation = customConsommation || (
     catKey === 'robe_chemise' ? 3.8 :
     catKey === 'ensemble_3_pieces' ? 5.2 :
+    catKey === 'survetement_2_pieces' ? 2.9 :
     catKey === 'boxer_sous_vetement' ? 0.35 :
     catKey === 'abaya_beldi' ? 3.2 :
     catKey === 'chemise_blouse' ? 1.5 :
@@ -246,6 +253,7 @@ export const getGarmentTechnicalBreakdown = (
   const prixMetre = customPrice || (
     catKey === 'robe_chemise' ? 24.0 :
     catKey === 'ensemble_3_pieces' ? 22.0 :
+    catKey === 'survetement_2_pieces' ? 38.0 :
     catKey === 'boxer_sous_vetement' ? 18.0 :
     catKey === 'abaya_beldi' ? 15.0 :
     catKey === 'chemise_blouse' ? 18.0 :
@@ -296,6 +304,22 @@ export const getGarmentTechnicalBreakdown = (
       { nomAr: 'مراقبة الجودة للطقم الكامل، كيّ بالبخار وتغليف ثلاثي', nomFr: 'Contrôle Qualité 3 Pièces, Repassage & Pack', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 2.4, tempsPro: 2.4, tempsStandard: 4.0, tempsDebutant: 6.5, roleOuvrier: 'مراقب جودة وتشطيب' }
     ];
     recommendation = 'طقم متكامل من 3 قطع (مانطو طويل + سويت + سروال). وقت الورشة الإجمالي للحرافيين حوالي 25 دقيقة للطقم الكامل.';
+  } else if (catKey === 'survetement_2_pieces') {
+    categorieName = 'طقم رياضي قطعتين (سويت شيرت كول رون مقلم + سروال جوغينغ)';
+    tissuName = 'مولتون قطن مبطن / فرينش تيري 280g (Molleton Coton Gratté)';
+    fournitures = 14.0;
+    postes = [
+      { nomAr: 'فصالة الطقم الكامل (قطعتين) بالمطلوة الصناعية وتحضير الرزم', nomFr: 'Coupe Matelas 2 Pièces (Sweat + Pantalon)', machine: 'Table de Coupe / Ciseaux', tempsMin: 1.4, tempsPro: 1.4, tempsStandard: 2.5, tempsDebutant: 4.5, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'خياطة الجيوب الإيطالية لسروال الجوغينغ وتثبيتها', nomFr: 'Montage Poches Italiennes Pantalon Jogging', machine: 'Piqueuse Plate', tempsMin: 1.8, tempsPro: 1.8, tempsStandard: 3.2, tempsDebutant: 5.5, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب أشرطة الصدر المقلمة المتناسقة للسويت شيرت', nomFr: 'Incrustation Bandes Contrastées Poitrine', machine: 'Piqueuse Plate 2 Aiguilles', tempsMin: 2.0, tempsPro: 2.0, tempsStandard: 3.5, tempsDebutant: 6.0, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع أكتاف وأكمام السويت شيرت بماكينة الأوفرلوك', nomFr: 'Assemblage Épaules & Manches Sweat (Overlock)', machine: 'Surjeteuse 4 Fils', tempsMin: 2.2, tempsPro: 2.2, tempsStandard: 3.8, tempsDebutant: 6.5, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تركيب ياقة كول رون بورد-كوت مع شريط نظافة داخلي', nomFr: 'Pose Col Rond Bord-Côte & Bande Propreté', machine: 'Piqueuse Plate', tempsMin: 1.5, tempsPro: 1.5, tempsStandard: 2.6, tempsDebutant: 4.5, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع ساقي سروال الجوغينغ بالسرفلة المتينة', nomFr: 'Assemblage Jambes Jogging & Entrejambe', machine: 'Surjeteuse 4 Fils', tempsMin: 2.0, tempsPro: 2.0, tempsStandard: 3.5, tempsDebutant: 6.0, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تركيب حزام الخصر المطاطي مع الكوردون والعيون المعدنية', nomFr: 'Pose Ceinture Élastique Cordon & Œillets', machine: 'Recouvreuse', tempsMin: 1.8, tempsPro: 1.8, tempsStandard: 3.0, tempsDebutant: 5.2, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'تثبيت أساور الأكمام، حاشية السويت وأسفل الكاحل بالبورد-كوت', nomFr: 'Pose Bord-Côte Poignets, Ourlet Bas & Chevilles', machine: 'Recouvreuse', tempsMin: 2.2, tempsPro: 2.2, tempsStandard: 3.8, tempsDebutant: 6.5, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'مراقبة الجودة للطقم (قطعتين)، كيّ بالبخار وتغليف ثنائي', nomFr: 'Contrôle Qualité 2 Pièces, Repassage & Pack', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 1.8, tempsPro: 1.8, tempsStandard: 3.0, tempsDebutant: 5.0, roleOuvrier: 'مراقب جودة وتشطيب' }
+    ];
+    recommendation = 'طقم رياضي عصري قطعتين (سويت شيرت كول رون مقلم + سروال جوغينغ). استهلاك الثوب الإجمالي 2.90م (1.50م للسويت + 1.40م للسروال). ثوب مولتون قطن 280g متوفر بدرب عمر وسوق القريعة.';
   } else if (catKey === 'boxer_sous_vetement') {
     categorieName = 'بوكسر / ملابس داخلية رجالية (Boxer / Sous-vêtement)';
     tissuName = 'قطن جيرسي ليكرا (Jersey Coton 95% + Élasthanne 5%)';

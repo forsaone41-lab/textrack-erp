@@ -813,6 +813,13 @@ function AppContent() {
     return (
       <Routes>
         <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
+        <Route path="/store-builder" element={
+          <Suspense fallback={<PageLoader />}>
+            <div className="min-h-screen bg-white">
+              <StoreBuilder appCurrentUser={currentUser} />
+            </div>
+          </Suspense>
+        } />
         <Route path="*" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
       </Routes>
     );
@@ -1024,6 +1031,11 @@ function AppContent() {
       } />
       {/* Standalone SaaS Route for BEYA STORE Builder (Accessible by admin via this specific route) */}
       <Route path="/store-builder" element={(currentUser?.role === 'admin') ? <div className="min-h-screen bg-white"><StoreBuilder appCurrentUser={currentUser} /></div> : <Navigate to="/" replace />} />
+      <Route path="/portal" element={
+        <Suspense fallback={<PageLoader />}>
+          <PortailClient currentUser={currentUser} onLogout={handleLogout} />
+        </Suspense>
+      } />
       <Route path="/store-analytics" element={<Suspense fallback={<PageLoader />}><StoreAnalytics currentUser={currentUser} /></Suspense>} />
       <Route path="/beya-designer" element={<Suspense fallback={<PageLoader />}><BeyaDesignerPage /></Suspense>} />
       <Route path="/store/:storeNameUrl" element={<div className="min-h-screen bg-white"><StoreBuilder isLiveStore={true} /></div>} />

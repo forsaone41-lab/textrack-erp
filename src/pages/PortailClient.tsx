@@ -546,14 +546,20 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                  </div>
                </div>
              )}
-             {currentUser?.role === 'merchant' && (
-                <button 
-                  onClick={() => window.location.hash = '#/'}
-                  className="w-full py-4 mb-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-indigo-500/20"
-                >
-                  {isAr ? 'العودة للمتجر' : 'Retour au Store'}
-                </button>
-             )}
+             <button 
+                onClick={() => {
+                  try {
+                    localStorage.setItem('beya_builder_mode', 'dashboard');
+                    window.location.hash = '#/store-builder';
+                  } catch {
+                    window.location.href = '/#/store-builder';
+                  }
+                }}
+                className="w-full py-3.5 mb-2 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-amber-500/30 flex items-center justify-center gap-2 group"
+              >
+                <Store className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                <span>{isAr ? 'العودة إلى BEYA STORE' : 'Retour à BEYA STORE'}</span>
+              </button>
              <button 
                onClick={onLogout}
                className="w-full py-4 bg-white/5 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-transparent hover:border-rose-500/20"
@@ -585,7 +591,26 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
               </h2>
            </div>
            
-           <div className="flex items-center gap-4">
+           <div className="flex items-center gap-3 sm:gap-4">
+              {/* Switch to BEYA STORE button */}
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.setItem('beya_builder_mode', 'dashboard');
+                    window.location.hash = '#/store-builder';
+                  } catch {
+                    window.location.href = '/#/store-builder';
+                  }
+                }}
+                className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-500/20 hover:shadow-lg hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-95 shrink-0 cursor-pointer group"
+                title={isAr ? 'الانتقال إلى لوحة المتاجر (BEYA Store)' : 'Basculer vers BEYA Store (Mes Boutiques)'}
+              >
+                <Store className="w-4 h-4 shrink-0 group-hover:scale-110 transition-transform" />
+                <span className="hidden sm:inline">BEYA STORE</span>
+                <span className="sm:hidden">STORE</span>
+                <ArrowRight className={`w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform ${isAr ? 'rotate-180 group-hover:-translate-x-0.5' : ''}`} />
+              </button>
+
               <button 
                 onClick={() => window.location.reload()}
                 className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"

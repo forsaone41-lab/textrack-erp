@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler, Crown, RotateCcw, BarChart3, LogOut, Clock, PhoneCall } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler, Crown, RotateCcw, BarChart3, LogOut, Clock, PhoneCall, Layers } from 'lucide-react';
 
 
 const ReadMoreDescription = ({ text, className, isAr }: any) => {
@@ -5314,6 +5314,20 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
          {/* Profile / Logout */}
          {!isLiveStore && (
             <div className="flex items-center gap-3">
+               {/* BEYA Portal Switcher Button */}
+               <button
+                  onClick={() => {
+                     window.location.hash = '#/portal';
+                  }}
+                  className="flex items-center gap-2 px-3.5 h-[44px] bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 shrink-0 cursor-pointer group"
+                  title={isAr ? 'الانتقال إلى بوابة BEYA' : 'Basculer vers BEYA Portal'}
+               >
+                  <Layers className="w-4 h-4 shrink-0 group-hover:rotate-12 transition-transform" />
+                  <span className="hidden sm:inline">BEYA PORTAL</span>
+                  <span className="sm:hidden">PORTAL</span>
+                  <ArrowRight className={`w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform ${isAr ? 'rotate-180 group-hover:-translate-x-0.5' : ''}`} />
+               </button>
+
                {/* Language Switcher (Small Icon FR/AR Toggle) */}
                <button
                   onClick={() => {

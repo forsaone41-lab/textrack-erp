@@ -117,7 +117,31 @@ export default function Profil({ currentUser }: ProfilProps) {
     }
     
     try {
-      await saveRecord('users', { ...currentUser, password: passForm.new });
+      const email = (currentUser.email || '').toLowerCase().trim();
+      const updatedUser = { ...currentUser, password: passForm.new };
+
+      // 1. Update Supabase Auth if session exists
+      try {
+        const { supabase } = await import('../supabase');
+        await supabase.auth.updateUser({ password: passForm.new });
+      } catch (authErr) {
+        console.warn('Auth password update:', authErr);
+      }
+
+      // 2. Save in users table
+      await saveRecord('users', updatedUser);
+
+      // 3. Save local override so offline/fallback login always recognizes the new password
+      if (email) {
+        localStorage.setItem(`beya_override_pass_${email}`, passForm.new);
+      }
+      if (currentUser.role === 'admin' || email.includes('admin')) {
+        localStorage.setItem('beya_admin_pass', passForm.new);
+      }
+
+      // 4. Update current user session in local auth storage
+      localStorage.setItem('textrack_auth', JSON.stringify(updatedUser));
+
       setShowPasswordModal(false);
       setPassForm({ current: '', new: '', confirm: '' });
       setSuccess(true);

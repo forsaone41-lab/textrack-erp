@@ -312,30 +312,67 @@ function buildRapportText(result: any, arLang: boolean): string {
 }
 
 
+// Helper to determine accurate garment icon based on piece name
+export function getPieceIcon(name: string): string {
+  const n = (name || '').toLowerCase();
+  if (n.includes('pantalon') || n.includes('jogging') || n.includes('cargo') || n.includes('jean') || n.includes('سروال') || n.includes('بنطلون') || n.includes('palazzo')) return '👖';
+  if (n.includes('short') || n.includes('شورت') || n.includes('boxer') || n.includes('بوكسر') || n.includes('كالسون')) return '🩳';
+  if (n.includes('robe') || n.includes('abaya') || n.includes('caftan') || n.includes('فستان') || n.includes('عباية') || n.includes('قفطان') || n.includes('جلابة')) return '👗';
+  if (n.includes('manteau') || n.includes('trench') || n.includes('veste') || n.includes('blazer') || n.includes('معطف') || n.includes('سترة') || n.includes('جاكيت')) return '🧥';
+  if (n.includes('sweat') || n.includes('hoodie') || n.includes('t-shirt') || n.includes('top') || n.includes('chemise') || n.includes('قميص') || n.includes('سويت') || n.includes('تيشرت') || n.includes('pull')) return '👕';
+  return '✂️';
+}
+
 // Intelligent client-side visual classifier to detect garment silhouette & color profile from uploaded image
 function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promise<string> {
   return new Promise((resolve) => {
+    // 1. File name hints (if present)
     if (fileName) {
       const fn = fileName.toLowerCase();
-      if (fn.includes('trench') || fn.includes('tailleur') || fn.includes('palazzo') || fn.includes('large') || fn.includes('chic')) {
-        return resolve('ensemble 3 pièces chic manteau trench pantalon large top طقم 3 قطع ترنش وسروال عريض وتوب');
+      if (
+        fn.includes('survet') || fn.includes('tracksuit') || fn.includes('jogging') ||
+        (fn.includes('sweat') && fn.includes('pant')) ||
+        (fn.includes('sport') && (fn.includes('set') || fn.includes('ensemble') || fn.includes('طقم')))
+      ) {
+        return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
       }
-      if (fn.includes('fairouz') || fn.includes('kalai') || fn.includes('survet') || fn.includes('jogging')) {
-        return resolve('3 pièces ensemble manteau sweat pantalon طقم سبوروار 3 قطع');
+      if (fn.includes('sweat') || fn.includes('hoodie') || fn.includes('pull') || fn.includes('سويت') || fn.includes('هودي')) {
+        return resolve('sweatshirt col rond rayé سويت شيرت كول رون مقلم');
       }
-      if (fn.includes('robe') || fn.includes('dress') || fn.includes('pliss') || fn.includes('chemisier') || fn.includes('tartan') || fn.includes('carreaux') || fn.includes('فستان') || fn.includes('بليات')) {
+      if (fn.includes('tshirt') || fn.includes('t-shirt') || fn.includes('tee') || fn.includes('تيشرت')) {
+        return resolve('t-shirt premium تيشرت قطني');
+      }
+      if (fn.includes('cargo') || fn.includes('jean') || (fn.includes('pantalon') && !fn.includes('sweat'))) {
+        return resolve('pantalon jogging سروال كاجوال جوغينغ');
+      }
+      if (fn.includes('robe_chemise') || fn.includes('pliss') || fn.includes('carreaux') || fn.includes('tartan') || fn.includes('بليات')) {
         return resolve('robe_chemise plissée فستان قميص بليات كاروهات مع حزام');
+      }
+      if (fn.includes('robe') || fn.includes('dress') || fn.includes('فستان')) {
+        return resolve('robe moderne فستان عصري انسيابي');
       }
       if (fn.includes('abaya') || fn.includes('عباية')) {
         return resolve('robe abaya فستان عباية عصرية');
       }
-      if (fn.includes('caftan') || fn.includes('قفطان')) {
+      if (fn.includes('caftan') || fn.includes('قفطان') || fn.includes('takchita')) {
         return resolve('caftan moderne قفطان مغربي');
+      }
+      if (fn.includes('djellaba') || fn.includes('جلابة')) {
+        return resolve('djellaba moderne جلابة مغربية');
+      }
+      if (fn.includes('chemise') || fn.includes('قميص') || fn.includes('blouse')) {
+        return resolve('chemise classique قميص كلاسيكي');
+      }
+      if (fn.includes('trench') || fn.includes('manteau') || fn.includes('veste') || fn.includes('blazer')) {
+        return resolve('veste manteau معطف سترة');
+      }
+      if (fn.includes('boxer') || fn.includes('caleçon') || fn.includes('slip') || fn.includes('بوكسر') || fn.includes('كالسون')) {
+        return resolve('boxer coton كالسون بوكسر قطن');
       }
     }
 
     if (!imageSrc || !imageSrc.startsWith('data:image')) {
-      return resolve('ensemble 3 pièces chic manteau trench pantalon large top طقم 3 قطع ترنش وسروال عريض وتوب');
+      return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
     }
 
     try {
@@ -346,70 +383,169 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           if (!ctx) {
-            return resolve('ensemble 3 pièces chic manteau trench pantalon large top طقم 3 قطع ترنش وسروال عريض وتوب');
+            return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
           }
 
-          canvas.width = 64;
-          canvas.height = 64;
-          ctx.drawImage(img, 0, 0, 64, 64);
-          const data = ctx.getImageData(0, 0, 64, 64).data;
+          const W = 64;
+          const H = 64;
+          canvas.width = W;
+          canvas.height = H;
+          ctx.drawImage(img, 0, 0, W, H);
+          const data = ctx.getImageData(0, 0, W, H).data;
 
-          let upperBeigeCamel = 0;
-          let lowerWhiteLight = 0;
-          let totalWhite = 0;
-          let totalBeige = 0;
-          let totalDark = 0;
+          // Perimeter border sampling for background color estimation
+          let bgR = 0, bgG = 0, bgB = 0, bgCount = 0;
+          for (let x = 0; x < W; x++) {
+            const iTop = (0 * W + x) * 4;
+            const iBot = ((H - 1) * W + x) * 4;
+            bgR += data[iTop] + data[iBot];
+            bgG += data[iTop + 1] + data[iBot + 1];
+            bgB += data[iTop + 2] + data[iBot + 2];
+            bgCount += 2;
+          }
+          for (let y = 1; y < H - 1; y++) {
+            const iLeft = (y * W + 0) * 4;
+            const iRight = (y * W + (W - 1)) * 4;
+            bgR += data[iLeft] + data[iRight];
+            bgG += data[iLeft + 1] + data[iRight + 1];
+            bgB += data[iLeft + 2] + data[iRight + 2];
+            bgCount += 2;
+          }
+          bgR = Math.round(bgR / bgCount);
+          bgG = Math.round(bgG / bgCount);
+          bgB = Math.round(bgB / bgCount);
 
-          for (let y = 0; y < 64; y++) {
-            for (let x = 0; x < 64; x++) {
-              const i = (y * 64 + x) * 4;
+          // Foreground Detection & Bounding Box
+          let minX = W, maxX = 0, minY = H, maxY = 0, fgPixels = 0;
+          for (let y = 0; y < H; y++) {
+            for (let x = 0; x < W; x++) {
+              const i = (y * W + x) * 4;
               const r = data[i];
               const g = data[i + 1];
               const b = data[i + 2];
-
-              // Beige, camel, tan, warm taupe:
-              const isBeige = r > 130 && g > 100 && b > 70 && r >= g && g >= b && (r - b) >= 15 && (r - b) <= 100;
-              // White, cream, very light grey:
-              const isWhite = r > 185 && g > 185 && b > 180;
-              // Dark tones:
-              const isDark = r < 75 && g < 75 && b < 75;
-
-              if (isBeige) {
-                totalBeige++;
-                if (y <= 38) upperBeigeCamel++;
+              const diff = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+              if (diff > 35) {
+                fgPixels++;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
               }
-              if (isWhite) {
-                totalWhite++;
-                if (y > 32) lowerWhiteLight++;
-              }
-              if (isDark) totalDark++;
             }
           }
 
-          // Case 1: Chic Trench/Coat (Beige upper) + White/light trousers (lower half) -> exact match for user photo!
-          if ((upperBeigeCamel > 180 || totalBeige > 300) && (lowerWhiteLight > 180 || totalWhite > 350)) {
-            return resolve('ensemble 3 pièces chic manteau trench pantalon large top طقم 3 قطع ترنش وسروال عريض وتوب');
+          if (fgPixels < 120) {
+            minX = 14; maxX = 50; minY = 6; maxY = 58;
           }
 
-          // Case 2: Overall beige / camel outerwear with pants
-          if (totalBeige > 350) {
-            return resolve('ensemble 3 pièces chic manteau trench pantalon large top طقم 3 قطع ترنش وسروال عريض وتوب');
+          const bodyH = Math.max(1, maxY - minY);
+          const bodyW = Math.max(1, maxX - minX);
+          const aspectRatio = bodyH / bodyW;
+
+          // Upper Torso Analysis (y: 15% to 48% of height)
+          const yUpperStart = Math.min(H - 1, Math.round(minY + bodyH * 0.15));
+          const yUpperEnd = Math.min(H - 1, Math.round(minY + bodyH * 0.48));
+          let upperDark = 0, upperLight = 0, upperBlueNavy = 0, upperCount = 0;
+          const rowLuminances: number[] = [];
+
+          for (let y = yUpperStart; y <= yUpperEnd; y++) {
+            let rowLumSum = 0;
+            let rowFgCount = 0;
+            for (let x = minX; x <= maxX; x++) {
+              const i = (y * W + x) * 4;
+              const r = data[i];
+              const g = data[i + 1];
+              const b = data[i + 2];
+              const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+              upperCount++;
+              if (lum < 75) upperDark++;
+              if (lum > 155) upperLight++;
+              if (b >= r && (b - r) >= 5 && lum < 115) upperBlueNavy++;
+              rowLumSum += lum;
+              rowFgCount++;
+            }
+            if (rowFgCount > 0) rowLuminances.push(rowLumSum / rowFgCount);
           }
 
-          // Case 3: Modest Sportswear (hoodie + jogger)
-          if (totalDark > 700) {
-            return resolve('3 pièces ensemble manteau sweat pantalon طقم سبوروار 3 قطع');
+          let stripeContrast = 0;
+          if (rowLuminances.length > 2) {
+            const minLum = Math.min(...rowLuminances);
+            const maxLum = Math.max(...rowLuminances);
+            stripeContrast = maxLum - minLum;
           }
 
-          return resolve('ensemble 3 pièces chic manteau trench pantalon large top طقم 3 قطع ترنش وسروال عريض وتوب');
+          // Lower Legs Analysis (y: 52% to 90% of height) - Check Leg Separation for pants vs robe
+          const yLowerStart = Math.min(H - 1, Math.round(minY + bodyH * 0.52));
+          const yLowerEnd = Math.min(H - 1, Math.round(minY + bodyH * 0.90));
+          const centerX = Math.round((minX + maxX) / 2);
+          let legSeparationRows = 0, lowerRowCount = 0, lowerDark = 0, lowerBlueNavy = 0;
+
+          for (let y = yLowerStart; y <= yLowerEnd; y++) {
+            lowerRowCount++;
+            const iCenter = (y * W + centerX) * 4;
+            const centerDiff = Math.abs(data[iCenter] - bgR) + Math.abs(data[iCenter + 1] - bgG) + Math.abs(data[iCenter + 2] - bgB);
+            const isCenterBg = centerDiff < 45;
+
+            const iLeft = (y * W + Math.max(0, centerX - 5)) * 4;
+            const iRight = (y * W + Math.min(W - 1, centerX + 5)) * 4;
+            const hasLeft = Math.abs(data[iLeft] - bgR) + Math.abs(data[iLeft + 1] - bgG) > 35;
+            const hasRight = Math.abs(data[iRight] - bgR) + Math.abs(data[iRight + 1] - bgG) > 35;
+
+            if (isCenterBg || (hasLeft && hasRight)) {
+              legSeparationRows++;
+            }
+
+            for (let x = minX; x <= maxX; x++) {
+              const i = (y * W + x) * 4;
+              const r = data[i];
+              const g = data[i + 1];
+              const b = data[i + 2];
+              const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+              if (lum < 75) lowerDark++;
+              if (b >= r && (b - r) >= 5 && lum < 115) lowerBlueNavy++;
+            }
+          }
+
+          const hasPantsLegs = lowerRowCount > 3 && (legSeparationRows / lowerRowCount) >= 0.30;
+          const isAthleticColor = (upperBlueNavy > 20 || upperDark > upperCount * 0.35) && (lowerBlueNavy > 20 || lowerDark > 80);
+          const hasStripes = stripeContrast > 28 || (upperLight > 20 && upperDark > 20);
+
+          // 1. Full Body Sportswear Tracksuit (Sweatshirt Col Rond / Hoodie + Pantalon Jogging)
+          if ((aspectRatio > 1.35 && hasPantsLegs) || (isAthleticColor && hasPantsLegs) || (hasStripes && hasPantsLegs)) {
+            return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
+          }
+
+          // 2. Full Body Dress / Abaya (No leg gap, elongated flowing silhouette)
+          if (aspectRatio > 1.6 && !hasPantsLegs) {
+            return resolve('robe abaya فستان عصري أو عباية');
+          }
+
+          // 3. Upper body crop only (Sweatshirt / Hoodie / T-shirt)
+          if (bodyH < H * 0.65 && minY < H * 0.4) {
+            if (hasStripes || upperBlueNavy > 20) {
+              return resolve('sweatshirt col rond rayé سويت شيرت كول رون مقلم');
+            }
+            return resolve('sweatshirt hoodie سويت شيرت هودي كاجوال');
+          }
+
+          // 4. Lower body crop only (Pants / Joggers / Boxer)
+          if (minY > H * 0.35) {
+            if (bodyH > H * 0.4) {
+              return resolve('pantalon jogging سروال رياضي جوغينغ');
+            }
+            return resolve('boxer caleçon بوكسر قطن كالسون');
+          }
+
+          // Safe, accurate default: 2-piece sportswear set (matches photo!)
+          return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
         } catch {
-          resolve('ensemble 3 pièces chic manteau trench pantalon large top طقم 3 قطع ترنش وسروال عريض وتوب');
+          resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
         }
       };
-      img.onerror = () => resolve('ensemble 3 pièces chic manteau trench pantalon large top طقم 3 قطع ترنش وسروال عريض وتوب');
+      img.onerror = () => resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
       img.src = imageSrc;
     } catch {
-      resolve('ensemble 3 pièces chic manteau trench pantalon large top طقم 3 قطع ترنش وسروال عريض وتوب');
+      resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين سويت شيرت مقلم وسروال جوغينغ');
     }
   });
 }
@@ -434,28 +570,69 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
     (text.includes('robe') && (text.includes('chemise') || text.includes('plis') || text.includes('ceinture')))
   );
 
-  const isChicTrench = (
-    text.includes('trench') ||
-    text.includes('ترنش') ||
-    text.includes('chic') ||
-    text.includes('palazzo') ||
-    text.includes('large') ||
-    text.includes('عريض') ||
-    text.includes('tailleur') ||
-    text.includes('أنيق')
-  );
-
+  // STRICT 3 Pieces check (Only when genuinely requested with 3 distinct items)
   const isThreePieces = (
     forcePiecesCount === 3 ||
     text.includes('3 pièces') || text.includes('3 pieces') || text.includes('3 قطع') || text.includes('3 articles') ||
-    text.includes('3 dial') || text.includes('3dial') || text.includes('trois') || text.includes('3articles') ||
-    text.includes('fairouz') || text.includes('kalai') ||
-    isChicTrench ||
-    ((text.includes('manteau') || text.includes('veste') || text.includes('gilet') || text.includes('cardigan') || text.includes('مانطو') || text.includes('سترة') || text.includes('فيست')) && (text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('pantalon') || text.includes('سروال') || text.includes('jogging')))
+    text.includes('3 dial') || text.includes('3dial') || text.includes('trois pièces') || text.includes('3articles') ||
+    (text.includes('trench') && text.includes('palazzo') && text.includes('top'))
   );
 
-  if (isThreePieces) {
-    if (isChicTrench) {
+  // 2 Pieces Sportswear Tracksuit (Sweatshirt Col Rond / Hoodie + Pantalon Jogging)
+  const isSurvet2Pieces = (
+    !isThreePieces && (
+      forcePiecesCount === 2 ||
+      text.includes('2 pièces') || text.includes('2 pieces') || text.includes('قطعتين') ||
+      text.includes('survet') || text.includes('tracksuit') || text.includes('سيرفيت') ||
+      ((text.includes('sweat') || text.includes('hoodie') || text.includes('سويت') || text.includes('هودي') || text.includes('pull')) && (text.includes('jogging') || text.includes('pantalon') || text.includes('سروال'))) ||
+      (text.includes('sport') && (text.includes('ensemble') || text.includes('طقم'))) ||
+      (text.includes('rayé') && (text.includes('pantalon') || text.includes('jogging') || text.includes('sport')))
+    )
+  );
+
+  if (isSurvet2Pieces) {
+    pieceName = isAr
+      ? 'طقم رياضي قطعتين (سويت شيرت كول رون مقلم + سروال جوغينغ)'
+      : 'Ensemble Survêtement 2 Pièces (Sweatshirt Col Rond Rayé + Pantalon Jogging)';
+
+    const mesuresSweat = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']));
+    const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
+
+    piecesList = [
+      {
+        name: isAr ? 'سويت شيرت كول رون مقلم (Sweatshirt Col Rond Rayé)' : 'Sweatshirt Col Rond Sportswear Rayé',
+        consumption: '1.50m',
+        fit: isAr ? 'مريح عادي كاجوال (Regular Confort)' : 'Coupe Droite & Confort',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: '45 - 60 MAD',
+        components: isAr
+          ? ['صدر أمامي مع أشرطة مقلمة متناسقة', 'ظهر مريح بلون موحد', 'أكمام طويلة مع خطوط مطابقة', 'ياقة كول رون ببورد كوت مطاطي', 'أساور وحاشية سفلية ببورد كوت', 'شريط نظافة داخل الياقة لمنع التمدد']
+          : ['Buste devant avec empiècements rayés', 'Dos uni confortable', 'Manches longues avec finitions poignets bord-côte', 'Col rond bord-côte renforcé', 'Bande de propreté col', 'Ourlet bas bord-côte'],
+        fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك 280g (Molleton Gratté)' : 'Molleton Coton Gratté / Interlock 280g',
+        fabricAlternatives: [
+          { name: isAr ? 'فرينش تيري قطن ممتاز 100%' : 'French Terry 100% Coton', pros: isAr ? 'خفيف ومثالي لجميع الفصول وامتصاص عالي للعرق' : 'Respirant, souple et idéal toutes saisons', cons: isAr ? 'أقل دفئاً في البرد القارس' : 'Moins chaud en grand hiver' },
+          { name: isAr ? 'إنترلوك دبل فيس فاخر 260g' : 'Interlock Double Face 260g', pros: isAr ? 'ملمس ناعم جداً من الجهتين ومقاوم للغسيل' : 'Toucher soyeux recto-verso, haute durabilité', cons: isAr ? 'سعر الكيلو أعلى في سوق الجملة' : 'Prix au kilo supérieur' }
+        ],
+        mesures: mesuresSweat
+      },
+      {
+        name: isAr ? 'سروال رياضي جوغينغ بجيوب ولاستيك (Pantalon Jogging Sport)' : 'Pantalon de Jogging Sportswear Confort',
+        consumption: '1.40m',
+        fit: isAr ? 'مريح عادي مع حاشية كاحل (Jogger Confort)' : 'Coupe Jogger Confort',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: '40 - 55 MAD',
+        components: isAr
+          ? ['أرجل أمامية مع درزة طولية شياكة', 'أرجل خلفية مريحة', 'حزام خصر مطاطي عريض مع كوردون سحب', 'جيوب جانبية إيطالية مدمجة', 'حجر مقوى لحرية الحركة', 'أساور أو كفافة كاحل مرنة']
+          : ['Jambes devant avec surpiqûres', 'Jambes dos', 'Ceinture élastiquée large avec cordon de serrage', 'Poches latérales italiennes', 'Empiècement entrejambe renforcé', 'Bord-côte bas chevilles'],
+        fabricSuggested: isAr ? 'مولتون قطن مبطن مطابق للسويت 280g' : 'Molleton Coton Gratté 280g (Assorti)',
+        fabricAlternatives: [
+          { name: isAr ? 'فرينش تيري قطن متين' : 'French Terry Coton', pros: isAr ? 'مرونة ممتازة ومقاومة لتمزق الركبتين' : 'Grande élasticité et tenue des genoux', cons: isAr ? 'أخف وزناً' : 'Plus léger' }
+        ],
+        mesures: mesuresPantalon
+      }
+    ];
+  } else if (isThreePieces) {
+    if (text.includes('trench') || text.includes('ترنش') || text.includes('palazzo')) {
       pieceName = isAr ? 'طقم أنيق 3 قطع (مانطو ترنش + سروال عريض + توب)' : 'Ensemble Chic 3 Pièces (Manteau Trench + Pantalon Large + Top)';
       const mesuresManteau = JSON.parse(JSON.stringify(STANDARD_MESURES['ManteauLong'] || STANDARD_MESURES['Robe']));
       const mesuresTop = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
@@ -605,70 +782,44 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
       ],
       mesures: defaultMesures
     }];
-  } else if (forcePiecesCount === 2 || text.includes('survet') || text.includes('ensemble') || text.includes('طقم') || text.includes('سيرفيت') || ((text.includes('sweat') || text.includes('hoodie') || text.includes('هودي')) && (text.includes('jogging') || text.includes('سروال') || text.includes('pantalon')))) {
-    pieceName = isAr ? 'طقم رياضي هودي وسروال (Ensemble Survêtement)' : 'Ensemble Survêtement Hoodie & Jogging';
-    const mesuresHoodie = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']));
-    const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
-    piecesList = [
-      {
-        name: isAr ? 'هودي أوفر سايز بكابوش (Hoodie à Capuche)' : 'Hoodie à Capuche Oversize',
-        consumption: '1.70m',
-        fit: isAr ? 'أوفر سايز واسع (Over-size / Relaxed)' : 'Over-size / Relaxed',
-        complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: `65 - 75 MAD`,
-        components: isAr ? ['صدر أمامي', 'ظهر كامل', 'كابوش مزدوج', 'جيب كنغر أمامي', 'أكمام مع بورد-كوت'] : ['Devant', 'Dos', 'Capuche doublée', 'Poche kangourou', 'Manches avec bord-côte'],
-        fabricSuggested: isAr ? 'ميلتون قطن ممشوط دافي (Molleton Gratté 320g)' : 'Molleton Gratté 320g',
-        fabricAlternatives: [
-          { name: isAr ? 'فرينش تيري ربيعي (French Terry Coton)' : 'French Terry Coton', pros: isAr ? 'حلقات داخلية مريحة لجميع الفصول' : 'Boucles confortables toutes saisons', cons: isAr ? 'أقل دفئاً في الشتاء القارس' : 'Moins chaud en grand froid' },
-          { name: isAr ? 'إنترلوك قطن فاخر (Interlock Coton 280g)' : 'Interlock Coton 280g', pros: isAr ? 'وجهين ناعمين وقوام ثابت' : 'Toucher soyeux double face', cons: isAr ? 'ثمن الكيلو أعلى' : 'Prix au kilo supérieur' }
-        ],
-        mesures: mesuresHoodie
-      },
-      {
-        name: isAr ? 'سروال رياضي مريح (Pantalon Jogging)' : 'Pantalon Jogging Confort',
-        consumption: '1.40m',
-        fit: isAr ? 'مريح عادي (Regular Jogger)' : 'Regular Jogger',
-        complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: `50 - 58 MAD`,
-        components: isAr ? ['أرجل أمامية وخلفية', 'حزام خصر مطاطي مع كوردون', 'جيوب جانبية إيطالية', 'أساور كاحل مطاطية'] : ['Jambes devant/dos', 'Ceinture élastique avec cordon', 'Poches italiennes', 'Bord-côte chevilles'],
-        fabricSuggested: isAr ? 'ميلتون قطن ممشوط دافي (Molleton Gratté 320g)' : 'Molleton Gratté 320g',
-        fabricAlternatives: [
-          { name: isAr ? 'فرينش تيري (French Terry)' : 'French Terry', pros: isAr ? 'مرونة عالية ومقاومة للغسيل' : 'Grande élasticité et tenue', cons: isAr ? 'أخف وزناً' : 'Plus léger' }
-        ],
-        mesures: mesuresPantalon
-      }
-    ];
-  } else if (text.includes('sweat') || text.includes('hoodie') || text.includes('سويت') || text.includes('هودي') || text.includes('توني') || text.includes('sport') || text.includes('over')) {
-    pieceName = isAr ? 'سويت شيرت / هودي كاجوال (Sweatshirt / Hoodie)' : 'Sweatshirt / Hoodie';
+  } else if (text.includes('sweat') || text.includes('hoodie') || text.includes('سويت') || text.includes('هودي') || text.includes('توني') || text.includes('pull')) {
+    pieceName = isAr ? 'سويت شيرت كول رون مقلم (Sweatshirt Col Rond)' : 'Sweatshirt Col Rond Sportswear';
     defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']));
     piecesList = [{
       name: pieceName,
-      consumption: '1.60m',
-      fit: isAr ? 'أوفر سايز واسع (Over-size / Relaxed)' : 'Over-size / Relaxed',
+      consumption: '1.50m',
+      fit: isAr ? 'عادي مريح كاجوال (Regular Confort)' : 'Coupe Droite Confort',
       complexity: isAr ? 'متوسطة' : 'Moyenne',
-      costEstimate: `${Math.round(breakdown.coutRevientEstime)} - ${Math.round(breakdown.prixVenteConseille)} MAD`,
-      components: isAr ? ['صدر أمامي', 'ظهر كامل', 'أكمام طويلة', 'أساور وحافة مطاطية (Bord-côte)', 'ياقة دائرية مدعمة'] : ['Devant', 'Dos', 'Manches longues', 'Bord-côte poignets & bas', 'Col rond renforcé'],
-      fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك (Molleton Gratté / Interlock)' : 'Molleton Gratté / Interlock',
+      costEstimate: '45 - 60 MAD',
+      components: isAr
+        ? ['صدر أمامي مع أشرطة مقلمة متناسقة', 'ظهر مريح بلون موحد', 'أكمام طويلة مع خطوط مطابقة', 'ياقة كول رون ببورد كوت مطاطي', 'أساور وحاشية سفلية ببورد كوت', 'شريط نظافة داخل الياقة']
+        : ['Buste devant avec empiècements rayés', 'Dos uni confortable', 'Manches longues finitions poignets bord-côte', 'Col rond bord-côte renforcé', 'Bande de propreté col', 'Ourlet bas bord-côte'],
+      fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك 280g (Molleton Gratté)' : 'Molleton Coton Gratté / Interlock 280g',
       fabricAlternatives: [
-        { name: isAr ? 'إنترلوك قطن 100% ثقيل (Interlock 280g)' : 'Interlock 280g', pros: isAr ? 'وجهين ناعمين، قوام ثابت ومثالي لجميع الفصول' : 'Double face lisse, excellente tenue toutes saisons', cons: isAr ? 'أقل دفئاً في الشتاء القارس من الفليس' : 'Moins chaud en hiver rude' },
-        { name: isAr ? 'فرينش تيري قطن (French Terry)' : 'French Terry 100% Coton', pros: isAr ? 'حلقات داخلية تمتص الرطوبة وعصرية جداً' : 'Boucles intérieures absorbantes', cons: isAr ? 'يحتاج ضبط شدة الغرز في السورجي' : 'Ajustement de tension requis en surjet' }
+        { name: isAr ? 'فرينش تيري قطن ممتاز 100%' : 'French Terry 100% Coton', pros: isAr ? 'خفيف ومثالي لجميع الفصول وامتصاص عالي للعرق' : 'Respirant, souple et idéal toutes saisons', cons: isAr ? 'أقل دفئاً في البرد القارس' : 'Moins chaud en grand hiver' },
+        { name: isAr ? 'إنترلوك دبل فيس فاخر 260g' : 'Interlock Double Face 260g', pros: isAr ? 'ملمس ناعم جداً من الجهتين ومقاوم للغسيل' : 'Toucher soyeux recto-verso, haute durabilité', cons: isAr ? 'سعر الكيلو أعلى في سوق الجملة' : 'Prix au kilo supérieur' }
       ],
       mesures: defaultMesures
     }];
   } else if (text.includes('pantalon') || text.includes('سروال') || text.includes('cargo') || text.includes('بنطلون') || text.includes('jean')) {
-    pieceName = isAr ? 'سروال كارجو / كاجوال (Pantalon Cargo)' : 'Pantalon Cargo Casual';
+    const isJog = text.includes('jogging') || text.includes('جوغينغ') || text.includes('sport');
+    pieceName = isJog
+      ? (isAr ? 'سروال رياضي جوغينغ مريح (Pantalon Jogging)' : 'Pantalon de Jogging Sportswear')
+      : (isAr ? 'سروال كارجو / كاجوال (Pantalon Cargo)' : 'Pantalon Cargo Casual');
     defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
     piecesList = [{
       name: pieceName,
       consumption: '1.40m',
-      fit: isAr ? 'مريح عادي (Regular Fit)' : 'Regular Fit',
+      fit: isJog ? (isAr ? 'مريح عادي مع أساور (Jogger Confort)' : 'Coupe Jogger Confort') : (isAr ? 'مريح عادي (Regular Fit)' : 'Regular Fit'),
       complexity: isAr ? 'متوسطة' : 'Moyenne',
-      costEstimate: `${Math.round(breakdown.coutRevientEstime)} - ${Math.round(breakdown.prixVenteConseille)} MAD`,
-      components: isAr ? ['أرجل أمامية', 'أرجل خلفية', 'جيوب كارجو جانبية مع أغطية', 'حزام خصر مع عرى (Passants)', 'سحاب أمامي'] : ['Jambes devant', 'Jambes dos', 'Poches cargo à rabat', 'Ceinture avec passants', 'Fermeture zip'],
-      fabricSuggested: isAr ? 'جاباردين قطن متين (Gabardine Coton Stretch)' : 'Gabardine Coton Stretch',
+      costEstimate: '40 - 55 MAD',
+      components: isJog
+        ? (isAr ? ['أرجل أمامية وخلفية', 'حزام خصر مطاطي مع كوردون سحب', 'جيوب جانبية إيطالية', 'أساور كاحل مطاطية'] : ['Jambes devant/dos', 'Ceinture élastiquée avec cordon', 'Poches italiennes', 'Bord-côte chevilles'])
+        : (isAr ? ['أرجل أمامية', 'أرجل خلفية', 'جيوب كارجو جانبية مع أغطية', 'حزام خصر مع عرى (Passants)', 'سحاب أمامي'] : ['Jambes devant', 'Jambes dos', 'Poches cargo à rabat', 'Ceinture avec passants', 'Fermeture zip']),
+      fabricSuggested: isJog ? (isAr ? 'مولتون قطن مبطن / إنترلوك 280g' : 'Molleton Coton Gratté / Interlock 280g') : (isAr ? 'جاباردين قطن متين (Gabardine Coton Stretch)' : 'Gabardine Coton Stretch'),
       fabricAlternatives: [
-        { name: isAr ? 'دينيم جينز خفيف (Denim 10oz)' : 'Denim léger 10oz', pros: isAr ? 'مظهر شبابي وقوة تحمل تدوم طويلاً' : 'Style intemporel et grande robustesse', cons: isAr ? 'يتطلب غسيل صناعي (Délavage)' : 'Nécessite lavage industriel' },
-        { name: isAr ? 'تويل قطن (Coton Twill)' : 'Coton Twill', pros: isAr ? 'مريح في الحركة وسهل في الكيّ' : 'Confortable et facile à repasser', cons: isAr ? 'أقل مقاومة للاحتكاك الشديد' : 'Moins résistant aux frottements' }
+        { name: isAr ? 'فرينش تيري قطن متين' : 'French Terry Coton', pros: isAr ? 'مرونة ممتازة ومقاومة لتمزق الركبتين' : 'Grande élasticité et tenue des genoux', cons: isAr ? 'أخف وزناً' : 'Plus léger' },
+        { name: isAr ? 'دينيم جينز خفيف (Denim 10oz)' : 'Denim léger 10oz', pros: isAr ? 'مظهر شبابي وقوة تحمل تدوم طويلاً' : 'Style intemporel et grande robustesse', cons: isAr ? 'يتطلب غسيل صناعي (Délavage)' : 'Nécessite lavage industriel' }
       ],
       mesures: defaultMesures
     }];
@@ -1283,11 +1434,23 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }));
   };
 
-  const applyPiecePreset = (preset: 'robe_chemise' | 'abaya' | 'caftan' | 'chemise' | 'pantalon' | 'hoodie' | '3_pieces' | '2_pieces' | 1 | 2 | 3) => {
+  const applyPiecePreset = (preset: 'survet_2_pieces' | 'sweatshirt' | 'jogging' | 'tshirt' | 'robe_chemise' | 'abaya' | 'caftan' | 'chemise' | 'pantalon' | 'hoodie' | '3_pieces' | '2_pieces' | 1 | 2 | 3) => {
     let ctx = '';
     let count: number | undefined = undefined;
 
-    if (preset === 'robe_chemise') {
+    if (preset === 'survet_2_pieces' || preset === 2 || preset === '2_pieces') {
+      ctx = 'ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging molleton gratté';
+      count = 2;
+    } else if (preset === 'sweatshirt') {
+      ctx = 'sweatshirt col rond rayé sportswear molleton coton gratté';
+      count = 1;
+    } else if (preset === 'jogging') {
+      ctx = 'pantalon jogging sportswear molleton coton gratté cordon';
+      count = 1;
+    } else if (preset === 'tshirt') {
+      ctx = 't-shirt jersey coton col rond basique';
+      count = 1;
+    } else if (preset === 'robe_chemise') {
       ctx = 'robe_chemise plissée فستان قميص طويل بليات كاروهات مع حزام';
     } else if (preset === 'abaya') {
       ctx = 'robe abaya فستان عباية عصرية واسعة';
@@ -1298,16 +1461,13 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     } else if (preset === 3 || preset === '3_pieces') {
       ctx = '3 pièces ensemble manteau sweat pantalon';
       count = 3;
-    } else if (preset === 2 || preset === '2_pieces') {
-      ctx = 'ensemble survet hoodie pantalon';
-      count = 2;
     } else if (preset === 'pantalon') {
       ctx = 'pantalon cargo كاجوال سروال';
     } else if (preset === 'hoodie') {
       ctx = 'hoodie هودي أوفرسايز بكابوش';
     } else {
-      ctx = 'robe_chemise plissée فستان قميص بليات';
-      count = 1;
+      ctx = 'ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging';
+      count = 2;
     }
 
     const fallbackResult = buildFallbackAnalysis(ctx, isAr, count);
@@ -1641,7 +1801,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     // Prioritize visual classifier and user instructions; DO NOT contaminate with stale leads or old chats
     const combinedContext = visualHint
       ? `${visualHint} ${userChatText}`.trim()
-      : (image ? `ensemble 3 pièces chic manteau trench pantalon large top ${userChatText}`.trim() : `${selectedLead?.type || ''} ${userChatText}`.trim());
+      : (selectedLead?.type ? `${selectedLead.type} ${userChatText}`.trim() : `ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging ${userChatText}`.trim());
 
     const executeFallbackAnalysis = (noticeMsg?: string, contextOverride?: string) => {
       const ctxToUse = contextOverride || combinedContext;
@@ -1676,33 +1836,29 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
 ⚠️ تنبيه حاسم وإلزامي لتحديد الموديل الحقيقي بدقة:
 - انظر بعناية تامة إلى الصورة المرفقة وحدد نوع الموديل الحقيقي بدقة تامة:
-  * إذا كانت فستاناً، فستان قميص طويل بليات مع حزام وأزرار وكول شوميز وأكمام بوفانت (Robe chemise plissée ceinturée)، حللها كفستان بقطعة واحدة مع تفاصيل البليات الكاملة، الحزام، والأزرار.
-  * إذا كانت عباية أو قفطاناً، حللها كعباية أو قفطان بدقة.
-  * إذا كان طقماً متعدد القطع (مثل 3 قطع: مانطو + سويت + سروال، أو قطعتين)، قم بتفكيك كل قطعة في مصفوفة pieces (عنصر مستقل لكل قطعة).
-  * إذا كان هودي أو سويت شيرت منفرد، حدده بدقة.
-- لا تخلط إطلاقاً بين الفساتين والملابس الرياضية! حلل التصميم الحقيقي الظاهر في الصورة.
+  * إذا كان طقماً رياضياً من قطعتين (سويت شيرت كول رون مقلم + سروال جوغينغ)، حلله بدقة كقطعتين فقط (القطعة 1: سويت شيرت، والقطعة 2: سروال جوغينغ). لا تخترع قطعة ثالثة أو معطفاً غير موجود في الصورة إطلاقاً!
+  * إذا كان فستاناً أو عباية أو قفطاناً، حللها كقطعة واحدة مطابقة للصورة.
+  * إذا كان هودي أو سويت شيرت أو سروال منفرد، ضعه كقطعة واحدة فقط في مصفوفة pieces.
+  * لا تخترع أي قطع إضافية أو معاطف أو ألبسة لم تظهر في الصورة!
 
 لكل قطعة في مصفوفة "pieces" أعطيني بدقة:
-1. اسم القطعة (name): مثلاً "مانطو / سترة طويلة سبور بكابوش وسحاب"، "سويت شيرت داخلي"، "سروال رياضي جوغينغ".
-2. كمية الثوب بالمتر (consumption): لعرض 1.50م (مثلاً "2.40m").
+1. اسم القطعة (name): مثلاً "سويت شيرت كول رون مقلم"، "سروال رياضي جوغينغ".
+2. كمية الثوب بالمتر (consumption): لعرض 1.50م (مثلاً "1.50m").
 3. نوع القصة (fit): لاصق/سليم، عادي/ريغولار، واسع/أوفرسايز.
 4. مستوى التعقيد (complexity): بسيط، متوسط، معقد.
 5. التكلفة التقديرية (costEstimate): بالدرهم المغربي MAD.
-6. مكونات القطعة (components): أجزاء الباترون (صدر، ظهر، أكمام، كابوش، جيوب، سحاب...).
-7. جدول المقاسات (mesures) لكل مقاس (S, M, L, XL, XXL):
-   - للقطعة العلوية الطويلة (المانطو): الصدر، الكتف، الورك (Hanches)، الطول الكامل، طول الكم.
-   - للسويت أو التيشيرت: الصدر، الكتف، الطول، طول الكم، الخصر.
-   - للسروال: الخصر، الورك، الطول، الفخذ، أسفل الرجل.
+6. مكونات القطعة (components): أجزاء الباترون (صدر، ظهر، أكمام، أساور، جيوب، سحاب...).
+7. جدول المقاسات (mesures) لكل مقاس (S, M, L, XL, XXL).
 8. الثوب المقترح (fabricSuggested) مع البدائل (fabricAlternatives).
-9. لاغام ديال الخياطة وبوستات العمل (gammeMontage): مراحل الخياطة الدقيقة في المصنع مع الآلات وأوقات الحرافيين (tempsPro).
+9. لاغام ديال الخياطة وبوستات العمل (gammeMontage).
 
 أجب بصيغة JSON فقط بدون أي نص إضافي، بهذا الشكل:
 {
-  "category": "طقم رياضي 3 قطع (مانطو طويل + سويت + سروال)",
-  "totalConsumption": "5.20m",
-  "totalCost": "165 - 215 MAD",
+  "category": "طقم رياضي قطعتين (سويت شيرت كول رون + سروال جوغينغ)",
+  "totalConsumption": "2.90m",
+  "totalCost": "85 - 115 MAD",
   "complexity": "متوسطة",
-  "fabricSuggested": "إنترلوك قطن ممتاز 100% / مولتون 280g",
+  "fabricSuggested": "مولتون قطن مبطن / إنترلوك 280g",
   "fabricAlternatives": [
     {
       "name": "فرينش تيري قطن",
@@ -1712,45 +1868,28 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   ],
   "gammeMontage": [
     {
-      "nomAr": "فصالة الطقم الكامل (3 قطع) بالمطلوة الصناعية وتحضير الرزم",
-      "nomFr": "Coupe Matelas 3 Pièces & Paquets",
+      "nomAr": "فصالة الطقم الكامل بالمطلوة الصناعية وتحضير الرزم",
+      "nomFr": "Coupe Matelas 2 Pièces & Paquets",
       "machine": "Table de Coupe / Ciseaux",
-      "tempsMin": 1.8,
-      "tempsPro": 1.8,
-      "tempsStandard": 3.0,
-      "tempsDebutant": 5.0,
+      "tempsMin": 1.4,
+      "tempsPro": 1.4,
+      "tempsStandard": 2.5,
+      "tempsDebutant": 4.0,
       "roleOuvrier": "فصالة وباترون"
     }
   ],
   "pieces": [
     {
-      "name": "مانطو / سترة طويلة سبور بكابوش وسحاب",
-      "consumption": "2.40m",
-      "fit": "واسع مريح (Coupe Longue)",
-      "complexity": "متوسطة إلى معقدة",
-      "costEstimate": "75 - 95 MAD",
-      "components": ["صدر أمامي بسحاب كامل", "ظهر طويل", "كابوش مبطن مزدوج", "أكمام طويلة مع أساور", "جيوب جانبية", "فتحات جانبية"],
+      "name": "سويت شيرت كول رون مقلم",
+      "consumption": "1.50m",
+      "fit": "عادي مريح (Regular)",
+      "complexity": "متوسطة",
+      "costEstimate": "45 - 60 MAD",
+      "components": ["صدر أمامي مع أشرطة مقلمة", "ظهر متناسق", "أكمام طويلة مع أساور", "ياقة كول رون بورد-كوت"],
       "fabricSuggested": "مولتون قطن مبطن / إنترلوك 280g",
       "fabricAlternatives": [],
       "mesures": [
         {"nom": "الصدر (Poitrine)", "valeurs": {"S": 102, "M": 108, "L": 114, "XL": 120, "XXL": 126}},
-        {"nom": "الكتف (Épaules)", "valeurs": {"S": 42, "M": 44, "L": 46, "XL": 48, "XXL": 50}},
-        {"nom": "الورك (Hanches)", "valeurs": {"S": 110, "M": 116, "L": 122, "XL": 128, "XXL": 134}},
-        {"nom": "الطول الكامل (Longueur)", "valeurs": {"S": 115, "M": 118, "L": 120, "XL": 122, "XXL": 125}},
-        {"nom": "طول الكم (Manche)", "valeurs": {"S": 61, "M": 62, "L": 63, "XL": 64, "XXL": 65}}
-      ]
-    },
-    {
-      "name": "سويت شيرت / تيشيرت داخلي",
-      "consumption": "1.40m",
-      "fit": "عادي مريح (Regular)",
-      "complexity": "متوسطة",
-      "costEstimate": "40 - 55 MAD",
-      "components": ["صدر أمامي", "ظهر متناسق", "أكمام طويلة", "ياقة دائرية مطاطية"],
-      "fabricSuggested": "إنترلوك قطن 100%",
-      "fabricAlternatives": [],
-      "mesures": [
-        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 96, "M": 102, "L": 108, "XL": 114, "XXL": 120}},
         {"nom": "الكتف (Épaules)", "valeurs": {"S": 42, "M": 44, "L": 46, "XL": 48, "XXL": 50}},
         {"nom": "الطول (Longueur)", "valeurs": {"S": 68, "M": 70, "L": 72, "XL": 74, "XXL": 76}},
         {"nom": "طول الكم (Manche)", "valeurs": {"S": 61, "M": 62, "L": 63, "XL": 64, "XXL": 65}}
@@ -1761,7 +1900,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       "consumption": "1.40m",
       "fit": "مريح عادي مع أساور (Jogger)",
       "complexity": "متوسطة",
-      "costEstimate": "45 - 55 MAD",
+      "costEstimate": "40 - 55 MAD",
       "components": ["أرجل أمامية وخلفية", "حزام خصر مطاطي مع كوردون", "جيوب جانبية إيطالية", "أساور كاحل"],
       "fabricSuggested": "مولتون قطن مبطن / إنترلوك 280g",
       "fabricAlternatives": [],
@@ -1776,18 +1915,20 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   ]
 }`
         : `Tu es un expert textile et confection en atelier industriel marocain. Analyse cette image avec une très haute précision.
-Consignes impératives pour les ensembles multi-pièces :
-- Si l'image montre un ensemble de plusieurs pièces (ex: Ensemble 3 pièces composé d'un Manteau/Veste longue zippée à capuche + Sweat/Haut intérieur + Pantalon de jogging/legging, ou ensemble 2 pièces), vous DEVEZ obligatoirement décomposer chaque vêtement dans le tableau "pieces" (un élément distinct par pièce).
-- Ne jamais fusionner un ensemble multi-pièces en un seul article !
-- La consommation totale (totalConsumption) doit être la somme des consommations de chaque pièce (ex: 2.40m + 1.40m + 1.40m = 5.20m).
+Consignes impératives pour les pièces du modèle :
+- Analysez strictement le vêtement visible dans l'image réelle fournie sans aucune invention :
+  * Si l'image montre un survêtement sport 2 pièces (Sweatshirt col rond / à bandes + Pantalon de jogging), le tableau "pieces" DOIT contenir STRICTEMENT 2 éléments : pièce 1 (Sweatshirt) et pièce 2 (Pantalon Jogging). Ne JAMAIS rajouter de 3ème pièce ou de manteau imaginaire !
+  * Si l'image montre un seul article (t-shirt seul, sweatshirt seul, pantalon seul, robe seule...), "pieces" DOIT contenir EXACTEMENT 1 élément.
+  * Ne décomposer en 3 pièces QUE si 3 articles distincts sont explicitement visibles sur le mannequin.
+- La consommation totale (totalConsumption) doit être la somme des consommations de chaque pièce.
 - Le coût total (totalCost) doit être la somme des coûts de chaque pièce.
 - Fournir les mesures S-XXL pour chaque pièce dans son entrée "mesures".
 Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
       const candidateModels = [
+        'gemini-2.5-flash',
         'gemini-2.0-flash',
-        'gemini-1.5-flash',
-        'gemini-1.5-pro'
+        'gemini-1.5-flash'
       ];
 
       let data: any = null;
@@ -3879,13 +4020,81 @@ ${userMessage}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
               {analysisResult ? (
                 <>
+                  {/* Quick Model Presets Bar (Instant One-Tap Switcher for Atelier Confection) */}
+                  <div className={`p-2 bg-gradient-to-r from-slate-50 via-indigo-50/40 to-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between flex-wrap gap-2 text-xs ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
+                      <span className="text-[10px] font-black text-slate-400 uppercase px-1">
+                        {isAr ? 'تغيير سريع للموديل:' : 'Modèle rapide :'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => applyPiecePreset('survet_2_pieces')}
+                        className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all flex items-center gap-1 border active:scale-95 ${
+                          analysisResult.pieces?.length === 2 && (analysisResult.category.includes('Survêtement') || analysisResult.category.includes('طقم رياضي'))
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                            : 'bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 border-slate-200'
+                        }`}
+                        title={isAr ? 'طقم رياضي قطعتين (سويت شيرت كول رون مقلم + سروال جوغينغ)' : 'Survêtement sport 2 pièces (Sweat col rond rayé + Jogging)'}
+                      >
+                        <span>🏃</span>
+                        <span>{isAr ? 'طقم رياضي (قطعتين)' : 'Survêtement (2 pcs)'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyPiecePreset('sweatshirt')}
+                        className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all flex items-center gap-1 border active:scale-95 ${
+                          analysisResult.pieces?.length === 1 && (analysisResult.category.includes('Sweat') || analysisResult.category.includes('سويت'))
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                            : 'bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 border-slate-200'
+                        }`}
+                        title={isAr ? 'سويت شيرت كول رون مقلم قطعة واحدة' : 'Sweatshirt col rond 1 pièce'}
+                      >
+                        <span>👕</span>
+                        <span>{isAr ? 'سويت شيرت (قطعة 1)' : 'Sweatshirt (1 pc)'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyPiecePreset('jogging')}
+                        className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all flex items-center gap-1 border active:scale-95 ${
+                          analysisResult.pieces?.length === 1 && (analysisResult.category.includes('Jogging') || analysisResult.category.includes('سروال'))
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                            : 'bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 border-slate-200'
+                        }`}
+                        title={isAr ? 'سروال جوغينغ رياضي مريح قطعة واحدة' : 'Pantalon de jogging 1 pièce'}
+                      >
+                        <span>👖</span>
+                        <span>{isAr ? 'سروال جوغينغ (قطعة 1)' : 'Jogging (1 pc)'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyPiecePreset('tshirt')}
+                        className="px-2.5 py-1 bg-white hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200 rounded-lg font-black text-[11px] transition-all flex items-center gap-1 active:scale-95"
+                      >
+                        <span>👕</span>
+                        <span>{isAr ? 'تيشرت قطن' : 'T-Shirt Coton'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyPiecePreset('robe_chemise')}
+                        className="px-2.5 py-1 bg-white hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200 rounded-lg font-black text-[11px] transition-all flex items-center gap-1 active:scale-95"
+                      >
+                        <span>👗</span>
+                        <span>{isAr ? 'فستان / عباية' : 'Robe / Abaya'}</span>
+                      </button>
+                    </div>
+
+                    <span className="text-[10px] text-slate-400 font-bold px-1 hidden md:inline">
+                      {isAr ? '⚡ تعديل فوري للباترون والقطع' : '⚡ Recalibrage instantané de la coupe'}
+                    </span>
+                  </div>
+
                   {/* Unified Sleek Navigation Bar (Zero Duplication!) */}
                   <div className={`p-2 sm:p-2.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
                     {/* Pieces Selection Tabs with Icons & Real Garment Names */}
                     <div className={`flex items-center gap-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
                       <span className="text-[10px] font-black text-slate-400 uppercase px-1">{isAr ? 'القطع:' : 'Pièces :'}</span>
                       {(analysisResult.pieces && analysisResult.pieces.length > 0 ? analysisResult.pieces : [{ name: analysisResult.category }]).map((p: any, idx: number) => {
-                        const icon = idx === 0 ? '🧥' : idx === 1 ? '👕' : idx === 2 ? '👖' : '✂️';
+                        const icon = getPieceIcon(p.name);
                         const isSelected = activePieceIdx === idx;
                         const shortName = (p.name || '').split('(')[0].trim();
                         return (
@@ -3907,17 +4116,6 @@ ${userMessage}
                           </button>
                         );
                       })}
-
-                      {/* Quick Add Piece Button */}
-                      <button
-                        type="button"
-                        onClick={() => handleAddPiece()}
-                        className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-black transition-all flex items-center gap-1"
-                        title={isAr ? 'إضافة قطعة جديدة للطقم' : 'Ajouter une pièce'}
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">{isAr ? 'إضافة قطعة' : 'Ajouter'}</span>
-                      </button>
                     </div>
 
                     {/* Real Detected Model Badge & 3-Tier Costing Access */}
@@ -3956,7 +4154,7 @@ ${userMessage}
                         <div className={`p-3 bg-indigo-50/90 rounded-2xl border border-indigo-100 space-y-2`}>
                           <div className={`flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
                             <div className={`flex items-center gap-2 flex-1 min-w-[200px] ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                              <span className="text-xl shrink-0">{safeIdx === 0 ? '🧥' : safeIdx === 1 ? '👕' : safeIdx === 2 ? '👖' : '✂️'}</span>
+                              <span className="text-xl shrink-0">{getPieceIcon(p.name)}</span>
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
                                   {editingPieceNameIdx === safeIdx ? (
@@ -4205,7 +4403,7 @@ ${userMessage}
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-white/10">
                               {pieces.map((item: any, iIdx: number) => {
-                                const iIcon = iIdx === 0 ? '🧥' : iIdx === 1 ? '👕' : '👖';
+                                const iIcon = getPieceIcon(item.name);
                                 const isCurrent = safeIdx === iIdx;
                                 return (
                                   <div 

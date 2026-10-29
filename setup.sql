@@ -325,6 +325,9 @@ ALTER TABLE store_products ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Stores are viewable by everyone" ON stores FOR SELECT USING (true);
 CREATE POLICY "Stores are insertable by authenticated users" ON stores FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 CREATE POLICY "Stores are updatable by authenticated users" ON stores FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Stores are deletable by authenticated users" ON stores FOR DELETE USING (auth.role() = 'authenticated');
+CREATE POLICY "Stores are deletable by everyone" ON stores FOR DELETE USING (true);
+
 
 CREATE POLICY "Store products are viewable by everyone" ON store_products FOR SELECT USING (true);
 CREATE POLICY "Store products are insertable by authenticated users" ON store_products FOR INSERT WITH CHECK (auth.role() = 'authenticated');
