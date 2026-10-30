@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
@@ -37,12 +37,121 @@ const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   return <img src={src} className="h-10 object-contain" alt={alt} onError={() => setError(true)} />;
 };
 
+const LeadCardImage = ({
+  lead,
+  leadPhotos,
+  onPhotoLoaded,
+  alt = '',
+  className = "w-full h-full object-cover",
+  onClick,
+  isAr = true,
+  dark = false,
+  iconSize = 12
+}: {
+  lead: Lead;
+  leadPhotos: Record<string, string>;
+  onPhotoLoaded?: (id: string, photo: string) => void;
+  alt?: string;
+  className?: string;
+  onClick?: () => void;
+  isAr?: boolean;
+  dark?: boolean;
+  iconSize?: number;
+}) => {
+  const currentPhoto = lead.photo || (lead.photos && lead.photos[0]) || leadPhotos[lead.id];
+  const [photo, setPhoto] = useState<string | null>(currentPhoto || null);
+  const [loading, setLoading] = useState(!currentPhoto && (lead.photoCount === undefined || lead.photoCount > 0));
+
+  useEffect(() => {
+    if (currentPhoto) {
+      setPhoto(currentPhoto);
+      setLoading(false);
+      return;
+    }
+    
+    if (lead.photoCount === 0) {
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    setLoading(true);
+
+    loadLeadPhoto(lead.id).then(loadedPhoto => {
+      if (!isMounted) return;
+      setLoading(false);
+      if (loadedPhoto) {
+        setPhoto(loadedPhoto);
+        onPhotoLoaded?.(lead.id, loadedPhoto);
+      }
+    }).catch(() => {
+      if (isMounted) setLoading(false);
+    });
+
+    return () => { isMounted = false; };
+  }, [lead.id, currentPhoto, lead.photoCount]);
+
+  if (photo) {
+    return (
+      <img
+        src={photo}
+        alt={alt}
+        className={className}
+        onClick={onClick}
+        loading="lazy"
+      />
+    );
+  }
+
+  if (loading) {
+    return (
+      <div 
+        onClick={onClick}
+        className={`w-full h-full flex flex-col gap-2 items-center justify-center animate-pulse ${dark ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-300'} ${onClick ? 'cursor-pointer' : ''}`}
+      >
+        <Camera className={iconSize >= 12 ? 'w-12 h-12 animate-pulse' : iconSize >= 10 ? 'w-10 h-10 animate-pulse' : 'w-8 h-8 animate-pulse'} />
+        <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'جاري التحميل...' : 'Chargement...'}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      onClick={onClick}
+      className={`w-full h-full flex flex-col gap-2 items-center justify-center ${dark ? 'bg-slate-800 text-slate-400' : 'bg-slate-50 text-slate-300'} ${onClick ? 'cursor-pointer' : ''}`}
+    >
+      <Camera className={iconSize >= 12 ? 'w-12 h-12' : iconSize >= 10 ? 'w-10 h-10' : 'w-8 h-8'} />
+      <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
+    </div>
+  );
+};
+
 export default function PortailClient({ currentUser, onLogout }: PortailClientProps) {
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
   const [fiches, setFiches] = useState<any[]>([]);
   const [mesDemandes, setMesDemandes] = useState<Lead[]>([]);
-  const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
+  const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem('textrack_lead_photos_cache');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const leadPhotosRef = useRef<Record<string, string>>(leadPhotos);
+  leadPhotosRef.current = leadPhotos;
+
+  const handlePhotoLoaded = (id: string, photo: string) => {
+    setLeadPhotos(prev => ({ ...prev, [id]: photo }));
+    setMesDemandes(prev => prev.map(m => m.id === id ? { ...m, photo } : m));
+    try {
+      const raw = localStorage.getItem('textrack_lead_photos_cache');
+      const cache = raw ? JSON.parse(raw) : {};
+      cache[id] = photo;
+      localStorage.setItem('textrack_lead_photos_cache', JSON.stringify(cache));
+    } catch (_) {}
+  };
   const [reference, setReference] = useState('');
   const [found, setFound] = useState<Commande[]>([]);
   const [notifsEnabled, setNotifsEnabled] = useState(true);
@@ -110,6 +219,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordSavedSuccess, setPasswordSavedSuccess] = useState(false);
   const [selectedDemandeFiche, setSelectedDemandeFiche] = useState<Lead | null>(null);
+  const [selectedDemandePage, setSelectedDemandePage] = useState<Lead | null>(null);
   const [atelierQuickEditLead, setAtelierQuickEditLead] = useState<Lead | null>(null);
   const [quickEditForm, setQuickEditForm] = useState({
     modeleReel: '',
@@ -283,9 +393,11 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         
         // Load photos for these leads asynchronously
         myLeads.forEach(async (lead) => {
-          const photo = await loadLeadPhoto(lead.id);
-          if (photo) {
-            setLeadPhotos(prev => ({ ...prev, [lead.id]: photo }));
+          if (!leadPhotosRef.current[lead.id] && !lead.photo) {
+            const photo = await loadLeadPhoto(lead.id);
+            if (photo) {
+              handlePhotoLoaded(lead.id, photo);
+            }
           }
         });
         
@@ -334,7 +446,31 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         }
       }
       lastClientMessageCountRef.current = myLeads.length;
-      setMesDemandes(myLeads);
+
+      // Preserve photos from existing state and cache so polling never blanks out the images!
+      setMesDemandes(prev => {
+        const existingMap: Record<string, Lead> = {};
+        prev.forEach(p => { existingMap[p.id] = p; });
+        return myLeads.map(l => {
+          const existing = existingMap[l.id];
+          const photo = l.photo || existing?.photo || leadPhotosRef.current[l.id];
+          return {
+            ...l,
+            ...(photo ? { photo } : {}),
+            ...(existing?.photos ? { photos: existing.photos } : {})
+          };
+        });
+      });
+
+      // Fetch any missing photos for incoming leads
+      myLeads.forEach(async (lead) => {
+        if (!leadPhotosRef.current[lead.id] && !lead.photo && (lead.photoCount === undefined || lead.photoCount > 0)) {
+          const photo = await loadLeadPhoto(lead.id);
+          if (photo) {
+            handlePhotoLoaded(lead.id, photo);
+          }
+        }
+      });
     }, 3000);
     return () => clearInterval(interval);
   }, [activeTab, currentUser]);
@@ -368,6 +504,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     if (!confirm(isAr ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Voulez-vous vraiment supprimer cette demande ?')) return;
     await deleteRecord('leads', id);
     setMesDemandes(prev => prev.filter(m => m.id !== id));
+    setSelectedDemandePage(prev => prev?.id === id ? null : prev);
   };
 
   const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
@@ -509,6 +646,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       };
       await saveRecord('leads', updatedLead);
       setMesDemandes(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
+      setSelectedDemandePage(prev => prev?.id === updatedLead.id ? updatedLead : prev);
       setAtelierQuickEditLead(null);
     } catch (err) {
       console.error(err);
@@ -619,15 +757,35 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
          const updatedLead = existing ? { ...existing, ...leadPayload } : leadPayload;
          await saveRecord('leads', updatedLead);
          setMesDemandes(prev => prev.map(m => m.id === editingDemandeId ? updatedLead : m));
+         setSelectedDemandePage(prev => prev?.id === editingDemandeId ? updatedLead : prev);
+         if (newOrderForm.photo) {
+           handlePhotoLoaded(editingDemandeId, newOrderForm.photo);
+         }
       } else {
+         const newId = genId();
          const newLead = {
            ...leadPayload,
-           id: `lead-${Date.now()}`,
+           id: newId,
            crmStage: 'nouveau',
            date: new Date().toISOString()
          };
-         await saveLead(newLead);
-         setMesDemandes(prev => [newLead, ...prev]);
+
+         // Instantly update leadPhotos & cache BEFORE async save so UI has the photo at 0ms!
+         if (newOrderForm.photo) {
+           handlePhotoLoaded(newId, newOrderForm.photo);
+         }
+
+         const createdLead = await saveLead(newLead);
+         const finalLead = {
+           ...(createdLead || newLead),
+           photo: newOrderForm.photo || (createdLead as any)?.photo
+         };
+
+         if (finalLead.id && finalLead.id !== newId && newOrderForm.photo) {
+           handlePhotoLoaded(finalLead.id, newOrderForm.photo);
+         }
+
+         setMesDemandes(prev => [finalLead, ...prev.filter(p => p.id !== finalLead.id && p.id !== newId)]);
          setActiveTab('demandes');
       }
 
@@ -664,15 +822,30 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
              const updatedLead = existing ? { ...existing, ...leadPayload } : leadPayload;
              await saveRecord('leads', updatedLead);
              setMesDemandes(prev => prev.map(m => m.id === editingDemandeId ? updatedLead : m));
+             setSelectedDemandePage(prev => prev?.id === editingDemandeId ? updatedLead : prev);
+             if (newOrderForm.photo) {
+               handlePhotoLoaded(editingDemandeId, newOrderForm.photo);
+             }
           } else {
+             const newId = genId();
              const newLead = {
                ...leadPayload,
-               id: `lead-${Date.now()}`,
+               id: newId,
                crmStage: 'nouveau',
                date: new Date().toISOString()
              };
-             await saveLead(newLead);
-             setMesDemandes(prev => [newLead, ...prev]);
+             if (newOrderForm.photo) {
+               handlePhotoLoaded(newId, newOrderForm.photo);
+             }
+             const createdLead = await saveLead(newLead);
+             const finalLead = {
+               ...(createdLead || newLead),
+               photo: newOrderForm.photo || (createdLead as any)?.photo
+             };
+             if (finalLead.id && finalLead.id !== newId && newOrderForm.photo) {
+               handlePhotoLoaded(finalLead.id, newOrderForm.photo);
+             }
+             setMesDemandes(prev => [finalLead, ...prev.filter(p => p.id !== finalLead.id && p.id !== newId)]);
              setActiveTab('demandes');
           }
           setOrderSent(true);
@@ -782,7 +955,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                 className="w-full py-3.5 mb-2 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-amber-500/30 flex items-center justify-center gap-2 group"
               >
                 <Store className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-                <span>{isAr ? 'العودة إلى BEYA STORE' : 'Retour à BEYA STORE'}</span>
+                <span>{isAr ? 'الانتقال إلى BEYA STORE' : 'Accéder à BEYA STORE'}</span>
               </button>
               <button 
                 onClick={() => setShowPasswordModal(true)}
@@ -1332,40 +1505,394 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           )}
           {activeTab === 'demandes' && (() => {
              const trueDemandes = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
-             return (
-            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 text-center md:text-left">
-                  <div>
-                    <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">{isAr ? 'تتبع طلباتي' : 'Mes Demandes'}</h1>
-                    <p className="text-slate-500 font-medium italic">{isAr ? 'حالة الطلبات اللي صيفطتي' : 'Statut de vos demandes envoyées'}</p>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      setEditingDemandeId(null);
-                      setNewOrderForm({
-                        modele: '',
-                        quantite: '',
-                        details: '',
-                        photo: null as string | null,
-                        telephone: currentUser?.telephone || '',
-                        tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
-                      });
-                      setShowNewOrderModal(true);
-                    }}
-                    className="px-6 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-sm font-black uppercase tracking-wider shadow-xl shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 cursor-pointer shrink-0"
-                  >
-                    <Plus className="w-5 h-5" />
-                    {isAr ? '+ إضافة أرتيكل / موديل جديد' : '+ Nouvel Article / Modèle'}
-                  </button>
-               </div>
 
-               {trueDemandes.length === 0 ? (
-                 <div className="text-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
-                   <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                     <MessageCircle className="w-10 h-10 text-indigo-300" />
+             // Dedicated Full Page for Demande Details & Technical Study
+             if (selectedDemandePage) {
+               const d = selectedDemandePage;
+               const analysis = getDemandeAnalysis(d, isAr);
+               const sizes = getLeadSizes(d);
+               const hasCustomSizes = Object.keys(sizes).length > 0;
+               const isAccepted = d.crmStage === 'confirme';
+               const isRejected = d.crmStage === 'annule';
+               const isPending = !isAccepted && !isRejected;
+               const isTestAccount = currentUser?.email === 'forsaone41@gmail.com' || currentUser?.role === 'admin' || currentUser?.role === 'manager';
+
+               const stepOrder: Array<'reception' | 'etude' | 'echantillon' | 'production' | 'pret'> = ['reception', 'etude', 'echantillon', 'production', 'pret'];
+               const currentStepIdx = stepOrder.indexOf(analysis.statusProgression) >= 0 ? stepOrder.indexOf(analysis.statusProgression) : 1;
+
+               const stepLabels = [
+                 { key: 'reception', fr: '1. Reçu', ar: '١. تم الاستلام', icon: '⏳' },
+                 { key: 'etude', fr: '2. Étude & Devis', ar: '٢. دراسة وتحديد السعر', icon: '📋' },
+                 { key: 'echantillon', fr: '3. Échantillon', ar: '٣. إعداد العينة', icon: '✂️' },
+                 { key: 'production', fr: '4. Production', ar: '٤. قيد الإنتاج', icon: '🏭' },
+               ];
+
+               const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
+               const waText = isAr
+                 ? `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي رقم REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${analysis.qty} قطعة\n- السعر التقديري: ${analysis.unitPrice} درهم (المجموع: ${analysis.totalPrice.toLocaleString()} درهم)\n- الثوب: ${analysis.tissuSuggere}\nبغيت نأكد الدوفيس ونبداو العينة التقنية. شكراً!`
+                 : `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, je consulte ma demande REF: #${d.id.substring(0, 8).toUpperCase()} sur le portail :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Prix Estimé : ${analysis.unitPrice} MAD/pc (Total : ${analysis.totalPrice.toLocaleString()} MAD)\n- Tissu : ${analysis.tissuSuggere}\nJe souhaite valider ce devis et lancer l'échantillon. Merci !`;
+               const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
+
+               return (
+                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                   {/* Top Navigation & Action Header */}
+                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+                     <button
+                       type="button"
+                       onClick={() => setSelectedDemandePage(null)}
+                       className="inline-flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-100 text-slate-800 rounded-2xl text-xs font-black uppercase tracking-wider border border-slate-200 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer w-fit"
+                     >
+                       <ChevronRight className={`w-4 h-4 ${isAr ? '' : 'rotate-180'}`} />
+                       <span>{isAr ? '← الرجوع إلى قائمة طلباتي' : '← Retour à mes demandes'}</span>
+                     </button>
+
+                     <div className="flex items-center gap-2">
+                       {isTestAccount && (
+                         <button
+                           type="button"
+                           onClick={() => {
+                             setAtelierQuickEditLead(d);
+                             setQuickEditForm({
+                               modeleReel: analysis.modeleReel,
+                               unitPrice: analysis.unitPrice,
+                               totalPrice: analysis.totalPrice,
+                               tissuSuggere: analysis.tissuSuggere,
+                               techDetails: analysis.techDetails,
+                               delaiEstime: analysis.delaiEstime,
+                               statusProgression: analysis.statusProgression,
+                               reponseAtelier: analysis.reponseAtelier
+                             });
+                           }}
+                           className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer"
+                         >
+                           <span>⚙️ {isAr ? 'رد وتعديل الورشة' : 'Réponse Atelier'}</span>
+                         </button>
+                       )}
+
+                       <button
+                         type="button"
+                         onClick={() => window.print()}
+                         className="p-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition-all shadow-sm cursor-pointer"
+                         title={isAr ? 'طباعة' : 'Imprimer'}
+                       >
+                         <Printer className="w-5 h-5" />
+                       </button>
+
+                       {isPending && (
+                         <button
+                           type="button"
+                           onClick={() => {
+                             setEditingDemandeId(d.id);
+                             let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
+                             if (d.tailles) {
+                                (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                             } else if (d.sizes) {
+                                try {
+                                  const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
+                                  Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                } catch(e) {}
+                             }
+                             setNewOrderForm({
+                               modele: d.type || '',
+                               quantite: d.quantity?.toString() || '',
+                               photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
+                               details: d.details || '',
+                               telephone: d.phone || currentUser?.telephone || '',
+                               tailles: parsedTailles
+                             });
+                             setShowNewOrderModal(true);
+                           }}
+                           className="p-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition-all shadow-sm cursor-pointer"
+                           title={isAr ? 'تعديل الطلب' : 'Modifier'}
+                         >
+                           <Edit2 className="w-5 h-5" />
+                         </button>
+                       )}
+
+                       <button
+                         type="button"
+                         onClick={(e) => handleDeleteDemande(d.id, e)}
+                         className="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-all shadow-sm cursor-pointer"
+                         title={isAr ? 'حذف الطلب' : 'Supprimer'}
+                       >
+                         <Trash2 className="w-5 h-5" />
+                       </button>
+                     </div>
                    </div>
-                   <h3 className="text-xl font-black text-slate-800 mb-2">{isAr ? 'ماكاين حتى طلب' : 'Aucune demande'}</h3>
-                   <p className="text-slate-500 mb-6">{isAr ? 'باقي ما صيفطتي لينا حتى موديل' : 'Vous n\'avez encore envoyé aucun modèle.'}</p>
+
+                   {/* Full Page Content Container */}
+                   <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+                     {/* Hero Presentation Header */}
+                     <div className="p-6 md:p-8 bg-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
+                       <div className="flex items-center gap-5">
+                         <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-800 shrink-0 border-2 border-white/10 shadow-lg">
+                           {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
+                             <img 
+                               src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} 
+                               alt={analysis.modeleReel} 
+                               className="w-full h-full object-cover" 
+                             />
+                           ) : (
+                             <div className="w-full h-full flex flex-col gap-1 items-center justify-center text-slate-400">
+                               <Camera className="w-8 h-8" />
+                               <span className="text-[9px] font-bold uppercase">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
+                             </div>
+                           )}
+                         </div>
+                         <div>
+                           <div className="flex flex-wrap items-center gap-2 mb-2">
+                             <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-lg border border-white/10">
+                               REF: #{d.id.substring(0, 8).toUpperCase()}
+                             </span>
+                             {isAccepted && <span className="px-3 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
+                             {isRejected && <span className="px-3 py-1 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
+                             {isPending && <span className="px-3 py-1 bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg">{isAr ? 'دراسة تقنية معتمدة 📋' : 'Étude Technique 📋'}</span>}
+                           </div>
+                           <h2 className="text-2xl md:text-3xl font-black text-white leading-tight">
+                             {analysis.modeleReel}
+                           </h2>
+                           <p className="text-xs text-slate-400 mt-1">
+                             {isAr ? 'الزبون :' : 'Client :'} <strong className="text-white">{d.name || currentUser?.nom || 'Client'}</strong> • {d.date ? new Date(d.date).toLocaleDateString() : new Date().toLocaleDateString()}
+                           </p>
+                         </div>
+                       </div>
+
+                       <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0">
+                         <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/10 text-center sm:text-right md:text-right">
+                           <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">{isAr ? 'الكمية المطلوبة' : 'Quantité'}</span>
+                           <span className="text-xl font-black text-white">{analysis.qty} pcs</span>
+                         </div>
+                         <div className="px-4 py-2 bg-indigo-500/20 rounded-xl border border-indigo-500/30 text-center sm:text-right md:text-right">
+                           <span className="text-[10px] text-indigo-300 uppercase tracking-widest block font-bold">{isAr ? 'مدة التسليم المقدرة' : 'Délai'}</span>
+                           <span className="text-xs font-black text-indigo-200 flex items-center justify-center sm:justify-end md:justify-end gap-1">
+                             <Clock className="w-3.5 h-3.5" />
+                             {analysis.delaiEstime}
+                           </span>
+                         </div>
+                       </div>
+                     </div>
+
+                     {/* 4-Step Tracker */}
+                     <div className="p-6 md:p-8 border-b border-slate-100 bg-slate-50/50">
+                       <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-slate-500 mb-4">
+                         <span className="flex items-center gap-2">
+                           <Clock className="w-4 h-4 text-indigo-600" />
+                           {isAr ? 'تتبع مراحل طلبك في الورشة' : 'Progression de la Commande'}
+                         </span>
+                         <span className="text-indigo-600 font-black">
+                           {stepLabels[Math.min(currentStepIdx, 3)] ? (isAr ? stepLabels[Math.min(currentStepIdx, 3)].ar : stepLabels[Math.min(currentStepIdx, 3)].fr) : 'Étude'}
+                         </span>
+                       </div>
+                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                         {stepLabels.map((st, sIdx) => {
+                           const isDone = currentStepIdx > sIdx;
+                           const isCurrent = currentStepIdx === sIdx;
+                           return (
+                             <div key={st.key} className={`p-4 rounded-2xl border transition-all ${
+                               isCurrent ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200' :
+                               isDone ? 'bg-emerald-50 text-emerald-900 border-emerald-200' :
+                               'bg-white text-slate-400 border-slate-200'
+                             }`}>
+                               <div className="flex items-center justify-between mb-2">
+                                 <span className="text-lg">{isDone ? '✅' : st.icon}</span>
+                                 <span className={`text-[10px] font-black uppercase tracking-widest ${isCurrent ? 'text-indigo-200' : isDone ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                   Étape {sIdx + 1}
+                                 </span>
+                               </div>
+                               <h4 className={`text-xs font-black ${isCurrent ? 'text-white' : isDone ? 'text-emerald-950' : 'text-slate-700'}`}>
+                                 {isAr ? st.ar.split('. ')[1] : st.fr.split('. ')[1]}
+                               </h4>
+                             </div>
+                           );
+                         })}
+                       </div>
+                     </div>
+
+                     {/* The Main Information Body (what was circled by user) */}
+                     <div className="p-6 md:p-8 space-y-8">
+                       {/* Financial Estimation Box */}
+                       <div>
+                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                           <Receipt className="w-4 h-4 text-indigo-600" />
+                           {isAr ? 'تفاصيل السعر التقديري (Devis Estimatif)' : 'Tarification & Devis Estimatif'}
+                         </h3>
+                         <div className="p-6 bg-gradient-to-br from-indigo-50/90 via-white to-slate-50/80 rounded-3xl border border-indigo-100 shadow-xs space-y-6">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-indigo-100/60">
+                             <div>
+                               <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">
+                                 {isAr ? 'السعر التقديري للقطعة الواحدة' : 'Prix Unitaire Estimé'}
+                               </span>
+                               <div className="flex items-baseline gap-2">
+                                 <span className="text-4xl md:text-5xl font-black text-indigo-950 tracking-tight">{analysis.unitPrice}</span>
+                                 <span className="text-sm font-black text-indigo-600">MAD / pc</span>
+                               </div>
+                               <p className="text-xs text-slate-500 font-semibold mt-2 flex items-center gap-1.5">
+                                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                                 {isAr ? 'يشمل الثوب، الفصالة، الخياطة والتطريز/الطباعة' : 'Inclus tissu, coupe, confection et sérigraphie'}
+                               </p>
+                             </div>
+
+                             <div className="md:text-right flex flex-col justify-between">
+                               <div>
+                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                                   {isAr ? 'الإجمالي التقديري للطلبية' : 'Total Estimé Commande'}
+                                 </span>
+                                 <div className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+                                   {analysis.totalPrice.toLocaleString()} <span className="text-sm font-bold text-slate-500">MAD</span>
+                                 </div>
+                               </div>
+                               <div className="mt-3">
+                                 <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-black rounded-lg">
+                                   {isAr ? 'دوفيس أولي معتمد من الورشة' : 'Devis Échantillon Validé'}
+                                 </span>
+                               </div>
+                             </div>
+                           </div>
+
+                           {/* Cost Breakdown Table */}
+                           <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-xs">
+                             <table className="w-full text-xs">
+                               <thead className="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
+                                 <tr>
+                                   <th className="p-3.5 text-left">{isAr ? 'البيان' : 'Poste de Coût'}</th>
+                                   <th className="p-3.5 text-right">{isAr ? 'التقدير / القطعة' : 'Estimation / pc'}</th>
+                                   <th className="p-3.5 text-right">{isAr ? 'المجموع' : 'Total'}</th>
+                                 </tr>
+                               </thead>
+                               <tbody className="divide-y divide-slate-100 font-medium">
+                                 <tr>
+                                   <td className="p-3.5 font-bold text-slate-700">{isAr ? 'المواد الأولية (الأقمشة، مستلزمات الخياطة والإكسسوارات)' : 'Matières premières (Tissus, fournitures & accessoires)'}</td>
+                                   <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.48)} MAD</td>
+                                   <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.48 * analysis.qty).toLocaleString()} MAD</td>
+                                 </tr>
+                                 <tr className="bg-slate-50/40">
+                                   <td className="p-3.5 font-bold text-slate-700">{isAr ? 'الفصالة والخياطة والتركيب الصناعي' : 'Coupe, confection et assemblage industriel'}</td>
+                                   <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.32)} MAD</td>
+                                   <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.32 * analysis.qty).toLocaleString()} MAD</td>
+                                 </tr>
+                                 <tr>
+                                   <td className="p-3.5 font-bold text-slate-700">{isAr ? 'الماركينغ، الطباعة/التطريز والفينيسيون' : 'Marquage, finitions & packaging'}</td>
+                                   <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.20)} MAD</td>
+                                   <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(analysis.unitPrice * 0.20 * analysis.qty).toLocaleString()} MAD</td>
+                                 </tr>
+                                 <tr className="bg-indigo-50/80 font-black text-indigo-950 text-sm">
+                                   <td className="p-4">{isAr ? 'السعر الصافي للقطعة' : 'PRIX UNITAIRE HT'}</td>
+                                   <td className="p-4 text-right font-mono text-base text-indigo-700">{analysis.unitPrice} MAD</td>
+                                   <td className="p-4 text-right font-mono text-base text-indigo-700">{analysis.totalPrice.toLocaleString()} MAD</td>
+                                 </tr>
+                               </tbody>
+                             </table>
+                           </div>
+                         </div>
+                       </div>
+
+                       {/* Technical Specifications */}
+                       <div>
+                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                           <Scissors className="w-4 h-4 text-indigo-600" />
+                           {isAr ? 'المواصفات التقنية والمواد' : 'Cahier des Charges & Matières'}
+                         </h3>
+                         <div className="border border-slate-100 rounded-3xl overflow-hidden shadow-xs divide-y divide-slate-100">
+                           <div className="p-4 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                             <span className="text-xs font-bold text-slate-500 w-1/3">{isAr ? 'القماش الرئيسي المقترح' : 'Matière Principale'}</span>
+                             <span className="text-xs font-black text-slate-900 flex-1">{analysis.tissuSuggere}</span>
+                           </div>
+                           <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                             <span className="text-xs font-bold text-slate-500 w-1/3">{isAr ? 'الفصالة والباترون' : 'Patronage & Coupe'}</span>
+                             <span className="text-xs font-bold text-slate-700 flex-1">{isAr ? 'باترون احترافي رقمي بمقاسات مظبوطة (Coupe Numérique Haute Précision)' : 'Patronage industriel numérique avec gradation normée'}</span>
+                           </div>
+                           <div className="p-4 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                             <span className="text-xs font-bold text-slate-500 w-1/3">{isAr ? 'الفصالة والتشطيبات والإكسسوارات' : 'Finitions & Fournitures'}</span>
+                             <span className="text-xs font-bold text-slate-800 flex-1">{analysis.techDetails}</span>
+                           </div>
+                           <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                             <span className="text-xs font-bold text-slate-500 w-1/3">{isAr ? 'الطباعة / التطريز' : 'Marquage / Sérigraphie'}</span>
+                             <span className="text-xs font-bold text-slate-700 flex-1">{isAr ? 'سيريغرافي عالي الجودة أو تطريز بارز على الصدر' : 'Sérigraphie textile haute tenue / Broderie relief poitrine'}</span>
+                           </div>
+                           <div className="p-4 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                             <span className="text-xs font-bold text-slate-500 w-1/3">{isAr ? 'مدة إعداد العينة والإنتاج' : 'Délai Réalisation'}</span>
+                             <span className="text-xs font-black text-indigo-700 flex-1">{analysis.delaiEstime}</span>
+                           </div>
+                         </div>
+                       </div>
+
+                       {/* Sizes Breakdown */}
+                       <div>
+                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                           <Layers className="w-4 h-4 text-indigo-600" />
+                           {isAr ? 'المقاسات والكميات المطلوبة' : 'Grille des Tailles'}
+                         </h3>
+                         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-center">
+                           {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
+                             <div key={sz} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                               <span className="block text-[10px] font-black text-slate-400 uppercase mb-1">{sz}</span>
+                               <span className="text-base font-black text-slate-900">{sizes[sz] ? `${sizes[sz]} pcs` : (hasCustomSizes ? '0' : '—')}</span>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+
+                       {/* Atelier Direct Note */}
+                       <div className="p-5 bg-indigo-50/70 border border-indigo-100 rounded-3xl flex items-start gap-4">
+                         <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                           <MessageCircle className="w-5 h-5" />
+                         </div>
+                         <div className="flex-1 min-w-0">
+                           <p className="text-xs font-black text-indigo-700 uppercase tracking-wider mb-1">
+                             {isAr ? 'ملاحظة ودراسة ورشة BEYA CREATIVE' : "Note d'Étude de l'Atelier BEYA"}
+                           </p>
+                           <p className="text-sm font-semibold text-slate-700 italic leading-relaxed">
+                             "{analysis.reponseAtelier}"
+                           </p>
+                         </div>
+                       </div>
+
+                       {/* Quality Guarantee Box */}
+                       <div className="p-5 bg-emerald-50/70 border border-emerald-100 rounded-3xl text-xs text-emerald-900 space-y-2">
+                         <p className="font-black text-sm flex items-center gap-2">
+                           <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                           {isAr ? 'ضمان ورشة BEYA CREATIVE للجودة والمطابقة' : 'Garantie Conformité & Qualité Atelier BEYA'}
+                         </p>
+                         <p className="text-xs text-emerald-800 leading-relaxed font-medium">
+                           {isAr 
+                             ? 'يتم إعداد عينة أولية (Prototype Échantillon) واعتمادها من طرفكم قبل إطلاق الإنتاج الشامل. يتم دفع تسبيق 50% عند انطلاق العينة والباقي عند التسليم النهائي بعد مراقبة الجودة.' 
+                             : "Un prototype d'échantillon physique est validé avant le lancement de la production en série. Acompte de 50% au lancement, solde à la livraison après contrôle qualité."}
+                         </p>
+                       </div>
+                     </div>
+
+                     {/* Bottom Action Footer */}
+                     <div className="p-6 md:p-8 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                       <button
+                         type="button"
+                         onClick={() => setSelectedDemandePage(null)}
+                         className="w-full sm:w-auto px-6 py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-slate-100 transition-colors cursor-pointer"
+                       >
+                         {isAr ? '← الرجوع إلى قائمة الطلبات' : '← Retour aux demandes'}
+                       </button>
+
+                       <a
+                         href={waUrl}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/20 hover:shadow-2xl cursor-pointer text-center"
+                       >
+                         <MessageCircle className="w-5 h-5" />
+                         <span>{isAr ? 'تأكيد العرض وبدء العينة عبر واتساب' : 'Valider le Devis & Lancer sur WhatsApp'}</span>
+                       </a>
+                     </div>
+                   </div>
+                 </div>
+               );
+             }
+
+             return (
+             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 text-center md:text-left">
+                   <div>
+                     <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">{isAr ? 'تتبع طلباتي' : 'Mes Demandes'}</h1>
+                     <p className="text-slate-500 font-medium italic">{isAr ? 'حالة الطلبات اللي صيفطتي' : 'Statut de vos demandes envoyées'}</p>
+                   </div>
                    <button 
                      onClick={() => {
                        setEditingDemandeId(null);
@@ -1379,383 +1906,262 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                        });
                        setShowNewOrderModal(true);
                      }}
-                     className="inline-flex items-center gap-2 px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all cursor-pointer"
+                     className="px-6 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-sm font-black uppercase tracking-wider shadow-xl shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 cursor-pointer shrink-0"
                    >
                      <Plus className="w-5 h-5" />
-                     {isAr ? '+ إضافة أول موديل ديالك الآن' : '+ Ajouter votre premier modèle'}
+                     {isAr ? '+ إضافة أرتيكل / موديل جديد' : '+ Nouvel Article / Modèle'}
                    </button>
-                 </div>
-               ) : (
-                  <div className={`grid gap-6 ${(currentUser?.email === "forsaone41@gmail.com" || currentUser?.role === "admin" || currentUser?.role === "manager") ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"}`}>
-                    {trueDemandes.map(d => {
-                      const isAccepted = d.crmStage === 'confirme';
-                      const isRejected = d.crmStage === 'annule';
-                      const isPending = !isAccepted && !isRejected;
-                      const analysis = getDemandeAnalysis(d, isAr);
-                      const sizes = getLeadSizes(d);
-                      const hasCustomSizes = Object.keys(sizes).length > 0;
-                      
-                      const isTestAccount = currentUser?.email === 'forsaone41@gmail.com' || currentUser?.role === 'admin' || currentUser?.role === 'manager';
+                </div>
 
-                      // For all other clients, keep the standard card until testing is complete
-                      if (!isTestAccount) {
-                        return (
-                          <div key={d.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden group">
-                            <div className="h-48 bg-slate-100 relative overflow-hidden">
-                              {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
-                                <img src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} alt={d.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                              ) : (
-                                <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-50 text-slate-300">
-                                  <Camera className="w-10 h-10" />
-                                  <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
-                                </div>
-                              )}
-                              <div className="absolute top-4 left-4 flex gap-2">
-                                {isAccepted && <span className="px-3 py-1 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
-                                {isRejected && <span className="px-3 py-1 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
-                                {isPending && <span className="px-3 py-1 bg-amber-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'قيد المراجعة ⏳' : 'En attente ⏳'}</span>}
-                              </div>
-                              {isPending && (
-                                <div className={`absolute top-4 right-4 flex flex-col gap-2 z-10`}>
-                                  <button 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setEditingDemandeId(d.id);
-                                      let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
-                                      if (d.tailles) {
-                                         (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
-                                      } else if (d.sizes) {
-                                         try {
-                                           const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
-                                           Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
-                                         } catch(e) {}
-                                      }
-                                      setNewOrderForm({
-                                        modele: d.type || '',
-                                        quantite: d.quantity?.toString() || '',
-                                        photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
-                                        details: d.details || '',
-                                        telephone: d.phone || currentUser?.telephone || '',
-                                        tailles: parsedTailles
-                                      });
-                                      setShowNewOrderModal(true);
-                                    }}
-                                    className="w-8 h-8 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
-                                  >
-                                    <Edit2 className="w-4 h-4" />
-                                  </button>
-                                  <button 
-                                    onClick={(e) => handleDeleteDemande(d.id, e)}
-                                    className="w-8 h-8 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                            <div className="p-6">
-                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">REF: {d.id.substring(0, 8)}</div>
-                              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2 truncate" title={d.type}>{d.type}</h3>
-                              <div className="text-sm font-bold text-slate-500 bg-slate-50 px-4 py-2 rounded-xl inline-block">
-                                {isAr ? 'الكمية:' : 'Quantité :'} <span className="text-indigo-600">{d.quantity}</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      const stepOrder: Array<'reception' | 'etude' | 'echantillon' | 'production' | 'pret'> = ['reception', 'etude', 'echantillon', 'production', 'pret'];
-                      const currentStepIdx = stepOrder.indexOf(analysis.statusProgression) >= 0 ? stepOrder.indexOf(analysis.statusProgression) : 1;
-
-                      const stepLabels = [
-                        { key: 'reception', fr: '1. Reçu', ar: '١. تم الاستلام', icon: '⏳' },
-                        { key: 'etude', fr: '2. Étude & Devis', ar: '٢. دراسة وتحديد السعر', icon: '📋' },
-                        { key: 'echantillon', fr: '3. Échantillon', ar: '٣. إعداد العينة', icon: '✂️' },
-                        { key: 'production', fr: '4. Production', ar: '٤. قيد الإنتاج', icon: '🏭' },
-                      ];
-
-                      const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
-                      const waText = isAr
-                        ? `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي رقم REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${analysis.qty} قطعة\n- السعر التقديري: ${analysis.unitPrice} درهم (المجموع: ${analysis.totalPrice.toLocaleString()} درهم)\n- الثوب: ${analysis.tissuSuggere}\nبغيت نأكد الدوفيس ونبداو العينة التقنية. شكراً!`
-                        : `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, je consulte ma demande REF: #${d.id.substring(0, 8).toUpperCase()} sur le portail :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Prix Estimé : ${analysis.unitPrice} MAD/pc (Total : ${analysis.totalPrice.toLocaleString()} MAD)\n- Tissu : ${analysis.tissuSuggere}\nJe souhaite valider ce devis et lancer l'échantillon. Merci !`;
-                      const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
-
-                      return (
-                        <div key={d.id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-indigo-100/80 hover:border-indigo-100">
-                          <div>
-                            {/* Image & Header Overlay */}
-                            <div className="h-64 sm:h-72 bg-slate-900 relative overflow-hidden">
-                              {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
-                                <img 
-                                  src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} 
-                                  alt={analysis.modeleReel} 
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-95 group-hover:opacity-100" 
-                                />
-                              ) : (
-                                <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-800 text-slate-400">
-                                  <Camera className="w-12 h-12" />
-                                  <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
-                                </div>
-                              )}
-
-                              {/* Top Badges */}
-                              <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10 items-center">
-                                <span className="px-3 py-1.5 bg-slate-950/80 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg border border-white/10">
-                                  REF: #{d.id.substring(0, 8).toUpperCase()}
-                                </span>
-                                {isAccepted && <span className="px-3 py-1.5 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
-                                {isRejected && <span className="px-3 py-1.5 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
-                                {isPending && <span className="px-3 py-1.5 bg-indigo-600/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'دراسة تقنية 📋' : 'Étude Technique 📋'}</span>}
-                              </div>
-
-                              {/* Top Right Action Buttons */}
-                              <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-                                {isTestAccount && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setAtelierQuickEditLead(d);
-                                      setQuickEditForm({
-                                        modeleReel: analysis.modeleReel,
-                                        unitPrice: analysis.unitPrice,
-                                        totalPrice: analysis.totalPrice,
-                                        tissuSuggere: analysis.tissuSuggere,
-                                        techDetails: analysis.techDetails,
-                                        delaiEstime: analysis.delaiEstime,
-                                        statusProgression: analysis.statusProgression,
-                                        reponseAtelier: analysis.reponseAtelier
-                                      });
-                                    }}
-                                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer backdrop-blur-sm"
-                                    title="Tester la réponse atelier pour ce compte"
-                                  >
-                                    <span>⚙️ {isAr ? 'رد الورشة (تجريبي)' : 'Réponse Atelier (Test)'}</span>
-                                  </button>
-                                )}
-                                {isPending && (
-                                  <button 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setEditingDemandeId(d.id);
-                                      let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
-                                      if (d.tailles) {
-                                         (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
-                                      } else if (d.sizes) {
-                                         try {
-                                           const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
-                                           Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
-                                         } catch(e) {}
-                                      }
-                                      setNewOrderForm({
-                                        modele: d.type || '',
-                                        quantite: d.quantity?.toString() || '',
-                                        photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
-                                        details: d.details || '',
-                                        telephone: d.phone || currentUser?.telephone || '',
-                                        tailles: parsedTailles
-                                      });
-                                      setShowNewOrderModal(true);
-                                    }}
-                                    className="w-8 h-8 bg-white/90 hover:bg-white text-slate-800 rounded-xl shadow-lg flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
-                                    title="Modifier"
-                                  >
-                                    <Edit2 className="w-4 h-4" />
-                                  </button>
-                                )}
-                                <button 
-                                  onClick={(e) => handleDeleteDemande(d.id, e)}
-                                  className="w-8 h-8 bg-rose-500/90 hover:bg-rose-600 text-white rounded-xl shadow-lg flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
-                                  title="Supprimer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-
-                              {/* Bottom Dark Gradient Shadow */}
-                              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent flex items-end p-5">
-                                <span className="text-white/90 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-                                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                                  {d.type && d.type.toUpperCase() !== 'MODEL' && d.type !== analysis.modeleReel ? `${d.type} • ` : ''}{isAr ? 'تصنيع عالي الجودة' : 'Confection Premium'}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Card Content */}
-                            <div className="p-6 md:p-7 space-y-5">
-                              {/* Title & Delay */}
-                              <div>
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1.5">
-                                  <h3 className="text-xl md:text-2xl font-black text-slate-900 leading-snug">
-                                    {analysis.modeleReel}
-                                  </h3>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500">
-                                  <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-lg">
-                                    {isAr ? 'الكمية المطلوبة :' : 'Quantité :'} <strong className="text-indigo-600 font-black">{analysis.qty} pcs</strong>
-                                  </span>
-                                  <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg flex items-center gap-1">
-                                    <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                                    {analysis.delaiEstime}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Financial Estimations Box */}
-                              <div className="p-4 md:p-5 bg-gradient-to-br from-indigo-50/90 via-white to-slate-50/80 rounded-2xl border border-indigo-100 shadow-xs">
-                                <div className="flex items-center justify-between gap-4 mb-3 pb-3 border-b border-indigo-100/60">
-                                  <div>
-                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-0.5">
-                                      {isAr ? 'السعر التقديري للقطعة' : 'Prix Unitaire Estimé'}
-                                    </span>
-                                    <div className="flex items-baseline gap-1.5">
-                                      <span className="text-3xl font-black text-indigo-950 tracking-tight">{analysis.unitPrice}</span>
-                                      <span className="text-xs font-black text-indigo-600">MAD / pc</span>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">
-                                      {isAr ? 'الإجمالي التقديري للطلبية' : 'Total Estimé Commande'}
-                                    </span>
-                                    <span className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
-                                      {analysis.totalPrice.toLocaleString()} <span className="text-xs font-bold text-slate-500">MAD</span>
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="font-semibold text-slate-500 flex items-center gap-1">
-                                    <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                    {isAr ? 'يشمل الثوب، الفصالة، الخياطة والتطريز/الطباعة' : 'Inclus tissu, coupe, confection et sérigraphie'}
-                                  </span>
-                                  <span className="font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md text-[10px] uppercase">
-                                    {isAr ? 'دوفيس أولي معتمد' : 'Devis Échantillon'}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Technical Specs: Fabric & Finitions */}
-                              <div className="space-y-2.5">
-                                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-3">
-                                  <div className="w-8 h-8 rounded-xl bg-indigo-100/70 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
-                                    <Scissors className="w-4 h-4" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{isAr ? 'الثوب المقترح والوزن' : 'Tissu & Matière Recommandée'}</p>
-                                    <p className="text-xs font-bold text-slate-800 leading-snug">{analysis.tissuSuggere}</p>
-                                  </div>
-                                </div>
-
-                                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-3">
-                                  <div className="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
-                                    <Sparkles className="w-4 h-4" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{isAr ? 'الفصالة والتشطيبات' : 'Finitions & Sérigraphie'}</p>
-                                    <p className="text-xs font-bold text-slate-700 leading-snug">{analysis.techDetails}</p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Size breakdown */}
-                              <div>
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'توزيع المقاسات المطلوبة' : 'Répartition des Tailles'}</span>
-                                  <span className="text-[10px] font-bold text-slate-400">{hasCustomSizes ? (isAr ? 'حسب اختيارك' : 'Selon votre sélection') : (isAr ? 'توزيع حر عند التأكيد' : 'Répartition libre au choix')}</span>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                  {hasCustomSizes ? (
-                                    Object.entries(sizes).map(([sz, qty]) => (
-                                      <div key={sz} className="px-3 py-1.5 bg-slate-100 rounded-xl text-xs font-black text-slate-800 border border-slate-200/60">
-                                        {sz} : <span className="text-indigo-600">{qty} pcs</span>
-                                      </div>
-                                    ))
-                                  ) : (
-                                    ['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
-                                      <div key={sz} className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold border border-slate-100">
-                                        {sz}
-                                      </div>
-                                    ))
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* 4-Step Production Tracker */}
-                              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-400 mb-3">
-                                  <span>{isAr ? 'مراحل التتبع' : 'Progression de la Demande'}</span>
-                                  <span className="text-indigo-600">
-                                    {stepLabels[Math.min(currentStepIdx, 3)] ? (isAr ? stepLabels[Math.min(currentStepIdx, 3)].ar : stepLabels[Math.min(currentStepIdx, 3)].fr) : 'Étude'}
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-4 gap-2">
-                                  {stepLabels.map((st, sIdx) => {
-                                    const isDone = currentStepIdx > sIdx;
-                                    const isCurrent = currentStepIdx === sIdx;
-                                    return (
-                                      <div key={st.key} className="flex flex-col items-center text-center">
-                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs mb-1.5 transition-all ${
-                                          isDone 
-                                            ? 'bg-emerald-500 text-white shadow-sm' 
-                                            : isCurrent 
-                                              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-300 ring-2 ring-indigo-200 scale-105' 
-                                              : 'bg-white text-slate-300 border border-slate-200'
-                                        }`}>
-                                          {isDone ? '✓' : st.icon}
-                                        </div>
-                                        <span className={`text-[9px] font-black leading-tight line-clamp-1 ${isCurrent ? 'text-indigo-600' : isDone ? 'text-emerald-700' : 'text-slate-400'}`}>
-                                          {isAr ? st.ar.split('. ')[1] : st.fr.split('. ')[1]}
-                                        </span>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-
-                              {/* Atelier Note */}
-                              <div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-start gap-3">
-                                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                                  <MessageCircle className="w-4 h-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[10px] font-black text-indigo-700 uppercase tracking-wider mb-0.5">
-                                    {isAr ? 'ملاحظة ورشة BEYA للزبون' : "Note de l'Atelier BEYA"}
-                                  </p>
-                                  <p className="text-xs font-semibold text-slate-700 italic leading-relaxed">
-                                    "{analysis.reponseAtelier}"
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Bottom Action Buttons */}
-                          <div className="p-6 md:p-7 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <button 
-                              type="button"
-                              onClick={() => setSelectedDemandeFiche(d)}
-                              className="w-full py-4 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 hover:shadow-xl cursor-pointer"
-                            >
-                              <FileText className="w-4 h-4 text-indigo-400" />
-                              <span>{isAr ? 'الملف التقني والتسعير' : 'Fiche Technique & Devis'}</span>
-                            </button>
-                            
-                            <a 
-                              href={waUrl}
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="w-full py-4 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 hover:shadow-xl cursor-pointer text-center"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                              <span>{isAr ? 'تأكيد عبر واتساب' : 'Valider sur WhatsApp'}</span>
-                            </a>
-                          </div>
-                        </div>
-                      );
-                    })}
+                {trueDemandes.length === 0 ? (
+                  <div className="text-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                    <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <MessageCircle className="w-10 h-10 text-indigo-300" />
+                    </div>
+                    <h3 className="text-xl font-black text-slate-800 mb-2">{isAr ? 'ماكاين حتى طلب' : 'Aucune demande'}</h3>
+                    <p className="text-slate-500 mb-6">{isAr ? 'باقي ما صيفطتي لينا حتى موديل' : 'Vous n\'avez encore envoyé aucun modèle.'}</p>
+                    <button 
+                      onClick={() => {
+                        setEditingDemandeId(null);
+                        setNewOrderForm({
+                          modele: '',
+                          quantite: '',
+                          details: '',
+                          photo: null as string | null,
+                          telephone: currentUser?.telephone || '',
+                          tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
+                        });
+                        setShowNewOrderModal(true);
+                      }}
+                      className="inline-flex items-center gap-2 px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all cursor-pointer"
+                    >
+                      <Plus className="w-5 h-5" />
+                      {isAr ? '+ إضافة أول موديل ديالك الآن' : '+ Ajouter votre premier modèle'}
+                    </button>
                   </div>
-               )}
-            </div>
-          );})()}
+                ) : (
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                     {trueDemandes.map(d => {
+                       const isAccepted = d.crmStage === 'confirme';
+                       const isRejected = d.crmStage === 'annule';
+                       const isPending = !isAccepted && !isRejected;
+                       const analysis = getDemandeAnalysis(d, isAr);
+                       
+                       const isTestAccount = currentUser?.email === 'forsaone41@gmail.com' || currentUser?.role === 'admin' || currentUser?.role === 'manager';
+
+                       // For all other clients, keep the standard card until testing is complete
+                       if (!isTestAccount) {
+                         return (
+                           <div key={d.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden group">
+                             <div className="h-48 bg-slate-100 relative overflow-hidden">
+                               {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
+                                 <img src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} alt={d.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                               ) : (
+                                 <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-50 text-slate-300">
+                                   <Camera className="w-10 h-10" />
+                                   <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
+                                 </div>
+                               )}
+                               <div className="absolute top-4 left-4 flex gap-2">
+                                 {isAccepted && <span className="px-3 py-1 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
+                                 {isRejected && <span className="px-3 py-1 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
+                                 {isPending && <span className="px-3 py-1 bg-amber-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'قيد المراجعة ⏳' : 'En attente ⏳'}</span>}
+                               </div>
+                               {isPending && (
+                                 <div className={`absolute top-4 right-4 flex flex-col gap-2 z-10`}>
+                                   <button 
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       setEditingDemandeId(d.id);
+                                       let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
+                                       if (d.tailles) {
+                                          (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                       } else if (d.sizes) {
+                                          try {
+                                            const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
+                                            Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                          } catch(e) {}
+                                       }
+                                       setNewOrderForm({
+                                         modele: d.type || '',
+                                         quantite: d.quantity?.toString() || '',
+                                         photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
+                                         details: d.details || '',
+                                         telephone: d.phone || currentUser?.telephone || '',
+                                         tailles: parsedTailles
+                                       });
+                                       setShowNewOrderModal(true);
+                                     }}
+                                     className="w-8 h-8 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                                   >
+                                     <Edit2 className="w-4 h-4" />
+                                   </button>
+                                   <button 
+                                     onClick={(e) => handleDeleteDemande(d.id, e)}
+                                     className="w-8 h-8 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                                   >
+                                     <Trash2 className="w-4 h-4" />
+                                   </button>
+                                 </div>
+                               )}
+                             </div>
+                             <div className="p-6">
+                               <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">REF: {d.id.substring(0, 8)}</div>
+                               <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2 truncate" title={d.type}>{d.type}</h3>
+                               <div className="text-sm font-bold text-slate-500 bg-slate-50 px-4 py-2 rounded-xl inline-block">
+                                 {isAr ? 'الكمية:' : 'Quantité :'} <span className="text-indigo-600">{d.quantity}</span>
+                               </div>
+                             </div>
+                           </div>
+                         );
+                       }
+
+                       return (
+                         <div key={d.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-indigo-100/80 hover:border-indigo-100">
+                           <div>
+                             {/* Photo Header */}
+                             <div className="h-56 bg-slate-900 relative overflow-hidden">
+                               {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
+                                 <img 
+                                   src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} 
+                                   alt={analysis.modeleReel} 
+                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-95 group-hover:opacity-100 cursor-pointer" 
+                                   onClick={() => setSelectedDemandePage(d)}
+                                 />
+                               ) : (
+                                 <div 
+                                   onClick={() => setSelectedDemandePage(d)}
+                                   className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-800 text-slate-400 cursor-pointer"
+                                 >
+                                   <Camera className="w-12 h-12" />
+                                   <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
+                                 </div>
+                               )}
+
+                               {/* Top Badges */}
+                               <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10 items-center">
+                                 <span className="px-3 py-1.5 bg-slate-950/80 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg border border-white/10">
+                                   REF: #{d.id.substring(0, 8).toUpperCase()}
+                                 </span>
+                                 {isAccepted && <span className="px-3 py-1.5 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
+                                 {isRejected && <span className="px-3 py-1.5 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
+                                 {isPending && <span className="px-3 py-1.5 bg-indigo-600/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'دراسة تقنية 📋' : 'Étude Technique 📋'}</span>}
+                               </div>
+
+                               {/* Top Right Action Buttons */}
+                               <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+                                 {isTestAccount && (
+                                   <button
+                                     type="button"
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       setAtelierQuickEditLead(d);
+                                       setQuickEditForm({
+                                         modeleReel: analysis.modeleReel,
+                                         unitPrice: analysis.unitPrice,
+                                         totalPrice: analysis.totalPrice,
+                                         tissuSuggere: analysis.tissuSuggere,
+                                         techDetails: analysis.techDetails,
+                                         delaiEstime: analysis.delaiEstime,
+                                         statusProgression: analysis.statusProgression,
+                                         reponseAtelier: analysis.reponseAtelier
+                                       });
+                                     }}
+                                     className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer backdrop-blur-sm"
+                                     title="تعديل دراسة الورشة"
+                                   >
+                                     <span>⚙️ {isAr ? 'رد الورشة' : 'Réponse Atelier'}</span>
+                                   </button>
+                                 )}
+                                 {isPending && (
+                                   <button 
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       setEditingDemandeId(d.id);
+                                       let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
+                                       if (d.tailles) {
+                                          (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                       } else if (d.sizes) {
+                                          try {
+                                            const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
+                                            Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                          } catch(e) {}
+                                       }
+                                       setNewOrderForm({
+                                         modele: d.type || '',
+                                         quantite: d.quantity?.toString() || '',
+                                         photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
+                                         details: d.details || '',
+                                         telephone: d.phone || currentUser?.telephone || '',
+                                         tailles: parsedTailles
+                                       });
+                                       setShowNewOrderModal(true);
+                                     }}
+                                     className="w-8 h-8 bg-white/90 hover:bg-white text-slate-800 rounded-xl shadow-lg flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
+                                     title="Modifier"
+                                   >
+                                     <Edit2 className="w-4 h-4" />
+                                   </button>
+                                 )}
+                                 <button 
+                                   onClick={(e) => handleDeleteDemande(d.id, e)}
+                                   className="w-8 h-8 bg-rose-500/90 hover:bg-rose-600 text-white rounded-xl shadow-lg flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
+                                   title="Supprimer"
+                                 >
+                                   <Trash2 className="w-4 h-4" />
+                                 </button>
+                               </div>
+
+                               <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/80 to-transparent flex items-end p-4">
+                                 <span className="text-white/90 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                                   {isAr ? 'تصنيع عالي الجودة' : 'Confection Premium'}
+                                 </span>
+                               </div>
+                             </div>
+
+                             {/* Clean Card Body */}
+                             <div className="p-6 space-y-4 cursor-pointer" onClick={() => setSelectedDemandePage(d)}>
+                               <div>
+                                 <h3 className="text-xl font-black text-slate-900 leading-snug line-clamp-1" title={analysis.modeleReel}>
+                                   {analysis.modeleReel}
+                                 </h3>
+                                 <p className="text-xs text-slate-500 line-clamp-1 mt-1 font-medium">
+                                   {analysis.tissuSuggere}
+                                 </p>
+                               </div>
+
+                               <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
+                                 <div>
+                                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{isAr ? 'الكمية المطلوبة' : 'Quantité'}</span>
+                                   <span className="text-sm font-black text-slate-900">{analysis.qty} pcs</span>
+                                 </div>
+                                 <div className="text-right">
+                                   <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">{isAr ? 'السعر التقديري' : 'Prix Estimé'}</span>
+                                   <span className="text-sm font-black text-indigo-950">{analysis.unitPrice} MAD <span className="text-[10px] font-bold text-slate-500">/ pc</span></span>
+                                 </div>
+                               </div>
+                             </div>
+                           </div>
+
+                           {/* Primary Action Button that navigates to the detailed page! */}
+                           <div className="p-6 pt-0">
+                             <button
+                               type="button"
+                               onClick={() => setSelectedDemandePage(d)}
+                               className="w-full py-4 px-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 hover:shadow-indigo-500/25 cursor-pointer group"
+                             >
+                               <FileText className="w-4 h-4 text-indigo-400 group-hover:text-white transition-colors" />
+                               <span>{isAr ? 'عرض دراسة الموديل والتسعير ←' : 'Voir la Fiche & Devis Complet →'}</span>
+                             </button>
+                           </div>
+                         </div>
+                       );
+                     })}
+                   </div>
+                )}
+             </div>
+           );})()}
 
           {activeTab === 'orders' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">

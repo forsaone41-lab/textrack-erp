@@ -130,18 +130,15 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
 
         if (signInError) throw signInError;
 
-        // Allow both client, merchant and admin - upgrade client smoothly to merchant
-        let role = data.user?.user_metadata?.role || 'merchant';
-        if (role !== 'merchant' && role !== 'admin') {
-          role = 'merchant';
-          try {
-            await supabase.auth.updateUser({ data: { role: 'merchant' } });
-          } catch (e) {}
-        }
+        let role = data.user?.user_metadata?.role || 'client';
+        try {
+          const { data: dbUser } = await supabase.from('users').select('role, nom').eq('id', data.user.id).maybeSingle();
+          if (dbUser?.role) role = dbUser.role;
+        } catch (e) {}
 
         const userObj = {
           id: data.user.id,
-          nom: data.user.user_metadata?.full_name || 'Merchant',
+          nom: data.user.user_metadata?.full_name || 'Client',
           role: role,
           email: data.user.email || email
         };
@@ -150,7 +147,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
           await saveRecord('users', userObj, true);
         } catch (e) {}
         if (onLogin) onLogin(userObj);
-        navigate('/store-builder');
+        navigate(role === 'admin' ? '/dashboard' : '/portal');
       } else if (mode === 'recovery') {
         // PASSWORD RECOVERY - redirect back to the app root so AppContent can show the new-password modal
         const siteUrl = window.location.origin + window.location.pathname;
@@ -169,8 +166,8 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
           if (found && (found.password === password || found.pinCode === password)) {
             const sessionUser = { ...found };
             localStorage.setItem('textrack_auth', JSON.stringify(sessionUser));
-            if (onLogin) onLogin(upgraded);
-            navigate('/store-builder');
+            if (onLogin) onLogin(sessionUser);
+            navigate(sessionUser.role === 'admin' ? '/dashboard' : '/portal');
             return;
           }
         } catch (fbErr) {}
@@ -187,7 +184,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
             localStorage.setItem('textrack_auth', JSON.stringify(userObj));
             await saveRecord('users', userObj, true);
             if (onLogin) onLogin(userObj);
-            navigate('/store-builder');
+            navigate(userObj.role === 'admin' ? '/dashboard' : '/portal');
             return;
           }
         } catch (signInFbErr) {}

@@ -1399,12 +1399,12 @@ export async function loadLeadPhotosBatch(leadIds: string[]): Promise<Record<str
   return map;
 }
 
-export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
+export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'> & { id?: string; date?: string; status?: string }) {
   const newLead: Lead = {
     ...lead,
-    id: genId(),
-    date: new Date().toISOString(),
-    status: 'new',
+    id: (lead as any).id || genId(),
+    date: (lead as any).date || new Date().toISOString(),
+    status: (lead as any).status || 'new',
     photoCount: lead.photos?.length || (lead.photo ? 1 : 0)
   };
   
@@ -1435,16 +1435,28 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
       throw error;
     }
   }
-    // Also save to local (legacy fallback)
+
+  // Also cache photo directly in photo cache for instant retrieval across all views
+  if (newLead.photo) {
     try {
-      const localRaw = safeStorage.getItem('textrack_data_leads') || safeStorage.getItem('textrack_leads');
-      const leads = localRaw ? JSON.parse(localRaw) : [];
-      safeStorage.setItem('textrack_leads', JSON.stringify([newLead, ...leads]));
-    } catch (e) {
-      console.warn("Failed to update local leads cache:", e);
-    }
-    
-    return newLead;
+      const cachedRaw = localStorage.getItem('textrack_lead_photos_cache');
+      const cached = cachedRaw ? JSON.parse(cachedRaw) : {};
+      cached[newLead.id] = newLead.photo;
+      localStorage.setItem('textrack_lead_photos_cache', JSON.stringify(cached));
+    } catch (_) {}
+  }
+
+  // Also save to local (legacy fallback)
+  try {
+    const localRaw = safeStorage.getItem('textrack_data_leads') || safeStorage.getItem('textrack_leads');
+    const leads = localRaw ? JSON.parse(localRaw) : [];
+    safeStorage.setItem('textrack_leads', JSON.stringify([newLead, ...leads]));
+    safeStorage.setItem('textrack_data_leads', JSON.stringify([newLead, ...leads]));
+  } catch (e) {
+    console.warn("Failed to update local leads cache:", e);
+  }
+  
+  return newLead;
 }
 
 export async function saveCompanyProfile(profile: CompanyProfile): Promise<void> {
@@ -1616,6 +1628,14 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     }
 
     if (!error) {
+      if (table === 'leads' && (record as any)?.photo && (record as any)?.id) {
+        try {
+          const cachedRaw = localStorage.getItem('textrack_lead_photos_cache');
+          const cached = cachedRaw ? JSON.parse(cachedRaw) : {};
+          cached[(record as any).id] = (record as any).photo;
+          localStorage.setItem('textrack_lead_photos_cache', JSON.stringify(cached));
+        } catch (_) {}
+      }
       // ✅ Invalidate both caches on success
       localStorage.removeItem(`textrack_data_${table}`);
       delete _cache[table];

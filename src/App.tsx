@@ -587,6 +587,9 @@ function AppContent() {
              if (!latest.password && currentUser.password) {
                 latest.password = currentUser.password;
              }
+             if (currentUser.role === 'client' && latest.role === 'merchant') {
+                latest.role = 'client';
+             }
              // Only update if there are actual changes
              if (JSON.stringify(latest) !== JSON.stringify(currentUser)) {
                setCurrentUser(latest);
@@ -610,11 +613,25 @@ function AppContent() {
   }, [currentUser]);
 
 
-  function handleLogin(user: User) {
+    function handleLogin(user: User) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(user));
     setCurrentUser(user);
     setShowClientPortal(false);
-    window.location.hash = '#/';
+    if (user.role === 'client' || user.role === 'merchant') {
+      window.location.hash = '#/portal';
+    } else if (user.role === 'worker') {
+      window.location.hash = '#/worker-portal';
+    } else if (user.role === 'chef_chaine') {
+      window.location.hash = '#/chef-portal';
+    } else if (user.role === 'commercial') {
+      window.location.hash = '#/commercial-portal';
+    } else if (user.role === 'affiliate') {
+      window.location.hash = '#/affiliate-portal';
+    } else if (user.role === 'partenaire') {
+      window.location.hash = '#/partenaire-portal';
+    } else {
+      window.location.hash = '#/';
+    }
   }
 
   function handleLogout() {
@@ -862,7 +879,9 @@ function AppContent() {
             </div>
           </Suspense>
         } />
-        <Route path="*" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
+        <Route path="/portal" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
+        <Route path="/" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
+        <Route path="*" element={<Navigate to="/portal" replace />} />
       </Routes>
     );
   }
@@ -912,12 +931,10 @@ function AppContent() {
           } />
           <Route path="/" element={
             <Suspense fallback={<PageLoader />}>
-              <div className="min-h-screen bg-white">
-                <StoreBuilder appCurrentUser={currentUser} />
-              </div>
+              <PortailClient currentUser={currentUser} onLogout={handleLogout} />
             </Suspense>
           } />
-          <Route path="*" element={<Navigate to="/store-builder" replace />} />
+          <Route path="*" element={<Navigate to="/portal" replace />} />
         </Routes>
       </>
     );
