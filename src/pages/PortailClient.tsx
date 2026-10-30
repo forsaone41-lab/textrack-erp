@@ -3676,13 +3676,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                      <p className="text-[10px] text-slate-400 max-w-sm mx-auto mb-3">
                                        {isAr ? 'يجب إرسال طلب موديل أولاً قبل إرسال التوصيل البنكي حتى يتم ربط الأداء بطلبك.' : 'Veuillez d\'abord créer une demande de modèle avant d\'envoyer un reçu afin d\'y associer votre paiement.'}
                                      </p>
-                                     <button 
-                                       type="button" 
-                                       onClick={() => { setShowNewOrderModal(true); }}
-                                       className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer"
-                                     >
-                                       {isAr ? '+ إنشاء طلب جديد' : '+ Nouvelle demande'}
-                                     </button>
                                    </div>
                                  )}
                               </div>
