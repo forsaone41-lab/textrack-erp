@@ -1156,7 +1156,9 @@ export default function App() {
     <ErrorBoundary>
       <LangProvider>
         <HashRouter>
-          <AppContent />
+          <Suspense fallback={<PageLoader />}>
+            <AppContent />
+          </Suspense>
         </HashRouter>
       </LangProvider>
     </ErrorBoundary>
