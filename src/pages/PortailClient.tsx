@@ -471,11 +471,18 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     return () => clearTimeout(failsafeTimer);
   }, [currentUser]);
 
-  useEffect(() => {
-    if (found.length === 1 && !virementCommandeId) {
-      setVirementCommandeId(found[0].id);
+    useEffect(() => {
+    if (!virementCommandeId) {
+      if (found.length === 1) {
+        setVirementCommandeId(found[0].id);
+      } else if (found.length === 0) {
+        const trueDem = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
+        if (trueDem.length === 1) {
+          setVirementCommandeId(trueDem[0].id);
+        }
+      }
     }
-  }, [found]);
+  }, [found, mesDemandes, virementCommandeId]);
 
   // Auto-refresh messages every 3 seconds if chat is active
   useEffect(() => {
@@ -2327,16 +2334,30 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
                      {/* Bottom Action Footer */}
                      <div className="p-6 md:p-8 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                       <button
-                         type="button"
-                         onClick={() => setSelectedDemandePage(null)}
-                         className="w-full sm:w-auto px-6 py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-slate-100 transition-colors cursor-pointer"
-                       >
-                         {isAr ? '← الرجوع إلى قائمة الطلبات' : '← Retour aux demandes'}
-                       </button>
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDemandePage(null)}
+                            className="w-full sm:w-auto px-6 py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-slate-100 transition-colors cursor-pointer"
+                          >
+                            {isAr ? '← الرجوع إلى قائمة الطلبات' : '← Retour aux demandes'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedDemandePage(null);
+                              setVirementCommandeId(d.id);
+                              setActiveTab('payments');
+                            }}
+                            className="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/20 cursor-pointer"
+                          >
+                            <CreditCard className="w-4 h-4" />
+                            <span>{isAr ? '💳 أداء التسبيق / إرسال التوصيل' : '💳 Payer un Acompte / Reçu'}</span>
+                          </button>
+                        </div>
 
-                       <a
-                         href={waUrl}
+                        <a
+                          href={waUrl}
                          target="_blank"
                          rel="noopener noreferrer"
                          className="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/20 hover:shadow-2xl cursor-pointer text-center"
@@ -3427,7 +3448,55 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
             </div>
           )}
 
-          {activeTab === 'payments' && (
+          {activeTab === 'payments' && (() => {
+            const trueDemandes = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
+            
+            // Build all payable items (both official production Commandes and Client Demandes/Devis)
+            const allPayableItems = [
+              ...found.map(c => {
+                const matchingLead = trueDemandes.find(l => l.type === c.modele);
+                const leadImgUrl = matchingLead ? (matchingLead.photo || (matchingLead.photos && matchingLead.photos[0]) || leadPhotos[matchingLead.id]) : null;
+                const imgUrl = (c as any).modelePhoto || c.photo || (c as any).tissuPhoto || leadImgUrl || null;
+                return {
+                  id: c.id,
+                  itemType: 'commande' as const,
+                  badgeText: isAr ? 'طلبية إنتاج' : 'Commande Production',
+                  badgeColor: 'bg-indigo-600',
+                  reference: c.reference || c.id,
+                  modele: c.modele || (isAr ? 'موديل إنتاج' : 'Modèle Production'),
+                  quantite: c.quantite || 0,
+                  prixTotal: c.prix ? c.quantite * c.prix : null,
+                  photo: imgUrl,
+                  rawCommande: c
+                };
+              }),
+              ...trueDemandes.map(d => {
+                const analysis = getDemandeAnalysis(d, isAr);
+                const photo = d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null;
+                return {
+                  id: d.id,
+                  itemType: 'demande' as const,
+                  badgeText: isAr ? 'طلب موديل / دراسة' : 'Demande & Devis',
+                  badgeColor: 'bg-purple-600',
+                  reference: `#${d.id.slice(0, 8).toUpperCase()}`,
+                  modele: analysis.modeleReel || d.type || (isAr ? 'طلب موديل' : 'Demande Modèle'),
+                  quantite: analysis.qty || 1,
+                  prixTotal: analysis.totalPrice || (analysis.unitPrice ? analysis.unitPrice * analysis.qty : null),
+                  photo: photo,
+                  rawDemande: d
+                };
+              })
+            ];
+
+            const isFormValid = Boolean(
+              virementCommandeId && 
+              virementMontant && 
+              parseFloat(virementMontant) > 0 && 
+              virementPhoto && 
+              !sendingVirement
+            );
+
+            return (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                <div className="flex items-center justify-between">
                  <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-800">{isAr ? 'الدفع والأداء' : 'Paiements & Virements'}</h2>
@@ -3438,7 +3507,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                   <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-xl shadow-indigo-900/20">
                      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
                      <Building className="w-12 h-12 text-indigo-400 mb-6 relative z-10" />
-                     <h3 className="text-xl font-black uppercase tracking-widest mb-6 text-indigo-100 relative z-10">{isAr ? 'المعلومات البنكية' : 'Coordonnées Bancaires'}</h3>
+                     <h3 className="text-xl font-black uppercase tracking-widest mb-6 text-indigo-100 relative z-10">{isAr ? 'الحسابات البنكية' : 'Coordonnées Bancaires'}</h3>
                      
                      <div className="space-y-4 relative z-10">
                         <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 flex items-center justify-between">
@@ -3458,218 +3527,314 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                            <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'اسم المستفيد' : 'Bénéficiaire'}</p>
                            <p className="text-lg font-bold tracking-tight">{company.bankBeneficiary || company.name}</p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 group cursor-pointer hover:bg-white/20 transition-all relative overflow-hidden" onClick={() => {
-                          navigator.clipboard.writeText(company.rib || '230000000000000000000000');
-                          setRibCopied(true);
-                          setTimeout(() => setRibCopied(false), 2000);
-                        }}>
-                           <div className={`absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1.5 rounded-full shadow-lg shadow-emerald-500/20 transition-all duration-300 flex items-center gap-2 ${ribCopied ? 'opacity-100 translate-y-6 z-20' : 'opacity-0 translate-y-0 -z-10'}`}>
-                              <Check className="w-3.5 h-3.5" />
-                              <span className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'تم النسخ بنجاح' : 'RIB Copié !'}</span>
-                           </div>
-                           <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1 relative z-10">{isAr ? 'رقم الحساب (RIB)' : 'RIB (24 chiffres)'}</p>
-                           <div className="flex items-center justify-between relative z-10 gap-4">
-                             <p className="text-sm sm:text-base md:text-lg font-black tracking-wider font-mono whitespace-nowrap overflow-x-auto no-scrollbar">{company.rib || '230 000 00000000000000 00'}</p>
-                             {ribCopied ? (
-                               <div className="flex items-center gap-1.5 bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                                 <Check className="w-4 h-4 text-emerald-400" />
-                                 <span className="text-[10px] font-black uppercase text-emerald-400">{isAr ? 'تم' : 'Copié'}</span>
-                               </div>
-                             ) : (
-                               <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 group-hover:bg-white/20 group-hover:border-white/30 transition-all">
-                                 <FileText className="w-4 h-4 text-indigo-300 group-hover:text-white transition-colors" />
-                                 <span className="text-[10px] font-black uppercase text-indigo-300 group-hover:text-white transition-colors">{isAr ? 'نسخ' : 'Copier'}</span>
-                               </div>
-                             )}
-                           </div>
-                        </div>
-
-                        {company.bankQrCode && (
-                          <div className="mt-6 flex flex-col items-center">
-                            <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-3">{isAr ? 'مسح QR Code للدفع السريع' : 'Scanner pour payer'}</p>
-                            <div className="bg-white p-3 rounded-2xl shadow-xl shadow-black/20">
-                              <img src={company.bankQrCode} alt="Bank QR Code" className="w-40 h-40 object-cover rounded-xl" />
+                        <div 
+                           onClick={() => {
+                             navigator.clipboard?.writeText(company.rib || '');
+                             setRibCopied(true);
+                             setTimeout(() => setRibCopied(false), 2000);
+                           }}
+                           className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/15 transition-all group relative"
+                         >
+                            <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1 relative z-10">{isAr ? 'رقم الحساب (RIB)' : 'RIB (24 chiffres)'}</p>
+                            <div className="flex items-center justify-between relative z-10 gap-4">
+                              <p className="text-sm sm:text-base md:text-lg font-black tracking-wider font-mono whitespace-nowrap overflow-x-auto no-scrollbar">{company.rib || '230 000 00000000000000 00'}</p>
+                              {ribCopied ? (
+                                <div className="flex items-center gap-1.5 bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                                  <Check className="w-4 h-4 text-emerald-400" />
+                                  <span className="text-[10px] font-black uppercase text-emerald-400">{isAr ? 'تم' : 'Copié'}</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 group-hover:bg-white/20 group-hover:border-white/30 transition-all">
+                                  <FileText className="w-4 h-4 text-indigo-300 group-hover:text-white transition-colors" />
+                                  <span className="text-[10px] font-black uppercase text-indigo-300 group-hover:text-white transition-colors">{isAr ? 'نسخ' : 'Copier'}</span>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        )}
-                     </div>
+                         </div>
+
+                         {company.bankQrCode && (
+                           <div className="mt-6 flex flex-col items-center">
+                             <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-3">{isAr ? 'مسح QR Code للدفع السريع' : 'Scanner pour payer'}</p>
+                             <div className="bg-white p-3 rounded-2xl shadow-xl shadow-black/20">
+                               <img src={company.bankQrCode} alt="Bank QR Code" className="w-40 h-40 object-cover rounded-xl" />
+                             </div>
+                           </div>
+                         )}
+                      </div>
                   </div>
 
                   {/* Upload Receipt */}
                   <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col">
-                     <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-slate-800">{isAr ? 'تأكيد الدفع' : 'Confirmer un paiement'}</h3>
-                     
-                     <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 bg-indigo-50 border-indigo-100 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                       <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                         <Info className="w-4 h-4" />
-                       </div>
-                       <div className="flex-1">
-                         <p className="text-xs font-bold text-indigo-900 mb-1">
-                           {isAr ? 'خطوة ضرورية لبدء الإنتاج' : 'Étape nécessaire pour lancer la production'}
-                         </p>
-                         <p className="text-[10px] text-indigo-700 leading-relaxed font-medium">
-                           {isAr 
-                             ? 'المرجو تحديد الطلبية المعنية، إدخال مبلغ التحويل، وإرفاق صورة التوصيل البنكي. هذا الإجراء ضروري جداً باش نقدروا نشريو السلعة (الثوب واللوازم) ونبدأو الخدمة على طلبيتك في أسرع وقت!' 
-                             : "Veuillez sélectionner la commande, saisir le montant viré et joindre le reçu de paiement. Cette étape est indispensable pour nous permettre d'acheter la matière première et de commencer à travailler sur votre commande !"}
-                         </p>
-                       </div>
-                     </div>
-                     
-                     {virementSent ? (
-                        <div className="flex-1 flex flex-col items-center justify-center text-center py-8 animate-in zoom-in duration-500">
-                           <div className="w-20 h-20 bg-emerald-100 rounded-[2rem] flex items-center justify-center text-emerald-600 mb-4 shadow-lg shadow-emerald-100">
-                             <CircleCheck className="w-10 h-10" />
-                           </div>
-                           <h4 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">{isAr ? 'تم الإرسال بنجاح!' : 'Reçu envoyé !'}</h4>
-                           <p className="text-sm font-medium text-slate-500">{isAr ? 'سيتم مراجعة التوصيل وتأكيد الدفع في أقرب وقت.' : 'Votre paiement sera validé prochainement.'}</p>
-                           <button onClick={() => setVirementSent(false)} className="mt-6 px-6 py-3 bg-slate-50 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-colors">
-                              {isAr ? 'إرسال توصيل آخر' : 'Nouveau paiement'}
-                           </button>
+                      <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-slate-800">{isAr ? 'تأكيد الدفع' : 'Confirmer un paiement'}</h3>
+                      
+                      <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 bg-indigo-50 border-indigo-100 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                        <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                          <Info className="w-4 h-4" />
                         </div>
-                     ) : (
-                        <div className="space-y-6 flex-1 flex flex-col">
-                           <div className="grid grid-cols-1 gap-6">
-                             <div>
-                                <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ${isAr ? 'text-right' : ''}`}>{isAr ? 'الطلبية المعنية (ضروري)' : 'Commande concernée (Obligatoire)'}</label>
-                                
-                                {found.length > 0 ? (
-                                  <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 ${isAr ? 'direction-rtl' : ''}`}>
-                                    {found.map(c => {
-                                      const isSelected = virementCommandeId === c.id;
-                                      const matchingLead = mesDemandes.find(l => l.type === c.modele);
-                                      const leadImgUrl = matchingLead ? leadPhotos[matchingLead.id] : null;
-                                      const imgUrl = (c as any).modelePhoto || c.photo || (c as any).tissuPhoto || leadImgUrl || null;
-                                      return (
-                                        <div 
-                                          key={c.id}
-                                          onClick={() => setVirementCommandeId(c.id)}
-                                          className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col ${isSelected ? 'border-indigo-600 shadow-xl shadow-indigo-500/20 transform scale-[1.02] z-10 bg-indigo-50/30' : 'border-slate-100 hover:border-indigo-300 bg-white hover:bg-slate-50'}`}
-                                        >
-                                          {isSelected && (
-                                            <div className="absolute top-2 right-2 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center z-20 shadow-md animate-in zoom-in duration-200">
-                                              <Check className="w-3.5 h-3.5" />
-                                            </div>
-                                          )}
-                                          
-                                          <div className="h-28 w-full bg-slate-100 relative overflow-hidden flex items-center justify-center shrink-0 group">
-                                            {imgUrl ? (
-                                              <img src={imgUrl} alt={c.modele} className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? 'scale-110' : 'group-hover:scale-105'}`} />
-                                            ) : (
-                                              <Package className="w-8 h-8 text-slate-300" />
-                                            )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
-                                            <span className="absolute bottom-2 left-3 right-3 text-white text-[10px] font-black uppercase tracking-widest truncate drop-shadow-md">{c.reference}</span>
-                                          </div>
-                                          
-                                          <div className={`p-3 flex-1 flex flex-col justify-between ${isAr ? 'text-right' : 'text-left'}`}>
-                                            <p className="text-xs font-black text-slate-800 line-clamp-2 leading-tight mb-2" title={c.modele}>{c.modele || 'SANS MODÈLE'}</p>
-                                            <div className="flex items-center justify-between mt-auto">
-                                              <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">{c.quantite} PCS</span>
-                                              {c.prix && (
-                                                <span className="text-[10px] font-black text-emerald-600">{(c.quantite * c.prix).toLocaleString()} MAD</span>
-                                              )}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                ) : (
-                                  <div className="p-4 bg-slate-50 rounded-2xl text-center border-2 border-dashed border-slate-200">
-                                    <p className="text-xs font-bold text-slate-400">{isAr ? 'لا توجد طلبيات مسجلة حالياً' : 'Aucune commande trouvée'}</p>
-                                  </div>
-                                )}
-                             </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-indigo-900 mb-1">
+                            {isAr ? 'خطوة ضرورية لبدء الإنتاج' : 'Étape nécessaire pour lancer la production'}
+                          </p>
+                          <p className="text-[10px] text-indigo-700 leading-relaxed font-medium">
+                            {isAr 
+                              ? 'المرجو تحديد الطلبية المعنية، إدخال مبلغ التحويل، وإرفاق صورة التوصيل البنكي. هذا الإجراء ضروري جداً باش نقدروا نشريو السلعة (الثوب واللوازم) ونبدأو الخدمة على طلبيتك في أسرع وقت!' 
+                              : "Veuillez sélectionner la commande, saisir le montant viré et joindre le reçu de paiement. Cette étape est indispensable pour nous permettre d'acheter la matière première et de commencer à travailler sur votre commande !"}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {virementSent ? (
+                         <div className="flex-1 flex flex-col items-center justify-center text-center py-8 animate-in zoom-in duration-500">
+                            <div className="w-20 h-20 bg-emerald-100 rounded-[2rem] flex items-center justify-center text-emerald-600 mb-4 shadow-lg shadow-emerald-100">
+                              <CircleCheck className="w-10 h-10" />
+                            </div>
+                            <h4 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">{isAr ? 'تم الإرسال بنجاح!' : 'Reçu envoyé !'}</h4>
+                            <p className="text-sm font-medium text-slate-500">{isAr ? 'سيتم مراجعة التوصيل وتأكيد الدفع في أقرب وقت.' : 'Votre paiement sera validé prochainement.'}</p>
+                            <button onClick={() => setVirementSent(false)} className="mt-6 px-6 py-3 bg-slate-50 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-colors cursor-pointer">
+                               {isAr ? 'إرسال توصيل آخر' : 'Nouveau paiement'}
+                            </button>
+                         </div>
+                      ) : (
+                         <div className="space-y-6 flex-1 flex flex-col">
+                            <div className="grid grid-cols-1 gap-6">
+                              <div>
+                                 <div className="flex items-center justify-between mb-3">
+                                   <label className={`block text-[10px] font-black uppercase tracking-widest ${virementCommandeId ? 'text-indigo-600' : 'text-slate-500'} ${isAr ? 'text-right' : ''}`}>
+                                     {isAr ? 'الطلبية أو الموديل المعني (إجباري)' : 'Commande ou Modèle concerné (Obligatoire)'}
+                                   </label>
+                                   {virementCommandeId && (
+                                     <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-200">
+                                       <Check className="w-3 h-3" />
+                                       <span>{isAr ? 'تم اختيار الطلبية' : 'Sélectionné'}</span>
+                                     </span>
+                                   )}
+                                 </div>
+                                 
+                                 {allPayableItems.length > 0 ? (
+                                   <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 ${isAr ? 'direction-rtl' : ''}`}>
+                                     {allPayableItems.map(item => {
+                                       const isSelected = virementCommandeId === item.id;
+                                       return (
+                                         <div 
+                                           key={item.id}
+                                           onClick={() => setVirementCommandeId(item.id)}
+                                           className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col ${
+                                             isSelected 
+                                               ? 'border-indigo-600 shadow-xl shadow-indigo-500/25 bg-indigo-50/40 ring-2 ring-indigo-500/30 transform scale-[1.02] z-10' 
+                                               : 'border-slate-100 hover:border-indigo-300 bg-white hover:bg-slate-50'
+                                           }`}
+                                         >
+                                           {isSelected && (
+                                             <div className="absolute top-2 right-2 px-2.5 py-1 bg-indigo-600 text-white rounded-lg flex items-center gap-1 z-20 shadow-md text-[10px] font-black uppercase tracking-wider animate-in zoom-in duration-200">
+                                               <Check className="w-3.5 h-3.5" />
+                                               <span>{isAr ? 'محدد' : 'Sélectionné'}</span>
+                                             </div>
+                                           )}
+                                           
+                                           <div className="h-28 w-full bg-slate-900 relative overflow-hidden flex items-center justify-center shrink-0 group">
+                                             {item.photo ? (
+                                               <img src={item.photo} alt={item.modele} className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? 'scale-110' : 'group-hover:scale-105'}`} />
+                                             ) : (
+                                               <Package className="w-8 h-8 text-slate-500" />
+                                             )}
+                                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent" />
+                                             
+                                             <span className={`absolute top-2 left-2 ${item.badgeColor} text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider`}>
+                                               {item.badgeText}
+                                             </span>
 
-                             <div>
-                                <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'المبلغ المحول (درهم)' : 'Montant viré (MAD)'}</label>
-                                <div className="relative">
-                                  <input 
-                                    type="number" 
-                                    value={virementMontant}
-                                    onChange={e => setVirementMontant(e.target.value)}
-                                    placeholder="0.00"
-                                    className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-lg font-black outline-none focus:border-indigo-500 transition-colors ${isAr ? 'text-right' : ''}`}
-                                  />
-                                  <span className={`absolute top-1/2 -translate-y-1/2 text-slate-400 font-black ${isAr ? 'left-5' : 'right-5'}`}>MAD</span>
-                                </div>
-                             </div>
-                           </div>
-                           
-                           <div className="flex-1">
-                              <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'صورة التوصيل' : 'Photo du reçu'}</label>
-                              <div className="relative h-40 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden hover:border-indigo-400 transition-colors cursor-pointer group">
-                                {virementPhoto ? (
-                                  <>
-                                    <img src={virementPhoto} className="w-full h-full object-cover" />
-                                    <button onClick={() => setVirementPhoto(null)} className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-full shadow-lg"><X className="w-4 h-4" /></button>
-                                  </>
-                                ) : (
-                                  <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
-                                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                      <Upload className="w-5 h-5 text-indigo-400" />
-                                    </div>
-                                    <span className="text-xs font-black text-slate-500 uppercase tracking-widest">{isAr ? 'اضغط لرفع الصورة' : 'Cliquez pour uploader'}</span>
-                                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) {
-                                        try {
-                                          const compressed = await compressImage(file);
-                                          setVirementPhoto(compressed);
-                                        } catch (err) {}
-                                      }
-                                    }} />
-                                  </label>
-                                )}
+                                             <span className="absolute bottom-2 left-3 right-3 text-white text-[10px] font-black uppercase tracking-widest truncate drop-shadow-md">
+                                               {item.reference}
+                                             </span>
+                                           </div>
+                                           
+                                           <div className={`p-3.5 flex-1 flex flex-col justify-between ${isAr ? 'text-right' : 'text-left'}`}>
+                                             <p className="text-xs font-black text-slate-900 line-clamp-2 leading-tight mb-2" title={item.modele}>
+                                               {item.modele}
+                                             </p>
+                                             <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100 text-[10px]">
+                                               <span className="font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                 {item.quantite} PCS
+                                               </span>
+                                               {item.prixTotal ? (
+                                                 <span className="font-black text-emerald-600">
+                                                   {item.prixTotal.toLocaleString()} MAD
+                                                 </span>
+                                               ) : null}
+                                             </div>
+                                           </div>
+                                         </div>
+                                       );
+                                     })}
+                                   </div>
+                                 ) : (
+                                   <div className="p-6 bg-slate-50 rounded-2xl text-center border-2 border-dashed border-slate-200">
+                                     <Package className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                                     <p className="text-xs font-bold text-slate-600 mb-1">
+                                       {isAr ? 'لا توجد طلبيات أو طلبات مسجلة بحسابك حالياً' : 'Aucune commande ou demande trouvée'}
+                                     </p>
+                                     <p className="text-[10px] text-slate-400 max-w-sm mx-auto mb-3">
+                                       {isAr ? 'يجب إرسال طلب موديل أولاً قبل إرسال التوصيل البنكي حتى يتم ربط الأداء بطلبك.' : 'Veuillez d\'abord créer une demande de modèle avant d\'envoyer un reçu afin d\'y associer votre paiement.'}
+                                     </p>
+                                     <button 
+                                       type="button" 
+                                       onClick={() => { setShowNewOrderModal(true); }}
+                                       className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer"
+                                     >
+                                       {isAr ? '+ إنشاء طلب جديد' : '+ Nouvelle demande'}
+                                     </button>
+                                   </div>
+                                 )}
                               </div>
-                           </div>
 
-                           <button 
-                             disabled={sendingVirement || !virementPhoto || !virementMontant || (found.length > 0 && !virementCommandeId)}
-                             onClick={async () => {
-                               if(!currentUser || !virementMontant || !virementPhoto) return;
-                               setSendingVirement(true);
-                               try {
-                                 const newFacture: Partial<Facture> = {
-                                   id: Math.random().toString(36).substr(2, 9),
-                                   numero: `REC-${Date.now().toString().slice(-6)}`,
-                                   client: currentUser.nom,
-                                   commandeId: virementCommandeId || undefined,
-                                   date: new Date().toISOString(),
-                                   echeance: new Date().toISOString().split('T')[0],
-                                   montant: parseFloat(virementMontant),
-                                   typeDoc: 'recu',
-                                   statut: 'en_verification',
-                                   banque: 'virement',
-                                   articles: [],
-                                   preuvePaiement: virementPhoto
-                                 };
-                                 await saveRecord('factures', newFacture);
-                                 try {
-                                   const { sendPushToAll } = await import('../utils/pushNotifications');
-                                   sendPushToAll(isAr ? '💰 توصيل دفع جديد' : '💰 Nouveau Reçu', `${currentUser.nom} - ${virementMontant} MAD`, '/recus');
-                                 } catch (_) {}
-                                 setVirementSent(true);
-                                 setVirementMontant('');
-                                 setVirementCommandeId('');
-                                 setVirementPhoto(null);
-                               } catch (err) {
-                                 console.error(err);
-                               } finally {
-                                 setSendingVirement(false);
-                               }
-                             }}
-                             className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-600/30"
-                           >
-                             {sendingVirement ? <RotateCw className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" />}
-                             {isAr ? 'إرسال التوصيل' : 'Envoyer le reçu'}
-                           </button>
-                        </div>
-                     )}
+                              <div>
+                                 <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'المبلغ المحول (درهم)' : 'Montant viré (MAD)'}</label>
+                                 <div className="relative">
+                                   <input 
+                                     type="number" 
+                                     value={virementMontant}
+                                     onChange={e => setVirementMontant(e.target.value)}
+                                     placeholder="0.00"
+                                     className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-lg font-black outline-none focus:border-indigo-500 transition-colors ${isAr ? 'text-right' : ''}`}
+                                   />
+                                   <span className={`absolute top-1/2 -translate-y-1/2 text-slate-400 font-black ${isAr ? 'left-5' : 'right-5'}`}>MAD</span>
+                                 </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex-1">
+                               <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'صورة التوصيل' : 'Photo du reçu'}</label>
+                               <div className="relative h-40 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden hover:border-indigo-400 transition-colors cursor-pointer group">
+                                 {virementPhoto ? (
+                                   <>
+                                     <img src={virementPhoto} className="w-full h-full object-cover" />
+                                     <button onClick={() => setVirementPhoto(null)} className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-full shadow-lg"><X className="w-4 h-4" /></button>
+                                   </>
+                                 ) : (
+                                   <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                                     <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                       <Upload className="w-5 h-5 text-indigo-400" />
+                                     </div>
+                                     <span className="text-xs font-black text-slate-500 uppercase tracking-widest">{isAr ? 'اضغط لرفع الصورة' : 'Cliquez pour uploader'}</span>
+                                     <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                       const file = e.target.files?.[0];
+                                       if (file) {
+                                         try {
+                                           const compressed = await compressImage(file);
+                                           setVirementPhoto(compressed);
+                                         } catch (err) {}
+                                       }
+                                     }} />
+                                   </label>
+                                 )}
+                               </div>
+                            </div>
+
+                            {/* Strict Validation Info Alerts */}
+                            {!virementCommandeId && allPayableItems.length > 0 && (
+                              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs font-bold text-center flex items-center justify-center gap-2 animate-in fade-in">
+                                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                                <span>{isAr ? '⚠️ اختيار الطلبية أو الموديل المعني بالأعلى إجباري قبل إرسال التوصيل.' : '⚠️ Veuillez sélectionner la commande ou le modèle concerné ci-dessus pour activer l\'envoi.'}</span>
+                              </div>
+                            )}
+
+                            {allPayableItems.length === 0 && (
+                              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-bold text-center flex items-center justify-center gap-2 animate-in fade-in">
+                                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                                <span>{isAr ? '❌ لا توجد أي طلبية مسجلة لربط الدفع بها. يرجى إنشاء طلب أولاً.' : '❌ Aucune commande trouvée pour associer ce paiement. Veuillez d\'abord créer une demande.'}</span>
+                              </div>
+                            )}
+
+                            <button 
+                              disabled={!isFormValid}
+                              onClick={async () => {
+                                if (!isFormValid || !currentUser || !virementCommandeId || !virementMontant || !virementPhoto) {
+                                  alert(isAr ? 'يرجى اختيار الطلبية، إدخال المبلغ، وإرفاق صورة التوصيل.' : 'Veuillez sélectionner la commande, saisir le montant et joindre le reçu.');
+                                  return;
+                                }
+
+                                const selectedItem = allPayableItems.find(i => i.id === virementCommandeId);
+                                if (!selectedItem) {
+                                  alert(isAr ? 'يرجى اختيار الطلبية المعنية أولاً' : 'Veuillez sélectionner la commande concernée');
+                                  return;
+                                }
+
+                                const isDemande = selectedItem.itemType === 'demande';
+                                setSendingVirement(true);
+                                try {
+                                  const newFacture: Partial<Facture> = {
+                                    id: Math.random().toString(36).substr(2, 9),
+                                    numero: `REC-${Date.now().toString().slice(-6)}`,
+                                    client: currentUser.nom,
+                                    commandeId: isDemande ? undefined : selectedItem.id,
+                                    date: new Date().toISOString(),
+                                    echeance: new Date().toISOString().split('T')[0],
+                                    montant: parseFloat(virementMontant),
+                                    typeDoc: 'recu',
+                                    statut: 'en_verification',
+                                    banque: 'virement',
+                                    articles: [{
+                                      description: `[${selectedItem.reference}] ${selectedItem.modele} (${selectedItem.badgeText})`,
+                                      quantite: selectedItem.quantite || 1,
+                                      prixUnitaire: parseFloat(virementMontant),
+                                      total: parseFloat(virementMontant)
+                                    }],
+                                    preuvePaiement: virementPhoto
+                                  };
+                                  await saveRecord('factures', newFacture);
+
+                                  // If this receipt is for a Demande, link the proof to the lead directly!
+                                  if (isDemande && (selectedItem as any).rawDemande) {
+                                    try {
+                                      const raw = (selectedItem as any).rawDemande;
+                                      const updatedLead: Lead = {
+                                        ...raw,
+                                        preuveClient: virementPhoto,
+                                        crmPriceConfirmed: true,
+                                        notes: `${raw.notes || ''}\n[توصيل تحويل بنكي بقيمة ${virementMontant} MAD - قيد التحقق]`.trim()
+                                      };
+                                      await saveRecord('leads', updatedLead);
+                                      setMesDemandes(prev => prev.map(m => m.id === selectedItem.id ? updatedLead : m));
+                                    } catch (leadErr) {
+                                      console.warn("Failed to update lead with payment proof:", leadErr);
+                                    }
+                                  }
+
+                                  try {
+                                    const { sendPushToAll } = await import('../utils/pushNotifications');
+                                    sendPushToAll(
+                                      isAr ? '💰 توصيل دفع جديد' : '💰 Nouveau Reçu', 
+                                      `${currentUser.nom} - ${virementMontant} MAD (${selectedItem.reference} - ${selectedItem.modele})`, 
+                                      '/recus'
+                                    );
+                                  } catch (_) {}
+
+                                  setVirementSent(true);
+                                  setVirementMontant('');
+                                  setVirementCommandeId('');
+                                  setVirementPhoto(null);
+                                } catch (err) {
+                                  console.error(err);
+                                } finally {
+                                  setSendingVirement(false);
+                                }
+                              }}
+                              className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg ${
+                                isFormValid 
+                                  ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-indigo-600/30 hover:scale-[1.01] active:scale-95 cursor-pointer' 
+                                  : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-60 shadow-none'
+                              }`}
+                            >
+                              {sendingVirement ? <RotateCw className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" />}
+                              {isAr ? 'إرسال التوصيل' : 'Envoyer le reçu'}
+                            </button>
+                         </div>
+                      )}
                   </div>
                </div>
             </div>
-          )}
+            );
+          })()}
 
           {activeTab === 'DISABLED_atelier' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
