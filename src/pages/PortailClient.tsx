@@ -997,24 +997,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
            </div>
            
            <div className="flex items-center gap-3 sm:gap-4">
-              {/* Switch to BEYA STORE button */}
-              <button
-                onClick={() => {
-                  try {
-                    localStorage.setItem('beya_builder_mode', 'dashboard');
-                    window.location.hash = '#/store-builder';
-                  } catch {
-                    window.location.href = '/#/store-builder';
-                  }
-                }}
-                className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-500/20 hover:shadow-lg hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-95 shrink-0 cursor-pointer group"
-                title={isAr ? 'الانتقال إلى لوحة المتاجر (BEYA Store)' : 'Basculer vers BEYA Store (Mes Boutiques)'}
-              >
-                <Store className="w-4 h-4 shrink-0 group-hover:scale-110 transition-transform" />
-                <span className="hidden sm:inline">BEYA STORE</span>
-                <span className="sm:hidden">STORE</span>
-                <ArrowRight className={`w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform ${isAr ? 'rotate-180 group-hover:-translate-x-0.5' : ''}`} />
-              </button>
+              
 
               <button 
                 onClick={() => window.location.reload()}
@@ -1626,18 +1609,15 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                      <div className="p-6 md:p-8 bg-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
                        <div className="flex items-center gap-5">
                          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-800 shrink-0 border-2 border-white/10 shadow-lg">
-                           {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
-                             <img 
-                               src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} 
-                               alt={analysis.modeleReel} 
-                               className="w-full h-full object-cover" 
-                             />
-                           ) : (
-                             <div className="w-full h-full flex flex-col gap-1 items-center justify-center text-slate-400">
-                               <Camera className="w-8 h-8" />
-                               <span className="text-[9px] font-bold uppercase">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
-                             </div>
-                           )}
+                            <LeadCardImage
+                              lead={d}
+                              leadPhotos={leadPhotos}
+                              onPhotoLoaded={handlePhotoLoaded}
+                              alt={analysis.modeleReel}
+                              dark={true}
+                              iconSize={8}
+                              isAr={isAr}
+                            />
                          </div>
                          <div>
                            <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -1954,14 +1934,16 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                          return (
                            <div key={d.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden group">
                              <div className="h-48 bg-slate-100 relative overflow-hidden">
-                               {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
-                                 <img src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} alt={d.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                               ) : (
-                                 <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-50 text-slate-300">
-                                   <Camera className="w-10 h-10" />
-                                   <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
-                                 </div>
-                               )}
+                                <LeadCardImage
+                                  lead={d}
+                                  leadPhotos={leadPhotos}
+                                  onPhotoLoaded={handlePhotoLoaded}
+                                  alt={d.type}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                  dark={false}
+                                  iconSize={10}
+                                  isAr={isAr}
+                                />
                                <div className="absolute top-4 left-4 flex gap-2">
                                  {isAccepted && <span className="px-3 py-1 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
                                  {isRejected && <span className="px-3 py-1 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
@@ -2021,22 +2003,17 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                            <div>
                              {/* Photo Header */}
                              <div className="h-56 bg-slate-900 relative overflow-hidden">
-                               {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
-                                 <img 
-                                   src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} 
-                                   alt={analysis.modeleReel} 
-                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-95 group-hover:opacity-100 cursor-pointer" 
-                                   onClick={() => setSelectedDemandePage(d)}
-                                 />
-                               ) : (
-                                 <div 
-                                   onClick={() => setSelectedDemandePage(d)}
-                                   className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-800 text-slate-400 cursor-pointer"
-                                 >
-                                   <Camera className="w-12 h-12" />
-                                   <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
-                                 </div>
-                               )}
+                                <LeadCardImage
+                                  lead={d}
+                                  leadPhotos={leadPhotos}
+                                  onPhotoLoaded={handlePhotoLoaded}
+                                  alt={analysis.modeleReel}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-95 group-hover:opacity-100 cursor-pointer"
+                                  onClick={() => setSelectedDemandePage(d)}
+                                  dark={true}
+                                  iconSize={12}
+                                  isAr={isAr}
+                                />
 
                                {/* Top Badges */}
                                <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10 items-center">
@@ -3829,13 +3806,17 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                 {/* Top Info Banner */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="flex items-center gap-4">
-                    {(d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]) && (
-                      <img 
-                        src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} 
-                        alt={analysis.modeleReel} 
-                        className="w-20 h-20 rounded-2xl object-cover border border-slate-200 shadow-sm"
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden border border-slate-200 shadow-sm shrink-0">
+                      <LeadCardImage
+                        lead={d}
+                        leadPhotos={leadPhotos}
+                        onPhotoLoaded={handlePhotoLoaded}
+                        alt={analysis.modeleReel}
+                        dark={false}
+                        iconSize={8}
+                        isAr={isAr}
                       />
-                    )}
+                    </div>
                     <div>
                       <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-0.5">{isAr ? 'الموديل المعتمد' : 'Modèle Technique'}</span>
                       <h4 className="text-lg font-black text-slate-900">{analysis.modeleReel}</h4>
