@@ -1194,6 +1194,140 @@ export async function loadLeads(): Promise<Lead[]> {
   }
 }
 
+export function parseLeadMeta(l: any): Lead {
+  const item = { ...l };
+  if (item.details && typeof item.details === 'string') {
+    if (item.details.includes('| COM_UNLOCK:true')) {
+      item.commercialUnlocked = true;
+      item.details = item.details.replace('| COM_UNLOCK:true', '');
+    }
+    if (item.details.includes('| AI_NOTES:')) {
+      const parts = item.details.split('| AI_NOTES:');
+      item.details = parts[0];
+      item.aiNotes = parts[1];
+    }
+    if (item.details.includes('| ATELIER_DEVIS:')) {
+      try {
+        const parts = item.details.split('| ATELIER_DEVIS:');
+        item.details = parts[0];
+        const parsed = JSON.parse(parts[1]);
+        if (parsed && typeof parsed === 'object') {
+          if (parsed.modeleReel) item.modeleReel = parsed.modeleReel;
+          if (parsed.unitPrice) item.unitPrice = Number(parsed.unitPrice);
+          if (parsed.totalPrice) item.totalPrice = Number(parsed.totalPrice);
+          if (parsed.tissuSuggere) item.tissuSuggere = parsed.tissuSuggere;
+          if (parsed.techDetails) item.techDetails = parsed.techDetails;
+          if (parsed.delaiEstime) item.delaiEstime = parsed.delaiEstime;
+          if (parsed.statusProgression) item.statusProgression = parsed.statusProgression;
+          if (parsed.reponseAtelier) item.reponseAtelier = parsed.reponseAtelier;
+          if (parsed.reponseAtelierDate) item.reponseAtelierDate = parsed.reponseAtelierDate;
+        }
+      } catch (e) {
+        console.error('Error parsing ATELIER_DEVIS:', e);
+      }
+    }
+  }
+  if (!item.unitPrice && item.crmPrice && Number(item.crmPrice) > 0) {
+    item.unitPrice = Number(item.crmPrice);
+  }
+  return item;
+}
+
+export async function loadClientLeads(user: { nom: string; email?: string; telephone?: string }): Promise<Lead[]> {
+  if (!user || (!user.nom && !user.email && !user.telephone)) return [];
+
+  const LEADS_COLS = 'id, name, phone, phone2, ville, type, quantity, details, tailles, date, status, email, contactedAt, contactedType, contactedBy, crmStage, crmContactMethod, crmRdvDate, crmNotes, crmPrice, crmPriceConfirmed, photoCount, crmDevisMode, crmPriority, rejectedAt';
+
+  const filterParts: string[] = [];
+  if (user.nom && user.nom.trim()) {
+    filterParts.push(`name.ilike.${user.nom.trim()}`);
+  }
+  if (user.email && user.email.trim()) {
+    filterParts.push(`email.ilike.${user.email.trim()}`);
+  }
+  if (user.telephone && user.telephone.trim()) {
+    filterParts.push(`phone.eq.${user.telephone.trim()}`);
+  }
+
+  const orFilter = filterParts.join(',');
+
+  let remoteLeads: any[] = [];
+
+  // 1. Direct targeted Supabase query (super fast, hits client indexes in < 300ms)
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .select(LEADS_COLS)
+      .or(orFilter)
+      .order('date', { ascending: false });
+
+    if (!error && Array.isArray(data) && data.length > 0) {
+      remoteLeads = data;
+    }
+  } catch (_) {}
+
+  // 2. Direct REST API fallback (immune to JWT session locks, client timeouts, or browser client issues)
+  if (!remoteLeads || remoteLeads.length === 0) {
+    try {
+      const url = `https://cyduteruvmpefvemeutm.supabase.co/rest/v1/leads?or=(${encodeURIComponent(orFilter)})&select=${encodeURIComponent(LEADS_COLS)}&order=date.desc`;
+      const res = await fetch(url, {
+        headers: {
+          'apikey': 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr',
+          'Authorization': 'Bearer sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr'
+        }
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0) {
+          remoteLeads = rows;
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 3. Local storage fallback and merge
+  let localLeads: Lead[] = [];
+  try {
+    const raw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        localLeads = parsed.filter((l: any) =>
+          l && l.id && l.name &&
+          ((user.nom && (l.name || '').trim().toLowerCase() === user.nom.trim().toLowerCase()) ||
+           (user.email && (l.email || '').trim().toLowerCase() === user.email.trim().toLowerCase()) ||
+           (user.telephone && (l.phone || '').trim() === user.telephone.trim()))
+        );
+      }
+    }
+  } catch (_) {}
+
+  // 4. Merge unique leads by ID
+  const map: Record<string, Lead> = {};
+  remoteLeads.forEach((l: any) => {
+    if (l && l.id && !l.name?.startsWith('__')) {
+      map[l.id] = parseLeadMeta(l);
+    }
+  });
+  localLeads.forEach((l: any) => {
+    if (l && l.id && !map[l.id] && !l.name?.startsWith('__')) {
+      map[l.id] = parseLeadMeta(l);
+    }
+  });
+
+  const finalLeads = Object.values(map).sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+
+  // 5. Update local cache
+  try {
+    const existingRaw = localStorage.getItem('textrack_data_leads');
+    const existing = existingRaw ? JSON.parse(existingRaw) : [];
+    const merged = [...finalLeads, ...(Array.isArray(existing) ? existing.filter((e: any) => !map[e.id]) : [])];
+    localStorage.setItem('textrack_data_leads', JSON.stringify(merged.slice(0, 50)));
+  } catch (_) {}
+
+  return finalLeads;
+}
+
 export async function loadLeadPhoto(leadId: string): Promise<string | null> {
   if (!leadId) return null;
 

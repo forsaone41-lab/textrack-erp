@@ -3,7 +3,7 @@ import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, Messa
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto, deleteRecord, genId, isJwtExpiredError, recoverExpiredJwt
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadClientLeads, loadLeadPhoto, deleteRecord, genId, isJwtExpiredError, recoverExpiredJwt
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { trackPixelEvent } from '../utils/pixel';
@@ -424,28 +424,33 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       setLoading(false);
     }, 1200);
 
+    const leadsLoader = (currentUser && (currentUser.nom || currentUser.email))
+      ? loadClientLeads(currentUser)
+      : loadLeads();
+
     Promise.all([
       loadData<Commande>('commandes').catch(() => []),
       loadData<Facture>('factures').catch(() => []),
       loadData<any>('fiches').catch(() => []),
-      loadLeads().catch(() => [])
-    ]).then(([allCommandes, allFactures, allFiches, allLeads]) => {
+      leadsLoader.catch(() => [])
+    ]).then(([allCommandes, allFactures, allFiches, clientOrAllLeads]) => {
       if (Array.isArray(allCommandes) && allCommandes.length > 0) setCommandes(allCommandes);
       if (Array.isArray(allFactures) && allFactures.length > 0) setFactures(allFactures);
       if (Array.isArray(allFiches) && allFiches.length > 0) setFiches(allFiches);
 
-      // If a client or merchant is logged in, show their orders automatically
-      if (currentUser?.role === 'client' || currentUser?.role === 'merchant') {
+      // If a user is logged in, show their orders & demands automatically
+      if (currentUser) {
         const myCommandes = (allCommandes || []).filter(c =>
-          (c.client || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase()
+          (c.client || '').trim().toLowerCase() === (currentUser.nom || '').trim().toLowerCase() ||
+          (currentUser.email && (c as any).email?.trim().toLowerCase() === currentUser.email.trim().toLowerCase())
         );
-        const myLeads = (allLeads || []).filter(l =>
-          (l.name || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase() ||
-          ((l.email || '').trim().toLowerCase() === (currentUser?.email || '').trim().toLowerCase() && currentUser?.email) ||
-          ((l.phone || '').trim() === (currentUser?.telephone || '').trim() && currentUser?.telephone)
+        const myLeads = (clientOrAllLeads || []).filter(l =>
+          (l.name || '').trim().toLowerCase() === (currentUser.nom || '').trim().toLowerCase() ||
+          ((l.email || '').trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase() && currentUser.email) ||
+          ((l.phone || '').trim() === (currentUser.telephone || '').trim() && currentUser.telephone)
         );
         setFound(myCommandes);
-        if (myLeads.length > 0) setMesDemandes(myLeads);
+        setMesDemandes(myLeads);
         lastClientMessageCountRef.current = myLeads.length;
         
         // Load photos for these leads asynchronously
@@ -471,34 +476,31 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     return () => clearTimeout(failsafeTimer);
   }, [currentUser]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (!virementCommandeId) {
       if (found.length === 1) {
         setVirementCommandeId(found[0].id);
       } else if (found.length === 0) {
         const trueDem = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
-        if (trueDem.length === 1) {
+        if (trueDem.length >= 1) {
           setVirementCommandeId(trueDem[0].id);
         }
       }
     }
   }, [found, mesDemandes, virementCommandeId]);
 
-  // Auto-refresh messages every 3 seconds if chat is active
+  // Auto-refresh messages & demands every 8 seconds if chat or payments is active
   useEffect(() => {
-    if ((activeTab !== 'support' && activeTab !== 'demandes') || !currentUser) return;
+    if ((activeTab !== 'support' && activeTab !== 'demandes' && activeTab !== 'payments') || !currentUser) return;
 
     if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
       Notification.requestPermission();
     }
 
     const interval = setInterval(async () => {
-      const allLeads = await loadLeads();
-      const myLeads = allLeads.filter(l =>
-        (l.name || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase() ||
-        ((l.email || '').trim().toLowerCase() === (currentUser?.email || '').trim().toLowerCase() && currentUser?.email) ||
-        ((l.phone || '').trim() === (currentUser?.telephone || '').trim() && currentUser?.telephone)
-      );
+      const myLeads = (currentUser && (currentUser.nom || currentUser.email))
+        ? await loadClientLeads(currentUser)
+        : await loadLeads();
 
       if (lastClientMessageCountRef.current > 0 && myLeads.length > lastClientMessageCountRef.current) {
         const newOnes = myLeads.slice(lastClientMessageCountRef.current);
