@@ -541,7 +541,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           }
         }
       });
-    }, 3000);
+    }, 12000);
     return () => clearInterval(interval);
   }, [activeTab, currentUser]);
 
