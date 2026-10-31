@@ -871,8 +871,21 @@ export default function Demandes() {
     await saveRecord('factures', devis);
 
     // Save full technical & commercial response directly on the Lead so Portail Client gets updated instantly
+    let extDetails: any = {};
+    try { extDetails = JSON.parse(devisLead.details || '{}'); } catch(e) {}
+    if (devisPatronagePrice) {
+      extDetails.patronagePrice = Number(devisPatronagePrice);
+      extDetails.patronageStatus = 'priced';
+    }
+    if (devisPrixEchantillon) {
+      extDetails.prixEchantillon = Number(devisPrixEchantillon);
+    }
+
     const updatedLead: Lead = {
       ...devisLead,
+      details: JSON.stringify(extDetails),
+      patronagePrice: devisPatronagePrice ? Number(devisPatronagePrice) : devisLead.patronagePrice,
+      prixEchantillon: devisPrixEchantillon ? Number(devisPrixEchantillon) : devisLead.prixEchantillon,
       modeleReel: devisModeleReel.trim() || devisLead.type,
       unitPrice,
       totalPrice: total,
@@ -1256,6 +1269,34 @@ export default function Demandes() {
                       <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اليد العاملة' : "Main d'œuvre"}</label>
                       <input type="number" value={laborPrice} onChange={e => setLaborPrice(e.target.value)} placeholder="0"
                         className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2 px-3 text-sm font-black text-slate-900 outline-none focus:border-indigo-400" />
+                    </div>
+                  </div>
+
+                  {/* Patronage & Échantillon Prices Row (Controlled by Admin / Modéliste) */}
+                  <div className="grid grid-cols-2 gap-2 mb-2 p-2.5 bg-amber-50/70 rounded-xl border border-amber-200">
+                    <div>
+                      <label className="block text-[8px] font-black text-amber-900 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <span>📐</span> {isAr ? 'ثمن الباتروناج والتدريج' : 'Patronage (MAD)'}
+                      </label>
+                      <input
+                        type="number"
+                        value={devisPatronagePrice}
+                        onChange={e => setDevisPatronagePrice(e.target.value)}
+                        placeholder="Ex: 250"
+                        className="w-full bg-white border border-amber-200 rounded-lg py-1.5 px-3 text-xs font-black text-amber-900 outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[8px] font-black text-indigo-900 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <span>✂️</span> {isAr ? 'ثمن العينة الأولية' : 'Échantillon (MAD)'}
+                      </label>
+                      <input
+                        type="number"
+                        value={devisPrixEchantillon}
+                        onChange={e => setDevisPrixEchantillon(e.target.value)}
+                        placeholder="Ex: 350"
+                        className="w-full bg-white border border-indigo-200 rounded-lg py-1.5 px-3 text-xs font-black text-indigo-900 outline-none focus:border-indigo-500"
+                      />
                     </div>
                   </div>
 
