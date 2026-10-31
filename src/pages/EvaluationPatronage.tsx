@@ -17,6 +17,7 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   const [priceInput, setPriceInput] = useState<string>('');
+  const [echantillonInput, setEchantillonInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
   const [customAlert, setCustomAlert] = useState<{ title: string; message: string; onConfirm?: () => void; isError?: boolean } | null>(null);
 
@@ -65,8 +66,11 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
 
   const handleSelectLead = (lead: Lead) => {
     setSelectedLead(lead);
-    setPriceInput(lead.patronagePrice ? String(lead.patronagePrice) : '');
-    setNotesInput(lead.patronageNotes || '');
+    let ext: any = {};
+    try { ext = JSON.parse(lead.details || '{}'); } catch(e) {}
+    setPriceInput(lead.patronagePrice ? String(lead.patronagePrice) : ext.patronagePrice ? String(ext.patronagePrice) : '');
+    setEchantillonInput(lead.prixEchantillon ? String(lead.prixEchantillon) : ext.prixEchantillon ? String(ext.prixEchantillon) : '');
+    setNotesInput(lead.patronageNotes || ext.patronageNotes || '');
   };
 
   const handleSavePrice = async () => {
@@ -74,17 +78,21 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
     if (!priceInput) {
       setCustomAlert({
         title: isAr ? 'تنبيه' : 'Attention',
-        message: isAr ? 'أدخل الثمن أولا' : 'Veuillez entrer un prix',
+        message: isAr ? 'أدخل ثمن الباتروناج أولا' : 'Veuillez entrer le prix du patronage',
         isError: true
       });
       return;
     }
 
     try {
+      const patPrice = Number(priceInput);
+      const echPrice = echantillonInput ? Number(echantillonInput) : 0;
+
       const newDetails = {
         ...(selectedLead as any),
         patronageStatus: 'priced',
-        patronagePrice: Number(priceInput),
+        patronagePrice: patPrice,
+        prixEchantillon: echPrice,
         patronageNotes: notesInput,
         modelisteId: currentUser?.id,
         modelisteName: currentUser?.nom,
@@ -100,6 +108,8 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
         quantity: selectedLead.quantity,
         status: selectedLead.status,
         date: selectedLead.date,
+        patronagePrice: patPrice,
+        prixEchantillon: echPrice,
         details: JSON.stringify(newDetails)
       };
       
@@ -263,17 +273,31 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
               )}
 
               <div className="space-y-5">
-                <div>
-                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-widest mb-2">
-                    {isAr ? 'ثمن الفصالة / الباترون (MAD)' : 'Prix de Patronage (MAD)'}
-                  </label>
-                  <input 
-                    type="number" 
-                    value={priceInput}
-                    onChange={(e) => setPriceInput(e.target.value)}
-                    placeholder="Ex: 150"
-                    className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-xl font-black text-amber-600 outline-none focus:border-amber-500 transition-colors"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-black text-slate-700 uppercase tracking-widest mb-2">
+                      {isAr ? '📐 ثمن الباتروناج والتدريج (MAD)' : '📐 Prix de Patronage (MAD)'}
+                    </label>
+                    <input 
+                      type="number" 
+                      value={priceInput}
+                      onChange={(e) => setPriceInput(e.target.value)}
+                      placeholder="Ex: 250"
+                      className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-xl font-black text-amber-600 outline-none focus:border-amber-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-black text-slate-700 uppercase tracking-widest mb-2">
+                      {isAr ? '✂️ ثمن العينة الأولية (MAD)' : '✂️ Prix Prototype / Échantillon (MAD)'}
+                    </label>
+                    <input 
+                      type="number" 
+                      value={echantillonInput}
+                      onChange={(e) => setEchantillonInput(e.target.value)}
+                      placeholder="Ex: 350"
+                      className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-xl font-black text-indigo-600 outline-none focus:border-indigo-500 transition-colors"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[11px] font-black text-slate-700 uppercase tracking-widest mb-2">

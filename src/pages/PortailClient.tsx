@@ -582,6 +582,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const text = `${d.type || ''} ${d.details || ''} ${d.id || ''}`.toLowerCase();
     
+    let extDetails: any = {};
+    try { extDetails = JSON.parse(d.details || '{}'); } catch(e) {}
+
     // Check custom saved values from database/atelier edit first
     const savedUnitPrice = (d.unitPrice && Number(d.unitPrice) > 0) ? Number(d.unitPrice) : (d.crmPrice && Number(d.crmPrice) > 0) ? Number(d.crmPrice) : null;
     const savedModele = (d.modeleReel && d.modeleReel.trim() && d.modeleReel.toUpperCase() !== 'MODEL') ? d.modeleReel.trim() : null;
@@ -590,8 +593,18 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     const savedDelai = (d.delaiEstime && d.delaiEstime.trim()) ? d.delaiEstime.trim() : null;
     const savedProgression = d.statusProgression || 'etude';
     const savedReponse = (d.reponseAtelier && d.reponseAtelier.trim()) ? d.reponseAtelier.trim() : null;
-    const savedPatronage = (d.patronagePrice && Number(d.patronagePrice) > 0) ? Number(d.patronagePrice) : null;
-    const savedEchantillon = (d.prixEchantillon && Number(d.prixEchantillon) > 0) ? Number(d.prixEchantillon) : null;
+    const savedPatronage = (d.patronagePrice && Number(d.patronagePrice) > 0) 
+      ? Number(d.patronagePrice) 
+      : (extDetails.patronagePrice && Number(extDetails.patronagePrice) > 0)
+      ? Number(extDetails.patronagePrice)
+      : null;
+    const savedEchantillon = (d.prixEchantillon && Number(d.prixEchantillon) > 0) 
+      ? Number(d.prixEchantillon) 
+      : (extDetails.prixEchantillon && Number(extDetails.prixEchantillon) > 0)
+      ? Number(extDetails.prixEchantillon)
+      : null;
+    const hasCustomPatronage = Boolean(savedPatronage && savedPatronage > 0);
+    const hasCustomEchantillon = Boolean(savedEchantillon && savedEchantillon > 0);
 
     // Detect Clothing Categories
     const isTracksuit = text.includes('survet') || text.includes('survêtement') || text.includes('tracksuit') || text.includes('ensemble') || text.includes('بدلة') || text.includes('طقم') || d.id?.toLowerCase().includes('49606be7');
@@ -714,6 +727,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       qty,
       patronagePrice,
       echantillonPrice,
+      hasCustomPatronage,
+      hasCustomEchantillon,
       tissuConsoMeters: defaultTissuConso,
       tissuPricePerKg: defaultTissuPrixKg,
       hasBroderie,
@@ -746,13 +761,20 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     if (!atelierQuickEditLead) return;
     setSavingQuickEdit(true);
     try {
+      let extDetails: any = {};
+      try { extDetails = JSON.parse(atelierQuickEditLead.details || '{}'); } catch(e) {}
+      extDetails.patronagePrice = Number(quickEditForm.patronagePrice);
+      extDetails.prixEchantillon = Number(quickEditForm.prixEchantillon);
+      extDetails.patronageStatus = 'priced';
+
       const updatedLead: Lead = {
         ...atelierQuickEditLead,
+        details: JSON.stringify(extDetails),
         modeleReel: quickEditForm.modeleReel,
         unitPrice: Number(quickEditForm.unitPrice),
         totalPrice: Number(quickEditForm.unitPrice) * (atelierQuickEditLead.quantity || 100),
-        patronagePrice: Number(quickEditForm.patronagePrice || 250),
-        prixEchantillon: Number(quickEditForm.prixEchantillon || 350),
+        patronagePrice: Number(quickEditForm.patronagePrice),
+        prixEchantillon: Number(quickEditForm.prixEchantillon),
         tissuSuggere: quickEditForm.tissuSuggere,
         techDetails: quickEditForm.techDetails,
         delaiEstime: quickEditForm.delaiEstime,
@@ -770,6 +792,23 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     } finally {
       setSavingQuickEdit(false);
     }
+  };
+
+  const openQuickEdit = (lead: Lead) => {
+    const analysis = getDemandeAnalysis(lead, isAr);
+    setAtelierQuickEditLead(lead);
+    setQuickEditForm({
+      modeleReel: analysis.modeleReel,
+      patronagePrice: analysis.hasCustomPatronage ? analysis.patronagePrice : (analysis.patronagePrice || 250),
+      prixEchantillon: analysis.hasCustomEchantillon ? analysis.echantillonPrice : (analysis.echantillonPrice || 350),
+      unitPrice: analysis.unitPrice,
+      totalPrice: analysis.totalPrice,
+      tissuSuggere: analysis.tissuSuggere,
+      techDetails: analysis.techDetails,
+      delaiEstime: analysis.delaiEstime,
+      statusProgression: analysis.statusProgression,
+      reponseAtelier: analysis.reponseAtelier
+    });
   };
 
   const handleDemandeAnnulation = async () => {
@@ -1848,55 +1887,114 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                        </div>
 
                        {/* 2. Pre-Production Engineering Package (Patronage & Échantillonnage) */}
-                       <div>
-                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                           <Scissors className="w-4 h-4 text-indigo-600" />
-                           {isAr ? 'خدمات ما قبل الإنتاج (الباترون والعينة)' : 'Pack Pré-Production (Patronage & Échantillon)'}
-                         </h3>
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                           {/* Patronage Card */}
-                           <div className="p-5 bg-white rounded-3xl border border-slate-200/80 shadow-xs hover:border-indigo-300 transition-all">
-                             <div className="flex items-start justify-between mb-3">
-                               <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-wider rounded-lg">
-                                 {isAr ? 'تدفع لمرة واحدة فقط' : 'Paiement Unique'}
-                               </span>
-                               <span className="text-2xl font-black text-slate-900">
-                                 {analysis.patronagePrice} <span className="text-xs font-bold text-slate-500">MAD</span>
-                               </span>
-                             </div>
-                             <h4 className="text-sm font-black text-slate-900 mb-1 flex items-center gap-1.5">
-                               <span>📐</span> {isAr ? 'الباتروناج والتدريج الرقمي (Gradation)' : 'Patronage Numérique & Gradation'}
-                             </h4>
-                             <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                               {isAr 
-                                 ? 'تصميم رقمي دقيق لجميع المقاسات (XS-XXL) بنظام CAD. يبقى ملكاً لعلامتك لإعادة الإنتاج (Réassort) في أي وقت.' 
-                                 : 'Création du patron industriel aux normes et gradation toutes tailles. Réutilisable à vie pour tous vos réassorts.'}
-                             </p>
-                           </div>
+                        <div>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                              <Scissors className="w-4 h-4 text-indigo-600" />
+                              {isAr ? 'خدمات ما قبل الإنتاج (الباترون والعينة)' : 'Pack Pré-Production (Patronage & Échantillon)'}
+                            </h3>
+                            {isTestAccount && (
+                              <button
+                                type="button"
+                                onClick={() => openQuickEdit(d)}
+                                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                              >
+                                <span>✏️</span> {isAr ? 'تحديد / تعديل أسعار الباترون والعينة' : 'Fixer les Prix Atelier'}
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Patronage Card */}
+                            <div className={`p-5 rounded-3xl border transition-all ${
+                              analysis.hasCustomPatronage
+                                ? 'bg-white border-slate-200/80 shadow-xs hover:border-indigo-300'
+                                : 'bg-gradient-to-br from-amber-50/50 via-white to-amber-50/20 border-amber-200/80 shadow-xs'
+                            }`}>
+                              <div className="flex items-start justify-between mb-3">
+                                {analysis.hasCustomPatronage ? (
+                                  <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1">
+                                    <span>✓</span> {isAr ? 'معتمد من الموديلست' : 'Validé Modéliste'}
+                                  </span>
+                                ) : (
+                                  <span className="px-2.5 py-1 bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1">
+                                    <Clock className="w-3 h-3 animate-spin text-amber-700" />
+                                    {isAr ? 'قيد التدقيق الفني' : 'En cours d\'étude'}
+                                  </span>
+                                )}
+                                
+                                {analysis.hasCustomPatronage ? (
+                                  <span className="text-2xl font-black text-slate-900">
+                                    {analysis.patronagePrice} <span className="text-xs font-bold text-slate-500">MAD</span>
+                                  </span>
+                                ) : (
+                                  <span className="px-3 py-1 bg-amber-500/10 text-amber-900 text-xs font-black rounded-lg border border-amber-300/40 flex items-center gap-1.5">
+                                    <span>⏳</span> {isAr ? 'قيد التقييم من طرف الموديلست' : 'À déterminer par le Modéliste'}
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="text-sm font-black text-slate-900 mb-1 flex items-center gap-1.5">
+                                <span>📐</span> {isAr ? 'الباتروناج والتدريج الرقمي (Gradation)' : 'Patronage Numérique & Gradation'}
+                              </h4>
+                              <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                                {analysis.hasCustomPatronage ? (
+                                  isAr 
+                                    ? 'تصميم رقمي دقيق لجميع المقاسات (XS-XXL) بنظام CAD معتمد من الموديلست. تدفع لمرة واحدة ويبقى ملكاً لعلامتك لإعادة الإنتاج (Réassort) في أي وقت.' 
+                                    : 'Création du patron industriel aux normes et gradation toutes tailles validée par le modéliste. Réutilisable à vie pour tous vos réassorts.'
+                                ) : (
+                                  isAr 
+                                    ? 'يقوم الموديلست حالياً بدراسة تفاصيل قصة الموديل وتحديد تكلفة الباتروناج والتدريج الرقمي بدقة حسب تعقيد الموديل.' 
+                                    : 'Le modéliste étudie actuellement les détails du modèle pour déterminer le tarif exact du patronage.'
+                                )}
+                              </p>
+                            </div>
 
-                           {/* Échantillon Card */}
-                           <div className="p-5 bg-gradient-to-br from-indigo-50/70 to-purple-50/50 rounded-3xl border border-indigo-200/80 shadow-xs hover:border-indigo-400 transition-all">
-                             <div className="flex items-start justify-between mb-3">
-                               <span className="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm">
-                                 {isAr ? '⭐ تُخصم من الإنتاج' : '⭐ Déductible'}
-                               </span>
-                               <span className="text-2xl font-black text-indigo-950">
-                                 {analysis.echantillonPrice} <span className="text-xs font-bold text-indigo-600">MAD</span>
-                               </span>
-                             </div>
-                             <h4 className="text-sm font-black text-indigo-950 mb-1 flex items-center gap-1.5">
-                               <span>✂️</span> {isAr ? 'العينة التجريبية الأولية (Prototype)' : 'Échantillon / Prototype Physique'}
-                             </h4>
-                             <p className="text-xs text-indigo-900/80 leading-relaxed font-medium">
-                               {isAr 
-                                 ? 'حبة نموذجية كاملة للفحص والموافقة على القماش والفينيسيون. يُخصم هذا المبلغ بالكامل من فاتورة الإنتاج عند الاعتماد!' 
-                                 : 'Pièce prototype physique pour valider coupe et finitions. 100% déductible du montant total lors du lancement série.'}
-                             </p>
-                           </div>
-                         </div>
-                       </div>
+                            {/* Échantillon Card */}
+                            <div className={`p-5 rounded-3xl border transition-all ${
+                              analysis.hasCustomEchantillon
+                                ? 'bg-gradient-to-br from-indigo-50/70 to-purple-50/50 border-indigo-200/80 shadow-xs hover:border-indigo-400'
+                                : 'bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/20 border-indigo-200/50 shadow-xs'
+                            }`}>
+                              <div className="flex items-start justify-between mb-3">
+                                {analysis.hasCustomEchantillon ? (
+                                  <span className="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1">
+                                    <span>⭐</span> {isAr ? 'تُخصم من الإنتاج • معتمد' : 'Déductible • Validé'}
+                                  </span>
+                                ) : (
+                                  <span className="px-2.5 py-1 bg-indigo-100 text-indigo-800 border border-indigo-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1">
+                                    <Clock className="w-3 h-3 animate-spin text-indigo-700" />
+                                    {isAr ? 'ورشة النماذج' : 'Atelier Prototype'}
+                                  </span>
+                                )}
 
-                       {/* 3. Interactive Wholesale Quantity Simulator */}
+                                {analysis.hasCustomEchantillon ? (
+                                  <span className="text-2xl font-black text-indigo-950">
+                                    {analysis.echantillonPrice} <span className="text-xs font-bold text-indigo-600">MAD</span>
+                                  </span>
+                                ) : (
+                                  <span className="px-3 py-1 bg-indigo-500/10 text-indigo-900 text-xs font-black rounded-lg border border-indigo-300/40 flex items-center gap-1.5">
+                                    <span>⏳</span> {isAr ? 'في انتظار تحديد تكلفة العينة' : 'En attente de chiffrage'}
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="text-sm font-black text-indigo-950 mb-1 flex items-center gap-1.5">
+                                <span>✂️</span> {isAr ? 'العينة التجريبية الأولية (Prototype)' : 'Échantillon / Prototype Physique'}
+                              </h4>
+                              <p className="text-xs text-indigo-900/80 leading-relaxed font-medium">
+                                {analysis.hasCustomEchantillon ? (
+                                  isAr 
+                                    ? 'حبة نموذجية كاملة للفحص والموافقة على القماش والفينيسيون. يُخصم هذا المبلغ بالكامل من فاتورة الإنتاج عند الاعتماد!' 
+                                    : 'Pièce prototype physique pour valider coupe et finitions. 100% déductible du montant total lors du lancement série.'
+                                ) : (
+                                  isAr 
+                                    ? 'جاري تقييم تكلفة تفصيل وخياطة العينة الأولية بالورشة. هذا المبلغ مسترجع ويُخصم بالكامل 100% من فاتورة الإنتاج عند الاعتماد.' 
+                                    : 'L\'atelier évalue actuellement le coût de confection du prototype (déductible à 100% de la commande de production).'
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 3. Interactive Wholesale Quantity Simulator */}
                         <div>
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">

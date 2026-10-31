@@ -208,6 +208,8 @@ export default function Demandes() {
   const [devisDelai, setDevisDelai] = useState<string>('7 - 10 jours ouvrables');
   const [devisReponse, setDevisReponse] = useState<string>('');
   const [devisTechDetails, setDevisTechDetails] = useState<string>('');
+  const [devisPatronagePrice, setDevisPatronagePrice] = useState<string>('');
+  const [devisPrixEchantillon, setDevisPrixEchantillon] = useState<string>('');
   const [devisProgression, setDevisProgression] = useState<'reception' | 'etude' | 'echantillon' | 'production' | 'pret'>('etude');
   const [factureCreated, setFactureCreated] = useState<{numero: string; client: string; montant: number} | null>(null);
   const [pdfProgress, setPdfProgress] = useState<'idle' | 'generating' | 'sharing' | 'done' | 'error'>('idle');
@@ -827,6 +829,10 @@ export default function Demandes() {
     setDevisTechDetails(lead.techDetails || '');
     setDevisProgression(lead.statusProgression || 'etude');
     setFabricType(lead.tissuSuggere || '');
+    let ext: any = {};
+    try { ext = JSON.parse(lead.details || '{}'); } catch(e) {}
+    setDevisPatronagePrice(lead.patronagePrice ? String(lead.patronagePrice) : ext.patronagePrice ? String(ext.patronagePrice) : '');
+    setDevisPrixEchantillon(lead.prixEchantillon ? String(lead.prixEchantillon) : ext.prixEchantillon ? String(ext.prixEchantillon) : '');
     if (lead.unitPrice) {
       setMatierePrice(String(Math.round(lead.unitPrice * 0.6)));
       setLaborPrice(String(Math.round(lead.unitPrice * 0.4)));
