@@ -2605,9 +2605,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
                        return (
                          <div key={d.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-indigo-100/80 hover:border-indigo-100">
-                           <div>
-                             {/* Photo Header */}
-                             <div className="h-56 bg-slate-900 relative overflow-hidden">
+                            <div>
+                              {/* Photo Header */}
+                              <div className="h-56 bg-slate-900 relative overflow-hidden">
                                 <LeadCardImage
                                   lead={d}
                                   leadPhotos={leadPhotos}
@@ -2620,126 +2620,150 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                   isAr={isAr}
                                 />
 
-                               {/* Top Badges */}
-                               <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10 items-center">
-                                 <span className="px-3 py-1.5 bg-slate-950/80 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg border border-white/10">
-                                   REF: #{d.id.substring(0, 8).toUpperCase()}
-                                 </span>
-                                 {isAccepted && <span className="px-3 py-1.5 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
-                                 {isRejected && <span className="px-3 py-1.5 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
-                                 {isPending && <span className="px-3 py-1.5 bg-indigo-600/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg">{isAr ? 'دراسة تقنية 📋' : 'Étude Technique 📋'}</span>}
-                               </div>
+                                {/* Top Left Status Badge */}
+                                <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-2">
+                                  {isAccepted && (
+                                    <span className="px-3 py-1.5 bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-md border border-emerald-400/30 flex items-center gap-1.5">
+                                      <CheckCircle className="w-3.5 h-3.5" />
+                                      <span>{isAr ? 'مقبول' : 'Accepté'}</span>
+                                    </span>
+                                  )}
+                                  {isRejected && (
+                                    <span className="px-3 py-1.5 bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-md border border-rose-400/30">
+                                      {isAr ? 'مرفوض ❌' : 'Refusé ❌'}
+                                    </span>
+                                  )}
+                                  {isPending && (
+                                    <span className="px-3 py-1.5 bg-indigo-600/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-md border border-indigo-400/30 flex items-center gap-1.5">
+                                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                                      <span>{isAr ? 'دراسة تقنية 📋' : 'Étude Technique 📋'}</span>
+                                    </span>
+                                  )}
+                                </div>
 
-                               {/* Top Right Action Buttons */}
-                               <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-                                 {isTestAccount && (
-                                   <button
-                                     type="button"
-                                     onClick={(e) => {
-                                       e.stopPropagation();
-                                       setAtelierQuickEditLead(d);
-                                       setQuickEditForm({
-                                         modeleReel: analysis.modeleReel,
-                                         patronagePrice: analysis.patronagePrice,
-                                         prixEchantillon: analysis.echantillonPrice,
-                                         unitPrice: analysis.unitPrice,
-                                         totalPrice: analysis.totalPrice,
-                                         tissuSuggere: analysis.tissuSuggere,
-                                         techDetails: analysis.techDetails,
-                                         delaiEstime: analysis.delaiEstime,
-                                         statusProgression: analysis.statusProgression,
-                                         reponseAtelier: analysis.reponseAtelier
-                                       });
-                                     }}
-                                     className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer backdrop-blur-sm"
-                                     title="تعديل دراسة الورشة"
-                                   >
-                                     <span>⚙️ {isAr ? 'رد الورشة' : 'Réponse Atelier'}</span>
-                                   </button>
-                                 )}
-                                 {isPending && (
-                                   <button 
-                                     onClick={(e) => {
-                                       e.stopPropagation();
-                                       setEditingDemandeId(d.id);
-                                       let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
-                                       if (d.tailles) {
-                                          (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
-                                       } else if (d.sizes) {
-                                          try {
-                                            const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
-                                            Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
-                                          } catch(e) {}
-                                       }
-                                       setNewOrderForm({
-                                         modele: d.type || '',
-                                         quantite: d.quantity?.toString() || '',
-                                         photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
-                                         details: d.details || '',
-                                         telephone: d.phone || currentUser?.telephone || '',
-                                         tailles: parsedTailles
-                                       });
-                                       setShowNewOrderModal(true);
-                                     }}
-                                     className="w-8 h-8 bg-white/90 hover:bg-white text-slate-800 rounded-xl shadow-lg flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
-                                     title="Modifier"
-                                   >
-                                     <Edit2 className="w-4 h-4" />
-                                   </button>
-                                 )}
-                                 <button 
-                                   onClick={(e) => handleDeleteDemande(d.id, e)}
-                                   className="w-8 h-8 bg-rose-500/90 hover:bg-rose-600 text-white rounded-xl shadow-lg flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
-                                   title="Supprimer"
-                                 >
-                                   <Trash2 className="w-4 h-4" />
-                                 </button>
-                               </div>
+                                {/* Top Right Reference */}
+                                <div className="absolute top-3.5 right-3.5 z-10">
+                                  <span className="px-2.5 py-1.5 bg-slate-950/75 backdrop-blur-md text-slate-300 text-[10px] font-mono font-bold tracking-wider rounded-xl border border-white/10 shadow-sm">
+                                    #{d.id.substring(0, 8).toUpperCase()}
+                                  </span>
+                                </div>
 
-                               <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/80 to-transparent flex items-end p-4">
-                                 <span className="text-white/90 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-                                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                                   {isAr ? 'تصنيع عالي الجودة' : 'Confection Premium'}
-                                 </span>
-                               </div>
-                             </div>
+                                {/* Bottom Image Overlay */}
+                                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent flex items-end p-4 pointer-events-none">
+                                  <span className="text-white/90 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                                    {isAr ? 'تصنيع عالي الجودة' : 'Confection Premium'}
+                                  </span>
+                                </div>
+                              </div>
 
-                             {/* Clean Card Body */}
-                             <div className="p-6 space-y-4 cursor-pointer" onClick={() => setSelectedDemandePage(d)}>
-                               <div>
-                                 <h3 className="text-xl font-black text-slate-900 leading-snug line-clamp-1" title={analysis.modeleReel}>
-                                   {analysis.modeleReel}
-                                 </h3>
-                                 <p className="text-xs text-slate-500 line-clamp-1 mt-1 font-medium">
-                                   {analysis.tissuSuggere}
-                                 </p>
-                               </div>
+                              {/* Clean Card Body */}
+                              <div className="p-5 space-y-3 cursor-pointer" onClick={() => setSelectedDemandePage(d)}>
+                                <div>
+                                  <h3 className="text-xl font-black text-slate-900 leading-snug line-clamp-1 group-hover:text-indigo-600 transition-colors" title={analysis.modeleReel}>
+                                    {analysis.modeleReel}
+                                  </h3>
+                                  <p className="text-xs text-slate-500 line-clamp-1 mt-1 font-medium">
+                                    {analysis.tissuSuggere}
+                                  </p>
+                                </div>
 
-                               <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
-                                 <div>
-                                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{isAr ? 'الكمية المطلوبة' : 'Quantité'}</span>
-                                   <span className="text-sm font-black text-slate-900">{analysis.qty} pcs</span>
-                                 </div>
-                                 <div className="text-right">
-                                   <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">{isAr ? 'السعر التقديري' : 'Prix Estimé'}</span>
-                                   <span className="text-sm font-black text-indigo-950">{analysis.unitPrice} MAD <span className="text-[10px] font-bold text-slate-500">/ pc</span></span>
-                                 </div>
-                               </div>
-                             </div>
-                           </div>
+                                <div className="flex items-center justify-between gap-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
+                                  <div>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{isAr ? 'الكمية المطلوبة' : 'Quantité'}</span>
+                                    <span className="text-sm font-black text-slate-900">{analysis.qty} pcs</span>
+                                  </div>
+                                  <div className={isAr ? 'text-left' : 'text-right'}>
+                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">{isAr ? 'السعر التقديري' : 'Prix Estimé'}</span>
+                                    <span className="text-sm font-black text-indigo-950">{analysis.unitPrice} MAD <span className="text-[10px] font-bold text-slate-500">/ pc</span></span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
 
-                           {/* Primary Action Button that navigates to the detailed page! */}
-                           <div className="p-6 pt-0">
-                             <button
-                               type="button"
-                               onClick={() => setSelectedDemandePage(d)}
-                               className="w-full py-4 px-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 hover:shadow-indigo-500/25 cursor-pointer group"
-                             >
-                               <FileText className="w-4 h-4 text-indigo-400 group-hover:text-white transition-colors" />
-                               <span>{isAr ? 'عرض دراسة الموديل والتسعير ←' : 'Voir la Fiche & Devis Complet →'}</span>
-                             </button>
-                           </div>
-                         </div>
+                            {/* Actions Toolbar in Footer */}
+                            <div className="p-5 pt-0 space-y-2.5">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedDemandePage(d)}
+                                className="w-full py-3.5 px-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 hover:shadow-indigo-500/25 cursor-pointer group active:scale-[0.99]"
+                              >
+                                <FileText className="w-4 h-4 text-indigo-400 group-hover:text-white transition-colors" />
+                                <span>{isAr ? 'عرض دراسة الموديل والتسعير ←' : 'Voir la Fiche & Devis Complet →'}</span>
+                              </button>
+
+                              <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                                {isTestAccount && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAtelierQuickEditLead(d);
+                                      setQuickEditForm({
+                                        modeleReel: analysis.modeleReel,
+                                        patronagePrice: analysis.patronagePrice,
+                                        prixEchantillon: analysis.echantillonPrice,
+                                        unitPrice: analysis.unitPrice,
+                                        totalPrice: analysis.totalPrice,
+                                        tissuSuggere: analysis.tissuSuggere,
+                                        techDetails: analysis.techDetails,
+                                        delaiEstime: analysis.delaiEstime,
+                                        statusProgression: analysis.statusProgression,
+                                        reponseAtelier: analysis.reponseAtelier
+                                      });
+                                    }}
+                                    className="flex-1 py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/90 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer hover:border-amber-300"
+                                    title={isAr ? 'تعديل دراسة الورشة والتسعير' : 'Réponse & Édition Atelier'}
+                                  >
+                                    <span>⚙️</span>
+                                    <span className="truncate">{isAr ? 'رد وتعديل الورشة' : 'Réponse Atelier'}</span>
+                                  </button>
+                                )}
+
+                                {isPending && (
+                                  <button 
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingDemandeId(d.id);
+                                      let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
+                                      if (d.tailles) {
+                                         (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                      } else if (d.sizes) {
+                                         try {
+                                           const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
+                                           Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                         } catch(e) {}
+                                      }
+                                      setNewOrderForm({
+                                        modele: d.type || '',
+                                        quantite: d.quantity?.toString() || '',
+                                        photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
+                                        details: d.details || '',
+                                        telephone: d.phone || currentUser?.telephone || '',
+                                        tailles: parsedTailles
+                                      });
+                                      setShowNewOrderModal(true);
+                                    }}
+                                    className={`${isTestAccount ? 'p-2' : 'flex-1 py-2 px-3'} bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200 shrink-0`}
+                                    title={isAr ? 'تعديل الطلب' : 'Modifier'}
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                    {!isTestAccount && <span>{isAr ? 'تعديل الطلب' : 'Modifier'}</span>}
+                                  </button>
+                                )}
+
+                                <button 
+                                  type="button"
+                                  onClick={(e) => handleDeleteDemande(d.id, e)}
+                                  className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-all cursor-pointer border border-rose-200/80 shrink-0"
+                                  title={isAr ? 'حذف الطلب' : 'Supprimer'}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
                        );
                      })}
                    </div>
