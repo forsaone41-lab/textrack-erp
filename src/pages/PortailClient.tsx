@@ -284,6 +284,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [sourcingCheckActive, setSourcingCheckActive] = useState<Record<string, boolean>>({});
   const [sourcingSelectedColor, setSourcingSelectedColor] = useState<Record<string, string>>({});
   const [fabricOrderSent, setFabricOrderSent] = useState<Record<string, boolean>>({});
+  const [showFullStudy, setShowFullStudy] = useState(false);
 
   const handleSendVerificationEmail = async () => {
     if (!currentUser?.email) return;
@@ -1771,7 +1772,201 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                      </div>
                    </div>
 
-                   {/* Full Page Content Container */}
+                   {/* 1. Compact Express Devis Card (Zero scroll / Lightweight) */}
+                    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/50 overflow-hidden">
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
+                        {/* Left Column: Photo & Model Header */}
+                        <div className="md:col-span-5 bg-gradient-to-br from-slate-900 to-slate-950 p-6 flex flex-col justify-between text-white relative">
+                          <div>
+                            {/* Status Chip */}
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                              <span className="px-3 py-1 bg-white/10 backdrop-blur text-white text-[10px] font-black uppercase tracking-wider rounded-lg border border-white/10">
+                                {isAccepted ? (isAr ? 'مقبول ✅' : 'Accepté ✅') : isRejected ? (isAr ? 'مرفوض ❌' : 'Refusé ❌') : (isAr ? 'دراسة تقنية معتمدة 📋' : 'Étude Technique 📋')}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {d.date ? new Date(d.date).toLocaleDateString() : ''}
+                              </span>
+                            </div>
+
+                            {/* Model Photo */}
+                            <div className="w-full h-44 rounded-2xl overflow-hidden bg-slate-800 border border-white/10 shadow-inner relative group mb-3">
+                              <LeadCardImage
+                                lead={d}
+                                leadPhotos={leadPhotos}
+                                onPhotoLoaded={handlePhotoLoaded}
+                                alt={analysis.modeleReel}
+                                dark={true}
+                                iconSize={8}
+                                isAr={isAr}
+                              />
+                            </div>
+
+                            {/* Model Name & Client */}
+                            <h2 className="text-xl md:text-2xl font-black text-white leading-tight">
+                              {analysis.modeleReel}
+                            </h2>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              {isAr ? 'الزبون :' : 'Client :'} <span className="text-slate-200 font-bold">{d.name || currentUser?.nom || 'Client'}</span>
+                            </p>
+                          </div>
+
+                          {/* Delivery delay pill */}
+                          <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                            <span className="text-slate-400 font-medium flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-amber-400" />
+                              {isAr ? 'مدة التسليم المقدرة' : 'Délai estimé'}
+                            </span>
+                            <span className="font-black text-amber-300">
+                              {analysis.delaiEstime}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right Column: Essential Devis Info */}
+                        <div className="md:col-span-7 p-6 flex flex-col justify-between space-y-4">
+                          <div className="space-y-3.5">
+                            {/* Header Title */}
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                              <div>
+                                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">
+                                  {isAr ? 'عرض السعر التقديري' : 'Devis Estimatif'}
+                                </span>
+                                <h3 className="text-lg font-black text-slate-900">
+                                  {isAr ? 'تفاصيل الموديل والتكلفة' : 'Détails & Estimation'}
+                                </h3>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                  {isAr ? 'الكمية المطلوبة' : 'Quantité'}
+                                </span>
+                                <span className="text-base font-black text-slate-900">
+                                  {currentQty} pcs
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* 1. Fabric Type */}
+                            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                                <Layers className="w-4 h-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                  {isAr ? 'نوع الثوب المقترح للموديل' : 'Tissu Conseillé'}
+                                </span>
+                                <p className="text-sm font-black text-slate-900 truncate" title={analysis.tissuSuggere}>
+                                  {analysis.tissuSuggere}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* 2. Estimated Price Box */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-100">
+                                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider block mb-0.5">
+                                  {isAr ? 'سعر القطعة التقديري' : 'Prix Unitaire Estimé'}
+                                </span>
+                                <div className="flex items-baseline gap-1">
+                                  <span className="text-2xl font-black text-indigo-950">{activeUnitPrice}</span>
+                                  <span className="text-xs font-black text-indigo-600">MAD <span className="text-[10px] font-normal text-slate-500">/ pc</span></span>
+                                </div>
+                              </div>
+
+                              <div className="p-3 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-sm">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
+                                  {isAr ? 'المجموع التقديري' : 'Total Estimé'}
+                                </span>
+                                <div className="flex items-baseline gap-1">
+                                  <span className="text-2xl font-black text-white">{activeTotalPrice.toLocaleString()}</span>
+                                  <span className="text-xs font-black text-indigo-300">MAD</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 3. Pre-production / Prototype status */}
+                            {(analysis.hasCustomPatronage || analysis.hasCustomEchantillon) ? (
+                              <div className="flex items-center justify-between text-xs p-2.5 bg-amber-50 rounded-xl border border-amber-200/80 text-amber-900">
+                                <span className="font-bold flex items-center gap-1.5">
+                                  <Scissors className="w-3.5 h-3.5 text-amber-600" />
+                                  {isAr ? 'الباترون والعينة الأولية:' : 'Patronage & Échantillon :'}
+                                </span>
+                                <span className="font-black">
+                                  {analysis.patronagePrice + analysis.echantillonPrice} MAD
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between text-xs p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-slate-600">
+                                <span className="font-medium flex items-center gap-1.5">
+                                  <Scissors className="w-3.5 h-3.5 text-slate-400" />
+                                  {isAr ? 'الباترون والعينة:' : 'Patronage & Échantillon :'}
+                                </span>
+                                <span className="text-slate-500 font-bold">
+                                  {isAr ? '⏳ قيد التقييم من طرف الموديلست' : 'À déterminer par le modéliste'}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* 4. Atelier notes / Tech details brief if present */}
+                            {analysis.techDetails && analysis.techDetails !== 'دراسة فنية متكاملة' && (
+                              <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 line-clamp-2">
+                                <span className="font-bold text-slate-800">{isAr ? 'ملاحظة الورشة: ' : 'Note atelier : '}</span>
+                                {analysis.techDetails}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Instant Action: WhatsApp Chat Button */}
+                          <div className="pt-2 border-t border-slate-100 space-y-2">
+                            <a
+                              href={waUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 hover:shadow-xl cursor-pointer"
+                            >
+                              <MessageCircle className="w-5 h-5" />
+                              <span>{isAr ? 'محادثة الورشة وتأكيد الدوفيز عبر واتساب' : 'Discuter & Valider le Devis sur WhatsApp'}</span>
+                            </a>
+
+                            <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedDemandePage(null);
+                                  setVirementCommandeId(d.id);
+                                  setActiveTab('payments');
+                                }}
+                                className="text-indigo-600 hover:text-indigo-700 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                              >
+                                <CreditCard className="w-3.5 h-3.5" />
+                                <span>{isAr ? '💳 أداء التسبيق' : 'Payer Acompte'}</span>
+                              </button>
+                              <span className="flex items-center gap-1 text-emerald-600 font-bold">
+                                <Sparkles className="w-3 h-3 text-emerald-500" />
+                                {isAr ? 'ورشة BEYA Creative معتمدة' : 'Atelier BEYA Certifié'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Expandable Study Toggle */}
+                    <div className="text-center pt-1 pb-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowFullStudy(!showFullStudy)}
+                        className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all shadow-xs cursor-pointer"
+                      >
+                        <span>{showFullStudy ? '▲' : '▼'}</span>
+                        <span>{showFullStudy 
+                          ? (isAr ? 'إخفاء الدراسة الفنية الموسعة' : 'Masquer l\'étude détaillée') 
+                          : (isAr ? 'عرض الدراسة الفنية الموسعة، الموردين وتتبع المراحل' : 'Voir l\'étude technique complète & fournisseurs')}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Extended Technical Study Container (only when toggled) */}
+                    {showFullStudy && (
                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
                      {/* Hero Presentation Header */}
                      <div className="p-6 md:p-8 bg-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -2467,6 +2662,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                        </a>
                      </div>
                    </div>
+                    )}
                  </div>
                );
              }
