@@ -1453,14 +1453,13 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     if (leadPhoto) {
       lead = { ...lead, photo: leadPhoto };
       setImage(leadPhoto);
+      startAnalysis(leadPhoto, lead.type || lead.name);
     } else {
       setImage(null);
     }
 
     setSelectedLead(lead);
     setAnalysisResult(null);
-
-    setAnalysisResult(null); // Keep null until user clicks Analyze!
     setPiecesMesures([]);
     setCustomMesures([]);
     setActivePieceIdx(0);
@@ -1470,8 +1469,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       {
         role: 'ai',
         text: isAr
-          ? `📋 تم اختيار موديل [ ${lead.name || ''} ] — (${lead.type}). الصورة محملة وجاهزة للتحليل الفوري عبر زر "بدء تحليل الموديل بالذكاء الاصطناعي".`
-          : `📋 Modèle prospect [ ${lead.name || ''} ] — (${lead.type}) sélectionné. Cliquez sur "Lancer l'Analyse IA du Modèle" pour générer la fiche technique.`
+          ? `📋 تم اختيار موديل [ ${lead.name || ''} ] — (${lead.type}). جاري التحليل الفوري للموديل عبر محرك الذكاء الاصطناعي...`
+          : `📋 Modèle prospect [ ${lead.name || ''} ] — (${lead.type}) sélectionné. Analyse IA en cours...`
       }
     ]);
 
@@ -1979,6 +1978,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     setPiecesMesures([]);
     setCustomMesures([]);
     setActivePieceIdx(0);
+    setAnalyzing(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setChat([
       {
         role: 'ai',
@@ -1987,42 +1988,52 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
           : 'Bienvenue ! Je suis votre assistant expert en confection. Uploadez la photo de votre nouveau modèle pour une analyse précise des mesures, métrage et coûts.'
       }
     ]);
-    setActiveTab('photo');
+    setActiveTab('fiche');
   };
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageFileName(file.name || '');
+    const fName = file.name || '';
+    setImageFileName(fName);
     setSelectedLead(null);
     setAnalysisResult(null);
     setPiecesMesures([]);
     setCustomMesures([]);
     setActivePieceIdx(0);
+    setActiveTab('fiche');
+    setAnalyzing(true);
     // Clear old chat memory completely on new image upload
     setChat([
       {
         role: 'ai',
         text: isAr
-          ? `📸 تم تحميل صورة جديدة [ ${file.name} ]. اضغط على "تحليل الموديل بالذكاء الاصطناعي" لبدء التحليل الفوري.`
-          : `📸 Nouvelle image chargée [ ${file.name} ]. Cliquez sur "Analyser le modèle" pour démarrer l'analyse technique.`
+          ? `📸 تم تحميل صورة جديدة [ ${fName} ]. جاري الفحص والتحليل البصري المباشر للموديل بالذكاء الاصطناعي...`
+          : `📸 Nouvelle image chargée [ ${fName} ]. Analyse IA en cours...`
       }
     ]);
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setImage(ev.target?.result as string);
-      setActiveTab('photo');
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) {
+        setImage(dataUrl);
+        // AUTOMATICALLY TRIGGER LIVE GEMINI ANALYSIS ON PC UPLOAD
+        startAnalysis(dataUrl, fName);
+      }
     };
     reader.readAsDataURL(file);
     e.target.value = '';
   };
 
-  const startAnalysis = async () => {
-    if (!image) return;
+  const startAnalysis = async (imgOverride?: string, fileNameOverride?: string) => {
+    const targetImage = imgOverride || image;
+    if (!targetImage) return;
+    const targetFileName = fileNameOverride !== undefined ? fileNameOverride : imageFileName;
     setAnalyzing(true);
     setActivePieceIdx(0);
+    setActiveTab('fiche');
 
-    const visualHint = await detectGarmentFromImageAsync(image, imageFileName);
+    const visualHint = await detectGarmentFromImageAsync(targetImage, targetFileName);
 
     const apiKey = getActiveApiKey();
     // Isolate new analysis: never contaminate new model analysis with old user chats
@@ -2056,15 +2067,15 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       let base64Data = '';
       let mimeType = 'image/jpeg';
 
-      if (image.startsWith('data:')) {
-        const match = image.match(/^data:([^;]+);base64,(.+)$/);
+      if (targetImage.startsWith('data:')) {
+        const match = targetImage.match(/^data:([^;]+);base64,(.+)$/);
         if (match) {
           mimeType = match[1];
           base64Data = match[2];
         }
-      } else if (image.startsWith('http') || image.startsWith('blob:')) {
+      } else if (targetImage.startsWith('http') || targetImage.startsWith('blob:')) {
         try {
-          const resp = await fetch(image);
+          const resp = await fetch(targetImage);
           const blob = await resp.blob();
           mimeType = blob.type || 'image/jpeg';
           const buf = await blob.arrayBuffer();
@@ -2166,8 +2177,8 @@ Consignes impératives pour les pièces du modèle :
 Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
       const candidateModels = [
-        'gemini-flash-latest',
         'gemini-2.5-flash',
+        'gemini-flash-latest',
         'gemini-2.5-pro'
       ];
 
@@ -3741,7 +3752,7 @@ ${userMessage}
 
       const systemInstructionText = "أنت خبير نسيج وهندسة إنتاج وتسعير في مصنع مغربي (BEYA Expert). تكلم بالدارجة المغربية بأسلوب احترافي مباشر ومفيد جداً. أجب المستخدم فوراً وبشكل مباشر وبدون أي لف أو دوران أو إحالة إلى أزرار أخرى! إذا سأل عن التكلفة أو الثمن أو 'شحال كتقام البياسة'، احسب له التكلفة فوراً بالأرقام المحددة والمفصلة: ثمن الثوب، اللوازم، اليد العاملة، التكلفة الإجمالية للقطعة (Prix de revient)، وسعر الجملة وسعر التقسيط وتكلفة 500 أو 1000 بياسة. إذا سأل عن الثوب، الوقت، الفصالة، أو مراحل الخياطة، أجب فوراً بأرقام ومعلومات تقنية عملية.";
 
-      const candidateModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-pro'];
+      const candidateModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro'];
       let data: any = null;
 
       for (const model of candidateModels) {
@@ -4783,44 +4794,52 @@ ${userMessage}
                 </>
               ) : image ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6 md:p-12 animate-in fade-in duration-300">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-indigo-500/10 border border-indigo-200/60 flex items-center justify-center text-indigo-600 mb-5 shadow-sm">
-                    <Sparkles className="w-10 h-10 text-indigo-600" />
-                  </div>
-                  
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-black rounded-full mb-3 border border-indigo-100">
-                    <Check className="w-3.5 h-3.5" />
-                    <span>{isAr ? 'الصورة محملة وجاهزة للتحليل' : 'Image chargée & prête'}</span>
-                  </div>
+                  {analyzing ? (
+                    <div className="space-y-4 max-w-md mx-auto">
+                      <div className="relative w-24 h-24 mx-auto rounded-3xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-2xl shadow-indigo-600/40 animate-pulse">
+                        <RefreshCw className="w-12 h-12 animate-spin text-white" />
+                      </div>
+                      <h3 className="text-xl font-black text-slate-900">
+                        {isAr ? '🧠 جاري التحليل البصري الذكي للموديل...' : '🧠 Analyse IA Vision en cours...'}
+                      </h3>
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                        {isAr 
+                          ? 'يقوم محرك Google Gemini 2.5 Flash الآن بفحص الصورة، تحديد نوع الموديل الحقيقي بدقة، حساب استهلاك القماش، واقتراح لاغام ديال الخياطة.'
+                          : 'Google Gemini 2.5 Flash analyse l\'image en direct pour identifier le vêtement, métrage exact et coûts de confection.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-indigo-500/10 border border-indigo-200/60 flex items-center justify-center text-indigo-600 mb-5 shadow-sm">
+                        <Sparkles className="w-10 h-10 text-indigo-600" />
+                      </div>
+                      
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-black rounded-full mb-3 border border-indigo-100">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{isAr ? 'الصورة محملة وجاهزة للتحليل' : 'Image chargée & prête'}</span>
+                      </div>
 
-                  <h3 className="text-xl font-black text-slate-900 mb-2">
-                    {selectedLead ? selectedLead.type : (isAr ? 'موديل جاهز للتحليل الفني' : 'Modèle Prêt pour Analyse')}
-                  </h3>
+                      <h3 className="text-xl font-black text-slate-900 mb-2">
+                        {selectedLead ? selectedLead.type : (isAr ? 'موديل جاهز للتحليل الفني' : 'Modèle Prêt pour Analyse')}
+                      </h3>
 
-                  <p className="text-xs text-slate-500 max-w-md mb-8 leading-relaxed font-medium">
-                    {isAr 
-                      ? 'اضغط على الزر أسفله لبدء التحليل البصري الذكي للصورة وتحديد نوع القماش، كلفة الفصالة والخياطة، والمقاسات بدقة.' 
-                      : 'Cliquez sur le bouton ci-dessous pour lancer l\'analyse IA réelle par vision et calculer le coût de confection et tissu exact.'}
-                  </p>
+                      <p className="text-xs text-slate-500 max-w-md mb-8 leading-relaxed font-medium">
+                        {isAr 
+                          ? 'اضغط على الزر أسفله لبدء التحليل البصري الذكي للصورة وتحديد نوع القماش، كلفة الفصالة والخياطة، والمقاسات بدقة.' 
+                          : 'Cliquez sur le bouton ci-dessous pour lancer l\'analyse IA réelle par vision et calculer le coût de confection et tissu exact.'}
+                      </p>
 
-                  {/* THE ONE AND ONLY ANALYSIS BUTTON */}
-                  <button
-                    type="button"
-                    onClick={startAnalysis}
-                    disabled={analyzing}
-                    className="px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl font-black text-sm uppercase shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50"
-                  >
-                    {analyzing ? (
-                      <>
-                        <RefreshCw className="w-5 h-5 animate-spin" />
-                        <span>{isAr ? 'جاري تحليل الموديل بالذكاء الاصطناعي...' : 'Analyse IA en cours...'}</span>
-                      </>
-                    ) : (
-                      <>
+                      {/* THE ONE AND ONLY ANALYSIS BUTTON */}
+                      <button
+                        type="button"
+                        onClick={() => startAnalysis()}
+                        className="px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl font-black text-sm uppercase shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                      >
                         <Sparkles className="w-5 h-5 text-amber-300" />
                         <span>{isAr ? '🧠 بدء تحليل الموديل بالذكاء الاصطناعي' : '🧠 Lancer l\'Analyse IA du Modèle'}</span>
-                      </>
-                    )}
-                  </button>
+                      </button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-400">
