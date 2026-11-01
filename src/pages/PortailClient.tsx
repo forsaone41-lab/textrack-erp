@@ -310,10 +310,10 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       if (raw) saved = JSON.parse(raw);
     } catch {}
     return {
-      role: (saved?.role || currentUser?.networkRole || 'brand') as 'brand' | 'supplier' | 'modeliste' | 'imprimeur',
-      brandName: saved?.brandName || currentUser?.brandName || (currentUser as any)?.store_name || (currentUser as any)?.storeName || '',
+      role: 'brand' as 'brand' | 'supplier' | 'modeliste' | 'imprimeur',
+      brandName: saved?.brandName || currentUser?.brandName || (currentUser as any)?.store_name || (currentUser as any)?.storeName || currentUser?.nom || 'Beya Brand',
       city: saved?.city || currentUser?.ville || 'الدار البيضاء (Casablanca)',
-      phone: saved?.phone || currentUser?.telephone || '',
+      phone: saved?.phone || currentUser?.telephone || '0600000000',
       bio: saved?.bio || currentUser?.networkBio || ''
     };
   });
@@ -328,30 +328,24 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
   const handleSaveNetworkProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!networkProfileForm.brandName.trim()) {
-      alert(isAr ? 'يرجى إدخال اسم البراند أو المحل التجاري' : 'Veuillez saisir le nom de marque ou entreprise');
-      return;
-    }
-    if (!networkProfileForm.phone.trim()) {
-      alert(isAr ? 'يرجى إدخال رقم الواتساب المباشر للتواصل' : 'Veuillez saisir le numéro WhatsApp');
-      return;
-    }
+    const finalBrandName = networkProfileForm.brandName.trim() || currentUser?.nom || 'Beya Client';
+    const finalPhone = networkProfileForm.phone.trim() || currentUser?.telephone || '0600000000';
     setSavingNetworkProfile(true);
     try {
       const emailKey = (currentUser?.email || '').toLowerCase().trim();
       const updated: User = {
         ...currentUser!,
-        brandName: networkProfileForm.brandName.trim(),
-        telephone: networkProfileForm.phone.trim(),
-        ville: networkProfileForm.city.trim(),
-        networkRole: networkProfileForm.role,
+        brandName: finalBrandName,
+        telephone: finalPhone,
+        ville: networkProfileForm.city.trim() || 'الدار البيضاء (Casablanca)',
+        networkRole: 'brand',
         networkBio: networkProfileForm.bio.trim(),
         networkProfileCompleted: true
       };
       localStorage.setItem('textrack_auth', JSON.stringify(updated));
       if (emailKey) {
         localStorage.setItem(`beya_network_completed_${emailKey}`, 'true');
-        localStorage.setItem(`beya_network_profile_${emailKey}`, JSON.stringify(networkProfileForm));
+        localStorage.setItem(`beya_network_profile_${emailKey}`, JSON.stringify(updated));
       }
       await saveRecord('users', updated, true).catch(() => {});
       setShowEditNetworkProfileModal(false);
@@ -5209,44 +5203,18 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                       <Users className="w-10 h-10" />
                     </div>
                     <span className="px-4 py-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-xs font-black uppercase tracking-widest inline-block mb-3">
-                      {isAr ? 'عضوية حصرية VIP' : 'Accès Exclusif VIP'}
+                      {isAr ? 'عضوية الزبناء والبراندات VIP' : 'Espace Clients & Marques VIP'}
                     </span>
                     <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-3">
-                      {isAr ? 'مرحباً بك في BEYA NETWORK 🌐' : 'Bienvenue sur BEYA NETWORK 🌐'}
+                      {isAr ? 'طلب تفعيل حسابك في BEYA NETWORK 🌐' : 'Activation de votre accès BEYA NETWORK 🌐'}
                     </h2>
-                    <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-8 max-w-lg mx-auto">
+                    <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-6 max-w-lg mx-auto">
                       {isAr 
-                        ? 'الملتقى الحصري لرواد الموضة، موردي الأقمشة، والمطابع بالمغرب. يرجى إكمال ملفك التعريفي لتفعيل عضويتك وفتح الوصول إلى دليل الموردين المعتمدين والمجتمع.'
-                        : 'Le hub exclusif des créateurs de marques, fournisseurs de tissus et ateliers au Maroc. Complétez votre profil pour débloquer l\'accès.'}
+                        ? 'بصفتك زبوناً في BEYA، تتيح لك شبكة BEYA NETWORK الوصول الحصري إلى دليل الموردين المعتمدين للأقمشة والمطابع، والمشاركة في عروض الشراء المشترك بأسعار الجملة، ومجتمع رواد الموضة.'
+                        : 'En tant que client BEYA, accédez au réseau exclusif des fournisseurs de tissus agréés, ateliers d\'impression et achats groupés.'}
                     </p>
 
                     <form onSubmit={handleSaveNetworkProfile} className="space-y-4 text-right" dir={isAr ? 'rtl' : 'ltr'}>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-300 mb-1.5">
-                          {isAr ? 'صفة العضوية في المنصة *' : 'Votre rôle dans le réseau *'}
-                        </label>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          {[
-                            { id: 'brand', label: isAr ? '🏷️ صاحب براند / علامة' : '🏷️ Créateur de marque' },
-                            { id: 'supplier', label: isAr ? '🧵 مورد أقمشة ومواد' : '🧵 Fournisseur tissus' },
-                            { id: 'modeliste', label: isAr ? '📐 مصمم وموديلست' : '📐 Modéliste / Patron' },
-                            { id: 'imprimeur', label: isAr ? '🖨️ ورشة طباعة وتطريز' : '🖨️ Impression / Sérigraphie' },
-                          ].map(opt => (
-                            <button
-                              key={opt.id}
-                              type="button"
-                              onClick={() => setNetworkProfileForm(prev => ({ ...prev, role: opt.id as any }))}
-                              className={`p-3 rounded-2xl font-bold border transition-all text-center cursor-pointer ${
-                                networkProfileForm.role === opt.id
-                                  ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-600/30'
-                                  : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -5346,9 +5314,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                           </span>
                         </div>
                         <p className="text-xs text-slate-300 font-medium mt-1">
-                          📍 {networkProfileForm.city} &bull; {networkProfileForm.role === 'brand' ? (isAr ? '🏷️ صاحب براند' : '🏷️ Marque') :
-                                                             networkProfileForm.role === 'supplier' ? (isAr ? '🧵 مورد أقمشة' : '🧵 Fournisseur') :
-                                                             networkProfileForm.role === 'modeliste' ? (isAr ? '📐 مصمم وموديلست' : '📐 Modéliste') : (isAr ? '🖨️ ورشة طباعة' : '🖨️ Imprimeur')}
+                          📍 {networkProfileForm.city} &bull; {isAr ? '🏷️ علامة تجارية / زبون BEYA' : '🏷️ Marque / Client'}
                           {networkProfileForm.bio && ` &bull; ${networkProfileForm.bio}`}
                         </p>
                       </div>
@@ -6465,20 +6431,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
             </div>
 
             <form onSubmit={handleSaveNetworkProfile} className="p-6 space-y-4 text-right" dir={isAr ? 'rtl' : 'ltr'}>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  {isAr ? 'صفة العضوية' : 'Rôle'}
-                </label>
-                <select
-                  value={networkProfileForm.role}
-                  onChange={(e) => setNetworkProfileForm(prev => ({ ...prev, role: e.target.value as any }))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-600"
-                >
-                  <option value="brand">{isAr ? '🏷️ صاحب براند / علامة ملابس' : '🏷️ Créateur de marque'}</option>
-                  <option value="supplier">{isAr ? '🧵 مورد أقمشة ومواد أولية' : '🧵 Fournisseur de tissus'}</option>
-                  <option value="modeliste">{isAr ? '📐 مصمم وموديلست' : '📐 Modéliste'}</option>
-                  <option value="imprimeur">{isAr ? '🖨️ ورشة طباعة وتطريز' : '🖨️ Atelier d\'impression'}</option>
-                </select>
+              <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex items-center justify-between text-xs">
+                <span className="font-bold text-slate-600">{isAr ? 'نوع العضوية:' : 'Type de compte :'}</span>
+                <span className="font-black text-indigo-700 bg-white px-3 py-1 rounded-xl shadow-xs">
+                  {isAr ? '🏷️ صاحب علامة تجارية / زبون BEYA' : '🏷️ Marque / Client'}
+                </span>
               </div>
 
               <div>
