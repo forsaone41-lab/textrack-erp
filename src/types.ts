@@ -1545,29 +1545,84 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'> & { id
     status: (lead as any).status || 'new',
     photoCount: lead.photos?.length || (lead.photo ? 1 : 0)
   };
-  
+
+  // Safely encode any atelier / AI calculation metadata into details column so schema never fails
+  let baseDetails = newLead.details || '';
+  if (typeof baseDetails === 'string') {
+    baseDetails = baseDetails.replace('| COM_UNLOCK:true', '').split('| AI_NOTES:')[0].split('| ATELIER_DEVIS:')[0];
+  } else {
+    baseDetails = '';
+  }
+
+  const atelierData: any = {};
+  if (newLead.modeleReel) atelierData.modeleReel = newLead.modeleReel;
+  if (newLead.unitPrice) atelierData.unitPrice = Number(newLead.unitPrice);
+  if (newLead.totalPrice) atelierData.totalPrice = Number(newLead.totalPrice);
+  if (newLead.tissuSuggere) atelierData.tissuSuggere = newLead.tissuSuggere;
+  if (newLead.techDetails) atelierData.techDetails = newLead.techDetails;
+  if (newLead.delaiEstime) atelierData.delaiEstime = newLead.delaiEstime;
+  if (newLead.statusProgression) atelierData.statusProgression = newLead.statusProgression;
+  if (newLead.reponseAtelier) atelierData.reponseAtelier = newLead.reponseAtelier;
+  if (newLead.reponseAtelierDate) atelierData.reponseAtelierDate = newLead.reponseAtelierDate;
+  if ((newLead as any).patronagePrice) atelierData.patronagePrice = Number((newLead as any).patronagePrice);
+  if ((newLead as any).prixEchantillon) atelierData.prixEchantillon = Number((newLead as any).prixEchantillon);
+
+  if ((newLead as any).commercialUnlocked) {
+    baseDetails += '| COM_UNLOCK:true';
+  }
+  if ((newLead as any).aiNotes) {
+    baseDetails += '| AI_NOTES:' + (newLead as any).aiNotes;
+  }
+  if (Object.keys(atelierData).length > 0) {
+    baseDetails += '| ATELIER_DEVIS:' + JSON.stringify(atelierData);
+  }
+
+  newLead.details = baseDetails;
+
+  // Supabase Payload: strictly exclude non-schema fields to guarantee schema cache compatibility
+  const supaPayload: any = { ...newLead };
+  if (supaPayload.unitPrice && (!supaPayload.crmPrice || supaPayload.crmPrice === 0)) {
+    supaPayload.crmPrice = Number(supaPayload.unitPrice);
+  }
+
+  const nonSchemaCols = [
+    'aiNotes', 'commercialUnlocked', 'modeleReel', 'unitPrice', 'totalPrice',
+    'tissuSuggere', 'techDetails', 'delaiEstime', 'statusProgression',
+    'reponseAtelier', 'reponseAtelierDate', 'patronagePrice', 'prixEchantillon'
+  ];
+  nonSchemaCols.forEach(col => delete supaPayload[col]);
+
   // Save to Supabase (primary) - Use pure INSERT for public users to respect RLS
-  let { error } = await supabase.from('leads').insert(newLead);
+  let { error } = await supabase.from('leads').insert(supaPayload);
   if (isJwtExpiredError(error)) {
     console.warn('[saveLead] JWT expired, recovering session and retrying insert...');
     await recoverExpiredJwt();
-    const retry = await supabase.from('leads').insert(newLead);
+    const retry = await supabase.from('leads').insert(supaPayload);
     error = retry.error;
   }
 
   if (error) {
     const errMsg = error.message.toLowerCase();
     if (errMsg.includes('column') || errMsg.includes('not find') || errMsg.includes('schema cache')) {
-      const fallbackLead = { ...newLead as any };
-      const newCols = ['photo', 'photos', 'photoCount', 'tailles', 'aiNotes', 'adresse', 'notes', 'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority', 'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy'];
-      newCols.forEach(col => delete fallbackLead[col]);
+      const fallbackLead = { ...supaPayload };
+      const fallbackCols = [
+        'photo', 'photos', 'photoCount', 'tailles', 'aiNotes', 'adresse', 'notes',
+        'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice',
+        'crmPriceConfirmed', 'crmPriority', 'preuveClient', 'annulationRaison',
+        'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy',
+        'delaiEstime', 'modeleReel', 'tissuSuggere', 'techDetails', 'reponseAtelier',
+        'reponseAtelierDate', 'patronagePrice', 'unitPrice', 'totalPrice', 'statusProgression'
+      ];
+      fallbackCols.forEach(col => delete fallbackLead[col]);
       let { error: retryError } = await supabase.from('leads').insert(fallbackLead);
       if (isJwtExpiredError(retryError)) {
         await recoverExpiredJwt();
         const secondRetry = await supabase.from('leads').insert(fallbackLead);
         retryError = secondRetry.error;
       }
-      if (retryError) throw retryError;
+      if (retryError) {
+        console.warn('Fallback insert lead warning (saved locally):', retryError.message);
+      }
     } else {
       console.error("Erreur d'insertion lead:", error);
       throw error;
@@ -1734,6 +1789,8 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     if (payload.statusProgression) atelierData.statusProgression = payload.statusProgression;
     if (payload.reponseAtelier) atelierData.reponseAtelier = payload.reponseAtelier;
     if (payload.reponseAtelierDate) atelierData.reponseAtelierDate = payload.reponseAtelierDate;
+    if (payload.patronagePrice) atelierData.patronagePrice = Number(payload.patronagePrice);
+    if (payload.prixEchantillon) atelierData.prixEchantillon = Number(payload.prixEchantillon);
 
     if (Object.keys(atelierData).length > 0) {
       baseDetails += '| ATELIER_DEVIS:' + JSON.stringify(atelierData);
@@ -1754,6 +1811,8 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     delete payload.statusProgression;
     delete payload.reponseAtelier;
     delete payload.reponseAtelierDate;
+    delete payload.patronagePrice;
+    delete payload.prixEchantillon;
   }
 
   try {

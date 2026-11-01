@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
@@ -1258,7 +1258,16 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   };
 
   const reanalyzeDemandeWithAI = async (lead: Lead) => {
-    const photo = lead.photo || (lead.photos && lead.photos[0]) || leadPhotos[lead.id];
+    let photo = lead.photo || (lead.photos && lead.photos[0]) || leadPhotos[lead.id];
+    if (!photo) {
+      try {
+        const loaded = await loadLeadPhoto(lead.id);
+        if (loaded) {
+          photo = loaded;
+          handlePhotoLoaded(lead.id, loaded);
+        }
+      } catch (e) {}
+    }
     if (!photo) {
       alert(isAr ? 'المرجو إضافة صورة للموديل أولاً لتشغيل التحليل بالذكاء الاصطناعي' : 'Veuillez ajouter une photo pour lancer l\'analyse IA');
       return;
@@ -1272,8 +1281,28 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       });
 
       if (aiResult) {
+        let extDetails: any = {};
+        try { extDetails = JSON.parse(lead.details?.split('| ATELIER_DEVIS:')[0] || '{}'); } catch(e) {}
+        extDetails.patronagePrice = aiResult.patronagePrice;
+        extDetails.prixEchantillon = aiResult.prixEchantillon;
+        extDetails.tissuConso = aiResult.tissuConso;
+        extDetails.prixMetreEstime = aiResult.prixMetreEstime;
+
+        const devisPayload = {
+          modeleReel: aiResult.modeleReel || lead.modeleReel,
+          unitPrice: aiResult.unitPrice || lead.unitPrice,
+          totalPrice: (aiResult.unitPrice || 65) * (Number(lead.quantity) || 10),
+          tissuSuggere: aiResult.tissuSuggere || lead.tissuSuggere,
+          techDetails: aiResult.techDetails || lead.techDetails,
+          delaiEstime: aiResult.delaiEstime || lead.delaiEstime,
+          statusProgression: lead.statusProgression || 'etude',
+          reponseAtelier: aiResult.reponseAtelier || lead.reponseAtelier,
+          reponseAtelierDate: new Date().toISOString()
+        };
+
         const updatedLead: Lead = {
           ...lead,
+          details: `${JSON.stringify(extDetails)}| ATELIER_DEVIS:${JSON.stringify(devisPayload)}`,
           modeleReel: aiResult.modeleReel || lead.modeleReel,
           tissuSuggere: aiResult.tissuSuggere || lead.tissuSuggere,
           unitPrice: aiResult.unitPrice || lead.unitPrice,
@@ -1288,7 +1317,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         await saveRecord('leads', updatedLead);
         setMesDemandes(prev => prev.map(m => m.id === lead.id ? updatedLead : m));
         setSelectedDemandePage(updatedLead);
-        alert(isAr ? 'تم تحليل الموديل بالذكاء الاصطناعي بنجاح وتحديث الأسعار التقديرية ونوع الثوب بدقة!' : 'Modèle analysé avec succès par l\'IA ! Prix et tissu mis à jour.');
+        alert(isAr ? 'تم تحليل الموديل وتدقيق الأسعار والأقمشة بالذكاء الاصطناعي بنجاح!' : 'Modèle analysé avec succès par l\'IA ! Prix et tissu mis à jour.');
       } else {
         alert(isAr ? 'لم نتمكن من تحليل الصورة. تأكد من صحة مفتاح Gemini API.' : 'Échec de l\'analyse. Vérifiez votre clé Gemini API.');
       }
@@ -1480,6 +1509,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     let defaultEchantillon = 350;
     let defaultTissuConso = 1.85;
     let defaultTissuPrixKg = 68;
+    let defaultPrixMetre = 40;
+    let defaultAccessoriesCost = 15;
+    let defaultPrixConfection = 65;
+    let defaultTissuMarche = isAr ? 'سوق درب عمر / القريعة (الدار البيضاء)' : 'Marché de gros Derb Omar';
 
     if (isTracksuit) {
       defaultModele = isAr ? 'طقم بدلة رياضية (Ensemble Survêtement Veste Zippée + Pantalon)' : 'Ensemble Survêtement Veste Zippée + Pantalon (2 Pièces)';
@@ -1491,6 +1524,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultEchantillon = 450;
       defaultTissuConso = 2.85;
       defaultTissuPrixKg = 68;
+      defaultPrixMetre = 40;
+      defaultAccessoriesCost = 18;
+      defaultPrixConfection = 95;
+      defaultTissuMarche = isAr ? 'سوق درب عمر (مولطون 300g قطن بوليستر)' : 'Marché Derb Omar (Molleton 300g)';
       defaultReponse = isAr
         ? 'تمت دراسة موديل البدلة الرياضية (2 قطع): ثوب المولطون 300g مع السحاب والشرائط الجانبية تم حسابهما بدقة. السعر (135 درهم) يشمل الطقم كاملاً (الفوق والسروال). جاهزون لإطلاق العينة الأولية فور تأكيدكم.'
         : "Modèle Ensemble Survêtement (2 pièces) étudié par l'atelier : Molleton 300g avec zip et bandes latérales calculés avec précision. Le tarif (135 MAD) comprend l'ensemble complet veste + pantalon. Prototype prêt à lancer.";
@@ -1504,6 +1541,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultEchantillon = 350;
       defaultTissuConso = 1.85;
       defaultTissuPrixKg = 68;
+      defaultPrixMetre = 38;
+      defaultAccessoriesCost = 15;
+      defaultPrixConfection = 55;
+      defaultTissuMarche = isAr ? 'سوق درب عمر / ليساسفة (مولطون 320g)' : 'Marché Derb Omar (Molleton 320g)';
       defaultReponse = isAr
         ? 'موديل الهودي تم تحليله بالكامل: ثوب المولطون 320g ممتاز لهذا التصميم مع طباعة الصدر. العينة التقنية جاهزة للإطلاق فور التأكيد.'
         : 'Modèle Hoodie analysé par notre atelier : tissu Molleton 320g validé avec marquage poitrine. Prototype prêt à lancer.';
@@ -1517,6 +1558,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultEchantillon = 250;
       defaultTissuConso = 1.15;
       defaultTissuPrixKg = 72;
+      defaultPrixMetre = 28;
+      defaultAccessoriesCost = 8;
+      defaultPrixConfection = 28;
+      defaultTissuMarche = isAr ? 'سوق درب عمر (جيرسي 100% قطن ممشط)' : 'Marché Derb Omar (Jersey 100% Coton)';
       defaultReponse = isAr
         ? 'تمت دراسة موديل التيشيرت: ثوب الجيرسي 100% قطن ممشط عالي الجودة، جاهز للخياطة والطباعة.'
         : 'Modèle T-shirt analysé : jersey 100% coton peigné de qualité supérieure, prêt pour confection.';
@@ -1530,6 +1575,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultEchantillon = 280;
       defaultTissuConso = 1.30;
       defaultTissuPrixKg = 70;
+      defaultPrixMetre = 34;
+      defaultAccessoriesCost = 12;
+      defaultPrixConfection = 38;
+      defaultTissuMarche = isAr ? 'سوق درب عمر (بيكي 100% قطن)' : 'Marché Derb Omar (Piqué)';
     } else if (isPants) {
       defaultModele = isAr ? 'سروال جوغينغ كاجوال' : 'Pantalon Jogging / Survêtement Confort';
       defaultTissu = isAr ? 'مولطون قطن 300 غرام' : 'Molleton Coton 300g';
@@ -1540,6 +1589,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultEchantillon = 320;
       defaultTissuConso = 1.45;
       defaultTissuPrixKg = 68;
+      defaultPrixMetre = 38;
+      defaultAccessoriesCost = 14;
+      defaultPrixConfection = 48;
+      defaultTissuMarche = isAr ? 'سوق درب عمر (مولطون قطن)' : 'Marché Derb Omar';
     } else if (isVeste) {
       defaultModele = isAr ? 'جاكيت رياضية تقنية بسحاب (Veste Sport Coupe-Vent Zippée)' : 'Veste Sport Coupe-Vent Zippée';
       defaultTissu = isAr ? 'مايكروفايبر تقني مقاوم للرياح والماء (Microfibre Coupe-Vent Imperméable / Nylon Twill)' : 'Microfibre Coupe-Vent Imperméable / Nylon Twill Lourd';
@@ -1550,6 +1603,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultEchantillon = 380;
       defaultTissuConso = 2.10;
       defaultTissuPrixKg = 75;
+      defaultPrixMetre = 42;
+      defaultAccessoriesCost = 22;
+      defaultPrixConfection = 75;
+      defaultTissuMarche = isAr ? 'سوق كراج علال / درب عمر (مايكروفايبر تقني مقاوم للماء)' : 'Marché Derb Omar (Microfibre étanche)';
       defaultReponse = isAr
         ? 'موديل الجاكيت التقنية تم تحليله بالكامل من الورشة: ثوب المايكروفايبر المقاوم للماء مع السحاب والبطانة تم تسعيرهم بدقة. العينة جاهزة للإطلاق فور التأكيد.'
         : 'Veste coupe-vent analysée par l\'atelier : microfibre imperméable et zips validés. Prototype prêt à lancer.';
@@ -1563,6 +1620,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultEchantillon = 420;
       defaultTissuConso = 2.40;
       defaultTissuPrixKg = 75;
+      defaultPrixMetre = 48;
+      defaultAccessoriesCost = 35;
+      defaultPrixConfection = 115;
+      defaultTissuMarche = isAr ? 'سوق درب عمر / القريعة (توب الدنيم الخام والجاف)' : 'Marché Derb Omar / Al Ghorfa (Denim brut)';
       defaultReponse = isAr
         ? 'تمت دراسة موديل فيست الجينز/الدنيم بعناية من طرف الورشة: ثوب الدنيم 100% قطن متين مع تفاصيل الحزام والدرزات المضاعفة محسوبة بدقة. جاهزون لإطلاق العينة الأولية فور تأكيدكم.'
         : 'Modèle Veste Denim étudié avec soin : toile 100% coton et finitions ceinture calculées. Prêt pour prototypage.';
@@ -1572,10 +1633,24 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const hasPrint = text.includes('sérigraphie') || text.includes('serigraphie') || text.includes('dtf') || text.includes('print') || text.includes('طباعة') || text.includes('طبعة') || text.includes('marquage') || isHoodieOrSweat || isTshirt;
 
     const isGenericPrice = savedUnitPrice === 65 && !d.crmPriceConfirmed && (isVeste || isDenimOrTailleur || isTracksuit);
-    const unitPrice = (savedUnitPrice && !isGenericPrice) ? savedUnitPrice : defaultUnitPrice;
+    const tissuCostPerPiece = Math.round(defaultTissuConso * defaultPrixMetre);
+    let confectionPrice = defaultPrixConfection;
+    let fullPackagePrice = defaultPrixConfection + tissuCostPerPiece + defaultAccessoriesCost;
+
+    if (savedUnitPrice && !isGenericPrice) {
+      if (savedUnitPrice > 130) {
+        fullPackagePrice = savedUnitPrice;
+        confectionPrice = Math.max(35, savedUnitPrice - tissuCostPerPiece - defaultAccessoriesCost);
+      } else {
+        confectionPrice = savedUnitPrice;
+        fullPackagePrice = savedUnitPrice + tissuCostPerPiece + defaultAccessoriesCost;
+      }
+    }
+
+    const unitPrice = confectionPrice;
     const modeleReel = savedModele || defaultModele;
     const qty = Number(d.quantity) > 0 ? Number(d.quantity) : 100;
-    const totalPrice = d.totalPrice && d.totalPrice > 0 ? d.totalPrice : (unitPrice * qty);
+    const totalPrice = d.totalPrice && d.totalPrice > 0 ? d.totalPrice : (fullPackagePrice * qty);
     const tissuSuggere = savedTissu || defaultTissu;
     const techDetails = savedTech || defaultTech;
     const delaiEstime = savedDelai || defaultDelai;
@@ -1587,6 +1662,12 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     return {
       modeleReel,
       unitPrice,
+      confectionPrice,
+      fullPackagePrice,
+      tissuCostPerPiece,
+      accessoriesCost: defaultAccessoriesCost,
+      prixMetreEstime: defaultPrixMetre,
+      tissuMarcheNom: defaultTissuMarche,
       totalPrice,
       tissuSuggere,
       techDetails,
@@ -1601,7 +1682,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       tissuConsoMeters: defaultTissuConso,
       tissuPricePerKg: defaultTissuPrixKg,
       hasBroderie,
-      hasPrint
+      hasPrint,
+      isAnalyzedByAI: Boolean(d.details?.includes('ATELIER_DEVIS') || d.aiNotes || (d as any).aiAnalyzed)
     };
   };
 
@@ -1793,6 +1875,18 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
             leadPayload.delaiEstime = aiResult.delaiEstime;
             leadPayload.techDetails = aiResult.techDetails;
             leadPayload.reponseAtelier = aiResult.reponseAtelier;
+
+            const atelierMeta = {
+              modeleReel: aiResult.modeleReel,
+              tissuSuggere: aiResult.tissuSuggere,
+              unitPrice: aiResult.unitPrice,
+              patronagePrice: aiResult.patronagePrice,
+              prixEchantillon: aiResult.prixEchantillon,
+              delaiEstime: aiResult.delaiEstime,
+              techDetails: aiResult.techDetails,
+              reponseAtelier: aiResult.reponseAtelier
+            };
+            leadPayload.details = `${leadPayload.details || ''} | ATELIER_DEVIS:${JSON.stringify(atelierMeta)}`.trim();
           }
         } catch (e) {
           console.warn('AI analysis on new lead submit:', e);
@@ -2648,10 +2742,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                  if (qty <= 350) return Math.max(25, Math.round(basePrice * 0.90));
                  return Math.max(20, Math.round(basePrice * 0.84));
                };
-               const activeUnitPrice = calculateTierUnitPrice(currentQty, analysis.unitPrice);
-               const activeTotalPrice = activeUnitPrice * currentQty;
-
                const isClientFabric = fabricOption[d.id] === 'client';
+               const selectedBasePrice = isClientFabric ? analysis.confectionPrice : analysis.fullPackagePrice;
+               const activeUnitPrice = calculateTierUnitPrice(currentQty, selectedBasePrice);
+               const activeTotalPrice = activeUnitPrice * currentQty;
                 const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
                 const waText = isAr
                   ? (isClientFabric
@@ -2751,6 +2845,78 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                      </div>
                    </div>
 
+                   {/* 0. Primary AI Analysis Action Command (زر التحليل بالذكاء الاصطناعي أولاً قبل باقي المعلومات) */}
+                   <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 md:p-6 shadow-xl border border-indigo-500/30 mb-5 relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+                       <div className="space-y-1.5 min-w-0">
+                         <div className="flex items-center gap-2 flex-wrap">
+                           <span className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-indigo-500/30 to-purple-500/30 text-indigo-200 border border-indigo-400/30 text-[10px] font-black tracking-wider uppercase flex items-center gap-1.5">
+                             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                             <span>BEYA AI Tactical Analysis V2.1</span>
+                           </span>
+                           <span className="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                             {analysis.isAnalyzedByAI || d.details?.includes('ATELIER_DEVIS') ? (isAr ? '✓ فحص الموديل مكتمل' : '✓ Analyse Terminée') : (isAr ? '⚡ جاهز للفحص والتحليل' : '⚡ Prêt pour l\'analyse')}
+                           </span>
+                           <span className="text-[11px] text-slate-400 font-mono">
+                             REF: #{d.id.substring(0, 8).toUpperCase()}
+                           </span>
+                         </div>
+
+                         <h3 className="text-lg md:text-xl font-black text-white tracking-tight">
+                           {isAr ? 'تحليل وتدقيق الموديل بالذكاء الاصطناعي الفوري' : 'Analyse Immédiate du Modèle par l\'IA'}
+                         </h3>
+                         <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                           {isAr 
+                             ? 'كيتم فحص صورة الموديل بالرؤية الحاسوبية (Vision AI) لتحديد نوع القماش الأنسب، حساب الميطراج المستهلك بدقة، وتقدير كلفة الفصالة والخياطة وفق أسعار سوق الجملة المغربي.'
+                             : 'Analyse la photo par Vision IA pour identifier le tissu optimal, calculer le métrage exact et estimer le coût de confection selon les cours du marché de gros marocain.'}
+                         </p>
+                       </div>
+
+                       {/* Primary CTA Button */}
+                       <div className="shrink-0 flex items-center gap-2">
+                         <button
+                           type="button"
+                           disabled={isAiAnalyzingLead === d.id}
+                           onClick={() => reanalyzeDemandeWithAI(d)}
+                           className="w-full md:w-auto px-6 py-4 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-600 hover:from-indigo-600 hover:via-purple-700 hover:to-pink-700 text-white rounded-2xl text-xs md:text-sm font-black shadow-xl shadow-purple-900/40 hover:shadow-purple-700/60 active:scale-95 transition-all flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+                         >
+                           {isAiAnalyzingLead === d.id ? (
+                             <>
+                               <RotateCw className="w-4 h-4 animate-spin text-white" />
+                               <span className="animate-pulse">{isAr ? 'جاري فحص الصورة وتدقيق الأسعار...' : 'Analyse IA en cours...'}</span>
+                             </>
+                           ) : (
+                             <>
+                               <Sparkles className="w-4 h-4 text-amber-300" />
+                               <span>
+                                 {analysis.isAnalyzedByAI || d.details?.includes('ATELIER_DEVIS')
+                                   ? (isAr ? '🔄 إعادة التحليل وتحديث الحسابات' : '🔄 Relancer l\'Analyse IA')
+                                   : (isAr ? '🧠 إطلاق التحليل الذكي الفوري' : '🧠 Lancer l\'Analyse IA')}
+                               </span>
+                             </>
+                           )}
+                         </button>
+                       </div>
+                     </div>
+
+                     {/* Active analysis progress bar when analyzing */}
+                     {isAiAnalyzingLead === d.id && (
+                       <div className="mt-4 pt-3 border-t border-white/10 space-y-2">
+                         <div className="flex items-center justify-between text-[11px] text-indigo-200">
+                           <span className="flex items-center gap-2">
+                             <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                             {isAr ? 'جاري الاتصال بنموذج Gemini Vision وتحليل مواصفات الصورة والخياطة...' : 'Connexion à Gemini Vision et calcul des métrages...'}
+                           </span>
+                           <span className="font-mono">75%</span>
+                         </div>
+                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                           <div className="h-full bg-gradient-to-r from-amber-400 via-pink-500 to-indigo-400 rounded-full animate-pulse w-3/4" />
+                         </div>
+                       </div>
+                     )}
+                   </div>
+
                    {/* 1. Professional Minimalist Stepper (No games / Corporate timeline) */}
                     <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-xs mb-4">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
@@ -2809,25 +2975,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-lg border border-emerald-100">
                                   {isAr ? 'دوفيز رسمي معتمد' : 'Devis Officiel'}
                                 </span>
-                                <button
-                                  type="button"
-                                  disabled={isAiAnalyzingLead === d.id}
-                                  onClick={() => reanalyzeDemandeWithAI(d)}
-                                  className="px-2.5 py-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-[10px] font-black rounded-lg shadow-xs flex items-center gap-1 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
-                                  title={isAr ? 'تحليل الموديل بالذكاء الاصطناعي وتحديث الأسعار التقديرية ونوع الثوب' : 'Re-analyser avec l\'IA'}
-                                >
-                                  {isAiAnalyzingLead === d.id ? (
-                                    <>
-                                      <RotateCw className="w-3 h-3 animate-spin" />
-                                      <span>{isAr ? 'جاري التحليل...' : 'Analyse...'}</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Sparkles className="w-3 h-3 text-amber-300" />
-                                      <span>{isAr ? '🧠 تحليل بـ AI' : '🧠 Analyse IA'}</span>
-                                    </>
-                                  )}
-                                </button>
+                                <span className="px-2.5 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-black rounded-lg border border-purple-100 flex items-center gap-1">
+                                  <Sparkles className="w-3 h-3 text-purple-600" />
+                                  <span>{isAr ? 'مدقق بالذكاء الاصطناعي' : 'Vérifié IA'}</span>
+                                </span>
                               </div>
                               <h2 className="text-xl font-black text-slate-900 truncate leading-snug">
                                 {analysis.modeleReel}
@@ -2846,12 +2997,15 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 <div className="w-8 h-8 rounded-xl bg-indigo-100/70 text-indigo-700 flex items-center justify-center shrink-0">
                                   <Layers className="w-4 h-4" />
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                    {isAr ? 'نوع الثوب المقترح' : 'Tissu conseillé'}
+                                    {isAr ? 'نوع الثوب المقترح ومكان الشراء' : 'Tissu conseillé & Marché'}
                                   </span>
                                   <span className="text-xs font-black text-slate-900 truncate block">
                                     {analysis.tissuSuggere}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-medium block truncate">
+                                    {analysis.tissuMarcheNom} • ~{analysis.prixMetreEstime} MAD/m ({analysis.tissuConsoMeters}m / pc)
                                   </span>
                                 </div>
                               </div>
@@ -2863,8 +3017,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             {/* Unit Price & Total Price */}
                             <div className="grid grid-cols-2 gap-2.5">
                               <div className="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-100">
-                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block mb-0.5">
-                                  {isAr ? 'سعر الخياطة للقطعة' : 'Façon / Pièce'}
+                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block mb-0.5 truncate">
+                                  {isClientFabric 
+                                    ? (isAr ? 'سعر الخياطة فقط للقطعة' : 'Façon seule / Pièce')
+                                    : (isAr ? 'سعر القطعة كاملة (ثوب + خياطة)' : 'Prix Complet / Pièce')}
                                 </span>
                                 <div className="flex items-baseline gap-1">
                                   <span className="text-xl font-black text-indigo-950">{activeUnitPrice}</span>
@@ -2901,7 +3057,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 }`}
                               >
                                 <Layers className="w-3.5 h-3.5 text-indigo-600" />
-                                <span>{isAr ? 'الثوب من المعمل (تسبيق 50%)' : 'Tissu Atelier (50%)'}</span>
+                                <span>{isAr ? 'الثوب من المعمل (شامل كل شيء)' : 'Tissu Atelier (Tout Compris)'}</span>
                               </button>
                               <button
                                 type="button"
@@ -2913,8 +3069,122 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 }`}
                               >
                                 <Package className="w-3.5 h-3.5" />
-                                <span>{isAr ? 'الثوب من عندك (0 درهم تسبيق)' : 'Tissu par vous (0 MAD)'}</span>
+                                <span>{isAr ? 'الثوب من عندك (الخياطة فقط)' : 'Tissu par vous (Façon)'}</span>
                               </button>
+                            </div>
+
+                            {/* Dedicated Detailed Cost Breakdown Box ("باش يعرف التمن منين جا") */}
+                            <div className="p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200/90 space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-lg bg-indigo-600/10 text-indigo-700 flex items-center justify-center">
+                                    <Calculator className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-xs font-black text-slate-900 leading-tight">
+                                      {isAr ? 'تفاصيل تركيبة وتفكيك السعر (Détail des Coûts)' : 'Décomposition & Détail des Coûts'}
+                                    </h4>
+                                    <span className="text-[9px] text-slate-500 font-medium block">
+                                      {isAr ? 'شفافية كاملة: منين جا كل درهم فالحساب' : 'Transparence totale sur chaque composante du prix'}
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-md border border-emerald-200">
+                                  {isAr ? 'شفافية 100%' : '100% Transparent'}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                {/* 1. Tissu au marché */}
+                                <div className={`p-2.5 rounded-xl border transition-all ${
+                                  isClientFabric 
+                                    ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60' 
+                                    : 'bg-white border-slate-200/90 text-slate-800 shadow-2xs'
+                                }`}>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-bold flex items-center gap-1.5 text-[11px]">
+                                      <span>🧵</span>
+                                      <span>{isAr ? 'كلفة الثوب فالسوق:' : 'Coût Tissu :'}</span>
+                                    </span>
+                                    <span className={`font-black font-mono ${isClientFabric ? 'line-through text-slate-400' : 'text-indigo-950'}`}>
+                                      {isClientFabric ? '0 MAD' : `${analysis.tissuCostPerPiece} MAD`}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                                    {isClientFabric 
+                                      ? (isAr ? '✓ ملغاة: الثوب كتجيبو نتا من عندك' : '✓ Tissu fourni par vous (0 MAD)')
+                                      : `${analysis.tissuConsoMeters}m × ~${analysis.prixMetreEstime} MAD (${analysis.tissuMarcheNom})`}
+                                  </p>
+                                </div>
+
+                                {/* 2. Coupe & Façon */}
+                                <div className="p-2.5 rounded-xl border bg-white border-slate-200/90 text-slate-800 shadow-2xs">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-bold flex items-center gap-1.5 text-[11px]">
+                                      <span>✂️</span>
+                                      <span>{isAr ? 'الفصالة والخياطة (Façon):' : 'Coupe & Façon :'}</span>
+                                    </span>
+                                    <span className="font-black text-indigo-950 font-mono">
+                                      {analysis.confectionPrice} MAD
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                                    {isAr ? 'اليد العاملة المؤهلة، ماكينات الورشة، درزات مضاعفة وتجميع' : 'Main d\'œuvre qualifiée, machines industrielles & finitions'}
+                                  </p>
+                                </div>
+
+                                {/* 3. Accessoires & Finitions */}
+                                <div className={`p-2.5 rounded-xl border transition-all ${
+                                  isClientFabric 
+                                    ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60' 
+                                    : 'bg-white border-slate-200/90 text-slate-800 shadow-2xs'
+                                }`}>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-bold flex items-center gap-1.5 text-[11px]">
+                                      <span>🔘</span>
+                                      <span>{isAr ? 'المستلزمات والتشطيب:' : 'Fournitures :'}</span>
+                                    </span>
+                                    <span className={`font-black font-mono ${isClientFabric ? 'line-through text-slate-400' : 'text-indigo-950'}`}>
+                                      {isClientFabric ? '0 MAD' : `${analysis.accessoriesCost} MAD`}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                                    {isClientFabric 
+                                      ? (isAr ? '✓ ملغاة: المستلزمات كتجيبها نتا' : '✓ Fourni par vos soins')
+                                      : (isAr ? 'سحابات، أزرار، خيوط متينة، بطانة، كي وتغليف' : 'Zips, boutons, fils, repassage & emballage')}
+                                  </p>
+                                </div>
+
+                                {/* 4. Palier de Quantité */}
+                                <div className="p-2.5 rounded-xl border bg-indigo-50/60 border-indigo-100 text-indigo-950">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-bold flex items-center gap-1.5 text-[11px]">
+                                      <span>📦</span>
+                                      <span>{isAr ? `معامل الكمية (${currentQty} قطعة):` : `Palier (${currentQty} pcs) :`}</span>
+                                    </span>
+                                    <span className="font-black font-mono">
+                                      {currentQty <= 35 ? '+18%' : currentQty <= 60 ? '+8%' : currentQty <= 150 ? '0% (Standard)' : '-10% (Gros)'}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-indigo-700/80 leading-relaxed">
+                                    {currentQty <= 35 
+                                      ? (isAr ? 'سلسلة صغرى (Petite série): مصاريف ضبط الماكينات والباترون' : 'Petite série : frais fixes de calage machines')
+                                      : (isAr ? 'تسعير قياسي مع تخفيض الإنتاج بالجملة' : 'Série standard : économie d\'échelle')}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Summary comparison bar */}
+                              <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                                <span className="text-[11px] text-slate-600 font-bold">
+                                  {isClientFabric 
+                                    ? (isAr ? '💡 الثوب من عندك: كتوفر كلفة الثوب وكتخلص غير الخياطة:' : '💡 Tissu par vous : vous réglez uniquement la façon :')
+                                    : (isAr ? '💡 الثوب من المعمل: سعر متكامل شامل السلعة واجدة:' : '💡 Clé en main : formule complète sans prise de tête :')}
+                                </span>
+                                <span className="font-black text-indigo-950 text-sm">
+                                  {activeUnitPrice} MAD <span className="text-[10px] font-medium text-slate-500">/ pc</span>
+                                </span>
+                              </div>
                             </div>
 
                             {/* Dynamic Acompte / Payment Banner */}
@@ -4097,8 +4367,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                     <span className="text-sm font-black text-slate-900">{analysis.qty} pcs</span>
                                   </div>
                                   <div className={isAr ? 'text-left' : 'text-right'}>
-                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">{isAr ? 'السعر التقديري' : 'Prix Estimé'}</span>
-                                    <span className="text-sm font-black text-indigo-950">{analysis.unitPrice} MAD <span className="text-[10px] font-bold text-slate-500">/ pc</span></span>
+                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">{isAr ? 'الخياطة من' : 'Façon dès'}</span>
+                                    <span className="text-sm font-black text-indigo-950">{analysis.confectionPrice || analysis.unitPrice} MAD <span className="text-[10px] font-bold text-slate-500">/ pc</span></span>
                                   </div>
                                 </div>
                               </div>
