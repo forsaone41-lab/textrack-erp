@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
@@ -242,6 +242,18 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   });
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderSent, setOrderSent] = useState(false);
+  const [geminiApiKey, setGeminiApiKey] = useState<string>(() => {
+    try {
+      return localStorage.getItem('beya_gemini_api_key') || (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
+    } catch {
+      return '';
+    }
+  });
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [apiKeyDraft, setApiKeyDraft] = useState('');
+  const [testingApiKey, setTestingApiKey] = useState(false);
+  const [apiKeyTestResult, setApiKeyTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [isAiAnalyzingLead, setIsAiAnalyzingLead] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(() => {
     try {
       const hasLeads = !!localStorage.getItem('textrack_data_leads');
@@ -964,7 +976,209 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setSelectedDemandePage(prev => prev?.id === id ? null : prev);
   };
 
-    const generateClientAssistantReply = async (query: string, lead: Lead, analysis: any, isAr: boolean = true): Promise<string> => {
+      const testGeminiApiKey = async (keyToTest: string) => {
+    const cleanKey = (keyToTest || '').trim();
+    if (!cleanKey) {
+      setApiKeyTestResult({ ok: false, message: isAr ? 'المرجو إدخال مفتاح API أولاً' : 'Veuillez saisir une clé API' });
+      return;
+    }
+    setTestingApiKey(true);
+    setApiKeyTestResult(null);
+    try {
+      const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      let succeeded = false;
+      let lastErr = '';
+      for (const m of candidateModels) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${cleanKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: 'Bonjour' }] }] })
+          });
+          const data = await res.json();
+          if (res.ok && data.candidates && data.candidates.length > 0) {
+            succeeded = true;
+            break;
+          }
+          if (data.error?.message) lastErr = data.error.message;
+        } catch (e: any) {
+          lastErr = e.message || 'Network error';
+        }
+      }
+      if (succeeded) {
+        setApiKeyTestResult({ ok: true, message: isAr ? 'المفتاح شغال بنجاح! الاتصال بـ Google Gemini ممتاز ✓' : 'Clé API valide et connectée à Google Gemini avec succès ✓' });
+      } else {
+        setApiKeyTestResult({ ok: false, message: (isAr ? 'فشل التحقق: ' : 'Échec : ') + (lastErr || (isAr ? 'المفتاح غير صالح أو الحساب بدون رصيد' : 'Clé invalide')) });
+      }
+    } catch (err: any) {
+      setApiKeyTestResult({ ok: false, message: err.message || (isAr ? 'خطأ في الاتصال' : 'Erreur de connexion') });
+    } finally {
+      setTestingApiKey(false);
+    }
+  };
+
+  const handleSaveApiKey = () => {
+    const clean = apiKeyDraft.trim();
+    if (clean) {
+      localStorage.setItem('beya_gemini_api_key', clean);
+      setGeminiApiKey(clean);
+    } else {
+      localStorage.removeItem('beya_gemini_api_key');
+      setGeminiApiKey('');
+    }
+    setShowApiKeyModal(false);
+  };
+
+  const analyzeLeadPhotoWithAI = async (
+    target: { modele: string; details?: string; photo: string },
+    apiKeyParam?: string
+  ) => {
+    const apiKey = (apiKeyParam || geminiApiKey || localStorage.getItem('beya_gemini_api_key') || (import.meta as any).env?.VITE_GEMINI_API_KEY || '').trim();
+    if (!apiKey || !target.photo) return null;
+
+    let base64Data = '';
+    let mimeType = 'image/jpeg';
+
+    if (target.photo.startsWith('data:')) {
+      const match = target.photo.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        mimeType = match[1];
+        base64Data = match[2];
+      }
+    }
+
+    if (!base64Data && target.photo.startsWith('http')) {
+      try {
+        const resp = await fetch(target.photo);
+        const blob = await resp.blob();
+        mimeType = blob.type || 'image/jpeg';
+        const readerResult = await new Promise<string>((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(r.result as string);
+          r.onerror = reject;
+          r.readAsDataURL(blob);
+        });
+        const match = readerResult.match(/^data:([^;]+);base64,(.+)$/);
+        if (match) {
+          base64Data = match[2];
+        }
+      } catch (e) {
+        console.warn('Could not extract image base64 for Gemini vision:', e);
+      }
+    }
+
+    const prompt = `أنت كبير المهندسين التقنيين وخبير تسعير صناعة الملابس والنسيج في ورشة BEYA Creative بالمغرب بخبرة 20 سنة.
+المهمة: قم بتحليل دقيق جداً للموديل المعروض في الصورة وحساب التكلفة التقديرية الحقيقية للفصالة والخياطة (Façon) ونوع القماش واستهلاكه بالمتر وسعره في سوق الجملة المغربي (درب عمر، كراج علال بالدار البيضاء).
+
+نوع الموديل المدخل من الزبون: "${target.modele || ''}"
+ملاحظات الزبون: "${target.details || ''}"
+
+يجب أن تجيب بـ JSON صحيح تماماً وبدون أي نص آخر قبله أو بعده:
+{
+  "modeleReel": "الاسم الفني الواضح والدقيق للموديل بالعربية (مثلاً: جاكيت جينز دنيم أوفرسايز بجيوب صدرية وسحاب)",
+  "tissuSuggere": "أفضل نوع ثوب مطابق للصورة مع الغراماج المناسب (مثلاً: قماش دنيم قطني متين 12 أونصة أو غاباردين كوتون)",
+  "tissuConso": 1.95,
+  "prixMetreEstime": 42,
+  "unitPrice": 78,
+  "patronagePrice": 280,
+  "prixEchantillon": 380,
+  "delaiEstime": "7 إلى 10 أيام عمل (العينة تحت 48 ساعة)",
+  "techDetails": "المواصفات التقنية: الخياطة المزدوجة، السحابات، الأزرار، الجيوب، التبطين، الفينيسيون",
+  "reponseAtelier": "تعليق تقني واحترافي من الورشة للزبون حول هذا الموديل ومراحل صناعته وجودته"
+}`;
+
+    const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+
+    for (const model of candidateModels) {
+      try {
+        const parts: any[] = [{ text: prompt }];
+        if (base64Data) {
+          parts.push({
+            inlineData: { data: base64Data, mimeType }
+          });
+        }
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts }],
+            generationConfig: { temperature: 0.2 }
+          })
+        });
+
+        if (!res.ok) continue;
+        const data = await res.json();
+        const rawText: string = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+        const jsonStr = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
+        const parsed = JSON.parse(jsonStr);
+
+        if (parsed && (parsed.unitPrice || parsed.modeleReel)) {
+          return {
+            modeleReel: parsed.modeleReel || target.modele,
+            tissuSuggere: parsed.tissuSuggere || '',
+            tissuConso: Number(parsed.tissuConso) || 1.85,
+            prixMetreEstime: Number(parsed.prixMetreEstime) || 45,
+            unitPrice: Math.max(15, Math.round(Number(parsed.unitPrice) || 65)),
+            patronagePrice: Math.max(150, Math.round(Number(parsed.patronagePrice) || 280)),
+            prixEchantillon: Math.max(200, Math.round(Number(parsed.prixEchantillon) || 350)),
+            delaiEstime: parsed.delaiEstime || '7 إلى 10 أيام عمل (العينة تحت 48 ساعة)',
+            techDetails: parsed.techDetails || '',
+            reponseAtelier: parsed.reponseAtelier || '',
+            aiAnalyzed: true
+          };
+        }
+      } catch (e) {
+        console.warn(`Model ${model} in analyzeLeadPhotoWithAI failed:`, e);
+      }
+    }
+    return null;
+  };
+
+  const reanalyzeDemandeWithAI = async (lead: Lead) => {
+    const photo = lead.photo || (lead.photos && lead.photos[0]) || leadPhotos[lead.id];
+    if (!photo) {
+      alert(isAr ? 'المرجو إضافة صورة للموديل أولاً لتشغيل التحليل بالذكاء الاصطناعي' : 'Veuillez ajouter une photo pour lancer l\'analyse IA');
+      return;
+    }
+    setIsAiAnalyzingLead(lead.id);
+    try {
+      const aiResult = await analyzeLeadPhotoWithAI({
+        modele: lead.type || lead.modeleReel || 'Modèle',
+        details: lead.details,
+        photo: photo
+      });
+
+      if (aiResult) {
+        const updatedLead: Lead = {
+          ...lead,
+          modeleReel: aiResult.modeleReel || lead.modeleReel,
+          tissuSuggere: aiResult.tissuSuggere || lead.tissuSuggere,
+          unitPrice: aiResult.unitPrice || lead.unitPrice,
+          crmPrice: aiResult.unitPrice || lead.crmPrice,
+          patronagePrice: aiResult.patronagePrice || lead.patronagePrice,
+          prixEchantillon: aiResult.prixEchantillon || lead.prixEchantillon,
+          delaiEstime: aiResult.delaiEstime || lead.delaiEstime,
+          techDetails: aiResult.techDetails || lead.techDetails,
+          reponseAtelier: aiResult.reponseAtelier || lead.reponseAtelier
+        };
+
+        await saveRecord('leads', updatedLead);
+        setMesDemandes(prev => prev.map(m => m.id === lead.id ? updatedLead : m));
+        setSelectedDemandePage(updatedLead);
+        alert(isAr ? 'تم تحليل الموديل بالذكاء الاصطناعي بنجاح وتحديث الأسعار التقديرية ونوع الثوب بدقة!' : 'Modèle analysé avec succès par l\'IA ! Prix et tissu mis à jour.');
+      } else {
+        alert(isAr ? 'لم نتمكن من تحليل الصورة. تأكد من صحة مفتاح Gemini API.' : 'Échec de l\'analyse. Vérifiez votre clé Gemini API.');
+      }
+    } catch (err: any) {
+      alert((isAr ? 'خطأ في التحليل: ' : 'Erreur analyse : ') + (err?.message || ''));
+    } finally {
+      setIsAiAnalyzingLead(null);
+    }
+  };
+
+  const generateClientAssistantReply = async (query: string, lead: Lead, analysis: any, isAr: boolean = true): Promise<string> => {
     const q = (query || '').toLowerCase().trim();
     const mod = (analysis.modeleReel || lead.type || '').toLowerCase();
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key');
