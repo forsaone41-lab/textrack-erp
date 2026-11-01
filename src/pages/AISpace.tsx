@@ -374,6 +374,13 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
       if (fn.includes('chemise') || fn.includes('قميص') || fn.includes('blouse')) {
         return resolve('chemise classique قميص كلاسيكي');
       }
+      if (
+        fn.includes('jakit') || fn.includes('jacket') || fn.includes('veste') || fn.includes('bomber') ||
+        fn.includes('blazer') || fn.includes('جاكيت') || fn.includes('فيست') || fn.includes('كابوت') ||
+        fn.includes('denim') || fn.includes('jean')
+      ) {
+        return resolve('veste jacket casual جاكيت كاجوال عصرية');
+      }
       if (fn.includes('trench') || fn.includes('manteau') || fn.includes('veste') || fn.includes('blazer')) {
         return resolve('veste manteau معطف سترة');
       }
@@ -917,6 +924,29 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
       ],
       mesures: defaultMesures
     }];
+  } else if (
+    text.includes('jakit') || text.includes('jacket') || text.includes('veste') || text.includes('bomber') ||
+    text.includes('blazer') || text.includes('جاكيت') || text.includes('فيست') || text.includes('كابوت') ||
+    text.includes('denim') || text.includes('jean')
+  ) {
+    pieceName = isAr ? 'جاكيت كاجوال عصرية (Veste / Jacket Casual)' : 'Veste / Jacket Casual';
+    defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Chemise'] || STANDARD_MESURES['TShirt']));
+    piecesList = [{
+      name: pieceName,
+      consumption: '2.10m',
+      fit: isAr ? 'عادي أوفرسايز عصري (Regular / Oversize)' : 'Coupe Regular / Oversize',
+      complexity: isAr ? 'متوسطة إلى عالية' : 'Moyenne à Avancée',
+      costEstimate: '75 - 95 MAD',
+      components: isAr
+        ? ['صدر أمامي بجيوب وأزرار/سحاب', 'ظهر مقوى بقطعة يوك', 'أكمام طويلة بأساور وقفل', 'ياقة كلاسيكية أو مرتفعة', 'سجاف وبطانة خفيفة']
+        : ['Devant avec poches et zip/boutons', 'Dos avec empiècement', 'Manches longues avec poignets', 'Col classique', 'Doublure/parementure'],
+      fabricSuggested: isAr ? 'غاباردين كوتون متين (Gabardine Coton) أو دنيم 12 أونصة' : 'Gabardine Coton Lourd / Denim 12oz',
+      fabricAlternatives: [
+        { name: isAr ? 'تويل قطن سميك (Twill Lourd)' : 'Twill Coton Lourd', pros: isAr ? 'شياكة ومتانة عالية ومقاوم للغسيل' : 'Très robuste et élégant', cons: isAr ? 'ثمن المتر أعلى في الجملة' : 'Prix au mètre supérieur' },
+        { name: isAr ? 'دنيم قطني مغسول (Denim Stone Wash)' : 'Denim Coton Stone Wash', pros: isAr ? 'موضة كلاسيكية مرغوبة في السوق' : 'Tendance indémodable', cons: isAr ? 'يحتاج معامل معالجة الغسيل' : 'Nécessite délavage' }
+      ],
+      mesures: defaultMesures
+    }];
   } else {
     // Intelligent default: Sweatshirt / T-Shirt Manches Longues (matches long-sleeve grey shirt)
     pieceName = isAr ? 'سويت شيرت / تيشرت أكمام طويلة (Sweatshirt / Long Sleeve)' : 'Sweatshirt / T-Shirt Manches Longues';
@@ -1310,22 +1340,18 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     setSelectedLead(lead);
     setAnalysisResult(null);
 
-    // Build immediate technical analysis from lead specifications
-    const fullLeadText = `${lead.type} ${lead.details || ''} ${lead.notes || ''}`.trim();
-    const fallback = buildFallbackAnalysis(fullLeadText, isAr);
-    setAnalysisResult(fallback);
-    if (fallback.pieces && fallback.pieces.length > 0) {
-      setCustomMesures(fallback.pieces[0].mesures || []);
-      setPiecesMesures(fallback.pieces.map((p: any) => JSON.parse(JSON.stringify(p.mesures || []))));
-    }
+    setAnalysisResult(null); // Keep null until user clicks Analyze!
+    setPiecesMesures([]);
+    setCustomMesures([]);
+    setActivePieceIdx(0);
     setActiveTab('fiche');
 
     setChat([
       {
         role: 'ai',
         text: isAr
-          ? `📋 تم تحميل وقراءة طلب الزبون [ ${lead.name} ] — (${lead.type}) بنجاح!\n\n${buildRapportText(fallback, isAr)}`
-          : `📋 Demande prospect [ ${lead.name} ] — (${lead.type}) chargée et analysée avec succès !\n\n${buildRapportText(fallback, false)}`
+          ? `📋 تم اختيار موديل [ ${lead.name || ''} ] — (${lead.type}). الصورة محملة وجاهزة للتحليل الفوري عبر زر "بدء تحليل الموديل بالذكاء الاصطناعي".`
+          : `📋 Modèle prospect [ ${lead.name || ''} ] — (${lead.type}) sélectionné. Cliquez sur "Lancer l'Analyse IA du Modèle" pour générer la fiche technique.`
       }
     ]);
 
@@ -3879,24 +3905,8 @@ ${userMessage}
                     <Eye className="w-4 h-4" />
                   </button>
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 flex-wrap p-2">
-                    <button onClick={() => setImage(null)} className="bg-white/90 p-2.5 rounded-xl text-rose-600 hover:bg-white transition-all shadow-xl" title={isAr ? 'حذف الصورة' : 'Supprimer'}><RefreshCw className="w-4 h-4" /></button>
-                    <button onClick={startAnalysis} className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase shadow-xl flex items-center gap-1.5 hover:bg-indigo-700 active:scale-95 transition-all">
-                      <Sparkles className="w-4 h-4" />
-                      <span>{analysisResult ? (isAr ? 'إعادة التحليل' : 'Re-analyser') : (isAr ? 'بدء التحليل الفوري' : 'Lancer l\'analyse')}</span>
-                    </button>
-                    {analysisResult && (
-                      <button 
-                        onClick={() => {
-                          setQuoteInitialMode('chiffrage');
-                          setShowClientQuoteModal(true);
-                        }} 
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 rounded-xl font-black text-xs shadow-xl flex items-center gap-1.5 active:scale-95 transition-all" 
-                        title={isAr ? 'كلفة السلعة وتفاصيل 3 مستويات جودة' : 'Coût de revient 3 niveaux'}
-                      >
-                        <DollarSign className="w-3.5 h-3.5" />
-                        <span>{isAr ? 'كلفة 3 مستويات' : 'Costing 3 Niveaux'}</span>
-                      </button>
-                    )}
+                    <button onClick={() => { setImage(null); setSelectedLead(null); setAnalysisResult(null); }} className="bg-white/90 p-2.5 rounded-xl text-rose-600 hover:bg-white transition-all shadow-xl" title={isAr ? 'حذف الصورة' : 'Supprimer'}><RefreshCw className="w-4 h-4" /></button>
+                    <button onClick={() => fileInputRef.current?.click()} className="bg-white/90 p-2.5 rounded-xl text-slate-700 hover:bg-white transition-all shadow-xl" title={isAr ? 'تغيير الصورة' : 'Changer photo'}><Camera className="w-4 h-4" /></button>
                   </div>
                   {analyzing && (
                     <div className="absolute inset-0 bg-indigo-900/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-20">
@@ -4602,14 +4612,60 @@ ${userMessage}
                     </button>
                   </div>
                 </>
+              ) : image ? (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 md:p-12 animate-in fade-in duration-300">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-indigo-500/10 border border-indigo-200/60 flex items-center justify-center text-indigo-600 mb-5 shadow-sm">
+                    <Sparkles className="w-10 h-10 text-indigo-600" />
+                  </div>
+                  
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-black rounded-full mb-3 border border-indigo-100">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{isAr ? 'الصورة محملة وجاهزة للتحليل' : 'Image chargée & prête'}</span>
+                  </div>
+
+                  <h3 className="text-xl font-black text-slate-900 mb-2">
+                    {selectedLead ? selectedLead.type : (isAr ? 'موديل جاهز للتحليل الفني' : 'Modèle Prêt pour Analyse')}
+                  </h3>
+
+                  <p className="text-xs text-slate-500 max-w-md mb-8 leading-relaxed font-medium">
+                    {isAr 
+                      ? 'اضغط على الزر أسفله لبدء التحليل البصري الذكي للصورة وتحديد نوع القماش، كلفة الفصالة والخياطة، والمقاسات بدقة.' 
+                      : 'Cliquez sur le bouton ci-dessous pour lancer l\'analyse IA réelle par vision et calculer le coût de confection et tissu exact.'}
+                  </p>
+
+                  {/* THE ONE AND ONLY ANALYSIS BUTTON */}
+                  <button
+                    type="button"
+                    onClick={startAnalysis}
+                    disabled={analyzing}
+                    className="px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl font-black text-sm uppercase shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50"
+                  >
+                    {analyzing ? (
+                      <>
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        <span>{isAr ? 'جاري تحليل الموديل بالذكاء الاصطناعي...' : 'Analyse IA en cours...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5 text-amber-300" />
+                        <span>{isAr ? '🧠 بدء تحليل الموديل بالذكاء الاصطناعي' : '🧠 Lancer l\'Analyse IA du Modèle'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-400">
                   <FileText className="w-16 h-16 mb-4 text-slate-300" />
                   <h4 className="text-lg font-black text-slate-700 mb-1">{isAr ? 'البطاقة التقنية فارغة' : 'Fiche Technique Vide'}</h4>
-                  <p className="text-xs max-w-sm mb-6">{isAr ? 'ارفع صورة الموديل واضغط على "بدء التحليل الفوري" للحصول على جدول الثمن، كتالوج الأثواب، وتفاصيل الخياطة.' : 'Uploadez une image et lancez l\'analyse pour générer la fiche technique.'}</p>
-                  <button onClick={() => fileInputRef.current?.click()} className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase hover:bg-indigo-700 transition-all shadow-md">
-                    {isAr ? 'رفع صورة الموديل الآن' : 'Uploader une photo'}
-                  </button>
+                  <p className="text-xs max-w-sm mb-6">{isAr ? 'ارفع صورة الموديل أو اختر طلباً من قائمة الزبائن للبدء.' : 'Uploadez une image ou sélectionnez une demande pour commencer.'}</p>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => fileInputRef.current?.click()} className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:bg-indigo-700 transition-all shadow-md">
+                      {isAr ? 'رفع صورة الموديل' : 'Uploader une photo'}
+                    </button>
+                    <button onClick={() => setShowLeadsModal(true)} className="bg-slate-100 text-slate-700 border border-slate-200 px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:bg-slate-200 transition-all">
+                      {isAr ? 'اختيار من الطلبات' : 'Demandes Prospects'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -4727,16 +4783,7 @@ ${userMessage}
               {/* Chat Input Bar */}
               <div className="p-3 bg-white border-t border-slate-200/80 flex-shrink-0 space-y-2">
                 <div className={`flex items-center gap-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
-                  <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'تحليل وتسعير:' : 'Actions :'}</span>
-                  <button
-                    type="button"
-                    onClick={startAnalysis}
-                    className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-black rounded-lg border border-indigo-200/60 transition-all active:scale-95 flex items-center gap-1 shadow-xs"
-                    title={isAr ? 'تحليل الموديل في الصورة مباشرة وحساب المقاسات والأثواب' : 'Analyser directement le modèle de la photo'}
-                  >
-                    <span>🎯</span>
-                    <span>{isAr ? 'تحليل موديل الصورة' : 'Analyser l\'image'}</span>
-                  </button>
+                  <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'أسئلة وتكلفة:' : 'Questions :'}</span>
                   <button
                     type="button"
                     onClick={() => sendDirect(isAr ? 'شحال كتقام البياسة فـ الجودة الممتازة (Qualité Mziana) ونوع الثوب والأرباح؟' : 'Détail du coût et tissu en Qualité Mziana (Haut de gamme) ?')}
@@ -5140,7 +5187,7 @@ ${userMessage}
                         )}
                         <div className="flex items-center justify-end text-[10px]">
                           <span className="text-indigo-600 font-black group-hover:underline flex items-center gap-1">
-                            {isAr ? 'تحليل الموديل ←' : 'Analyser →'}
+                            {isAr ? 'اختيار الموديل ←' : 'Sélectionner →'}
                           </span>
                         </div>
                       </div>
