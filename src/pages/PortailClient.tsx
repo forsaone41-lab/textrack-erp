@@ -122,6 +122,121 @@ const LeadCardImage = ({
     >
       <Camera className={iconSize >= 12 ? 'w-12 h-12' : iconSize >= 10 ? 'w-10 h-10' : 'w-8 h-8'} />
       <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
+      {/* Gemini API Key Configuration Modal */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-[2rem] max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="p-6 bg-slate-950 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-indigo-400" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base uppercase tracking-wider">
+                    {isAr ? 'إعدادات الذكاء الاصطناعي (Gemini API)' : 'Configuration IA (Gemini API)'}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {isAr ? 'تحليل الموديلات بدقة، أسعار الخياطة، وكتالوج الأقمشة' : 'Analyse automatique des modèles et chiffrage'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowApiKeyModal(false)}
+                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 md:p-8 space-y-5">
+              <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 text-xs text-slate-700 space-y-2">
+                <div className="flex items-center gap-2 font-black text-indigo-950">
+                  <Key className="w-4 h-4 text-indigo-600" />
+                  <span>{isAr ? 'أدخل مفتاح Google Gemini API الخاص بك' : 'Saisissez votre clé Google Gemini API'}</span>
+                </div>
+                <p className="text-slate-600 leading-relaxed text-[11px]">
+                  {isAr 
+                    ? 'هذا المفتاح كيمكن النظام ومستشار الورشة من تحليل صور الموديلات فالحين، تحديد نوع الثوب المطلوب، سعرو فدرب عمر، وثمن الخياطة المقترح تلقائياً.'
+                    : 'Cette clé permet d\'analyser directement vos photos, d\'estimer les métrages et de chiffrer la confection avec l\'IA.'}
+                </p>
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-indigo-600 font-bold hover:underline text-[11px]"
+                >
+                  <span>{isAr ? 'الحصول على مفتاح مجاني من Google AI Studio ←' : 'Obtenir une clé gratuite sur Google AI Studio →'}</span>
+                </a>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">
+                  {isAr ? 'مفتاح API Key' : 'Clé API (Google Gemini)'}
+                </label>
+                <input
+                  type="password"
+                  value={apiKeyDraft}
+                  onChange={(e) => {
+                    setApiKeyDraft(e.target.value);
+                    setApiKeyTestResult(null);
+                  }}
+                  placeholder="AIzaSy..."
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-600 focus:bg-white transition-all"
+                />
+              </div>
+
+              {apiKeyTestResult && (
+                <div className={`p-3.5 rounded-2xl text-xs font-bold border flex items-center gap-2 ${
+                  apiKeyTestResult.ok 
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                    : 'bg-rose-50 border-rose-200 text-rose-800'
+                }`}>
+                  {apiKeyTestResult.ok ? <CircleCheck className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+                  <span>{apiKeyTestResult.message}</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  disabled={testingApiKey || !apiKeyDraft.trim()}
+                  onClick={() => testGeminiApiKey(apiKeyDraft)}
+                  className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {testingApiKey ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-indigo-600" />}
+                  <span>{isAr ? 'اختبار المفتاح' : 'Tester'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveApiKey}
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{isAr ? 'حفظ وتفعيل' : 'Enregistrer'}</span>
+                </button>
+
+                {geminiApiKey && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.removeItem('beya_gemini_api_key');
+                      setGeminiApiKey('');
+                      setApiKeyDraft('');
+                      setShowApiKeyModal(false);
+                    }}
+                    className="p-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-colors cursor-pointer"
+                    title={isAr ? 'حذف المفتاح' : 'Supprimer la clé'}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
@@ -1186,14 +1301,20 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
   const generateClientAssistantReply = async (query: string, lead: Lead, analysis: any, isAr: boolean = true): Promise<string> => {
     const q = (query || '').toLowerCase().trim();
-    const mod = (analysis.modeleReel || lead.type || '').toLowerCase();
+    const safeModel = (analysis?.modeleReel || lead.type || 'الموديل').trim();
+    const mod = safeModel.toLowerCase();
+    const safeUnit = Number(analysis?.unitPrice) || 65;
+    const safeQty = Number(analysis?.qty) || Number(lead.quantity) || 100;
+    const safeTotal = Number(analysis?.totalPrice) || (safeUnit * safeQty);
+    const safeTissu = (analysis?.tissuSuggere || 'قماش مخصص ومطابق للمواصفات').trim();
+    const safeDelai = (analysis?.delaiEstime || '7 إلى 10 أيام عمل').trim();
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key');
 
     // If Gemini API is configured, use it with strict factory advisor constraints
     if (apiKey) {
       try {
         const sysPrompt = `أنت "مستشار ورشة BEYA Creative" لصناعة الملابس والنسيج بالمغرب.
-الموديل: ${analysis.modeleReel}
+الموديل: ${safeModel}
 الكمية: ${analysis.qty} قطعة
 نوع الثوب المقترح: ${analysis.tissuSuggere}
 سعر الخياطة التقديري: ${analysis.unitPrice} درهم للقطعة (المجموع: ${analysis.totalPrice} درهم)
@@ -1222,12 +1343,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     if (/(ثوب|قماش|tissu|tissou|matiere|prix.*tissu|taman.*toub|شحال.*ثوب|نوع.*ثوب|السوق|درب عمر|garage allal|شحال كيدير)/i.test(q)) {
       if (mod.includes('jakit') || mod.includes('jacket') || mod.includes('veste') || mod.includes('جاكيت') || mod.includes('bomber')) {
         return isAr
-          ? `بخصوص جاكيت ${analysis.modeleReel}، أحسن نوع ثوب كننصحو بيه فالورشة هو:
+          ? `بخصوص جاكيت ${safeModel}، أحسن نوع ثوب كننصحو بيه فالورشة هو:
 1. **غاباردين كوتون متين (Gabardine Coton)**: كيدير فسوق درب عمر وكراج علال بين 35 و 48 درهم للمتر. واقف وما كيموتش فالتصبين.
 2. **كوتون تويل (Twill Lourd)**: ثوب نقي وشيك بزاف، كيدير بين 38 و 52 درهم للمتر.
 3. **مولطون قطن سميك 340g** (للجاكيتات الرياضية أو ستريتوير): كيدير بين 68 و 75 درهم للكيلو في الجملة.
 كل جاكيت كتاكل تقريباً ما بين 1.90m إلى 2.10m.`
-          : `Pour la veste ${analysis.modeleReel}, nous conseillons la Gabardine de Coton (35-48 MAD/m au marché de gros à Casablanca) ou le Twill Coton lourd (38-52 MAD/m). Consommation : ~2.00m par pièce.`;
+          : `Pour la veste ${safeModel}, nous conseillons la Gabardine de Coton (35-48 MAD/m au marché de gros à Casablanca) ou le Twill Coton lourd (38-52 MAD/m). Consommation : ~2.00m par pièce.`;
       }
       if (mod.includes('robe') || mod.includes('abaya') || mod.includes('كسوة') || mod.includes('عباية') || mod.includes('جلابة')) {
         return isAr
@@ -1255,20 +1376,20 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       if (mod.includes('survet') || mod.includes('طقم')) meters = '2.80 إلى 3.10 متر (للطقم كاملاً)';
 
       return isAr
-        ? `حسب الباترون والقصة ديال موديل "${analysis.modeleReel}"، كل قطعة كتاكل تقريباً ما بين **${meters}** (عرض الثوب العادي 1.50m). إيلا بغيتي تشري الثوب من عندك، كنصحوك ديما تزيد 5% كإحتياط للانكماش والقصّان.`
-        : `Pour le modèle "${analysis.modeleReel}", la consommation estimée est de **${meters}** par pièce (laize 1.50m). Prévoyez 5% de marge pour le retrait et la coupe.`;
+        ? `حسب الباترون والقصة ديال موديل "${safeModel}"، كل قطعة كتاكل تقريباً ما بين **${meters}** (عرض الثوب العادي 1.50m). إيلا بغيتي تشري الثوب من عندك، كنصحوك ديما تزيد 5% كإحتياط للانكماش والقصّان.`
+        : `Pour le modèle "${safeModel}", la consommation estimée est de **${meters}** par pièce (laize 1.50m). Prévoyez 5% de marge pour le retrait et la coupe.`;
     }
 
     // 3. Prix et Quantité
     if (/(taman|prix|سعر|تكلفة|شحال.*خياطة|تخفيض|كونتيتي|كمية|quantite|reduc|remise)/i.test(q)) {
       return isAr
-        ? `سعر الخياطة والتصنيع التقديري لهاد الموديل هو **${analysis.unitPrice} درهم للقطعة** (على حساب كمية ${analysis.qty} قطعة). إيلا طلعتي الكمية (مثلاً أكثر من 100 أو 300 قطعة)، السعر كيهبط بـ 10% إلى 18% حيت وقت الفصالة والماكينات كيتوزع على عدد كبير.`
-        : `Le coût de confection actuel est de **${analysis.unitPrice} MAD/pièce** pour ${analysis.qty} pcs. Pour un volume supérieur (>100 ou >300 pcs), le tarif unitaire diminue de 10% à 18%.`;
+        ? `سعر الخياطة والتصنيع التقديري لهاد الموديل هو **${safeUnit} درهم للقطعة** (على حساب كمية ${safeQty} قطعة). إيلا طلعتي الكمية (مثلاً أكثر من 100 أو 300 قطعة)، السعر كيهبط بـ 10% إلى 18% حيت وقت الفصالة والماكينات كيتوزع على عدد كبير.`
+        : `Le coût de confection actuel est de **${safeUnit} MAD/pièce** pour ${safeQty} pcs. Pour un volume supérieur (>100 ou >300 pcs), le tarif unitaire diminue de 10% à 18%.`;
     }
 
     // 4. Échantillon & Acompte
     if (/(عينة|echantillon|prototype|تسبيق|acompte|avance|خلاص|paiement|rib|واش كترجع|شحال تسبيق)/i.test(q)) {
-      const acompteApprox = Math.round(analysis.totalPrice * 0.5);
+      const acompteApprox = Math.round(safeTotal * 0.5);
       return isAr
         ? `عندنا فالورشة جوج خيارات واضحين ومريحين:
 1. **إيلا جبتي الثوب والمستلزمات من عندك:** **ما كتسبق حتى درهم مسبقاً (0 درهم تسبيق)!** كتصيفط غير الثوب والمستلزمات للورشة، وحنا كنبداو الفصالة والخياطة مباشرة، وما كتخلص حتى تكمل السلعة وتستلمها واجدة بعد مراقبة الجودة وفينيسيون.
@@ -1283,10 +1404,10 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     return isAr
       ? `مرحباً بك! أنا مستشار ورشة BEYA Creative. بخصوص موديل "${analysis.modeleReel}":
 - **نوع الثوب المقترح:** ${analysis.tissuSuggere}
-- **سعر الخياطة:** ${analysis.unitPrice} درهم للقطعة (المجموع: ${analysis.totalPrice.toLocaleString()} درهم)
+- **سعر الخياطة:** ${analysis.unitPrice} درهم للقطعة (المجموع: ${safeTotal.toLocaleString()} درهم)
 - **مدة التسليم:** ${analysis.delaiEstime}
 تقدر تسولني على: نوع وسعر القماش فالسوق، الميطراج اللي كتاكل البياسة، أو شروط العينة والتسبيق.`
-      : `Bonjour ! Pour votre modèle "${analysis.modeleReel}", le tissu conseillé est "${analysis.tissuSuggere}" (${analysis.unitPrice} MAD/pc pour ${analysis.qty} pcs). N'hésitez pas à me demander le prix du tissu, le métrage ou les modalités d'échantillon.`;
+      : `Bonjour ! Pour votre modèle "${analysis.modeleReel}", le tissu conseillé est "${analysis.tissuSuggere}" (${safeUnit} MAD/pc pour ${safeQty} pcs). N'hésitez pas à me demander le prix du tissu, le métrage ou les modalités d'échantillon.`;
   };
 
 const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
@@ -1297,9 +1418,9 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
     // Check custom saved values from database/atelier edit first
     const savedUnitPrice = (d.unitPrice && Number(d.unitPrice) > 0) ? Number(d.unitPrice) : (d.crmPrice && Number(d.crmPrice) > 0) ? Number(d.crmPrice) : null;
-    const savedModele = (d.modeleReel && d.modeleReel.trim() && d.modeleReel.toUpperCase() !== 'MODEL') ? d.modeleReel.trim() : null;
-    const savedTissu = (d.tissuSuggere && d.tissuSuggere.trim()) ? d.tissuSuggere.trim() : null;
-    const savedTech = (d.techDetails && d.techDetails.trim()) ? d.techDetails.trim() : null;
+    const savedModele = (d.modeleReel && d.modeleReel.trim() && d.modeleReel.toUpperCase() !== 'MODEL' && d.modeleReel !== 'JAKIT' && d.modeleReel !== 'modz') ? d.modeleReel.trim() : null;
+    const savedTissu = (d.tissuSuggere && d.tissuSuggere.trim() && !d.tissuSuggere.includes('قماش مخصص ومطابق للمواصفات') && !d.tissuSuggere.includes('Tissu adapté selon cahier')) ? d.tissuSuggere.trim() : null;
+    const savedTech = (d.techDetails && d.techDetails.trim() && !d.techDetails.includes('قصة وخياطة مخصصة بدقة عالية مع معالجة')) ? d.techDetails.trim() : null;
     const savedDelai = (d.delaiEstime && d.delaiEstime.trim()) ? d.delaiEstime.trim() : null;
     const savedProgression = d.statusProgression || 'etude';
     const savedReponse = (d.reponseAtelier && d.reponseAtelier.trim()) ? d.reponseAtelier.trim() : null;
@@ -1317,12 +1438,20 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const hasCustomEchantillon = Boolean(savedEchantillon && savedEchantillon > 0);
 
     // Detect Clothing Categories
-    const isTracksuit = text.includes('survet') || text.includes('survêtement') || text.includes('tracksuit') || text.includes('ensemble') || text.includes('بدلة') || text.includes('طقم') || d.id?.toLowerCase().includes('49606be7');
-    const isHoodieOrSweat = !isTracksuit && (text.includes('hoodie') || text.includes('sweat') || text.includes('capuche') || text.includes('9f2f3e3') || (d.type?.toLowerCase() === 't-shirt' && (d.id?.toLowerCase().includes('9f2f3e3') || text.includes('vert') || text.includes('amour') || text.includes('green'))));
-    const isTshirt = !isTracksuit && !isHoodieOrSweat && (text.includes('t-shirt') || text.includes('tshirt') || text.includes('tee') || text.includes('تيشرت') || text.includes('تيشيرت'));
-    const isPolo = !isTracksuit && (text.includes('polo') || text.includes('بولو'));
-    const isPants = !isTracksuit && (text.includes('pantalon') || text.includes('jogging') || text.includes('cargo') || text.includes('سروال'));
-    const isVeste = !isTracksuit && (
+    const isDenimOrTailleur = (
+      text.includes('modz') ||
+      text.includes('denim') ||
+      text.includes('jean') ||
+      text.includes('tailleur') ||
+      text.includes('ceintur') ||
+      d.id?.toLowerCase().includes('7eea2877')
+    );
+    const isTracksuit = !isDenimOrTailleur && (text.includes('survet') || text.includes('survêtement') || text.includes('tracksuit') || text.includes('ensemble') || text.includes('بدلة') || text.includes('طقم') || d.id?.toLowerCase().includes('49606be7'));
+    const isHoodieOrSweat = !isTracksuit && !isDenimOrTailleur && (text.includes('hoodie') || text.includes('sweat') || text.includes('capuche') || text.includes('9f2f3e3') || (d.type?.toLowerCase() === 't-shirt' && (d.id?.toLowerCase().includes('9f2f3e3') || text.includes('vert') || text.includes('amour') || text.includes('green'))));
+    const isTshirt = !isTracksuit && !isHoodieOrSweat && !isDenimOrTailleur && (text.includes('t-shirt') || text.includes('tshirt') || text.includes('tee') || text.includes('تيشرت') || text.includes('تيشيرت'));
+    const isPolo = !isTracksuit && !isDenimOrTailleur && (text.includes('polo') || text.includes('بولو'));
+    const isPants = !isTracksuit && !isDenimOrTailleur && (text.includes('pantalon') || text.includes('jogging') || text.includes('cargo') || text.includes('سروال'));
+    const isVeste = !isTracksuit && !isDenimOrTailleur && (
       text.includes('veste') || 
       text.includes('jacket') || 
       text.includes('jakit') || 
@@ -1333,7 +1462,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       text.includes('فيست') || 
       text.includes('كابوت') || 
       text.includes('manteau') || 
-      text.includes('windbreaker')
+      text.includes('windbreaker') ||
+      d.id?.toLowerCase().includes('d1fbca4c')
     );
 
     let defaultModele = d.type && d.type.toUpperCase() !== 'MODEL' ? d.type : (isAr ? 'موديل تفصيل وخياطة مخصص' : 'Modèle Confection Sur-Mesure');
@@ -1411,22 +1541,39 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultTissuConso = 1.45;
       defaultTissuPrixKg = 68;
     } else if (isVeste) {
-      defaultModele = isAr ? 'جاكيت بسحاب كامل (Veste Zippée)' : 'Veste Zippée Streetwear';
-      defaultTissu = isAr ? 'غاباردين كوتون متين (Gabardine Coton) أو Twill Lourd مقاوم للتصبين' : 'Gabardine Coton résistant / Twill Lourd';
-      defaultTech = isAr ? 'سحاب معدني أمامي كامل • جيوب جانبية مخفية • ياقة مضلعة' : 'Fermeture zippée métallique intégrale • Poches zippées • Col bord-côte';
+      defaultModele = isAr ? 'جاكيت رياضية تقنية بسحاب (Veste Sport Coupe-Vent Zippée)' : 'Veste Sport Coupe-Vent Zippée';
+      defaultTissu = isAr ? 'مايكروفايبر تقني مقاوم للرياح والماء (Microfibre Coupe-Vent Imperméable / Nylon Twill)' : 'Microfibre Coupe-Vent Imperméable / Nylon Twill Lourd';
+      defaultTech = isAr ? 'سحاب أمامي كامل مقاوم للماء • جيبين جانبيين بسحاب مخفي • ياقة مرتفعة مع أكمام مطاطية مرنة • خياطة تقنية مع شريط نظافة داخلي' : 'Fermeture zippée métallique intégrale étanche • Poches zippées invisibles • Col montant et poignets élastiqués';
       defaultUnitPrice = 95;
-      defaultDelai = isAr ? '8 - 12 يوم عمل' : '8 - 12 jours ouvrables';
-      defaultPatronage = 320;
-      defaultEchantillon = 400;
+      defaultDelai = isAr ? '7 - 10 أيام عمل (العينة تحت 48 ساعة)' : '7 - 10 jours ouvrables (Échantillon sous 48h)';
+      defaultPatronage = 300;
+      defaultEchantillon = 380;
       defaultTissuConso = 2.10;
       defaultTissuPrixKg = 75;
+      defaultReponse = isAr
+        ? 'موديل الجاكيت التقنية تم تحليله بالكامل من الورشة: ثوب المايكروفايبر المقاوم للماء مع السحاب والبطانة تم تسعيرهم بدقة. العينة جاهزة للإطلاق فور التأكيد.'
+        : 'Veste coupe-vent analysée par l\'atelier : microfibre imperméable et zips validés. Prototype prêt à lancer.';
+    } else if (isDenimOrTailleur) {
+      defaultModele = isAr ? 'طقم فيست دنيم عصري بحزام (Ensemble Veste Tailleur Denim)' : 'Ensemble Veste Tailleur Denim Ceinturée';
+      defaultTissu = isAr ? 'ثوب دنيم جينز 100% قطن متين 11-12 أونصة معالجة ناعمة (Toile Denim Coton Brut / Twill Jeans)' : 'Toile Denim 100% Coton 11-12oz / Twill Jeans Lourd';
+      defaultTech = isAr ? 'قصة جاكيت مفصلة مع حزام خصر مدمج وحلقة معدنية • درزات مضاعفة بخيط الجينز المتين (Double Surpiqûre) • ياقة كلاسيكية مفتوحة وأكتاف مضبوطة' : 'Veste tailleur avec ceinture intégrée boucle métal • Double surpiqûre fil jean • Col tailleur et emmanchures renforcées';
+      defaultUnitPrice = 115;
+      defaultDelai = isAr ? '8 - 12 يوم عمل (العينة تحت 48 ساعة)' : '8 - 12 jours ouvrables (Échantillon sous 48h)';
+      defaultPatronage = 350;
+      defaultEchantillon = 420;
+      defaultTissuConso = 2.40;
+      defaultTissuPrixKg = 75;
+      defaultReponse = isAr
+        ? 'تمت دراسة موديل فيست الجينز/الدنيم بعناية من طرف الورشة: ثوب الدنيم 100% قطن متين مع تفاصيل الحزام والدرزات المضاعفة محسوبة بدقة. جاهزون لإطلاق العينة الأولية فور تأكيدكم.'
+        : 'Modèle Veste Denim étudié avec soin : toile 100% coton et finitions ceinture calculées. Prêt pour prototypage.';
     }
 
     const hasBroderie = text.includes('broderie') || text.includes('طرز') || text.includes('طريزة') || text.includes('brodé') || text.includes('brode');
     const hasPrint = text.includes('sérigraphie') || text.includes('serigraphie') || text.includes('dtf') || text.includes('print') || text.includes('طباعة') || text.includes('طبعة') || text.includes('marquage') || isHoodieOrSweat || isTshirt;
 
+    const isGenericPrice = savedUnitPrice === 65 && !d.crmPriceConfirmed && (isVeste || isDenimOrTailleur || isTracksuit);
+    const unitPrice = (savedUnitPrice && !isGenericPrice) ? savedUnitPrice : defaultUnitPrice;
     const modeleReel = savedModele || defaultModele;
-    const unitPrice = savedUnitPrice || defaultUnitPrice;
     const qty = Number(d.quantity) > 0 ? Number(d.quantity) : 100;
     const totalPrice = d.totalPrice && d.totalPrice > 0 ? d.totalPrice : (unitPrice * qty);
     const tissuSuggere = savedTissu || defaultTissu;
@@ -1618,15 +1765,39 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       const leadPayload: any = {
         name: currentUser.nom,
         email: currentUser.email || '',
-        phone: newOrderForm.telephone || currentUser.telephone || pastPhone,
+        phone: currentUser.telephone || pastPhone || newOrderForm.telephone || '',
         phone2: pastPhone2,
         ville: '',
         type: newOrderForm.modele,
-        quantity: parseInt(newOrderForm.quantite),
+        quantity: parseInt(newOrderForm.quantite) || 100,
         photo: newOrderForm.photo,
         details: newOrderForm.details,
         tailles: sizeQuantities
       };
+
+      // Auto AI analysis if photo and Gemini key exist to accurately set fabric and cost
+      if (newOrderForm.photo && geminiApiKey) {
+        try {
+          const aiResult = await analyzeLeadPhotoWithAI({
+            modele: newOrderForm.modele,
+            details: newOrderForm.details,
+            photo: newOrderForm.photo
+          });
+          if (aiResult) {
+            leadPayload.modeleReel = aiResult.modeleReel;
+            leadPayload.tissuSuggere = aiResult.tissuSuggere;
+            leadPayload.unitPrice = aiResult.unitPrice;
+            leadPayload.crmPrice = aiResult.unitPrice;
+            leadPayload.patronagePrice = aiResult.patronagePrice;
+            leadPayload.prixEchantillon = aiResult.prixEchantillon;
+            leadPayload.delaiEstime = aiResult.delaiEstime;
+            leadPayload.techDetails = aiResult.techDetails;
+            leadPayload.reponseAtelier = aiResult.reponseAtelier;
+          }
+        } catch (e) {
+          console.warn('AI analysis on new lead submit:', e);
+        }
+      }
       
       if (editingDemandeId) {
          leadPayload.id = editingDemandeId;
@@ -1862,6 +2033,18 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 <Lock className="w-3.5 h-3.5 text-amber-400" />
                 <span>{isAr ? 'تغيير كلمة المرور' : 'Modifier mot de passe'}</span>
               </button>
+              <button 
+                onClick={() => {
+                  setApiKeyDraft(geminiApiKey);
+                  setApiKeyTestResult(null);
+                  setShowApiKeyModal(true);
+                }}
+                className="w-full py-3 mb-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-white rounded-2xl text-xs font-bold transition-all border border-indigo-500/20 flex items-center justify-center gap-2"
+              >
+                <Key className="w-3.5 h-3.5 text-indigo-400" />
+                <span>{isAr ? 'إعدادات الذكاء الاصطناعي (API)' : 'Configuration IA (API Key)'}</span>
+                {geminiApiKey && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>}
+              </button>
              <button 
                onClick={onLogout}
                className="w-full py-4 bg-white/5 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-transparent hover:border-rose-500/20"
@@ -1904,6 +2087,19 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 title={isAr ? 'تحديث الصفحة' : 'Actualiser la page'}
               >
                 <RotateCw className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => {
+                  setApiKeyDraft(geminiApiKey);
+                  setApiKeyTestResult(null);
+                  setShowApiKeyModal(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200/80 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer"
+                title={isAr ? 'إعداد مفتاح الذكاء الاصطناعي (Gemini API)' : 'Configurer clé API Gemini'}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="hidden sm:inline">{isAr ? 'AI API' : 'Clé IA'}</span>
+                {geminiApiKey && <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-200 animate-pulse" />}
               </button>
               <button onClick={toggle} className="px-5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-colors">
                  {isAr ? 'FR' : 'عربية'}
@@ -2606,13 +2802,32 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-mono font-black rounded-lg border border-indigo-100">
                                   #{d.id.substring(0, 8).toUpperCase()}
                                 </span>
                                 <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-lg border border-emerald-100">
                                   {isAr ? 'دوفيز رسمي معتمد' : 'Devis Officiel'}
                                 </span>
+                                <button
+                                  type="button"
+                                  disabled={isAiAnalyzingLead === d.id}
+                                  onClick={() => reanalyzeDemandeWithAI(d)}
+                                  className="px-2.5 py-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-[10px] font-black rounded-lg shadow-xs flex items-center gap-1 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                                  title={isAr ? 'تحليل الموديل بالذكاء الاصطناعي وتحديث الأسعار التقديرية ونوع الثوب' : 'Re-analyser avec l\'IA'}
+                                >
+                                  {isAiAnalyzingLead === d.id ? (
+                                    <>
+                                      <RotateCw className="w-3 h-3 animate-spin" />
+                                      <span>{isAr ? 'جاري التحليل...' : 'Analyse...'}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="w-3 h-3 text-amber-300" />
+                                      <span>{isAr ? '🧠 تحليل بـ AI' : '🧠 Analyse IA'}</span>
+                                    </>
+                                  )}
+                                </button>
                               </div>
                               <h2 className="text-xl font-black text-slate-900 truncate leading-snug">
                                 {analysis.modeleReel}
@@ -2802,9 +3017,23 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               </span>
                             </div>
                           </div>
-                          <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg border border-indigo-100">
-                            {isAr ? 'رد فوري' : 'Direct'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setApiKeyDraft(geminiApiKey);
+                                setApiKeyTestResult(null);
+                                setShowApiKeyModal(true);
+                              }}
+                              className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors"
+                              title={isAr ? 'إعدادات مفتاح الذكاء الاصطناعي (API Key)' : 'Clé API Gemini'}
+                            >
+                              <Key className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg border border-indigo-100">
+                              {isAr ? 'رد فوري' : 'Direct'}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Chat Messages Body */}
@@ -3844,8 +4073,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
                                 {/* Bottom Image Overlay */}
                                 <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent flex items-end p-4 pointer-events-none">
-                                  <span className="text-white/90 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-                                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                                  <span className="text-white/90 text-xs font-black uppercase tracking-wider block">
+
                                     {isAr ? 'تصنيع عالي الجودة' : 'Confection Premium'}
                                   </span>
                                 </div>
@@ -6107,15 +6336,14 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                         className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-indigo-600 transition-all ${isAr ? 'text-right' : ''}`}
                       />
                     </div>
-                    <div>
-                      <label className={`block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'رقم الهاتف' : 'TÉLÉPHONE / WHATSAPP'}</label>
-                      <input 
-                        type="tel" 
-                        value={newOrderForm.telephone}
-                        onChange={e => setNewOrderForm({...newOrderForm, telephone: e.target.value})}
-                        placeholder={isAr ? '06XXXXXXXX' : 'Ex: 06XXXXXXXX'}
-                        className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-indigo-600 transition-all ${isAr ? 'text-right' : ''}`}
-                      />
+                    <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-bold flex items-center gap-1.5">
+                        <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+                        {isAr ? 'رقم الهاتف المعتمد بالطلب:' : 'Téléphone du compte :'}
+                      </span>
+                      <span className="font-mono font-black text-slate-800">
+                        {currentUser?.telephone || (mesDemandes.find(d => d.phone)?.phone) || 'مسجل تلقائياً بالحساب'}
+                      </span>
                     </div>
                     <div>
                       <label className={`block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'الكمية التقديرية' : 'Quantité Estimée'}</label>
