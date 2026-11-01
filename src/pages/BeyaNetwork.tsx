@@ -32,8 +32,6 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [modelisteCategoryFilter, setModelisteCategoryFilter] = useState<'all' | 'streetwear' | 'femme' | 'sport' | 'denim'>('all');
   const [clientCategoryFilter, setClientCategoryFilter] = useState<'all' | 'streetwear' | 'casual' | 'modest' | 'sport'>('all');
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>('all');
-  const [selectedModelisteProfile, setSelectedModelisteProfile] = useState<any | null>(null);
-  const [modelisteProfileTab, setModelisteProfileTab] = useState<'about' | 'portfolio' | 'pricing' | 'reviews'>('about');
   const [endorsedModelistes, setEndorsedModelistes] = useState<Record<string, number>>(() => {
     try {
       const raw = localStorage.getItem('beya_modeliste_endorsements');
@@ -1316,11 +1314,15 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                       {/* 2. Overlapping Circular Avatar + Identity Header */}
                       <div className="px-6 pb-2 relative">
                         <div className="flex items-end justify-between -mt-12 mb-3">
-                          <div className="relative">
+                          <div 
+                            className="relative cursor-pointer group/avatar" 
+                            onClick={() => navigate(`/modeliste/${mod.id}`)}
+                            title="عرض صفحة الموديليست الكاملة"
+                          >
                             <img 
                               src={mod.avatar} 
                               alt={mod.name} 
-                              className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg shadow-slate-900/10 bg-slate-100"
+                              className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg shadow-slate-900/10 bg-slate-100 group-hover/avatar:ring-2 group-hover/avatar:ring-indigo-500 transition"
                             />
                             {mod.verified && (
                               <div className="absolute -bottom-1 -right-1 bg-indigo-600 text-white p-1 rounded-full border-2 border-white shadow-xs" title="موديليست موثق">
@@ -1340,7 +1342,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                         {/* Name & LinkedIn Headline */}
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-black text-lg text-slate-900 hover:text-indigo-600 transition-colors cursor-pointer" onClick={() => { setSelectedModelisteProfile(mod); setModelisteProfileTab('about'); }}>
+                            <h3 className="font-black text-lg text-slate-900 hover:text-indigo-600 transition-colors cursor-pointer" onClick={() => navigate(`/modeliste/${mod.id}`)}>
                               {mod.name}
                             </h3>
                             <span className="px-2 py-0.5 bg-amber-50 text-amber-800 text-[10px] font-bold rounded-md border border-amber-200/60">
@@ -1398,8 +1400,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                             {mod.portfolio.map((item: any, pIdx: number) => (
                               <div 
                                 key={pIdx} 
-                                onClick={() => { setSelectedModelisteProfile(mod); setModelisteProfileTab('portfolio'); }}
+                                onClick={() => navigate(`/modeliste/${mod.id}`)}
                                 className="group/item relative h-20 rounded-xl overflow-hidden border border-slate-200 cursor-pointer"
+                                title="عرض نموذج الباترون فصفحة الموديليست"
                               >
                                 <img 
                                   src={item.image} 
@@ -1442,7 +1445,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => { setSelectedModelisteProfile(mod); setModelisteProfileTab('about'); }}
+                          onClick={() => navigate(`/modeliste/${mod.id}`)}
                           className="flex-1 py-3 px-4 bg-white hover:bg-slate-100 text-slate-800 rounded-2xl text-xs font-black border border-slate-200 transition-all flex items-center justify-center gap-1.5 shadow-2xs active:scale-98 cursor-pointer"
                         >
                           <Eye className="w-4 h-4 text-indigo-600" />
@@ -1771,292 +1774,6 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
           </div>
         </div>
       )}
-
-      {/* ───────────────── FULL MODÉLISTE PROFILE MODAL (LINKEDIN / FACEBOOK STYLE) ───────────────── */}
-      {selectedModelisteProfile && (() => {
-        const mod = selectedModelisteProfile;
-        const totalEndorsements = (mod.endorsementsBase || 50) + (endorsedModelistes[mod.id] || 0);
-
-        return (
-          <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-y-auto animate-in fade-in" dir="rtl">
-            <div className="bg-white rounded-[2rem] max-w-3xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col my-auto relative custom-scrollbar">
-              
-              {/* Cover Banner */}
-              <div className="h-44 md:h-52 relative overflow-hidden bg-slate-900 shrink-0">
-                <img src={mod.banner} alt={mod.name} className="w-full h-full object-cover opacity-90" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                
-                {/* Close Button */}
-                <button 
-                  onClick={() => setSelectedModelisteProfile(null)}
-                  className="absolute top-4 left-4 p-2.5 rounded-full bg-black/60 hover:bg-black text-white transition cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                <div className="absolute top-4 right-4 flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-amber-300 text-xs font-black border border-amber-400/30">
-                    {mod.categoryLabel}
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm">
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    <span>{mod.availability}</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Profile Card Header Info */}
-              <div className="px-6 md:px-8 pb-4 relative border-b border-slate-100">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 mb-4">
-                  <div className="relative">
-                    <img 
-                      src={mod.avatar} 
-                      alt={mod.name} 
-                      className="w-28 h-28 md:w-32 md:h-32 rounded-3xl object-cover border-4 border-white shadow-xl bg-slate-100"
-                    />
-                    {mod.verified && (
-                      <div className="absolute bottom-1 right-1 bg-indigo-600 text-white p-1.5 rounded-full border-2 border-white shadow-sm" title="موديليست معتمد">
-                        <CheckCircle2 className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => handleEndorse(mod.id)}
-                      className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
-                    >
-                      <ThumbsUp className="w-4 h-4 text-indigo-600" />
-                      <span>توصية ({totalEndorsements})</span>
-                    </button>
-
-                    <a
-                      href={`https://wa.me/${mod.whatsapp}?text=${encodeURIComponent(`السلام عليكم أستاذ(ة) ${mod.name}، تواصلت معك من خلال بروفايلك فـ BEYA NETWORK وبغيت نستفسر على الباترون وتفاصيل الخدمة.`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-md flex items-center gap-2 transition active:scale-95 cursor-pointer"
-                    >
-                      <Phone className="w-4 h-4" />
-                      <span>واتساب مباشر</span>
-                    </a>
-                  </div>
-                </div>
-
-                {/* Identity */}
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-xl md:text-2xl font-black text-slate-900">{mod.name}</h2>
-                    <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 text-xs font-bold rounded-lg">
-                      {mod.studio}
-                    </span>
-                  </div>
-                  <p className="text-xs md:text-sm font-bold text-slate-700 mt-1">
-                    {mod.headline}
-                  </p>
-                  <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{mod.city}</span>
-                    <span>•</span>
-                    <span>الهاتف: <strong className="font-mono text-slate-700">{mod.phone}</strong></span>
-                  </p>
-                </div>
-
-                {/* Stats Bar */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-100 text-center">
-                  <div className="p-2.5 bg-slate-50 rounded-2xl">
-                    <span className="text-[10px] text-slate-400 block font-bold">الباترونات المنجزة</span>
-                    <span className="text-base font-black text-slate-900">+{mod.completedPatterns}</span>
-                  </div>
-                  <div className="p-2.5 bg-slate-50 rounded-2xl">
-                    <span className="text-[10px] text-slate-400 block font-bold">سنوات الخبرة</span>
-                    <span className="text-base font-black text-indigo-600">{mod.experienceYears}</span>
-                  </div>
-                  <div className="p-2.5 bg-slate-50 rounded-2xl">
-                    <span className="text-[10px] text-slate-400 block font-bold">التقييم العام</span>
-                    <span className="text-base font-black text-amber-500">⭐ {mod.rating} / 5</span>
-                  </div>
-                  <div className="p-2.5 bg-slate-50 rounded-2xl">
-                    <span className="text-[10px] text-slate-400 block font-bold">مدة الإنجاز</span>
-                    <span className="text-base font-black text-emerald-600">{mod.turnaround}</span>
-                  </div>
-                </div>
-
-                {/* Profile Tabs (LinkedIn Style) */}
-                <div className="flex items-center gap-2 mt-4 pt-2 border-t border-slate-100 overflow-x-auto">
-                  {[
-                    { id: 'about', label: 'السيرة والنبذة' },
-                    { id: 'portfolio', label: `معرض النماذج (${mod.portfolio.length})` },
-                    { id: 'pricing', label: 'الأسعار والخدمات' },
-                    { id: 'reviews', label: `توصيات الزبائن (${mod.reviews.length})` }
-                  ].map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setModelisteProfileTab(tab.id as any)}
-                      className={`px-4 py-2 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer ${
-                        modelisteProfileTab === tab.id
-                          ? 'bg-slate-900 text-white shadow-sm'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tab Content Body */}
-              <div className="p-6 md:p-8 space-y-6 flex-1 text-slate-800">
-                {modelisteProfileTab === 'about' && (
-                  <div className="space-y-6">
-                    {/* About */}
-                    <div>
-                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">نبذة مهنية (À propos)</h4>
-                      <p className="text-xs md:text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        {mod.about}
-                      </p>
-                    </div>
-
-                    {/* Experiences */}
-                    <div>
-                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">سجل الخبرات والمسار المهني</h4>
-                      <div className="space-y-3">
-                        {mod.experiences.map((exp: any, eIdx: number) => (
-                          <div key={eIdx} className="p-4 bg-white border border-slate-200/80 rounded-2xl space-y-1">
-                            <div className="flex items-center justify-between">
-                              <h5 className="font-extrabold text-sm text-slate-900">{exp.role}</h5>
-                              <span className="text-[11px] font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{exp.period}</span>
-                            </div>
-                            <p className="text-xs font-bold text-amber-700">{exp.company}</p>
-                            <p className="text-xs text-slate-500 leading-relaxed">{exp.desc}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Education & Certs */}
-                    <div>
-                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">التكوين والشهادات</h4>
-                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2 text-xs">
-                        <div className="flex items-center gap-2 font-bold text-slate-800">
-                          <GraduationCap className="w-4 h-4 text-indigo-600" />
-                          <span>{mod.education}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {mod.certifications.map((c: string, cIdx: number) => (
-                            <span key={cIdx} className="px-2.5 py-1 bg-white border border-slate-200 text-slate-700 rounded-lg text-[11px] font-bold">
-                              ✓ {c}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {modelisteProfileTab === 'portfolio' && (
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">معرض الموديلات والباترونات المنفذة</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {mod.portfolio.map((pItem: any, pi: number) => (
-                        <div key={pi} className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-2xs group/p">
-                          <div className="h-48 relative overflow-hidden bg-slate-900">
-                            <img src={pItem.image} alt={pItem.title} className="w-full h-full object-cover group-hover/p:scale-105 transition-transform duration-500" />
-                            <span className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-black/70 text-white rounded-lg text-[10px] font-black">
-                              {pItem.tag}
-                            </span>
-                          </div>
-                          <div className="p-4 space-y-1">
-                            <h5 className="font-black text-sm text-slate-900">{pItem.title}</h5>
-                            <p className="text-xs text-slate-500">{pItem.specs}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {modelisteProfileTab === 'pricing' && (
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">لائحة أسعار الخدمات الشفافة</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
-                        <div>
-                          <strong className="block text-slate-900">الباترون الأساسي (Patron de Base)</strong>
-                          <span className="text-slate-400 text-[11px]">ملف DXF/RUL + PDF بالحجم الحقيقي 1:1</span>
-                        </div>
-                        <span className="text-base font-black text-emerald-600 font-mono">{mod.pricing.basePattern} DH</span>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
-                        <div>
-                          <strong className="block text-slate-900">تدريج المقاسات (Gradation)</strong>
-                          <span className="text-slate-400 text-[11px]">لكل مقاس إضافي (XS إلى 3XL)</span>
-                        </div>
-                        <span className="text-base font-black text-emerald-600 font-mono">+{mod.pricing.gradation} DH</span>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
-                        <div>
-                          <strong className="block text-slate-900">محاكاة ثلاثية الأبعاد (Rendu CLO 3D)</strong>
-                          <span className="text-slate-400 text-[11px]">فيديو 360 درجة وصور للموديل على مانيكان</span>
-                        </div>
-                        <span className="text-base font-black text-indigo-600 font-mono">+{mod.pricing.simulation3d} DH</span>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
-                        <div>
-                          <strong className="block text-slate-900">البطاقة التقنية والاستهلاك (Placement)</strong>
-                          <span className="text-slate-400 text-[11px]">حساب أمتار القماش وهوامش الفصالة</span>
-                        </div>
-                        <span className="text-base font-black text-indigo-600 font-mono">+{mod.pricing.ficheTech} DH</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {modelisteProfileTab === 'reviews' && (
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">توصيات البراندات والزبائن</h4>
-                    <div className="space-y-3">
-                      {mod.reviews.map((rev: any, rIdx: number) => (
-                        <div key={rIdx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <strong className="text-xs font-extrabold text-slate-900">{rev.author}</strong>
-                              <span className="text-xs text-slate-400 mr-2 font-medium">({rev.brand})</span>
-                            </div>
-                            <span className="text-[11px] text-amber-500 font-black">{'⭐'.repeat(rev.rating)}</span>
-                          </div>
-                          <p className="text-xs text-slate-600 leading-relaxed italic">"{rev.comment}"</p>
-                          <span className="text-[10px] text-slate-400 block">{rev.date}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom Sticky CTA */}
-              <div className="p-4 md:p-6 bg-slate-900 text-white border-t border-slate-800 flex items-center justify-between gap-4 sticky bottom-0 z-20">
-                <div>
-                  <span className="text-[10px] text-slate-400 block">بدء طلب باترون فوري</span>
-                  <strong className="text-xs md:text-sm text-amber-400">{mod.name}</strong>
-                </div>
-
-                <a
-                  href={`https://wa.me/${mod.whatsapp}?text=${encodeURIComponent(`السلام عليكم أستاذ(ة) ${mod.name}، أنا مهتم بخدمات الباترون والتدريج ديالك فـ BEYA NETWORK وبغيت نناقش معك موديل جديد.`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs md:text-sm rounded-xl shadow-lg transition active:scale-95 flex items-center gap-2 cursor-pointer"
-                >
-                  <Phone className="w-4 h-4" />
-                  <span>تواصل فـ الواتساب للاتفاق على الموديل</span>
-                </a>
-              </div>
-
-            </div>
-          </div>
-        );
-      })()}
 
     </div>
   );
