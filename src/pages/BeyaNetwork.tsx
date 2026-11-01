@@ -4,7 +4,8 @@ import {
   Send, ThumbsUp, MessageSquare, ShieldCheck, CheckCircle2, Phone, 
   Sparkles, Plus, X, ExternalLink, Filter, MapPin, Tag, Scissors, 
   Building2, Layers, Award, Clock, ChevronDown, Check, Share2, 
-  SlidersHorizontal, RefreshCw, AlertCircle, ShoppingBag
+  SlidersHorizontal, RefreshCw, AlertCircle, ShoppingBag, Palette, 
+  Ruler, Eye, Briefcase, FileCode2, Star
 } from 'lucide-react';
 import { User, saveRecord } from '../types';
 
@@ -18,13 +19,15 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const emailKey = (currentUser?.email || '').toLowerCase().trim();
   const isPilotAuthorized = emailKey === 'forsaone41@gmail.com' || currentUser?.role === 'admin';
 
-  // Navigation tab in Network
-  const [activeTab, setActiveTab] = useState<'feed' | 'suppliers' | 'groupage' | 'members'>('feed');
+  // Navigation tabs in BEYA NETWORK (Feed, Fournisseurs, Modélistes, Clients BEYA, Groupage)
+  const [activeTab, setActiveTab] = useState<'feed' | 'suppliers' | 'modelistes' | 'clients' | 'groupage'>('feed');
 
   // Search query & Category filters
   const [searchQuery, setSearchQuery] = useState('');
   const [forumTopicFilter, setForumTopicFilter] = useState<'all' | 'livraison' | 'marketing' | 'tissus' | 'conseils' | 'groupage'>('all');
-  const [supplierCategoryFilter, setSupplierCategoryFilter] = useState<'all' | 'tissu' | 'impression' | 'broderie' | 'modeliste'>('all');
+  const [supplierCategoryFilter, setSupplierCategoryFilter] = useState<'all' | 'tissu' | 'impression' | 'broderie' | 'accessoires'>('all');
+  const [modelisteCategoryFilter, setModelisteCategoryFilter] = useState<'all' | 'streetwear' | 'femme' | 'sport' | 'denim'>('all');
+  const [clientCategoryFilter, setClientCategoryFilter] = useState<'all' | 'streetwear' | 'casual' | 'modest' | 'sport'>('all');
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>('all');
 
   // Profile Form & Completion
@@ -37,10 +40,10 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       if (raw) saved = JSON.parse(raw);
     } catch {}
     return {
-      brandName: saved?.brandName || currentUser?.brandName || (currentUser as any)?.store_name || (currentUser as any)?.storeName || currentUser?.nom || 'FAS Brand',
+      brandName: saved?.brandName || currentUser?.brandName || (currentUser as any)?.store_name || (currentUser as any)?.storeName || currentUser?.nom || 'FAS Wear',
       city: saved?.city || currentUser?.ville || 'الدار البيضاء (Casablanca)',
       phone: saved?.phone || currentUser?.telephone || '0600000000',
-      bio: saved?.bio || currentUser?.networkBio || 'علامة تجارية مغربية للملابس الجاهزة والستريتوير'
+      bio: saved?.bio || currentUser?.networkBio || 'علامة تجارية مغربية متخصصة في ملابس الستريتوير والهوديات الأوفرسايز'
     };
   });
 
@@ -49,7 +52,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
     try {
       if (localStorage.getItem(`beya_network_completed_${emailKey}`) === 'true') return true;
     } catch {}
-    return true; // Default completed for smooth UX
+    return true;
   });
 
   // Posts Feed State (Persisted)
@@ -115,6 +118,30 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         ]
       },
       {
+        id: 'post-mod-1',
+        author: 'فاطمة الزهراء العمراني',
+        authorRole: 'موديلست معتمدة BEYA',
+        authorRoleKey: 'modeliste',
+        city: 'الدار البيضاء / طنجة',
+        title: '📐 نصائح ذهبية لباترون الهودي الأوفرسايز (Drop Shoulder Oversize Pattern)',
+        category: 'conseils',
+        content: 'السلام عليكم أصحاب الماركات، باش الهودي الأوفرسايز يجي طايح مزيان (Silhouette Boxy) وما يعطيش منظر خايب فـ الكمام:\n1. نزول الكتف (Emmanchure basse): هبط بـ 4 حتى لـ 6 سم على الكتف العادي.\n2. القب (Capuche): دير فيه ارتفاع 38 سم مع Doublure ثوب باش يبقى واقف وما يطيحش على الظهر.\n3. الكوت والريبان (Bord-côte): استعمل كوت قطن 2x2 ستريتش باش الكول والكمام يرجعو لبلاصتهم وما يتوسّعوش.',
+        date: 'منذ 4 ساعات',
+        likesCount: 56,
+        whatsapp: '212663049182',
+        whatsappText: 'السلام عليكم أستاذة فاطمة الزهراء، تواصلت معك من خلال BEYA NETWORK بخصوص إعداد باترون لهودي جديد.',
+        comments: [
+          {
+            id: 'c-mod-1',
+            author: 'FAS Wear',
+            role: 'صاحب علامة تجارية',
+            city: 'الدار البيضاء',
+            content: 'معلومات تقنية دقيقة شكراً بزاف! غادي نتواصل معاك بخصوص الكوليكسيون الياية.',
+            date: 'منذ ساعتين'
+          }
+        ]
+      },
+      {
         id: 'post-client-1',
         author: 'أمين البراندي',
         authorRole: 'صاحب براند ملابس شبابية',
@@ -157,28 +184,6 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         likesCount: 45,
         whatsapp: '212662938102',
         whatsappText: 'السلام عليكم، تواصلت معكم من BEYA NETWORK بخصوص خدمات طباعة الـ DTF والسيريغرافي.',
-        comments: [
-          {
-            id: 'c-5',
-            author: 'فاطمة الزهراء',
-            role: 'مصممة أزياء',
-            city: 'طنجة',
-            content: 'معلومة قيمة جداً، شكراً على مشاركة هذه التفاصيل التقنية الدقيقة!',
-            date: 'أمس، 20:10'
-          }
-        ]
-      },
-      {
-        id: 'post-mkt-1',
-        author: 'عمر التازي',
-        authorRole: 'صاحب براند كاجوال',
-        authorRoleKey: 'brand',
-        city: 'مراكش',
-        title: '📢 تجربة إعلانات TikTok Ads لبراند ملابس: شنو لي خدام دابا؟',
-        category: 'marketing',
-        content: 'شاركت معاكم هاد التيست لي درناه هاد الأسبوع: صور الكاتالوج الاحترافية عطاتنا ROAS ديال 1.9، بينما فيديو بسيط مصور بالأيفون وسط الورشة كيبين تقطيع الثوب وخياطة الشعار (Behind The Scenes) جاب ROAS 4.3 ونفس الموديل تباع منو 140 بياس فـ 48 ساعة!\nالكليان المغربي كيعجبو يشوف أصالة التصنيع والخدمة المتقونة.',
-        date: 'منذ يومين',
-        likesCount: 52,
         comments: []
       }
     ];
@@ -195,6 +200,251 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   // Active Comment Input per post
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+
+  // ───────────────── 1. SUPPLIERS DIRECTORY DATA ─────────────────
+  const suppliersList = [
+    {
+      id: 'sup-1',
+      name: 'مجمع أقمشة الشرق (Derb Omar)',
+      category: 'tissu',
+      categoryLabel: 'أقمشة وتوريد قطن',
+      city: 'الدار البيضاء (درب عمر)',
+      whatsapp: '212661849201',
+      phone: '0661849201',
+      products: ['مولتون شتوي 340g مبطن', 'إنترلوك أصلي 100% قطن', 'جيرسي ليكرا صيفي 240g', 'كوتون كوردوروي'],
+      minQty: 'ابتداءً من 25 كلغ (رولو واحد)',
+      rating: 4.9,
+      verified: true,
+      desc: 'الموزع المعتمد لأرقى خامات الأقطان والمنسوجات الشتوية والصيفية في درب عمر زنقة فاس. أسعار تفضيلية خاصة بأعضاء شبكة BEYA.'
+    },
+    {
+      id: 'sup-2',
+      name: 'أقمشة المسيرة الشمالية (Tissus Nord)',
+      category: 'tissu',
+      categoryLabel: 'أقمشة سراويل وجاباردين',
+      city: 'طنجة (المنطقة الحرة)',
+      whatsapp: '212665819203',
+      phone: '0665819203',
+      products: ['جاباردين كوتون ستريتش متين', 'قماش كوتون كانفاس (Canvas)', 'أقمشة تقنية ووتربروف', 'كتان صيفي بيور'],
+      minQty: 'ابتداءً من 30 متر',
+      rating: 4.85,
+      verified: true,
+      desc: 'متخصصون في توريد خامات السراويل الكارجو والسترات الواقية والمآزر بأعلى معايير المتانة ومقاومة التمزق.'
+    },
+    {
+      id: 'sup-3',
+      name: 'المركز الرقمي للطباعة والـ DTF (Digital Print Pro)',
+      category: 'impression',
+      categoryLabel: 'طباعة وسيريغرافي',
+      city: 'الدار البيضاء (عين السبع)',
+      whatsapp: '212662938102',
+      phone: '0662938102',
+      products: ['طباعة DTF فائقة النقاء HD', 'سيريغرافي Plastisol & Waterbase', 'فلوكاج قطني مخملي', 'Sublimation حراري'],
+      minQty: 'ابتداءً من 30 قطعة',
+      rating: 4.95,
+      verified: true,
+      desc: 'ورشة طباعة عصرية مجهزة بأحدث آلات الـ DTF والطباعة الحريرية بألوان ثابتة ومقاومة للغسيل المتكرر.'
+    },
+    {
+      id: 'sup-4',
+      name: 'ورشة الفجر للتطريز الصناعي (Broderie Industrielle Tajima)',
+      category: 'broderie',
+      categoryLabel: 'تطريز آلي متطور',
+      city: 'فاس / الدار البيضاء',
+      whatsapp: '212664728190',
+      phone: '0664728190',
+      products: ['تطريز ثلاثي الأبعاد 3D بارز', 'تطريز شعارات الهودي والكابوتش', 'بادجات مطرزة حرارية (Écussons)'],
+      minQty: 'ابتداءً من 50 قطعة',
+      rating: 4.88,
+      verified: true,
+      desc: 'أسطول ماكينات تطريز يابانية Tajima 12 رأس لدقة متناهية وسرعة فائقة في تنفيذ أرقى شعارات الماركات.'
+    },
+    {
+      id: 'sup-5',
+      name: 'مؤسسة الأناقة للوازم الخياطة والتغليف (Packaging & Accessories)',
+      category: 'accessoires',
+      categoryLabel: 'لوازم خياطة وتغليف',
+      city: 'الدار البيضاء (كراج علال)',
+      whatsapp: '212668901234',
+      phone: '0668901234',
+      products: ['أكياس بولي باغ مخصصة (Polybags)', 'بطاقات الهانج تاج (Hangtags)', 'سحابات معدنية YKK', 'حبال هودي كوتون سميكة'],
+      minQty: 'ابتداءً من 100 قطعة',
+      rating: 4.9,
+      verified: true,
+      desc: 'تجهيز كامل لمستلزمات الفينيسيون الراقي لعلامات الملابس مع إمكانية طبع الشعار على الأكياس والأشرطة.'
+    }
+  ];
+
+  // ───────────────── 2. MODELISTES DIRECTORY DATA ─────────────────
+  const modelistesList = [
+    {
+      id: 'mod-1',
+      name: 'فاطمة الزهراء العمراني (Atelier Patronage Pro)',
+      title: 'موديلست أولى وخبير تدريج الباترون (Gerber & Lectra)',
+      city: 'الدار البيضاء / طنجة (عن بعد وحضوري)',
+      whatsapp: '212663049182',
+      phone: '0663049182',
+      software: ['Lectra Modaris V8', 'Clo 3D Simulation', 'Gerber Accumark'],
+      specialities: ['هوديات وتيشرتات أوفرسايز Drop Shoulder', 'سراويل سويت بانتس وشورتات', 'ملابس Streetwear عصرية'],
+      category: 'streetwear',
+      experienceYears: '9 سنوات',
+      turnaround: '24 إلى 48 ساعة',
+      startPriceMAD: 220,
+      rating: 5.0,
+      verified: true,
+      completedPatterns: 145,
+      desc: 'إعداد ملفات الباترون الدقيقة المتوافقة مباشرة مع ماكينات الفصالة بالليزر مع جدول تدريج مقاسات مضبوط (Gradation XS إلى 3XL) ومحاكاة 3D واقعية للموديل قبل التفصيل.'
+    },
+    {
+      id: 'mod-2',
+      name: 'ياسين الصنهاجي (Design & Industrial Pattern Studio)',
+      title: 'مهندس ملابس وموديلست تيكنيكال وسراويل كارجو',
+      city: 'الدار البيضاء (سيدي معروف)',
+      whatsapp: '212664556677',
+      phone: '0664556677',
+      software: ['Gerber Accumark', 'Optitex', 'Adobe Illustrator'],
+      specialities: ['سراويل كارجو بجيوب تكتيكية', 'جاكيتات بومبر وفيستات مبطنة', 'جينز ودنيم صناعي'],
+      category: 'denim',
+      experienceYears: '8 سنوات',
+      turnaround: '48 ساعة',
+      startPriceMAD: 280,
+      rating: 4.95,
+      verified: true,
+      completedPatterns: 98,
+      desc: 'متخصص في الباترونات المعقدة والملابس ذات الجيوب والقصات الهندسية الدقيقة مع إعداد الـ Fiche Technique ومقادير استهلاك القماش (Consommation).'
+    },
+    {
+      id: 'mod-3',
+      name: 'سلمى المنصوري (Modéliste Styliste Haute Couture)',
+      title: 'مصممة أزياء وموديلست للعبايات والملابس النسائية الراقية',
+      city: 'الرباط / فاس',
+      whatsapp: '212667112233',
+      phone: '0667112233',
+      software: ['Clo 3D', 'Lectra Modaris', 'Photoshop'],
+      specialities: ['عبايات خليجية عصرية كيمونو', 'فساتين لين وكاجوال نسائي', 'أطقم صيفية مستورة (Modest Fashion)'],
+      category: 'femme',
+      experienceYears: '7 سنوات',
+      turnaround: '48 ساعة مع محاكاة 3D',
+      startPriceMAD: 250,
+      rating: 4.92,
+      verified: true,
+      completedPatterns: 120,
+      desc: 'إعداد باترونات راقية للملابس النسائية المحتشمة والعصرية مع مراعاة انسيابية القماش وتناسق المقاسات الخليجية والمغربية.'
+    },
+    {
+      id: 'mod-4',
+      name: 'كريم العلمي (Sportswear & Activewear Patterns)',
+      title: 'خبير باترون الألبسة الرياضية والأكتيف وير',
+      city: 'طنجة (المنطقة الحرة)',
+      whatsapp: '212669334455',
+      phone: '0669334455',
+      software: ['Lectra Modaris', 'Illustrator'],
+      specialities: ['بدلات تداريب رياضية Tracksuits', 'تيشيرتات دراي فيت وضغط (Compression)', 'شورتات جيم وركض'],
+      category: 'sport',
+      experienceYears: '6 سنوات',
+      turnaround: '24 ساعة',
+      startPriceMAD: 200,
+      rating: 4.88,
+      verified: true,
+      completedPatterns: 76,
+      desc: 'خبرة طويلة بمصانع التصدير الرياضية بطنجة، دراية كاملة بمرونة الأقمشة التقنية والليكرا لضمان راحة الرياضي أثناء الحركة.'
+    }
+  ];
+
+  // ───────────────── 3. BEYA CLIENTS & BRANDS DIRECTORY DATA ─────────────────
+  const clientsList = [
+    {
+      id: 'cli-current',
+      name: userProfile.brandName || 'FAS Wear',
+      ownerName: currentUser?.nom || 'FAS',
+      city: userProfile.city.split(' ')[0] || 'الدار البيضاء',
+      category: 'streetwear',
+      categoryLabel: 'ستريتوير وملابس شبابية',
+      specialities: ['هوديات شتوية 340g مبطنة', 'تيشرتات أوفرسايز قطن ممشط', 'سويت بانتس'],
+      piecesProduced: '+450 قطعة مصنعة',
+      collectionsCount: 2,
+      verified: true,
+      isCurrentUser: true,
+      whatsapp: userProfile.phone,
+      bio: userProfile.bio || 'علامة تجارية مغربية للملابس الجاهزة والستريتوير المصنعة بشراكة مع BEYA.',
+      story: 'براندك الرسمي المسجل في المنصة. تظهر شارة التوثيق الأخضر لجميع أعضاء الشبكة.'
+    },
+    {
+      id: 'cli-1',
+      name: 'Atlas Streetwear',
+      ownerName: 'أمين البراندي',
+      city: 'الدار البيضاء',
+      category: 'streetwear',
+      categoryLabel: 'ستريتوير ثقيل Heavyweight',
+      specialities: ['هوديات 350g بطباعة DTF', 'تيشرتات دروب شولدر 240g', 'كابات'],
+      piecesProduced: '+1,800 قطعة مصنعة فـ BEYA',
+      collectionsCount: 4,
+      verified: true,
+      whatsapp: '0662112233',
+      bio: 'براند ستريتوير كازاوي مستوحى من ثقافة الشارع والموسيقى الحضرية.',
+      story: 'بدينا بأول كوموند تجريبية ديال 30 قطعة فـ BEYA واليوم وصلنا لـ 4 كوليكسيونات ناجحة مع نسبة تحصيل 85%.'
+    },
+    {
+      id: 'cli-2',
+      name: 'Sahara Nomads Studio',
+      ownerName: 'يوسف العثماني',
+      city: 'مراكش',
+      category: 'casual',
+      categoryLabel: 'كاجوال أصيل مطرز',
+      specialities: ['سترات كوتون كانفاس مطرزة 3D', 'هوديات بألوان رملية وطبيعية'],
+      piecesProduced: '+950 قطعة مصنعة فـ BEYA',
+      collectionsCount: 3,
+      verified: true,
+      whatsapp: '0663445566',
+      bio: 'مزج بين الموضة العصرية المعاصرة والتراث الأمازيغي والصحراوي المغربي.',
+      story: 'كنتعاملو مع BEYA فالفصالة والخياطة الفاخرة، والتطريز كيدار بدقة متناهية.'
+    },
+    {
+      id: 'cli-3',
+      name: 'Modesty Chic Label',
+      ownerName: 'هند التازي',
+      city: 'الرباط',
+      category: 'modest',
+      categoryLabel: 'أزياء نسائية ومحجبات',
+      specialities: ['عبايات كيمونو لين', 'أطقم شتوية مستورة قطن إنترلوك'],
+      piecesProduced: '+1,120 قطعة مصنعة فـ BEYA',
+      collectionsCount: 3,
+      verified: true,
+      whatsapp: '0664889900',
+      bio: 'تصاميم نسائية محتشمة وعصرية بجودة خامات ناعمة ومريحة.',
+      story: 'الفينيسيون ديال BEYA عاوننا نرفعو ثقة الزبونات ونحققو مبيعات قوية فالمغرب ودول الخليج.'
+    },
+    {
+      id: 'cli-4',
+      name: 'Urban Pulse Sport',
+      ownerName: 'سفيان إيكوم',
+      city: 'طنجة',
+      category: 'sport',
+      categoryLabel: 'ملابس رياضية وأكتيف وير',
+      specialities: ['سراويل سويت بانتس مريحة', 'شورتات جيم', 'هوديات خفيفة'],
+      piecesProduced: '+720 قطعة مصنعة فـ BEYA',
+      collectionsCount: 2,
+      verified: true,
+      whatsapp: '0665778899',
+      bio: 'ملابس رياضية مصممة للشباب والرياضيين بمقاسات مريحة وتصاميم بسيطة.',
+      story: 'استفدنا بزاف من عروض الشراء المشترك للأقمشة فـ BEYA Network ووفرنا 25% من تكلفة المتر.'
+    },
+    {
+      id: 'cli-5',
+      name: 'Casawear Collective',
+      ownerName: 'سيمو الودغيري',
+      city: 'فاس',
+      category: 'streetwear',
+      categoryLabel: 'ستريتوير وتيشيرتات أوفرسايز',
+      specialities: ['تيشرتات غرافيك 240g', 'هوديات سادة بألوان ترابية'],
+      piecesProduced: '+1,300 قطعة مصنعة فـ BEYA',
+      collectionsCount: 4,
+      verified: true,
+      whatsapp: '0666223344',
+      bio: 'متجر إلكتروني يركز على تيشيرتات القطن الطبيعي عالي الجودة مع طباعة ثابتة.',
+      story: 'السرعة فـ إنجاز العينات والتوصيل السريع هو لي مخليني مكمل مع ورشة BEYA.'
+    }
+  ];
 
   // Group Buying State
   const [groupDeals, setGroupDeals] = useState([
@@ -232,145 +482,6 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [showJoinGroupModal, setShowJoinGroupModal] = useState<any | null>(null);
   const [joinKgInput, setJoinKgInput] = useState('25');
 
-  // Suppliers Directory Data
-  const suppliersList = [
-    {
-      id: 'sup-1',
-      name: 'مجمع أقمشة الشرق (Derb Omar)',
-      category: 'tissu',
-      categoryLabel: 'أقمشة وتوريد قطن',
-      city: 'الدار البيضاء (درب عمر)',
-      whatsapp: '212661849201',
-      phone: '0661849201',
-      products: ['مولتون شتوي 340g مبطن', 'إنترلوك أصلي 100% قطن', 'جيرسي ليكرا صيفي', 'كوتون كوردوروي'],
-      minQty: 'ابتداءً من 25 كلغ (رولو واحد)',
-      rating: 4.9,
-      verified: true,
-      desc: 'الموزع المعتمد لأرقى خامات الأقطان والمنسوجات الشتوية والصيفية في درب عمر. أسعار تفضيلية خاصة بأعضاء شبكة BEYA.'
-    },
-    {
-      id: 'sup-2',
-      name: 'المركز الرقمي للطباعة والـ DTF (Digital Print Pro)',
-      category: 'impression',
-      categoryLabel: 'طباعة وسيريغرافي',
-      city: 'الدار البيضاء (عين السبع)',
-      whatsapp: '212662938102',
-      phone: '0662938102',
-      products: ['طباعة DTF فائقة النقاء HD', 'سيريغرافي Plastisol & Waterbase', 'فلوكاج قطني مخملي', 'Sublimation'],
-      minQty: 'ابتداءً من 30 قطعة',
-      rating: 4.95,
-      verified: true,
-      desc: 'ورشة طباعة عصرية مجهزة بأحدث آلات الـ DTF والطباعة الحريرية بألوان ثابتة ومقاومة للغسيل المتكرر.'
-    },
-    {
-      id: 'sup-3',
-      name: 'استوديو الباترون الرقمي (Atelier Patronage Pro)',
-      category: 'modeliste',
-      categoryLabel: 'تصميم وموديلست',
-      city: 'الدار البيضاء / طنجة',
-      whatsapp: '212663049182',
-      phone: '0663049182',
-      products: ['إعداد الباترون الرقمي Gerber & Lectra', 'تدريج القياسات (Gradation XS-3XL)', 'إعداد Fiche Technique كاملة'],
-      minQty: 'موديل واحد',
-      rating: 5.0,
-      verified: true,
-      desc: 'مهندسو وموديلست أزياء معتمدون لتجهيز ملفات الباترون الدقيقة المتوافقة مباشرة مع ماكينات الفصالة بالليزر.'
-    },
-    {
-      id: 'sup-4',
-      name: 'ورشة الفجر للتطريز الصناعي (Broderie Industrielle Tajima)',
-      category: 'broderie',
-      categoryLabel: 'تطريز آلي متطور',
-      city: 'فاس / الدار البيضاء',
-      whatsapp: '212664728190',
-      phone: '0664728190',
-      products: ['تطريز ثلاثي الأبعاد 3D بارز', 'تطريز شعارات الهودي والكابوتش', 'بادجات مطرزة حرارية (Écussons)'],
-      minQty: 'ابتداءً من 50 قطعة',
-      rating: 4.85,
-      verified: true,
-      desc: 'أسطول ماكينات تطريز يابانية Tajima 12 رأس لدقة متناهية وسرعة فائقة في تنفيذ أرقى شعارات الماركات.'
-    },
-    {
-      id: 'sup-5',
-      name: 'أقمشة المسيرة الشمالية (Tissus Nord)',
-      category: 'tissu',
-      categoryLabel: 'أقمشة سراويل وفيستات',
-      city: 'طنجة (المنطقة الحرة)',
-      whatsapp: '212665819203',
-      phone: '0665819203',
-      products: ['جاباردين كوتون ستريتش متين', 'قماش كوتون كانفاس (Canvas)', 'أقمشة تقنية مضادة للماء'],
-      minQty: 'ابتداءً من 30 متر',
-      rating: 4.8,
-      verified: true,
-      desc: 'متخصصون في توريد خامات السراويل الكارجو والسترات الواقية والمآزر بأعلى معايير المتانة ومقاومة التمزق.'
-    }
-  ];
-
-  // Members Directory Data
-  const networkMembers = [
-    {
-      id: 'mem-1',
-      name: userProfile.brandName || 'FAS Brand',
-      role: 'صاحب علامة تجارية',
-      roleKey: 'brand',
-      city: userProfile.city.split(' ')[0] || 'الدار البيضاء',
-      verified: true,
-      bio: userProfile.bio || 'علامة ملابس شبابية وستريتوير بالمغرب',
-      whatsapp: userProfile.phone,
-      isCurrentUser: true
-    },
-    {
-      id: 'mem-2',
-      name: 'سفيان تيكستيل',
-      role: 'مورد أقمشة معتمد',
-      roleKey: 'supplier',
-      city: 'الدار البيضاء',
-      verified: true,
-      bio: 'توريد أقمشة القطن والمولتون بالجملة في درب عمر',
-      whatsapp: '0661849201'
-    },
-    {
-      id: 'mem-3',
-      name: 'أمين البراندي',
-      role: 'صاحب علامة تجارية',
-      roleKey: 'brand',
-      city: 'الدار البيضاء',
-      verified: true,
-      bio: 'براند ملابس هوديات وتيشرتات أوفرسايز',
-      whatsapp: '0662112233'
-    },
-    {
-      id: 'mem-4',
-      name: 'المركز الرقمي للطباعة',
-      role: 'ورشة طباعة معتمدة',
-      roleKey: 'imprimeur',
-      city: 'عين السبع',
-      verified: true,
-      bio: 'طباعة DTF وسيريغرافي للعلامات التجارية',
-      whatsapp: '0662938102'
-    },
-    {
-      id: 'mem-5',
-      name: 'فاطمة الزهراء الباترونيست',
-      role: 'موديلست معتمدة',
-      roleKey: 'modeliste',
-      city: 'طنجة',
-      verified: true,
-      bio: 'تصميم الباترونات الرقمية والتدريج بالليكترا وجيربر',
-      whatsapp: '0663049182'
-    },
-    {
-      id: 'mem-6',
-      name: 'سيمو الودغيري',
-      role: 'متجر ملابس إلكتروني',
-      roleKey: 'brand',
-      city: 'فاس',
-      verified: true,
-      bio: 'تجارة إلكترونية متخصصة في الجينز والقمصان',
-      whatsapp: '0665445566'
-    }
-  ];
-
   // Save profile updates
   const handleSaveProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -378,7 +489,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
     try {
       const updatedUser: User = {
         ...currentUser!,
-        brandName: userProfile.brandName.trim() || 'FAS Brand',
+        brandName: userProfile.brandName.trim() || 'FAS Wear',
         telephone: userProfile.phone.trim() || '0600000000',
         ville: userProfile.city.trim() || 'الدار البيضاء (Casablanca)',
         networkBio: userProfile.bio.trim(),
@@ -460,7 +571,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
     const createdPost = {
       id: `post-${Date.now()}`,
-      author: userProfile.brandName || currentUser?.nom || 'FAS Brand',
+      author: userProfile.brandName || currentUser?.nom || 'FAS Wear',
       authorRole: 'صاحب علامة تجارية (زبون معتمد)',
       authorRoleKey: 'brand' as const,
       city: userProfile.city.split(' ')[0] || 'الدار البيضاء',
@@ -554,12 +665,25 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
     return true;
   });
 
-  // Filter members
-  const filteredMembers = networkMembers.filter(m => {
+  // Filter modelistes
+  const filteredModelistes = modelistesList.filter(m => {
+    if (modelisteCategoryFilter !== 'all' && m.category !== modelisteCategoryFilter) return false;
     if (selectedCityFilter !== 'all' && !m.city.includes(selectedCityFilter)) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchText = (m.name + ' ' + m.bio + ' ' + m.city + ' ' + m.role).toLowerCase();
+      const matchText = (m.name + ' ' + m.title + ' ' + m.desc + ' ' + m.city + ' ' + m.specialities.join(' ') + ' ' + m.software.join(' ')).toLowerCase();
+      if (!matchText.includes(q)) return false;
+    }
+    return true;
+  });
+
+  // Filter clients
+  const filteredClients = clientsList.filter(c => {
+    if (clientCategoryFilter !== 'all' && c.category !== clientCategoryFilter) return false;
+    if (selectedCityFilter !== 'all' && !c.city.includes(selectedCityFilter)) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchText = (c.name + ' ' + c.ownerName + ' ' + c.bio + ' ' + c.city + ' ' + c.specialities.join(' ')).toLowerCase();
       if (!matchText.includes(q)) return false;
     }
     return true;
@@ -582,21 +706,21 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-black tracking-tight text-slate-900">BEYA</span>
                   <span className="text-lg font-black tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">NETWORK</span>
-                  <span className="px-1.5 py-0.5 text-[10px] font-extrabold bg-amber-100 text-amber-800 rounded border border-amber-300">VIP</span>
+                  <span className="px-1.5 py-0.5 text-[10px] font-extrabold bg-amber-100 text-amber-800 rounded border border-amber-300">VIP B2B</span>
                 </div>
                 <p className="text-[11px] text-slate-500 font-medium">شبكة صناع الموضة، الموردين والبراندات بالمغرب</p>
               </div>
             </div>
 
             {/* Global Search Bar (Facebook style) */}
-            <div className="flex-1 max-w-md hidden md:block">
+            <div className="flex-1 max-w-xs md:max-w-sm hidden md:block">
               <div className="relative">
                 <Search className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="ابحث عن موردين، أقمشة، ماركات، نقاشات..."
+                  placeholder="ابحث عن موردين، موديلست، براندات، أقمشة..."
                   className="w-full pl-4 pr-10 py-2 bg-slate-100 hover:bg-slate-200/70 focus:bg-white text-xs text-slate-800 rounded-full border border-transparent focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition outline-none"
                 />
                 {searchQuery && (
@@ -610,13 +734,14 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
               </div>
             </div>
 
-            {/* Center Desktop Navigation Tabs */}
-            <nav className="flex items-center gap-1 sm:gap-2">
+            {/* Navigation Pages: Feed, Suppliers, Modélistes, Clients BEYA, Groupage */}
+            <nav className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none py-1">
+              {/* 1. Feed */}
               <button
                 onClick={() => setActiveTab('feed')}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                   activeTab === 'feed'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-sm'
+                    ? 'bg-indigo-600 text-white shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
@@ -624,41 +749,57 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 <span>المجتمع</span>
               </button>
 
+              {/* 2. Fournisseurs */}
               <button
                 onClick={() => setActiveTab('suppliers')}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                   activeTab === 'suppliers'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-sm'
+                    ? 'bg-indigo-600 text-white shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                <Scissors className="w-4 h-4 text-emerald-600" />
-                <span>الموردون المعتمدون</span>
+                <Scissors className="w-4 h-4 text-emerald-500" />
+                <span>الموردون</span>
               </button>
 
+              {/* 3. Modélistes */}
+              <button
+                onClick={() => setActiveTab('modelistes')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                  activeTab === 'modelistes'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Ruler className="w-4 h-4 text-amber-500" />
+                <span>الموديلست</span>
+                <span className="px-1 py-0.2 bg-amber-400 text-slate-950 text-[9px] font-black rounded-full">جديد</span>
+              </button>
+
+              {/* 4. Clients BEYA */}
+              <button
+                onClick={() => setActiveTab('clients')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                  activeTab === 'clients'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Tag className="w-4 h-4 text-violet-500" />
+                <span>كليان BEYA</span>
+              </button>
+
+              {/* 5. Group Buying */}
               <button
                 onClick={() => setActiveTab('groupage')}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                   activeTab === 'groupage'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-sm'
+                    ? 'bg-indigo-600 text-white shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                <Package className="w-4 h-4 text-amber-500" />
+                <Package className="w-4 h-4 text-rose-500" />
                 <span>الشراء المشترك</span>
-                <span className="hidden lg:inline-block px-1.5 py-0.2 bg-amber-500 text-white text-[10px] font-black rounded-full">خصم 28%</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('members')}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
-                  activeTab === 'members'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                <Users className="w-4 h-4" />
-                <span>الأعضاء</span>
               </button>
             </nav>
 
@@ -698,15 +839,15 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             </span>
             <span className="text-slate-300 shrink-0">🧵 وصول دفعة مولتون شتوي 340g بدرب عمر</span>
             <span className="text-slate-500">•</span>
-            <span className="text-slate-300 shrink-0">📦 تجمع شراء الإنترلوك اكتمل بنسبة 70%</span>
+            <span className="text-slate-300 shrink-0">📐 انضمام 4 موديلست معتمدين لتدريج الباترونات</span>
             <span className="text-slate-500">•</span>
-            <span className="text-slate-300 shrink-0">🚚 تحديث تجارب شركات التوصيل لشهر نونبر</span>
+            <span className="text-slate-300 shrink-0">🏷️ دليل براندات BEYA مفتوح الآن للتعاون</span>
           </div>
 
           <div className="hidden md:flex items-center gap-3 text-slate-300 shrink-0">
             <span className="flex items-center gap-1">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>شبكة موثوقة ومغلقة</span>
+              <span>شبكة موثوقة ومغلقة لرواد النسيج</span>
             </span>
           </div>
         </div>
@@ -772,52 +913,52 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
               <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-3">
                 <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                   <Layers className="w-4 h-4 text-indigo-600" />
-                  <span>دليل الأقسام والخدمات</span>
+                  <span>دليل الأقسام المتخصصة</span>
                 </h4>
                 
                 <div className="space-y-1.5 text-xs font-bold text-slate-700">
                   <button 
-                    onClick={() => { setActiveTab('suppliers'); setSupplierCategoryFilter('tissu'); }}
+                    onClick={() => setActiveTab('suppliers')}
                     className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-700 transition"
                   >
                     <span className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                      <span>موردو الأقمشة (درب عمر، فاس)</span>
+                      <Scissors className="w-4 h-4 text-emerald-600" />
+                      <span>دليل الموردين (درب عمر، فاس)</span>
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono">18 مورد</span>
                   </button>
 
                   <button 
-                    onClick={() => { setActiveTab('suppliers'); setSupplierCategoryFilter('impression'); }}
+                    onClick={() => setActiveTab('modelistes')}
                     className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-700 transition"
                   >
                     <span className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                      <span>مطابع DTF والسيريغرافي</span>
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">12 ورشة</span>
-                  </button>
-
-                  <button 
-                    onClick={() => { setActiveTab('suppliers'); setSupplierCategoryFilter('modeliste'); }}
-                    className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-700 transition"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                      <span>مصممو الباترون والموديلست</span>
+                      <Ruler className="w-4 h-4 text-amber-500" />
+                      <span>دليل الموديلست والباترون</span>
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono">8 خبراء</span>
                   </button>
 
                   <button 
-                    onClick={() => { setForumTopicFilter('livraison'); }}
+                    onClick={() => setActiveTab('clients')}
                     className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-700 transition"
                   >
                     <span className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                      <span>تجارب شركات التوصيل</span>
+                      <Tag className="w-4 h-4 text-violet-500" />
+                      <span>دليل براندات وكليان BEYA</span>
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">24 نقاش</span>
+                    <span className="text-[10px] text-slate-400 font-mono">24 براند</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab('groupage')}
+                    className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-700 transition"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Package className="w-4 h-4 text-rose-500" />
+                      <span>الشراء المشترك للأقمشة</span>
+                    </span>
+                    <span className="text-[10px] text-amber-600 font-mono font-bold">-28% خصم</span>
                   </button>
                 </div>
               </div>
@@ -861,18 +1002,18 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     <span>سؤال عن قماش</span>
                   </button>
                   <button 
+                    onClick={() => { setActiveTab('modelistes'); }}
+                    className="flex items-center gap-1.5 hover:text-amber-600 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition"
+                  >
+                    <Ruler className="w-4 h-4 text-amber-500" />
+                    <span>طلب موديلست</span>
+                  </button>
+                  <button 
                     onClick={() => { setNewPostData(p => ({ ...p, category: 'livraison' })); setShowNewPostModal(true); }}
                     className="flex items-center gap-1.5 hover:text-rose-600 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition"
                   >
                     <Building2 className="w-4 h-4 text-rose-500" />
                     <span>شركة توصيل</span>
-                  </button>
-                  <button 
-                    onClick={() => { setNewPostData(p => ({ ...p, category: 'marketing' })); setShowNewPostModal(true); }}
-                    className="flex items-center gap-1.5 hover:text-amber-600 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition"
-                  >
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    <span>نصيحة إعلانات</span>
                   </button>
                 </div>
               </div>
@@ -884,7 +1025,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                   { id: 'tissus', label: '🧵 جودة الأقمشة' },
                   { id: 'livraison', label: '🚚 شركات التوصيل' },
                   { id: 'marketing', label: '📢 التسويق والإعلانات' },
-                  { id: 'conseils', label: '💡 نصائح الإنتاج' },
+                  { id: 'conseils', label: '💡 نصائح الإنتاج والباترون' },
                 ].map((pill) => (
                   <button
                     key={pill.id}
@@ -918,6 +1059,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                           <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-sm ${
                             post.authorRoleKey === 'supplier'
                               ? 'bg-gradient-to-tr from-emerald-600 to-teal-500'
+                              : post.authorRoleKey === 'modeliste'
+                              ? 'bg-gradient-to-tr from-amber-500 to-orange-500'
                               : post.authorRoleKey === 'imprimeur'
                               ? 'bg-gradient-to-tr from-purple-600 to-indigo-600'
                               : 'bg-gradient-to-tr from-indigo-600 to-blue-500'
@@ -930,6 +1073,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
                                 post.authorRoleKey === 'supplier'
                                   ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                  : post.authorRoleKey === 'modeliste'
+                                  ? 'bg-amber-100 text-amber-800 border border-amber-200'
                                   : post.authorRoleKey === 'imprimeur'
                                   ? 'bg-purple-100 text-purple-800 border border-purple-200'
                                   : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
@@ -945,7 +1090,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                           </div>
                         </div>
 
-                        {/* Direct WhatsApp button if author is a verified supplier/partner */}
+                        {/* Direct WhatsApp button if author has phone */}
                         {post.whatsapp && (
                           <a
                             href={`https://wa.me/${post.whatsapp}?text=${encodeURIComponent(post.whatsappText || 'السلام عليكم، تواصلت معك من منصة BEYA NETWORK.')}`}
@@ -1047,7 +1192,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
             </div>
 
-            {/* ─── LEFT COLUMN: Verified Suppliers & Group Buying Widgets ─── */}
+            {/* ─── LEFT COLUMN: Recommended & Group Buying Widgets ─── */}
             <aside className="lg:col-span-3 space-y-5 order-3">
               
               {/* Widget: Recommended Fabric Suppliers */}
@@ -1073,13 +1218,6 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                         <span className="text-[10px] font-bold text-amber-600">⭐ {sup.rating}</span>
                       </div>
                       <p className="text-[11px] text-slate-500">{sup.city}</p>
-                      <div className="flex flex-wrap gap-1">
-                        {sup.products.slice(0, 2).map((p, idx) => (
-                          <span key={idx} className="px-1.5 py-0.5 bg-white text-slate-700 text-[10px] rounded border border-slate-200">
-                            {p}
-                          </span>
-                        ))}
-                      </div>
                       <a
                         href={`https://wa.me/${sup.whatsapp}?text=${encodeURIComponent('السلام عليكم، تواصلت معك من منصة BEYA NETWORK بخصوص طلب توريد أقمشة.')}`}
                         target="_blank"
@@ -1094,13 +1232,44 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 </div>
               </div>
 
-              {/* Widget: Group Buying Fabric (Achats Groupés) */}
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 shadow-sm space-y-3">
+              {/* Widget: Modéliste Spotlight */}
+              <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-transparent border border-amber-200 rounded-2xl p-5 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="px-2 py-0.5 bg-amber-500 text-white font-extrabold text-[10px] rounded-full uppercase tracking-wider">
+                    موديلست معتمد
+                  </span>
+                  <button onClick={() => setActiveTab('modelistes')} className="text-[11px] font-bold text-amber-900 hover:underline">
+                    دليل الموديلست ➔
+                  </button>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-900 leading-snug">
+                    {modelistesList[0].name}
+                  </h4>
+                  <p className="text-[11px] text-slate-600 mt-1">
+                    {modelistesList[0].title}
+                  </p>
+                </div>
+
+                <a
+                  href={`https://wa.me/${modelistesList[0].whatsapp}?text=${encodeURIComponent('السلام عليكم، تواصلت معك من منصة BEYA NETWORK لطلب باترون.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>طلب باترون فـ الواتساب</span>
+                </a>
+              </div>
+
+              {/* Widget: Group Buying Fabric */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl p-5 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="px-2 py-0.5 bg-indigo-600 text-white font-extrabold text-[10px] rounded-full uppercase tracking-wider">
                     الشراء المشترك
                   </span>
-                  <span className="text-xs font-bold text-amber-900 font-mono">خصم 28%</span>
+                  <span className="text-xs font-bold text-indigo-900 font-mono">خصم 28%</span>
                 </div>
 
                 <div>
@@ -1112,26 +1281,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                   </p>
                 </div>
 
-                {/* Progress bar */}
-                <div>
-                  <div className="flex justify-between text-[11px] font-bold mb-1">
-                    <span className="text-slate-600">المحجوز: {groupDeals[0].currentKg} كلغ</span>
-                    <span className="text-amber-700 font-mono">
-                      {Math.round((groupDeals[0].currentKg / groupDeals[0].targetKg) * 100)}%
-                    </span>
-                  </div>
-                  <div className="w-full h-2.5 bg-amber-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.round((groupDeals[0].currentKg / groupDeals[0].targetKg) * 100)}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-[10px] text-slate-500 mt-1">باقي فقط {groupDeals[0].targetKg - groupDeals[0].currentKg} كلغ لإغلاق الكوموند</p>
-                </div>
-
                 <button
                   onClick={() => setShowJoinGroupModal(groupDeals[0])}
-                  className="w-full py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold text-xs shadow-sm transition"
+                  className="w-full py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl font-bold text-xs shadow-sm transition"
                 >
                   حجز كمية والاستفادة من الثمن 📦
                 </button>
@@ -1142,37 +1294,40 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
           </div>
         )}
 
-        {/* ═════════════════ TAB 2: SUPPLIERS DIRECTORY ═════════════════ */}
+        {/* ═════════════════ TAB 2: صفحة الموردين (PAGE FOURNISSEURS) ═════════════════ */}
         {activeTab === 'suppliers' && (
           <div className="space-y-6">
             
-            {/* Header & Sub-filters */}
+            {/* Header */}
             <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                  <Scissors className="w-6 h-6 text-indigo-600" />
-                  <span>دليل الموردين وورشات العمل المعتمدة بالمغرب</span>
+                <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black inline-block mb-2">
+                  دليل الموردين المعتمدين بالمغرب 🧵
+                </span>
+                <h2 className="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-2">
+                  <Scissors className="w-6 h-6 text-emerald-600" />
+                  <span>موردو الأقمشة، المطابع، ولوازم النسيج</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  تواصل مباشرة مع تجار الأقمشة، مطابع السيريغرافي، ومصممي الباترونات بأسعار تفضيلية لأعضاء BEYA
+                  تواصل مباشر مع كبار تجار الأقمشة في درب عمر، فاس، وطنجة بأسعار الجملة المباشرة وبدون وساطة
                 </p>
               </div>
 
               {/* Category Pills */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {[
                   { id: 'all', label: 'الكل' },
                   { id: 'tissu', label: '🧵 أقمشة وقطن' },
                   { id: 'impression', label: '🖨️ طباعة وDTF' },
-                  { id: 'broderie', label: '🪡 تطريز' },
-                  { id: 'modeliste', label: '📐 باترون وموديلست' }
+                  { id: 'broderie', label: '🪡 تطريز آلي' },
+                  { id: 'accessoires', label: '🏷️ لوازم وتغليف' }
                 ].map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSupplierCategoryFilter(cat.id as any)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                       supplierCategoryFilter === cat.id
-                        ? 'bg-indigo-600 text-white shadow-sm'
+                        ? 'bg-emerald-600 text-white shadow-sm'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
@@ -1189,7 +1344,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
                           {supplier.categoryLabel}
                         </span>
                         <h3 className="font-extrabold text-base text-slate-900 mt-2">{supplier.name}</h3>
@@ -1209,7 +1364,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     </p>
 
                     <div>
-                      <span className="block text-[11px] font-bold text-slate-700 mb-1.5">المنتجات والخدمات الرئيسية:</span>
+                      <span className="block text-[11px] font-bold text-slate-700 mb-1.5">الأقمشة والخدمات المتوفرة:</span>
                       <div className="flex flex-wrap gap-1.5">
                         {supplier.products.map((prod, idx) => (
                           <span key={idx} className="px-2 py-0.5 bg-slate-50 text-slate-700 text-[11px] rounded-lg border border-slate-200">
@@ -1219,8 +1374,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                       </div>
                     </div>
 
-                    <div className="text-[11px] text-slate-500 pt-2 border-t border-slate-100">
-                      <strong>الحد الأدنى للطلب (MOQ):</strong> {supplier.minQty}
+                    <div className="text-[11px] text-slate-500 pt-2 border-t border-slate-100 flex justify-between">
+                      <span><strong>الحد الأدنى (MOQ):</strong> {supplier.minQty}</span>
+                      <span className="text-emerald-700 font-bold">✓ أسعار خاصة بـ BEYA</span>
                     </div>
                   </div>
 
@@ -1228,7 +1384,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     href={`https://wa.me/${supplier.whatsapp}?text=${encodeURIComponent(`السلام عليكم، تواصلت معك من خلال منصة BEYA NETWORK بخصوص ${supplier.categoryLabel}.`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-95"
                   >
                     <Phone className="w-4 h-4" />
                     <span>تواصل مباشر عبر الواتساب</span>
@@ -1240,7 +1396,269 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
           </div>
         )}
 
-        {/* ═════════════════ TAB 3: GROUP BUYING (ACHATS GROUPÉS) ═════════════════ */}
+        {/* ═════════════════ TAB 3: صفحة الموديلست (PAGE MODÉLISTES & STYLISTES) ═════════════════ */}
+        {activeTab === 'modelistes' && (
+          <div className="space-y-6">
+            
+            {/* Header */}
+            <div className="bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-amber-500/10 border border-amber-200/80 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <span className="px-3 py-1 rounded-full bg-amber-500 text-slate-950 text-xs font-black inline-block mb-2">
+                  دليل الموديلست ومصممي الباترون الصناعي 📐
+                </span>
+                <h2 className="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-2">
+                  <Ruler className="w-6 h-6 text-amber-600" />
+                  <span>شبكة الموديلست والباترونيست المعتمدين بالمغرب</span>
+                </h2>
+                <p className="text-xs text-slate-600 mt-1 max-w-2xl">
+                  خبراء إعداد ملفات الفصالة الدقيقة والباترون الرقمي (Gerber, Lectra, Clo3D) وتدريج المقاسات (Gradation) لأصحاب البراندات بأسعار تفضيلية
+                </p>
+              </div>
+
+              {/* Category Pills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'all', label: 'الكل' },
+                  { id: 'streetwear', label: '👕 هوديات وستريتوير' },
+                  { id: 'femme', label: '👗 عبايات وأزياء نسائية' },
+                  { id: 'denim', label: '👖 سراويل كارجو ودنيم' },
+                  { id: 'sport', label: '🏃 ملابس رياضية' }
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setModelisteCategoryFilter(cat.id as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                      modelisteCategoryFilter === cat.id
+                        ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
+                        : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Modélistes Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredModelistes.map((mod) => (
+                <div key={mod.id} className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
+                  <div className="space-y-4">
+                    
+                    {/* Top Info */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-black text-lg flex items-center justify-center shrink-0 shadow-md">
+                          {mod.name[0]}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="font-extrabold text-base text-slate-900">{mod.name}</h3>
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          </div>
+                          <p className="text-xs font-bold text-amber-700 mt-0.5">{mod.title}</p>
+                          <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-3 h-3 text-slate-400" />
+                            <span>{mod.city}</span>
+                            <span>•</span>
+                            <span>خبرة {mod.experienceYears}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-left font-mono shrink-0">
+                        <span className="text-[10px] text-slate-400 block">ابتداءً من</span>
+                        <span className="text-lg font-black text-emerald-600">{mod.startPriceMAD} DH</span>
+                        <span className="text-[10px] text-slate-500 block">باترون + تدريج</span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      {mod.desc}
+                    </p>
+
+                    {/* Specialities & Software */}
+                    <div className="space-y-2 text-xs">
+                      <div>
+                        <span className="block text-[11px] font-bold text-slate-700 mb-1">البرامج المعتمدة:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {mod.software.map((sw, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[11px] font-bold rounded-lg border border-indigo-200/60">
+                              {sw}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="block text-[11px] font-bold text-slate-700 mb-1">أبرز الموديلات المتخصصة:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {mod.specialities.map((sp, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-slate-100 text-slate-800 text-[11px] rounded-lg">
+                              {sp}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats Footer */}
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-500">
+                      <span>⏳ مدة التسليم: <strong>{mod.turnaround}</strong></span>
+                      <span>⭐ التقييم: <strong>{mod.rating} / 5.0</strong> ({mod.completedPatterns} باترون)</span>
+                    </div>
+
+                  </div>
+
+                  <a
+                    href={`https://wa.me/${mod.whatsapp}?text=${encodeURIComponent(`السلام عليكم أستاذ(ة) ${mod.name}، تواصلت معك من خلال BEYA NETWORK بخصوص إعداد وتدريج باترون لموديل جديد.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black rounded-xl text-xs shadow-md transition active:scale-95"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span>طلب باترون وتواصل فـ الواتساب</span>
+                  </a>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* ═════════════════ TAB 4: صفحة كليان BEYA (PAGE CLIENTS & MARQUES) ═════════════════ */}
+        {activeTab === 'clients' && (
+          <div className="space-y-6">
+            
+            {/* Header */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <span className="px-3 py-1 rounded-full bg-violet-100 text-violet-800 text-xs font-black inline-block mb-2">
+                  مجتمع براندات وكليان BEYA بالمغرب 🏷️
+                </span>
+                <h2 className="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-2">
+                  <Tag className="w-6 h-6 text-violet-600" />
+                  <span>العلامات التجارية ورواد الموضة المصنعة في BEYA</span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  تعرف على الماركات الشريكة، تبادل الخبرات في التوصيل والتسويق، وتعاون في تجميع طلبيات الأقمشة
+                </p>
+              </div>
+
+              {/* Category Pills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'all', label: 'الكل' },
+                  { id: 'streetwear', label: '👕 ستريتوير' },
+                  { id: 'casual', label: '👔 كاجوال وأصلي' },
+                  { id: 'modest', label: '👗 محجبات ومستورة' },
+                  { id: 'sport', label: '🏃 ملابس رياضية' }
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setClientCategoryFilter(cat.id as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                      clientCategoryFilter === cat.id
+                        ? 'bg-violet-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Clients Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredClients.map((client) => (
+                <div 
+                  key={client.id} 
+                  className={`rounded-2xl p-5 border shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4 ${
+                    client.isCurrentUser
+                      ? 'bg-gradient-to-br from-indigo-50/60 to-purple-50/60 border-indigo-300'
+                      : 'bg-white border-slate-200/80'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    
+                    {/* Top Info */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-2xl text-white font-black text-lg flex items-center justify-center shrink-0 shadow-md ${
+                          client.isCurrentUser
+                            ? 'bg-gradient-to-tr from-amber-500 via-orange-500 to-indigo-600'
+                            : 'bg-gradient-to-tr from-violet-600 to-indigo-600'
+                        }`}>
+                          {client.name[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="font-extrabold text-base text-slate-900 truncate">{client.name}</h3>
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          </div>
+                          <p className="text-xs font-bold text-violet-700">{client.categoryLabel}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            📍 {client.city} • بصاحب البراند: <strong>{client.ownerName}</strong>
+                          </p>
+                        </div>
+                      </div>
+
+                      {client.isCurrentUser && (
+                        <span className="px-2 py-0.5 text-[9px] font-black bg-amber-400 text-slate-950 rounded-full shrink-0">
+                          حسابك
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-slate-600 bg-white/70 p-3 rounded-xl border border-slate-100 leading-relaxed">
+                      {client.bio}
+                    </p>
+
+                    <div>
+                      <span className="block text-[11px] font-bold text-slate-700 mb-1">نوع الموديلات المصنعة فـ BEYA:</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {client.specialities.map((sp, idx) => (
+                          <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-800 text-[11px] rounded-lg">
+                            {sp}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-600 flex items-center justify-between">
+                      <span>🧵 الإنتاج: <strong className="text-indigo-600">{client.piecesProduced}</strong></span>
+                      <span>📦 الكوليكسيونات: <strong>{client.collectionsCount} مجموعات</strong></span>
+                    </div>
+
+                  </div>
+
+                  {client.isCurrentUser ? (
+                    <button
+                      onClick={() => setShowEditProfileModal(true)}
+                      className="w-full py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+                    >
+                      <span>تعديل بروفايل براندك ⚙️</span>
+                    </button>
+                  ) : client.whatsapp ? (
+                    <a
+                      href={`https://wa.me/${client.whatsapp}?text=${encodeURIComponent(`السلام عليكم، تواصلت معك من خلال BEYA NETWORK للتعاون والشراكة.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>تواصل في الواتساب للتعاون</span>
+                    </a>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* ═════════════════ TAB 5: GROUP BUYING (ACHATS GROUPÉS) ═════════════════ */}
         {activeTab === 'groupage' && (
           <div className="space-y-6">
             
@@ -1306,82 +1724,13 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
                     <button
                       onClick={() => setShowJoinGroupModal(deal)}
-                      className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl font-bold text-sm shadow-md transition"
+                      className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl font-bold text-sm shadow-md transition active:scale-95"
                     >
                       حجز كمية في هذا التجمع (ابتداءً من 20 كلغ) 📦
                     </button>
                   </div>
                 );
               })}
-            </div>
-
-          </div>
-        )}
-
-        {/* ═════════════════ TAB 4: MEMBERS DIRECTORY ═════════════════ */}
-        {activeTab === 'members' && (
-          <div className="space-y-6">
-            
-            <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                  <Users className="w-6 h-6 text-indigo-600" />
-                  <span>دليل أعضاء BEYA NETWORK بالمغرب</span>
-                </h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  رواد الموضة، أصحاب العلامات التجارية، الموردون وخبراء الصناعة المسجلون في المنصة
-                </p>
-              </div>
-
-              <div className="w-full md:w-72">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="ابحث بالاسم أو المدينة..."
-                  className="w-full px-4 py-2 bg-slate-100 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 outline-none transition"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredMembers.map((member) => (
-                <div key={member.id} className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-base flex items-center justify-center shrink-0 shadow-sm">
-                        {member.name[0]}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="font-extrabold text-sm text-slate-900 truncate">{member.name}</h3>
-                          {member.verified && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
-                        </div>
-                        <p className="text-xs font-bold text-indigo-600">{member.role}</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">📍 {member.city}</p>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                      {member.bio}
-                    </p>
-                  </div>
-
-                  {member.whatsapp ? (
-                    <a
-                      href={`https://wa.me/${member.whatsapp}?text=${encodeURIComponent(`السلام عليكم، تواصلت معك من خلال BEYA NETWORK.`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
-                    >
-                      <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>تواصل في الواتساب</span>
-                    </a>
-                  ) : (
-                    <div className="text-center py-2 text-xs text-slate-400 font-medium">عضو مسجل</div>
-                  )}
-                </div>
-              ))}
             </div>
 
           </div>
@@ -1423,7 +1772,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                   onChange={(e) => setNewPostData(p => ({ ...p, category: e.target.value as any }))}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 outline-none"
                 >
-                  <option value="conseils">💡 نصيحة عامة أو تصنيع</option>
+                  <option value="conseils">💡 نصيحة عامة أو باترون وتصنيع</option>
                   <option value="tissus">🧵 جودة وتوفر الأقمشة</option>
                   <option value="livraison">🚚 شركات التوصيل والروتور</option>
                   <option value="marketing">📢 إعلانات وتسويق الملابس</option>
