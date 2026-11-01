@@ -677,7 +677,108 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setSelectedDemandePage(prev => prev?.id === id ? null : prev);
   };
 
-  const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
+    const generateClientAssistantReply = async (query: string, lead: Lead, analysis: any, isAr: boolean = true): Promise<string> => {
+    const q = (query || '').toLowerCase().trim();
+    const mod = (analysis.modeleReel || lead.type || '').toLowerCase();
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key');
+
+    // If Gemini API is configured, use it with strict factory advisor constraints
+    if (apiKey) {
+      try {
+        const sysPrompt = `أنت "مستشار ورشة BEYA Creative" لصناعة الملابس والنسيج بالمغرب.
+الموديل: ${analysis.modeleReel}
+الكمية: ${analysis.qty} قطعة
+نوع الثوب المقترح: ${analysis.tissuSuggere}
+سعر الخياطة التقديري: ${analysis.unitPrice} درهم للقطعة (المجموع: ${analysis.totalPrice} درهم)
+مدة التسليم: ${analysis.delaiEstime}
+أجب باختصار واحترافية وبشكل مفيد بالدارجة المغربية التقنية (أو الفرنسية إذا سأل بها).
+اقتصر على: نوع القماش، سعره بسوق درب عمر / كراج علال، استهلاك القماش بالامتار، وسعر الخياطة والعينة والتسبيق.
+سؤال الزبون: ${query}`;
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text && text.trim()) return text.trim();
+        }
+      } catch (e) {
+        console.warn('Gemini call failed, using built-in expert textile engine:', e);
+      }
+    }
+
+    // Local Resilient Textile Knowledge Engine (Always accurate, zero external dependency)
+    // 1. Tissu & Prix marché
+    if (/(ثوب|قماش|tissu|tissou|matiere|prix.*tissu|taman.*toub|شحال.*ثوب|نوع.*ثوب|السوق|درب عمر|garage allal|شحال كيدير)/i.test(q)) {
+      if (mod.includes('jakit') || mod.includes('jacket') || mod.includes('veste') || mod.includes('جاكيت') || mod.includes('bomber')) {
+        return isAr
+          ? `بخصوص جاكيت ${analysis.modeleReel}، أحسن نوع ثوب كننصحو بيه فالورشة هو:
+1. **غاباردين كوتون متين (Gabardine Coton)**: كيدير فسوق درب عمر وكراج علال بين 35 و 48 درهم للمتر. واقف وما كيموتش فالتصبين.
+2. **كوتون تويل (Twill Lourd)**: ثوب نقي وشيك بزاف، كيدير بين 38 و 52 درهم للمتر.
+3. **مولطون قطن سميك 340g** (للجاكيتات الرياضية أو ستريتوير): كيدير بين 68 و 75 درهم للكيلو في الجملة.
+كل جاكيت كتاكل تقريباً ما بين 1.90m إلى 2.10m.`
+          : `Pour la veste ${analysis.modeleReel}, nous conseillons la Gabardine de Coton (35-48 MAD/m au marché de gros à Casablanca) ou le Twill Coton lourd (38-52 MAD/m). Consommation : ~2.00m par pièce.`;
+      }
+      if (mod.includes('robe') || mod.includes('abaya') || mod.includes('كسوة') || mod.includes('عباية') || mod.includes('جلابة')) {
+        return isAr
+          ? `لهاد الموديل، أحسن قماش كيعطي طيحة وانسكاب راقي هو الكريب الحريري (Crêpe Cey / Crêpe de Soie) أو الكتان الطبيعي (Lin). السعر ديالو فالجملة (درب عمر) كيدير ما بين 25 و 42 درهم للمتر. كل بياسة كتاكل ما بين 2.60m و 3.10m.`
+          : `Pour ce modèle, le Crêpe fluide ou le Lin naturel est idéal (25-42 MAD/mètre en gros). Consommation : ~2.8m par pièce.`;
+      }
+      if (mod.includes('hoodie') || mod.includes('sweat') || mod.includes('survet') || mod.includes('بدلة')) {
+        return isAr
+          ? `لهاد الموديل الرياضي، أحسن ثوب هو المولطون القطني 300g إلى 340g (Molleton Coton Gratté / French Terry). السعر ديالو فالجملة كيدير بين 68 و 74 درهم للكيلو (الكيلو كيخرج بياسة أو بياسة وشوية). ثوب دافئ ومرغوب بزاف.`
+          : `Tissu recommandé : Molleton Coton 300-340g (68-74 MAD/kg en gros). Idéal pour le confort et la tenue.`;
+      }
+      return isAr
+        ? `نوع الثوب المقترح لهاد الموديل هو "${analysis.tissuSuggere}". السعر ديالو فأسواق الجملة بالمغرب (درب عمر وكراج علال) كيتراوح ما بين 28 و 48 درهم للمتر حسب الجودة والجراماج.`
+        : `Le tissu préconisé est "${analysis.tissuSuggere}" (estimé à 28-48 MAD/mètre en gros à Casablanca).`;
+    }
+
+    // 2. Métrage / Consommation
+    if (/(ميطراج|metrage|consommation|شحال كياكل|متر|طول الثوب|شحال نشري)/i.test(q)) {
+      let meters = '1.80 إلى 2.10 متر';
+      if (mod.includes('jakit') || mod.includes('jacket') || mod.includes('veste') || mod.includes('جاكيت')) meters = '1.90 إلى 2.15 متر';
+      if (mod.includes('robe') || mod.includes('كسوة')) meters = '2.50 إلى 2.80 متر';
+      if (mod.includes('abaya') || mod.includes('عباية') || mod.includes('جلابة')) meters = '2.90 إلى 3.20 متر';
+      if (mod.includes('t-shirt') || mod.includes('تيشيرت')) meters = '1.10 إلى 1.25 متر';
+      if (mod.includes('pantalon') || mod.includes('سروال')) meters = '1.40 إلى 1.60 متر';
+      if (mod.includes('survet') || mod.includes('طقم')) meters = '2.80 إلى 3.10 متر (للطقم كاملاً)';
+
+      return isAr
+        ? `حسب الباترون والقصة ديال موديل "${analysis.modeleReel}"، كل قطعة كتاكل تقريباً ما بين **${meters}** (عرض الثوب العادي 1.50m). إيلا بغيتي تشري الثوب من عندك، كنصحوك ديما تزيد 5% كإحتياط للانكماش والقصّان.`
+        : `Pour le modèle "${analysis.modeleReel}", la consommation estimée est de **${meters}** par pièce (laize 1.50m). Prévoyez 5% de marge pour le retrait et la coupe.`;
+    }
+
+    // 3. Prix et Quantité
+    if (/(taman|prix|سعر|تكلفة|شحال.*خياطة|تخفيض|كونتيتي|كمية|quantite|reduc|remise)/i.test(q)) {
+      return isAr
+        ? `سعر الخياطة والتصنيع التقديري لهاد الموديل هو **${analysis.unitPrice} درهم للقطعة** (على حساب كمية ${analysis.qty} قطعة). إيلا طلعتي الكمية (مثلاً أكثر من 100 أو 300 قطعة)، السعر كيهبط بـ 10% إلى 18% حيت وقت الفصالة والماكينات كيتوزع على عدد كبير.`
+        : `Le coût de confection actuel est de **${analysis.unitPrice} MAD/pièce** pour ${analysis.qty} pcs. Pour un volume supérieur (>100 ou >300 pcs), le tarif unitaire diminue de 10% à 18%.`;
+    }
+
+    // 4. Échantillon & Acompte
+    if (/(عينة|echantillon|prototype|تسبيق|acompte|avance|خلاص|paiement|rib|واش كترجع|شحال تسبيق)/i.test(q)) {
+      const acompteApprox = Math.round(analysis.totalPrice * 0.3);
+      return isAr
+        ? `باش نبداو الباترون وتفصيل العينة، التسبيق المطلوب هو **30% من قيمة الدوفيز (تقريباً ${acompteApprox.toLocaleString()} درهم)**.
+أهم نقطة: **تكلفة العينة والباترون كترجع وتتخصم 100% من الفاتورة النهائية** عند تأكيدك لبدء الإنتاج! العينة كتوجد فـ 48 إلى 72 ساعة للمعاينة والتجربة.`
+        : `Pour lancer le patronage et l'échantillon, un acompte de 30% (env. ${acompteApprox.toLocaleString()} MAD) est demandé. Important : le coût du prototype est 100% déductible de la facture finale de production ! Échantillon prêt sous 48-72h.`;
+    }
+
+    // Default general response
+    return isAr
+      ? `مرحباً بك! أنا مستشار ورشة BEYA Creative. بخصوص موديل "${analysis.modeleReel}":
+- **نوع الثوب المقترح:** ${analysis.tissuSuggere}
+- **سعر الخياطة:** ${analysis.unitPrice} درهم للقطعة (المجموع: ${analysis.totalPrice.toLocaleString()} درهم)
+- **مدة التسليم:** ${analysis.delaiEstime}
+تقدر تسولني على: نوع وسعر القماش فالسوق، الميطراج اللي كتاكل البياسة، أو شروط العينة والتسبيق.`
+      : `Bonjour ! Pour votre modèle "${analysis.modeleReel}", le tissu conseillé est "${analysis.tissuSuggere}" (${analysis.unitPrice} MAD/pc pour ${analysis.qty} pcs). N'hésitez pas à me demander le prix du tissu, le métrage ou les modalités d'échantillon.`;
+  };
+
+const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const text = `${d.type || ''} ${d.details || ''} ${d.id || ''}`.toLowerCase();
     
     let extDetails: any = {};
@@ -710,7 +811,19 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     const isTshirt = !isTracksuit && !isHoodieOrSweat && (text.includes('t-shirt') || text.includes('tshirt') || text.includes('tee') || text.includes('تيشرت') || text.includes('تيشيرت'));
     const isPolo = !isTracksuit && (text.includes('polo') || text.includes('بولو'));
     const isPants = !isTracksuit && (text.includes('pantalon') || text.includes('jogging') || text.includes('cargo') || text.includes('سروال'));
-    const isVeste = !isTracksuit && (text.includes('veste') || text.includes('jacket') || text.includes('bomber') || text.includes('جاكيت') || text.includes('فيست'));
+    const isVeste = !isTracksuit && (
+      text.includes('veste') || 
+      text.includes('jacket') || 
+      text.includes('jakit') || 
+      text.includes('jakita') || 
+      text.includes('bomber') || 
+      text.includes('blouson') || 
+      text.includes('جاكيت') || 
+      text.includes('فيست') || 
+      text.includes('كابوت') || 
+      text.includes('manteau') || 
+      text.includes('windbreaker')
+    );
 
     let defaultModele = d.type && d.type.toUpperCase() !== 'MODEL' ? d.type : (isAr ? 'موديل تفصيل وخياطة مخصص' : 'Modèle Confection Sur-Mesure');
     let defaultTissu = isAr ? 'قماش مخصص ومطابق للمواصفات المطلوبة' : 'Tissu adapté selon cahier des charges';
@@ -788,7 +901,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       defaultTissuPrixKg = 68;
     } else if (isVeste) {
       defaultModele = isAr ? 'جاكيت بسحاب كامل (Veste Zippée)' : 'Veste Zippée Streetwear';
-      defaultTissu = isAr ? 'مولطون قطن سميك 340 غرام أو غاباردين' : 'Molleton Épais 340g / Gabardine';
+      defaultTissu = isAr ? 'غاباردين كوتون متين (Gabardine Coton) أو Twill Lourd مقاوم للتصبين' : 'Gabardine Coton résistant / Twill Lourd';
       defaultTech = isAr ? 'سحاب معدني أمامي كامل • جيوب جانبية مخفية • ياقة مضلعة' : 'Fermeture zippée métallique intégrale • Poches zippées • Col bord-côte';
       defaultUnitPrice = 95;
       defaultDelai = isAr ? '8 - 12 يوم عمل' : '8 - 12 jours ouvrables';
