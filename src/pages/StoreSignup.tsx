@@ -136,11 +136,20 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
           if (dbUser?.role) role = dbUser.role;
         } catch (e) {}
 
+        const isEmailVerified = !!(data.user?.email_confirmed_at || data.user?.user_metadata?.email_verified);
+        const userEmail = data.user.email || email;
+        if (isEmailVerified && userEmail) {
+          try {
+            localStorage.setItem(`beya_email_verified_${userEmail.toLowerCase().trim()}`, 'true');
+          } catch (e) {}
+        }
+
         const userObj = {
           id: data.user.id,
           nom: data.user.user_metadata?.full_name || 'Client',
           role: role,
-          email: data.user.email || email
+          email: userEmail,
+          emailVerified: isEmailVerified
         };
         localStorage.setItem('textrack_auth', JSON.stringify(userObj));
         try {
@@ -175,11 +184,19 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
         try {
           const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
           if (signInData?.user) {
+            const isEmailVerified = !!(signInData.user.email_confirmed_at || signInData.user.user_metadata?.email_verified);
+            const userEmail = signInData.user.email || email;
+            if (isEmailVerified && userEmail) {
+              try {
+                localStorage.setItem(`beya_email_verified_${userEmail.toLowerCase().trim()}`, 'true');
+              } catch (e) {}
+            }
             const userObj = {
               id: signInData.user.id,
               nom: fullName || signInData.user.user_metadata?.full_name || 'Merchant',
               role: 'merchant',
-              email: signInData.user.email || email
+              email: userEmail,
+              emailVerified: isEmailVerified
             };
             localStorage.setItem('textrack_auth', JSON.stringify(userObj));
             await saveRecord('users', userObj, true);

@@ -254,7 +254,16 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [annulationModal, setAnnulationModal] = useState<{ cmdId: string, cmdRef: string } | null>(null);
   const [annulationRaison, setAnnulationRaison] = useState('');
   const [annulationSending, setAnnulationSending] = useState(false);
-  const [showEmailBanner, setShowEmailBanner] = useState(true);
+  const [showEmailBanner, setShowEmailBanner] = useState(() => {
+    if (!currentUser?.email) return false;
+    if (currentUser.emailVerified) return false;
+    try {
+      const cached = localStorage.getItem(`beya_email_verified_${currentUser.email.toLowerCase().trim()}`);
+      if (cached === 'true') return false;
+    } catch {}
+    return true;
+  });
+  const [emailAlreadyConfirmedMsg, setEmailAlreadyConfirmedMsg] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [emailSentCooldown, setEmailSentCooldown] = useState(false);
   const [emailSentSuccess, setEmailSentSuccess] = useState(false);
@@ -284,18 +293,70 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [sourcingCheckActive, setSourcingCheckActive] = useState<Record<string, boolean>>({});
   const [sourcingSelectedColor, setSourcingSelectedColor] = useState<Record<string, string>>({});
   const [fabricOrderSent, setFabricOrderSent] = useState<Record<string, boolean>>({});
+  // Auto-detect if user's email is already confirmed in Supabase Auth to dismiss banner
+  useEffect(() => {
+    if (!currentUser?.email) return;
+    const emailKey = currentUser.email.toLowerCase().trim();
+
+    const checkConfirmedStatus = async () => {
+      try {
+        const cached = localStorage.getItem(`beya_email_verified_${emailKey}`);
+        if (cached === 'true' || currentUser.emailVerified) {
+          setShowEmailBanner(false);
+          return;
+        }
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.email?.toLowerCase().trim() === emailKey) {
+          const isConfirmed = !!(user.email_confirmed_at || user.user_metadata?.email_verified);
+          if (isConfirmed) {
+            localStorage.setItem(`beya_email_verified_${emailKey}`, 'true');
+            setShowEmailBanner(false);
+            if (!currentUser.emailVerified) {
+              const updated = { ...currentUser, emailVerified: true };
+              localStorage.setItem('textrack_auth', JSON.stringify(updated));
+            }
+          }
+        }
+      } catch (e) {
+        // Silent catch
+      }
+    };
+
+    checkConfirmedStatus();
+  }, [currentUser?.email]);
   const [showFullStudy, setShowFullStudy] = useState(false);
 
   const handleSendVerificationEmail = async () => {
     if (!currentUser?.email) return;
+    const emailKey = currentUser.email.toLowerCase().trim();
     setEmailSending(true);
     setEmailSentError('');
     setEmailSentSuccess(false);
+    setEmailAlreadyConfirmedMsg(false);
 
     try {
       const siteUrl = window.location.origin + window.location.pathname;
 
-      // 1. Send genuine confirmation email (type: 'signup')
+      // 1. Check if user is ALREADY confirmed in Supabase Auth
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.email?.toLowerCase().trim() === emailKey) {
+          const isConfirmed = !!(user.email_confirmed_at || user.user_metadata?.email_verified);
+          if (isConfirmed) {
+            localStorage.setItem(`beya_email_verified_${emailKey}`, 'true');
+            const updated = { ...currentUser, emailVerified: true };
+            localStorage.setItem('textrack_auth', JSON.stringify(updated));
+            setEmailAlreadyConfirmedMsg(true);
+            setTimeout(() => {
+              setShowEmailBanner(false);
+            }, 3000);
+            return;
+          }
+        }
+      } catch (authErr) {}
+
+      // 2. If not confirmed, send confirmation email via Supabase resend
       const { error: resendError } = await supabase.auth.resend({
         type: 'signup',
         email: currentUser.email,
@@ -305,6 +366,27 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       });
 
       if (resendError) {
+        const msg = (resendError.message || '').toLowerCase();
+
+        // If email is already confirmed
+        if (msg.includes('already confirmed') || msg.includes('already verified')) {
+          localStorage.setItem(`beya_email_verified_${emailKey}`, 'true');
+          const updated = { ...currentUser, emailVerified: true };
+          localStorage.setItem('textrack_auth', JSON.stringify(updated));
+          setEmailAlreadyConfirmedMsg(true);
+          setTimeout(() => {
+            setShowEmailBanner(false);
+          }, 3000);
+          return;
+        }
+
+        // Rate limit protection check
+        if (msg.includes('rate limit') || msg.includes('security purposes') || (resendError as any).status === 429) {
+          throw new Error(isAr 
+            ? 'تم إرسال عدة طلبات مؤخراً لأسباب أمنية. يرجى الانتظار دقيقة وتفقد مجلد الرسائل غير المرغوب فيها (Spam).'
+            : 'Trop de requêtes récentes. Veuillez patienter une minute et vérifier vos spams.');
+        }
+
         // If user not in Supabase Auth yet, create auth user to trigger confirmation email
         const { error: signUpError } = await supabase.auth.signUp({
           email: currentUser.email,
@@ -318,7 +400,19 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           }
         });
 
-        if (signUpError && !signUpError.message?.toLowerCase().includes('already registered')) {
+        if (signUpError) {
+          const sMsg = (signUpError.message || '').toLowerCase();
+          if (sMsg.includes('already registered') || sMsg.includes('already exists')) {
+            // Already registered and active
+            localStorage.setItem(`beya_email_verified_${emailKey}`, 'true');
+            const updated = { ...currentUser, emailVerified: true };
+            localStorage.setItem('textrack_auth', JSON.stringify(updated));
+            setEmailAlreadyConfirmedMsg(true);
+            setTimeout(() => {
+              setShowEmailBanner(false);
+            }, 3000);
+            return;
+          }
           throw signUpError;
         }
       }
@@ -1246,6 +1340,13 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                       ? `يرجى تأكيد بريدك الإلكتروني (${currentUser.email}) لتفعيل حسابك بالكامل وتلقي إشعارات طلبياتك.`
                       : `Veuillez confirmer votre adresse email (${currentUser.email}) pour sécuriser votre compte et recevoir vos notifications.`}
                   </span>
+                  {emailAlreadyConfirmedMsg && (
+                    <p className="mt-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-1.5 rounded-lg border border-emerald-300 animate-in fade-in">
+                      {isAr 
+                        ? '✅ بريدك الإلكتروني مؤكد بالفعل وحسابك نشط 100%! تم إخفاء التنبيه تلقائياً.' 
+                        : '✅ Votre adresse email est déjà confirmée et votre compte est 100% actif !'}
+                    </p>
+                  )}
                   {emailSentSuccess && (
                     <p className="mt-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-1 rounded-lg border border-emerald-300">
                       {isAr 

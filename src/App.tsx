@@ -587,6 +587,9 @@ function AppContent() {
              if (!latest.password && currentUser.password) {
                 latest.password = currentUser.password;
              }
+             if (!latest.emailVerified && currentUser.emailVerified) {
+                latest.emailVerified = currentUser.emailVerified;
+             }
              if (currentUser.role === 'client' && latest.role === 'merchant') {
                 latest.role = 'client';
              }
