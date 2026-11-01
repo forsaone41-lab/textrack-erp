@@ -2691,7 +2691,7 @@ export default function AtelierCalculator({
                   </button>
                 ) : (
                   <span className="text-[11px] font-bold text-slate-400 px-2">
-                    {isAr ? '✨ ديزاين مترتب بدون سكرول' : '✨ Vue sans défilement'}
+                    {isAr ? '✨ حاسبة تكاليف المعمل' : '✨ Calculateur BEYA'}
                   </span>
                 )}
               </div>
