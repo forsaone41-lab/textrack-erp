@@ -122,122 +122,7 @@ const LeadCardImage = ({
     >
       <Camera className={iconSize >= 12 ? 'w-12 h-12' : iconSize >= 10 ? 'w-10 h-10' : 'w-8 h-8'} />
       <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
-      {/* Gemini API Key Configuration Modal */}
-      {showApiKeyModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-[2rem] max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden" dir={isAr ? 'rtl' : 'ltr'}>
-            <div className="p-6 bg-slate-950 text-white flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-indigo-400" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base uppercase tracking-wider">
-                    {isAr ? 'إعدادات الذكاء الاصطناعي (Gemini API)' : 'Configuration IA (Gemini API)'}
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    {isAr ? 'تحليل الموديلات بدقة، أسعار الخياطة، وكتالوج الأقمشة' : 'Analyse automatique des modèles et chiffrage'}
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setShowApiKeyModal(false)}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6 md:p-8 space-y-5">
-              <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 text-xs text-slate-700 space-y-2">
-                <div className="flex items-center gap-2 font-black text-indigo-950">
-                  <Key className="w-4 h-4 text-indigo-600" />
-                  <span>{isAr ? 'أدخل مفتاح Google Gemini API الخاص بك' : 'Saisissez votre clé Google Gemini API'}</span>
-                </div>
-                <p className="text-slate-600 leading-relaxed text-[11px]">
-                  {isAr 
-                    ? 'هذا المفتاح كيمكن النظام ومستشار الورشة من تحليل صور الموديلات فالحين، تحديد نوع الثوب المطلوب، سعرو فدرب عمر، وثمن الخياطة المقترح تلقائياً.'
-                    : 'Cette clé permet d\'analyser directement vos photos, d\'estimer les métrages et de chiffrer la confection avec l\'IA.'}
-                </p>
-                <a
-                  href="https://aistudio.google.com/app/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-indigo-600 font-bold hover:underline text-[11px]"
-                >
-                  <span>{isAr ? 'الحصول على مفتاح مجاني من Google AI Studio ←' : 'Obtenir une clé gratuite sur Google AI Studio →'}</span>
-                </a>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">
-                  {isAr ? 'مفتاح API Key' : 'Clé API (Google Gemini)'}
-                </label>
-                <input
-                  type="password"
-                  value={apiKeyDraft}
-                  onChange={(e) => {
-                    setApiKeyDraft(e.target.value);
-                    setApiKeyTestResult(null);
-                  }}
-                  placeholder="AIzaSy..."
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-600 focus:bg-white transition-all"
-                />
-              </div>
-
-              {apiKeyTestResult && (
-                <div className={`p-3.5 rounded-2xl text-xs font-bold border flex items-center gap-2 ${
-                  apiKeyTestResult.ok 
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                    : 'bg-rose-50 border-rose-200 text-rose-800'
-                }`}>
-                  {apiKeyTestResult.ok ? <CircleCheck className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
-                  <span>{apiKeyTestResult.message}</span>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 pt-2">
-                <button
-                  type="button"
-                  disabled={testingApiKey || !apiKeyDraft.trim()}
-                  onClick={() => testGeminiApiKey(apiKeyDraft)}
-                  className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {testingApiKey ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-indigo-600" />}
-                  <span>{isAr ? 'اختبار المفتاح' : 'Tester'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSaveApiKey}
-                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>{isAr ? 'حفظ وتفعيل' : 'Enregistrer'}</span>
-                </button>
-
-                {geminiApiKey && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      localStorage.removeItem('beya_gemini_api_key');
-                      setGeminiApiKey('');
-                      setApiKeyDraft('');
-                      setShowApiKeyModal(false);
-                    }}
-                    className="p-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-colors cursor-pointer"
-                    title={isAr ? 'حذف المفتاح' : 'Supprimer la clé'}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
           </div>
-        </div>
-      )}
-
-    </div>
   );
 };
 
@@ -7400,6 +7285,121 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Gemini API Key Configuration Modal */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-[2rem] max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="p-6 bg-slate-950 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-indigo-400" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base uppercase tracking-wider">
+                    {isAr ? 'إعدادات الذكاء الاصطناعي (Gemini API)' : 'Configuration IA (Gemini API)'}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {isAr ? 'تحليل الموديلات بدقة، أسعار الخياطة، وكتالوج الأقمشة' : 'Analyse automatique des modèles et chiffrage'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowApiKeyModal(false)}
+                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 md:p-8 space-y-5">
+              <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 text-xs text-slate-700 space-y-2">
+                <div className="flex items-center gap-2 font-black text-indigo-950">
+                  <Key className="w-4 h-4 text-indigo-600" />
+                  <span>{isAr ? 'أدخل مفتاح Google Gemini API الخاص بك' : 'Saisissez votre clé Google Gemini API'}</span>
+                </div>
+                <p className="text-slate-600 leading-relaxed text-[11px]">
+                  {isAr 
+                    ? 'هذا المفتاح كيمكن النظام ومستشار الورشة من تحليل صور الموديلات فالحين، تحديد نوع الثوب المطلوب، سعرو فدرب عمر، وثمن الخياطة المقترح تلقائياً.'
+                    : 'Cette clé permet d\'analyser directement vos photos, d\'estimer les métrages et de chiffrer la confection avec l\'IA.'}
+                </p>
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-indigo-600 font-bold hover:underline text-[11px]"
+                >
+                  <span>{isAr ? 'الحصول على مفتاح مجاني من Google AI Studio ←' : 'Obtenir une clé gratuite sur Google AI Studio →'}</span>
+                </a>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">
+                  {isAr ? 'مفتاح API Key' : 'Clé API (Google Gemini)'}
+                </label>
+                <input
+                  type="password"
+                  value={apiKeyDraft}
+                  onChange={(e) => {
+                    setApiKeyDraft(e.target.value);
+                    setApiKeyTestResult(null);
+                  }}
+                  placeholder="AIzaSy..."
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-600 focus:bg-white transition-all"
+                />
+              </div>
+
+              {apiKeyTestResult && (
+                <div className={`p-3.5 rounded-2xl text-xs font-bold border flex items-center gap-2 ${
+                  apiKeyTestResult.ok 
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                    : 'bg-rose-50 border-rose-200 text-rose-800'
+                }`}>
+                  {apiKeyTestResult.ok ? <CircleCheck className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+                  <span>{apiKeyTestResult.message}</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  disabled={testingApiKey || !apiKeyDraft.trim()}
+                  onClick={() => testGeminiApiKey(apiKeyDraft)}
+                  className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {testingApiKey ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-indigo-600" />}
+                  <span>{isAr ? 'اختبار المفتاح' : 'Tester'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveApiKey}
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{isAr ? 'حفظ وتفعيل' : 'Enregistrer'}</span>
+                </button>
+
+                {geminiApiKey && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.removeItem('beya_gemini_api_key');
+                      setGeminiApiKey('');
+                      setApiKeyDraft('');
+                      setShowApiKeyModal(false);
+                    }}
+                    className="p-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-colors cursor-pointer"
+                    title={isAr ? 'حذف المفتاح' : 'Supprimer la clé'}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

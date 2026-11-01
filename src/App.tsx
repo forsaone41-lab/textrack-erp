@@ -117,6 +117,7 @@ const Privacy         = lazy(() => import('./pages/Privacy'));
 const Cookies         = lazy(() => import('./pages/Cookies'));
 const SaaSAdminPage   = lazy(() => import('./pages/SaaSAdminPage'));
 const BeyaNetwork     = lazy(() => import('./pages/BeyaNetwork'));
+const ModelisteProfilePage = lazy(() => import('./pages/ModelisteProfilePage'));
 import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
@@ -833,6 +834,21 @@ function AppContent() {
             <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
           </Suspense>
         } />
+        <Route path="/modeliste/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <ModelisteProfilePage />
+          </Suspense>
+        } />
+        <Route path="/modeliste" element={
+          <Suspense fallback={<PageLoader />}>
+            <ModelisteProfilePage />
+          </Suspense>
+        } />
+        <Route path="/network/modeliste/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <ModelisteProfilePage />
+          </Suspense>
+        } />
         <Route path="/terms" element={
           <Suspense fallback={<PageLoader />}>
             <Terms />
@@ -901,6 +917,21 @@ function AppContent() {
         <Route path="/network" element={
           <Suspense fallback={<PageLoader />}>
             <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
+          </Suspense>
+        } />
+        <Route path="/modeliste/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <ModelisteProfilePage />
+          </Suspense>
+        } />
+        <Route path="/modeliste" element={
+          <Suspense fallback={<PageLoader />}>
+            <ModelisteProfilePage />
+          </Suspense>
+        } />
+        <Route path="/network/modeliste/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <ModelisteProfilePage />
           </Suspense>
         } />
         <Route path="/portal" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
@@ -1108,6 +1139,21 @@ function AppContent() {
         <Route path="/network" element={
           <Suspense fallback={<PageLoader />}>
             <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
+          </Suspense>
+        } />
+        <Route path="/modeliste/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <ModelisteProfilePage />
+          </Suspense>
+        } />
+        <Route path="/modeliste" element={
+          <Suspense fallback={<PageLoader />}>
+            <ModelisteProfilePage />
+          </Suspense>
+        } />
+        <Route path="/network/modeliste/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <ModelisteProfilePage />
           </Suspense>
         } />
 
