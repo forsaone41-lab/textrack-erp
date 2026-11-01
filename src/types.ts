@@ -354,6 +354,10 @@ export interface User {
   adresse?: string;
   notes?: string;
   emailVerified?: boolean;
+  brandName?: string;
+  networkProfileCompleted?: boolean;
+  networkRole?: 'brand' | 'supplier' | 'modeliste' | 'imprimeur';
+  networkBio?: string;
 }
 
 // ─── Affiliate Program ────────────────────────────────────────

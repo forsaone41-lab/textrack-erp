@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
@@ -218,7 +218,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       return null;
     }
   });
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'demandes' | 'docs' | 'payments' | 'support' | 'info'>(() => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'demandes' | 'docs' | 'payments' | 'support' | 'info' | 'network'>(() => {
     try {
       if (sessionStorage.getItem('beya_new_signup_code')) {
         return 'demandes';
@@ -293,6 +293,298 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [sourcingCheckActive, setSourcingCheckActive] = useState<Record<string, boolean>>({});
   const [sourcingSelectedColor, setSourcingSelectedColor] = useState<Record<string, string>>({});
   const [fabricOrderSent, setFabricOrderSent] = useState<Record<string, boolean>>({});
+
+  // ─── BEYA NETWORK Pilot (Restricted strictly to forsaone41@gmail.com and admin) ───
+  const isNetworkPilotUser = (currentUser?.email || '').toLowerCase().trim() === 'forsaone41@gmail.com' || currentUser?.role === 'admin';
+  const [networkSubTab, setNetworkSubTab] = useState<'fournisseurs' | 'forum' | 'groupage'>('fournisseurs');
+  const [networkCategoryFilter, setNetworkCategoryFilter] = useState<'all' | 'tissu' | 'impression' | 'broderie' | 'modeliste'>('all');
+  const [networkSearchQuery, setNetworkSearchQuery] = useState('');
+  const [networkForumTopicFilter, setNetworkForumTopicFilter] = useState<'all' | 'livraison' | 'marketing' | 'tissus' | 'conseils'>('all');
+  const [showEditNetworkProfileModal, setShowEditNetworkProfileModal] = useState(false);
+  const [savingNetworkProfile, setSavingNetworkProfile] = useState(false);
+
+  const [networkProfileForm, setNetworkProfileForm] = useState(() => {
+    let saved: any = null;
+    try {
+      const raw = localStorage.getItem(`beya_network_profile_${currentUser?.email?.toLowerCase().trim()}`);
+      if (raw) saved = JSON.parse(raw);
+    } catch {}
+    return {
+      role: (saved?.role || currentUser?.networkRole || 'brand') as 'brand' | 'supplier' | 'modeliste' | 'imprimeur',
+      brandName: saved?.brandName || currentUser?.brandName || (currentUser as any)?.store_name || (currentUser as any)?.storeName || '',
+      city: saved?.city || currentUser?.ville || 'الدار البيضاء (Casablanca)',
+      phone: saved?.phone || currentUser?.telephone || '',
+      bio: saved?.bio || currentUser?.networkBio || ''
+    };
+  });
+
+  const isNetworkProfileCompleted = () => {
+    if (currentUser?.networkProfileCompleted) return true;
+    try {
+      if (localStorage.getItem(`beya_network_completed_${currentUser?.email?.toLowerCase().trim()}`) === 'true') return true;
+    } catch {}
+    return false;
+  };
+
+  const handleSaveNetworkProfile = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!networkProfileForm.brandName.trim()) {
+      alert(isAr ? 'يرجى إدخال اسم البراند أو المحل التجاري' : 'Veuillez saisir le nom de marque ou entreprise');
+      return;
+    }
+    if (!networkProfileForm.phone.trim()) {
+      alert(isAr ? 'يرجى إدخال رقم الواتساب المباشر للتواصل' : 'Veuillez saisir le numéro WhatsApp');
+      return;
+    }
+    setSavingNetworkProfile(true);
+    try {
+      const emailKey = (currentUser?.email || '').toLowerCase().trim();
+      const updated: User = {
+        ...currentUser!,
+        brandName: networkProfileForm.brandName.trim(),
+        telephone: networkProfileForm.phone.trim(),
+        ville: networkProfileForm.city.trim(),
+        networkRole: networkProfileForm.role,
+        networkBio: networkProfileForm.bio.trim(),
+        networkProfileCompleted: true
+      };
+      localStorage.setItem('textrack_auth', JSON.stringify(updated));
+      if (emailKey) {
+        localStorage.setItem(`beya_network_completed_${emailKey}`, 'true');
+        localStorage.setItem(`beya_network_profile_${emailKey}`, JSON.stringify(networkProfileForm));
+      }
+      await saveRecord('users', updated, true).catch(() => {});
+      setShowEditNetworkProfileModal(false);
+    } catch (err) {
+      console.error('Error saving network profile:', err);
+    } finally {
+      setSavingNetworkProfile(false);
+    }
+  };
+
+  // Forum posts state with persistence
+  const [forumPosts, setForumPosts] = useState<Array<{
+    id: string;
+    author: string;
+    authorRole: string;
+    city: string;
+    title: string;
+    category: 'livraison' | 'marketing' | 'tissus' | 'conseils';
+    content: string;
+    date: string;
+    repliesCount: number;
+    likesCount: number;
+    liked?: boolean;
+  }>>(() => {
+    try {
+      const saved = localStorage.getItem('beya_network_forum_posts');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      {
+        id: 'post-1',
+        author: 'أمين البراندي',
+        authorRole: 'صاحب براند ملابس شبابية',
+        city: 'الدار البيضاء',
+        title: 'شكون أحسن شركة توصيل (Livraison) من ناحية سرعة التحصيل (Retour de fonds) هاد الأيام؟',
+        category: 'livraison',
+        content: 'السلام عليكم الإخوان، كنسولكم على تجاربكم مع شركات التوصيل هاد الشهر؟ شكون لي عندهم نسبة التسليم (Livraison) طالعة وكيصيفطو الفلوس بلا تعطيل؟',
+        date: 'اليوم، 10:30',
+        repliesCount: 16,
+        likesCount: 24
+      },
+      {
+        id: 'post-2',
+        author: 'سفيان - E-com Pro',
+        authorRole: 'متجر ملابس أونلاين',
+        city: 'الرباط',
+        title: 'نصيحة مجربة لحملات التيك توك والإعلانات (TikTok Ads) لبراندات الملابس',
+        category: 'marketing',
+        content: 'بالنسبة للإخوان لي كيطلقو إعلانات: فيديوهات الـ UGC والـ Behind the scenes وسط الورشة فاش كيبان الثوب والفصالة والخياطة راهم كيجيبو أعلى عائد (ROAS 4.8) مقارنة بالتصاور العادية. جربو هاد الطريقة!',
+        date: 'أمس، 18:45',
+        repliesCount: 22,
+        likesCount: 39
+      },
+      {
+        id: 'post-3',
+        author: 'يوسف العثماني',
+        authorRole: 'علامة Streetwear',
+        city: 'مراكش',
+        title: 'مقارنة بين إنترلوك 240g والمولتون 320g: شكون لي كيمشي أحسن فالهودي الخريفي؟',
+        category: 'tissus',
+        content: 'بناءً على طلبات الكليان ديالي: الإنترلوك قطن دابل نيت كيعطي فينيسيون راقية واقفة وما كيتلواش، بينما المولتون كيبقى هو الملك ديال البرد والأوفر سايز.',
+        date: 'منذ يومين',
+        repliesCount: 11,
+        likesCount: 19
+      },
+      {
+        id: 'post-4',
+        author: 'BEYA Advisory',
+        authorRole: 'فريق دعم الورشة',
+        city: 'الدار البيضاء',
+        title: '💡 أهمية التغليف الاحترافي (Hangtags & Polybags) في خفض نسبة الـ Retour',
+        category: 'conseils',
+        content: 'تنبيه مهم لجميع رواد BEYA NETWORK: إضافة بطاقة إرشادات الغسيل (Etiquette de lavage) وHangtag احترافي كيرفع ثقة الزبون بنسبة 35% وكيقلل من نسبة رفض الطرد عند الاستلام.',
+        date: 'منذ 3 أيام',
+        repliesCount: 8,
+        likesCount: 31
+      }
+    ];
+  });
+  const [showNewForumPostModal, setShowNewForumPostModal] = useState(false);
+  const [newPostForm, setNewPostForm] = useState({
+    title: '',
+    category: 'conseils' as 'livraison' | 'marketing' | 'tissus' | 'conseils',
+    content: ''
+  });
+
+  const handleCreateForumPost = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPostForm.title.trim() || !newPostForm.content.trim()) return;
+    const authorName = networkProfileForm.brandName || currentUser?.nom || 'عضو BEYA';
+    const authorRoleText = networkProfileForm.role === 'brand' ? 'صاحب علامة تجارية' :
+                           networkProfileForm.role === 'supplier' ? 'مورد أقمشة' :
+                           networkProfileForm.role === 'modeliste' ? 'مصمم وموديلست' : 'ورشة طباعة';
+    const postObj = {
+      id: `post-${Date.now()}`,
+      author: authorName,
+      authorRole: authorRoleText,
+      city: networkProfileForm.city.split(' ')[0] || 'المغرب',
+      title: newPostForm.title.trim(),
+      category: newPostForm.category,
+      content: newPostForm.content.trim(),
+      date: isAr ? 'الآن' : 'À l\'instant',
+      repliesCount: 0,
+      likesCount: 1,
+      liked: true
+    };
+    const updated = [postObj, ...forumPosts];
+    setForumPosts(updated);
+    try {
+      localStorage.setItem('beya_network_forum_posts', JSON.stringify(updated));
+    } catch {}
+    setNewPostForm({ title: '', category: 'conseils', content: '' });
+    setShowNewForumPostModal(false);
+  };
+
+  const handleLikePost = (postId: string) => {
+    setForumPosts(prev => {
+      const next = prev.map(p => {
+        if (p.id === postId) {
+          const isLiked = p.liked;
+          return {
+            ...p,
+            liked: !isLiked,
+            likesCount: isLiked ? p.likesCount - 1 : p.likesCount + 1
+          };
+        }
+        return p;
+      });
+      try {
+        localStorage.setItem('beya_network_forum_posts', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const networkSuppliers = [
+    {
+      id: 'sup-1',
+      name: 'مجمع أقمشة الشرق (Derb Omar)',
+      category: 'tissu',
+      categoryLabel: 'أقمشة وتوريد قطن',
+      city: 'الدار البيضاء (درب عمر)',
+      whatsapp: '212661849201',
+      products: ['مولتون شتوي 320g مبطن', 'إنترلوك أصلي 100% قطن', 'جيرسي ليكرا صيفي', 'كوتون كوردوروي'],
+      minQty: 'ابتداءً من 25 متر (رولو واحد)',
+      rating: 4.9,
+      badge: 'مورد معتمد BEYA ⭐',
+      desc: 'الموزع المعتمد لأرقى خامات الأقطان والمنسوجات الشتوية والصيفية في درب عمر. أسعار تفضيلية لأعضاء شبكة BEYA.'
+    },
+    {
+      id: 'sup-2',
+      name: 'المركز الرقمي للطباعة والـ DTF (Digital Print Pro)',
+      category: 'impression',
+      categoryLabel: 'طباعة وسيريغرافي',
+      city: 'الدار البيضاء (عين السبع)',
+      whatsapp: '212662938102',
+      products: ['طباعة DTF فائقة النقاء HD', 'سيريغرافي Plastisol & Waterbase', 'فلوكاج قطني مخملي', 'Sublimation'],
+      minQty: 'ابتداءً من 30 قطعة',
+      rating: 4.95,
+      badge: 'شريك معتمد BEYA ⭐',
+      desc: 'ورشة طباعة عصرية مجهزة بأحدث آلات الـ DTF والطباعة الحريرية بألوان ثابتة ومقاومة للغسيل المتكرر.'
+    },
+    {
+      id: 'sup-3',
+      name: 'استوديو الباترون الرقمي (Atelier Patronage Pro)',
+      category: 'modeliste',
+      categoryLabel: 'تصميم وموديلست',
+      city: 'الدار البيضاء / طنجة',
+      whatsapp: '212663049182',
+      products: ['إعداد الباترون الرقمي Gerber & Lectra', 'تدريج القياسات (Gradation XS-3XL)', 'إعداد Fiche Technique كاملة'],
+      minQty: 'موديل واحد',
+      rating: 5.0,
+      badge: 'موديلست معتمد BEYA ⭐',
+      desc: 'مهندسو وموديلست أزياء معتمدون لتجهيز ملفات الباترون الدقيقة المتوافقة مباشرة مع ماكينات الفصالة بالليزر.'
+    },
+    {
+      id: 'sup-4',
+      name: 'ورشة الفجر للتطريز الصناعي (Broderie Industrielle Tajima)',
+      category: 'broderie',
+      categoryLabel: 'تطريز آلي متطور',
+      city: 'فاس / الدار البيضاء',
+      whatsapp: '212664728190',
+      products: ['تطريز ثلاثي الأبعاد 3D بارز', 'تطريز شعارات الهودي والكابوتش', 'بادجات مطرزة حرارية (Écussons)'],
+      minQty: 'ابتداءً من 50 قطعة',
+      rating: 4.85,
+      badge: 'شريك معتمد BEYA ⭐',
+      desc: 'أسطول ماكينات تطريز يابانية Tajima 12 رأس لدقة متناهية وسرعة فائقة في تنفيذ أرقى شعارات الماركات.'
+    },
+    {
+      id: 'sup-5',
+      name: 'أقمشة المسيرة الشمالية (Tissus Nord)',
+      category: 'tissu',
+      categoryLabel: 'أقمشة سراويل وفيستات',
+      city: 'طنجة (المنطقة الحرة)',
+      whatsapp: '212665819203',
+      products: ['جاباردين كوتون ستريتش متين', 'قماش كوتون كانفاس (Canvas)', 'أقمشة تقنية مضادة للماء'],
+      minQty: 'ابتداءً من 30 متر',
+      rating: 4.8,
+      badge: 'مورد معتمد BEYA ⭐',
+      desc: 'متخصصون في توريد خامات السراويل الكارجو والسترات الواقية والمآزر بأعلى معايير المتانة ومقاومة التمزق.'
+    }
+  ];
+
+  const networkGroupage = [
+    {
+      id: 'grp-1',
+      fabricName: 'مولتون شتوي مبطن قطن 100% فاخر (Molleton Gratté 320 GSM)',
+      factory: 'مباشرة من مصنع النسيج بالمنطقة الصناعية عين السبع',
+      colors: ['أسود داكن (Noir intense)', 'رمادي ميلونج (Gris chiné)', 'أخضر غابوي (Vert bouteille)'],
+      regularPriceMAD: 52,
+      groupPriceMAD: 38,
+      savingsPct: '27%',
+      targetMeters: 300,
+      currentMeters: 220,
+      progressPct: 73,
+      deadlineDays: 4,
+      whatsappMsg: 'Bonjour BEYA Network, je souhaite réserver ma part dans l\'achat groupé du Molleton Gratté 320g (Réf: GRP-MOLLETON-320).'
+    },
+    {
+      id: 'grp-2',
+      fabricName: 'إنترلوك قطن دابل نيت راقي (Interlock Double Knit 240 GSM)',
+      factory: 'استيراد وتوريد جماعي حصري لأعضاء BEYA',
+      colors: ['أوف وايت (Off-white)', 'كحلي ملكي (Bleu marine)', 'بيج رملي (Beige sable)'],
+      regularPriceMAD: 44,
+      groupPriceMAD: 32,
+      savingsPct: '27%',
+      targetMeters: 250,
+      currentMeters: 145,
+      progressPct: 58,
+      deadlineDays: 7,
+      whatsappMsg: 'Bonjour BEYA Network, je souhaite réserver ma part dans l\'achat groupé Interlock Double Knit (Réf: GRP-INTERLOCK-240).'
+    }
+  ];
   // Auto-detect if user's email is already confirmed in Supabase Auth to dismiss banner
   useEffect(() => {
     if (!currentUser?.email) return;
@@ -1277,6 +1569,14 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 { id: 'overview', icon: <Globe className="w-5 h-5" />, label: isAr ? 'نظرة عامة' : 'Vue d\'ensemble' },
                 { id: 'demandes', icon: <MessageCircle className="w-5 h-5" />, label: isAr ? 'طلباتي' : 'Mes Demandes' },
                 { id: 'orders', icon: <Package className="w-5 h-5" />, label: isAr ? 'طلبياتي' : 'Mes Commandes' },
+                ...(isNetworkPilotUser ? [
+                  { 
+                    id: 'network', 
+                    icon: <Users className="w-5 h-5 text-amber-400" />, 
+                    label: 'BEYA NETWORK', 
+                    badge: 'VIP' 
+                  }
+                ] : []),
                 { id: 'docs', icon: <Receipt className="w-5 h-5" />, label: isAr ? 'الفواتير والوثائق' : 'Factures & Docs' },
                 { id: 'payments', icon: <CreditCard className="w-5 h-5" />, label: isAr ? 'الدفع والأداء' : 'Paiements' },
                 { id: 'support', icon: <Bell className="w-5 h-5" />, label: isAr ? 'الدعم الفني VIP' : 'Support VIP' },
@@ -1284,14 +1584,21 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id as any)}
-                  className={`w-full flex items-center gap-3 md:gap-4 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all ${
+                  className={`w-full flex items-center justify-between px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all ${
                     activeTab === item.id 
                       ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' 
                       : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  {item.icon}
-                  {item.label}
+                  <div className="flex items-center gap-3 md:gap-4">
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </div>
+                  {(item as any).badge && (
+                    <span className="px-2 py-0.5 text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-sm">
+                      {(item as any).badge}
+                    </span>
+                  )}
                 </button>
               ))}
             </nav>
@@ -1355,6 +1662,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 {activeTab === 'overview' ? (isAr ? 'لوحة التحكم' : 'Tableau de Bord') :
                  activeTab === 'demandes' ? (isAr ? 'تتبع طلباتي' : 'Mes Demandes') :
                  activeTab === 'orders' ? (isAr ? 'الطلبيات' : 'Commandes') :
+                 activeTab === 'network' ? 'BEYA NETWORK 🌐' :
                  activeTab === 'payments' ? (isAr ? 'الدفع والأداء' : 'Paiements') :
                  activeTab === 'docs' ? (isAr ? 'الوثائق' : 'Documents') :
                  activeTab === 'info' ? (isAr ? 'معلومات وأسعار' : 'Infos & Prix') :
@@ -4811,6 +5119,512 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
              </div>
             </div>
           )}
+
+          {/* BEYA NETWORK TAB (Exclusive Pilot for forsaone41@gmail.com and Admin) */}
+          {activeTab === 'network' && isNetworkPilotUser && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+              
+              {/* IF PROFILE NOT COMPLETED YET -> SHOW ONBOARDING GATEWAY */}
+              {!isNetworkProfileCompleted() ? (
+                <div className="max-w-2xl mx-auto bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-indigo-500/30 relative overflow-hidden text-center">
+                  <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="relative z-10">
+                    <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-3xl mx-auto flex items-center justify-center shadow-xl shadow-orange-500/20 mb-6 text-white animate-bounce duration-1000">
+                      <Users className="w-10 h-10" />
+                    </div>
+                    <span className="px-4 py-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-xs font-black uppercase tracking-widest inline-block mb-3">
+                      {isAr ? 'عضوية حصرية VIP' : 'Accès Exclusif VIP'}
+                    </span>
+                    <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-3">
+                      {isAr ? 'مرحباً بك في BEYA NETWORK 🌐' : 'Bienvenue sur BEYA NETWORK 🌐'}
+                    </h2>
+                    <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-8 max-w-lg mx-auto">
+                      {isAr 
+                        ? 'الملتقى الحصري لرواد الموضة، موردي الأقمشة، والمطابع بالمغرب. يرجى إكمال ملفك التعريفي لتفعيل عضويتك وفتح الوصول إلى دليل الموردين المعتمدين والمجتمع.'
+                        : 'Le hub exclusif des créateurs de marques, fournisseurs de tissus et ateliers au Maroc. Complétez votre profil pour débloquer l\'accès.'}
+                    </p>
+
+                    <form onSubmit={handleSaveNetworkProfile} className="space-y-4 text-right" dir={isAr ? 'rtl' : 'ltr'}>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                          {isAr ? 'صفة العضوية في المنصة *' : 'Votre rôle dans le réseau *'}
+                        </label>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {[
+                            { id: 'brand', label: isAr ? '🏷️ صاحب براند / علامة' : '🏷️ Créateur de marque' },
+                            { id: 'supplier', label: isAr ? '🧵 مورد أقمشة ومواد' : '🧵 Fournisseur tissus' },
+                            { id: 'modeliste', label: isAr ? '📐 مصمم وموديلست' : '📐 Modéliste / Patron' },
+                            { id: 'imprimeur', label: isAr ? '🖨️ ورشة طباعة وتطريز' : '🖨️ Impression / Sérigraphie' },
+                          ].map(opt => (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => setNetworkProfileForm(prev => ({ ...prev, role: opt.id as any }))}
+                              className={`p-3 rounded-2xl font-bold border transition-all text-center cursor-pointer ${
+                                networkProfileForm.role === opt.id
+                                  ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-600/30'
+                                  : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                            {isAr ? 'اسم البراند أو المحل التجاري *' : 'Nom de marque / enseigne *'}
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder={isAr ? 'مثال: Beya Streetwear' : 'Ex: Beya Brand'}
+                            value={networkProfileForm.brandName}
+                            onChange={(e) => setNetworkProfileForm(prev => ({ ...prev, brandName: e.target.value }))}
+                            className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-slate-400 text-xs font-bold outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                            {isAr ? 'المدينة *' : 'Ville *'}
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder={isAr ? 'الدار البيضاء، الرباط، طنجة...' : 'Casablanca, Rabat, Tanger...'}
+                            value={networkProfileForm.city}
+                            onChange={(e) => setNetworkProfileForm(prev => ({ ...prev, city: e.target.value }))}
+                            className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-slate-400 text-xs font-bold outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                            {isAr ? 'رقم الواتساب المباشر للتواصل *' : 'Numéro WhatsApp direct *'}
+                          </label>
+                          <input
+                            type="tel"
+                            required
+                            placeholder="06XXXXXXXX / +2126XXXXXXX"
+                            value={networkProfileForm.phone}
+                            onChange={(e) => setNetworkProfileForm(prev => ({ ...prev, phone: e.target.value }))}
+                            className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-slate-400 text-xs font-bold outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                            {isAr ? 'نبذة مختصرة أو تخصصك (اختياري)' : 'Spécialité / Bio (optionnel)'}
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={isAr ? 'مثال: ملابس أوفر سايز، هودي، تيشيرت...' : 'Ex: Streetwear, Hoodies...'}
+                            value={networkProfileForm.bio}
+                            onChange={(e) => setNetworkProfileForm(prev => ({ ...prev, bio: e.target.value }))}
+                            className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-slate-400 text-xs font-bold outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={savingNetworkProfile}
+                        className="w-full mt-6 py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black rounded-2xl text-sm shadow-xl shadow-orange-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {savingNetworkProfile ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>{isAr ? 'جاري تفعيل العضوية...' : 'Activation...'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-5 h-5" />
+                            <span>{isAr ? '🚀 تفعيل عضويتي ودخول BEYA NETWORK' : '🚀 Activer mon profil et entrer'}</span>
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ) : (
+                /* PROFILE IS COMPLETED -> FULL BEYA NETWORK PORTAL */
+                <div className="space-y-8 animate-in fade-in duration-500">
+                  
+                  {/* VIP Member Top Card */}
+                  <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="flex items-center gap-4 relative z-10 text-center md:text-right" dir={isAr ? 'rtl' : 'ltr'}>
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center font-black text-2xl text-white shadow-lg shadow-orange-500/20 shrink-0">
+                        {networkProfileForm.brandName ? networkProfileForm.brandName[0].toUpperCase() : 'B'}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 justify-center md:justify-start flex-wrap">
+                          <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight">
+                            {networkProfileForm.brandName || currentUser?.nom}
+                          </h1>
+                          <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" /> {isAr ? 'عضو معتمد BEYA' : 'Membre Vérifié'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 font-medium mt-1">
+                          📍 {networkProfileForm.city} &bull; {networkProfileForm.role === 'brand' ? (isAr ? '🏷️ صاحب براند' : '🏷️ Marque') :
+                                                             networkProfileForm.role === 'supplier' ? (isAr ? '🧵 مورد أقمشة' : '🧵 Fournisseur') :
+                                                             networkProfileForm.role === 'modeliste' ? (isAr ? '📐 مصمم وموديلست' : '📐 Modéliste') : (isAr ? '🖨️ ورشة طباعة' : '🖨️ Imprimeur')}
+                          {networkProfileForm.bio && ` &bull; ${networkProfileForm.bio}`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 relative z-10">
+                      <button
+                        onClick={() => setShowEditNetworkProfileModal(true)}
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>{isAr ? 'تعديل بروفايلي' : 'Modifier mon profil'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sub-Navigation Tabs */}
+                  <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl max-w-xl mx-auto md:mx-0">
+                    <button
+                      onClick={() => setNetworkSubTab('fournisseurs')}
+                      className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        networkSubTab === 'fournisseurs'
+                          ? 'bg-white text-indigo-700 shadow-md'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Layers className="w-4 h-4" />
+                      <span>{isAr ? '🧵 دليل الموردين' : 'Fournisseurs'}</span>
+                    </button>
+                    <button
+                      onClick={() => setNetworkSubTab('forum')}
+                      className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        networkSubTab === 'forum'
+                          ? 'bg-white text-indigo-700 shadow-md'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>{isAr ? '💬 مجتمع BEYA' : 'Forum'}</span>
+                    </button>
+                    <button
+                      onClick={() => setNetworkSubTab('groupage')}
+                      className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        networkSubTab === 'groupage'
+                          ? 'bg-white text-indigo-700 shadow-md'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>{isAr ? '📦 الشراء المشترك' : 'Achats Groupés'}</span>
+                    </button>
+                  </div>
+
+                  {/* SUBTAB 1: FOURNISSEURS AGRÉÉS */}
+                  {networkSubTab === 'fournisseurs' && (
+                    <div className="space-y-6">
+                      {/* Search & Category Filter */}
+                      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                        <div className="relative flex-1 max-w-md">
+                          <Search className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            placeholder={isAr ? 'ابحث عن مورد، نوع القماش، المدينة...' : 'Rechercher fournisseur, tissu, ville...'}
+                            value={networkSearchQuery}
+                            onChange={(e) => setNetworkSearchQuery(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-2xl pr-11 pl-4 py-3 text-xs font-medium outline-none focus:border-indigo-500 shadow-sm"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                          {[
+                            { id: 'all', label: isAr ? 'الكل' : 'Tous' },
+                            { id: 'tissu', label: isAr ? '🧵 أقمشة' : '🧵 Tissus' },
+                            { id: 'impression', label: isAr ? '🖨️ مطابع وDTF' : '🖨️ Impression' },
+                            { id: 'broderie', label: isAr ? '🪡 تطريز' : '🪡 Broderie' },
+                            { id: 'modeliste', label: isAr ? '📐 موديلست' : '📐 Modéliste' },
+                          ].map(cat => (
+                            <button
+                              key={cat.id}
+                              onClick={() => setNetworkCategoryFilter(cat.id as any)}
+                              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                                networkCategoryFilter === cat.id
+                                  ? 'bg-indigo-600 text-white shadow-sm'
+                                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              {cat.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Suppliers Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {networkSuppliers
+                          .filter(s => networkCategoryFilter === 'all' || s.category === networkCategoryFilter)
+                          .filter(s => {
+                            if (!networkSearchQuery.trim()) return true;
+                            const q = networkSearchQuery.toLowerCase();
+                            return s.name.toLowerCase().includes(q) ||
+                                   s.city.toLowerCase().includes(q) ||
+                                   s.desc.toLowerCase().includes(q) ||
+                                   s.products.some(p => p.toLowerCase().includes(q));
+                          })
+                          .map(sup => (
+                            <div key={sup.id} className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-300 transition-all flex flex-col justify-between">
+                              <div>
+                                <div className="flex items-start justify-between gap-3 mb-3">
+                                  <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider rounded-full">
+                                    {sup.categoryLabel}
+                                  </span>
+                                  <span className="flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                                    ⭐ {sup.rating}
+                                  </span>
+                                </div>
+
+                                <h3 className="font-black text-slate-900 text-base mb-1">{sup.name}</h3>
+                                <p className="text-xs text-slate-400 font-bold mb-3 flex items-center gap-1">
+                                  <MapPin className="w-3.5 h-3.5" /> {sup.city}
+                                </p>
+                                <p className="text-xs text-slate-600 leading-relaxed mb-4">{sup.desc}</p>
+
+                                <div className="space-y-1.5 mb-4">
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{isAr ? 'المنتجات / الخدمات المتاحة:' : 'Disponibilités :'}</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {sup.products.map((prod, i) => (
+                                      <span key={i} className="px-2.5 py-1 bg-slate-50 text-slate-700 text-[11px] font-medium rounded-lg border border-slate-100">
+                                        {prod}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="pt-4 border-t border-slate-100">
+                                <p className="text-[11px] text-slate-500 font-bold mb-3">
+                                  📦 {isAr ? 'الكمية الدنيا:' : 'Minimum :'} <span className="text-slate-900 font-black">{sup.minQty}</span>
+                                </p>
+                                <a
+                                  href={`https://wa.me/${sup.whatsapp}?text=${encodeURIComponent(
+                                    `Bonjour ${sup.name}, je vous contacte via BEYA NETWORK (Code Partenaire: BEYA-VIP-2026). Je suis intéressé par vos produits et tarifs.`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  <span>{isAr ? 'تواصل عبر الواتساب (كود BEYA)' : 'Contacter sur WhatsApp'}</span>
+                                </a>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 2: FORUM & ENTRAIDE */}
+                  {networkSubTab === 'forum' && (
+                    <div className="space-y-6">
+                      {/* Security Banner */}
+                      <div className="bg-indigo-50 border border-indigo-200 rounded-3xl p-5 flex items-start gap-3">
+                        <ShieldCheck className="w-6 h-6 text-indigo-600 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-xs font-black text-indigo-900 uppercase tracking-tight">
+                            {isAr ? '🔒 فضاء مجتمع BEYA الآمن لتبادل الخبرات' : 'Espace Communautaire Sécurisé'}
+                          </h4>
+                          <p className="text-xs text-indigo-700 leading-relaxed mt-0.5">
+                            {isAr 
+                              ? 'هذا الفضاء مخصص لمشاركة التجارب والنصائح العامة بين رواد الموضة وصناع الملابس. حفاظاً على سرية مشاريعكم، يُمنع مشاركة الأسعار أو تصاميم الموديلات الخاصة.'
+                              : 'Cet espace est dédié aux retours d\'expérience et conseils. Vos devis et modèles restent 100% confidentiels et privés.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Header + Add Button */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                          {[
+                            { id: 'all', label: isAr ? 'جميع المواضيع' : 'Tous' },
+                            { id: 'livraison', label: isAr ? '🚚 شركات التوصيل' : '🚚 Livraison' },
+                            { id: 'marketing', label: isAr ? '📢 التسويق والإعلانات' : '📢 Marketing' },
+                            { id: 'tissus', label: isAr ? '🧵 جودة الأقمشة' : '🧵 Tissus' },
+                            { id: 'conseils', label: isAr ? '💡 نصائح عامة' : '💡 Conseils' },
+                          ].map(t => (
+                            <button
+                              key={t.id}
+                              onClick={() => setNetworkForumTopicFilter(t.id as any)}
+                              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                                networkForumTopicFilter === t.id
+                                  ? 'bg-slate-900 text-white'
+                                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              {t.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        <button
+                          onClick={() => setShowNewForumPostModal(true)}
+                          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-xs shadow-md shadow-indigo-600/20 transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>{isAr ? 'كتابة سؤال أو مشاركة' : 'Poser une question'}</span>
+                        </button>
+                      </div>
+
+                      {/* Posts Feed */}
+                      <div className="space-y-4">
+                        {forumPosts
+                          .filter(p => networkForumTopicFilter === 'all' || p.category === networkForumTopicFilter)
+                          .map(post => (
+                            <div key={post.id} className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+                              <div className="flex items-start justify-between gap-4 mb-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-black text-sm">
+                                    {post.author[0]}
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h4 className="font-bold text-slate-900 text-xs">{post.author}</h4>
+                                      <span className="text-[10px] text-slate-400 font-medium">&bull; 📍 {post.city}</span>
+                                    </div>
+                                    <p className="text-[10px] text-indigo-600 font-bold">{post.authorRole}</p>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] text-slate-400 font-medium">{post.date}</span>
+                              </div>
+
+                              <h3 className="font-black text-slate-900 text-sm md:text-base mb-2">{post.title}</h3>
+                              <p className="text-xs text-slate-600 leading-relaxed mb-4">{post.content}</p>
+
+                              <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+                                <div className="flex items-center gap-4">
+                                  <button
+                                    onClick={() => handleLikePost(post.id)}
+                                    className={`flex items-center gap-1.5 font-bold transition cursor-pointer ${
+                                      post.liked ? 'text-rose-600' : 'text-slate-400 hover:text-slate-700'
+                                    }`}
+                                  >
+                                    <ThumbsUp className={`w-4 h-4 ${post.liked ? 'fill-rose-600' : ''}`} />
+                                    <span>{post.likesCount}</span>
+                                  </button>
+
+                                  <span className="flex items-center gap-1.5 text-slate-400 font-bold">
+                                    <MessageSquare className="w-4 h-4" />
+                                    <span>{post.repliesCount} {isAr ? 'رد' : 'réponses'}</span>
+                                  </span>
+                                </div>
+
+                                <button
+                                  onClick={() => alert(isAr ? 'يمكنك المشاركة بالرد أو التفاعل مع الموضوع مباشرة!' : 'Espace réponse activé.')}
+                                  className="text-indigo-600 hover:text-indigo-800 font-black text-xs cursor-pointer"
+                                >
+                                  {isAr ? 'أضف تعقيباً ←' : 'Répondre ←'}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 3: ACHATS GROUPÉS */}
+                  {networkSubTab === 'groupage' && (
+                    <div className="space-y-6">
+                      <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-300 rounded-3xl p-6 text-slate-900">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center font-black text-xl shrink-0 shadow-md">
+                            📦
+                          </div>
+                          <div>
+                            <h3 className="font-black text-base text-slate-900 mb-1">
+                              {isAr ? 'ما هو الشراء المشترك للأقمشة (Achats Groupés)؟' : 'Comment fonctionne l\'achat groupé ?'}
+                            </h3>
+                            <p className="text-xs text-slate-700 leading-relaxed">
+                              {isAr
+                                ? 'نقوم بتجميع طلبيات أعضاء BEYA NETWORK لحجز رولوات الأقمشة مباشرة من مصانع الغزل والنسيج بأسعار الجملة الكبرى (وفر حتى 30% مقارنة بأسواق التقسيط). بعد اكتمال الكمية، تُسلّم الأقمشة مباشرة إلى ورشة BEYA لبدء تفصيل وخياطة طلبياتكم.'
+                                : 'Nous regroupons les commandes des membres pour commander directement aux usines au tarif usine grand volume (jusqu\'à -30%).'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {networkGroupage.map(grp => (
+                          <div key={grp.id} className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between">
+                            <div>
+                              <div className="flex items-center justify-between gap-3 mb-3">
+                                <span className="px-3 py-1 bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider rounded-full">
+                                  {isAr ? 'تخفيض' : 'Réduction'} {grp.savingsPct}
+                                </span>
+                                <span className="text-[11px] font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full">
+                                  ⏳ {isAr ? `باقي ${grp.deadlineDays} أيام` : `${grp.deadlineDays} jours restants`}
+                                </span>
+                              </div>
+
+                              <h3 className="font-black text-slate-900 text-base mb-1">{grp.fabricName}</h3>
+                              <p className="text-xs text-slate-400 font-bold mb-4">🏭 {grp.factory}</p>
+
+                              <div className="flex items-baseline gap-2 mb-4">
+                                <span className="text-2xl font-black text-indigo-600">{grp.groupPriceMAD} DH</span>
+                                <span className="text-xs text-slate-400 line-through font-bold">{grp.regularPriceMAD} DH/m</span>
+                                <span className="text-xs text-slate-500 font-medium">({isAr ? 'للمتر الصافي' : 'le mètre'})</span>
+                              </div>
+
+                              {/* Progress Bar */}
+                              <div className="space-y-1.5 mb-4">
+                                <div className="flex items-center justify-between text-xs font-bold">
+                                  <span className="text-slate-600">{isAr ? 'نسبة الاكتمال:' : 'Progression :'}</span>
+                                  <span className="text-indigo-600 font-black">{grp.currentMeters}m / {grp.targetMeters}m ({grp.progressPct}%)</span>
+                                </div>
+                                <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-gradient-to-r from-indigo-500 to-amber-500 rounded-full transition-all duration-500"
+                                    style={{ width: `${grp.progressPct}%` }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="space-y-1.5 mb-4">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{isAr ? 'الألوان المتوفرة في هذا العرض:' : 'Coloris inclus :'}</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {grp.colors.map((c, idx) => (
+                                    <span key={idx} className="px-2.5 py-1 bg-slate-50 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-100">
+                                      {c}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            <a
+                              href={`https://wa.me/212600000000?text=${encodeURIComponent(grp.whatsappMsg)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-600/20 transition active:scale-95"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span>{isAr ? '📲 حجز حصتي في الطلبية المشتركة' : 'Réserver ma part'}</span>
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              )}
+
+            </div>
+          )}
         </div>
       </main>
 
@@ -5543,6 +6357,218 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   ) : (
                     <span>{isAr ? 'حفظ وتفعيل الحساب' : 'Enregistrer'}</span>
                   )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT NETWORK PROFILE MODAL */}
+      {showEditNetworkProfileModal && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-[300] p-4">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Edit2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">
+                    {isAr ? 'تعديل بروفايل BEYA NETWORK' : 'Modifier mon profil BEYA NETWORK'}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-medium">{currentUser?.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditNetworkProfileModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNetworkProfile} className="p-6 space-y-4 text-right" dir={isAr ? 'rtl' : 'ltr'}>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'صفة العضوية' : 'Rôle'}
+                </label>
+                <select
+                  value={networkProfileForm.role}
+                  onChange={(e) => setNetworkProfileForm(prev => ({ ...prev, role: e.target.value as any }))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-600"
+                >
+                  <option value="brand">{isAr ? '🏷️ صاحب براند / علامة ملابس' : '🏷️ Créateur de marque'}</option>
+                  <option value="supplier">{isAr ? '🧵 مورد أقمشة ومواد أولية' : '🧵 Fournisseur de tissus'}</option>
+                  <option value="modeliste">{isAr ? '📐 مصمم وموديلست' : '📐 Modéliste'}</option>
+                  <option value="imprimeur">{isAr ? '🖨️ ورشة طباعة وتطريز' : '🖨️ Atelier d\'impression'}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'اسم البراند أو المحل التجاري *' : 'Nom de marque *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={networkProfileForm.brandName}
+                  onChange={(e) => setNetworkProfileForm(prev => ({ ...prev, brandName: e.target.value }))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    {isAr ? 'المدينة *' : 'Ville *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={networkProfileForm.city}
+                    onChange={(e) => setNetworkProfileForm(prev => ({ ...prev, city: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    {isAr ? 'رقم الواتساب *' : 'WhatsApp *'}
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={networkProfileForm.phone}
+                    onChange={(e) => setNetworkProfileForm(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'نبذة مختصرة أو تخصصك' : 'Bio / Spécialité'}
+                </label>
+                <input
+                  type="text"
+                  placeholder={isAr ? 'مثال: تيشيرتات وهوديات أوفر سايز' : 'Ex: Streetwear'}
+                  value={networkProfileForm.bio}
+                  onChange={(e) => setNetworkProfileForm(prev => ({ ...prev, bio: e.target.value }))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-600"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditNetworkProfileModal(false)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl"
+                >
+                  {isAr ? 'إلغاء' : 'Annuler'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingNetworkProfile}
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition disabled:opacity-50"
+                >
+                  {savingNetworkProfile ? (isAr ? 'جاري الحفظ...' : 'Enregistrement...') : (isAr ? 'حفظ التغييرات' : 'Enregistrer')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* NEW FORUM POST MODAL */}
+      {showNewForumPostModal && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-[300] p-4">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">
+                    {isAr ? 'مشاركة سؤال أو تجربة جديدة' : 'Nouveau sujet de discussion'}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-medium">{isAr ? 'في مجتمع BEYA NETWORK' : 'Sur BEYA NETWORK'}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowNewForumPostModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateForumPost} className="p-6 space-y-4 text-right" dir={isAr ? 'rtl' : 'ltr'}>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'تصنيف الموضوع *' : 'Catégorie *'}
+                </label>
+                <select
+                  value={newPostForm.category}
+                  onChange={(e) => setNewPostForm(prev => ({ ...prev, category: e.target.value as any }))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-600"
+                >
+                  <option value="livraison">{isAr ? '🚚 شركات التوصيل واللوجستيك' : '🚚 Livraison'}</option>
+                  <option value="marketing">{isAr ? '📢 التسويق والإعلانات' : '📢 Marketing'}</option>
+                  <option value="tissus">{isAr ? '🧵 جودة الأقمشة والمواد' : '🧵 Tissus'}</option>
+                  <option value="conseils">{isAr ? '💡 نصائح عامة وتجارب' : '💡 Conseils généraux'}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'عنوان السؤال أو الموضوع *' : 'Titre du sujet *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={isAr ? 'مثال: تجربتي مع شركات الشحن والتوصيل في كازا' : 'Titre clair et précis'}
+                  value={newPostForm.title}
+                  onChange={(e) => setNewPostForm(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'التفاصيل والنصيحة *' : 'Détails du message *'}
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  placeholder={isAr ? 'اكتب تفاصيل سؤالك أو التجربة التي تريد مشاركتها مع الزملاء...' : 'Écrivez votre message ici...'}
+                  value={newPostForm.content}
+                  onChange={(e) => setNewPostForm(prev => ({ ...prev, content: e.target.value }))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-medium text-slate-800 outline-none focus:border-indigo-600 resize-none"
+                />
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <p className="text-[11px] font-bold text-amber-800">
+                  {isAr 
+                    ? '🔒 تذكير: يرجى عدم كتابة أسعار خاصة أو بيانات سرية لمشروعك للحفاظ على خصوصيتك.' 
+                    : 'Rappel : ne partagez pas de données confidentielles ou de prix privés.'}
+                </p>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNewForumPostModal(false)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl"
+                >
+                  {isAr ? 'إلغاء' : 'Annuler'}
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition"
+                >
+                  {isAr ? '🚀 نشر في المجتمع' : 'Publier'}
                 </button>
               </div>
             </form>
