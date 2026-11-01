@@ -330,6 +330,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     };
   });
 
+  useEffect(() => {
+    if (activeTab === 'network') {
+      window.location.hash = '#/network';
+    }
+  }, [activeTab]);
+
   const isNetworkProfileCompleted = () => {
     if (currentUser?.networkProfileCompleted) return true;
     try {
@@ -1796,7 +1802,13 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
               ].map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id as any)}
+                  onClick={() => {
+                    if (item.id === 'network') {
+                      window.location.hash = '#/network';
+                    } else {
+                      setActiveTab(item.id as any);
+                    }
+                  }}
                   className={`w-full flex items-center justify-between px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-[10px] md:text-sm font-bold uppercase tracking-widest transition-all ${
                     activeTab === item.id 
                       ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' 
@@ -2086,6 +2098,34 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
           {activeTab === 'overview' && (
             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               {/* VIP BEYA NETWORK Access Banner for forsaone41 */}
+               {isNetworkPilotUser && (
+                 <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 border-2 border-indigo-500/40 rounded-2xl md:rounded-[2.5rem] p-5 md:p-8 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                   <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl -mr-20 -mt-20 pointer-events-none" />
+                   <div className="flex items-center gap-4 relative z-10">
+                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-indigo-600 to-violet-600 flex items-center justify-center text-white shrink-0 shadow-lg shadow-indigo-500/30">
+                       <Users className="w-7 h-7 text-white" />
+                     </div>
+                     <div>
+                       <div className="flex items-center gap-2">
+                         <span className="font-black text-base md:text-xl tracking-tight text-white">🌐 منصة BEYA NETWORK المستقلة</span>
+                         <span className="px-2 py-0.5 text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 rounded-full shadow-sm">VIP</span>
+                       </div>
+                       <p className="text-xs md:text-sm text-slate-300 mt-1 max-w-xl leading-relaxed">
+                         {isAr ? 'الملتقى المستقل لرواد الموضة، موردي الأقمشة، الشراء المشترك وتبادل التجارب بالمغرب. موقع متكامل مستقل تماماً عن البوابة!' : 'Réseau social & marketplace indépendant pour les créateurs et fournisseurs textiles au Maroc.'}
+                       </p>
+                     </div>
+                   </div>
+                   <button
+                     onClick={() => window.location.hash = '#/network'}
+                     className="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs md:text-sm rounded-xl shadow-xl transition flex items-center justify-center gap-2 shrink-0 active:scale-95 relative z-10"
+                   >
+                     <span>{isAr ? 'الانتقال إلى BEYA NETWORK' : 'Ouvrir BEYA NETWORK'}</span>
+                     <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+                   </button>
+                 </div>
+               )}
+
                {/* Welcome Hero */}
                <div className="bg-slate-900 rounded-2xl md:rounded-[3rem] p-4 md:p-12 text-white relative overflow-hidden shadow-2xl">
                   <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -mr-48 -mt-48" />

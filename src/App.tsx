@@ -116,6 +116,7 @@ const Partners        = lazy(() => import('./pages/Partners'));
 const Privacy         = lazy(() => import('./pages/Privacy'));
 const Cookies         = lazy(() => import('./pages/Cookies'));
 const SaaSAdminPage   = lazy(() => import('./pages/SaaSAdminPage'));
+const BeyaNetwork     = lazy(() => import('./pages/BeyaNetwork'));
 import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
@@ -822,6 +823,16 @@ function AppContent() {
             <Partners />
           </Suspense>
         } />
+        <Route path="network" element={
+          <Suspense fallback={<PageLoader />}>
+            <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
+          </Suspense>
+        } />
+        <Route path="/network" element={
+          <Suspense fallback={<PageLoader />}>
+            <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
+          </Suspense>
+        } />
         <Route path="/terms" element={
           <Suspense fallback={<PageLoader />}>
             <Terms />
@@ -864,6 +875,11 @@ function AppContent() {
           <Route path="/funnel/ar" element={<BeyaFunnel />} />
           <Route path="/funnel/fr" element={<BeyaFunnel />} />
           <Route path="/funnel/en" element={<BeyaFunnel />} />
+          <Route path="/network" element={
+            <Suspense fallback={<PageLoader />}>
+              <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
+            </Suspense>
+          } />
           <Route path="/app" element={<DownloadApp />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -880,6 +896,11 @@ function AppContent() {
             <div className="min-h-screen bg-white">
               <StoreBuilder appCurrentUser={currentUser} />
             </div>
+          </Suspense>
+        } />
+        <Route path="/network" element={
+          <Suspense fallback={<PageLoader />}>
+            <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
           </Suspense>
         } />
         <Route path="/portal" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
@@ -1077,6 +1098,16 @@ function AppContent() {
         <Route path="/partners" element={
           <Suspense fallback={<PageLoader />}>
             <Partners />
+          </Suspense>
+        } />
+        <Route path="network" element={
+          <Suspense fallback={<PageLoader />}>
+            <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
+          </Suspense>
+        } />
+        <Route path="/network" element={
+          <Suspense fallback={<PageLoader />}>
+            <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
           </Suspense>
         } />
 
