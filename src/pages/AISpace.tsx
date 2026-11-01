@@ -329,10 +329,23 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
     // 1. File name hints (if present)
     if (fileName) {
       const fn = fileName.toLowerCase();
+      // Denim / Jean Ensemble & Veste priority
+      if (
+        (fn.includes('denim') || fn.includes('jean') || fn.includes('جينز') || fn.includes('دنيم')) &&
+        (fn.includes('set') || fn.includes('ensemble') || fn.includes('طقم') || fn.includes('2 piece') || fn.includes('2_piece') || fn.includes('2piece') || (fn.includes('veste') && fn.includes('pantalon')))
+      ) {
+        return resolve('ensemble denim veste et pantalon jean طقم جينز دنيم (فيست + سروال)');
+      }
+      if (
+        (fn.includes('denim') || fn.includes('jean') || fn.includes('جينز') || fn.includes('دنيم')) &&
+        (fn.includes('veste') || fn.includes('jacket') || fn.includes('jakit') || fn.includes('فيست') || fn.includes('جاكيت'))
+      ) {
+        return resolve('veste en jean denim جاكيت فيست جينز دنيم');
+      }
       // Pants / Joggers check (Single piece priority)
       if (
         fn.includes('jogging') || fn.includes('pantalon') || fn.includes('pant') ||
-        fn.includes('cargo') || fn.includes('jean') || fn.includes('jogger') ||
+        fn.includes('cargo') || fn.includes('jogger') ||
         fn.includes('trouser') || fn.includes('سروال') || fn.includes('بنطلون') || fn.includes('جوغينغ')
       ) {
         if (
@@ -342,6 +355,9 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond pantalon jogging طقم رياضي قطعتين');
         }
         return resolve('pantalon jogging سروال رياضي جوغينغ كاجوال');
+      }
+      if (fn.includes('jean') || fn.includes('denim')) {
+        return resolve('pantalon jean denim سروال جينز دنيم كاجوال');
       }
       if (
         fn.includes('survet') || fn.includes('tracksuit') ||
@@ -524,22 +540,40 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
             }
           }
 
-          const hasPantsLegs = lowerRowCount > 3 && (legSeparationRows / lowerRowCount) >= 0.40;
+          const hasPantsLegs = lowerRowCount > 3 && (legSeparationRows / lowerRowCount) >= 0.35;
           const isAthleticColor = (upperBlueNavy > 20 || upperDark > upperCount * 0.35) && (lowerBlueNavy > 20 || lowerDark > 80);
           const hasStripes = stripeContrast > 28 || (upperLight > 20 && upperDark > 20);
+          const isDenimBlueTone = (upperBlueNavy > 14 || lowerBlueNavy > 14);
+          const isFullBodyWithLegs = hasPantsLegs && (aspectRatio > 1.25 || bodyH > H * 0.55);
 
-          // 1. Pants / Joggers (Strict: only if aspect ratio is tall and body width is narrow like real trousers, never mockups)
+          // 1. Denim / Jean Ensemble 2 Pièces (Tall silhouette, legs visible, denim/blue tones)
+          if (isFullBodyWithLegs && isDenimBlueTone) {
+            return resolve('ensemble denim veste et pantalon jean طقم جينز دنيم (فيست + سروال)');
+          }
+
+          // 2. Tracksuit / Survêtement 2 Pièces
+          if (isFullBodyWithLegs && (isAthleticColor || hasStripes)) {
+            return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond pantalon jogging طقم رياضي قطعتين');
+          }
+
+          // 3. Pants / Joggers alone (Strict: only if aspect ratio is tall and body width is narrow like real trousers)
           if (hasPantsLegs && aspectRatio > 1.35 && bodyW < bodyH * 0.65) {
+            if (lowerBlueNavy > 18) {
+              return resolve('pantalon jean denim سروال جينز دنيم كاجوال');
+            }
             return resolve('pantalon jogging سروال رياضي جوغينغ كاجوال');
           }
 
-          // 2. Full Body Dress / Abaya (No leg gap, elongated flowing silhouette)
+          // 4. Full Body Dress / Abaya (No leg gap, elongated flowing silhouette)
           if (aspectRatio > 1.5 && !hasPantsLegs && bodyH > H * 0.70) {
             return resolve('robe abaya فستان عصري أو عباية');
           }
 
-          // 3. Upper body (Sweatshirt / Hoodie / T-shirt)
-          if (hasStripes || upperBlueNavy > 20) {
+          // 5. Upper body (Veste Denim Jean vs Sweatshirt vs T-shirt)
+          if (upperBlueNavy > 15) {
+            return resolve('veste en jean denim جاكيت فيست جينز دنيم');
+          }
+          if (hasStripes || upperDark > upperCount * 0.35) {
             return resolve('sweatshirt col rond سويت شيرت كول رون');
           }
           return resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
@@ -595,7 +629,81 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
     )
   );
 
-  if (isSurvet2Pieces) {
+  // Denim / Jean Ensemble 2 Pièces (Veste Jean + Pantalon Jean)
+  const isDenimEnsemble = (
+    forcePiecesCount !== 1 &&
+    !isThreePieces && (
+      (text.includes('denim') || text.includes('jean') || text.includes('جينز') || text.includes('دنيم')) &&
+      (text.includes('ensemble') || text.includes('طقم') || text.includes('2 pièces') || text.includes('2 pieces') || text.includes('قطعتين') || (text.includes('veste') && text.includes('pantalon')))
+    )
+  );
+
+  const isDenimJacket = (
+    !isDenimEnsemble &&
+    (text.includes('denim') || text.includes('jean') || text.includes('جينز') || text.includes('دنيم')) &&
+    (text.includes('veste') || text.includes('jacket') || text.includes('jakit') || text.includes('فيست') || text.includes('جاكيت'))
+  );
+
+  if (isDenimEnsemble) {
+    pieceName = isAr
+      ? 'طقم جينز دنيم راقي قطعتين (فيست دنيم بحزام + سروال جينز)'
+      : 'Ensemble Denim 2 Pièces (Veste Denim Ceinturée + Pantalon Jean)';
+
+    const mesuresVeste = JSON.parse(JSON.stringify(STANDARD_MESURES['Veste'] || STANDARD_MESURES['Chemise']));
+    const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
+
+    piecesList = [
+      {
+        name: isAr ? 'فيست جاكيت دنيم بحزام وقصة عصرية' : 'Veste en Jean Denim Ceinturée',
+        consumption: '2.10m',
+        fit: isAr ? 'قصة محددة بحزام مع درزات بارزة (Coupe Structurée Ceinturée)' : 'Coupe Structurée Ceinturée',
+        complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
+        costEstimate: '55 - 75 MAD',
+        components: isAr
+          ? ['صدر أمامي مع قفل أزرار معدنية بارزة', 'ياقة جاكيت رسمية كلاسيكية', 'حزام خصر دنيم متناسق مع عرى التثبيت', 'أكمام طويلة مع أساور وبوانيات بأزرار كبس', 'درزات مزدوجة بخيط نحاسي سميك متين', 'جيوب صدرية وجيوب جانبية مدمجة']
+          : ['Devants avec boutonnage boutons clous jean', 'Col chemisier tailleur', 'Ceinture denim assortie avec passants', 'Manches longues avec poignets boutonnés', 'Surpiqûres 2 aiguilles fil épais orange/caramel', 'Poches poitrine à rabat et passepoils'],
+        fabricSuggested: isAr ? 'قماش دنيم 100% قطن متين 12.5oz (Toile Denim Coton / Jean)' : 'Toile Denim 100% Coton 12.5oz / Jean',
+        fabricAlternatives: [
+          { name: isAr ? 'دنيم قطن ستريتش 11.5oz (Denim Stretch)' : 'Denim Stretch 11.5oz', pros: isAr ? 'مرونة عالية وراحة فائقة فالحركة' : 'Très confortable et extensible', cons: isAr ? 'أقل صلابة في المظهر' : 'Tenue plus souple' },
+          { name: isAr ? 'تويل قطن ثقيل مصبوغ 280g (Twill Coton Lourd)' : 'Twill Coton Lourd 280g', pros: isAr ? 'ألوان متعددة وملمس ناعم' : 'Variété de coloris et toucher doux', cons: isAr ? 'ليس دنيم أصيل' : 'Texture différente du vrai denim' }
+        ],
+        mesures: mesuresVeste
+      },
+      {
+        name: isAr ? 'سروال جينز دنيم مطابق بقصة مستقيمة' : 'Pantalon Jean Denim Assorti',
+        consumption: '1.45m',
+        fit: isAr ? 'قصة مستقيمة مريحة كلاسيك (Regular Straight)' : 'Coupe Droite Regular Jean',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: '45 - 65 MAD',
+        components: isAr
+          ? ['أرجل جينز أمامية وخلفية بدرزات جانبية مقواة', 'حزام خصر مع عرى حزام جينز', 'سحاب معدني أمامي مع زر كبس نحاسي', 'جيوب أمامية دائرية مع جيب ساعة صغير', 'جيوب خلفية بارزة مع تطريز درزات الجينز الكلاسيكية']
+          : ['Jambes devant et dos avec surpiqûres renforcées', 'Ceinture jean avec passants', 'Fermeture zip métal et bouton clou', 'Poches cavalières et poche ticket', 'Poches plaquées dos avec surpiqûres décoratives'],
+        fabricSuggested: isAr ? 'قماش دنيم 100% قطن مطابق 12.5oz (Toile Denim Assortie)' : 'Toile Denim Assortie 12.5oz',
+        fabricAlternatives: [
+          { name: isAr ? 'دنيم قطن ستريتش مريح' : 'Denim Stretch Confort', pros: isAr ? 'مريح عند الجلوس والحركة' : 'Confort d\'assise et d\'aisance', cons: isAr ? 'قد يتمدد قليلاً مع الاستعمال' : 'Légère détente à l\'usage' }
+        ],
+        mesures: mesuresPantalon
+      }
+    ];
+  } else if (isDenimJacket) {
+    pieceName = isAr ? 'جاكيت فيست جينز دنيم عصرية (Veste en Jean Denim)' : 'Veste en Jean Denim Casual';
+    defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Veste'] || STANDARD_MESURES['Chemise']));
+    piecesList = [{
+      name: pieceName,
+      consumption: '2.10m',
+      fit: isAr ? 'قصة محددة عصرية مع تفاصيل جينز بارزة' : 'Coupe Structurée Denim',
+      complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
+      costEstimate: '55 - 75 MAD',
+      components: isAr
+        ? ['صدر أمامي مع أزرار معدنية بارزة', 'ياقة كلاسيكية', 'حزام سفلي أو حزام خصر', 'أكمام طويلة مع بوانيات', 'درزات مزدوجة بخيط نحاسي سميك', 'جيوب صدرية وجانبية']
+        : ['Devants avec boutonnage clous métal', 'Col classique', 'Ceinture bas ou taille', 'Manches avec poignets', 'Surpiqûres 2 aiguilles', 'Poches poitrine et passepoils'],
+      fabricSuggested: isAr ? 'قماش دنيم 100% قطن متين 12oz / 13oz (Toile Denim Jean)' : 'Toile Denim 100% Coton 12oz / 13oz',
+      fabricAlternatives: [
+        { name: isAr ? 'دنيم قطن ستريتش 11.5oz' : 'Denim Stretch 11.5oz', pros: isAr ? 'مرونة عالية ومريح' : 'Extensible et confortable', cons: isAr ? 'أخف وزناً' : 'Plus léger' }
+      ],
+      mesures: defaultMesures
+    }];
+  } else if (isSurvet2Pieces) {
     pieceName = isAr
       ? 'طقم رياضي قطعتين (سويت شيرت كول رون مقلم + سروال جوغينغ)'
       : 'Ensemble Survêtement 2 Pièces (Sweatshirt Col Rond Rayé + Pantalon Jogging)';
@@ -2058,9 +2166,9 @@ Consignes impératives pour les pièces du modèle :
 Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
       const candidateModels = [
-        'gemini-2.5-flash',
         'gemini-flash-latest',
-        'gemini-3.8-flash'
+        'gemini-2.5-flash',
+        'gemini-2.5-pro'
       ];
 
       let data: any = null;
@@ -3633,7 +3741,7 @@ ${userMessage}
 
       const systemInstructionText = "أنت خبير نسيج وهندسة إنتاج وتسعير في مصنع مغربي (BEYA Expert). تكلم بالدارجة المغربية بأسلوب احترافي مباشر ومفيد جداً. أجب المستخدم فوراً وبشكل مباشر وبدون أي لف أو دوران أو إحالة إلى أزرار أخرى! إذا سأل عن التكلفة أو الثمن أو 'شحال كتقام البياسة'، احسب له التكلفة فوراً بالأرقام المحددة والمفصلة: ثمن الثوب، اللوازم، اليد العاملة، التكلفة الإجمالية للقطعة (Prix de revient)، وسعر الجملة وسعر التقسيط وتكلفة 500 أو 1000 بياسة. إذا سأل عن الثوب، الوقت، الفصالة، أو مراحل الخياطة، أجب فوراً بأرقام ومعلومات تقنية عملية.";
 
-      const candidateModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.8-flash'];
+      const candidateModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-pro'];
       let data: any = null;
 
       for (const model of candidateModels) {

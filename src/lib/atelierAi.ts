@@ -193,6 +193,16 @@ export const getGarmentTechnicalBreakdown = (
     ) {
       catKey = 'survetement_2_pieces';
     } else if (
+      (text.includes('denim') || text.includes('jean') || text.includes('جينز') || text.includes('دنيم')) &&
+      (text.includes('ensemble') || text.includes('طقم') || text.includes('2 pièces') || text.includes('2 pieces') || text.includes('قطعتين') || (text.includes('veste') && text.includes('pantalon')))
+    ) {
+      catKey = 'ensemble_denim_jean';
+    } else if (
+      (text.includes('denim') || text.includes('jean') || text.includes('جينز') || text.includes('دنيم')) &&
+      (text.includes('veste') || text.includes('jacket') || text.includes('jakit') || text.includes('فيست') || text.includes('جاكيت'))
+    ) {
+      catKey = 'veste_denim_jean';
+    } else if (
       text.includes('boxer') ||
       text.includes('caleçon') ||
       text.includes('calecon') ||
@@ -243,6 +253,8 @@ export const getGarmentTechnicalBreakdown = (
   const consommation = customConsommation || (
     catKey === 'robe_chemise' ? 3.8 :
     catKey === 'ensemble_3_pieces' ? 5.2 :
+    catKey === 'ensemble_denim_jean' ? 3.55 :
+    catKey === 'veste_denim_jean' ? 2.1 :
     catKey === 'survetement_2_pieces' ? 2.9 :
     catKey === 'boxer_sous_vetement' ? 0.35 :
     catKey === 'abaya_beldi' ? 3.2 :
@@ -257,6 +269,8 @@ export const getGarmentTechnicalBreakdown = (
   const prixMetre = customPrice || (
     catKey === 'robe_chemise' ? 24.0 :
     catKey === 'ensemble_3_pieces' ? 22.0 :
+    catKey === 'ensemble_denim_jean' ? 42.0 :
+    catKey === 'veste_denim_jean' ? 44.0 :
     catKey === 'survetement_2_pieces' ? 38.0 :
     catKey === 'boxer_sous_vetement' ? 18.0 :
     catKey === 'abaya_beldi' ? 15.0 :
@@ -308,6 +322,36 @@ export const getGarmentTechnicalBreakdown = (
       { nomAr: 'مراقبة الجودة للطقم الكامل، كيّ بالبخار وتغليف ثلاثي', nomFr: 'Contrôle Qualité 3 Pièces, Repassage & Pack', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 2.4, tempsPro: 2.4, tempsStandard: 4.0, tempsDebutant: 6.5, roleOuvrier: 'مراقب جودة وتشطيب' }
     ];
     recommendation = 'طقم متكامل من 3 قطع (مانطو طويل + سويت + سروال). وقت الورشة الإجمالي للحرافيين حوالي 25 دقيقة للطقم الكامل.';
+  } else if (catKey === 'ensemble_denim_jean') {
+    categorieName = 'طقم جينز دنيم راقي قطعتين (فيست دنيم بحزام + سروال جينز)';
+    tissuName = 'قماش دنيم قطن 100% متين 12.5oz (Toile Denim Coton / Jean)';
+    fournitures = 18.0;
+    postes = [
+      { nomAr: 'فصالة قماش الدنيم بالمطلوة الصناعية وتحضير الرزم', nomFr: 'Coupe Matelas Toile Denim 12.5oz & Paquets', machine: 'Table de Coupe / Ciseaux', tempsMin: 1.6, tempsPro: 1.6, tempsStandard: 2.8, tempsDebutant: 5.0, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'لصق الفيزلين للياقة، حزام الفيست، مرد الأزرار وحزام السروال', nomFr: 'Thermocollage Col, Ceinture & Parementures', machine: 'Presse à Thermocoller', tempsMin: 1.2, tempsPro: 1.2, tempsStandard: 2.0, tempsDebutant: 3.5, roleOuvrier: 'مساعد فصالة' },
+      { nomAr: 'خياطة الجيوب الصدرية للفيست بدرزات مزدوجة (Surpiqûres 2 aiguilles fil épais)', nomFr: 'Montage Poches Poitrine Surpiqûres Doubles', machine: 'Piqueuse Plate 2 Aiguilles', tempsMin: 2.2, tempsPro: 2.2, tempsStandard: 3.8, tempsDebutant: 6.5, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع ظهر وأكتاف الفيست مع القصة المحددة والحزام المتناسق', nomFr: 'Assemblage Dos, Épaules & Ceinture Veste', machine: 'Piqueuse Plate', tempsMin: 2.5, tempsPro: 2.5, tempsStandard: 4.2, tempsDebutant: 7.0, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب ياقة الفيست وأكمام الجينز مع بوانيات الأزرار', nomFr: 'Montage Col & Manches avec Poignets Boutonnés', machine: 'Piqueuse Plate', tempsMin: 2.4, tempsPro: 2.4, tempsStandard: 4.0, tempsDebutant: 6.5, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع سروال الجينز (الجيوب الدائرية، السحاب المعدني وركوب الحجر)', nomFr: 'Assemblage Pantalon Jean (Poches, Zip & Fourche)', machine: 'Surjeteuse 5 Fils (Safety)', tempsMin: 2.6, tempsPro: 2.6, tempsStandard: 4.5, tempsDebutant: 7.5, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تركيب حزام سروال الجينز وعرى الحزام مع الدرزات المتينة', nomFr: 'Pose Ceinture Pantalon Jean & Passants', machine: 'Piqueuse Plate', tempsMin: 1.8, tempsPro: 1.8, tempsStandard: 3.0, tempsDebutant: 5.0, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'كبس الأزرار والمسامير المعدنية (Rivets & Boutons Clous Jean)', nomFr: 'Pose Boutons Jeans Métalliques & Rivets', machine: 'Presse Pneumatique / Riveteuse', tempsMin: 1.8, tempsPro: 1.8, tempsStandard: 2.8, tempsDebutant: 4.5, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'مراقبة الجودة، تنظيف خيوط الجينز، كيّ بالبخار وتغليف ثنائي', nomFr: 'Contrôle Qualité 2 Pièces Denim, Repassage & Pack', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 2.0, tempsPro: 2.0, tempsStandard: 3.5, tempsDebutant: 5.5, roleOuvrier: 'مراقب جودة وتشطيب' }
+    ];
+    recommendation = 'طقم جينز دنيم راقي متكامل من قطعتين (فيست دنيم بقصة عصرية وحزام + سروال جينز مطابق). استهلاك القماش الإجمالي 3.55م (2.10م للفيست + 1.45م للسروال). قماش الدنيم 12.5oz متوفر بسوق درب عمر وسوق القريعة للجينز بالدار البيضاء.';
+  } else if (catKey === 'veste_denim_jean') {
+    categorieName = 'جاكيت فيست جينز دنيم عصرية (Veste en Jean Denim)';
+    tissuName = 'قماش دنيم 100% قطن متين 12oz / 13oz (Toile Denim Jean)';
+    fournitures = 12.0;
+    postes = [
+      { nomAr: 'فصالة قماش الدنيم بالمطلوة الصناعية', nomFr: 'Coupe Matelas Toile Denim 12oz', machine: 'Table de Coupe / Ciseaux', tempsMin: 1.2, tempsPro: 1.2, tempsStandard: 2.2, tempsDebutant: 4.0, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'لصق الفيزلين للياقة ومرد الأزرار والأساور', nomFr: 'Thermocollage Col, Gorge & Poignets', machine: 'Presse à Thermocoller', tempsMin: 0.8, tempsPro: 0.8, tempsStandard: 1.5, tempsDebutant: 2.5, roleOuvrier: 'مساعد فصالة' },
+      { nomAr: 'خياطة الجيوب الصدرية مع أغطية وأزرار معدنية', nomFr: 'Montage Poches Poitrine à Rabat', machine: 'Piqueuse Plate 2 Aiguilles', tempsMin: 2.0, tempsPro: 2.0, tempsStandard: 3.5, tempsDebutant: 6.0, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع هيكل الجاكيت والدرزات التزيينية المزدوجة بخيط نحاسي', nomFr: 'Assemblage Corps & Surpiqûres Doubles', machine: 'Piqueuse Plate', tempsMin: 2.2, tempsPro: 2.2, tempsStandard: 3.8, tempsDebutant: 6.5, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب ياقة الجاكيت والأكمام والأساور', nomFr: 'Montage Col, Manches & Poignets', machine: 'Piqueuse Plate', tempsMin: 2.2, tempsPro: 2.2, tempsStandard: 3.8, tempsDebutant: 6.5, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'كبس الأزرار المعدنية الخاصة بالجينز (Boutons Clous)', nomFr: 'Pose Boutons Métalliques Jean', machine: 'Presse Pneumatique / Riveteuse', tempsMin: 1.2, tempsPro: 1.2, tempsStandard: 2.0, tempsDebutant: 3.5, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'مراقبة الجودة، كيّ بالبخار وتغليف', nomFr: 'Contrôle Qualité, Repassage & Pack', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 1.5, tempsPro: 1.5, tempsStandard: 2.5, tempsDebutant: 4.5, roleOuvrier: 'مراقب جودة وتشطيب' }
+    ];
+    recommendation = 'جاكيت جينز دنيم متينة وعصرية مع تفاصيل خياطة مزدوجة وأزرار كبس معدنية. استهلاك القماش 2.10م. متوفر بدرب عمر وسوق القريعة.';
   } else if (catKey === 'survetement_2_pieces') {
     categorieName = 'طقم رياضي قطعتين (سويت شيرت كول رون مقلم + سروال جوغينغ)';
     tissuName = 'مولتون قطن مبطن / فرينش تيري 280g (Molleton Coton Gratté)';

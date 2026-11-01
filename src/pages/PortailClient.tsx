@@ -1350,26 +1350,26 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
   const generateClientAssistantReply = async (query: string, lead: Lead, analysis: any, isAr: boolean = true): Promise<string> => {
     const q = (query || '').toLowerCase().trim();
-    const safeModel = (analysis?.modeleReel || lead.type || 'الموديل').trim();
+    const safeModel = (analysis?.modeleReel || lead?.type || 'الموديل').trim();
     const mod = safeModel.toLowerCase();
     const safeUnit = Number(analysis?.unitPrice) || 65;
-    const safeQty = Number(analysis?.qty) || Number(lead.quantity) || 100;
+    const safeQty = Number(analysis?.qty) || Number(lead?.quantity) || 100;
     const safeTotal = Number(analysis?.totalPrice) || (safeUnit * safeQty);
     const safeTissu = (analysis?.tissuSuggere || 'قماش مخصص ومطابق للمواصفات').trim();
     const safeDelai = (analysis?.delaiEstime || '7 إلى 10 أيام عمل').trim();
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key');
+    const apiKey = (localStorage.getItem('beya_gemini_api_key') || (import.meta as any).env?.VITE_GEMINI_API_KEY || DEFAULT_GEMINI_KEY || '').trim();
 
     // If Gemini API is configured, use it with strict factory advisor constraints
     if (apiKey) {
       try {
         const sysPrompt = `أنت "مستشار ورشة BEYA Creative" لصناعة الملابس والنسيج بالمغرب.
 الموديل: ${safeModel}
-الكمية: ${analysis.qty} قطعة
-نوع الثوب المقترح: ${analysis.tissuSuggere}
-سعر الخياطة التقديري: ${analysis.unitPrice} درهم للقطعة (المجموع: ${analysis.totalPrice} درهم)
-مدة التسليم: ${analysis.delaiEstime}
+الكمية: ${safeQty} قطعة
+نوع الثوب المقترح: ${safeTissu}
+سعر الخياطة التقديري: ${safeUnit} درهم للقطعة (المجموع: ${safeTotal} درهم)
+مدة التسليم: ${safeDelai}
 أجب باختصار واحترافية وبشكل مفيد بالدارجة المغربية التقنية (أو الفرنسية إذا سأل بها).
-اقتصر على: نوع القماش، سعره بسوق درب عمر / كراج علال، استهلاك القماش بالامتار، وسعر الخياطة والعينة والتسبيق.
+اقتصر على: نوع القماش، سعره بسوق درب عمر / كراج علال / القريعة، استهلاك القماش بالامتار، وسعر الخياطة والعينة والتسبيق.
 سؤال الزبون: ${query}`;
 
         const candidateChatModels = ['gemini-flash-latest', 'gemini-2.5-flash'];
@@ -1395,6 +1395,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     // Local Resilient Textile Knowledge Engine (Always accurate, zero external dependency)
     // 1. Tissu & Prix marché
     if (/(ثوب|قماش|tissu|tissou|matiere|prix.*tissu|taman.*toub|شحال.*ثوب|نوع.*ثوب|السوق|درب عمر|garage allal|شحال كيدير)/i.test(q)) {
+      if (mod.includes('denim') || mod.includes('jean') || mod.includes('جينز') || mod.includes('دنيم')) {
+        return isAr
+          ? `بخصوص موديل الدنيم/الجينز (${safeModel})، أحسن نوع قماش كننصحو بيه فالورشة هو:
+1. **قماش دنيم 100% قطن متين (Toile Denim 12.5oz)**: كيدير فسوق القريعة ودرب عمر بالدار البيضاء بين 34 و 46 درهم للمتر. واقف وما كيموتش فالتصبين.
+2. **دنيم قطن ستريتش (Denim Stretch 11.5oz)**: مريح بزاف فالحركة، كيدير بين 36 و 48 درهم للمتر.
+3. كل فيست دنيم كتاكل تقريباً 2.10m، وسروال الجينز كياكل 1.45m (والطقم كاملاً كياكل حوالي 3.55m).`
+          : `Pour ce modèle en Denim/Jean (${safeModel}), nous conseillons la Toile Denim 100% Coton 12.5oz (34-46 MAD/mètre en gros au marché de Derb Omar et Souk El Kriaa à Casablanca). Consommation : ~2.10m pour la veste, ~1.45m pour le pantalon.`;
+      }
       if (mod.includes('jakit') || mod.includes('jacket') || mod.includes('veste') || mod.includes('جاكيت') || mod.includes('bomber')) {
         return isAr
           ? `بخصوص جاكيت ${safeModel}، أحسن نوع ثوب كننصحو بيه فالورشة هو:
@@ -1415,19 +1423,20 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           : `Tissu recommandé : Molleton Coton 300-340g (68-74 MAD/kg en gros). Idéal pour le confort et la tenue.`;
       }
       return isAr
-        ? `نوع الثوب المقترح لهاد الموديل هو "${analysis.tissuSuggere}". السعر ديالو فأسواق الجملة بالمغرب (درب عمر وكراج علال) كيتراوح ما بين 28 و 48 درهم للمتر حسب الجودة والجراماج.`
-        : `Le tissu préconisé est "${analysis.tissuSuggere}" (estimé à 28-48 MAD/mètre en gros à Casablanca).`;
+        ? `نوع الثوب المقترح لهاد الموديل هو "${safeTissu}". السعر ديالو فأسواق الجملة بالمغرب (درب عمر وكراج علال) كيتراوح ما بين 28 و 48 درهم للمتر حسب الجودة والجراماج.`
+        : `Le tissu préconisé est "${safeTissu}" (estimé à 28-48 MAD/mètre en gros à Casablanca).`;
     }
 
     // 2. Métrage / Consommation
     if (/(ميطراج|metrage|consommation|شحال كياكل|متر|طول الثوب|شحال نشري)/i.test(q)) {
       let meters = '1.80 إلى 2.10 متر';
-      if (mod.includes('jakit') || mod.includes('jacket') || mod.includes('veste') || mod.includes('جاكيت')) meters = '1.90 إلى 2.15 متر';
-      if (mod.includes('robe') || mod.includes('كسوة')) meters = '2.50 إلى 2.80 متر';
-      if (mod.includes('abaya') || mod.includes('عباية') || mod.includes('جلابة')) meters = '2.90 إلى 3.20 متر';
-      if (mod.includes('t-shirt') || mod.includes('تيشيرت')) meters = '1.10 إلى 1.25 متر';
-      if (mod.includes('pantalon') || mod.includes('سروال')) meters = '1.40 إلى 1.60 متر';
-      if (mod.includes('survet') || mod.includes('طقم')) meters = '2.80 إلى 3.10 متر (للطقم كاملاً)';
+      if ((mod.includes('denim') || mod.includes('jean') || mod.includes('جينز')) && (mod.includes('ensemble') || mod.includes('طقم'))) meters = '3.40 إلى 3.65 متر (للطقم كاملاً)';
+      else if (mod.includes('jakit') || mod.includes('jacket') || mod.includes('veste') || mod.includes('جاكيت')) meters = '1.90 إلى 2.15 متر';
+      else if (mod.includes('robe') || mod.includes('كسوة')) meters = '2.50 إلى 2.80 متر';
+      else if (mod.includes('abaya') || mod.includes('عباية') || mod.includes('جلابة')) meters = '2.90 إلى 3.20 متر';
+      else if (mod.includes('t-shirt') || mod.includes('تيشيرت')) meters = '1.10 إلى 1.25 متر';
+      else if (mod.includes('pantalon') || mod.includes('سروال')) meters = '1.40 إلى 1.60 متر';
+      else if (mod.includes('survet') || mod.includes('طقم')) meters = '2.80 إلى 3.10 متر (للطقم كاملاً)';
 
       return isAr
         ? `حسب الباترون والقصة ديال موديل "${safeModel}"، كل قطعة كتاكل تقريباً ما بين **${meters}** (عرض الثوب العادي 1.50m). إيلا بغيتي تشري الثوب من عندك، كنصحوك ديما تزيد 5% كإحتياط للانكماش والقصّان.`
@@ -1448,7 +1457,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         ? `عندنا فالورشة جوج خيارات واضحين ومريحين:
 1. **إيلا جبتي الثوب والمستلزمات من عندك:** **ما كتسبق حتى درهم مسبقاً (0 درهم تسبيق)!** كتصيفط غير الثوب والمستلزمات للورشة، وحنا كنبداو الفصالة والخياطة مباشرة، وما كتخلص حتى تكمل السلعة وتستلمها واجدة بعد مراقبة الجودة وفينيسيون.
 2. **إيلا كان المعمل غايتكلف بالثوب والسلعة كاملة:** التسبيق المطلوب هو **50% من قيمة الدوفيز (تقريباً ${acompteApprox.toLocaleString()} درهم)** لشراء رولوات القماش، والباقي (50%) عند التسليم.
-(وفالحالتين معاً، إيلا باغي عينة أولية قبل الإنتاج، كتوجد فـ 48 إلى 72 ساعة للتحقق والتجربة).`
+(وفالحالتين معاً، إيلا باغي عينة أولية قبل الإنتاج، كتوجد فـ 48 إلى 72 ساعة للتحقق والتجربة، وتكلفتها تخصم 100% من الفاتورة النهائية عند الاعتماد).`
         : `Deux options très claires à l'atelier :
 1. **Si vous fournissez le tissu et fournitures :** **Aucun acompte financier requis (0 MAD) !** Vous envoyez simplement le tissu à l'atelier, nous lançons la coupe et confection, et le paiement à 100% s'effectue à la livraison.
 2. **Si l'atelier fournit le tissu :** Acompte de **50% (env. ${acompteApprox.toLocaleString()} MAD)** pour l'achat des rouleaux de tissu, et le solde (50%) à la livraison.`;
@@ -1456,12 +1465,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
     // Default general response
     return isAr
-      ? `مرحباً بك! أنا مستشار ورشة BEYA Creative. بخصوص موديل "${analysis.modeleReel}":
-- **نوع الثوب المقترح:** ${analysis.tissuSuggere}
-- **سعر الخياطة:** ${analysis.unitPrice} درهم للقطعة (المجموع: ${safeTotal.toLocaleString()} درهم)
-- **مدة التسليم:** ${analysis.delaiEstime}
+      ? `مرحباً بك! أنا مستشار ورشة BEYA Creative. بخصوص موديل "${safeModel}":
+- **نوع الثوب المقترح:** ${safeTissu}
+- **سعر الخياطة:** ${safeUnit} درهم للقطعة (المجموع: ${safeTotal.toLocaleString()} درهم)
+- **مدة التسليم:** ${safeDelai}
 تقدر تسولني على: نوع وسعر القماش فالسوق، الميطراج اللي كتاكل البياسة، أو شروط العينة والتسبيق.`
-      : `Bonjour ! Pour votre modèle "${analysis.modeleReel}", le tissu conseillé est "${analysis.tissuSuggere}" (${safeUnit} MAD/pc pour ${safeQty} pcs). N'hésitez pas à me demander le prix du tissu, le métrage ou les modalités d'échantillon.`;
+      : `Bonjour ! Pour votre modèle "${safeModel}", le tissu conseillé est "${safeTissu}" (${safeUnit} MAD/pc pour ${safeQty} pcs). N'hésitez pas à me demander le prix du tissu, le métrage ou les modalités d'échantillon.`;
   };
 
 const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
@@ -1917,6 +1926,15 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           console.warn('AI analysis on new lead submit:', e);
         }
       }
+
+      // Explicitly delete non-schema columns from leadPayload to prevent schema cache errors
+      delete leadPayload.delaiEstime;
+      delete leadPayload.modeleReel;
+      delete leadPayload.tissuSuggere;
+      delete leadPayload.techDetails;
+      delete leadPayload.reponseAtelier;
+      delete leadPayload.patronagePrice;
+      delete leadPayload.prixEchantillon;
       
       if (editingDemandeId) {
          leadPayload.id = editingDemandeId;
