@@ -355,15 +355,28 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     telephone: currentUser?.telephone || '',
     tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
   });
+  const DEFAULT_GEMINI_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof window !== 'undefined' ? atob('QVEuQWI4Uk42SjJuR1gwSlVfVWRBR0RvQXhTSzVDQVJReWR5ZFN1eldva296NzRqdlhYTmc=') : '');
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderSent, setOrderSent] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState<string>(() => {
     try {
-      return localStorage.getItem('beya_gemini_api_key') || (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
+      const stored = localStorage.getItem('beya_gemini_api_key');
+      if (stored && stored.trim()) return stored.trim();
+      const envKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
+      if (envKey && envKey.trim()) return envKey.trim();
+      return DEFAULT_GEMINI_KEY;
     } catch {
-      return '';
+      return DEFAULT_GEMINI_KEY;
     }
   });
+
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem('beya_gemini_api_key')) {
+        localStorage.setItem('beya_gemini_api_key', DEFAULT_GEMINI_KEY);
+      }
+    } catch {}
+  }, []);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [apiKeyDraft, setApiKeyDraft] = useState('');
   const [testingApiKey, setTestingApiKey] = useState(false);
@@ -1106,7 +1119,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setTestingApiKey(true);
     setApiKeyTestResult(null);
     try {
-      const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      const candidateModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-3.8-flash'];
       let succeeded = false;
       let lastErr = '';
       for (const m of candidateModels) {
@@ -1154,13 +1167,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     target: { modele: string; details?: string; photo: string },
     apiKeyParam?: string
   ) => {
-    const apiKey = (apiKeyParam || geminiApiKey || localStorage.getItem('beya_gemini_api_key') || (import.meta as any).env?.VITE_GEMINI_API_KEY || '').trim();
-    if (!apiKey || !target.photo) return null;
+    const apiKey = (apiKeyParam || geminiApiKey || localStorage.getItem('beya_gemini_api_key') || (import.meta as any).env?.VITE_GEMINI_API_KEY || DEFAULT_GEMINI_KEY).trim();
+    if (!apiKey) return null;
+    if (!target.photo && !target.modele) return null;
 
     let base64Data = '';
     let mimeType = 'image/jpeg';
 
-    if (target.photo.startsWith('data:')) {
+    if (target.photo && target.photo.startsWith('data:')) {
       const match = target.photo.match(/^data:([^;]+);base64,(.+)$/);
       if (match) {
         mimeType = match[1];
@@ -1168,7 +1182,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       }
     }
 
-    if (!base64Data && target.photo.startsWith('http')) {
+    if (!base64Data && target.photo && target.photo.startsWith('http')) {
       try {
         const resp = await fetch(target.photo);
         const blob = await resp.blob();
@@ -1189,26 +1203,32 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     }
 
     const prompt = `أنت كبير المهندسين التقنيين وخبير تسعير صناعة الملابس والنسيج في ورشة BEYA Creative بالمغرب بخبرة 20 سنة.
-المهمة: قم بتحليل دقيق جداً للموديل المعروض في الصورة وحساب التكلفة التقديرية الحقيقية للفصالة والخياطة (Façon) ونوع القماش واستهلاكه بالمتر وسعره في سوق الجملة المغربي (درب عمر، كراج علال بالدار البيضاء).
+المهمة: قم بتحليل دقيق وشامل ومخصص جداً للموديل المعروض في الصورة (أو المذكور في الملاحظات) وحساب التكلفة التقديرية الحقيقية والمضبوطة لهذا الموديل بالتحديد.
+تنبيه حاسم: لا تكرر نفس الأرقام لجميع الموديلات! احسب تكلفة متناسبة مع نوع القطعة بدقة:
+- إذا كان تيشيرت: سعر الخياطة unitPrice عادة بين 18 و 32 درهم، واستهلاك القماش 1.00m إلى 1.25m، وسعر المتر 28 إلى 45 درهم.
+- إذا كان هودي شتوي / سويت: سعر الخياطة unitPrice عادة بين 38 و 58 درهم، واستهلاك القماش 1.75m إلى 2.05m، وسعر المتر/الكيلو 42 إلى 65 درهم.
+- إذا كان بنطلون / كارجو / جينز: سعر الخياطة بين 45 و 68 درهم، واستهلاك القماش 1.50m إلى 1.85m.
+- إذا كان جاكيت مبطن / معطف / بدلة: سعر الخياطة بين 75 و 140 درهم حسب التعقيد والبطانة، واستهلاك القماش 2.00m إلى 2.50m.
+- إذا كانت عباية / فستان: سعر الخياطة بين 35 و 70 درهم حسب الموديل، واستهلاك القماش 2.50m إلى 3.50m.
 
-نوع الموديل المدخل من الزبون: "${target.modele || ''}"
+الموديل المدخل من الزبون: "${target.modele || ''}"
 ملاحظات الزبون: "${target.details || ''}"
 
-يجب أن تجيب بـ JSON صحيح تماماً وبدون أي نص آخر قبله أو بعده:
+أجب فقط بصيغة JSON صحيحة وبدون أي نصوص إضافية قبل أو بعد:
 {
-  "modeleReel": "الاسم الفني الواضح والدقيق للموديل بالعربية (مثلاً: جاكيت جينز دنيم أوفرسايز بجيوب صدرية وسحاب)",
-  "tissuSuggere": "أفضل نوع ثوب مطابق للصورة مع الغراماج المناسب (مثلاً: قماش دنيم قطني متين 12 أونصة أو غاباردين كوتون)",
-  "tissuConso": 1.95,
-  "prixMetreEstime": 42,
-  "unitPrice": 78,
-  "patronagePrice": 280,
-  "prixEchantillon": 380,
-  "delaiEstime": "7 إلى 10 أيام عمل (العينة تحت 48 ساعة)",
-  "techDetails": "المواصفات التقنية: الخياطة المزدوجة، السحابات، الأزرار، الجيوب، التبطين، الفينيسيون",
-  "reponseAtelier": "تعليق تقني واحترافي من الورشة للزبون حول هذا الموديل ومراحل صناعته وجودته"
+  "modeleReel": "الاسم الدقيق المخصص لهذا الموديل بالذات بالعربية والفرنسية",
+  "tissuSuggere": "أفضل نوع ثوب مطابق تماماً لصورة هذا الموديل مع غراماج النسيج",
+  "tissuConso": 1.85,
+  "prixMetreEstime": 45,
+  "unitPrice": 48,
+  "patronagePrice": 220,
+  "prixEchantillon": 300,
+  "delaiEstime": "5 إلى 8 أيام عمل",
+  "techDetails": "المواصفات التقنية الحقيقية الظاهرة: الخياطة، الأزرار، السحابات، الجيوب، الكول، التطريز أو الطباعة",
+  "reponseAtelier": "تعليق تقني احترافي مباشر من الورشة للزبون حول هذا الموديل بالدارجة المغربية التقنية أو الفرنسية"
 }`;
 
-    const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    const candidateModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-3.8-flash'];
 
     for (const model of candidateModels) {
       try {
@@ -1352,15 +1372,20 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 اقتصر على: نوع القماش، سعره بسوق درب عمر / كراج علال، استهلاك القماش بالامتار، وسعر الخياطة والعينة والتسبيق.
 سؤال الزبون: ${query}`;
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text && text.trim()) return text.trim();
+        const candidateChatModels = ['gemini-flash-latest', 'gemini-2.5-flash'];
+        for (const chatMod of candidateChatModels) {
+          try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${chatMod}:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] })
+            });
+            if (res.ok) {
+              const data = await res.json();
+              const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text && text.trim()) return text.trim();
+            }
+          } catch (mErr) {}
         }
       } catch (e) {
         console.warn('Gemini call failed, using built-in expert textile engine:', e);
