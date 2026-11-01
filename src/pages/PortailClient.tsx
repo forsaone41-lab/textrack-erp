@@ -1053,11 +1053,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
     // 4. Échantillon & Acompte
     if (/(عينة|echantillon|prototype|تسبيق|acompte|avance|خلاص|paiement|rib|واش كترجع|شحال تسبيق)/i.test(q)) {
-      const acompteApprox = Math.round(analysis.totalPrice * 0.3);
+      const acompteApprox = Math.round(analysis.totalPrice * 0.5);
       return isAr
-        ? `باش نبداو الباترون وتفصيل العينة، التسبيق المطلوب هو **30% من قيمة الدوفيز (تقريباً ${acompteApprox.toLocaleString()} درهم)**.
-أهم نقطة: **تكلفة العينة والباترون كترجع وتتخصم 100% من الفاتورة النهائية** عند تأكيدك لبدء الإنتاج! العينة كتوجد فـ 48 إلى 72 ساعة للمعاينة والتجربة.`
-        : `Pour lancer le patronage et l'échantillon, un acompte de 30% (env. ${acompteApprox.toLocaleString()} MAD) est demandé. Important : le coût du prototype est 100% déductible de la facture finale de production ! Échantillon prêt sous 48-72h.`;
+        ? `باش نبداو الخدمة على الكمية كاملة ونشريو رولوات الثوب ومستلزمات الخياطة، التسبيق المطلوب فالمعامل هو **50% من قيمة الدوفيز (تقريباً ${acompteApprox.toLocaleString()} درهم)** حيت شراء القماش كياخد الحصة الكبرى من الميزانية فالبداية.
+أما الباقي (50%) كيتخلص عند تسليم السلعة الجاهزة بعد مراقبة الجودة.
+(وإيلا كنتي باغي تبدا غير بالعينة الأولى قبل الإنتاج الكلي، كتخلص ثمن العينة والباترون فقط، واللي كيتخصم 100% من الفاتورة النهائية عند تأكيد الإنتاج).`
+        : `Pour lancer la production complète et l'achat des rouleaux de tissu, l'acompte usine standard est de **50% de la commande (env. ${acompteApprox.toLocaleString()} MAD)** car la matière première représente l'investissement initial majeur. Le solde (50%) est réglé à la livraison après contrôle qualité.`;
     }
 
     // Default general response
@@ -2417,17 +2418,22 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             </div>
 
                             {/* Acompte Banner */}
-                            <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200/80 flex items-center justify-between text-xs text-amber-900">
-                              <span className="font-bold flex items-center gap-1.5">
-                                <CreditCard className="w-3.5 h-3.5 text-amber-600" />
-                                {isAr ? 'التسبيق المطلوب لبدء العينة (30%):' : 'Acompte requis (30%) :'}
-                              </span>
-                              <span className="font-black text-sm text-amber-950">
-                                {Math.round(activeTotalPrice * 0.3).toLocaleString()} MAD
+                            <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200/90 flex items-center justify-between text-xs text-amber-900">
+                              <div>
+                                <span className="font-black flex items-center gap-1.5 text-xs">
+                                  <CreditCard className="w-3.5 h-3.5 text-amber-600" />
+                                  {isAr ? 'تسبيق شراء القماش وبدء الإنتاج (50%):' : 'Acompte Tissu & Lancement (50%) :'}
+                                </span>
+                                <span className="text-[10px] text-amber-800/80 font-medium block mt-0.5">
+                                  {isAr ? 'ضروري لشراء رولوات الثوب وحجز خط الإنتاج' : 'Nécessaire à l\'achat des rouleaux de tissu'}
+                                </span>
+                              </div>
+                              <span className="font-black text-base text-amber-950 shrink-0">
+                                {Math.round(activeTotalPrice * 0.5).toLocaleString()} MAD
                               </span>
                             </div>
                             <p className="text-[10px] text-slate-400 text-center font-medium">
-                              {isAr ? '✓ ثمن الباترون والعينة يخصم 100% من الفاتورة النهائية عند التأكيد' : '✓ Coût prototype déductible à 100% de la facture finale'}
+                              {isAr ? '✓ الباقي (50%) يؤدى عند استلام السلعة الجاهزة بعد مراقبة الجودة' : '✓ Le solde (50%) est réglé à la livraison après contrôle qualité'}
                             </p>
                           </div>
                         </div>
