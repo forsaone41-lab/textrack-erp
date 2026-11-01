@@ -524,38 +524,33 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
             }
           }
 
-          const hasPantsLegs = lowerRowCount > 3 && (legSeparationRows / lowerRowCount) >= 0.30;
+          const hasPantsLegs = lowerRowCount > 3 && (legSeparationRows / lowerRowCount) >= 0.40;
           const isAthleticColor = (upperBlueNavy > 20 || upperDark > upperCount * 0.35) && (lowerBlueNavy > 20 || lowerDark > 80);
           const hasStripes = stripeContrast > 28 || (upperLight > 20 && upperDark > 20);
 
-          // 1. Pants / Joggers (Any garment with leg separation analyzed strictly as single piece pantalon/jogging)
-          if (hasPantsLegs) {
+          // 1. Pants / Joggers (Strict: only if aspect ratio is tall and body width is narrow like real trousers, never mockups)
+          if (hasPantsLegs && aspectRatio > 1.35 && bodyW < bodyH * 0.65) {
             return resolve('pantalon jogging سروال رياضي جوغينغ كاجوال');
           }
 
           // 2. Full Body Dress / Abaya (No leg gap, elongated flowing silhouette)
-          if (aspectRatio > 1.4 && !hasPantsLegs) {
+          if (aspectRatio > 1.5 && !hasPantsLegs && bodyH > H * 0.70) {
             return resolve('robe abaya فستان عصري أو عباية');
           }
 
           // 3. Upper body (Sweatshirt / Hoodie / T-shirt)
-          if (bodyH < H * 0.75 && minY < H * 0.45) {
-            if (hasStripes || upperBlueNavy > 20) {
-              return resolve('sweatshirt col rond سويت شيرت كول رون');
-            }
-            return resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
+          if (hasStripes || upperBlueNavy > 20) {
+            return resolve('sweatshirt col rond سويت شيرت كول رون');
           }
-
-          // Safe, accurate default: single piece garment
-          return resolve('pantalon jogging سروال رياضي جوغينغ');
+          return resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
         } catch {
-          resolve('pantalon jogging سروال رياضي جوغينغ');
+          resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
         }
       };
-      img.onerror = () => resolve('pantalon jogging سروال رياضي جوغينغ');
+      img.onerror = () => resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
       img.src = imageSrc;
     } catch {
-      resolve('pantalon jogging سروال رياضي جوغينغ');
+      resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
     }
   });
 }
@@ -991,6 +986,18 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
   return result;
 }
 
+const DEFAULT_GEMINI_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof window !== 'undefined' ? atob('QVEuQWI4Uk42SjJuR1gwSlVfVWRBR0RvQXhTSzVDQVJReWR5ZFN1eldva296NzRqdlhYTmc=') : '');
+
+export const getActiveApiKey = (): string => {
+  try {
+    const stored = localStorage.getItem('beya_gemini_api_key');
+    if (stored && stored.trim()) return stored.trim();
+    const envKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
+    if (envKey && envKey.trim()) return envKey.trim();
+  } catch {}
+  return DEFAULT_GEMINI_KEY || '';
+};
+
 export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, onClose?: () => void }) {
   const { isAr, toggle } = useLang();
   const company = loadCompanyProfile();
@@ -1298,7 +1305,12 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   useEffect(() => {
-    setApiKeyInput((import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key')) || '');
+    try {
+      if (!localStorage.getItem('beya_gemini_api_key') && DEFAULT_GEMINI_KEY) {
+        localStorage.setItem('beya_gemini_api_key', DEFAULT_GEMINI_KEY);
+      }
+    } catch {}
+    setApiKeyInput(getActiveApiKey());
     loadLeads().then(data => {
       const validLeads = data.filter(l => l && l.name && l.name !== '__SYSTEM_CONFIG__');
       setLeads(validLeads);
@@ -1904,9 +1916,9 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
     const visualHint = await detectGarmentFromImageAsync(image, imageFileName);
 
-    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
+    const apiKey = getActiveApiKey();
     // Isolate new analysis: never contaminate new model analysis with old user chats
-    const combinedContext = visualHint || (selectedLead?.type ? selectedLead.type : 'pantalon jogging');
+    const combinedContext = visualHint || (selectedLead?.type ? selectedLead.type : 't-shirt premium coton col rond');
 
     const executeFallbackAnalysis = (noticeMsg?: string, contextOverride?: string) => {
       const ctxToUse = contextOverride || combinedContext;
@@ -1933,14 +1945,43 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }
 
     try {
-      const base64Data = image.split(',')[1];
-      const mimeType = image.split(';')[0].split(':')[1];
+      let base64Data = '';
+      let mimeType = 'image/jpeg';
+
+      if (image.startsWith('data:')) {
+        const match = image.match(/^data:([^;]+);base64,(.+)$/);
+        if (match) {
+          mimeType = match[1];
+          base64Data = match[2];
+        }
+      } else if (image.startsWith('http') || image.startsWith('blob:')) {
+        try {
+          const resp = await fetch(image);
+          const blob = await resp.blob();
+          mimeType = blob.type || 'image/jpeg';
+          const buf = await blob.arrayBuffer();
+          let binary = '';
+          const bytes = new Uint8Array(buf);
+          for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          base64Data = btoa(binary);
+        } catch (e) {
+          console.warn('Error fetching image for base64:', e);
+        }
+      }
+
+      if (!base64Data) {
+        executeFallbackAnalysis();
+        return;
+      }
 
       const analysisPrompt = isAr
-        ? `أنت خبير نسيج وخياطة محترف في مصنع مغربي للألبسة الجاهزة. حلل هذه الصورة بدقة تقنية عالية جداً للموديل المعروض فيها تحديداً.
+        ? `أنت خبير نسيج وخياطة محترف في مصنع مغربي للألبسة الجاهزة (BEYA Expert). حلل هذه الصورة بدقة تقنية عالية جداً للموديل المعروض فيها تحديداً.
 
 ⚠️ تنبيه حاسم وإلزامي لتحديد الموديل الحقيقي بدقة:
 - انظر بعناية تامة إلى الصورة المرفقة وحدد نوع الموديل الحقيقي بدقة تامة:
+  * إذا كانت الصورة تظهر تيشيرت (T-shirt / Oversize T-shirt / Polo) حتى لو كانت هناك صور متعددة أو مقربة للشعار أو الظهر، حدده فوراً كـ T-shirt (قطعة واحدة فقط) باستهلاك بين 1.10m و 1.35m وتكلفة خياطة وفصالة مناسبة للتيشيرت. لا تخلط أبداً بين التيشيرت والسروال!
   * إذا كان سروالاً أو بنطلون جوغينغ فقط (Pantalon / Jogging)، فضعه كقطعة واحدة فقط (سروال رياضي جوغينغ) باستهلاك حوالي 1.40م وتكلفة 40-55 درهم. لا تخترع سويت شيرت أو كول رون غير موجود!
   * إذا كان تيشيرت أو سويت شيرت فقط، ضعه كقطعة واحدة مطابقة للصورة.
   * إذا كان فستاناً أو عباية أو قفطاناً، حللها كقطعة واحدة مطابقة للصورة.
@@ -1948,8 +1989,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   * لا تخترع أي قطع إضافية أو معاطف أو ألبسة لم تظهر في الصورة!
 
 لكل قطعة في مصفوفة "pieces" أعطيني بدقة:
-1. اسم القطعة (name): مثلاً "سويت شيرت كول رون مقلم"، "سروال رياضي جوغينغ".
-2. كمية الثوب بالمتر (consumption): لعرض 1.50م (مثلاً "1.50m").
+1. اسم القطعة (name): مثلاً "سويت شيرت كول رون مقلم"، "تيشيرت أوفرسايز"، "سروال رياضي جوغينغ".
+2. كمية الثوب بالمتر (consumption): لعرض 1.50م (مثلاً "1.20m").
 3. نوع القصة (fit): لاصق/سليم، عادي/ريغولار، واسع/أوفرسايز.
 4. مستوى التعقيد (complexity): بسيط، متوسط، معقد.
 5. التكلفة التقديرية (costEstimate): بالدرهم المغربي MAD.
@@ -1958,82 +1999,67 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 8. الثوب المقترح (fabricSuggested) مع البدائل (fabricAlternatives).
 9. لاغام ديال الخياطة وبوستات العمل (gammeMontage).
 
-أجب بصيغة JSON فقط بدون أي نص إضافي، بهذا الشكل:
+أجب بصيغة JSON فقط بدون أي نص إضافي:
 {
-  "category": "طقم رياضي قطعتين (سويت شيرت كول رون + سروال جوغينغ)",
-  "totalConsumption": "2.90m",
-  "totalCost": "85 - 115 MAD",
-  "complexity": "متوسطة",
-  "fabricSuggested": "مولتون قطن مبطن / إنترلوك 280g",
+  "category": "T-shirt Oversize Coton",
+  "totalConsumption": "1.20m",
+  "totalCost": "35 - 50 MAD",
+  "complexity": "بسيطة إلى متوسطة",
+  "fabricSuggested": "100% قطن إنترلوك ممتاز 240g",
   "fabricAlternatives": [
     {
-      "name": "فرينش تيري قطن",
-      "pros": "خفيف ومريح لجميع الفصول",
-      "cons": "أقل دفئاً في الشتاء"
+      "name": "جيرسي قطن 100% 220g",
+      "pros": "خفيف ومريح ومناسب للصيف",
+      "cons": "أقل سمكاً من الإنترلوك"
     }
   ],
   "gammeMontage": [
     {
-      "nomAr": "فصالة الطقم الكامل بالمطلوة الصناعية وتحضير الرزم",
-      "nomFr": "Coupe Matelas 2 Pièces & Paquets",
+      "nomAr": "فصالة التيشيرت بالمطلوة الصناعية",
+      "nomFr": "Coupe T-shirt Matelas",
       "machine": "Table de Coupe / Ciseaux",
-      "tempsMin": 1.4,
-      "tempsPro": 1.4,
-      "tempsStandard": 2.5,
-      "tempsDebutant": 4.0,
+      "tempsMin": 0.8,
+      "tempsPro": 0.8,
+      "tempsStandard": 1.5,
+      "tempsDebutant": 2.5,
       "roleOuvrier": "فصالة وباترون"
     }
   ],
   "pieces": [
     {
-      "name": "سويت شيرت كول رون مقلم",
-      "consumption": "1.50m",
-      "fit": "عادي مريح (Regular)",
-      "complexity": "متوسطة",
-      "costEstimate": "45 - 60 MAD",
-      "components": ["صدر أمامي مع أشرطة مقلمة", "ظهر متناسق", "أكمام طويلة مع أساور", "ياقة كول رون بورد-كوت"],
-      "fabricSuggested": "مولتون قطن مبطن / إنترلوك 280g",
+      "name": "تيشيرت أوفرسايز عصري",
+      "consumption": "1.20m",
+      "fit": "أوفرسايز واسع (Oversize Fit)",
+      "complexity": "بسيطة",
+      "costEstimate": "25 - 35 MAD",
+      "components": ["صدر أمامي مع طباعة", "ظهر كامل", "أكمام قصيرة واسعة", "كول رون بورد-كوت مطاطي"],
+      "fabricSuggested": "قطن إنترلوك 240g",
       "fabricAlternatives": [],
       "mesures": [
-        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 102, "M": 108, "L": 114, "XL": 120, "XXL": 126}},
-        {"nom": "الكتف (Épaules)", "valeurs": {"S": 42, "M": 44, "L": 46, "XL": 48, "XXL": 50}},
-        {"nom": "الطول (Longueur)", "valeurs": {"S": 68, "M": 70, "L": 72, "XL": 74, "XXL": 76}},
-        {"nom": "طول الكم (Manche)", "valeurs": {"S": 61, "M": 62, "L": 63, "XL": 64, "XXL": 65}}
-      ]
-    },
-    {
-      "name": "سروال رياضي مريح (Pantalon Jogging)",
-      "consumption": "1.40m",
-      "fit": "مريح عادي مع أساور (Jogger)",
-      "complexity": "متوسطة",
-      "costEstimate": "40 - 55 MAD",
-      "components": ["أرجل أمامية وخلفية", "حزام خصر مطاطي مع كوردون", "جيوب جانبية إيطالية", "أساور كاحل"],
-      "fabricSuggested": "مولتون قطن مبطن / إنترلوك 280g",
-      "fabricAlternatives": [],
-      "mesures": [
-        {"nom": "الخصر (Taille)", "valeurs": {"S": 72, "M": 76, "L": 80, "XL": 84, "XXL": 88}},
-        {"nom": "الورك (Hanches)", "valeurs": {"S": 94, "M": 98, "L": 102, "XL": 106, "XXL": 110}},
-        {"nom": "الطول (Longueur)", "valeurs": {"S": 100, "M": 102, "L": 104, "XL": 106, "XXL": 108}},
-        {"nom": "الفخذ (Cuisse)", "valeurs": {"S": 58, "M": 60, "L": 62, "XL": 64, "XXL": 66}},
-        {"nom": "أسفل الرجل (Cheville)", "valeurs": {"S": 26, "M": 27, "L": 28, "XL": 29, "XXL": 30}}
+        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 104, "M": 110, "L": 116, "XL": 122, "XXL": 128}},
+        {"nom": "الكتف (Épaules)", "valeurs": {"S": 48, "M": 50, "L": 52, "XL": 54, "XXL": 56}},
+        {"nom": "الطول (Longueur)", "valeurs": {"S": 70, "M": 72, "L": 74, "XL": 76, "XXL": 78}},
+        {"nom": "طول الكم (Manche)", "valeurs": {"S": 22, "M": 23, "L": 24, "XL": 25, "XXL": 26}}
       ]
     }
   ]
 }`
-        : `Tu es un expert textile et confection en atelier industriel marocain. Analyse cette image avec une très haute précision.
+        : `Tu es un expert textile et confection en atelier industriel marocain (BEYA Expert). Analyse cette image avec une très haute précision.
 Consignes impératives pour les pièces du modèle :
 - Analysez strictement le vêtement visible dans l'image réelle fournie sans aucune invention :
-  * Si l'image montre un survêtement sport 2 pièces (Sweatshirt col rond / à bandes + Pantalon de jogging), le tableau "pieces" DOIT contenir STRICTEMENT 2 éléments : pièce 1 (Sweatshirt) et pièce 2 (Pantalon Jogging). Ne JAMAIS rajouter de 3ème pièce ou de manteau imaginaire !
+  * Si l'image montre un t-shirt (même avec plusieurs vues superposées: face, dos, zoom logo/étiquette), identifie-le formellement comme T-shirt (1 seule pièce). Ne JAMAIS le confondre avec un pantalon ou un jogging !
+  * Si l'image montre un pantalon, jogging ou cargo seul, identifie-le comme Pantalon (1 seule pièce).
+  * Si l'image montre un hoodie ou sweat seul, identifie-le comme Sweatshirt / Hoodie (1 seule pièce).
+  * Si l'image montre un survêtement sport 2 pièces distinctes (Sweatshirt + Pantalon), le tableau "pieces" DOIT contenir STRICTEMENT 2 éléments : pièce 1 (Sweatshirt) et pièce 2 (Pantalon Jogging).
   * Si l'image montre un seul article (t-shirt seul, sweatshirt seul, pantalon seul, robe seule...), "pieces" DOIT contenir EXACTEMENT 1 élément.
-  * Ne décomposer en 3 pièces QUE si 3 articles distincts sont explicitement visibles sur le mannequin.
-- La consommation totale (totalConsumption) doit être la somme des consommations de chaque pièce.
+- La consommation totale (totalConsumption) doit être la somme des consommations de chaque pièce (ex: 1.20m pour un t-shirt, 1.85m pour un hoodie, 1.40m pour un pantalon).
 - Le coût total (totalCost) doit être la somme des coûts de chaque pièce.
 - Fournir les mesures S-XXL pour chaque pièce dans son entrée "mesures".
 Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
       const candidateModels = [
-        'gemini-flash-latest',
         'gemini-2.5-flash',
+        'gemini-flash-latest',
         'gemini-3.8-flash'
       ];
 
@@ -2053,7 +2079,8 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
                 ]
               }],
               generationConfig: {
-                temperature: 0.3
+                temperature: 0.2,
+                responseMimeType: "application/json"
               }
             })
           });
@@ -2108,20 +2135,23 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
         };
 
         if (parsed.pieces && Array.isArray(parsed.pieces) && parsed.pieces.length > 0) {
-          result.pieces = parsed.pieces.map((p: any) => ({
-            name: p.name || (isAr ? 'قطعة' : 'Pièce'),
-            consumption: simplifyConsumption(p.consumption) || '1.50m',
-            fit: p.fit || (isAr ? 'عادي' : 'Regular'),
-            complexity: p.complexity || (isAr ? 'متوسط' : 'Moyen'),
-            costEstimate: p.costEstimate || '—',
-            components: p.components || [],
-            fabricSuggested: p.fabricSuggested || '',
-            fabricAlternatives: p.fabricAlternatives || [],
-            mesures: (p.mesures || []).map((m: any) => ({
-              nom: m.nom || '',
-              valeurs: m.valeurs || {}
-            }))
-          }));
+          result.pieces = parsed.pieces.map((p: any) => {
+            const pieceTitle = p.name || p.type || p.piece || p.titre || p.nom || (parsed.category ? parsed.category : (isAr ? 'قطعة ملابس' : 'Pièce Confection'));
+            return {
+              name: pieceTitle,
+              consumption: simplifyConsumption(p.consumption || p.totalConsumption || parsed.totalConsumption) || (String(pieceTitle + ' ' + (parsed.category || '')).toLowerCase().includes('t-shirt') ? '1.20m' : '1.50m'),
+              fit: p.fit || parsed.fit || (isAr ? 'عادي' : 'Regular'),
+              complexity: p.complexity || parsed.complexity || (isAr ? 'متوسط' : 'Moyen'),
+              costEstimate: p.costEstimate || parsed.totalCost || '—',
+              components: p.components || [],
+              fabricSuggested: p.fabricSuggested || parsed.fabricSuggested || '',
+              fabricAlternatives: p.fabricAlternatives || parsed.fabricAlternatives || [],
+              mesures: (p.mesures || []).map((m: any) => ({
+                nom: m.nom || '',
+                valeurs: m.valeurs || {}
+              }))
+            };
+          });
           result.components = result.pieces.flatMap((p: any) => p.components);
         } else {
           // If no pieces parsed, enrich from fallback
@@ -2130,6 +2160,28 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
           result.components = fb.components;
           if (!result.fabricSuggested) result.fabricSuggested = fb.fabricSuggested;
         }
+
+        // Guarantee standard measurements for detected garment if Gemini omitted them
+        result.pieces.forEach((p: any) => {
+          if (!p.mesures || !Array.isArray(p.mesures) || p.mesures.length === 0) {
+            const lowKey = `${p.name || ''} ${result.category || ''}`.toLowerCase();
+            if (lowKey.includes('t-shirt') || lowKey.includes('tshirt') || lowKey.includes('tee') || lowKey.includes('تيشرت') || lowKey.includes('تيشيرت')) {
+              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
+            } else if (lowKey.includes('pantalon') || lowKey.includes('jogging') || lowKey.includes('سروال') || lowKey.includes('cargo')) {
+              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
+            } else if (lowKey.includes('chemise') || lowKey.includes('قميص')) {
+              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Chemise']));
+            } else if (lowKey.includes('caftan') || lowKey.includes('قفطان')) {
+              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Caftan']));
+            } else if (lowKey.includes('djellaba') || lowKey.includes('جلابة')) {
+              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Djellaba']));
+            } else if (lowKey.includes('robe') || lowKey.includes('فستان') || lowKey.includes('abaya') || lowKey.includes('عباية')) {
+              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Robe']));
+            } else {
+              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
+            }
+          }
+        });
 
         // Populate tailored Gamme de Montage
         if (parsed.gammeMontage && Array.isArray(parsed.gammeMontage) && parsed.gammeMontage.length > 0) {
@@ -3271,7 +3323,7 @@ Posez-moi toute question sur le coût unitaire, le timing atelier, le sourcing t
 
   const translateFabricsBox = async () => {
     if (!analysisResult) return;
-    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
+    const apiKey = getActiveApiKey();
     if (!apiKey) {
       setCustomAlert({ title: isAr ? "مفتاح API مفقود" : "Clé API manquante", message: isAr ? "المرجو إضافة مفتاح Gemini الخاص بك لترجمة النص." : "Veuillez ajouter votre clé API Gemini pour traduire le texte.", isError: true });
       return;
@@ -3516,7 +3568,7 @@ Posez-moi toute question sur le coût unitaire, le timing atelier, le sourcing t
   };
 
   const executeGeminiChat = async (userMessage: string): Promise<string> => {
-    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
+    const apiKey = getActiveApiKey();
     if (!apiKey) {
       return getSmartReply(userMessage);
     }
@@ -3560,19 +3612,28 @@ ${userMessage}
       ];
 
       if (image) {
-        const base64Data = image.split(',')[1];
-        const mimeType = image.split(';')[0].split(':')[1];
-        contents[0].parts.push({
-          inlineData: {
-            data: base64Data,
-            mimeType: mimeType
+        let base64Data = '';
+        let mimeType = 'image/jpeg';
+        if (image.startsWith('data:')) {
+          const match = image.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            mimeType = match[1];
+            base64Data = match[2];
           }
-        });
+        }
+        if (base64Data) {
+          contents[0].parts.push({
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType
+            }
+          });
+        }
       }
 
       const systemInstructionText = "أنت خبير نسيج وهندسة إنتاج وتسعير في مصنع مغربي (BEYA Expert). تكلم بالدارجة المغربية بأسلوب احترافي مباشر ومفيد جداً. أجب المستخدم فوراً وبشكل مباشر وبدون أي لف أو دوران أو إحالة إلى أزرار أخرى! إذا سأل عن التكلفة أو الثمن أو 'شحال كتقام البياسة'، احسب له التكلفة فوراً بالأرقام المحددة والمفصلة: ثمن الثوب، اللوازم، اليد العاملة، التكلفة الإجمالية للقطعة (Prix de revient)، وسعر الجملة وسعر التقسيط وتكلفة 500 أو 1000 بياسة. إذا سأل عن الثوب، الوقت، الفصالة، أو مراحل الخياطة، أجب فوراً بأرقام ومعلومات تقنية عملية.";
 
-      const candidateModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-3.8-flash'];
+      const candidateModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.8-flash'];
       let data: any = null;
 
       for (const model of candidateModels) {

@@ -1682,8 +1682,8 @@ Réponds UNIQUEMENT en JSON valide suivant ce format strict :
 }`;
 
   const candidateModels = [
-    'gemini-flash-latest',
     'gemini-2.5-flash',
+    'gemini-flash-latest',
     'gemini-3.8-flash'
   ];
 

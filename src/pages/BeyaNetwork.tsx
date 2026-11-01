@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Globe, Users, Package, MessageCircle, ArrowRight, ArrowLeft, Search, 
+  Globe, Users, Package, MessageCircle, GraduationCap, ArrowRight, ArrowLeft, Search, 
   Send, ThumbsUp, MessageSquare, ShieldCheck, CheckCircle2, Phone, 
   Sparkles, Plus, X, ExternalLink, Filter, MapPin, Tag, Scissors, 
   Building2, Layers, Award, Clock, ChevronDown, Check, Share2, 
@@ -20,7 +20,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const isPilotAuthorized = emailKey === 'forsaone41@gmail.com' || currentUser?.role === 'admin';
 
   // Navigation tabs in BEYA NETWORK (Feed, Fournisseurs, Modélistes, Clients BEYA, Groupage)
-  const [activeTab, setActiveTab] = useState<'feed' | 'suppliers' | 'modelistes' | 'clients' | 'groupage'>('feed');
+  const [activeTab, setActiveTab] = useState<'feed' | 'suppliers' | 'modelistes' | 'groupage'>('feed');
 
   // Search query & Category filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,6 +29,26 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [modelisteCategoryFilter, setModelisteCategoryFilter] = useState<'all' | 'streetwear' | 'femme' | 'sport' | 'denim'>('all');
   const [clientCategoryFilter, setClientCategoryFilter] = useState<'all' | 'streetwear' | 'casual' | 'modest' | 'sport'>('all');
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>('all');
+  const [selectedModelisteProfile, setSelectedModelisteProfile] = useState<any | null>(null);
+  const [modelisteProfileTab, setModelisteProfileTab] = useState<'about' | 'portfolio' | 'pricing' | 'reviews'>('about');
+  const [endorsedModelistes, setEndorsedModelistes] = useState<Record<string, number>>(() => {
+    try {
+      const raw = localStorage.getItem('beya_modeliste_endorsements');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const handleEndorse = (modId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEndorsedModelistes(prev => {
+      const nextVal = (prev[modId] || 0) + 1;
+      const updated = { ...prev, [modId]: nextVal };
+      try { localStorage.setItem('beya_modeliste_endorsements', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
 
   // Profile Form & Completion
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -279,174 +299,217 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const modelistesList = [
     {
       id: 'mod-1',
-      name: 'فاطمة الزهراء العمراني (Atelier Patronage Pro)',
-      title: 'موديلست أولى وخبير تدريج الباترون (Gerber & Lectra)',
-      city: 'الدار البيضاء / طنجة (عن بعد وحضوري)',
-      whatsapp: '212663049182',
-      phone: '0663049182',
-      software: ['Lectra Modaris V8', 'Clo 3D Simulation', 'Gerber Accumark'],
-      specialities: ['هوديات وتيشرتات أوفرسايز Drop Shoulder', 'سراويل سويت بانتس وشورتات', 'ملابس Streetwear عصرية'],
-      category: 'streetwear',
+      name: 'فاطمة الزهراء العمراني',
+      studio: 'Atelier Patronage Pro Casablanca',
+      badge: 'موديليست معتمدة من BEYA Creative',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+      banner: 'https://images.unsplash.com/photo-1558769132-cb1fac08c04a?auto=format&fit=crop&w=1200&q=80',
+      headline: 'Senior Fashion Modéliste & Pattern Maker • Spécialiste Streetwear & Oversize 340g • Ex-Lectra & ESITH',
+      city: 'الدار البيضاء / طنجة (متاح عن بعد وحضوري)',
+      availability: 'متاح للطلبيات والمجموعات الجديدة 🟢',
+      available: true,
       experienceYears: '9 سنوات',
       turnaround: '24 إلى 48 ساعة',
       startPriceMAD: 220,
       rating: 5.0,
-      verified: true,
+      reviewsCount: 94,
       completedPatterns: 145,
-      desc: 'إعداد ملفات الباترون الدقيقة المتوافقة مباشرة مع ماكينات الفصالة بالليزر مع جدول تدريج مقاسات مضبوط (Gradation XS إلى 3XL) ومحاكاة 3D واقعية للموديل قبل التفصيل.'
+      endorsementsBase: 88,
+      verified: true,
+      whatsapp: '212663049182',
+      phone: '0663049182',
+      category: 'streetwear',
+      categoryLabel: 'ستريتوير وملابس عصرية',
+      software: ['Lectra Modaris V8', 'CLO 3D Simulation', 'Gerber Accumark', 'Optitex PDS'],
+      specialities: ['هوديات وتيشرتات أوفرسايز Drop Shoulder', 'سراويل سويت بانتس وشورتات', 'ملابس Streetwear عصرية'],
+      desc: 'إعداد ملفات الباترون الدقيقة المتوافقة مباشرة مع ماكينات الفصالة بالليزر مع جدول تدريج مقاسات مضبوط (Gradation XS إلى 3XL) ومحاكاة 3D واقعية للموديل قبل التفصيل لضمان انعدام الأخطاء بنسبة 100%.',
+      about: 'خريجة المعهد العالي لصناعات النسيج والألبسة (ESITH) سنة 2015. اشتغلت لأكثر من 5 سنوات في كبريات وحدات التصدير بمدينة طنجة والدار البيضاء، قبل تأسيس ورشتي الخاصة لمواكبة براندات الملابس الناشئة في المغرب والخليج. أقدم خدمة شاملة تشمل الباترون الأساسي، التدريج الرقمي لكافة المقاسات، تحسين استهلاك الثوب (Placement)، وملفات جاهزة للطباعة والتصدير (DXF-AAMA, RUL, PDF 1:1, HPGL).',
+      experiences: [
+        { role: 'Lead Modéliste & Fondatrice', company: 'Atelier Patronage Pro (Casablanca)', period: '2020 - الآن', desc: 'إعداد باترونات لأكثر من 85 براند ستريتوير ومحاكاة 3D تفاعلية.' },
+        { role: 'Modéliste Senior Lectra Modaris', company: 'Groupe Textile Confection Export (Tanger)', period: '2016 - 2020', desc: 'تطوير الباترونات الصناعية والتدريج لطلبيات تفوق 50,000 قطعة شهرياً.' }
+      ],
+      education: 'دبلوم مهندس تقني في موديليزم الملابس والنسيج - ESITH الدار البيضاء (2015)',
+      certifications: ['Lectra Modaris V8 Expert', 'CLO 3D Virtual Prototyping Certified'],
+      portfolio: [
+        { title: 'هودي أوفرسايز Heavyweight 350g', image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=600&q=80', tag: 'Streetwear', specs: 'Drop Shoulder • Double Capuche • Gradation XS-XXL' },
+        { title: 'سويت بانتس فضفاض بجيوب بسحاب مخفي', image: 'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=600&q=80', tag: 'Sweatpants', specs: 'Coupe Baggy • Taille élastique • Poches zippées' },
+        { title: 'تيشيرت Boxy Fit قطن 240g ممشط', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80', tag: 'Boxy Fit', specs: 'Col bord-côte renforcé • Coutures renforcées' }
+      ],
+      pricing: { basePattern: 220, gradation: 40, simulation3d: 120, ficheTech: 60 },
+      reviews: [
+        { author: 'أمين البوشيخي', brand: 'North Wear Casablanca', comment: 'فاطمة الزهراء خدمت معنا كوليكسيون كاملة د الشتا (800 هودي وسويت بانتس). الباترون جا مضبوط فالفصالة 100% وما ضيعنا حتى سنتيم فالثوب.', rating: 5, date: 'منذ أسبوعين' },
+        { author: 'سارة لمرابط', brand: 'Urban Modest', comment: 'سرعة واحترافية كبيرة. بعثات ليا ملفات DXF مع محاكاة 3D بينات ليا الموديل قبل ما نقطعو الثوب. نوصي بها بقوة.', rating: 5, date: 'منذ شهر' }
+      ]
     },
     {
       id: 'mod-2',
-      name: 'ياسين الصنهاجي (Design & Industrial Pattern Studio)',
-      title: 'مهندس ملابس وموديلست تيكنيكال وسراويل كارجو',
-      city: 'الدار البيضاء (سيدي معروف)',
-      whatsapp: '212664556677',
-      phone: '0664556677',
-      software: ['Gerber Accumark', 'Optitex', 'Adobe Illustrator'],
-      specialities: ['سراويل كارجو بجيوب تكتيكية', 'جاكيتات بومبر وفيستات مبطنة', 'جينز ودنيم صناعي'],
-      category: 'denim',
+      name: 'ياسين الصنهاجي',
+      studio: 'Industrial Pattern Engineering Studio',
+      badge: 'مهندس باترون صناعي معتمد',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      banner: 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=1200&q=80',
+      headline: 'مهندس ملابس وموديلست تيكنيكال وسراويل كارجو ودنيم • خبرة 8 سنوات في الباترونات المعقدة والجيوب',
+      city: 'الدار البيضاء (سيدي معروف / البرنوصي)',
+      availability: 'متاح للطلبيات 🟢',
+      available: true,
       experienceYears: '8 سنوات',
       turnaround: '48 ساعة',
       startPriceMAD: 280,
       rating: 4.95,
-      verified: true,
+      reviewsCount: 68,
       completedPatterns: 98,
-      desc: 'متخصص في الباترونات المعقدة والملابس ذات الجيوب والقصات الهندسية الدقيقة مع إعداد الـ Fiche Technique ومقادير استهلاك القماش (Consommation).'
+      endorsementsBase: 73,
+      verified: true,
+      whatsapp: '212664556677',
+      phone: '0664556677',
+      category: 'denim',
+      categoryLabel: 'دنيم وسراويل كارجو تكتيكية',
+      software: ['Gerber Accumark', 'Optitex', 'Adobe Illustrator Technical'],
+      specialities: ['سراويل كارجو بجيوب تكتيكية ثلاثية الأبعاد', 'جاكيتات بومبر وفيستات مبطنة', 'جينز ودنيم صناعي 12oz-14oz'],
+      desc: 'متخصص في الباترونات المعقدة والملابس ذات الجيوب والقصات الهندسية الدقيقة مع إعداد الـ Fiche Technique ومقادير استهلاك القماش (Consommation).',
+      about: 'مهندس صناعي للملابس خريج المدارس المتخصصة بالدار البيضاء. عملت لأكثر من 6 سنوات في مصانع الجينز والملابس الوظيفية Technical Wear. أركز على الدقة الهندسية للجيوب والسحابات وخياطة الأوفرلوك المزدوجة والمقاسات الأوروبية والمغربية.',
+      experiences: [
+        { role: 'Pattern Engineer & Technical Director', company: 'Denim & Cargo Lab Casablanca', period: '2021 - الآن', desc: 'هندسة باترونات السراويل متعددة الجيوب والجاكيتات التقنية.' },
+        { role: 'Modéliste Industriel', company: 'Morocco Jeans Factory', period: '2017 - 2021', desc: 'ضبط الباترونات لإنتاج الدنيم ومراعاة انكماش الغسيل (Retrait Lavage).' }
+      ],
+      education: 'دبلوم عالي في هندسة الباترون الصناعي - الدار البيضاء',
+      certifications: ['Gerber Technology Certified Specialist', 'Technical Garment Construction'],
+      portfolio: [
+        { title: 'سروال كارجو بـ 6 جيوب تكتيكية ثلاثية الأبعاد', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=600&q=80', tag: 'Cargo Pants', specs: 'Poches à soufflet • Renforts genoux • Gradation 28-38' },
+        { title: 'جاكيت بومبر مبطنة بياقة كلاسيكية وسحاب معدني', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80', tag: 'Bomber Jacket', specs: 'Doublure thermique • Bord-côtes poignets et col' },
+        { title: 'فيست دنيم جينز خام 13.5oz مع خياطة مزدوجة', image: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=600&q=80', tag: 'Denim Vest', specs: 'Poches poitrine à rabat • Surpiqûres sellier contrastées' }
+      ],
+      pricing: { basePattern: 280, gradation: 50, simulation3d: 130, ficheTech: 80 },
+      reviews: [
+        { author: 'عادل السعيدي', brand: 'Tactical Gear MA', comment: 'ياسين فنان فالسراويل د الكارجو. الجيوب جاو مضبوطين بالسنتيم وما كاينش فرق بين البياسات. تعامل احترافي ورائع.', rating: 5, date: 'منذ 3 أسابيع' }
+      ]
     },
     {
       id: 'mod-3',
-      name: 'سلمى المنصوري (Modéliste Styliste Haute Couture)',
-      title: 'مصممة أزياء وموديلست للعبايات والملابس النسائية الراقية',
-      city: 'الرباط / فاس',
-      whatsapp: '212667112233',
-      phone: '0667112233',
-      software: ['Clo 3D', 'Lectra Modaris', 'Photoshop'],
-      specialities: ['عبايات خليجية عصرية كيمونو', 'فساتين لين وكاجوال نسائي', 'أطقم صيفية مستورة (Modest Fashion)'],
-      category: 'femme',
+      name: 'سلمى المنصوري',
+      studio: 'Salma Modest & Haute Couture Studio',
+      badge: 'مصممة أزياء وموديلست محترفة',
+      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+      banner: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80',
+      headline: 'مصممة أزياء وموديلست للعبايات والملابس النسائية الراقية • محاكاة 3D للأقمشة المنسكبة والحراير',
+      city: 'الرباط / فاس (خدمات عن بعد لجميع المدن)',
+      availability: 'متاحة للمجموعات الجديدة 🟢',
+      available: true,
       experienceYears: '7 سنوات',
       turnaround: '48 ساعة مع محاكاة 3D',
       startPriceMAD: 250,
       rating: 4.92,
-      verified: true,
+      reviewsCount: 52,
       completedPatterns: 120,
-      desc: 'إعداد باترونات راقية للملابس النسائية المحتشمة والعصرية مع مراعاة انسيابية القماش وتناسق المقاسات الخليجية والمغربية.'
+      endorsementsBase: 64,
+      verified: true,
+      whatsapp: '212667112233',
+      phone: '0667112233',
+      category: 'femme',
+      categoryLabel: 'عبايات وملابس نسائية راقية',
+      software: ['CLO 3D', 'Lectra Modaris', 'Adobe Photoshop'],
+      specialities: ['عبايات خليجية عصرية كيمونو', 'فساتين لين وكاجوال نسائي', 'أطقم صيفية مستورة (Modest Fashion)'],
+      desc: 'إعداد باترونات راقية للملابس النسائية المحتشمة والعصرية مع مراعاة انسيابية القماش وتناسق المقاسات الخليجية والمغربية.',
+      about: 'خريجة المعهد الوطني للأزياء والموضة. متخصصة في خطوط المودست فاشن والعبايات المعاصرة. أتميز بمحاكاة حركة الأقمشة المنسكبة (كريب الحرير، لين، شيفون) على مانيكان رقمي قبل القص الفعلي.',
+      experiences: [
+        { role: 'Modéliste & Créatrice Modest Wear', company: 'Salma Pattern Studio Rabat', period: '2019 - الآن', desc: 'إعداد باترونات لأكثر من 40 براند عبايات وأزياء محتشمة.' }
+      ],
+      education: 'دبلوم تصميم أزياء وموديليزم راقي - معهد الفنون التطبيقية الرباط',
+      certifications: ['CLO 3D Master Pattern & Draping'],
+      portfolio: [
+        { title: 'عباية كيمونو بقصة انسيابية من قماش الكريب الملكي', image: 'https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?auto=format&fit=crop&w=600&q=80', tag: 'Abaya', specs: 'Coupe évasée • Manches amples • Longueur personnalisable' },
+        { title: 'فستان صيفي من الكتان الطبيعي (Lin 100%)', image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=600&q=80', tag: 'Robe Lin', specs: 'Poches latérales • Ceinture amovible • Tomber parfait' }
+      ],
+      pricing: { basePattern: 250, gradation: 45, simulation3d: 110, ficheTech: 50 },
+      reviews: [
+        { author: 'مريم التازي', brand: 'Noor Modest Wear', comment: 'سلمى مبدعة كتعرف طيحة الثوب مزيان وكتخرج الباترون مضبوط ما كيحتاجش حتى إعادة روتوش.', rating: 5, date: 'منذ شهر' }
+      ]
     },
     {
       id: 'mod-4',
-      name: 'كريم العلمي (Sportswear & Activewear Patterns)',
-      title: 'خبير باترون الألبسة الرياضية والأكتيف وير',
-      city: 'طنجة (المنطقة الحرة)',
-      whatsapp: '212669334455',
-      phone: '0669334455',
-      software: ['Lectra Modaris', 'Illustrator'],
-      specialities: ['بدلات تداريب رياضية Tracksuits', 'تيشيرتات دراي فيت وضغط (Compression)', 'شورتات جيم وركض'],
-      category: 'sport',
+      name: 'كريم العلمي',
+      studio: 'Alami Sportswear Pattern Lab',
+      badge: 'خبير باترونات الملابس الرياضية',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+      banner: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80',
+      headline: 'خبير باترون الألبسة الرياضية والأكتيف وير • خبرة بمصانع التصدير بطنجة (Dry-Fit & Lycra)',
+      city: 'طنجة (المنطقة الحرة / مغوغة)',
+      availability: 'متاح للطلبيات السريعة 🟢',
+      available: true,
       experienceYears: '6 سنوات',
       turnaround: '24 ساعة',
       startPriceMAD: 200,
       rating: 4.88,
-      verified: true,
+      reviewsCount: 41,
       completedPatterns: 76,
-      desc: 'خبرة طويلة بمصانع التصدير الرياضية بطنجة، دراية كاملة بمرونة الأقمشة التقنية والليكرا لضمان راحة الرياضي أثناء الحركة.'
-    }
-  ];
-
-  // ───────────────── 3. BEYA CLIENTS & BRANDS DIRECTORY DATA ─────────────────
-  const clientsList = [
-    {
-      id: 'cli-current',
-      name: userProfile.brandName || 'FAS Wear',
-      ownerName: currentUser?.nom || 'FAS',
-      city: userProfile.city.split(' ')[0] || 'الدار البيضاء',
-      category: 'streetwear',
-      categoryLabel: 'ستريتوير وملابس شبابية',
-      specialities: ['هوديات شتوية 340g مبطنة', 'تيشرتات أوفرسايز قطن ممشط', 'سويت بانتس'],
-      piecesProduced: '+450 قطعة مصنعة',
-      collectionsCount: 2,
+      endorsementsBase: 55,
       verified: true,
-      isCurrentUser: true,
-      whatsapp: userProfile.phone,
-      bio: userProfile.bio || 'علامة تجارية مغربية للملابس الجاهزة والستريتوير المصنعة بشراكة مع BEYA.',
-      story: 'براندك الرسمي المسجل في المنصة. تظهر شارة التوثيق الأخضر لجميع أعضاء الشبكة.'
-    },
-    {
-      id: 'cli-1',
-      name: 'Atlas Streetwear',
-      ownerName: 'أمين البراندي',
-      city: 'الدار البيضاء',
-      category: 'streetwear',
-      categoryLabel: 'ستريتوير ثقيل Heavyweight',
-      specialities: ['هوديات 350g بطباعة DTF', 'تيشرتات دروب شولدر 240g', 'كابات'],
-      piecesProduced: '+1,800 قطعة مصنعة فـ BEYA',
-      collectionsCount: 4,
-      verified: true,
-      whatsapp: '0662112233',
-      bio: 'براند ستريتوير كازاوي مستوحى من ثقافة الشارع والموسيقى الحضرية.',
-      story: 'بدينا بأول كوموند تجريبية ديال 30 قطعة فـ BEYA واليوم وصلنا لـ 4 كوليكسيونات ناجحة مع نسبة تحصيل 85%.'
-    },
-    {
-      id: 'cli-2',
-      name: 'Sahara Nomads Studio',
-      ownerName: 'يوسف العثماني',
-      city: 'مراكش',
-      category: 'casual',
-      categoryLabel: 'كاجوال أصيل مطرز',
-      specialities: ['سترات كوتون كانفاس مطرزة 3D', 'هوديات بألوان رملية وطبيعية'],
-      piecesProduced: '+950 قطعة مصنعة فـ BEYA',
-      collectionsCount: 3,
-      verified: true,
-      whatsapp: '0663445566',
-      bio: 'مزج بين الموضة العصرية المعاصرة والتراث الأمازيغي والصحراوي المغربي.',
-      story: 'كنتعاملو مع BEYA فالفصالة والخياطة الفاخرة، والتطريز كيدار بدقة متناهية.'
-    },
-    {
-      id: 'cli-3',
-      name: 'Modesty Chic Label',
-      ownerName: 'هند التازي',
-      city: 'الرباط',
-      category: 'modest',
-      categoryLabel: 'أزياء نسائية ومحجبات',
-      specialities: ['عبايات كيمونو لين', 'أطقم شتوية مستورة قطن إنترلوك'],
-      piecesProduced: '+1,120 قطعة مصنعة فـ BEYA',
-      collectionsCount: 3,
-      verified: true,
-      whatsapp: '0664889900',
-      bio: 'تصاميم نسائية محتشمة وعصرية بجودة خامات ناعمة ومريحة.',
-      story: 'الفينيسيون ديال BEYA عاوننا نرفعو ثقة الزبونات ونحققو مبيعات قوية فالمغرب ودول الخليج.'
-    },
-    {
-      id: 'cli-4',
-      name: 'Urban Pulse Sport',
-      ownerName: 'سفيان إيكوم',
-      city: 'طنجة',
+      whatsapp: '212669334455',
+      phone: '0669334455',
       category: 'sport',
-      categoryLabel: 'ملابس رياضية وأكتيف وير',
-      specialities: ['سراويل سويت بانتس مريحة', 'شورتات جيم', 'هوديات خفيفة'],
-      piecesProduced: '+720 قطعة مصنعة فـ BEYA',
-      collectionsCount: 2,
-      verified: true,
-      whatsapp: '0665778899',
-      bio: 'ملابس رياضية مصممة للشباب والرياضيين بمقاسات مريحة وتصاميم بسيطة.',
-      story: 'استفدنا بزاف من عروض الشراء المشترك للأقمشة فـ BEYA Network ووفرنا 25% من تكلفة المتر.'
+      categoryLabel: 'ألبسة رياضية وأكتيف وير',
+      software: ['Lectra Modaris', 'Adobe Illustrator Technical'],
+      specialities: ['بدلات تداريب رياضية Tracksuits', 'تيشيرتات دراي فيت وضغط (Compression)', 'شورتات جيم وركض'],
+      desc: 'دراية كاملة بمرونة الأقمشة التقنية والليكرا لضمان راحة الرياضي أثناء الحركة وسهولة تنفيذ الدرزات المسطحة (Flatlock).',
+      about: 'قضيت 6 سنوات في مصانع النسيج الرياضي المخصصة للتصدير الأوروبي بمدينة طنجة. أقدم باترونات محسوبة بدقة على أقمشة البوليستر المطاطة والليكرا، مع مراعاة قصات التهوية (Mesh Panels) وخياطة الـ Flatlock الرياضية.',
+      experiences: [
+        { role: 'Sportswear Pattern Maker', company: 'Tanger Activewear Export', period: '2018 - 2023', desc: 'تطوير بدلات التداريب والملابس التقنية لماركات عالمية.' }
+      ],
+      education: 'تقني متخصص في ملابس الرياضة والنسيج المرن - طنجة',
+      certifications: ['Lectra Garment Pattern Expert'],
+      portfolio: [
+        { title: 'طقم تداريب رياضية Tracksuit بقصة رياضية عصرية', image: 'https://images.unsplash.com/photo-1483721074577-494b8e5c8e31?auto=format&fit=crop&w=600&q=80', tag: 'Tracksuit', specs: 'Passe-pouce aux manches • Poches zippées discrètes' },
+        { title: 'تيشيرت رياضي دراي فيت بقصات تهوية جانبية', image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80', tag: 'Dry-Fit', specs: 'Coutures flatlock anti-irritation • Empiècements mesh' }
+      ],
+      pricing: { basePattern: 200, gradation: 40, simulation3d: 90, ficheTech: 50 },
+      reviews: [
+        { author: 'عثمان الفهري', brand: 'Morocco Athletics', comment: 'كريم سريع جداً وجودة خدمتو لا نقاش فيها. الباترون وجد فـ 24 ساعة مضبوط فالفصالة.', rating: 5, date: 'منذ شهرين' }
+      ]
     },
     {
-      id: 'cli-5',
-      name: 'Casawear Collective',
-      ownerName: 'سيمو الودغيري',
-      city: 'فاس',
-      category: 'streetwear',
-      categoryLabel: 'ستريتوير وتيشيرتات أوفرسايز',
-      specialities: ['تيشرتات غرافيك 240g', 'هوديات سادة بألوان ترابية'],
-      piecesProduced: '+1,300 قطعة مصنعة فـ BEYA',
-      collectionsCount: 4,
+      id: 'mod-5',
+      name: 'هدى بنجلون',
+      studio: 'Atelier Benjelloun Couture & Tailleur',
+      badge: 'أستاذة موديليزم التايلور والبدلات الرسمية',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
+      banner: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=80',
+      headline: 'موديلست وخياطة تايلور نسائي ورجالي • بليزرات، معاطف، وأطقم فورمال راقية',
+      city: 'الدار البيضاء / مراكش',
+      availability: 'متاحة للطلبيات الخاصة 🟢',
+      available: true,
+      experienceYears: '11 سنة',
+      turnaround: '48 إلى 72 ساعة',
+      startPriceMAD: 320,
+      rating: 4.96,
+      reviewsCount: 84,
+      completedPatterns: 160,
+      endorsementsBase: 92,
       verified: true,
-      whatsapp: '0666223344',
-      bio: 'متجر إلكتروني يركز على تيشيرتات القطن الطبيعي عالي الجودة مع طباعة ثابتة.',
-      story: 'السرعة فـ إنجاز العينات والتوصيل السريع هو لي مخليني مكمل مع ورشة BEYA.'
+      whatsapp: '212661889900',
+      phone: '0661889900',
+      category: 'femme',
+      categoryLabel: 'بليزرات وأطقم رسمية تايلور',
+      software: ['Lectra Modaris', 'Gerber Accumark', 'Optitex'],
+      specialities: ['بليزرات فورمال مبطنة', 'معاطف شتوية كشمير وصوف', 'بدلات رسمية نسائية ورجالية'],
+      desc: 'خبرة أكثر من 11 سنة في الباترون الكلاسيكي وفنون التبطين والياقات الدقيقة لبليزرات ومعاطف براندات البريت-آ-بورتي الراقية.',
+      about: 'اشتغلت في ورشات باريسية ومغربية لأكثر من عقد. أتقن هندسة الأكتاف (Épaulettes)، الصدر المقوى (Plastron)، وبطانة الساتان الداخلية لضمان وقفة ملوكية للبياسة.',
+      experiences: [
+        { role: 'Master Tailleur & Modéliste Chef', company: 'Atelier Benjelloun Couture', period: '2015 - الآن', desc: 'إعداد باترونات البليزرات والأطقم الرسمية لأرقى العلامات بالمغرب.' }
+      ],
+      education: 'دبلوم Modéliste Haute Couture - باريس / الدار البيضاء',
+      certifications: ['Diplôme d\'État de Modélisme Industriel & Tailleur'],
+      portfolio: [
+        { title: 'بليزر أوفرسايز راقي مع بطانة داخلية كاملة', image: 'https://images.unsplash.com/photo-1584273143981-41c073dfe8f8?auto=format&fit=crop&w=600&q=80', tag: 'Blazer', specs: 'Col tailleur parfait • Poches passepoilées • Doublure intégrale' },
+        { title: 'معطف كشمير شتوي طويل بقصة مستقيمة', image: 'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?auto=format&fit=crop&w=600&q=80', tag: 'Manteau', specs: 'Fente d\'aisance au dos • Boutonnage croisé' }
+      ],
+      pricing: { basePattern: 320, gradation: 60, simulation3d: 140, ficheTech: 90 },
+      reviews: [
+        { author: 'كنزة المريني', brand: 'Maison Kenza Casa', comment: 'هدى أستاذة فالتايلور والجاكيتات. البليزر خرج فيه الياقة واقفة بحال زارا ومانغو ولا غلطة.', rating: 5, date: 'منذ 3 أسابيع' }
+      ]
     }
   ];
 
-  // Group Buying State
+    // Group Buying State
   const [groupDeals, setGroupDeals] = useState([
     {
       id: 'grp-1',
@@ -678,16 +741,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   });
 
   // Filter clients
-  const filteredClients = clientsList.filter(c => {
-    if (clientCategoryFilter !== 'all' && c.category !== clientCategoryFilter) return false;
-    if (selectedCityFilter !== 'all' && !c.city.includes(selectedCityFilter)) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchText = (c.name + ' ' + c.ownerName + ' ' + c.bio + ' ' + c.city + ' ' + c.specialities.join(' ')).toLowerCase();
-      if (!matchText.includes(q)) return false;
-    }
-    return true;
-  });
+  // clientsList removed
 
   return (
     <div className="min-h-screen bg-[#f0f2f5] text-slate-900 font-sans antialiased" dir="rtl">
@@ -762,31 +816,18 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 <span>الموردون</span>
               </button>
 
-              {/* 3. Modélistes */}
+              {/* 3. Modélistes (LinkedIn / FB Pro Style) */}
               <button
                 onClick={() => setActiveTab('modelistes')}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                   activeTab === 'modelistes'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black shadow-md'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                <Ruler className="w-4 h-4 text-amber-500" />
+                <Ruler className="w-4 h-4 text-amber-600" />
                 <span>الموديلست</span>
-                <span className="px-1 py-0.2 bg-amber-400 text-slate-950 text-[9px] font-black rounded-full">جديد</span>
-              </button>
-
-              {/* 4. Clients BEYA */}
-              <button
-                onClick={() => setActiveTab('clients')}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-                  activeTab === 'clients'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                <Tag className="w-4 h-4 text-violet-500" />
-                <span>كليان BEYA</span>
+                <span className="px-1.5 py-0.5 bg-slate-900 text-amber-300 text-[9px] font-black rounded-full shadow-xs">PRO</span>
               </button>
 
               {/* 5. Group Buying */}
@@ -939,16 +980,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     <span className="text-[10px] text-slate-400 font-mono">8 خبراء</span>
                   </button>
 
-                  <button 
-                    onClick={() => setActiveTab('clients')}
-                    className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-700 transition"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-violet-500" />
-                      <span>دليل براندات وكليان BEYA</span>
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">24 براند</span>
-                  </button>
+
 
                   <button 
                     onClick={() => setActiveTab('groupage')}
@@ -1398,261 +1430,247 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
         {/* ═════════════════ TAB 3: صفحة الموديلست (PAGE MODÉLISTES & STYLISTES) ═════════════════ */}
         {activeTab === 'modelistes' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in duration-300">
             
-            {/* Header */}
-            <div className="bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-amber-500/10 border border-amber-200/80 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <span className="px-3 py-1 rounded-full bg-amber-500 text-slate-950 text-xs font-black inline-block mb-2">
-                  دليل الموديلست ومصممي الباترون الصناعي 📐
-                </span>
-                <h2 className="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-2">
-                  <Ruler className="w-6 h-6 text-amber-600" />
-                  <span>شبكة الموديلست والباترونيست المعتمدين بالمغرب</span>
-                </h2>
-                <p className="text-xs text-slate-600 mt-1 max-w-2xl">
-                  خبراء إعداد ملفات الفصالة الدقيقة والباترون الرقمي (Gerber, Lectra, Clo3D) وتدريج المقاسات (Gradation) لأصحاب البراندات بأسعار تفضيلية
-                </p>
+            {/* LinkedIn / Facebook Style Hero Banner */}
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl border border-indigo-500/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1 shadow-sm">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>BEYA Fashion Talent Network</span>
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/10 text-slate-300 text-xs font-bold border border-white/10">
+                      بروفايلات احترافية موثقة (LinkedIn / FB Style)
+                    </span>
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+                    <Ruler className="w-7 h-7 text-amber-400" />
+                    <span>دليل نخبة الموديليست والباترونيست بالمغرب</span>
+                  </h2>
+                  <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                    تصفح السير الذاتية المهنية، نماذج الباترونات المنفذة (Patronage & Gradation)، والبرامج المعتمدة (Lectra, Gerber, CLO 3D). تواصل مباشرة مع الموديليست عبر واتساب لبدء كوليكسيونك القادمة.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap md:flex-col items-start md:items-end gap-3 shrink-0">
+                  <div className="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/10 text-left font-mono">
+                    <span className="text-[10px] text-slate-300 block font-sans">الموديليست المعتمدون</span>
+                    <span className="text-xl font-black text-amber-400">{filteredModelistes.length} خبير متاح</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Category Pills */}
-              <div className="flex flex-wrap items-center gap-1.5">
+              {/* Category Filter Chips */}
+              <div className="mt-6 pt-5 border-t border-white/10 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-slate-400 font-bold ml-2">التصنيف التخصصي:</span>
                 {[
-                  { id: 'all', label: 'الكل' },
-                  { id: 'streetwear', label: '👕 هوديات وستريتوير' },
-                  { id: 'femme', label: '👗 عبايات وأزياء نسائية' },
-                  { id: 'denim', label: '👖 سراويل كارجو ودنيم' },
-                  { id: 'sport', label: '🏃 ملابس رياضية' }
+                  { id: 'all', label: 'جميع الخبراء' },
+                  { id: 'streetwear', label: '🧥 ستريتوير وأوفرسايز' },
+                  { id: 'denim', label: '👖 دنيم وسراويل كارجو' },
+                  { id: 'femme', label: '👗 ملابس نسائية وعبايات' },
+                  { id: 'sport', label: '🏃 رياضية وأكتيف وير' }
                 ].map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setModelisteCategoryFilter(cat.id as any)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                       modelisteCategoryFilter === cat.id
-                        ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
-                        : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                        ? 'bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-400/20'
+                        : 'bg-white/10 text-slate-200 hover:bg-white/20 border border-white/10'
                     }`}
                   >
-                    {cat.label}
+                    <span>{cat.label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Modélistes Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredModelistes.map((mod) => (
-                <div key={mod.id} className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-                  <div className="space-y-4">
-                    
-                    {/* Top Info */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-black text-lg flex items-center justify-center shrink-0 shadow-md">
-                          {mod.name[0]}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <h3 className="font-extrabold text-base text-slate-900">{mod.name}</h3>
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                          </div>
-                          <p className="text-xs font-bold text-amber-700 mt-0.5">{mod.title}</p>
-                          <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                            <MapPin className="w-3 h-3 text-slate-400" />
-                            <span>{mod.city}</span>
-                            <span>•</span>
-                            <span>خبرة {mod.experienceYears}</span>
-                          </p>
-                        </div>
-                      </div>
+            {/* LinkedIn / Facebook Style Modélistes Cards Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {filteredModelistes.map((mod) => {
+                const totalEndorsements = (mod.endorsementsBase || 50) + (endorsedModelistes[mod.id] || 0);
+                const hasUserEndorsed = Boolean(endorsedModelistes[mod.id]);
 
-                      <div className="text-left font-mono shrink-0">
-                        <span className="text-[10px] text-slate-400 block">ابتداءً من</span>
-                        <span className="text-lg font-black text-emerald-600">{mod.startPriceMAD} DH</span>
-                        <span className="text-[10px] text-slate-500 block">باترون + تدريج</span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
-                      {mod.desc}
-                    </p>
-
-                    {/* Specialities & Software */}
-                    <div className="space-y-2 text-xs">
-                      <div>
-                        <span className="block text-[11px] font-bold text-slate-700 mb-1">البرامج المعتمدة:</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {mod.software.map((sw, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[11px] font-bold rounded-lg border border-indigo-200/60">
-                              {sw}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className="block text-[11px] font-bold text-slate-700 mb-1">أبرز الموديلات المتخصصة:</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {mod.specialities.map((sp, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-slate-100 text-slate-800 text-[11px] rounded-lg">
-                              {sp}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Stats Footer */}
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-                      <span>⏳ مدة التسليم: <strong>{mod.turnaround}</strong></span>
-                      <span>⭐ التقييم: <strong>{mod.rating} / 5.0</strong> ({mod.completedPatterns} باترون)</span>
-                    </div>
-
-                  </div>
-
-                  <a
-                    href={`https://wa.me/${mod.whatsapp}?text=${encodeURIComponent(`السلام عليكم أستاذ(ة) ${mod.name}، تواصلت معك من خلال BEYA NETWORK بخصوص إعداد وتدريج باترون لموديل جديد.`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black rounded-xl text-xs shadow-md transition active:scale-95"
+                return (
+                  <div 
+                    key={mod.id} 
+                    className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group"
                   >
-                    <Phone className="w-4 h-4" />
-                    <span>طلب باترون وتواصل فـ الواتساب</span>
-                  </a>
-                </div>
-              ))}
-            </div>
-
-          </div>
-        )}
-
-        {/* ═════════════════ TAB 4: صفحة كليان BEYA (PAGE CLIENTS & MARQUES) ═════════════════ */}
-        {activeTab === 'clients' && (
-          <div className="space-y-6">
-            
-            {/* Header */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <span className="px-3 py-1 rounded-full bg-violet-100 text-violet-800 text-xs font-black inline-block mb-2">
-                  مجتمع براندات وكليان BEYA بالمغرب 🏷️
-                </span>
-                <h2 className="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-2">
-                  <Tag className="w-6 h-6 text-violet-600" />
-                  <span>العلامات التجارية ورواد الموضة المصنعة في BEYA</span>
-                </h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  تعرف على الماركات الشريكة، تبادل الخبرات في التوصيل والتسويق، وتعاون في تجميع طلبيات الأقمشة
-                </p>
-              </div>
-
-              {/* Category Pills */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {[
-                  { id: 'all', label: 'الكل' },
-                  { id: 'streetwear', label: '👕 ستريتوير' },
-                  { id: 'casual', label: '👔 كاجوال وأصلي' },
-                  { id: 'modest', label: '👗 محجبات ومستورة' },
-                  { id: 'sport', label: '🏃 ملابس رياضية' }
-                ].map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setClientCategoryFilter(cat.id as any)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                      clientCategoryFilter === cat.id
-                        ? 'bg-violet-600 text-white shadow-sm'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Clients Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredClients.map((client) => (
-                <div 
-                  key={client.id} 
-                  className={`rounded-2xl p-5 border shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4 ${
-                    client.isCurrentUser
-                      ? 'bg-gradient-to-br from-indigo-50/60 to-purple-50/60 border-indigo-300'
-                      : 'bg-white border-slate-200/80'
-                  }`}
-                >
-                  <div className="space-y-3">
-                    
-                    {/* Top Info */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-2xl text-white font-black text-lg flex items-center justify-center shrink-0 shadow-md ${
-                          client.isCurrentUser
-                            ? 'bg-gradient-to-tr from-amber-500 via-orange-500 to-indigo-600'
-                            : 'bg-gradient-to-tr from-violet-600 to-indigo-600'
-                        }`}>
-                          {client.name[0]}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <h3 className="font-extrabold text-base text-slate-900 truncate">{client.name}</h3>
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                          </div>
-                          <p className="text-xs font-bold text-violet-700">{client.categoryLabel}</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">
-                            📍 {client.city} • بصاحب البراند: <strong>{client.ownerName}</strong>
-                          </p>
-                        </div>
-                      </div>
-
-                      {client.isCurrentUser && (
-                        <span className="px-2 py-0.5 text-[9px] font-black bg-amber-400 text-slate-950 rounded-full shrink-0">
-                          حسابك
-                        </span>
-                      )}
-                    </div>
-
-                    <p className="text-xs text-slate-600 bg-white/70 p-3 rounded-xl border border-slate-100 leading-relaxed">
-                      {client.bio}
-                    </p>
-
                     <div>
-                      <span className="block text-[11px] font-bold text-slate-700 mb-1">نوع الموديلات المصنعة فـ BEYA:</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {client.specialities.map((sp, idx) => (
-                          <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-800 text-[11px] rounded-lg">
-                            {sp}
+                      {/* 1. Cover Photo Banner (Facebook / LinkedIn Style) */}
+                      <div className="h-32 md:h-36 relative overflow-hidden bg-slate-900">
+                        <img 
+                          src={mod.banner} 
+                          alt={mod.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        
+                        {/* Top Banner Tags */}
+                        <div className="absolute top-3 right-3 left-3 flex items-center justify-between">
+                          <span className="px-2.5 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-amber-300 text-[10px] font-black border border-amber-400/30">
+                            {mod.categoryLabel}
                           </span>
-                        ))}
+                          <span className="px-2.5 py-1 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold shadow-xs flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            <span>{mod.availability}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 2. Overlapping Circular Avatar + Identity Header */}
+                      <div className="px-6 pb-2 relative">
+                        <div className="flex items-end justify-between -mt-12 mb-3">
+                          <div className="relative">
+                            <img 
+                              src={mod.avatar} 
+                              alt={mod.name} 
+                              className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg shadow-slate-900/10 bg-slate-100"
+                            />
+                            {mod.verified && (
+                              <div className="absolute -bottom-1 -right-1 bg-indigo-600 text-white p-1 rounded-full border-2 border-white shadow-xs" title="موديليست موثق">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Quick Stats Pill */}
+                          <div className="text-left font-mono bg-slate-50 border border-slate-100 px-3.5 py-1.5 rounded-2xl">
+                            <span className="text-[10px] text-slate-400 block font-sans">ابتداءً من</span>
+                            <span className="text-base font-black text-emerald-600">{mod.startPriceMAD} DH</span>
+                            <span className="text-[9px] text-slate-500 block font-sans">باترون + تدريج</span>
+                          </div>
+                        </div>
+
+                        {/* Name & LinkedIn Headline */}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-black text-lg text-slate-900 hover:text-indigo-600 transition-colors cursor-pointer" onClick={() => { setSelectedModelisteProfile(mod); setModelisteProfileTab('about'); }}>
+                              {mod.name}
+                            </h3>
+                            <span className="px-2 py-0.5 bg-amber-50 text-amber-800 text-[10px] font-bold rounded-md border border-amber-200/60">
+                              {mod.studio}
+                            </span>
+                          </div>
+
+                          <p className="text-xs font-bold text-slate-700 leading-snug">
+                            {mod.headline}
+                          </p>
+
+                          <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium pt-1 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{mod.city}</span>
+                            </span>
+                            <span>•</span>
+                            <span className="text-indigo-600 font-bold">خبرة {mod.experienceYears}</span>
+                            <span>•</span>
+                            <span>⭐ <strong>{mod.rating}</strong> ({mod.reviewsCount} تقييم)</span>
+                          </div>
+                        </div>
+
+                        {/* Bio Excerpt */}
+                        <p className="text-xs text-slate-600 leading-relaxed mt-3 bg-slate-50/80 p-3 rounded-2xl border border-slate-100/80">
+                          {mod.desc}
+                        </p>
+
+                        {/* Software Badges */}
+                        <div className="mt-3.5 space-y-1.5">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                            البرامج والمهارات المعتمدة:
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {mod.software.map((sw: string, sIdx: number) => (
+                              <span 
+                                key={sIdx}
+                                className="px-2.5 py-1 bg-indigo-50/80 text-indigo-700 text-[11px] font-bold rounded-xl border border-indigo-100"
+                              >
+                                {sw}
+                              </span>
+                            ))}
+                            <span className="px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-xl border border-emerald-100">
+                              Gradation XS إلى 3XL ✓
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Mini Visual Portfolio (Facebook / LinkedIn Featured Gallery) */}
+                        <div className="mt-4 space-y-1.5">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                            أبرز نماذج الباترون المنفذة:
+                          </span>
+                          <div className="grid grid-cols-3 gap-2">
+                            {mod.portfolio.map((item: any, pIdx: number) => (
+                              <div 
+                                key={pIdx} 
+                                onClick={() => { setSelectedModelisteProfile(mod); setModelisteProfileTab('portfolio'); }}
+                                className="group/item relative h-20 rounded-xl overflow-hidden border border-slate-200 cursor-pointer"
+                              >
+                                <img 
+                                  src={item.image} 
+                                  alt={item.title} 
+                                  className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-300"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-1.5">
+                                  <span className="text-[9px] font-bold text-white truncate w-full">
+                                    {item.title}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-600 flex items-center justify-between">
-                      <span>🧵 الإنتاج: <strong className="text-indigo-600">{client.piecesProduced}</strong></span>
-                      <span>📦 الكوليكسيونات: <strong>{client.collectionsCount} مجموعات</strong></span>
+                    {/* 3. Footer Action Bar (LinkedIn Style) */}
+                    <div className="p-5 pt-3 border-t border-slate-100 bg-slate-50/50 mt-4 space-y-2.5">
+                      <div className="flex items-center justify-between text-[11px] text-slate-500">
+                        <span className="flex items-center gap-1 font-bold text-slate-700">
+                          <Clock className="w-3.5 h-3.5 text-amber-500" />
+                          <span>التسليم: {mod.turnaround}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => handleEndorse(mod.id, e)}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition active:scale-95 cursor-pointer ${
+                            hasUserEndorsed 
+                              ? 'bg-indigo-100 text-indigo-700' 
+                              : 'text-slate-500 hover:bg-slate-200'
+                          }`}
+                        >
+                          <ThumbsUp className="w-3.5 h-3.5" />
+                          <span>توصية بالمهارات ({totalEndorsements})</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedModelisteProfile(mod); setModelisteProfileTab('about'); }}
+                          className="flex-1 py-3 px-4 bg-white hover:bg-slate-100 text-slate-800 rounded-2xl text-xs font-black border border-slate-200 transition-all flex items-center justify-center gap-1.5 shadow-2xs active:scale-98 cursor-pointer"
+                        >
+                          <Eye className="w-4 h-4 text-indigo-600" />
+                          <span>عرض البروفايل الكامل</span>
+                        </button>
+
+                        <a
+                          href={`https://wa.me/${mod.whatsapp}?text=${encodeURIComponent(`السلام عليكم أستاذ(ة) ${mod.name}، شفت البروفايل ديالك فـ BEYA NETWORK وبغيت نطلب خدمة باترون وتدريج لموديل جديد.`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-98 cursor-pointer"
+                        >
+                          <Phone className="w-4 h-4" />
+                          <span>تواصل فالواتساب</span>
+                        </a>
+                      </div>
                     </div>
-
                   </div>
-
-                  {client.isCurrentUser ? (
-                    <button
-                      onClick={() => setShowEditProfileModal(true)}
-                      className="w-full py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
-                    >
-                      <span>تعديل بروفايل براندك ⚙️</span>
-                    </button>
-                  ) : client.whatsapp ? (
-                    <a
-                      href={`https://wa.me/${client.whatsapp}?text=${encodeURIComponent(`السلام عليكم، تواصلت معك من خلال BEYA NETWORK للتعاون والشراكة.`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition"
-                    >
-                      <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>تواصل في الواتساب للتعاون</span>
-                    </a>
-                  ) : null}
-                </div>
-              ))}
+                );
+              })}
             </div>
 
           </div>
@@ -1961,6 +1979,292 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
           </div>
         </div>
       )}
+
+      {/* ───────────────── FULL MODÉLISTE PROFILE MODAL (LINKEDIN / FACEBOOK STYLE) ───────────────── */}
+      {selectedModelisteProfile && (() => {
+        const mod = selectedModelisteProfile;
+        const totalEndorsements = (mod.endorsementsBase || 50) + (endorsedModelistes[mod.id] || 0);
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-y-auto animate-in fade-in" dir="rtl">
+            <div className="bg-white rounded-[2rem] max-w-3xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col my-auto relative custom-scrollbar">
+              
+              {/* Cover Banner */}
+              <div className="h-44 md:h-52 relative overflow-hidden bg-slate-900 shrink-0">
+                <img src={mod.banner} alt={mod.name} className="w-full h-full object-cover opacity-90" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                
+                {/* Close Button */}
+                <button 
+                  onClick={() => setSelectedModelisteProfile(null)}
+                  className="absolute top-4 left-4 p-2.5 rounded-full bg-black/60 hover:bg-black text-white transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="absolute top-4 right-4 flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-amber-300 text-xs font-black border border-amber-400/30">
+                    {mod.categoryLabel}
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm">
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    <span>{mod.availability}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Profile Card Header Info */}
+              <div className="px-6 md:px-8 pb-4 relative border-b border-slate-100">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 mb-4">
+                  <div className="relative">
+                    <img 
+                      src={mod.avatar} 
+                      alt={mod.name} 
+                      className="w-28 h-28 md:w-32 md:h-32 rounded-3xl object-cover border-4 border-white shadow-xl bg-slate-100"
+                    />
+                    {mod.verified && (
+                      <div className="absolute bottom-1 right-1 bg-indigo-600 text-white p-1.5 rounded-full border-2 border-white shadow-sm" title="موديليست معتمد">
+                        <CheckCircle2 className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleEndorse(mod.id)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+                    >
+                      <ThumbsUp className="w-4 h-4 text-indigo-600" />
+                      <span>توصية ({totalEndorsements})</span>
+                    </button>
+
+                    <a
+                      href={`https://wa.me/${mod.whatsapp}?text=${encodeURIComponent(`السلام عليكم أستاذ(ة) ${mod.name}، تواصلت معك من خلال بروفايلك فـ BEYA NETWORK وبغيت نستفسر على الباترون وتفاصيل الخدمة.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-md flex items-center gap-2 transition active:scale-95 cursor-pointer"
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span>واتساب مباشر</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Identity */}
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-xl md:text-2xl font-black text-slate-900">{mod.name}</h2>
+                    <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 text-xs font-bold rounded-lg">
+                      {mod.studio}
+                    </span>
+                  </div>
+                  <p className="text-xs md:text-sm font-bold text-slate-700 mt-1">
+                    {mod.headline}
+                  </p>
+                  <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>{mod.city}</span>
+                    <span>•</span>
+                    <span>الهاتف: <strong className="font-mono text-slate-700">{mod.phone}</strong></span>
+                  </p>
+                </div>
+
+                {/* Stats Bar */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-100 text-center">
+                  <div className="p-2.5 bg-slate-50 rounded-2xl">
+                    <span className="text-[10px] text-slate-400 block font-bold">الباترونات المنجزة</span>
+                    <span className="text-base font-black text-slate-900">+{mod.completedPatterns}</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 rounded-2xl">
+                    <span className="text-[10px] text-slate-400 block font-bold">سنوات الخبرة</span>
+                    <span className="text-base font-black text-indigo-600">{mod.experienceYears}</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 rounded-2xl">
+                    <span className="text-[10px] text-slate-400 block font-bold">التقييم العام</span>
+                    <span className="text-base font-black text-amber-500">⭐ {mod.rating} / 5</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 rounded-2xl">
+                    <span className="text-[10px] text-slate-400 block font-bold">مدة الإنجاز</span>
+                    <span className="text-base font-black text-emerald-600">{mod.turnaround}</span>
+                  </div>
+                </div>
+
+                {/* Profile Tabs (LinkedIn Style) */}
+                <div className="flex items-center gap-2 mt-4 pt-2 border-t border-slate-100 overflow-x-auto">
+                  {[
+                    { id: 'about', label: 'السيرة والنبذة' },
+                    { id: 'portfolio', label: `معرض النماذج (${mod.portfolio.length})` },
+                    { id: 'pricing', label: 'الأسعار والخدمات' },
+                    { id: 'reviews', label: `توصيات الزبائن (${mod.reviews.length})` }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setModelisteProfileTab(tab.id as any)}
+                      className={`px-4 py-2 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer ${
+                        modelisteProfileTab === tab.id
+                          ? 'bg-slate-900 text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tab Content Body */}
+              <div className="p-6 md:p-8 space-y-6 flex-1 text-slate-800">
+                {modelisteProfileTab === 'about' && (
+                  <div className="space-y-6">
+                    {/* About */}
+                    <div>
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">نبذة مهنية (À propos)</h4>
+                      <p className="text-xs md:text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        {mod.about}
+                      </p>
+                    </div>
+
+                    {/* Experiences */}
+                    <div>
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">سجل الخبرات والمسار المهني</h4>
+                      <div className="space-y-3">
+                        {mod.experiences.map((exp: any, eIdx: number) => (
+                          <div key={eIdx} className="p-4 bg-white border border-slate-200/80 rounded-2xl space-y-1">
+                            <div className="flex items-center justify-between">
+                              <h5 className="font-extrabold text-sm text-slate-900">{exp.role}</h5>
+                              <span className="text-[11px] font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{exp.period}</span>
+                            </div>
+                            <p className="text-xs font-bold text-amber-700">{exp.company}</p>
+                            <p className="text-xs text-slate-500 leading-relaxed">{exp.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Education & Certs */}
+                    <div>
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">التكوين والشهادات</h4>
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2 text-xs">
+                        <div className="flex items-center gap-2 font-bold text-slate-800">
+                          <GraduationCap className="w-4 h-4 text-indigo-600" />
+                          <span>{mod.education}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {mod.certifications.map((c: string, cIdx: number) => (
+                            <span key={cIdx} className="px-2.5 py-1 bg-white border border-slate-200 text-slate-700 rounded-lg text-[11px] font-bold">
+                              ✓ {c}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {modelisteProfileTab === 'portfolio' && (
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">معرض الموديلات والباترونات المنفذة</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {mod.portfolio.map((pItem: any, pi: number) => (
+                        <div key={pi} className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-2xs group/p">
+                          <div className="h-48 relative overflow-hidden bg-slate-900">
+                            <img src={pItem.image} alt={pItem.title} className="w-full h-full object-cover group-hover/p:scale-105 transition-transform duration-500" />
+                            <span className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-black/70 text-white rounded-lg text-[10px] font-black">
+                              {pItem.tag}
+                            </span>
+                          </div>
+                          <div className="p-4 space-y-1">
+                            <h5 className="font-black text-sm text-slate-900">{pItem.title}</h5>
+                            <p className="text-xs text-slate-500">{pItem.specs}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {modelisteProfileTab === 'pricing' && (
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">لائحة أسعار الخدمات الشفافة</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <strong className="block text-slate-900">الباترون الأساسي (Patron de Base)</strong>
+                          <span className="text-slate-400 text-[11px]">ملف DXF/RUL + PDF بالحجم الحقيقي 1:1</span>
+                        </div>
+                        <span className="text-base font-black text-emerald-600 font-mono">{mod.pricing.basePattern} DH</span>
+                      </div>
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <strong className="block text-slate-900">تدريج المقاسات (Gradation)</strong>
+                          <span className="text-slate-400 text-[11px]">لكل مقاس إضافي (XS إلى 3XL)</span>
+                        </div>
+                        <span className="text-base font-black text-emerald-600 font-mono">+{mod.pricing.gradation} DH</span>
+                      </div>
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <strong className="block text-slate-900">محاكاة ثلاثية الأبعاد (Rendu CLO 3D)</strong>
+                          <span className="text-slate-400 text-[11px]">فيديو 360 درجة وصور للموديل على مانيكان</span>
+                        </div>
+                        <span className="text-base font-black text-indigo-600 font-mono">+{mod.pricing.simulation3d} DH</span>
+                      </div>
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <strong className="block text-slate-900">البطاقة التقنية والاستهلاك (Placement)</strong>
+                          <span className="text-slate-400 text-[11px]">حساب أمتار القماش وهوامش الفصالة</span>
+                        </div>
+                        <span className="text-base font-black text-indigo-600 font-mono">+{mod.pricing.ficheTech} DH</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {modelisteProfileTab === 'reviews' && (
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">توصيات البراندات والزبائن</h4>
+                    <div className="space-y-3">
+                      {mod.reviews.map((rev: any, rIdx: number) => (
+                        <div key={rIdx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <strong className="text-xs font-extrabold text-slate-900">{rev.author}</strong>
+                              <span className="text-xs text-slate-400 mr-2 font-medium">({rev.brand})</span>
+                            </div>
+                            <span className="text-[11px] text-amber-500 font-black">{'⭐'.repeat(rev.rating)}</span>
+                          </div>
+                          <p className="text-xs text-slate-600 leading-relaxed italic">"{rev.comment}"</p>
+                          <span className="text-[10px] text-slate-400 block">{rev.date}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom Sticky CTA */}
+              <div className="p-4 md:p-6 bg-slate-900 text-white border-t border-slate-800 flex items-center justify-between gap-4 sticky bottom-0 z-20">
+                <div>
+                  <span className="text-[10px] text-slate-400 block">بدء طلب باترون فوري</span>
+                  <strong className="text-xs md:text-sm text-amber-400">{mod.name}</strong>
+                </div>
+
+                <a
+                  href={`https://wa.me/${mod.whatsapp}?text=${encodeURIComponent(`السلام عليكم أستاذ(ة) ${mod.name}، أنا مهتم بخدمات الباترون والتدريج ديالك فـ BEYA NETWORK وبغيت نناقش معك موديل جديد.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs md:text-sm rounded-xl shadow-lg transition active:scale-95 flex items-center gap-2 cursor-pointer"
+                >
+                  <Phone className="w-4 h-4" />
+                  <span>تواصل فـ الواتساب للاتفاق على الموديل</span>
+                </a>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );
