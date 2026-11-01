@@ -621,6 +621,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [clientAiMessages, setClientAiMessages] = useState<Record<string, Array<{ sender: 'ai' | 'user'; text: string; time: string }>>>({});
   const [clientAiInput, setClientAiInput] = useState('');
   const [clientAiLoading, setClientAiLoading] = useState(false);
+  const [fabricOption, setFabricOption] = useState<Record<string, 'atelier' | 'client'>>({});
 
   const handleSendVerificationEmail = async () => {
     if (!currentUser?.email) return;
@@ -1055,10 +1056,13 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     if (/(عينة|echantillon|prototype|تسبيق|acompte|avance|خلاص|paiement|rib|واش كترجع|شحال تسبيق)/i.test(q)) {
       const acompteApprox = Math.round(analysis.totalPrice * 0.5);
       return isAr
-        ? `باش نبداو الخدمة على الكمية كاملة ونشريو رولوات الثوب ومستلزمات الخياطة، التسبيق المطلوب فالمعامل هو **50% من قيمة الدوفيز (تقريباً ${acompteApprox.toLocaleString()} درهم)** حيت شراء القماش كياخد الحصة الكبرى من الميزانية فالبداية.
-أما الباقي (50%) كيتخلص عند تسليم السلعة الجاهزة بعد مراقبة الجودة.
-(وإيلا كنتي باغي تبدا غير بالعينة الأولى قبل الإنتاج الكلي، كتخلص ثمن العينة والباترون فقط، واللي كيتخصم 100% من الفاتورة النهائية عند تأكيد الإنتاج).`
-        : `Pour lancer la production complète et l'achat des rouleaux de tissu, l'acompte usine standard est de **50% de la commande (env. ${acompteApprox.toLocaleString()} MAD)** car la matière première représente l'investissement initial majeur. Le solde (50%) est réglé à la livraison après contrôle qualité.`;
+        ? `عندنا فالورشة جوج خيارات واضحين ومريحين:
+1. **إيلا جبتي الثوب والمستلزمات من عندك:** **ما كتسبق حتى درهم مسبقاً (0 درهم تسبيق)!** كتصيفط غير الثوب والمستلزمات للورشة، وحنا كنبداو الفصالة والخياطة مباشرة، وما كتخلص حتى تكمل السلعة وتستلمها واجدة بعد مراقبة الجودة وفينيسيون.
+2. **إيلا كان المعمل غايتكلف بالثوب والسلعة كاملة:** التسبيق المطلوب هو **50% من قيمة الدوفيز (تقريباً ${acompteApprox.toLocaleString()} درهم)** لشراء رولوات القماش، والباقي (50%) عند التسليم.
+(وفالحالتين معاً، إيلا باغي عينة أولية قبل الإنتاج، كتوجد فـ 48 إلى 72 ساعة للتحقق والتجربة).`
+        : `Deux options très claires à l'atelier :
+1. **Si vous fournissez le tissu et fournitures :** **Aucun acompte financier requis (0 MAD) !** Vous envoyez simplement le tissu à l'atelier, nous lançons la coupe et confection, et le paiement à 100% s'effectue à la livraison.
+2. **Si l'atelier fournit le tissu :** Acompte de **50% (env. ${acompteApprox.toLocaleString()} MAD)** pour l'achat des rouleaux de tissu, et le solde (50%) à la livraison.`;
     }
 
     // Default general response
@@ -2203,11 +2207,16 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                const activeUnitPrice = calculateTierUnitPrice(currentQty, analysis.unitPrice);
                const activeTotalPrice = activeUnitPrice * currentQty;
 
-               const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
-               const waText = isAr
-                 ? `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي رقم REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${analysis.qty} قطعة\n- السعر التقديري: ${analysis.unitPrice} درهم (المجموع: ${analysis.totalPrice.toLocaleString()} درهم)\n- الثوب: ${analysis.tissuSuggere}\nبغيت نأكد الدوفيس ونبداو العينة التقنية. شكراً!`
-                 : `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, je consulte ma demande REF: #${d.id.substring(0, 8).toUpperCase()} sur le portail :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Prix Estimé : ${analysis.unitPrice} MAD/pc (Total : ${analysis.totalPrice.toLocaleString()} MAD)\n- Tissu : ${analysis.tissuSuggere}\nJe souhaite valider ce devis et lancer l'échantillon. Merci !`;
-               const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
+               const isClientFabric = fabricOption[d.id] === 'client';
+                const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
+                const waText = isAr
+                  ? (isClientFabric
+                      ? `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي رقم REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${analysis.qty} قطعة\n- الخياطة والتصنيع: ${analysis.unitPrice} درهم/قطعة (المجموع: ${analysis.totalPrice.toLocaleString()} درهم)\nالثوب والمستلزمات غانصيفطهم من عندي للورشة (بدون تسبيق مسبق)، والخلاص عند استلام السلعة إن شاء الله.`
+                      : `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي رقم REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${analysis.qty} قطعة\n- السعر الإجمالي: ${analysis.totalPrice.toLocaleString()} درهم\n- الثوب من المعمل: ${analysis.tissuSuggere}\nبغيت نأكد الدوفيز وندوز تسبيق 50% لشراء الثوب وبدء الإنتاج. شكراً!`)
+                  : (isClientFabric
+                      ? `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, demande REF: #${d.id.substring(0, 8).toUpperCase()} :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Façon : ${analysis.unitPrice} MAD/pc\nJe fournis le tissu et fournitures (0 MAD acompte). Règlement à la livraison.`
+                      : `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, demande REF: #${d.id.substring(0, 8).toUpperCase()} :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Tissu Atelier : ${analysis.tissuSuggere}\nJe valide le devis et souhaite verser l'acompte de 50% pour lancer la production.`);
+                const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
 
                return (
                  <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -2417,41 +2426,101 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               </div>
                             </div>
 
-                            {/* Acompte Banner */}
-                            <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200/90 flex items-center justify-between text-xs text-amber-900">
-                              <div>
-                                <span className="font-black flex items-center gap-1.5 text-xs">
-                                  <CreditCard className="w-3.5 h-3.5 text-amber-600" />
-                                  {isAr ? 'تسبيق شراء القماش وبدء الإنتاج (50%):' : 'Acompte Tissu & Lancement (50%) :'}
-                                </span>
-                                <span className="text-[10px] text-amber-800/80 font-medium block mt-0.5">
-                                  {isAr ? 'ضروري لشراء رولوات الثوب وحجز خط الإنتاج' : 'Nécessaire à l\'achat des rouleaux de tissu'}
+                            {/* Fabric Source Mode Switcher: Atelier fabric (50% acompte) VS Client fabric (0 MAD acompte) */}
+                            <div className="bg-slate-100 p-1 rounded-2xl flex items-center gap-1 border border-slate-200/70">
+                              <button
+                                type="button"
+                                onClick={() => setFabricOption(prev => ({ ...prev, [d.id]: 'atelier' }))}
+                                className={`flex-1 py-2 px-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                  !isClientFabric 
+                                    ? 'bg-white text-indigo-950 shadow-xs' 
+                                    : 'text-slate-500 hover:text-slate-800'
+                                }`}
+                              >
+                                <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                                <span>{isAr ? 'الثوب من المعمل (تسبيق 50%)' : 'Tissu Atelier (50%)'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setFabricOption(prev => ({ ...prev, [d.id]: 'client' }))}
+                                className={`flex-1 py-2 px-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                  isClientFabric 
+                                    ? 'bg-emerald-600 text-white shadow-xs' 
+                                    : 'text-slate-500 hover:text-slate-800'
+                                }`}
+                              >
+                                <Package className="w-3.5 h-3.5" />
+                                <span>{isAr ? 'الثوب من عندك (0 درهم تسبيق)' : 'Tissu par vous (0 MAD)'}</span>
+                              </button>
+                            </div>
+
+                            {/* Dynamic Acompte / Payment Banner */}
+                            {!isClientFabric ? (
+                              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200/90 flex items-center justify-between text-xs text-amber-900">
+                                <div>
+                                  <span className="font-black flex items-center gap-1.5 text-xs">
+                                    <CreditCard className="w-3.5 h-3.5 text-amber-600" />
+                                    {isAr ? 'تسبيق شراء القماش وبدء الإنتاج (50%):' : 'Acompte Tissu & Lancement (50%) :'}
+                                  </span>
+                                  <span className="text-[10px] text-amber-800/80 font-medium block mt-0.5">
+                                    {isAr ? 'ضروري لشراء رولوات الثوب وحجز خط الإنتاج' : 'Nécessaire à l\'achat des rouleaux de tissu'}
+                                  </span>
+                                </div>
+                                <span className="font-black text-base text-amber-950 shrink-0">
+                                  {Math.round(activeTotalPrice * 0.5).toLocaleString()} MAD
                                 </span>
                               </div>
-                              <span className="font-black text-base text-amber-950 shrink-0">
-                                {Math.round(activeTotalPrice * 0.5).toLocaleString()} MAD
-                              </span>
-                            </div>
+                            ) : (
+                              <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200/90 flex items-center justify-between text-xs text-emerald-950">
+                                <div>
+                                  <span className="font-black flex items-center gap-1.5 text-xs text-emerald-800">
+                                    <Package className="w-3.5 h-3.5 text-emerald-600" />
+                                    {isAr ? 'التسبيق المالي المطلوب:' : 'Acompte requis :'}
+                                  </span>
+                                  <span className="text-[10px] text-emerald-700/90 font-medium block mt-0.5">
+                                    {isAr ? 'صيفط غير الثوب والمستلزمات، كنبداو الفصالة والخياطة مباشرة' : 'Envoyez le tissu, nous lançons la coupe & confection'}
+                                  </span>
+                                </div>
+                                <span className="font-black text-xs text-emerald-800 bg-emerald-100/90 px-3 py-1.5 rounded-xl shrink-0">
+                                  {isAr ? '0 درهم (بدون تسبيق مالي)' : '0 MAD (Sans acompte)'}
+                                </span>
+                              </div>
+                            )}
+
                             <p className="text-[10px] text-slate-400 text-center font-medium">
-                              {isAr ? '✓ الباقي (50%) يؤدى عند استلام السلعة الجاهزة بعد مراقبة الجودة' : '✓ Le solde (50%) est réglé à la livraison après contrôle qualité'}
+                              {!isClientFabric
+                                ? (isAr ? '✓ الباقي (50%) يؤدى عند استلام السلعة الجاهزة بعد مراقبة الجودة' : '✓ Le solde (50%) est réglé à la livraison après contrôle qualité')
+                                : (isAr ? '✓ الخلاص (100%) كيكون حتى تكمل الخدمة وتستلم السلعة الجاهزة' : '✓ Paiement (100%) uniquement à la livraison après confection complète')}
                             </p>
                           </div>
                         </div>
 
-                        {/* 2 Essential Action Buttons: Valider/Acompte + WhatsApp */}
+                        {/* 2 Essential Action Buttons */}
                         <div className="pt-2 border-t border-slate-100 space-y-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedDemandePage(null);
-                              setVirementCommandeId(d.id);
-                              setActiveTab('payments');
-                            }}
-                            className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.99] cursor-pointer"
-                          >
-                            <CreditCard className="w-4 h-4" />
-                            <span>{isAr ? '💳 تأكيد الدوفيز وأداء التسبيق' : '💳 Valider le Devis & Verser l\'Acompte'}</span>
-                          </button>
+                          {!isClientFabric ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedDemandePage(null);
+                                setVirementCommandeId(d.id);
+                                setActiveTab('payments');
+                              }}
+                              className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.99] cursor-pointer"
+                            >
+                              <CreditCard className="w-4 h-4" />
+                              <span>{isAr ? '💳 تأكيد الدوفيز وأداء التسبيق (50%)' : '💳 Valider le Devis & Verser l\'Acompte (50%)'}</span>
+                            </button>
+                          ) : (
+                            <a
+                              href={waUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-[0.99] cursor-pointer"
+                            >
+                              <Package className="w-4 h-4" />
+                              <span>{isAr ? '📦 تأكيد الطلب وإرسال الثوب للورشة (0 درهم تسبيق)' : '📦 Valider & Envoyer le Tissu à l\'Atelier'}</span>
+                            </a>
+                          )}
 
                           <a
                             href={waUrl}
@@ -2543,7 +2612,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               { label: isAr ? '🧵 نوع وسعر الثوب فالسوق؟' : '🧵 Tissu & Prix Marché', query: isAr ? 'أشنو هو أحسن نوع ثوب لهاد الموديل وشحال كيدير فالسوق المغربي؟' : 'Quel est le meilleur tissu pour ce modèle et son prix au marché ?' },
                               { label: isAr ? '📏 شحال كياكل د الميطراج؟' : '📏 Métrage requis ?', query: isAr ? 'شحال كياكل هاد الموديل ديال الميطراج لكل بياسة؟' : 'Combien de mètres de tissu par pièce pour ce modèle ?' },
                               { label: isAr ? '💰 التخفيض مع الكونتيتي؟' : '💰 Remise Quantité ?', query: isAr ? 'شحال كيهبط ثمن الخياطة إيلا زدت فالكمية؟' : 'Comment évolue le prix unitaire si j\'augmente la quantité ?' },
-                              { label: isAr ? '✂️ تفاصيل العينة والتسبيق؟' : '✂️ Échantillon & Acompte', query: isAr ? 'كيفاش كتم مرحلة العينة وشحال التسبيق المطلوب باش نبداو؟' : 'Quelles sont les modalités de l\'échantillon et de l\'acompte ?' }
+                              { label: isAr ? '✂️ تفاصيل العينة والتسبيق؟' : '✂️ Échantillon & Acompte', query: isAr ? 'كيفاش كتم مرحلة العينة وشحال التسبيق المطلوب باش نبداو؟' : 'Quelles sont les modalités de l\'échantillon et de l\'acompte ?' },
+                              { label: isAr ? '📦 إيلا جبت الثوب من عندي؟' : '📦 Si je fournis le tissu ?', query: isAr ? 'إيلا بغيت نجيب الثوب والمستلزمات من عندي، واش كاين شي تسبيق وإمتى كنخلص؟' : 'Si je fournis le tissu et les fournitures, quel est l\'acompte et quand s\'effectue le paiement ?' }
                             ].map((chip, cIdx) => (
                               <button
                                 key={cIdx}
