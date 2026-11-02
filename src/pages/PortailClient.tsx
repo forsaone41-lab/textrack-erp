@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, LogOut, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator } from 'lucide-react';
+import { Search, LogOut, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Minus, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
@@ -643,6 +643,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     checkConfirmedStatus();
   }, [currentUser?.email]);
   const [showFullStudy, setShowFullStudy] = useState(false);
+  const [showAiChatPopup, setShowAiChatPopup] = useState(false);
+  const [isAiChatMinimized, setIsAiChatMinimized] = useState(false);
   const [clientAiMessages, setClientAiMessages] = useState<Record<string, Array<{ sender: 'ai' | 'user'; text: string; time: string }>>>({});
   const [clientAiInput, setClientAiInput] = useState('');
   const [clientAiLoading, setClientAiLoading] = useState(false);
@@ -1358,7 +1360,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       : `Bonjour ! Pour votre modèle "${safeModel}", le tissu conseillé est "${safeTissu}" (${safeUnit} MAD/pc pour ${safeQty} pcs). N'hésitez pas à me demander le prix du tissu, le métrage ou les modalités d'échantillon.`;
   };
 
-export function cleanLangText(text: string | undefined | null, isAr: boolean): string {
+function cleanLangText(text: string | undefined | null, isAr: boolean): string {
   if (!text || typeof text !== 'string') return '';
   const trimmed = text.trim();
   if (!trimmed) return '';
@@ -4025,88 +4027,21 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               </div>
                             </div>
 
-                            {/* Partner Supplier Box */}
-                            <div className="p-5 bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl border border-slate-800 space-y-4">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="px-2.5 py-0.5 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest rounded-md">
-                                      {isAr ? 'مورد معتمد' : 'Fournisseur Agréé'}
-                                    </span>
-                                    <h4 className="text-sm font-black text-white">
-                                      {isAr ? 'مجمع أقمشة النخبة - درب عمر (Comptoir Textile Derb Omar)' : 'Comptoir Textile Derb Omar (Partenaire BEYA)'}
-                                    </h4>
-                                  </div>
-                                  <p className="text-xs text-slate-400 mt-1">
-                                    {isAr ? 'الدار البيضاء • متوفر بالستوك بأسعار تفضيلية خاصة بزبناء ورشة BEYA Creative' : 'Casablanca • Stock disponible aux tarifs préférentiels BEYA'}
-                                  </p>
-                                </div>
-                                <span className="px-3 py-1 bg-white/10 text-emerald-400 text-xs font-black rounded-lg shrink-0 flex items-center gap-1.5 border border-white/10">
-                                  <span>✅</span> {isAr ? 'متوفر بالمستودع' : 'En Stock'}
-                                </span>
-                              </div>
-
-                              {/* Available Colors Picker */}
-                              <div>
-                                <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-2">
-                                  {isAr ? 'الألوان المتوفرة فالحين بالستوك:' : 'Coloris standards disponibles immédiatement :'}
-                                </label>
-                                <div className="flex flex-wrap gap-2">
-                                  {[
-                                    { id: 'noir', labelAr: '🖤 أسود كربوني (Noir)', labelFr: 'Noir' },
-                                    { id: 'blanc', labelAr: '🤍 أبيض ناصع (Blanc)', labelFr: 'Blanc' },
-                                    { id: 'gris', labelAr: '🩶 رمادي ملونج (Gris Chiné)', labelFr: 'Gris Chiné' },
-                                    { id: 'vert', labelAr: '🌲 أخضر غابوي (Vert Bouteille)', labelFr: 'Vert Bouteille' },
-                                    { id: 'bleu', labelAr: '🔵 أزرق داكن (Bleu Marine)', labelFr: 'Bleu Marine' }
-                                  ].map(col => {
-                                    const isSel = (sourcingSelectedColor[d.id] || 'noir') === col.id;
-                                    return (
-                                      <button
-                                        key={col.id}
-                                        type="button"
-                                        onClick={() => setSourcingSelectedColor(prev => ({ ...prev, [d.id]: col.id }))}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                                          isSel 
-                                            ? 'bg-white text-slate-900 border-white shadow-md font-black' 
-                                            : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
-                                        }`}
-                                      >
-                                        {isAr ? col.labelAr : col.labelFr}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                                <p className="text-[11px] text-slate-400 mt-2 font-medium">
-                                  💡 {isAr 
-                                    ? 'ألوان أخرى خاصة؟ إذا كان اللون غير متوفر، يتطلب صباغة مخصصة (Teinture Sur-Mesure) بحد أدنى 150kg للطلبية.' 
-                                    : 'Autre coloris spécifique ? La teinture sur-mesure nécessite un minimum de commande (MOQ) de 150kg de tissu.'}
-                                </p>
-                              </div>
-
-                              {/* Sourcing Action Buttons */}
-                              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                                <a
-                                  href={`https://wa.me/212661000003?text=${encodeURIComponent(
-                                    isAr 
-                                      ? `السلام عليكم، أنا زبون من طرف ورشة BEYA Creative (كود الشراكة: BEYA-FABRIC-2026). عندي طلبية لموديل ${analysis.modeleReel} (${currentQty} قطعة)، محتاج قماش ${analysis.tissuSuggere} لون [${sourcingSelectedColor[d.id] || 'أسود'}]. واش متوفر عندكم وبشحال الكيلو؟ شكراً.`
-                                      : `Bonjour, je suis client chez l'Atelier BEYA Creative (Code Partenaire : BEYA-FABRIC-2026). Pour mon modèle ${analysis.modeleReel} (${currentQty} pcs), je souhaite commander le tissu ${analysis.tissuSuggere} en coloris ${sourcingSelectedColor[d.id] || 'Noir'}. Pouvez-vous me confirmer le tarif ? Merci.`
-                                  )}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 cursor-pointer text-center"
-                                >
-                                  <MessageCircle className="w-4 h-4" />
-                                  <span>{isAr ? 'تواصل مع مورد الثوب (كود BEYA)' : 'Contacter le Fournisseur (Code BEYA)'}</span>
-                                </a>
-
-                                <button
-                                  type="button"
-                                  onClick={() => setFabricOrderSent(prev => ({ ...prev, [d.id]: true }))}
-                                  className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-white/15 cursor-pointer text-center"
-                                >
-                                  <span>{fabricOrderSent[d.id] ? (isAr ? '✅ تم إشعار المورد بنجاح' : '✅ Demande Envoyée') : (isAr ? 'طلب تجهيز عينة الثوب' : 'Demander Échantillon Tissu')}</span>
-                                </button>
-                              </div>
+                            {/* Direct WhatsApp Sourcing Action */}
+                            <div className="pt-2">
+                              <a
+                                href={`https://wa.me/212661000003?text=${encodeURIComponent(
+                                  isAr 
+                                    ? `السلام عليكم، أنا زبون من طرف ورشة BEYA Creative (كود الشراكة: BEYA-FABRIC-2026). عندي طلبية لموديل ${analysis.modeleReel} (${currentQty} قطعة)، محتاج قماش ${analysis.tissuSuggere}. واش متوفر عندكم وبشحال الكيلو؟ شكراً.`
+                                    : `Bonjour, je suis client chez l'Atelier BEYA Creative (Code Partenaire : BEYA-FABRIC-2026). Pour mon modèle ${analysis.modeleReel} (${currentQty} pcs), je souhaite commander le tissu ${analysis.tissuSuggere}. Pouvez-vous me confirmer le tarif ? Merci.`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/25 cursor-pointer text-center"
+                              >
+                                <MessageCircle className="w-5 h-5" />
+                                <span>{isAr ? 'تواصل مع مورد الثوب (كود BEYA)' : 'Contacter le Fournisseur (Code BEYA)'}</span>
+                              </a>
                             </div>
                           </div>
                         </div>
