@@ -3532,7 +3532,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               className="py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.99] cursor-pointer"
                             >
                               <CreditCard className="w-4 h-4" />
-                              <span>{isAr ? '💳 تأكيد الدوفيز وأداء التسبيق (50%)' : '💳 Valider le Devis & Verser l\'Acompte'}</span>
+                              <span>{isAr ? 'تأكيد الدوفيز وأداء التسبيق (50%)' : 'Valider le Devis & Verser l\'Acompte'}</span>
                             </button>
                           ) : (
                             <a
@@ -3542,7 +3542,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               className="py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-[0.99] cursor-pointer"
                             >
                               <Package className="w-4 h-4" />
-                              <span>{isAr ? '📦 تأكيد الطلب وإرسال الثوب (0 DH)' : '📦 Valider & Envoyer le Tissu'}</span>
+                              <span>{isAr ? 'تأكيد الطلب وإرسال الثوب (0 DH)' : 'Valider & Envoyer le Tissu'}</span>
                             </a>
                           )}
 
@@ -3553,7 +3553,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             className="py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md cursor-pointer"
                           >
                             <MessageCircle className="w-4 h-4" />
-                            <span>{isAr ? '💬 محادثة الورشة فالواتساب' : '💬 WhatsApp Atelier'}</span>
+                            <span>{isAr ? 'محادثة الورشة فالواتساب' : 'WhatsApp Atelier'}</span>
                           </a>
 
                           <button
@@ -3561,8 +3561,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             onClick={() => { setShowAiChatPopup(true); setIsAiChatMinimized(false); }}
                             className="py-3.5 px-4 bg-slate-100 hover:bg-indigo-50 text-indigo-700 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-slate-200 cursor-pointer"
                           >
-                            <Sparkles className="w-4 h-4 text-indigo-600" />
-                            <span>{isAr ? '💬 اسأل مستشار الورشة الذكي' : '💬 Poser une question'}</span>
+                            <MessageSquare className="w-4 h-4 text-indigo-600" />
+                            <span>{isAr ? 'اسأل مستشار الورشة الذكي' : 'Poser une question'}</span>
                           </button>
                         </div>
                       </div>
