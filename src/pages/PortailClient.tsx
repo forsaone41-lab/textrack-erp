@@ -1360,13 +1360,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       : `Bonjour ! Pour votre modèle "${safeModel}", le tissu conseillé est "${safeTissu}" (${safeUnit} MAD/pc pour ${safeQty} pcs). N'hésitez pas à me demander le prix du tissu, le métrage ou les modalités d'échantillon.`;
   };
 
+const hasArabic = (s: string) => /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(s);
+const hasLatin = (s: string) => /[a-zA-Z\u00C0-\u024F]/.test(s);
+
 function cleanLangText(text: string | undefined | null, isAr: boolean): string {
   if (!text || typeof text !== 'string') return '';
   const trimmed = text.trim();
   if (!trimmed) return '';
 
-  const hasArabic = (s: string) => /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(s);
-  const hasLatin = (s: string) => /[a-zA-Z\u00C0-\u024F]/.test(s);
 
   // If text does not mix Arabic and Latin
   if (!hasArabic(trimmed) || !hasLatin(trimmed)) {
@@ -1411,8 +1412,6 @@ function cleanLangText(text: string | undefined | null, isAr: boolean): string {
 }
 
 function cleanParenthesesLang(text: string, isAr: boolean): string {
-  const hasArabic = (s: string) => /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(s);
-  const hasLatin = (s: string) => /[a-zA-Z\u00C0-\u024F]/.test(s);
 
   const parenMatch = text.match(/\(([^)]+)\)/);
   if (parenMatch) {
@@ -3020,14 +3019,15 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                       </div>
                     </div>
 
-                    {/* 2. Main Two-Column Hub: Official Devis (Left) + BEYA AI Assistant (Right) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-                      {/* Left Column: Official Devis Card (lg:col-span-6) */}
-                      <div className="lg:col-span-6 bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/40 p-5 md:p-6 flex flex-col justify-between space-y-4">
-                        <div className="space-y-4">
-                          {/* Devis Header */}
-                          <div className="flex items-center gap-4 pb-3.5 border-b border-slate-100">
-                            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shrink-0 shadow-sm">
+                    {/* 2. Full-Width Official Devis Page Hub */}
+                    <div className="w-full space-y-5">
+                      {/* Official Devis Card (Full Page Width) */}
+                      <div className="w-full bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/40 p-5 md:p-8 space-y-5">
+                        
+                        {/* Devis Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                          <div className="flex items-center gap-4">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shrink-0 shadow-sm">
                               <LeadCardImage
                                 lead={d}
                                 leadPhotos={leadPhotos}
@@ -3039,7 +3039,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                                 <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-mono font-black rounded-lg border border-indigo-100">
                                   #{d.id.substring(0, 8).toUpperCase()}
                                 </span>
@@ -3051,323 +3051,370 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                   <span>{isAr ? 'عرض سعر معتمد من الورشة' : 'Devis Atelier Certifié'}</span>
                                 </span>
                               </div>
-                              <h2 className="text-lg md:text-xl font-black text-slate-900 leading-snug break-words">
+                              <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug break-words">
                                 {analysis.modeleReel}
                               </h2>
-                              <p className="text-xs text-slate-500 font-medium">
+                              <p className="text-xs text-slate-500 font-medium mt-0.5">
                                 {isAr ? 'الزبون :' : 'Client :'} <strong className="text-slate-800">{d.name || currentUser?.nom || 'Client'}</strong>
                               </p>
                             </div>
                           </div>
 
-                          {/* Devis Pricing & Specs Grid */}
-                          <div className="space-y-2.5">
-                            {/* Fabric */}
-                            <div className="p-3 bg-slate-50/90 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="w-8 h-8 rounded-xl bg-indigo-100/70 text-indigo-700 flex items-center justify-center shrink-0">
-                                  <Layers className="w-4 h-4" />
-                                </div>
-                                <div className="min-w-0">
-                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                    {isAr ? 'نوع الثوب المقترح ومكان الشراء' : 'Tissu conseillé & Marché'}
-                                  </span>
-                                  <span className="text-xs font-black text-slate-900 truncate block">
-                                    {analysis.tissuSuggere}
-                                  </span>
-                                  <span className="text-[10px] text-slate-500 font-medium block truncate">
-                                    {analysis.tissuMarcheNom} • ~{analysis.prixMetreEstime} MAD/m ({analysis.tissuConsoMeters}m / pc)
-                                  </span>
-                                </div>
-                              </div>
-                              <span className="px-2 py-1 bg-white text-indigo-700 text-[10px] font-black rounded-lg border border-slate-200 shrink-0">
-                                {isAr ? 'جودة ممتازة' : 'Qualité Pro'}
-                              </span>
-                            </div>
-
-                            {/* Unit Price & Total Price */}
-                            <div className="grid grid-cols-2 gap-2.5">
-                              <div className="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-100">
-                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block mb-0.5 truncate">
-                                  {isClientFabric 
-                                    ? (isAr ? 'سعر الخياطة فقط للقطعة' : 'Façon seule / Pièce')
-                                    : (isAr ? 'سعر القطعة كاملة (ثوب + خياطة)' : 'Prix Complet / Pièce')}
-                                </span>
-                                <div className="flex items-baseline gap-1">
-                                  <span className="text-xl font-black text-indigo-950">{activeUnitPrice}</span>
-                                  <span className="text-xs font-black text-indigo-600">MAD <span className="text-[9px] font-normal text-slate-500">/ pc</span></span>
-                                </div>
-                                <span className="text-[9px] text-slate-500 font-bold block mt-0.5">
-                                  {isAr ? `الكمية: ${currentQty} قطعة` : `Quantité : ${currentQty} pcs`}
-                                </span>
-                              </div>
-
-                              <div className="p-3 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-sm">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
-                                  {isAr ? 'المجموع الإجمالي' : 'Total Devis'}
-                                </span>
-                                <div className="flex items-baseline gap-1">
-                                  <span className="text-xl font-black text-white">{activeTotalPrice.toLocaleString()}</span>
-                                  <span className="text-xs font-black text-indigo-300">MAD</span>
-                                </div>
-                                <span className="text-[9px] text-slate-300 font-medium block mt-0.5">
-                                  {isAr ? `المدة: ${analysis.delaiEstime}` : `Délai : ${analysis.delaiEstime}`}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Fabric Source Mode Switcher: Atelier fabric (50% acompte) VS Client fabric (0 MAD acompte) */}
-                            <div className="bg-slate-100 p-1 rounded-2xl flex items-center gap-1 border border-slate-200/70">
-                              <button
-                                type="button"
-                                onClick={() => setFabricOption(prev => ({ ...prev, [d.id]: 'atelier' }))}
-                                className={`flex-1 py-2 px-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                                  !isClientFabric 
-                                    ? 'bg-white text-indigo-950 shadow-xs' 
-                                    : 'text-slate-500 hover:text-slate-800'
-                                }`}
-                              >
-                                <Layers className="w-3.5 h-3.5 text-indigo-600" />
-                                <span>{isAr ? 'الثوب من المعمل (شامل كل شيء)' : 'Tissu Atelier (Tout Compris)'}</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setFabricOption(prev => ({ ...prev, [d.id]: 'client' }))}
-                                className={`flex-1 py-2 px-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                                  isClientFabric 
-                                    ? 'bg-emerald-600 text-white shadow-xs' 
-                                    : 'text-slate-500 hover:text-slate-800'
-                                }`}
-                              >
-                                <Package className="w-3.5 h-3.5" />
-                                <span>{isAr ? 'الثوب من عندك (الخياطة فقط)' : 'Tissu par vous (Façon)'}</span>
-                              </button>
-                            </div>
-
-                            {/* Dedicated Detailed Cost Breakdown Box ("باش يعرف التمن منين جا") */}
-                            <div className="p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200/90 space-y-2.5">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 rounded-lg bg-indigo-600/10 text-indigo-700 flex items-center justify-center">
-                                    <Calculator className="w-3.5 h-3.5" />
-                                  </div>
-                                  <div>
-                                    <h4 className="text-xs font-black text-slate-900 leading-tight">
-                                      {isAr ? 'تفاصيل تركيبة وتفكيك السعر (Détail des Coûts)' : 'Décomposition & Détail des Coûts'}
-                                    </h4>
-                                    <span className="text-[9px] text-slate-500 font-medium block">
-                                      {isAr ? 'شفافية كاملة: منين جا كل درهم فالحساب' : 'Transparence totale sur chaque composante du prix'}
-                                    </span>
-                                  </div>
-                                </div>
-                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-md border border-emerald-200">
-                                  {isAr ? 'شفافية 100%' : '100% Transparent'}
-                                </span>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                                {/* 1. Tissu au marché */}
-                                <div className={`p-2.5 rounded-xl border transition-all ${
-                                  isClientFabric 
-                                    ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60' 
-                                    : 'bg-white border-slate-200/90 text-slate-800 shadow-2xs'
-                                }`}>
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="font-bold flex items-center gap-1.5 text-[11px]">
-                                      <span>🧵</span>
-                                      <span>{isAr ? 'كلفة الثوب فالسوق:' : 'Coût Tissu :'}</span>
-                                    </span>
-                                    <span className={`font-black font-mono ${isClientFabric ? 'line-through text-slate-400' : 'text-indigo-950'}`}>
-                                      {isClientFabric ? '0 MAD' : `${analysis.tissuCostPerPiece} MAD`}
-                                    </span>
-                                  </div>
-                                  <p className="text-[10px] text-slate-500 leading-relaxed">
-                                    {isClientFabric 
-                                      ? (isAr ? '✓ ملغاة: الثوب كتجيبو نتا من عندك' : '✓ Tissu fourni par vous (0 MAD)')
-                                      : `${analysis.tissuConsoMeters}m × ~${analysis.prixMetreEstime} MAD (${analysis.tissuMarcheNom})`}
-                                  </p>
-                                </div>
-
-                                {/* 2. Coupe & Façon */}
-                                <div className="p-2.5 rounded-xl border bg-white border-slate-200/90 text-slate-800 shadow-2xs">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="font-bold flex items-center gap-1.5 text-[11px]">
-                                      <span>✂️</span>
-                                      <span>{isAr ? 'الفصالة والخياطة (Façon):' : 'Coupe & Façon :'}</span>
-                                    </span>
-                                    <span className="font-black text-indigo-950 font-mono">
-                                      {analysis.confectionPrice} MAD
-                                    </span>
-                                  </div>
-                                  <p className="text-[10px] text-slate-500 leading-relaxed">
-                                    {isAr ? 'اليد العاملة المؤهلة، ماكينات الورشة، درزات مضاعفة وتجميع' : 'Main d\'œuvre qualifiée, machines industrielles & finitions'}
-                                  </p>
-                                </div>
-
-                                {/* 3. Accessoires & Finitions */}
-                                <div className={`p-2.5 rounded-xl border transition-all ${
-                                  isClientFabric 
-                                    ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60' 
-                                    : 'bg-white border-slate-200/90 text-slate-800 shadow-2xs'
-                                }`}>
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="font-bold flex items-center gap-1.5 text-[11px]">
-                                      <span>🔘</span>
-                                      <span>{isAr ? 'المستلزمات والتشطيب:' : 'Fournitures :'}</span>
-                                    </span>
-                                    <span className={`font-black font-mono ${isClientFabric ? 'line-through text-slate-400' : 'text-indigo-950'}`}>
-                                      {isClientFabric ? '0 MAD' : `${analysis.accessoriesCost} MAD`}
-                                    </span>
-                                  </div>
-                                  <p className="text-[10px] text-slate-500 leading-relaxed">
-                                    {isClientFabric 
-                                      ? (isAr ? '✓ ملغاة: المستلزمات كتجيبها نتا' : '✓ Fourni par vos soins')
-                                      : (isAr ? 'سحابات، أزرار، خيوط متينة، بطانة، كي وتغليف' : 'Zips, boutons, fils, repassage & emballage')}
-                                  </p>
-                                </div>
-
-                                {/* 4. Palier de Quantité */}
-                                <div className="p-2.5 rounded-xl border bg-indigo-50/60 border-indigo-100 text-indigo-950">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="font-bold flex items-center gap-1.5 text-[11px]">
-                                      <span>📦</span>
-                                      <span>{isAr ? `معامل الكمية (${currentQty} قطعة):` : `Palier (${currentQty} pcs) :`}</span>
-                                    </span>
-                                    <span className="font-black font-mono">
-                                      {currentQty <= 35 ? '+18%' : currentQty <= 60 ? '+8%' : currentQty <= 150 ? '0% (Standard)' : '-10% (Gros)'}
-                                    </span>
-                                  </div>
-                                  <p className="text-[10px] text-indigo-700/80 leading-relaxed">
-                                    {currentQty <= 35 
-                                      ? (isAr ? 'سلسلة صغرى (Petite série): مصاريف ضبط الماكينات والباترون' : 'Petite série : frais fixes de calage machines')
-                                      : (isAr ? 'تسعير قياسي مع تخفيض الإنتاج بالجملة' : 'Série standard : économie d\'échelle')}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Summary comparison bar */}
-                              <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                                <span className="text-[11px] text-slate-600 font-bold">
-                                  {isClientFabric 
-                                    ? (isAr ? '💡 الثوب من عندك: كتوفر كلفة الثوب وكتخلص غير الخياطة:' : '💡 Tissu par vous : vous réglez uniquement la façon :')
-                                    : (isAr ? '💡 الثوب من المعمل: سعر متكامل شامل السلعة واجدة:' : '💡 Clé en main : formule complète sans prise de tête :')}
-                                </span>
-                                <span className="font-black text-indigo-950 text-sm">
-                                  {activeUnitPrice} MAD <span className="text-[10px] font-medium text-slate-500">/ pc</span>
-                                </span>
-                              </div>
-
-                              {/* Explication Claire du Devis : علاش تقامت بهاد الثمن بالتحديد */}
-                              <div className="mt-3 p-3 bg-indigo-50/70 rounded-2xl border border-indigo-100/90 text-xs space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-sm">📋</span>
-                                    <div>
-                                      <span className="font-black text-indigo-950 text-xs block leading-tight">
-                                        {isAr ? 'علاش هاد الموديل تقام بهاد الثمن بالتحديد؟' : 'Pourquoi ce tarif précis ? (Étude Atelier)'}
-                                      </span>
-                                      <span className="text-[9px] text-indigo-700/80 font-medium">
-                                        {isAr ? 'تفاصيل فنية وحسابات الورشة المعتمدة' : 'Spécifications techniques & justification'}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <span className="px-2 py-0.5 bg-white text-indigo-800 text-[10px] font-bold rounded-md border border-indigo-200">
-                                    {isAr ? 'دراسة تقنية مضبوطة' : 'Devis Détaillé'}
-                                  </span>
-                                </div>
-
-                                <div className="space-y-1.5 text-[11px] text-slate-700 leading-relaxed pt-1">
-                                  {analysis.techDetails ? (
-                                    <div className="flex items-start gap-2 bg-white/70 p-2 rounded-xl border border-indigo-50">
-                                      <span className="text-indigo-600 font-black shrink-0">•</span>
-                                      <div>
-                                        <strong className="text-indigo-950 block">{isAr ? 'المواصفات الفنية المعتمدة :' : 'Spécifications techniques :'}</strong>
-                                        <span className="text-slate-600">{analysis.techDetails}</span>
-                                      </div>
-                                    </div>
-                                  ) : null}
-
-                                  <div className="flex items-start gap-2 bg-white/70 p-2 rounded-xl border border-indigo-50">
-                                    <span className="text-indigo-600 font-black shrink-0">•</span>
-                                    <div>
-                                      <strong className="text-indigo-950 block">{isAr ? 'استهلاك القماش وسعره فالسوق :' : 'Consommation tissu & Marché :'}</strong>
-                                      <span className="text-slate-600">
-                                        {isAr 
-                                          ? `تم احتساب ${analysis.tissuConsoMeters} متر لكل قطعة من قماش "${analysis.tissuSuggere}" بسعر سوق ${analysis.tissuMarcheNom} (~${analysis.prixMetreEstime} درهم/متر).`
-                                          : `Calculé sur ${analysis.tissuConsoMeters}m par pièce en ${analysis.tissuSuggere} (Marché ${analysis.tissuMarcheNom} ~${analysis.prixMetreEstime} MAD/m).`}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-start gap-2 bg-white/70 p-2 rounded-xl border border-indigo-50">
-                                    <span className="text-indigo-600 font-black shrink-0">•</span>
-                                    <div>
-                                      <strong className="text-indigo-950 block">{isAr ? 'اليد العاملة وتجهيزات الورشة :' : 'Confection & Finitions industrielles :'}</strong>
-                                      <span className="text-slate-600">
-                                        {isAr 
-                                          ? 'فصالة بمقصات كهربائية صناعية، تجميع بدرزات متينة ومزدوجة، سورجي 4 خيوط، وتركيب الإكسسوارات مع المراقبة الدقيقة للجودة.'
-                                          : 'Coupe industrielle, surjet 4 fils, piqûres de renfort, montage zips/accessoires & contrôle qualité strict.'}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {analysis.reponseAtelier ? (
-                                    <div className="p-2.5 bg-white rounded-xl border border-indigo-100 text-slate-800">
-                                      <span className="text-[10px] font-black text-indigo-950 block mb-0.5">
-                                        {isAr ? '💬 توجيه ورأي المعلم بالورشة :' : '💬 Recommandation du chef d\'atelier :'}
-                                      </span>
-                                      <p className="text-[11px] text-slate-600 italic leading-relaxed">
-                                        "{analysis.reponseAtelier}"
-                                      </p>
-                                    </div>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Dynamic Acompte / Payment Banner */}
-                            {!isClientFabric ? (
-                              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200/90 flex items-center justify-between text-xs text-amber-900">
-                                <div>
-                                  <span className="font-black flex items-center gap-1.5 text-xs">
-                                    <CreditCard className="w-3.5 h-3.5 text-amber-600" />
-                                    {isAr ? 'تسبيق شراء القماش وبدء الإنتاج (50%):' : 'Acompte Tissu & Lancement (50%) :'}
-                                  </span>
-                                  <span className="text-[10px] text-amber-800/80 font-medium block mt-0.5">
-                                    {isAr ? 'ضروري لشراء رولوات الثوب وحجز خط الإنتاج' : 'Nécessaire à l\'achat des rouleaux de tissu'}
-                                  </span>
-                                </div>
-                                <span className="font-black text-base text-amber-950 shrink-0">
-                                  {Math.round(activeTotalPrice * 0.5).toLocaleString()} MAD
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200/90 flex items-center justify-between text-xs text-emerald-950">
-                                <div>
-                                  <span className="font-black flex items-center gap-1.5 text-xs text-emerald-800">
-                                    <Package className="w-3.5 h-3.5 text-emerald-600" />
-                                    {isAr ? 'التسبيق المالي المطلوب:' : 'Acompte requis :'}
-                                  </span>
-                                  <span className="text-[10px] text-emerald-700/90 font-medium block mt-0.5">
-                                    {isAr ? 'صيفط غير الثوب والمستلزمات، كنبداو الفصالة والخياطة مباشرة' : 'Envoyez le tissu, nous lançons la coupe & confection'}
-                                  </span>
-                                </div>
-                                <span className="font-black text-xs text-emerald-800 bg-emerald-100/90 px-3 py-1.5 rounded-xl shrink-0">
-                                  {isAr ? '0 درهم (بدون تسبيق مالي)' : '0 MAD (Sans acompte)'}
-                                </span>
-                              </div>
-                            )}
-
-                            <p className="text-[10px] text-slate-400 text-center font-medium">
-                              {!isClientFabric
-                                ? (isAr ? '✓ الباقي (50%) يؤدى عند استلام السلعة الجاهزة بعد مراقبة الجودة' : '✓ Le solde (50%) est réglé à la livraison après contrôle qualité')
-                                : (isAr ? '✓ الخلاص (100%) كيكون حتى تكمل الخدمة وتستلم السلعة الجاهزة' : '✓ Paiement (100%) uniquement à la livraison après confection complète')}
-                            </p>
+                          {/* Quick AI Consultant Trigger Button in Header */}
+                          <div className="flex items-center gap-2 self-start sm:self-center">
+                            <button
+                              type="button"
+                              onClick={() => { setShowAiChatPopup(true); setIsAiChatMinimized(false); }}
+                              className="px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 text-indigo-700 rounded-2xl text-xs font-black border border-indigo-200 shadow-2xs flex items-center gap-2 transition active:scale-95 cursor-pointer"
+                              title={isAr ? 'استشارة مستشار ورشة BEYA الذكي' : 'Consulter le conseiller atelier'}
+                            >
+                              <Sparkles className="w-4 h-4 text-indigo-600" />
+                              <span>{isAr ? '💬 مستشار الورشة الذكي (Chat Pop)' : '💬 Conseiller Atelier'}</span>
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            </button>
                           </div>
                         </div>
 
-                        {/* 2 Essential Action Buttons */}
-                        <div className="pt-2 border-t border-slate-100 space-y-2">
+                        {/* ⚠️ تنبيه قانوني ومهني بالسعر التقديري بناءً على طلب الزبون */}
+                        <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 border-2 border-amber-500/35 rounded-3xl flex flex-col sm:flex-row items-start gap-4 text-amber-950 shadow-xs">
+                          <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-2xl shrink-0 shadow-md shadow-amber-500/25">
+                            <AlertCircle className="w-6 h-6" />
+                          </div>
+                          <div className="space-y-1.5 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <strong className="text-sm sm:text-base font-black text-amber-950">
+                                {isAr ? '⚠️ تنبيه هام : هذا السعر والمدة تقديرية ومبدئية للدراسة الأولية فقط' : '⚠️ Avis Important : Tarif & Délais Estimatifs & Indicatifs'}
+                              </strong>
+                              <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-lg uppercase tracking-wider shadow-xs">
+                                {isAr ? 'في انتظار القرار النهائي من BEYA CREATIVE' : 'Validation Finale BEYA CREATIVE'}
+                              </span>
+                            </div>
+                            <p className="text-xs sm:text-sm text-amber-900/90 leading-relaxed font-medium">
+                              {isAr
+                                ? 'السعر الإجمالي وتكلفة القطعة والمدة الموضحة في هذا الدوفيز مبنية على دراسة تقنية أولية للصور والمواصفات المدخلة. لا يجب أخذ هذا السعر بعين الاعتبار بنسبة 100% كالتزام نهائي حتى تتم المعاينة التقنية للنموذج وإصدار القرار والاعتماد النهائي المؤكد من طرف إدارة ورشة BEYA CREATIVE.'
+                                : 'Ce chiffrage, le prix unitaire et les délais sont calculés sur la base de spécifications estimatives. Ils ne doivent pas être considérés comme contractuels à 100% avant examen approfondi de faisabilité physique et validation finale par la direction de BEYA CREATIVE.'}
+                            </p>
+                            <div className="pt-0.5 flex items-center gap-2 text-[11px] font-bold text-amber-800">
+                              <span>✓ المعاينة الميدانية والتأكيد النهائي كيكونو قبل بدء الإنتاج الفعلي للطلبية</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Spacious Pricing & Fabric Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {/* 1. Fabric Info Card */}
+                          <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 flex flex-col justify-between space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                {isAr ? 'نوع الثوب المقترح ومكان الشراء' : 'Tissu conseillé & Marché'}
+                              </span>
+                              <span className="px-2 py-0.5 bg-white text-indigo-700 text-[10px] font-black rounded-lg border border-slate-200">
+                                {isAr ? 'جودة ممتازة' : 'Qualité Pro'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-sm font-black text-slate-900 block">{analysis.tissuSuggere}</span>
+                              <span className="text-xs text-slate-500 font-medium block mt-0.5">
+                                {analysis.tissuMarcheNom} • ~{analysis.prixMetreEstime} MAD/m ({analysis.tissuConsoMeters}m / pc)
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* 2. Unit Price Card */}
+                          <div className="p-4 bg-indigo-50/70 rounded-2xl border border-indigo-100 flex flex-col justify-between space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider truncate">
+                                {isClientFabric 
+                                  ? (isAr ? 'سعر الخياطة فقط للقطعة' : 'Façon seule / Pièce')
+                                  : (isAr ? 'سعر القطعة كاملة (ثوب + خياطة)' : 'Prix Complet / Pièce')}
+                              </span>
+                              <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[9px] font-bold rounded-md">
+                                {isAr ? 'سعر تقديري' : 'Estimatif'}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl sm:text-3xl font-black text-indigo-950 font-mono">{activeUnitPrice}</span>
+                                <span className="text-sm font-black text-indigo-600">MAD <span className="text-[10px] font-normal text-slate-500">/ pc</span></span>
+                              </div>
+                              <span className="text-[11px] text-slate-500 font-bold block mt-0.5">
+                                {isAr ? `الكمية المعتمدة: ${currentQty} قطعة` : `Quantité : ${currentQty} pcs`}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* 3. Total Price Card */}
+                          <div className="p-4 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                {isAr ? 'المجموع الإجمالي للدوفيز' : 'Total Devis Estimatif'}
+                              </span>
+                              <span className="px-2 py-0.5 bg-slate-800 text-amber-400 text-[9px] font-mono font-bold rounded-md border border-amber-400/20">
+                                {isAr ? `المدة: ${analysis.delaiEstime}` : `Délai : ${analysis.delaiEstime}`}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl sm:text-3xl font-black text-white font-mono">{activeTotalPrice.toLocaleString()}</span>
+                                <span className="text-sm font-black text-indigo-300">MAD</span>
+                              </div>
+                              <span className="text-[11px] text-slate-300 font-medium block mt-0.5">
+                                {isAr ? 'شامل لمراحل الإنتاج المتفق عليها' : 'Comprend les phases convenues'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Fabric Source Mode Switcher: Atelier fabric (50% acompte) VS Client fabric (0 MAD acompte) */}
+                        <div className="bg-slate-100 p-1.5 rounded-2xl flex items-center gap-1.5 border border-slate-200/70">
+                          <button
+                            type="button"
+                            onClick={() => setFabricOption(prev => ({ ...prev, [d.id]: 'atelier' }))}
+                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                              !isClientFabric 
+                                ? 'bg-white text-indigo-950 shadow-xs' 
+                                : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                          >
+                            <Layers className="w-4 h-4 text-indigo-600" />
+                            <span>{isAr ? 'الثوب من المعمل (شامل كل شيء)' : 'Tissu Atelier (Tout Compris)'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFabricOption(prev => ({ ...prev, [d.id]: 'client' }))}
+                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                              isClientFabric 
+                                ? 'bg-emerald-600 text-white shadow-xs' 
+                                : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                          >
+                            <Package className="w-4 h-4" />
+                            <span>{isAr ? 'الثوب من عندك (الخياطة فقط)' : 'Tissu par vous (Façon)'}</span>
+                          </button>
+                        </div>
+
+                        {/* Dedicated Detailed Cost Breakdown Box ("باش يعرف التمن منين جا") */}
+                        <div className="p-4 sm:p-5 bg-slate-50/90 rounded-2xl border border-slate-200/90 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-indigo-600/10 text-indigo-700 flex items-center justify-center">
+                                <Calculator className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <h4 className="text-xs sm:text-sm font-black text-slate-900 leading-tight">
+                                  {isAr ? 'تفاصيل تركيبة وتفكيك السعر (Détail des Coûts)' : 'Décomposition & Détail des Coûts'}
+                                </h4>
+                                <span className="text-[10px] text-slate-500 font-medium block">
+                                  {isAr ? 'شفافية كاملة: منين جا كل درهم فالحساب' : 'Transparence totale sur chaque composante du prix'}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-md border border-emerald-200">
+                              {isAr ? 'شفافية 100%' : '100% Transparent'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                            {/* 1. Tissu au marché */}
+                            <div className={`p-3 rounded-xl border transition-all ${
+                              isClientFabric 
+                                ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60' 
+                                : 'bg-white border-slate-200/90 text-slate-800 shadow-2xs'
+                            }`}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold flex items-center gap-1.5 text-[11px]">
+                                  <span>🧵</span>
+                                  <span>{isAr ? 'كلفة الثوب فالسوق:' : 'Coût Tissu :'}</span>
+                                </span>
+                                <span className={`font-black font-mono ${isClientFabric ? 'line-through text-slate-400' : 'text-indigo-950'}`}>
+                                  {isClientFabric ? '0 MAD' : `${analysis.tissuCostPerPiece} MAD`}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 leading-relaxed">
+                                {isClientFabric 
+                                  ? (isAr ? '✓ ملغاة: الثوب كتجيبو نتا من عندك' : '✓ Tissu fourni par vous (0 MAD)')
+                                  : `${analysis.tissuConsoMeters}m × ~${analysis.prixMetreEstime} MAD (${analysis.tissuMarcheNom})`}
+                              </p>
+                            </div>
+
+                            {/* 2. Coupe & Façon */}
+                            <div className="p-3 rounded-xl border bg-white border-slate-200/90 text-slate-800 shadow-2xs">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold flex items-center gap-1.5 text-[11px]">
+                                  <span>✂️</span>
+                                  <span>{isAr ? 'الفصالة والخياطة (Façon):' : 'Coupe & Façon :'}</span>
+                                </span>
+                                <span className="font-black text-indigo-950 font-mono">
+                                  {analysis.confectionPrice} MAD
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 leading-relaxed">
+                                {isAr ? 'اليد العاملة المؤهلة، ماكينات الورشة، درزات مضاعفة وتجميع' : 'Main d\'œuvre qualifiée, machines industrielles & finitions'}
+                              </p>
+                            </div>
+
+                            {/* 3. Accessoires & Finitions */}
+                            <div className={`p-3 rounded-xl border transition-all ${
+                              isClientFabric 
+                                ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60' 
+                                : 'bg-white border-slate-200/90 text-slate-800 shadow-2xs'
+                            }`}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold flex items-center gap-1.5 text-[11px]">
+                                  <span>🔘</span>
+                                  <span>{isAr ? 'المستلزمات والتشطيب:' : 'Fournitures :'}</span>
+                                </span>
+                                <span className={`font-black font-mono ${isClientFabric ? 'line-through text-slate-400' : 'text-indigo-950'}`}>
+                                  {isClientFabric ? '0 MAD' : `${analysis.accessoriesCost} MAD`}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 leading-relaxed">
+                                {isClientFabric 
+                                  ? (isAr ? '✓ ملغاة: المستلزمات كتجيبها نتا' : '✓ Fourni par vos soins')
+                                  : (isAr ? 'سحابات، أزرار، خيوط متينة، بطانة، كي وتغليف' : 'Zips, boutons, fils, repassage & emballage')}
+                              </p>
+                            </div>
+
+                            {/* 4. Palier de Quantité */}
+                            <div className="p-3 rounded-xl border bg-indigo-50/60 border-indigo-100 text-indigo-950">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold flex items-center gap-1.5 text-[11px]">
+                                  <span>📦</span>
+                                  <span>{isAr ? `معامل الكمية (${currentQty} قطعة):` : `Palier (${currentQty} pcs) :`}</span>
+                                </span>
+                                <span className="font-black font-mono">
+                                  {currentQty <= 35 ? '+18%' : currentQty <= 60 ? '+8%' : currentQty <= 150 ? '0% (Standard)' : '-10% (Gros)'}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-indigo-700/80 leading-relaxed">
+                                {currentQty <= 35 
+                                  ? (isAr ? 'سلسلة صغرى (Petite série): مصاريف ضبط الماكينات والباترون' : 'Petite série : frais fixes de calage machines')
+                                  : (isAr ? 'تسعير قياسي مع تخفيض الإنتاج بالجملة' : 'Série standard : économie d\'échelle')}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Summary comparison bar */}
+                          <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                            <span className="text-[11px] text-slate-600 font-bold">
+                              {isClientFabric 
+                                ? (isAr ? '💡 الثوب من عندك: كتوفر كلفة الثوب وكتخلص غير الخياطة:' : '💡 Tissu par vous : vous réglez uniquement la façon :')
+                                : (isAr ? '💡 الثوب من المعمل: سعر متكامل شامل السلعة واجدة:' : '💡 Clé en main : formule complète sans prise de tête :')}
+                            </span>
+                            <span className="font-black text-indigo-950 text-sm">
+                              {activeUnitPrice} MAD <span className="text-[10px] font-medium text-slate-500">/ pc</span>
+                            </span>
+                          </div>
+
+                          {/* Explication Claire du Devis : علاش تقامت بهاد الثمن بالتحديد */}
+                          <div className="mt-3 p-4 bg-indigo-50/70 rounded-2xl border border-indigo-100/90 text-xs space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-base">📋</span>
+                                <div>
+                                  <span className="font-black text-indigo-950 text-xs sm:text-sm block leading-tight">
+                                    {isAr ? 'علاش هاد الموديل تقام بهاد الثمن بالتحديد؟' : 'Pourquoi ce tarif précis ? (Étude Atelier)'}
+                                  </span>
+                                  <span className="text-[10px] text-indigo-700/80 font-medium">
+                                    {isAr ? 'تفاصيل فنية وحسابات الورشة المعتمدة' : 'Spécifications techniques & justification'}
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="px-2 py-0.5 bg-white text-indigo-800 text-[10px] font-bold rounded-md border border-indigo-200">
+                                {isAr ? 'دراسة تقنية مضبوطة' : 'Devis Détaillé'}
+                              </span>
+                            </div>
+
+                            <div className="space-y-2 text-[11px] text-slate-700 leading-relaxed pt-1">
+                              {analysis.techDetails ? (
+                                <div className="flex items-start gap-2 bg-white/70 p-2.5 rounded-xl border border-indigo-50">
+                                  <span className="text-indigo-600 font-black shrink-0">•</span>
+                                  <div>
+                                    <strong className="text-indigo-950 block">{isAr ? 'المواصفات الفنية المعتمدة :' : 'Spécifications techniques :'}</strong>
+                                    <span className="text-slate-600">{analysis.techDetails}</span>
+                                  </div>
+                                </div>
+                              ) : null}
+
+                              <div className="flex items-start gap-2 bg-white/70 p-2.5 rounded-xl border border-indigo-50">
+                                <span className="text-indigo-600 font-black shrink-0">•</span>
+                                <div>
+                                  <strong className="text-indigo-950 block">{isAr ? 'استهلاك القماش وسعره فالسوق :' : 'Consommation tissu & Marché :'}</strong>
+                                  <span className="text-slate-600">
+                                    {isAr 
+                                      ? `تم احتساب ${analysis.tissuConsoMeters} متر لكل قطعة من قماش "${analysis.tissuSuggere}" بسعر سوق ${analysis.tissuMarcheNom} (~${analysis.prixMetreEstime} درهم/متر).`
+                                      : `Calculé sur ${analysis.tissuConsoMeters}m par pièce en ${analysis.tissuSuggere} (Marché ${analysis.tissuMarcheNom} ~${analysis.prixMetreEstime} MAD/m).`}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-2 bg-white/70 p-2.5 rounded-xl border border-indigo-50">
+                                <span className="text-indigo-600 font-black shrink-0">•</span>
+                                <div>
+                                  <strong className="text-indigo-950 block">{isAr ? 'اليد العاملة وتجهيزات الورشة :' : 'Confection & Finitions industrielles :'}</strong>
+                                  <span className="text-slate-600">
+                                    {isAr 
+                                      ? 'فصالة بمقصات كهربائية صناعية، تجميع بدرزات متينة ومزدوجة، سورجي 4 خيوط، وتركيب الإكسسوارات مع المراقبة الدقيقة للجودة.'
+                                      : 'Coupe industrielle, surjet 4 fils, piqûres de renfort, montage zips/accessoires & contrôle qualité strict.'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {analysis.reponseAtelier ? (
+                                <div className="p-3 bg-white rounded-xl border border-indigo-100 text-slate-800">
+                                  <span className="text-[10px] font-black text-indigo-950 block mb-0.5">
+                                    {isAr ? '💬 توجيه ورأي المعلم بالورشة :' : '💬 Recommandation du chef d\'atelier :'}
+                                  </span>
+                                  <p className="text-[11px] text-slate-600 italic leading-relaxed">
+                                    "{analysis.reponseAtelier}"
+                                  </p>
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Dynamic Acompte / Payment Banner */}
+                        {!isClientFabric ? (
+                          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+                            <div>
+                              <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm">
+                                <CreditCard className="w-4 h-4 text-amber-600" />
+                                {isAr ? 'تسبيق شراء القماش وبدء الإنتاج (50%):' : 'Acompte Tissu & Lancement (50%) :'}
+                              </span>
+                              <span className="text-[11px] text-amber-800/80 font-medium block mt-0.5">
+                                {isAr ? 'ضروري لشراء رولوات الثوب وحجز خط الإنتاج' : 'Nécessaire à l\'achat des rouleaux de tissu'}
+                              </span>
+                            </div>
+                            <span className="font-black text-lg text-amber-950 shrink-0 font-mono">
+                              {Math.round(activeTotalPrice * 0.5).toLocaleString()} MAD
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-emerald-950">
+                            <div>
+                              <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm text-emerald-800">
+                                <Package className="w-4 h-4 text-emerald-600" />
+                                {isAr ? 'التسبيق المالي المطلوب:' : 'Acompte requis :'}
+                              </span>
+                              <span className="text-[11px] text-emerald-700/90 font-medium block mt-0.5">
+                                {isAr ? 'صيفط غير الثوب والمستلزمات، كنبداو الفصالة والخياطة مباشرة' : 'Envoyez le tissu, nous lançons la coupe & confection'}
+                              </span>
+                            </div>
+                            <span className="font-black text-sm text-emerald-800 bg-emerald-100/90 px-3.5 py-1.5 rounded-xl shrink-0">
+                              {isAr ? '0 درهم (بدون تسبيق مالي)' : '0 MAD (Sans acompte)'}
+                            </span>
+                          </div>
+                        )}
+
+                        <p className="text-[11px] text-slate-400 text-center font-medium">
+                          {!isClientFabric
+                            ? (isAr ? '✓ الباقي (50%) يؤدى عند استلام السلعة الجاهزة بعد مراقبة الجودة' : '✓ Le solde (50%) est réglé à la livraison après contrôle qualité')
+                            : (isAr ? '✓ الخلاص (100%) كيكون حتى تكمل الخدمة وتستلم السلعة الجاهزة' : '✓ Paiement (100%) uniquement à la livraison بعد confection complète')}
+                        </p>
+
+                        {/* Essential Action Buttons */}
+                        <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
                           {!isClientFabric ? (
                             <button
                               type="button"
@@ -3376,20 +3423,20 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 setVirementCommandeId(d.id);
                                 setActiveTab('payments');
                               }}
-                              className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.99] cursor-pointer"
+                              className="py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.99] cursor-pointer"
                             >
                               <CreditCard className="w-4 h-4" />
-                              <span>{isAr ? '💳 تأكيد الدوفيز وأداء التسبيق (50%)' : '💳 Valider le Devis & Verser l\'Acompte (50%)'}</span>
+                              <span>{isAr ? '💳 تأكيد الدوفيز وأداء التسبيق (50%)' : '💳 Valider le Devis & Verser l\'Acompte'}</span>
                             </button>
                           ) : (
                             <a
                               href={waUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-[0.99] cursor-pointer"
+                              className="py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-[0.99] cursor-pointer"
                             >
                               <Package className="w-4 h-4" />
-                              <span>{isAr ? '📦 تأكيد الطلب وإرسال الثوب للورشة (0 درهم تسبيق)' : '📦 Valider & Envoyer le Tissu à l\'Atelier'}</span>
+                              <span>{isAr ? '📦 تأكيد الطلب وإرسال الثوب (0 DH)' : '📦 Valider & Envoyer le Tissu'}</span>
                             </a>
                           )}
 
@@ -3397,112 +3444,194 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             href={waUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md cursor-pointer"
+                            className="py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md cursor-pointer"
                           >
                             <MessageCircle className="w-4 h-4" />
-                            <span>{isAr ? '💬 محادثة الورشة والتفاوض عبر واتساب' : '💬 Discuter avec l\'Atelier sur WhatsApp'}</span>
+                            <span>{isAr ? '💬 محادثة الورشة فالواتساب' : '💬 WhatsApp Atelier'}</span>
                           </a>
+
+                          <button
+                            type="button"
+                            onClick={() => { setShowAiChatPopup(true); setIsAiChatMinimized(false); }}
+                            className="py-3.5 px-4 bg-slate-100 hover:bg-indigo-50 text-indigo-700 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-slate-200 cursor-pointer"
+                          >
+                            <Sparkles className="w-4 h-4 text-indigo-600" />
+                            <span>{isAr ? '💬 اسأل مستشار الورشة الذكي' : '💬 Poser une question'}</span>
+                          </button>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Right Column: BEYA AI Fashion & Cost Assistant (lg:col-span-6) */}
-                      <div className="lg:col-span-6 bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/40 p-5 md:p-6 flex flex-col justify-between space-y-3.5">
-                        {/* Assistant Header */}
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
-                              <Sparkles className="w-4 h-4" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-1.5">
-                                <h3 className="text-sm font-black text-slate-900 leading-none">
-                                  {isAr ? 'مستشار ورشة BEYA' : 'Conseiller Atelier BEYA'}
-                                </h3>
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                              </div>
-                              <span className="text-[10px] text-slate-400 font-medium">
-                                {isAr ? 'دراسة التكلفة، الأقمشة والخياطة' : 'Chiffrage, Matières & Confection'}
-                              </span>
-                            </div>
+                    {/* ───────────────── FLOATING POP-UP CHAT BOX: مستشار ورشة BEYA الذكي ───────────────── */}
+                    <div className="fixed bottom-5 left-5 z-50">
+                      {!showAiChatPopup ? (
+                        <button
+                          type="button"
+                          onClick={() => { setShowAiChatPopup(true); setIsAiChatMinimized(false); }}
+                          className="group flex items-center gap-3 px-4 py-3 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white shadow-2xl hover:shadow-indigo-500/40 hover:scale-105 transition-all duration-300 active:scale-95 cursor-pointer border-2 border-white/80"
+                          title={isAr ? 'فتح مستشار ورشة BEYA الذكي' : 'Ouvrir le conseiller atelier'}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                            <Sparkles className="w-4 h-4 text-amber-300" />
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            
-                            <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg border border-indigo-100">
-                              {isAr ? 'رد فوري' : 'Direct'}
+                          <div className="text-right">
+                            <span className="text-xs font-black block leading-none">
+                              {isAr ? 'مستشار ورشة BEYA الذكي' : 'Conseiller BEYA'}
+                            </span>
+                            <span className="text-[10px] text-indigo-200 flex items-center gap-1 mt-0.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              <span>{isAr ? 'رد فوري على الثوب والسعر' : 'Direct Chiffrage'}</span>
                             </span>
                           </div>
-                        </div>
-
-                        {/* Chat Messages Body */}
-                        <div className="flex-1 min-h-[220px] max-h-[260px] overflow-y-auto space-y-2.5 p-3 bg-slate-50/70 rounded-2xl border border-slate-100 custom-scrollbar text-xs">
-                          {/* Default Welcome Message */}
-                          <div className="flex items-start gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
-                              B
-                            </div>
-                            <div className="p-3 bg-white text-slate-800 rounded-2xl rounded-tl-none border border-slate-200 shadow-2xs max-w-[90%] leading-relaxed">
-                              {isAr
-                                ? `مرحباً بك! أنا مستشار ورشة BEYA Creative. بخصوص موديل "${analysis.modeleReel}"، أنا هنا باش نجاوبك بدقة على: نوع الثوب الأنسب، سعرو التقديري فالسوق المغربي، شحال كياكل د الميطراج، وتكلفة الخياطة والعينة. كليكي على أي سؤال لتحت أو كتب سؤالك!`
-                                : `Bonjour ! Je suis le conseiller atelier BEYA Creative pour votre modèle "${analysis.modeleReel}". Je réponds à vos questions sur le tissu idéal, son prix au marché, le métrage requis et le coût de confection.`}
-                            </div>
-                          </div>
-
-                          {/* Dynamic User & AI Messages */}
-                          {((clientAiMessages[d.id] || [])).map((msg, mIdx) => (
-                            <div key={mIdx} className={`flex items-start gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                              {msg.sender === 'ai' && (
-                                <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
-                                  B
+                        </button>
+                      ) : (
+                        <div 
+                          className={`bg-white rounded-3xl shadow-2xl border border-slate-200 w-88 sm:w-96 max-w-[calc(100vw-32px)] overflow-hidden flex flex-col transition-all duration-300 ${
+                            isAiChatMinimized ? 'h-14' : 'h-[500px] max-h-[85vh]'
+                          }`}
+                        >
+                          {/* Chat Box Header */}
+                          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white p-3.5 flex items-center justify-between select-none">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                                <Sparkles className="w-4 h-4 text-amber-300" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <h3 className="text-xs font-black truncate">
+                                    {isAr ? 'مستشار ورشة BEYA الذكي' : 'Conseiller Atelier BEYA'}
+                                  </h3>
+                                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 </div>
-                              )}
-                              <div className={`p-3 rounded-2xl max-w-[88%] leading-relaxed shadow-2xs ${
-                                msg.sender === 'user'
-                                  ? 'bg-indigo-600 text-white rounded-tr-none'
-                                  : 'bg-white text-slate-800 rounded-tl-none border border-slate-200'
-                              }`}>
-                                <p className="whitespace-pre-wrap">{msg.text}</p>
-                                <span className={`text-[9px] block text-right mt-1 font-mono ${msg.sender === 'user' ? 'text-indigo-200' : 'text-slate-400'}`}>
-                                  {msg.time}
+                                <span className="text-[10px] text-indigo-100 block truncate">
+                                  {isAr ? 'دراسة التكلفة، الأقمشة والخياطة' : 'Chiffrage, Matières & Confection'}
                                 </span>
                               </div>
                             </div>
-                          ))}
 
-                          {clientAiLoading && (
-                            <div className="flex items-center gap-2 text-slate-400 text-xs py-1">
-                              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
-                              <span className="font-medium">{isAr ? 'مستشار الورشة يكتب الإجابة...' : 'L\'expert formule la réponse...'}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Quick Prompt Chips (1-Click Questions) */}
-                        <div className="space-y-1.5 pt-1">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
-                            {isAr ? 'أسئلة سريعة شائعة (كليك واحد):' : 'Questions rapides :'}
-                          </span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {[
-                              { label: isAr ? '🧵 نوع وسعر الثوب فالسوق؟' : '🧵 Tissu & Prix Marché', query: isAr ? 'أشنو هو أحسن نوع ثوب لهاد الموديل وشحال كيدير فالسوق المغربي؟' : 'Quel est le meilleur tissu pour ce modèle et son prix au marché ?' },
-                              { label: isAr ? '📏 شحال كياكل د الميطراج؟' : '📏 Métrage requis ?', query: isAr ? 'شحال كياكل هاد الموديل ديال الميطراج لكل بياسة؟' : 'Combien de mètres de tissu par pièce pour ce modèle ?' },
-                              { label: isAr ? '💰 التخفيض مع الكونتيتي؟' : '💰 Remise Quantité ?', query: isAr ? 'شحال كيهبط ثمن الخياطة إيلا زدت فالكمية؟' : 'Comment évolue le prix unitaire si j\'augmente la quantité ?' },
-                              { label: isAr ? '✂️ تفاصيل العينة والتسبيق؟' : '✂️ Échantillon & Acompte', query: isAr ? 'كيفاش كتم مرحلة العينة وشحال التسبيق المطلوب باش نبداو؟' : 'Quelles sont les modalités de l\'échantillon et de l\'acompte ?' },
-                              { label: isAr ? '📦 إيلا جبت الثوب من عندي؟' : '📦 Si je fournis le tissu ?', query: isAr ? 'إيلا بغيت نجيب الثوب والمستلزمات من عندي، واش كاين شي تسبيق وإمتى كنخلص؟' : 'Si je fournis le tissu et les fournitures, quel est l\'acompte et quand s\'effectue le paiement ?' }
-                            ].map((chip, cIdx) => (
+                            <div className="flex items-center gap-1">
                               <button
-                                key={cIdx}
                                 type="button"
-                                disabled={clientAiLoading}
-                                onClick={async () => {
+                                onClick={() => setIsAiChatMinimized(!isAiChatMinimized)}
+                                className="p-1.5 rounded-lg hover:bg-white/20 text-white transition cursor-pointer"
+                                title={isAiChatMinimized ? 'تكبير' : 'تصغير'}
+                              >
+                                <Minus className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setShowAiChatPopup(false)}
+                                className="p-1.5 rounded-lg hover:bg-white/20 text-white transition cursor-pointer"
+                                title="إغلاق"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Chat Box Body */}
+                          {!isAiChatMinimized && (
+                            <>
+                              <div className="flex-1 p-3 bg-slate-50/80 overflow-y-auto space-y-2.5 text-xs custom-scrollbar">
+                                {/* Default Welcome Message */}
+                                <div className="flex items-start gap-2">
+                                  <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
+                                    B
+                                  </div>
+                                  <div className="p-3 bg-white text-slate-800 rounded-2xl rounded-tl-none border border-slate-200 shadow-2xs max-w-[90%] leading-relaxed">
+                                    {isAr
+                                      ? `مرحباً بك! أنا مستشار ورشة BEYA Creative. بخصوص موديل "${analysis.modeleReel}"، أنا هنا باش نجاوبك بدقة على: نوع الثوب الأنسب، سعرو التقديري فالسوق المغربي، شحال كياكل د الميطراج، وتكلفة الخياطة والعينة. كليكي على أي سؤال لتحت أو كتب سؤالك!`
+                                      : `Bonjour ! Je suis le conseiller atelier BEYA Creative pour votre modèle "${analysis.modeleReel}". Je réponds à vos questions sur le tissu idéal, son prix au marché, le métrage requis et le coût de confection.`}
+                                  </div>
+                                </div>
+
+                                {/* Dynamic User & AI Messages */}
+                                {((clientAiMessages[d.id] || [])).map((msg, mIdx) => (
+                                  <div key={mIdx} className={`flex items-start gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    {msg.sender === 'ai' && (
+                                      <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
+                                        B
+                                      </div>
+                                    )}
+                                    <div className={`p-3 rounded-2xl max-w-[88%] leading-relaxed shadow-2xs ${
+                                      msg.sender === 'user'
+                                        ? 'bg-indigo-600 text-white rounded-tr-none'
+                                        : 'bg-white text-slate-800 rounded-tl-none border border-slate-200'
+                                    }`}>
+                                      <p className="whitespace-pre-wrap">{msg.text}</p>
+                                      <span className={`text-[9px] block text-right mt-1 font-mono ${msg.sender === 'user' ? 'text-indigo-200' : 'text-slate-400'}`}>
+                                        {msg.time}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+
+                                {clientAiLoading && (
+                                  <div className="flex items-center gap-2 text-slate-400 text-xs py-1">
+                                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
+                                    <span className="font-medium">{isAr ? 'مستشار الورشة يكتب الإجابة...' : 'L\'expert formule la réponse...'}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Quick Prompt Chips (1-Click Questions) */}
+                              <div className="p-2 bg-white border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+                                {[
+                                  { label: isAr ? '🧵 نوع وسعر الثوب؟' : '🧵 Tissu & Prix', query: isAr ? 'أشنو هو أحسن نوع ثوب لهاد الموديل وشحال كيدير فالسوق المغربي؟' : 'Quel est le meilleur tissu pour ce modèle et son prix au marché ?' },
+                                  { label: isAr ? '📏 شحال الميطراج؟' : '📏 Métrage requis ?', query: isAr ? 'شحال كياكل هاد الموديل ديال الميطراج لكل بياسة؟' : 'Combien de mètres de tissu par pièce pour ce modèle ?' },
+                                  { label: isAr ? '💰 التخفيض فالكمية؟' : '💰 Remise Quantité ?', query: isAr ? 'شحال كيهبط ثمن الخياطة إيلا زدت فالكمية؟' : 'Comment évolue le prix unitaire si j\'augmente la quantité ?' },
+                                  { label: isAr ? '✂️ تفاصيل العينة والتسبيق؟' : '✂️ Échantillon', query: isAr ? 'كيفاش كتم مرحلة العينة وشحال التسبيق المطلوب باش نبداو؟' : 'Quelles sont les modalités de l\'échantillon et de l\'acompte ?' },
+                                  { label: isAr ? '📦 إيلا جبت الثوب من عندي؟' : '📦 Si je fournis le tissu ?', query: isAr ? 'إيلا بغيت نجيب الثوب والمستلزمات من عندي، واش كاين شي تسبيق وإمتى كنخلص؟' : 'Si je fournis le tissu et les fournitures, quel est l\'acompte et quand s\'effectue le paiement ?' }
+                                ].map((chip, cIdx) => (
+                                  <button
+                                    key={cIdx}
+                                    type="button"
+                                    disabled={clientAiLoading}
+                                    onClick={async () => {
+                                      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                      const userMsg = { sender: 'user' as const, text: chip.query, time: nowTime };
+                                      setClientAiMessages(prev => ({
+                                        ...prev,
+                                        [d.id]: [...(prev[d.id] || []), userMsg]
+                                      }));
+                                      setClientAiLoading(true);
+                                      try {
+                                        const reply = await generateClientAssistantReply(chip.query, d, analysis, isAr);
+                                        setClientAiMessages(prev => ({
+                                          ...prev,
+                                          [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+                                        }));
+                                      } catch (err) {
+                                        setClientAiMessages(prev => ({
+                                          ...prev,
+                                          [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: isAr ? 'عفواً، وقع عطب بسيط. تواصل مع المعلم فالواتساب للجواب السريع.' : 'Erreur de connexion. Contactez l\'atelier sur WhatsApp.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+                                        }));
+                                      } finally {
+                                        setClientAiLoading(false);
+                                      }
+                                    }}
+                                    className="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 rounded-lg text-[10px] font-bold whitespace-nowrap transition cursor-pointer shrink-0 border border-slate-200/80"
+                                  >
+                                    {chip.label}
+                                  </button>
+                                ))}
+                              </div>
+
+                              {/* Interactive Chat Input Bar */}
+                              <form
+                                onSubmit={async (e) => {
+                                  e.preventDefault();
+                                  if (!clientAiInput.trim() || clientAiLoading) return;
+                                  const text = clientAiInput.trim();
+                                  setClientAiInput('');
                                   const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                  const userMsg = { sender: 'user' as const, text: chip.query, time: nowTime };
                                   setClientAiMessages(prev => ({
                                     ...prev,
-                                    [d.id]: [...(prev[d.id] || []), userMsg]
+                                    [d.id]: [...(prev[d.id] || []), { sender: 'user' as const, text, time: nowTime }]
                                   }));
                                   setClientAiLoading(true);
                                   try {
-                                    const reply = await generateClientAssistantReply(chip.query, d, analysis, isAr);
+                                    const reply = await generateClientAssistantReply(text, d, analysis, isAr);
                                     setClientAiMessages(prev => ({
                                       ...prev,
                                       [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
@@ -3510,68 +3639,48 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                   } catch (err) {
                                     setClientAiMessages(prev => ({
                                       ...prev,
-                                      [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: isAr ? 'عفواً، وقع عطب بسيط. تواصل مع المعلم فالواتساب للجواب السريع.' : 'Erreur de connexion. Contactez l\'atelier sur WhatsApp.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+                                      [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: isAr ? 'عفواً، وقع عطب بسيط. تواصل مع المعلم فالواتساب للجواب السريع.' : 'Erreur de connexion.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
                                     }));
                                   } finally {
                                     setClientAiLoading(false);
                                   }
                                 }}
-                                className="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 rounded-xl text-[11px] font-bold border border-slate-200 transition-all cursor-pointer text-right"
+                                className="p-2.5 bg-white border-t border-slate-100 flex items-center gap-2"
                               >
-                                {chip.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                                <input
+                                  type="text"
+                                  value={clientAiInput}
+                                  onChange={(e) => setClientAiInput(e.target.value)}
+                                  placeholder={isAr ? 'سول مستشار المعمل على الثوب أو السعر...' : 'Posez une question sur le tissu, prix...'}
+                                  className="flex-1 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-hidden focus:border-indigo-600 focus:bg-white transition-all text-slate-900"
+                                  disabled={clientAiLoading}
+                                />
+                                <button
+                                  type="submit"
+                                  disabled={!clientAiInput.trim() || clientAiLoading}
+                                  className="p-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl shadow-xs transition-all cursor-pointer shrink-0"
+                                  title={isAr ? 'إرسال' : 'Envoyer'}
+                                >
+                                  <Send className="w-3.5 h-3.5" />
+                                </button>
+                              </form>
 
-                        {/* Interactive Chat Input Bar */}
-                        <form
-                          onSubmit={async (e) => {
-                            e.preventDefault();
-                            if (!clientAiInput.trim() || clientAiLoading) return;
-                            const text = clientAiInput.trim();
-                            setClientAiInput('');
-                            const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            setClientAiMessages(prev => ({
-                              ...prev,
-                              [d.id]: [...(prev[d.id] || []), { sender: 'user' as const, text, time: nowTime }]
-                            }));
-                            setClientAiLoading(true);
-                            try {
-                              const reply = await generateClientAssistantReply(text, d, analysis, isAr);
-                              setClientAiMessages(prev => ({
-                                ...prev,
-                                [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
-                              }));
-                            } catch (err) {
-                              setClientAiMessages(prev => ({
-                                ...prev,
-                                [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: isAr ? 'عفواً، وقع عطب بسيط. تواصل مع المعلم فالواتساب للجواب السريع.' : 'Erreur de connexion.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
-                              }));
-                            } finally {
-                              setClientAiLoading(false);
-                            }
-                          }}
-                          className="flex items-center gap-2 pt-1 border-t border-slate-100"
-                        >
-                          <input
-                            type="text"
-                            value={clientAiInput}
-                            onChange={(e) => setClientAiInput(e.target.value)}
-                            placeholder={isAr ? 'سول مستشار المعمل على الثوب، السعر، أو الميطراج...' : 'Posez une question sur le tissu, prix, métrage...'}
-                            className="flex-1 py-2.5 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-indigo-600 focus:bg-white transition-all text-slate-900"
-                            disabled={clientAiLoading}
-                          />
-                          <button
-                            type="submit"
-                            disabled={!clientAiInput.trim() || clientAiLoading}
-                            className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl shadow-xs transition-all cursor-pointer shrink-0"
-                            title={isAr ? 'إرسال' : 'Envoyer'}
-                          >
-                            <Send className="w-4 h-4" />
-                          </button>
-                        </form>
-                      </div>
+                              {/* Direct WhatsApp link */}
+                              <div className="p-2 bg-slate-50 border-t border-slate-100 text-center">
+                                <a
+                                  href={waUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center justify-center gap-1 transition"
+                                >
+                                  <Phone className="w-3 h-3 text-emerald-600" />
+                                  <span>تواصل مباشرة مع المعلم فالواتساب ←</span>
+                                </a>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Expandable Study Toggle */}
