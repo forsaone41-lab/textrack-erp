@@ -5068,32 +5068,17 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               })()}
 
                               <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                                {isTestAccount && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      openQuickEdit(d);
-                                    }}
-                                    className="py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-200/90 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer hover:border-amber-300 shrink-0"
-                                    title={isAr ? 'خاص بإدارة الورشة فقط' : 'Admin Atelier Uniquement'}
-                                  >
-                                    <FileText className="w-3.5 h-3.5 text-amber-700" />
-                                    <span>{isAr ? 'قرار الورشة (Admin)' : 'Admin Devis'}</span>
-                                  </button>
-                                )}
-
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handlePrintDevis(d);
                                   }}
-                                  className="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-200 cursor-pointer"
+                                  className="flex-1 py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
                                   title={isAr ? 'تحميل أو طباعة ملف الدوفيز PDF' : 'Télécharger Devis PDF'}
                                 >
-                                  <Download className="w-3.5 h-3.5 text-slate-600" />
-                                  <span>{isAr ? 'تحميل ملف الدوفيز (PDF)' : 'Télécharger Devis (PDF)'}</span>
+                                  <FileText className="w-4 h-4 text-amber-700" />
+                                  <span>{isAr ? '📄 ملف الدوفيز (DEVIS)' : '📄 Devis (PDF)'}</span>
                                 </button>
 
                                 {isPending && (
@@ -5121,11 +5106,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                       });
                                       setShowNewOrderModal(true);
                                     }}
-                                    className={`${isTestAccount ? 'p-2' : 'flex-1 py-2 px-3'} bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200 shrink-0`}
+                                    className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center transition-all cursor-pointer border border-slate-200 shrink-0"
                                     title={isAr ? 'تعديل الطلب' : 'Modifier'}
                                   >
                                     <Edit2 className="w-3.5 h-3.5" />
-                                    {!isTestAccount && <span>{isAr ? 'تعديل الطلب' : 'Modifier'}</span>}
                                   </button>
                                 )}
 
