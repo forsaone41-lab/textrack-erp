@@ -1147,7 +1147,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       modele: lead.type || '',
       quantite: lead.quantity?.toString() || '',
       photo: lead.photo || (lead.photos && lead.photos[0]) || leadPhotos[lead.id] || null,
-      details: lead.details || '',
+      details: extractCleanUserNotes(lead.details),
       telephone: lead.phone || currentUser?.telephone || '',
       tailles: parsedTailles
     });
@@ -1532,6 +1532,20 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
 const hasArabic = (s: string) => /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(s);
 const hasLatin = (s: string) => /[a-zA-Z\u00C0-\u024F]/.test(s);
+
+const extractCleanUserNotes = (rawDetails?: string | null): string => {
+  if (!rawDetails) return '';
+  let text = rawDetails.split('| ATELIER_DEVIS:')[0].trim();
+  if (text.startsWith('{') || text.includes('"patronagePrice"') || text.includes('"prixEchantillon"') || text.includes('"tissuConso"') || text.includes('patronagePrice":')) {
+    try {
+      const obj = JSON.parse(text);
+      return obj.notes || obj.remarques || obj.details || obj.userNotes || obj.commentaires || '';
+    } catch (e) {
+      return '';
+    }
+  }
+  return text;
+};
 
 function cleanLangText(text: string | undefined | null, isAr: boolean): string {
   if (!text || typeof text !== 'string') return '';
@@ -2103,6 +2117,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       if (editingDemandeId) {
          leadPayload.id = editingDemandeId;
          const existing = mesDemandes.find(d => d.id === editingDemandeId);
+         if (!leadPayload.details?.includes('ATELIER_DEVIS') && existing?.details?.includes('ATELIER_DEVIS')) {
+           const existingAtelierPart = existing.details.substring(existing.details.indexOf('| ATELIER_DEVIS:'));
+           leadPayload.details = `${leadPayload.details || ''} ${existingAtelierPart}`.trim();
+         }
          const updatedLead = existing ? { ...existing, ...leadPayload } : leadPayload;
          await saveRecord('leads', updatedLead);
          setMesDemandes(prev => prev.map(m => m.id === editingDemandeId ? updatedLead : m));
@@ -2880,7 +2898,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-500/20 transition flex items-center gap-2 cursor-pointer"
                           >
                             <Plus className="w-4 h-4" />
-                            {isAr ? '+ إضافة أرتيكل / موديل جديد' : '+ Nouvel Article / Modèle'}
+                            {isAr ? 'موديل جديد' : 'Nouveau Modèle'}
                           </button>
                         </div>
                       </div>
@@ -4568,7 +4586,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                      className="px-6 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-sm font-black uppercase tracking-wider shadow-xl shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 cursor-pointer shrink-0"
                    >
                      <Plus className="w-5 h-5" />
-                     {isAr ? '+ إضافة أرتيكل / موديل جديد' : '+ Nouvel Article / Modèle'}
+                     {isAr ? 'موديل جديد' : 'Nouveau Modèle'}
                    </button>
                 </div>
 
@@ -4647,7 +4665,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                          modele: d.type || '',
                                          quantite: d.quantity?.toString() || '',
                                          photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
-                                         details: d.details || '',
+                                         details: extractCleanUserNotes(d.details),
                                          telephone: d.phone || currentUser?.telephone || '',
                                          tailles: parsedTailles
                                        });
@@ -4826,7 +4844,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                         modele: d.type || '',
                                         quantite: d.quantity?.toString() || '',
                                         photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
-                                        details: d.details || '',
+                                        details: extractCleanUserNotes(d.details),
                                         telephone: d.phone || currentUser?.telephone || '',
                                         tailles: parsedTailles
                                       });
@@ -6971,7 +6989,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           <div className="bg-white rounded-[32px] md:rounded-[40px] w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in duration-300">
             <div className={`p-6 md:p-8 border-b border-slate-100 flex items-center justify-between shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
               <h3 className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter">
-                {isAr ? (editingDemandeId ? 'تعديل الموديل' : 'إضافة أرتيكل / موديل جديد') : (editingDemandeId ? 'Modifier le Modèle' : 'Nouvel Article / Modèle')}
+                {isAr ? (editingDemandeId ? 'تعديل الموديل' : 'موديل جديد') : (editingDemandeId ? 'Modifier le Modèle' : 'Nouveau Modèle')}
               </h3>
               <button onClick={() => setShowNewOrderModal(false)} className="text-slate-400 hover:text-slate-900 transition-colors">
                 <X className="w-6 h-6" />
@@ -6984,7 +7002,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mx-auto mb-6">
                     <CircleCheck className="w-10 h-10" />
                   </div>
-                  <h4 className="text-xl font-black text-slate-900 mb-2">{isAr ? 'تم إرسال طلبك!' : 'Commande Envoyée !'}</h4>
+                  <h4 className="text-xl font-black text-slate-900 mb-2">{isAr ? (editingDemandeId ? 'تم تعديل الطلب بنجاح!' : 'تم إرسال طلبك!') : (editingDemandeId ? 'Demande modifiée avec succès !' : 'Commande Envoyée !')}</h4>
                   <p className="text-slate-500 text-sm font-medium">{isAr ? 'سنتواصل معك في أقرب وقت لتأكيد التفاصيل.' : 'Notre équipe vous contactera sous peu.'}</p>
                 </div>
               ) : (
@@ -7079,8 +7097,16 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                     onClick={submitNewOrder}
                     className="w-full py-5 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-slate-100"
                   >
-                    {sendingOrder ? <RotateCw className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-                    {isAr ? 'إرسال الطلب' : 'Envoyer la Commande'}
+                    {sendingOrder ? (
+                      <RotateCw className="w-5 h-5 animate-spin" />
+                    ) : editingDemandeId ? (
+                      <Check className="w-5 h-5" />
+                    ) : (
+                      <Plus className="w-5 h-5" />
+                    )}
+                    {isAr
+                      ? (editingDemandeId ? 'تعديل الطلب' : 'إرسال الطلب')
+                      : (editingDemandeId ? 'Modifier la demande' : 'Envoyer la Commande')}
                   </button>
                 </>
               )}
