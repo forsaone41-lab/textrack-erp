@@ -1034,8 +1034,65 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setMesDemandes(prev => prev.filter(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__'));
   };
 
+  const [deleteModalLead, setDeleteModalLead] = useState<Lead | null>(null);
+  const [deleteReasonId, setDeleteReasonId] = useState<string>('price_high');
+  const [deleteCustomNote, setDeleteCustomNote] = useState<string>('');
+  const [isDeletingLead, setIsDeletingLead] = useState<boolean>(false);
+
+  const handleOpenDeleteModal = (lead: Lead, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setDeleteModalLead(lead);
+    setDeleteReasonId('price_high');
+    setDeleteCustomNote('');
+  };
+
+  const handleConfirmDeleteWithReason = async () => {
+    if (!deleteModalLead) return;
+    setIsDeletingLead(true);
+    try {
+      const id = deleteModalLead.id;
+      await deleteRecord('leads', id);
+      setMesDemandes(prev => prev.filter(m => m.id !== id));
+      setSelectedDemandePage(prev => prev?.id === id ? null : prev);
+      setDeleteModalLead(null);
+    } catch (err) {
+      console.error(err);
+      alert(isAr ? 'حدث خطأ أثناء حذف الطلب' : 'Erreur lors de la suppression');
+    } finally {
+      setIsDeletingLead(false);
+    }
+  };
+
+  const handleOpenEditDemande = (lead: Lead, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEditingDemandeId(lead.id);
+    let parsedTailles: Record<string, string> = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
+    if (lead.tailles) {
+      (lead.tailles ? Object.entries(lead.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+    } else if (lead.sizes) {
+      try {
+        const parsed = typeof lead.sizes === 'string' ? JSON.parse(lead.sizes) : lead.sizes;
+        Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+      } catch(e) {}
+    }
+    setNewOrderForm({
+      modele: lead.type || '',
+      quantite: lead.quantity?.toString() || '',
+      photo: lead.photo || (lead.photos && lead.photos[0]) || leadPhotos[lead.id] || null,
+      details: lead.details || '',
+      telephone: lead.phone || currentUser?.telephone || '',
+      tailles: parsedTailles
+    });
+    setShowNewOrderModal(true);
+  };
+
   const handleDeleteDemande = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const targetLead = mesDemandes.find(m => m.id === id);
+    if (targetLead) {
+      handleOpenDeleteModal(targetLead, e);
+      return;
+    }
     if (!confirm(isAr ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Voulez-vous vraiment supprimer cette demande ?')) return;
     await deleteRecord('leads', id);
     setMesDemandes(prev => prev.filter(m => m.id !== id));
@@ -2260,6 +2317,18 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
            <div className="flex items-center gap-3 sm:gap-4">
               
 
+              {/* AI Workshop Consultant in Top Header Bar (Zero obstruction) */}
+              <button
+                type="button"
+                onClick={() => { setShowAiChatPopup(true); setIsAiChatMinimized(false); }}
+                className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-black shadow-md shadow-indigo-500/20 hover:scale-105 active:scale-95 transition cursor-pointer"
+                title={isAr ? 'مستشار ورشة BEYA الذكي' : 'Conseiller IA Atelier'}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span className="hidden sm:inline">{isAr ? 'مستشار الورشة' : 'Conseiller IA'}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </button>
+
               <button 
                 onClick={() => window.location.reload()}
                 className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
@@ -2924,7 +2993,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
 
                return (
-                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-28 sm:pb-32">
                    {/* Top Navigation & Action Header */}
                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
                      <button
@@ -3569,26 +3638,20 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                     </div>
 
                     {/* ───────────────── FLOATING POP-UP CHAT BOX: مستشار ورشة BEYA الذكي ───────────────── */}
-                    <div className="fixed bottom-5 left-5 z-50">
+                    <div className={`fixed bottom-5 ${isAr ? 'left-5' : 'right-5'} z-50`}>
                       {!showAiChatPopup ? (
                         <button
                           type="button"
                           onClick={() => { setShowAiChatPopup(true); setIsAiChatMinimized(false); }}
-                          className="group flex items-center gap-3 px-4 py-3 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white shadow-2xl hover:shadow-indigo-500/40 hover:scale-105 transition-all duration-300 active:scale-95 cursor-pointer border-2 border-white/80"
-                          title={isAr ? 'فتح مستشار ورشة BEYA الذكي' : 'Ouvrir le conseiller atelier'}
+                          className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 via-purple-600 to-indigo-700 text-white shadow-2xl hover:shadow-indigo-500/50 hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center border-2 border-white cursor-pointer relative group"
+                          title={isAr ? 'مستشار ورشة BEYA الذكي' : 'Conseiller Atelier BEYA'}
                         >
-                          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                            <Sparkles className="w-4 h-4 text-amber-300" />
-                          </div>
-                          <div className="text-right">
-                            <span className="text-xs font-black block leading-none">
-                              {isAr ? 'مستشار ورشة BEYA الذكي' : 'Conseiller BEYA'}
-                            </span>
-                            <span className="text-[10px] text-indigo-200 flex items-center gap-1 mt-0.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                              <span>{isAr ? 'رد فوري على الثوب والسعر' : 'Direct Chiffrage'}</span>
-                            </span>
-                          </div>
+                          <Sparkles className="w-5 h-5 text-amber-300" />
+                          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white animate-pulse" />
+                          {/* Tooltip on hover for desktop */}
+                          <span className={`hidden group-hover:block absolute bottom-full mb-2 whitespace-nowrap bg-slate-900 text-white text-[11px] font-black px-3 py-1.5 rounded-xl shadow-xl pointer-events-none transition ${isAr ? 'left-0' : 'right-0'}`}>
+                            {isAr ? '💬 مستشار الورشة الذكي' : '💬 Conseiller Atelier'}
+                          </span>
                         </button>
                       ) : (
                         <div 
@@ -4436,21 +4499,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                    </div>
                     )}
 
-                    {/* Floating Shortcut to BEYA NETWORK (الشبكة) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedDemandePage(null);
-                        setActiveTab('network');
-                        window.location.hash = '#/network';
-                      }}
-                      className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2.5 rounded-full shadow-2xl shadow-indigo-600/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-xs font-black border-2 border-white cursor-pointer"
-                      title={isAr ? 'الانتقال إلى شبكة BEYA NETWORK' : 'Accéder à BEYA NETWORK'}
-                    >
-                      <Globe className="w-4 h-4 text-cyan-300" />
-                      <span>{isAr ? '🌐 BEYA NETWORK (الشبكة)' : '🌐 BEYA NETWORK'}</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    </button>
+                    
                  </div>
                );
              }

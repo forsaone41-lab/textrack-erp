@@ -213,7 +213,7 @@ function AdminLayout({
       )}
       
       {/* Mobile Calculator - Bottom Right - Admin Only */}
-      {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && (
+      {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && location.pathname !== '/portal' && (
         <div className={`md:hidden fixed bottom-24 ${isAr ? 'left-6' : 'right-6'} z-[140] scale-90 print:hidden`}>
           <Calculator />
         </div>
@@ -239,7 +239,7 @@ function AdminLayout({
         )}
 
         {/* Floating Calculator - Admin Only */}
-        {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && (
+        {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && location.pathname !== '/portal' && (
           <div className={`fixed bottom-8 ${isAr ? 'right-8' : 'right-8'} z-[130] hidden md:block print:hidden`}>
             <Calculator />
           </div>
