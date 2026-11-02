@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, LogOut, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Minus, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator, Phone } from 'lucide-react';
+import { Copy, Search, LogOut, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Minus, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator, Phone } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
@@ -7069,6 +7069,428 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         </div>
       )}
 
+      {/* Official Devis Validation & Bank Virement Modal */}
+      {validatingDevisLead && (() => {
+        const d = validatingDevisLead;
+        const analysis = getDemandeAnalysis(d, isAr);
+        const acompte50 = Math.round(analysis.totalPrice * 0.5);
+
+        return (
+          <div className="fixed inset-0 z-[250] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+              {/* Header */}
+              <div className="p-5 sm:p-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-inner">
+                    <CheckCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm sm:text-base uppercase tracking-wider text-white">
+                      {isAr ? 'تأكيد الدوفيز والاتفاق الرسمي للورشة' : 'Validation Officielle du Devis Atelier'}
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      REF: #{d.id.substring(0, 8).toUpperCase()} • {isAr ? 'اتفاق ملزم لبدء حجز الثوب والإنتاج' : 'Accord contractuel de mise en production'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValidatingDevisLead(null);
+                    setVirementReceiptFile(null);
+                  }}
+                  className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+                {validatingDevisSuccess ? (
+                  <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2 animate-in zoom-in-95">
+                    <div className="w-12 h-12 mx-auto rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                      <Check className="w-6 h-6 stroke-[3]" />
+                    </div>
+                    <h4 className="font-black text-base text-emerald-950">
+                      {isAr ? 'تم تأكيد الدوفيز والاتفاق بنجاح! 🤝' : 'Devis Validé avec Succès !'}
+                    </h4>
+                    <p className="text-xs text-emerald-800 font-medium">
+                      {isAr
+                        ? 'تم تحويل حالة طلبك إلى (تم الاتفاق والموافقة). تم إشعار الورشة بحجز القماش وجدولة الإنتاج.'
+                        : 'Votre accord a été enregistré. L\'atelier réserve les métrages et lance la fabrication.'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Model & Quotation Summary Box */}
+                    <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-2.5">
+                        <span className="text-xs font-black text-slate-500 uppercase tracking-wider">{isAr ? 'الموديل المعتمد' : 'Modèle Recommandé'}</span>
+                        <span className="text-xs font-black text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs">
+                          {analysis.modeleReel}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="p-2.5 bg-white rounded-xl border border-slate-100">
+                          <span className="block text-[10px] font-bold text-slate-400 uppercase">{isAr ? 'الكمية' : 'Quantité'}</span>
+                          <span className="text-sm font-black text-slate-900">{analysis.quantity} pcs</span>
+                        </div>
+                        <div className="p-2.5 bg-white rounded-xl border border-slate-100">
+                          <span className="block text-[10px] font-bold text-slate-400 uppercase">{isAr ? 'سعر البياسة' : 'Prix unitaire'}</span>
+                          <span className="text-sm font-black text-indigo-600">{analysis.unitPrice} MAD</span>
+                        </div>
+                        <div className="p-2.5 bg-white rounded-xl border border-slate-100">
+                          <span className="block text-[10px] font-bold text-slate-400 uppercase">{isAr ? 'مجموع الدوفيز' : 'Total Devis'}</span>
+                          <span className="text-sm font-black text-slate-900">{analysis.totalPrice.toLocaleString('fr-FR')} MAD</span>
+                        </div>
+                      </div>
+
+                      {/* 50% Acompte Callout */}
+                      <div className="p-3.5 bg-amber-50/90 border border-amber-200/90 rounded-xl flex items-center justify-between">
+                        <div>
+                          <span className="block text-xs font-black text-amber-950">
+                            {isAr ? 'تسبيق شراء القماش وبدء الخياطة (50%):' : 'Acompte Tissu & Lancement (50%) :'}
+                          </span>
+                          <span className="text-[10px] text-amber-700 font-medium">
+                            {isAr ? '(50% المتبقية تؤدى عند فحص السلعة واستلام الطلبية)' : '(Le solde 50% est réglé à la livraison)'}
+                          </span>
+                        </div>
+                        <span className="text-base font-black text-amber-950 bg-white px-3 py-1.5 rounded-xl border border-amber-300 shadow-xs">
+                          {acompte50.toLocaleString('fr-FR')} MAD
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* CIH Bank Transfer Coordinates */}
+                    <div className="p-4 bg-indigo-50/60 border border-indigo-100 rounded-2xl space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Building className="w-4 h-4 text-indigo-600" />
+                          <span className="text-xs font-black text-indigo-950 uppercase tracking-wider">
+                            {isAr ? 'بيانات التحويل البنكي (CIH BANK)' : 'Coordonnées Bancaires CIH'}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-black text-indigo-600 bg-white px-2 py-0.5 rounded-md border border-indigo-200">
+                          RIB Officiel
+                        </span>
+                      </div>
+
+                      <div className="p-3 bg-white rounded-xl border border-indigo-200/70 space-y-1.5">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-slate-500 font-bold">{isAr ? 'المستفيد:' : 'Bénéficiaire :'}</span>
+                          <span className="font-black text-slate-900">STE BEYA CREATIVE SARL</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-slate-500 font-bold">{isAr ? 'الوكالة:' : 'Agence :'}</span>
+                          <span className="font-bold text-slate-700">CIH Bank — Hassan II Casablanca</span>
+                        </div>
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                          <div className="font-mono text-xs sm:text-sm font-black text-indigo-700 tracking-wider">
+                            230 780 0001234567890123 45
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText('230780000123456789012345');
+                              setRibCopied(true);
+                              setTimeout(() => setRibCopied(false), 2500);
+                            }}
+                            className="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
+                          >
+                            {ribCopied ? (
+                              <>
+                                <Check className="w-3.5 h-3.5" />
+                                <span>{isAr ? 'تم النسخ!' : 'Copié !'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>{isAr ? 'نسخ الـ RIB' : 'Copier'}</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Virement Receipt Upload (Optional/Recommended) */}
+                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider">
+                        {isAr ? 'إرفاق وصل التحويل (اختياري / مستحسن)' : 'Joindre le Reçu du Virement (Optionnel)'}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <label className="flex-1 py-2.5 px-3 bg-white hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 transition flex items-center justify-center gap-2 cursor-pointer">
+                          <Upload className="w-4 h-4 text-indigo-600" />
+                          <span>
+                            {virementReceiptFile
+                              ? (isAr ? 'تم اختيار الوصل بنجاح ✓' : 'Reçu sélectionné ✓')
+                              : (isAr ? 'اختيار صورة أو ملف الوصل' : 'Sélectionner reçu')}
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                  setVirementReceiptFile(reader.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                        </label>
+                        {virementReceiptFile && (
+                          <button
+                            type="button"
+                            onClick={() => setVirementReceiptFile(null)}
+                            className="p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl border border-rose-200"
+                            title={isAr ? 'حذف الوصل' : 'Supprimer'}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-500 leading-relaxed">
+                        {isAr
+                          ? 'يمكنك أيضاً تأكيد الاتفاق الآن وتزويد المعلم بالوصل عبر محادثة واتساب.'
+                          : 'Vous pouvez également valider maintenant et transmettre le reçu via WhatsApp.'}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Actions Footer */}
+              {!validatingDevisSuccess && (
+                <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 shrink-0">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => handlePrintDevis(d)}
+                      className="flex-1 sm:flex-none py-2.5 px-4 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold border border-slate-200 flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
+                      title={isAr ? 'معاينة وتحميل ملف Devis PDF' : 'Télécharger Devis PDF'}
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{isAr ? 'ملف Devis PDF' : 'PDF'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setValidatingDevisLead(null)}
+                      className="flex-1 sm:flex-none py-2.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                    >
+                      {isAr ? 'إلغاء' : 'Annuler'}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={validatingDevisSending}
+                    onClick={() => handleValidateDevisAndVirement(d)}
+                    className="w-full sm:w-auto py-3 px-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                  >
+                    {validatingDevisSending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{isAr ? 'جاري الاعتماد...' : 'Validation en cours...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        <span>{isAr ? 'أؤكد موافقتي على الدوفيز واعتماده ✅' : 'Confirmer et Valider le Devis'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Hidden Printable Official Devis Document Container */}
+      {printingDevisLead && (() => {
+        const lead = printingDevisLead;
+        const analysis = getDemandeAnalysis(lead, isAr);
+        const acompte = Math.round(analysis.totalPrice * 0.5);
+        const dateStr = new Date().toLocaleDateString('fr-MA', { day: '2-digit', month: 'long', year: 'numeric' });
+
+        return (
+          <div
+            id={`devis-doc-${lead.id}`}
+            className="fixed -left-[9999px] top-0 bg-white"
+            style={{ width: '210mm', minHeight: '297mm', padding: '15mm 18mm', color: '#0f172a', fontFamily: 'sans-serif' }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #0f172a', paddingBottom: '16px', marginBottom: '24px' }}>
+              <div>
+                <h1 style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+                  BEYA CREATIVE
+                </h1>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }}>
+                  Ateliers de Confection Textile & Bureau d'Études
+                </p>
+                <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>Zone Industrielle Sidi Bouzekri, Meknès — Agence Casablanca</p>
+                <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>Tél : +212 660 000 000 • Email : contact@beyacreative.com</p>
+                <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>R.C: 45210 | I.F: 32014589 | Patente: 12054890</p>
+              </div>
+
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ display: 'inline-block', backgroundColor: '#0f172a', color: 'white', padding: '6px 16px', borderRadius: '8px', fontSize: '16px', fontWeight: 900, letterSpacing: '1px', marginBottom: '8px' }}>
+                  DEVIS OFFICIEL
+                </div>
+                <p style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>
+                  N° DEV-{lead.id.substring(0, 8).toUpperCase()}
+                </p>
+                <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>Date : {dateStr}</p>
+                <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Validité : 30 jours</p>
+              </div>
+            </div>
+
+            {/* Client Coordinates Box */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 18px', marginBottom: '24px' }}>
+              <div>
+                <span style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Client / Donneur d'Ordre</span>
+                <p style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', margin: '4px 0 2px' }}>
+                  {lead.client || currentUser?.name || currentUser?.email || 'Client Partenaire BEYA'}
+                </p>
+                <p style={{ fontSize: '11px', color: '#475569', margin: '0 0 2px' }}>Tél : {clientPhone || lead.phone || '—'}</p>
+                <p style={{ fontSize: '11px', color: '#475569', margin: 0 }}>Email : {currentUser?.email || lead.email || '—'}</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Projet de Confection</span>
+                <p style={{ fontSize: '14px', fontWeight: 800, color: '#4f46e5', margin: '4px 0 2px' }}>
+                  {analysis.modeleReel}
+                </p>
+                <p style={{ fontSize: '11px', color: '#475569', margin: 0 }}>Quantité Totale : {analysis.quantity} pièces</p>
+              </div>
+            </div>
+
+            {/* Items Table */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '12px' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#0f172a', color: 'white' }}>
+                  <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px', borderRadius: '8px 0 0 0' }}>Désignation des Prestations</th>
+                  <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>Matière & Détails</th>
+                  <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>Quantité</th>
+                  <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>P.U HT (MAD)</th>
+                  <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px', borderRadius: '0 8px 0 0' }}>Total HT (MAD)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                  <td style={{ padding: '12px 14px', fontWeight: 700, color: '#0f172a' }}>
+                    Coupe, Confection & Finitions industrielles
+                    <br />
+                    <span style={{ fontSize: '11px', fontWeight: 400, color: '#64748b' }}>{analysis.modeleReel}</span>
+                  </td>
+                  <td style={{ padding: '12px 14px', color: '#475569' }}>
+                    <strong>Tissu :</strong> {analysis.tissuSuggere}
+                    <br />
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>{analysis.techDetails}</span>
+                  </td>
+                  <td style={{ padding: '12px 14px', textAlign: 'center', fontWeight: 800 }}>{analysis.quantity} pcs</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>{analysis.unitPrice.toFixed(2)}</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, color: '#0f172a' }}>{analysis.totalPrice.toFixed(2)}</td>
+                </tr>
+
+                {analysis.hasCustomPatronage && (
+                  <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#fafafa' }}>
+                    <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>
+                      Étude de patronage & Gradation numérique
+                    </td>
+                    <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '11px' }}>Fichier DXF / Barème de mesures validé</td>
+                    <td style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700 }}>1 forfait</td>
+                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>{analysis.patronagePrice.toFixed(2)}</td>
+                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>{analysis.patronagePrice.toFixed(2)}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Totals and Bank Section */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px', marginBottom: '28px' }}>
+              {/* Bank Details */}
+              <div style={{ flex: 1, backgroundColor: '#f1f5f9', borderRadius: '12px', padding: '14px 18px', fontSize: '11px', border: '1px solid #cbd5e1' }}>
+                <p style={{ fontWeight: 800, textTransform: 'uppercase', color: '#0f172a', margin: '0 0 6px', letterSpacing: '0.5px' }}>
+                  Modalités de Règlement & Virement Bancaire
+                </p>
+                <p style={{ margin: '0 0 3px', color: '#334155' }}><strong>Banque :</strong> CIH BANK (Agence Hassan II Casablanca)</p>
+                <p style={{ margin: '0 0 3px', color: '#334155' }}><strong>Titulaire :</strong> STE BEYA CREATIVE SARL</p>
+                <p style={{ margin: '0 0 6px', color: '#1e293b', fontWeight: 800, fontFamily: 'monospace', fontSize: '12px', backgroundColor: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', display: 'inline-block' }}>
+                  RIB : 230 780 0001234567890123 45
+                </p>
+                <p style={{ margin: 0, color: '#64748b', fontSize: '10px' }}>
+                  Délai estimé : {analysis.delaiEstime} dès réception de l'acompte.
+                </p>
+              </div>
+
+              {/* Total Calculation */}
+              <div style={{ width: '260px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '12px' }}>
+                  <span style={{ color: '#64748b', fontWeight: 600 }}>Total Général HT :</span>
+                  <span style={{ fontWeight: 800, color: '#0f172a' }}>{analysis.totalPrice.toLocaleString('fr-FR')} MAD</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '12px' }}>
+                  <span style={{ color: '#64748b', fontWeight: 600 }}>TVA (Confection) :</span>
+                  <span style={{ fontWeight: 700, color: '#64748b' }}>Exonérée / HT</span>
+                </div>
+                <div style={{ borderTop: '2px solid #0f172a', paddingTop: '8px', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 900, color: '#0f172a' }}>
+                    <span>Total Devis :</span>
+                    <span>{analysis.totalPrice.toLocaleString('fr-FR')} MAD</span>
+                  </div>
+                </div>
+                <div style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', borderRadius: '8px', padding: '8px 10px', marginTop: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 900, color: '#92400e' }}>
+                    <span>Acompte 50% :</span>
+                    <span>{acompte.toLocaleString('fr-FR')} MAD</span>
+                  </div>
+                  <span style={{ fontSize: '9px', color: '#b45309', display: 'block', marginTop: '2px' }}>
+                    Exigible pour achat tissu & lancement
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Legal Statement */}
+            <div style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.5, borderTop: '1px solid #e2e8f0', paddingTop: '12px', marginBottom: '32px' }}>
+              <p style={{ margin: '0 0 4px' }}>
+                <strong>Conditions Générales :</strong> Le présent devis est établi sur la base des spécifications techniques convenues. Le versement de l'acompte de 50% vaut validation ferme et déclenche immédiatement la réservation matière et l'ordre de fabrication en atelier.
+              </p>
+              <p style={{ margin: 0 }}>
+                يعد هذا الدوفيز ملزماً لكلا الطرفين فور أداء تسبيق 50%. يتم تسليم الطلبية بعد إجراء مراقبة الجودة الشاملة وأداء الرصيد المتبقي.
+              </p>
+            </div>
+
+            {/* Signatures */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '30px', marginTop: 'auto' }}>
+              <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '12px', padding: '16px', minHeight: '110px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#0f172a', margin: '0 0 8px' }}>
+                  Cachet & Signature de l'Atelier
+                </p>
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontStyle: 'italic' }}>
+                  BEYA CREATIVE SARL — Bureau Technique
+                </div>
+              </div>
+
+              <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '12px', padding: '16px', minHeight: '110px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#0f172a', margin: '0 0 8px' }}>
+                  Bon pour Accord & Signature du Client
+                </p>
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontStyle: 'italic' }}>
+                  "Lu et approuvé, bon pour commande"
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Technical Measurements Preview Modal */}
       {viewMesuresFiche && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[200] p-4" dir={isAr ? 'rtl' : 'ltr'}>
@@ -7472,7 +7894,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   <Scissors className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base uppercase tracking-wider">{isAr ? 'رد الورشة (وضع التجربة)' : 'Réponse Atelier (Mode Test)'}</h3>
+                  <div>
+                  <h3 className="font-black text-base uppercase tracking-wider">{isAr ? '📄 قرار ودوفيز الورشة الرسمي (DEVIS ATELIER)' : '📄 Décision Finale & Devis Atelier'}</h3>
+                  <p className="text-[11px] text-amber-400 font-bold">{isAr ? 'القرار التجاري والتقني الملزم للدوفيز والإنتاج' : 'Document officiel et tarification engageante'}</p>
+                </div>
                   <p className="text-xs text-slate-400">REF: #{atelierQuickEditLead.id.substring(0, 8).toUpperCase()} • {currentUser?.email}</p>
                 </div>
               </div>
