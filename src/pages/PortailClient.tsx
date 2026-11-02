@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, LogOut, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Minus, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator } from 'lucide-react';
+import { Search, LogOut, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Minus, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator, Phone } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
@@ -1413,77 +1413,58 @@ function cleanLangText(text: string | undefined | null, isAr: boolean): string {
   const trimmed = text.trim();
   if (!trimmed) return '';
 
-
-  // If text does not mix Arabic and Latin
+  // 1. If text is already strictly one language
   if (!hasArabic(trimmed) || !hasLatin(trimmed)) {
-    if (!isAr && hasArabic(trimmed)) {
-      return translateArabicAtelierPhrases(trimmed);
-    }
-    if (isAr && hasLatin(trimmed)) {
-      return translateFrenchAtelierPhrases(trimmed);
-    }
+    if (!isAr && hasArabic(trimmed)) return translateArabicAtelierPhrases(trimmed);
+    if (isAr && hasLatin(trimmed)) return translateFrenchAtelierPhrases(trimmed);
     return trimmed;
   }
 
-  // 1. Slash, pipe, or double-slash separator: 'Ar / Fr' or 'Fr / Ar'
-  if (/[\/|]/.test(trimmed)) {
-    const parts = trimmed.split(/\s*[\/|]+\s*/);
+  // 2. Explicit Language Separator with spaces or double slash: 'Ar / Fr' or 'Ar // Fr' or 'Ar | Fr'
+  // NEVER split on units like 'g/m²' or 'MAD/pc' which do NOT have spaces around the slash!
+  if (/\s+[\/|]\s+|\s*\/{2,}\s*/.test(trimmed)) {
+    const parts = trimmed.split(/\s+[\/|]\s+|\s*\/{2,}\s*/);
     if (parts.length >= 2) {
       if (isAr) {
         const arPart = parts.find(p => hasArabic(p) && !hasLatin(p)) || parts.find(p => hasArabic(p));
-        if (arPart) return cleanParenthesesLang(arPart.trim(), true);
+        if (arPart) return cleanLangText(arPart, true);
       } else {
         const frPart = parts.find(p => hasLatin(p) && !hasArabic(p)) || parts.find(p => hasLatin(p));
-        if (frPart) return cleanParenthesesLang(frPart.trim(), false);
+        if (frPart) return cleanLangText(frPart, false);
       }
     }
   }
 
-  // 2. Dash separator e.g. 'Ar - Fr'
-  if (/\s+-\s+/.test(trimmed)) {
-    const parts = trimmed.split(/\s+-\s+/);
-    if (parts.length >= 2) {
-      if (isAr) {
-        const arPart = parts.find(p => hasArabic(p) && !hasLatin(p)) || parts.find(p => hasArabic(p));
-        if (arPart) return cleanParenthesesLang(arPart.trim(), true);
-      } else {
-        const frPart = parts.find(p => hasLatin(p) && !hasArabic(p)) || parts.find(p => hasLatin(p));
-        if (frPart) return cleanParenthesesLang(frPart.trim(), false);
-      }
-    }
-  }
+  // 3. Parentheses resolution: e.g. "Arabic outside (French inside)" or "French outside (Arabic inside)"
+  const parenMatches = [...trimmed.matchAll(/\(([^)]+)\)/g)];
+  if (parenMatches.length > 0) {
+    if (!isAr) {
+      // User wants French:
+      // If outside is predominantly Arabic and inside has French/Latin
+      const latinParens = parenMatches
+        .map(m => m[1].trim())
+        .filter(inside => hasLatin(inside) && !hasArabic(inside));
+      const outsideParen = trimmed.replace(/\([^)]+\)/g, '').trim();
 
-  return cleanParenthesesLang(trimmed, isAr);
-}
-
-function cleanParenthesesLang(text: string, isAr: boolean): string {
-
-  const parenMatch = text.match(/\(([^)]+)\)/);
-  if (parenMatch) {
-    const insideParen = parenMatch[1].trim();
-    const outsideParen = text.replace(/\([^)]+\)/g, '').trim().replace(/\s{2,}/g, ' ');
-
-    if (isAr) {
-      if (hasArabic(outsideParen) && hasLatin(insideParen) && !hasArabic(insideParen)) {
-        return outsideParen;
-      }
-      if (!hasArabic(outsideParen) && hasArabic(insideParen)) {
-        return insideParen;
+      if (hasArabic(outsideParen) && latinParens.length > 0) {
+        return latinParens.join(' • ');
       }
     } else {
-      if (hasArabic(outsideParen) && hasLatin(insideParen) && !hasArabic(insideParen)) {
-        return insideParen;
-      }
-      if (hasLatin(outsideParen) && hasArabic(insideParen) && !hasLatin(insideParen)) {
+      // User wants Arabic:
+      // Keep outside Arabic, strip French parentheses
+      const outsideParen = trimmed.replace(/\([^)]*[a-zA-Z]{3,}[^)]*\)/g, '').trim().replace(/\s{2,}/g, ' ');
+      if (hasArabic(outsideParen)) {
         return outsideParen;
       }
     }
   }
 
-  if (!isAr) return translateArabicAtelierPhrases(text);
-  if (isAr) return translateFrenchAtelierPhrases(text);
-
-  return text;
+  // 4. Fallback cleanup: strip the unwanted language
+  if (!isAr) {
+    return translateArabicAtelierPhrases(trimmed);
+  } else {
+    return translateFrenchAtelierPhrases(trimmed);
+  }
 }
 
 function translateArabicAtelierPhrases(text: string): string {
@@ -1500,8 +1481,9 @@ function translateArabicAtelierPhrases(text: string): string {
   t = t.replace(/سوق درب عمر/g, 'Marché Derb Omar');
   t = t.replace(/قماش مخصص ومطابق للمواصفات المطلوبة/g, 'Tissu adapté selon cahier des charges');
   t = t.replace(/قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل/g, 'Patronage et confection sur-mesure de haute précision');
-  t = t.replace(/\([^)]*[\u0600-\u06FF][^)]*\)/g, '').trim();
-  if (hasLatin(t) && hasArabic(t)) {
+  
+  if (hasLatin(t)) {
+    t = t.replace(/\([^)]*[\u0600-\u06FF][^)]*\)/g, ' ');
     t = t.replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+/g, '');
     t = t.replace(/\s*[\/|:-]+\s*$/g, '').replace(/^\s*[\/|:-]+\s*/g, '').replace(/\s{2,}/g, ' ').trim();
   }
@@ -1514,9 +1496,9 @@ function translateFrenchAtelierPhrases(text: string): string {
   t = t.replace(/Échantillon sous (\d+)h/gi, (_m, p1) => `العينة تحت ${p1} ساعة`);
   t = t.replace(/Tissu adapté selon cahier des charges/gi, 'قماش مخصص ومطابق للمواصفات المطلوبة');
   t = t.replace(/Patronage et confection sur-mesure de haute précision/gi, 'قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل');
-  t = t.replace(/\([^)]*[a-zA-Z][^)]*\)/g, '').trim();
-  if (hasArabic(t) && hasLatin(t)) {
-    t = t.replace(/\([a-zA-Z0-9\s.,'%-]+\)/g, '');
+  
+  if (hasArabic(t)) {
+    t = t.replace(/\([a-zA-Z0-9\s.,'%-]{4,}\)/g, '');
     t = t.replace(/\s*[\/|:-]+\s*$/g, '').replace(/^\s*[\/|:-]+\s*/g, '').replace(/\s{2,}/g, ' ').trim();
   }
   return t;
