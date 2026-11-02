@@ -367,6 +367,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [passwordSavedSuccess, setPasswordSavedSuccess] = useState(false);
   const [selectedDemandeFiche, setSelectedDemandeFiche] = useState<Lead | null>(null);
   const [selectedDemandePage, setSelectedDemandePage] = useState<Lead | null>(null);
+  const [consultingDemande, setConsultingDemande] = useState<Lead | null>(null);
   const [atelierQuickEditLead, setAtelierQuickEditLead] = useState<Lead | null>(null);
   const [quickEditForm, setQuickEditForm] = useState({
     modeleReel: '',
@@ -2384,17 +2385,6 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
            <div className="flex items-center gap-3 sm:gap-4">
               
 
-              {/* AI Workshop Consultant in Top Header Bar (Zero obstruction) */}
-              <button
-                type="button"
-                onClick={() => { setShowAiChatPopup(true); setIsAiChatMinimized(false); }}
-                className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-black shadow-md shadow-indigo-500/20 hover:scale-105 active:scale-95 transition cursor-pointer"
-                title={isAr ? 'مستشار ورشة BEYA الذكي' : 'Conseiller IA Atelier'}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span className="hidden sm:inline">{isAr ? 'مستشار الورشة' : 'Conseiller IA'}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              </button>
 
               <button 
                 onClick={() => window.location.reload()}
@@ -3016,6 +3006,270 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           {activeTab === 'demandes' && (() => {
              const trueDemandes = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
 
+             // ───────────────── DEDICATED FULL PAGE: مستشار ورشة BEYA الذكي بخصوص الموديل ─────────────────
+             if (consultingDemande) {
+               const d = consultingDemande;
+               const analysis = getDemandeAnalysis(d, isAr);
+               const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
+               const waConsultMsg = isAr
+                 ? `السلام عليكم ورشة ${company.name || 'BEYA'}، كنت كنتشاور مع المستشار الذكي بخصوص موديل (${analysis.modeleReel}) كود REF: #${d.id.substring(0, 8).toUpperCase()}. بغيت نتواصل معكم مباشرة لتأكيد تفاصيل الثوب وتأكيد الكوموند.`
+                 : `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, je consultais l'assistant IA pour le modèle (${analysis.modeleReel}) REF: #${d.id.substring(0, 8).toUpperCase()}. Je souhaite échanger avec vous pour finaliser la commande.`;
+               const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waConsultMsg)}`;
+
+               return (
+                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 pb-28 sm:pb-32">
+                   {/* Top Header Bar */}
+                   <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100">
+                     <button
+                       type="button"
+                       onClick={() => setConsultingDemande(null)}
+                       className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 rounded-xl text-xs font-black uppercase tracking-wider border border-slate-200/80 shadow-2xs transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+                     >
+                       <ChevronRight className={`w-4 h-4 ${isAr ? '' : 'rotate-180'}`} />
+                       <span>{selectedDemandePage ? (isAr ? '← الرجوع لدراسة الموديل' : '← Retour au chiffrage') : (isAr ? '← الرجوع لقائمة الطلبات' : '← Retour aux demandes')}</span>
+                     </button>
+
+                     <div className="flex items-center gap-2">
+                       <a
+                         href={waUrl}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shadow-xs transition-all active:scale-95 cursor-pointer"
+                       >
+                         <MessageCircle className="w-3.5 h-3.5" />
+                         <span className="hidden sm:inline">{isAr ? 'تواصل مع المعلم فالواتساب' : 'WhatsApp Atelier'}</span>
+                       </a>
+                     </div>
+                   </div>
+
+                   {/* Model Context & Focus Banner */}
+                   <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-4 sm:p-5 text-white shadow-xl border border-indigo-500/20">
+                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                       <div className="flex items-center gap-3.5 min-w-0">
+                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-slate-800 border-2 border-white/10 shrink-0 shadow-md">
+                           <LeadCardImage
+                             lead={d}
+                             leadPhotos={leadPhotos}
+                             onPhotoLoaded={handlePhotoLoaded}
+                             onOpenPreview={(src) => setPreviewPhoto(src)}
+                             sizeClasses="w-full h-full object-cover"
+                           />
+                         </div>
+                         <div className="min-w-0">
+                           <div className="flex items-center gap-2 flex-wrap mb-1">
+                             <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-black uppercase tracking-wider">
+                               #${d.id.substring(0, 8).toUpperCase()}
+                             </span>
+                             <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black flex items-center gap-1">
+                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                               <span>{isAr ? 'استشارة حصرية للموديل' : 'Consultation exclusive'}</span>
+                             </span>
+                           </div>
+                           <h1 className="text-base sm:text-xl font-black truncate text-white">
+                             {analysis.modeleReel}
+                           </h1>
+                           <p className="text-xs text-indigo-200/80 font-medium mt-0.5">
+                             {isAr ? `الزبون: ${currentUser?.nom || 'Client'} | الكمية: ${d.quantity || 10} قطعة` : `Client : ${currentUser?.nom || 'Client'} | Quantité : ${d.quantity || 10} pcs`}
+                           </p>
+                         </div>
+                       </div>
+
+                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full sm:w-auto shrink-0 text-center sm:text-right">
+                         <div className="p-2 sm:p-2.5 bg-white/5 border border-white/10 rounded-2xl">
+                           <span className="text-[10px] font-bold text-slate-400 block">{isAr ? 'سعر الخياطة' : 'Prix Façon'}</span>
+                           <span className="text-sm font-black text-amber-300">{analysis.confectionPrice || analysis.unitPrice} MAD</span>
+                         </div>
+                         <div className="p-2 sm:p-2.5 bg-white/5 border border-white/10 rounded-2xl">
+                           <span className="text-[10px] font-bold text-slate-400 block">{isAr ? 'مدة الإنجاز' : 'Délai'}</span>
+                           <span className="text-xs font-black text-emerald-300 truncate block">{analysis.delaiEstime || '7-10j'}</span>
+                         </div>
+                         <div className="col-span-2 sm:col-span-1 p-2 sm:p-2.5 bg-white/5 border border-white/10 rounded-2xl">
+                           <span className="text-[10px] font-bold text-slate-400 block">{isAr ? 'سعر الثوب فالسوق' : 'Tissu marché'}</span>
+                           <span className="text-xs font-black text-cyan-300 truncate block">{analysis.prixTissuMaroc || '28-50 DH/m'}</span>
+                         </div>
+                       </div>
+                     </div>
+
+                     <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-2 text-[11px] text-indigo-200/90">
+                       <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                       <span>
+                         {isAr
+                           ? `الثوب الموصى به: ${analysis.tissuSuggere} — يمكنك طرح أي استفسار تقني حول الأمتار، الجودة، وأسواق درب عمر والقريعة.`
+                           : `Matière recommandée : ${analysis.tissuSuggere} — Posez vos questions techniques sur le métrage, patronage et finitions.`}
+                       </span>
+                     </div>
+                   </div>
+
+                   {/* Main Dedicated Chat Window */}
+                   <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[650px] max-h-[75vh]">
+                     {/* Chat Conversation Scroll Area */}
+                     <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/60 custom-scrollbar">
+                       {/* Welcome Message from Advisor */}
+                       <div className="flex items-start gap-3">
+                         <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xs font-black shrink-0 mt-0.5 shadow-xs">
+                           B
+                         </div>
+                         <div className="p-4 bg-white text-slate-800 rounded-3xl rounded-tl-none border border-slate-200 shadow-2xs max-w-[92%] sm:max-w-[85%] leading-relaxed text-xs sm:text-sm">
+                           <p className="font-bold text-indigo-950 mb-1.5 flex items-center gap-1.5">
+                             <span>{isAr ? 'مستشار ورشة BEYA Creative' : 'Conseiller Atelier BEYA Creative'}</span>
+                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                           </p>
+                           <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                             {isAr
+                               ? `مرحباً بك! أنا مستشار ورشة BEYA Creative. بخصوص موديل "${analysis.modeleReel}"، أنا هنا باش نجاوبك بدقة ومباشرة على:
+• نوع الثوب الأنسب وسعرو فأسواق الجملة بالمغرب (درب عمر / القريعة).
+• شحال كياكل هاد الموديل د الميطراج بالضبط لكل قطعة.
+• إمكانيات تخفيض سعر الخياطة مع الكمية (Dégressif).
+• تفاصيل إعداد الباترون والعينة الأولى (Échantillon) والتسبيق.
+• تكلفة الخياطة فقط في حال قمت بجلب الثوب من عندك.
+
+اختر أي سؤال من الأسئلة السريعة لتحت أو كتب سؤالك الخاص!`
+                               : `Bonjour ! Je suis le conseiller atelier BEYA Creative pour votre modèle "${analysis.modeleReel}". Je réponds à toutes vos questions sur le tissu idéal, son prix au marché de Derb Omar, le métrage exact requis, les remises sur quantité et les étapes du patronage & échantillon.`}
+                           </p>
+                         </div>
+                       </div>
+
+                       {/* User & AI Messages */}
+                       {((clientAiMessages[d.id] || [])).map((msg, mIdx) => (
+                         <div key={mIdx} className={`flex items-start gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                           {msg.sender === 'ai' && (
+                             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xs font-black shrink-0 mt-0.5 shadow-xs">
+                               B
+                             </div>
+                           )}
+                           <div className={`p-4 rounded-3xl max-w-[90%] sm:max-w-[80%] leading-relaxed text-xs sm:text-sm shadow-2xs ${
+                             msg.sender === 'user'
+                               ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-tr-none'
+                               : 'bg-white text-slate-800 rounded-tl-none border border-slate-200'
+                           }`}>
+                             <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                             <span className={`text-[10px] block text-right mt-1.5 font-mono ${msg.sender === 'user' ? 'text-indigo-200' : 'text-slate-400'}`}>
+                               {msg.time}
+                             </span>
+                           </div>
+                         </div>
+                       ))}
+
+                       {clientAiLoading && (
+                         <div className="flex items-center gap-3 text-slate-500 text-xs py-2 px-3 bg-white rounded-2xl w-fit border border-slate-200 shadow-2xs animate-pulse">
+                           <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
+                           <span className="font-bold">{isAr ? 'مستشار الورشة يكتب الإجابة الفنية...' : 'Le conseiller formule la réponse...'}</span>
+                         </div>
+                       )}
+                     </div>
+
+                     {/* Quick Suggestion Chips (Questions Rapides) */}
+                     <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2 overflow-x-auto custom-scrollbar">
+                       {[
+                         { label: isAr ? '🧵 نوع وسعر الثوب فالسوق؟' : '🧵 Tissu & Prix', query: isAr ? 'أشنو هو أحسن نوع ثوب لهاد الموديل وشحال كيدير فالسوق المغربي؟' : 'Quel est le meilleur tissu pour ce modèle et son prix au marché ?' },
+                         { label: isAr ? '📏 شحال الميطراج للقطعة؟' : '📏 Métrage requis ?', query: isAr ? 'شحال كياكل هاد الموديل ديال الميطراج لكل بياسة؟' : 'Combien de mètres de tissu par pièce pour ce modèle ?' },
+                         { label: isAr ? '💰 واش كاين تخفيض فالكمية؟' : '💰 Remise Quantité ?', query: isAr ? 'شحال كيهبط ثمن الخياطة إيلا زدت فالكمية؟' : 'Comment évolue le prix unitaire si j\'augmente la quantité ?' },
+                         { label: isAr ? '✂️ تفاصيل العينة والتسبيق؟' : '✂️ Échantillon', query: isAr ? 'كيفاش كتم مرحلة العينة وشحال التسبيق المطلوب باش نبداو؟' : 'Quelles sont les modalités de l\'échantillon et de l\'acompte ?' },
+                         { label: isAr ? '📦 إيلا جبت الثوب من عندي؟' : '📦 Si je fournis le tissu ?', query: isAr ? 'إيلا بغيت نجيب الثوب والمستلزمات من عندي، واش كاين شي تسبيق وإمتى كنخلص؟' : 'Si je fournis le tissu et les fournitures, quel est l\'acompte et quand s\'effectue le paiement ?' },
+                         { label: isAr ? '⏱️ إمكانية تسليم أسرع؟' : '⏱️ Délai express ?', query: isAr ? 'واش كاين إمكانية نوجدو السلعة فوقت أسرع ومستعجل؟' : 'Est-il possible d\'obtenir une fabrication express ?' }
+                       ].map((chip, cIdx) => (
+                         <button
+                           key={cIdx}
+                           type="button"
+                           disabled={clientAiLoading}
+                           onClick={async () => {
+                             const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                             const userMsg = { sender: 'user' as const, text: chip.query, time: nowTime };
+                             setClientAiMessages(prev => ({
+                               ...prev,
+                               [d.id]: [...(prev[d.id] || []), userMsg]
+                             }));
+                             setClientAiLoading(true);
+                             try {
+                               const reply = await generateClientAssistantReply(chip.query, d, analysis, isAr);
+                               setClientAiMessages(prev => ({
+                                 ...prev,
+                                 [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+                               }));
+                             } catch (err) {
+                               setClientAiMessages(prev => ({
+                                 ...prev,
+                                 [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: isAr ? 'عفواً، وقع عطب بسيط. تواصل مع المعلم فالواتساب للجواب السريع.' : 'Erreur de connexion. Contactez l\'atelier sur WhatsApp.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+                               }));
+                             } finally {
+                               setClientAiLoading(false);
+                             }
+                           }}
+                           className="px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer shrink-0 border border-slate-200/90 active:scale-95"
+                         >
+                           {chip.label}
+                         </button>
+                       ))}
+                     </div>
+
+                     {/* Input Bar */}
+                     <form
+                       onSubmit={async (e) => {
+                         e.preventDefault();
+                         if (!clientAiInput.trim() || clientAiLoading) return;
+                         const text = clientAiInput.trim();
+                         setClientAiInput('');
+                         const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                         setClientAiMessages(prev => ({
+                           ...prev,
+                           [d.id]: [...(prev[d.id] || []), { sender: 'user' as const, text, time: nowTime }]
+                         }));
+                         setClientAiLoading(true);
+                         try {
+                           const reply = await generateClientAssistantReply(text, d, analysis, isAr);
+                           setClientAiMessages(prev => ({
+                             ...prev,
+                             [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+                           }));
+                         } catch (err) {
+                           setClientAiMessages(prev => ({
+                             ...prev,
+                             [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: isAr ? 'عفواً، وقع عطب بسيط. تواصل مع المعلم فالواتساب للجواب السريع.' : 'Erreur de connexion.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+                           }));
+                         } finally {
+                           setClientAiLoading(false);
+                         }
+                       }}
+                       className="p-3 sm:p-4 bg-white border-t border-slate-100 flex items-center gap-2.5"
+                     >
+                       <input
+                         type="text"
+                         value={clientAiInput}
+                         onChange={(e) => setClientAiInput(e.target.value)}
+                         placeholder={isAr ? `سول مستشار المعمل على الثوب، السعر، أو الميطراج لموديل "${analysis.modeleReel}"...` : 'Posez votre question sur le tissu, métrage, prix...'}
+                         className="flex-1 py-3 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm font-medium outline-hidden focus:border-indigo-600 focus:bg-white transition-all text-slate-900"
+                         disabled={clientAiLoading}
+                       />
+                       <button
+                         type="submit"
+                         disabled={!clientAiInput.trim() || clientAiLoading}
+                         className="p-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl shadow-sm transition-all cursor-pointer shrink-0 active:scale-95"
+                         title={isAr ? 'إرسال' : 'Envoyer'}
+                       >
+                         <Send className="w-4 h-4" />
+                       </button>
+                     </form>
+
+                     {/* WhatsApp Direct Negotiation Bar */}
+                     <div className="p-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 border-t border-emerald-100 flex items-center justify-between px-4 text-xs">
+                       <span className="text-emerald-950 font-bold hidden sm:inline">
+                         {isAr ? '💡 تفاصيل واضحة وبغيتي تبدا العينة أو تثبت طلبك؟' : 'Prêt à valider votre échantillon ?'}
+                       </span>
+                       <a
+                         href={waUrl}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="text-emerald-700 hover:text-emerald-900 font-black flex items-center gap-1.5 transition ms-auto"
+                       >
+                         <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                         <span>{isAr ? 'تحدث مباشرة مع المعلم فالواتساب بخصوص هاد الموديل ←' : 'Contacter l\'atelier sur WhatsApp pour ce modèle →'}</span>
+                       </a>
+                     </div>
+                   </div>
+                 </div>
+               );
+             }
+
              // Dedicated Full Page for Demande Details & Technical Study
              if (selectedDemandePage) {
                const d = selectedDemandePage;
@@ -3250,19 +3504,6 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             </div>
                           </div>
 
-                          {/* Quick AI Consultant Trigger Button in Header */}
-                          <div className="flex items-center gap-2 self-start sm:self-center">
-                            <button
-                              type="button"
-                              onClick={() => { setShowAiChatPopup(true); setIsAiChatMinimized(false); }}
-                              className="px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 text-indigo-700 rounded-2xl text-xs font-black border border-indigo-200 shadow-2xs flex items-center gap-2 transition active:scale-95 cursor-pointer"
-                              title={isAr ? 'استشارة مستشار ورشة BEYA الذكي' : 'Consulter le conseiller atelier'}
-                            >
-                              <Sparkles className="w-4 h-4 text-indigo-600" />
-                              <span>{isAr ? '💬 مستشار الورشة الذكي (Chat Pop)' : '💬 Conseiller Atelier'}</span>
-                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            </button>
-                          </div>
                         </div>
 
                         {/* ⚠️ تنبيه قانوني ومهني بالسعر التقديري بناءً على طلب الزبون */}
@@ -3642,229 +3883,14 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
                           <button
                             type="button"
-                            onClick={() => { setShowAiChatPopup(true); setIsAiChatMinimized(false); }}
-                            className="py-3.5 px-4 bg-slate-100 hover:bg-indigo-50 text-indigo-700 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-slate-200 cursor-pointer"
+                            onClick={() => setConsultingDemande(d)}
+                            className="py-3.5 px-4 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 text-indigo-700 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-indigo-200/90 cursor-pointer shadow-xs active:scale-95"
                           >
-                            <MessageSquare className="w-4 h-4 text-indigo-600" />
+                            <Sparkles className="w-4 h-4 text-indigo-600" />
                             <span>{isAr ? 'اسأل مستشار الورشة الذكي' : 'Poser une question'}</span>
                           </button>
                         </div>
                       </div>
-                    </div>
-
-                    {/* ───────────────── FLOATING POP-UP CHAT BOX: مستشار ورشة BEYA الذكي ───────────────── */}
-                    <div className={`fixed bottom-5 ${isAr ? 'left-5' : 'right-5'} z-50`}>
-                      {!showAiChatPopup ? (
-                        <button
-                          type="button"
-                          onClick={() => { setShowAiChatPopup(true); setIsAiChatMinimized(false); }}
-                          className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 via-purple-600 to-indigo-700 text-white shadow-2xl hover:shadow-indigo-500/50 hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center border-2 border-white cursor-pointer relative group"
-                          title={isAr ? 'مستشار ورشة BEYA الذكي' : 'Conseiller Atelier BEYA'}
-                        >
-                          <Sparkles className="w-5 h-5 text-amber-300" />
-                          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white animate-pulse" />
-                          {/* Tooltip on hover for desktop */}
-                          <span className={`hidden group-hover:block absolute bottom-full mb-2 whitespace-nowrap bg-slate-900 text-white text-[11px] font-black px-3 py-1.5 rounded-xl shadow-xl pointer-events-none transition ${isAr ? 'left-0' : 'right-0'}`}>
-                            {isAr ? '💬 مستشار الورشة الذكي' : '💬 Conseiller Atelier'}
-                          </span>
-                        </button>
-                      ) : (
-                        <div 
-                          className={`bg-white rounded-3xl shadow-2xl border border-slate-200 w-88 sm:w-96 max-w-[calc(100vw-32px)] overflow-hidden flex flex-col transition-all duration-300 ${
-                            isAiChatMinimized ? 'h-14' : 'h-[500px] max-h-[85vh]'
-                          }`}
-                        >
-                          {/* Chat Box Header */}
-                          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white p-3.5 flex items-center justify-between select-none">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                                <Sparkles className="w-4 h-4 text-amber-300" />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <h3 className="text-xs font-black truncate">
-                                    {isAr ? 'مستشار ورشة BEYA الذكي' : 'Conseiller Atelier BEYA'}
-                                  </h3>
-                                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                </div>
-                                <span className="text-[10px] text-indigo-100 block truncate">
-                                  {isAr ? 'دراسة التكلفة، الأقمشة والخياطة' : 'Chiffrage, Matières & Confection'}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => setIsAiChatMinimized(!isAiChatMinimized)}
-                                className="p-1.5 rounded-lg hover:bg-white/20 text-white transition cursor-pointer"
-                                title={isAiChatMinimized ? 'تكبير' : 'تصغير'}
-                              >
-                                <Minus className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setShowAiChatPopup(false)}
-                                className="p-1.5 rounded-lg hover:bg-white/20 text-white transition cursor-pointer"
-                                title="إغلاق"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Chat Box Body */}
-                          {!isAiChatMinimized && (
-                            <>
-                              <div className="flex-1 p-3 bg-slate-50/80 overflow-y-auto space-y-2.5 text-xs custom-scrollbar">
-                                {/* Default Welcome Message */}
-                                <div className="flex items-start gap-2">
-                                  <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
-                                    B
-                                  </div>
-                                  <div className="p-3 bg-white text-slate-800 rounded-2xl rounded-tl-none border border-slate-200 shadow-2xs max-w-[90%] leading-relaxed">
-                                    {isAr
-                                      ? `مرحباً بك! أنا مستشار ورشة BEYA Creative. بخصوص موديل "${analysis.modeleReel}"، أنا هنا باش نجاوبك بدقة على: نوع الثوب الأنسب، سعرو التقديري فالسوق المغربي، شحال كياكل د الميطراج، وتكلفة الخياطة والعينة. كليكي على أي سؤال لتحت أو كتب سؤالك!`
-                                      : `Bonjour ! Je suis le conseiller atelier BEYA Creative pour votre modèle "${analysis.modeleReel}". Je réponds à vos questions sur le tissu idéal, son prix au marché, le métrage requis et le coût de confection.`}
-                                  </div>
-                                </div>
-
-                                {/* Dynamic User & AI Messages */}
-                                {((clientAiMessages[d.id] || [])).map((msg, mIdx) => (
-                                  <div key={mIdx} className={`flex items-start gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    {msg.sender === 'ai' && (
-                                      <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
-                                        B
-                                      </div>
-                                    )}
-                                    <div className={`p-3 rounded-2xl max-w-[88%] leading-relaxed shadow-2xs ${
-                                      msg.sender === 'user'
-                                        ? 'bg-indigo-600 text-white rounded-tr-none'
-                                        : 'bg-white text-slate-800 rounded-tl-none border border-slate-200'
-                                    }`}>
-                                      <p className="whitespace-pre-wrap">{msg.text}</p>
-                                      <span className={`text-[9px] block text-right mt-1 font-mono ${msg.sender === 'user' ? 'text-indigo-200' : 'text-slate-400'}`}>
-                                        {msg.time}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))}
-
-                                {clientAiLoading && (
-                                  <div className="flex items-center gap-2 text-slate-400 text-xs py-1">
-                                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
-                                    <span className="font-medium">{isAr ? 'مستشار الورشة يكتب الإجابة...' : 'L\'expert formule la réponse...'}</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Quick Prompt Chips (1-Click Questions) */}
-                              <div className="p-2 bg-white border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
-                                {[
-                                  { label: isAr ? '🧵 نوع وسعر الثوب؟' : '🧵 Tissu & Prix', query: isAr ? 'أشنو هو أحسن نوع ثوب لهاد الموديل وشحال كيدير فالسوق المغربي؟' : 'Quel est le meilleur tissu pour ce modèle et son prix au marché ?' },
-                                  { label: isAr ? '📏 شحال الميطراج؟' : '📏 Métrage requis ?', query: isAr ? 'شحال كياكل هاد الموديل ديال الميطراج لكل بياسة؟' : 'Combien de mètres de tissu par pièce pour ce modèle ?' },
-                                  { label: isAr ? '💰 التخفيض فالكمية؟' : '💰 Remise Quantité ?', query: isAr ? 'شحال كيهبط ثمن الخياطة إيلا زدت فالكمية؟' : 'Comment évolue le prix unitaire si j\'augmente la quantité ?' },
-                                  { label: isAr ? '✂️ تفاصيل العينة والتسبيق؟' : '✂️ Échantillon', query: isAr ? 'كيفاش كتم مرحلة العينة وشحال التسبيق المطلوب باش نبداو؟' : 'Quelles sont les modalités de l\'échantillon et de l\'acompte ?' },
-                                  { label: isAr ? '📦 إيلا جبت الثوب من عندي؟' : '📦 Si je fournis le tissu ?', query: isAr ? 'إيلا بغيت نجيب الثوب والمستلزمات من عندي، واش كاين شي تسبيق وإمتى كنخلص؟' : 'Si je fournis le tissu et les fournitures, quel est l\'acompte et quand s\'effectue le paiement ?' }
-                                ].map((chip, cIdx) => (
-                                  <button
-                                    key={cIdx}
-                                    type="button"
-                                    disabled={clientAiLoading}
-                                    onClick={async () => {
-                                      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                      const userMsg = { sender: 'user' as const, text: chip.query, time: nowTime };
-                                      setClientAiMessages(prev => ({
-                                        ...prev,
-                                        [d.id]: [...(prev[d.id] || []), userMsg]
-                                      }));
-                                      setClientAiLoading(true);
-                                      try {
-                                        const reply = await generateClientAssistantReply(chip.query, d, analysis, isAr);
-                                        setClientAiMessages(prev => ({
-                                          ...prev,
-                                          [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
-                                        }));
-                                      } catch (err) {
-                                        setClientAiMessages(prev => ({
-                                          ...prev,
-                                          [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: isAr ? 'عفواً، وقع عطب بسيط. تواصل مع المعلم فالواتساب للجواب السريع.' : 'Erreur de connexion. Contactez l\'atelier sur WhatsApp.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
-                                        }));
-                                      } finally {
-                                        setClientAiLoading(false);
-                                      }
-                                    }}
-                                    className="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 rounded-lg text-[10px] font-bold whitespace-nowrap transition cursor-pointer shrink-0 border border-slate-200/80"
-                                  >
-                                    {chip.label}
-                                  </button>
-                                ))}
-                              </div>
-
-                              {/* Interactive Chat Input Bar */}
-                              <form
-                                onSubmit={async (e) => {
-                                  e.preventDefault();
-                                  if (!clientAiInput.trim() || clientAiLoading) return;
-                                  const text = clientAiInput.trim();
-                                  setClientAiInput('');
-                                  const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                  setClientAiMessages(prev => ({
-                                    ...prev,
-                                    [d.id]: [...(prev[d.id] || []), { sender: 'user' as const, text, time: nowTime }]
-                                  }));
-                                  setClientAiLoading(true);
-                                  try {
-                                    const reply = await generateClientAssistantReply(text, d, analysis, isAr);
-                                    setClientAiMessages(prev => ({
-                                      ...prev,
-                                      [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
-                                    }));
-                                  } catch (err) {
-                                    setClientAiMessages(prev => ({
-                                      ...prev,
-                                      [d.id]: [...(prev[d.id] || []), { sender: 'ai' as const, text: isAr ? 'عفواً، وقع عطب بسيط. تواصل مع المعلم فالواتساب للجواب السريع.' : 'Erreur de connexion.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
-                                    }));
-                                  } finally {
-                                    setClientAiLoading(false);
-                                  }
-                                }}
-                                className="p-2.5 bg-white border-t border-slate-100 flex items-center gap-2"
-                              >
-                                <input
-                                  type="text"
-                                  value={clientAiInput}
-                                  onChange={(e) => setClientAiInput(e.target.value)}
-                                  placeholder={isAr ? 'سول مستشار المعمل على الثوب أو السعر...' : 'Posez une question sur le tissu, prix...'}
-                                  className="flex-1 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-hidden focus:border-indigo-600 focus:bg-white transition-all text-slate-900"
-                                  disabled={clientAiLoading}
-                                />
-                                <button
-                                  type="submit"
-                                  disabled={!clientAiInput.trim() || clientAiLoading}
-                                  className="p-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl shadow-xs transition-all cursor-pointer shrink-0"
-                                  title={isAr ? 'إرسال' : 'Envoyer'}
-                                >
-                                  <Send className="w-3.5 h-3.5" />
-                                </button>
-                              </form>
-
-                              {/* Direct WhatsApp link */}
-                              <div className="p-2 bg-slate-50 border-t border-slate-100 text-center">
-                                <a
-                                  href={waUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center justify-center gap-1 transition"
-                                >
-                                  <Phone className="w-3 h-3 text-emerald-600" />
-                                  <span>تواصل مباشرة مع المعلم فالواتساب ←</span>
-                                </a>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      )}
                     </div>
 
                     {/* Expandable Study Toggle */}
@@ -4738,6 +4764,19 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               >
                                 <FileText className="w-4 h-4 text-indigo-400 group-hover:text-white transition-colors" />
                                 <span>{isAr ? 'عرض دراسة الموديل والتسعير ←' : 'Voir la Fiche & Devis Complet →'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedDemandePage(d);
+                                  setConsultingDemande(d);
+                                }}
+                                className="w-full py-2.5 px-3 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-2xs hover:shadow-xs active:scale-[0.99] cursor-pointer"
+                              >
+                                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                                <span>{isAr ? '💬 اسأل مستشار الورشة على هاد الموديل' : '💬 Poser une question sur ce modèle'}</span>
                               </button>
 
                               <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
