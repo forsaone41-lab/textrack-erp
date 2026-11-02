@@ -898,6 +898,9 @@ export default function Demandes() {
     if (devisPrixEchantillon) {
       extDetails.prixEchantillon = Number(devisPrixEchantillon);
     }
+    extDetails.devisOfficielConfirmed = true;
+    extDetails.devisStatus = 'devis_confirme_atelier';
+    extDetails.devisOfficielDate = new Date().toISOString();
 
     const updatedLead: Lead = {
       ...devisLead,
@@ -917,6 +920,8 @@ export default function Demandes() {
       crmDevisMode: devisMode,
       statusProgression: devisProgression || 'etude'
     };
+    (updatedLead as any).devisOfficielConfirmed = true;
+    (updatedLead as any).devisStatus = 'devis_confirme_atelier';
     await saveRecord('leads', updatedLead);
     setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
 

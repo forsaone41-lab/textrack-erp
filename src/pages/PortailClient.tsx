@@ -4044,15 +4044,28 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                     </div>
                                   );
                                 }
+                                if (isTestAccount) {
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => openQuickEdit(d)}
+                                      className="py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                                    >
+                                      <FileText className="w-4 h-4 text-slate-950" />
+                                      <span>{isAr ? '📄 قرار ودوفيز الورشة (Admin)' : 'Devis Atelier (Admin)'}</span>
+                                    </button>
+                                  );
+                                }
                                 return (
-                                  <button
-                                    type="button"
-                                    onClick={() => openQuickEdit(d)}
-                                    className="py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                                  <a
+                                    href={waUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                                   >
-                                    <FileText className="w-4 h-4 text-slate-950" />
-                                    <span>{isAr ? '📄 قرار ودوفيز الورشة' : 'Devis Atelier'}</span>
-                                  </button>
+                                    <MessageCircle className="w-4 h-4 text-emerald-600" />
+                                    <span>{isAr ? '💬 استفسار ومتابعة مع الورشة' : 'Contacter l\'Atelier'}</span>
+                                  </a>
                                 );
                               })()}
 
@@ -5055,18 +5068,20 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               })()}
 
                               <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openQuickEdit(d);
-                                  }}
-                                  className="flex-1 py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-200/90 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer hover:border-amber-300"
-                                  title={isAr ? 'قرار ودوفيز الورشة النهائي' : 'Décision Finale & Devis Atelier'}
-                                >
-                                  <FileText className="w-3.5 h-3.5 text-amber-700" />
-                                  <span className="truncate">{isAr ? '📄 قرار ودوفيز الورشة (DEVIS)' : '📄 Devis Atelier Officiel'}</span>
-                                </button>
+                                {isTestAccount && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openQuickEdit(d);
+                                    }}
+                                    className="py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-200/90 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer hover:border-amber-300 shrink-0"
+                                    title={isAr ? 'خاص بإدارة الورشة فقط' : 'Admin Atelier Uniquement'}
+                                  >
+                                    <FileText className="w-3.5 h-3.5 text-amber-700" />
+                                    <span>{isAr ? 'قرار الورشة (Admin)' : 'Admin Devis'}</span>
+                                  </button>
+                                )}
 
                                 <button
                                   type="button"
@@ -5074,11 +5089,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                     e.stopPropagation();
                                     handlePrintDevis(d);
                                   }}
-                                  className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200 cursor-pointer shrink-0"
+                                  className="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-200 cursor-pointer"
                                   title={isAr ? 'تحميل أو طباعة ملف الدوفيز PDF' : 'Télécharger Devis PDF'}
                                 >
-                                  <Download className="w-3.5 h-3.5" />
-                                  <span className="text-[10px] font-black uppercase">{isAr ? 'ملف Devis' : 'PDF'}</span>
+                                  <Download className="w-3.5 h-3.5 text-slate-600" />
+                                  <span>{isAr ? 'تحميل ملف الدوفيز (PDF)' : 'Télécharger Devis (PDF)'}</span>
                                 </button>
 
                                 {isPending && (
