@@ -728,6 +728,54 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [phoneInputVal, setPhoneInputVal] = useState(clientPhone);
   const [savingPhone, setSavingPhone] = useState(false);
   const [phoneSaveSuccess, setPhoneSaveSuccess] = useState(false);
+  const [validatingDevisLead, setValidatingDevisLead] = useState<Lead | null>(null);
+  const [printingDevisLead, setPrintingDevisLead] = useState<Lead | null>(null);
+  const [virementReceiptFile, setVirementReceiptFile] = useState<string | null>(null);
+  const [validatingDevisSending, setValidatingDevisSending] = useState(false);
+  const [validatingDevisSuccess, setValidatingDevisSuccess] = useState(false);
+  const [ribCopied, setRibCopied] = useState(false);
+
+  const handleValidateDevisAndVirement = async (lead: Lead) => {
+    setValidatingDevisSending(true);
+    try {
+      const extDetails: any = {};
+      try { Object.assign(extDetails, JSON.parse(lead.details || '{}')); } catch(e) {}
+      extDetails.devisStatus = virementReceiptFile ? 'acompte_paye' : 'valide';
+      extDetails.clientValideDate = new Date().toISOString();
+      if (virementReceiptFile) extDetails.virementReceipt = virementReceiptFile;
+
+      const updatedLead: Lead = {
+        ...lead,
+        details: JSON.stringify(extDetails),
+        crmStage: 'confirme',
+        statusProgression: virementReceiptFile ? 'production' : 'etude',
+        reponseAtelierDate: new Date().toISOString()
+      };
+      (updatedLead as any).devisStatus = virementReceiptFile ? 'acompte_paye' : 'valide';
+
+      await saveRecord('leads', updatedLead);
+      setMesDemandes(prev => prev.map(m => m.id === lead.id ? updatedLead : m));
+      setSelectedDemandePage(prev => prev?.id === lead.id ? updatedLead : prev);
+      
+      setValidatingDevisSuccess(true);
+      setTimeout(() => {
+        setValidatingDevisSuccess(false);
+        setValidatingDevisLead(null);
+        setVirementReceiptFile(null);
+      }, 2000);
+    } catch (err) {
+      console.error('Error validating devis:', err);
+    } finally {
+      setValidatingDevisSending(false);
+    }
+  };
+
+  const handlePrintDevis = (lead: Lead) => {
+    setPrintingDevisLead(lead);
+    setTimeout(() => {
+      printElement(`devis-doc-${lead.id}`);
+    }, 250);
+  };
 
   const handleSaveClientPhone = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -3425,7 +3473,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             ) : (
                               <>
                                 <RotateCw className="w-3.5 h-3.5 text-indigo-200" />
-                                <span>{isAr ? '🔄 تحديث التسعير والحسابات' : '🔄 Actualiser le Chiffrage'}</span>
+                                <span>{isAr ? 'تحديث التسعير والحسابات' : 'Actualiser le Chiffrage'}</span>
                               </>
                             )}
                           </button>
