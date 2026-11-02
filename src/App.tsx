@@ -118,6 +118,7 @@ const Cookies         = lazy(() => import('./pages/Cookies'));
 const SaaSAdminPage   = lazy(() => import('./pages/SaaSAdminPage'));
 const BeyaNetwork     = lazy(() => import('./pages/BeyaNetwork'));
 const ModelisteProfilePage = lazy(() => import('./pages/ModelisteProfilePage'));
+const SupplierProfilePage  = lazy(() => import('./pages/SupplierProfilePage'));
 import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
@@ -849,6 +850,26 @@ function AppContent() {
             <ModelisteProfilePage />
           </Suspense>
         } />
+        <Route path="/supplier/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
+          </Suspense>
+        } />
+        <Route path="/supplier" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
+          </Suspense>
+        } />
+        <Route path="/network/supplier/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
+          </Suspense>
+        } />
+        <Route path="/fournisseur/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
+          </Suspense>
+        } />
         <Route path="/terms" element={
           <Suspense fallback={<PageLoader />}>
             <Terms />
@@ -932,6 +953,26 @@ function AppContent() {
         <Route path="/network/modeliste/:id" element={
           <Suspense fallback={<PageLoader />}>
             <ModelisteProfilePage />
+          </Suspense>
+        } />
+        <Route path="/supplier/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
+          </Suspense>
+        } />
+        <Route path="/supplier" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
+          </Suspense>
+        } />
+        <Route path="/network/supplier/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
+          </Suspense>
+        } />
+        <Route path="/fournisseur/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
           </Suspense>
         } />
         <Route path="/portal" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
@@ -1154,6 +1195,26 @@ function AppContent() {
         <Route path="/network/modeliste/:id" element={
           <Suspense fallback={<PageLoader />}>
             <ModelisteProfilePage />
+          </Suspense>
+        } />
+        <Route path="/supplier/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
+          </Suspense>
+        } />
+        <Route path="/supplier" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
+          </Suspense>
+        } />
+        <Route path="/network/supplier/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
+          </Suspense>
+        } />
+        <Route path="/fournisseur/:id" element={
+          <Suspense fallback={<PageLoader />}>
+            <SupplierProfilePage />
           </Suspense>
         } />
 

@@ -1,3 +1,5 @@
+import SupplierProfilePage from './SupplierProfilePage';
+import { SUPPLIERS_DATA } from '../data/suppliersData';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -33,6 +35,25 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [clientCategoryFilter, setClientCategoryFilter] = useState<'all' | 'streetwear' | 'casual' | 'modest' | 'sport'>('all');
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>('all');
   const [selectedSupplier, setSelectedSupplier] = useState<any | null>(null);
+  // Auto-detect supplier from URL hash
+  useEffect(() => {
+    const checkHash = () => {
+      const hash = window.location.hash;
+      if (hash.includes('supplier/')) {
+        const supId = hash.split('supplier/')[1]?.split('?')[0];
+        const match = SUPPLIERS_DATA.find(s => s.id === supId);
+        if (match) {
+          setSelectedSupplier(match);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, []);
+
+
   const [supplierModalTab, setSupplierModalTab] = useState<'catalog' | 'reviews' | 'about' | 'tamyoz'>('catalog');
   const [selectedSupplierCityFilter, setSelectedSupplierCityFilter] = useState<string>('all');
   const [selectedFabricTypeFilter, setSelectedFabricTypeFilter] = useState<string>('all');
@@ -836,6 +857,21 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
   // Filter clients
   // clientsList removed
+
+    // ───────────────── DEDICATED FULL SUPPLIER PAGE VIEW ─────────────────
+  if (selectedSupplier) {
+    return (
+      <SupplierProfilePage 
+        supplierId={selectedSupplier.id} 
+        onBack={() => {
+          setSelectedSupplier(null);
+          if (window.location.hash.includes('supplier')) {
+            window.location.hash = '#/network';
+          }
+        }} 
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f0f2f5] text-slate-900 font-sans antialiased" dir="rtl">
@@ -2238,392 +2274,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       )}
 
       {/* ───────────────── MODAL: JOIN GROUP BUYING ───────────────── */}
-            {/* ───────────────── DETAILED SUPPLIER PROFILE & CATALOG MODAL ───────────────── */}
-      {selectedSupplier && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200 flex flex-col justify-between">
-            
-            {/* Modal Hero Cover & Header */}
-            <div>
-              <div className="relative h-44 sm:h-52 bg-slate-900 rounded-t-3xl overflow-hidden">
-                <img 
-                  src={selectedSupplier.cover || "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&auto=format&fit=crop&q=80"} 
-                  alt={selectedSupplier.name} 
-                  className="w-full h-full object-cover opacity-75"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
-                
-                {/* Close Button */}
-                <button 
-                  onClick={() => setSelectedSupplier(null)} 
-                  className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition cursor-pointer backdrop-blur-xs"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                {/* Badges on Cover */}
-                <div className="absolute top-4 right-4 flex items-center gap-2">
-                  <span className="px-3 py-1 bg-white/95 text-slate-900 rounded-xl text-xs font-black shadow-md">
-                    {selectedSupplier.categoryLabel}
-                  </span>
-                  <span className="px-3 py-1 bg-amber-400 text-slate-950 rounded-xl text-xs font-black shadow-md flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 fill-slate-950" />
-                    <span>{selectedSupplier.rating}</span>
-                  </span>
-                </div>
-
-                {/* Supplier Identity on Cover */}
-                <div className="absolute bottom-4 right-4 left-4 flex items-end gap-3.5 text-white">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white p-1 shadow-xl shrink-0 overflow-hidden border-2 border-white">
-                    <img 
-                      src={selectedSupplier.logo || "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=300&auto=format&fit=crop&q=80"} 
-                      alt={selectedSupplier.name} 
-                      className="w-full h-full object-cover rounded-xl"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-lg sm:text-2xl font-black truncate">{selectedSupplier.name}</h2>
-                      {selectedSupplier.verified && (
-                        <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] font-black rounded-md flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>معتمد ورشة BEYA</span>
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-300 flex items-center gap-1 font-medium truncate">
-                      <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>{selectedSupplier.district || selectedSupplier.city}</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Info Bar */}
-              <div className="p-4 bg-slate-50 border-b border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                <div className="p-2 bg-white rounded-xl border border-slate-200">
-                  <span className="text-[10px] text-slate-400 block font-bold">الحد الأدنى للطلب (MOQ)</span>
-                  <span className="font-black text-slate-800">{selectedSupplier.minQty}</span>
-                </div>
-                <div className="p-2 bg-white rounded-xl border border-slate-200">
-                  <span className="text-[10px] text-slate-400 block font-bold">متوسط الأسعار</span>
-                  <span className="font-black text-emerald-700">{selectedSupplier.priceRange}</span>
-                </div>
-                <div className="p-2 bg-white rounded-xl border border-slate-200">
-                  <span className="text-[10px] text-slate-400 block font-bold">سرعة التوصيل</span>
-                  <span className="font-black text-slate-800">{selectedSupplier.deliveryTime?.split('•')[0] || '24 ساعة'}</span>
-                </div>
-                <div className="p-2 bg-white rounded-xl border border-slate-200">
-                  <span className="text-[10px] text-slate-400 block font-bold">تقييمات البراندات</span>
-                  <span className="font-black text-amber-600">⭐ {selectedSupplier.rating} ({selectedSupplier.reviewsCount || 30}+ تقييم)</span>
-                </div>
-              </div>
-
-              {/* Profile Modal Tabs */}
-              <div className="px-4 pt-3 border-b border-slate-200 flex items-center gap-2 overflow-x-auto custom-scrollbar">
-                {[
-                  { id: 'catalog', label: '📦 الكتالوج والأقمشة المتوفرة', count: selectedSupplier.catalog?.length },
-                  { id: 'reviews', label: '⭐ تقييمات وتجارب البراندات', count: (selectedSupplier.reviewsCount || 0) + (supplierCustomReviews[selectedSupplier.id]?.length || 0) },
-                  { id: 'about', label: '🏭 عن المورد والموقع' },
-                  { id: 'tamyoz', label: '🛡️ ضمان BEYA ومقارنة فيسبوك' }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setSupplierModalTab(tab.id as any)}
-                    className={`pb-3 px-3 text-xs font-black border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                      supplierModalTab === tab.id
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    <span>{tab.label}</span>
-                    {tab.count !== undefined && (
-                      <span className="px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded-full text-[10px]">
-                        {tab.count}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {/* Modal Body Tab Content */}
-              <div className="p-4 sm:p-6 space-y-4">
-                
-                {/* 1. TAB: CATALOG & STOCK */}
-                {supplierModalTab === 'catalog' && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-black text-sm text-slate-900 flex items-center gap-2">
-                        <span>قائمة الأقمشة والسلع الجاهزة فالمستودع</span>
-                        <span className="text-xs text-emerald-600 font-bold">✓ أسعار خاصة بأعضاء BEYA</span>
-                      </h4>
-                      <span className="text-xs text-slate-400">تحديث أسبوعي للمخزون</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                      {(selectedSupplier.catalog || []).map((item: any, idx: number) => (
-                        <div key={idx} className="p-4 rounded-2xl border border-slate-200/90 bg-white hover:border-indigo-200 hover:shadow-md transition space-y-2.5">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                {item.stockStatus}
-                              </span>
-                              <h5 className="font-black text-sm text-slate-900 mt-1">{item.name}</h5>
-                            </div>
-                            <span className="font-mono font-black text-sm text-indigo-900 bg-indigo-50 px-2.5 py-1 rounded-xl shrink-0">
-                              {item.price}
-                            </span>
-                          </div>
-
-                          <p className="text-xs text-slate-600 leading-relaxed">
-                            {item.specs}
-                          </p>
-
-                          {item.colors && item.colors.length > 0 && (
-                            <div>
-                              <span className="text-[10px] font-bold text-slate-400 block mb-1">الألوان المتوفرة :</span>
-                              <div className="flex flex-wrap gap-1">
-                                {item.colors.map((c: string, cIdx: number) => (
-                                  <span key={cIdx} className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] rounded-md font-medium">
-                                    {c}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                            <span className="text-[10px] text-slate-400">الطلب أو طلب عينة</span>
-                            <a
-                              href={`https://wa.me/${selectedSupplier.whatsapp}?text=${encodeURIComponent(`السلام عليكم، أرغب في الاستفسار عن (${item.name}) بسعر ${item.price} المتوفر عندكم في BEYA NETWORK. هل يمكن إرسال عينة أو رولو اختبار؟`)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs"
-                            >
-                              <Phone className="w-3 h-3" />
-                              <span>طلب هذا القماش</span>
-                            </a>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. TAB: REVIEWS & TRUST */}
-                {supplierModalTab === 'reviews' && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div>
-                        <h4 className="font-black text-sm text-slate-900">تقييمات وتجارب براندات الملابس والمشاغل</h4>
-                        <p className="text-xs text-slate-500">آراء حقيقية وموثوقة من أعضاء شبكة BEYA الذين تعاملوا مع هذا المورد</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowAddReviewModal(true)}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>أضف تقييمك وتجربتك</span>
-                      </button>
-                    </div>
-
-                    {/* Overall Score Box */}
-                    <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-200 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xl shadow-md">
-                          {selectedSupplier.rating}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1">
-                            {[1,2,3,4,5].map(s => (
-                              <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                            ))}
-                          </div>
-                          <span className="text-xs text-slate-700 font-bold block mt-0.5">
-                            مورد معتمد بمعدل ثقة 98%
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-500 font-medium">
-                        {(selectedSupplier.reviewsCount || 0) + (supplierCustomReviews[selectedSupplier.id]?.length || 0)} تقييم حقيقي
-                      </span>
-                    </div>
-
-                    {/* Reviews List */}
-                    <div className="space-y-3">
-                      {[
-                        ...(supplierCustomReviews[selectedSupplier.id] || []),
-                        ...(selectedSupplier.reviews || [])
-                      ].map((rev: any, rIdx: number) => (
-                        <div key={rIdx} className="p-4 rounded-2xl border border-slate-200 bg-white space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
-                                {rev.author?.[0] || 'B'}
-                              </div>
-                              <div>
-                                <span className="font-bold text-xs text-slate-900 block leading-tight">{rev.author}</span>
-                                <span className="text-[10px] text-slate-400">{rev.brand || 'براند أزياء مغربية'}</span>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="flex items-center gap-0.5">
-                                {[...Array(Math.floor(rev.rating || 5))].map((_, i) => (
-                                  <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                ))}
-                              </div>
-                              <span className="text-[9px] text-slate-400 block mt-0.5">{rev.date}</span>
-                            </div>
-                          </div>
-                          <p className="text-xs text-slate-700 leading-relaxed bg-slate-50/70 p-3 rounded-xl border border-slate-100">
-                            "{rev.text}"
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. TAB: ABOUT & LOCALISATION */}
-                {supplierModalTab === 'about' && (
-                  <div className="space-y-4 text-xs text-slate-700">
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                      <h4 className="font-black text-sm text-slate-900 flex items-center gap-1.5">
-                        <Building2 className="w-4 h-4 text-indigo-600" />
-                        <span>معلومات المحل والمستودع والتجهيزات</span>
-                      </h4>
-                      <p className="leading-relaxed text-slate-600">
-                        {selectedSupplier.desc}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="p-3.5 rounded-xl border border-slate-200 bg-white space-y-1">
-                        <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                          <MapPin className="w-4 h-4 text-rose-500" />
-                          <span>العنوان المضبوط :</span>
-                        </span>
-                        <p className="text-slate-600 text-xs">
-                          {selectedSupplier.district || selectedSupplier.city}
-                        </p>
-                      </div>
-
-                      <div className="p-3.5 rounded-xl border border-slate-200 bg-white space-y-1">
-                        <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                          <Clock className="w-4 h-4 text-amber-500" />
-                          <span>أوقات العمل والتواصل :</span>
-                        </span>
-                        <p className="text-slate-600 text-xs">
-                          من الإثنين إلى السبت: 09:00 صباحاً إلى 07:00 مساءً (الرد سريع عبر الواتساب).
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-2xl border border-indigo-100 bg-indigo-50/60 space-y-2">
-                      <span className="font-bold text-indigo-950 block">شروط التوصيل والدفع :</span>
-                      <ul className="space-y-1 text-indigo-900 text-[11px] leading-relaxed list-disc list-inside">
-                        <li>توصيل داخل المدينة في أقل من 24 ساعة عبر وسائل النقل الخاصة بالورشة.</li>
-                        <li>إرسال الشحنات والرولوات لجميع مدن المغرب عبر شركات النقل المعتمدة (Voie Express, Ghazala, SDTM).</li>
-                        <li>إمكانية الدفع عند الاستلام بعد معاينة الرولو أو التحويل البنكي المباشر.</li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. TAB: TAMYOZ & COMPARISON WITH FACEBOOK */}
-                {supplierModalTab === 'tamyoz' && (
-                  <div className="space-y-4">
-                    <div className="text-center max-w-xl mx-auto space-y-1">
-                      <h4 className="font-black text-base text-slate-900">
-                        علاش تشري الأقمشة من شبكة BEYA بلا ما تخاطر فكروبات فيسبوك؟
-                      </h4>
-                      <p className="text-xs text-slate-500">
-                        مقارنة حقيقية مبنية على تجارب مئات صناع الموضة بالمغرب
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 overflow-hidden text-xs">
-                      <table className="w-full text-right">
-                        <thead>
-                          <tr className="bg-slate-900 text-white text-[11px]">
-                            <th className="p-3 font-bold">المعيار</th>
-                            <th className="p-3 font-bold bg-emerald-800 text-emerald-100">BEYA NETWORK (المورد المعتمد)</th>
-                            <th className="p-3 font-bold text-rose-300">مجموعات فيسبوك العادية</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200 text-slate-700">
-                          <tr>
-                            <td className="p-3 font-bold">جودة القماش وفحص الانكماش</td>
-                            <td className="p-3 bg-emerald-50 text-emerald-900 font-bold">✓ مفحوص مخبرياً (انكماش &lt; 2.5% وألوان ثابتة)</td>
-                            <td className="p-3 text-rose-700">❌ بدون فحص، مخاطرة كبيرة بنقصان القياس بعد التصبين</td>
-                          </tr>
-                          <tr>
-                            <td className="p-3 font-bold">دقة الميزان (المتر والكيلو)</td>
-                            <td className="p-3 bg-emerald-50 text-emerald-900 font-bold">✓ ميزان إلكتروني موثق بدقة تامة</td>
-                            <td className="p-3 text-rose-700">❌ شكايات متكررة من سحب 2 إلى 4 كلغ من كل رولو</td>
-                          </tr>
-                          <tr>
-                            <td className="p-3 font-bold">السعر والوساطة</td>
-                            <td className="p-3 bg-emerald-50 text-emerald-900 font-bold">✓ سعر الجملة المباشر مع تخفيض BEYA VIP</td>
-                            <td className="p-3 text-rose-700">❌ سماسرة يضيفون من 5 إلى 15 درهم فكل كيلو كعمولة خفية</td>
-                          </tr>
-                          <tr>
-                            <td className="p-3 font-bold">عينة واختبار مسبق</td>
-                            <td className="p-3 bg-emerald-50 text-emerald-900 font-bold">✓ إمكانية أخذ رولو تجريبي (Rouleau Test) قبل الكمية</td>
-                            <td className="p-3 text-rose-700">❌ إجبار على شراء كمية كبرى دفعة واحدة بدون تجربة</td>
-                          </tr>
-                          <tr>
-                            <td className="p-3 font-bold">المصداقية والأمان</td>
-                            <td className="p-3 bg-emerald-50 text-emerald-900 font-bold">✓ محل ومستودع معروف فدرب عمر وطنجة مع تقييمات حقيقية</td>
-                            <td className="p-3 text-rose-700">❌ حسابات وهمية وتحويلات مسبقة بدون ضمان استلام</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            </div>
-
-            {/* Sticky Modal Footer CTA */}
-            <div className="p-4 bg-slate-900 text-white rounded-b-3xl flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0">
-              <div>
-                <span className="text-xs font-bold text-amber-300 block">
-                  ✓ تواصل مباشر مع {selectedSupplier.name}
-                </span>
-                <span className="text-[10px] text-slate-400">
-                  سيتم تطبيق تسعيرة BEYA VIP التفضيلية مباشرة عند المراسلة
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={() => setSelectedSupplier(null)}
-                  className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition cursor-pointer"
-                >
-                  إغلاق
-                </button>
-                <a
-                  href={`https://wa.me/${selectedSupplier.whatsapp}?text=${encodeURIComponent(`السلام عليكم، تواصلت معك من خلال منصة BEYA NETWORK بخصوص طلب الأقمشة والسلعة المتوفرة لديكم بسعر BEYA VIP التفضيلـي.`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 sm:flex-none px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Phone className="w-4 h-4" />
-                  <span>تواصل عبر واتساب (سعر BEYA VIP)</span>
-                </a>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* ───────────────── ADD SUPPLIER REVIEW MODAL ───────────────── */}
+            {/* ───────────────── ADD SUPPLIER REVIEW MODAL ───────────────── */}
       {showAddReviewModal && selectedSupplier && (
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200 space-y-4">

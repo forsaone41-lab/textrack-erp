@@ -2706,7 +2706,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                           });
                           setShowNewOrderModal(true);
                         }}
-                        className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider shadow-xl shadow-indigo-600/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                        className="w-full sm:w-auto px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider shadow-md shadow-indigo-600/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2.5 cursor-pointer"
                       >
                         <Plus className="w-4 h-4" />
                         <span>{isAr ? 'طلب جديد / موديل' : 'Nouvelle Commande'}</span>
@@ -2911,7 +2911,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                        onClick={handleLaunchMyStore}
                        className="block w-full md:w-auto px-8 py-4 bg-white text-blue-600 hover:bg-blue-50 rounded-xl text-sm font-black uppercase tracking-widest text-center shadow-lg hover:scale-105 transition-all cursor-pointer active:scale-95"
                      >
-                       {isAr ? 'أنشئ متجري الآن 🚀' : 'Créer ma boutique 🚀'}
+                       {isAr ? 'أنشئ متجري الآن' : 'Créer ma boutique'}
                      </button>
                    </div>
                  </div>
