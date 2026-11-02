@@ -1004,7 +1004,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setTestingApiKey(true);
     setApiKeyTestResult(null);
     try {
-      const candidateModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-3.8-flash'];
+      const candidateModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-1.5-flash'];
       let succeeded = false;
       let lastErr = '';
       for (const m of candidateModels) {
@@ -1257,7 +1257,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 اقتصر على: نوع القماش، سعره بسوق درب عمر / كراج علال / القريعة، استهلاك القماش بالامتار، وسعر الخياطة والعينة والتسبيق.
 سؤال الزبون: ${query}`;
 
-        const candidateChatModels = ['gemini-flash-latest', 'gemini-2.5-flash'];
+        const candidateChatModels = ['gemini-2.5-flash', 'gemini-flash-latest'];
         for (const chatMod of candidateChatModels) {
           try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${chatMod}:generateContent?key=${apiKey}`, {
@@ -2098,20 +2098,22 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
               >
                 <RotateCw className="w-5 h-5" />
               </button>
-              <button 
-                onClick={() => {
-                  setApiKeyDraft(geminiApiKey);
-                  setApiKeyTestResult(null);
-                  setShowApiKeyModal(true);
-                }}
-                className="p-2 hover:bg-slate-100 rounded-xl transition-all cursor-pointer flex items-center justify-center"
-                title={isAr ? 'الذكاء الاصطناعي متصل' : 'Système IA Actif'}
-              >
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-xs shadow-emerald-500/50" />
-                </span>
-              </button>
+              {currentUser?.role === 'admin' && (
+                <button 
+                  onClick={() => {
+                    setApiKeyDraft(geminiApiKey);
+                    setApiKeyTestResult(null);
+                    setShowApiKeyModal(true);
+                  }}
+                  className="p-2 hover:bg-slate-100 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                  title="Admin Gemini Config"
+                >
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-xs shadow-emerald-500/50" />
+                  </span>
+                </button>
+              )}
               <button onClick={toggle} className="px-5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-colors">
                  {isAr ? 'FR' : 'عربية'}
               </button>
@@ -2762,77 +2764,86 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                      </div>
                    </div>
 
-                   {/* 0. Primary AI Analysis Action Command (زر التحليل بالذكاء الاصطناعي أولاً قبل باقي المعلومات) */}
-                   <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 md:p-6 shadow-xl border border-indigo-500/30 mb-5 relative overflow-hidden">
-                     <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-                       <div className="space-y-1.5 min-w-0">
-                         <div className="flex items-center gap-2 flex-wrap">
-                           <span className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-indigo-500/30 to-purple-500/30 text-indigo-200 border border-indigo-400/30 text-[10px] font-black tracking-wider uppercase flex items-center gap-1.5">
-                             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                             <span>BEYA AI Tactical Analysis V2.1</span>
-                           </span>
-                           <span className="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
-                             {analysis.isAnalyzedByAI || d.details?.includes('ATELIER_DEVIS') ? (isAr ? '✓ فحص الموديل مكتمل' : '✓ Analyse Terminée') : (isAr ? '⚡ جاهز للفحص والتحليل' : '⚡ Prêt pour l\'analyse')}
-                           </span>
-                           <span className="text-[11px] text-slate-400 font-mono">
-                             REF: #{d.id.substring(0, 8).toUpperCase()}
-                           </span>
-                         </div>
+{/* 0. Primary Model Title & Devis Chiffrage Atelier Header (Compact, Sleek, No AI mentioned) */}
+                    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-3.5 md:p-4 shadow-lg border border-indigo-500/20 mb-4 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+                      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+                        <div className="space-y-1.5 min-w-0 flex-1">
+                          {/* Badges row */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2.5 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 text-[10px] font-black tracking-wider uppercase flex items-center gap-1.5">
+                              <span>🏭</span>
+                              <span>{isAr ? 'مكتب الدراسات والتسعير BEYA' : 'Bureau d\'Études Atelier BEYA'}</span>
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                              {isAr ? '✓ دراسة معتمدة ومسعرة' : '✓ Chiffrage Atelier Validé'}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              REF: #{d.id.substring(0, 8).toUpperCase()}
+                            </span>
+                          </div>
 
-                         <h3 className="text-lg md:text-xl font-black text-white tracking-tight">
-                           {isAr ? 'تحليل وتدقيق الموديل بالذكاء الاصطناعي الفوري' : 'Analyse Immédiate du Modèle par l\'IA'}
-                         </h3>
-                         <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-                           {isAr 
-                             ? 'كيتم فحص صورة الموديل بالرؤية الحاسوبية (Vision AI) لتحديد نوع القماش الأنسب، حساب الميطراج المستهلك بدقة، وتقدير كلفة الفصالة والخياطة وفق أسعار سوق الجملة المغربي.'
-                             : 'Analyse la photo par Vision IA pour identifier le tissu optimal, calculer le métrage exact et estimer le coût de confection selon les cours du marché de gros marocain.'}
-                         </p>
-                       </div>
+                          {/* Model Title (Prominent, Sleek, Clear) */}
+                          <h3 className="text-base md:text-lg font-black text-white tracking-tight leading-snug break-words">
+                            {analysis.modeleReel || d.modele || d.type || (isAr ? 'دراسة تقنية وتحديد سعر الموديل' : 'Étude Technique & Chiffrage Modèle')}
+                          </h3>
 
-                       {/* Primary CTA Button */}
-                       <div className="shrink-0 flex items-center gap-2">
-                         <button
-                           type="button"
-                           disabled={isAiAnalyzingLead === d.id}
-                           onClick={() => reanalyzeDemandeWithAI(d)}
-                           className="w-full md:w-auto px-6 py-4 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-600 hover:from-indigo-600 hover:via-purple-700 hover:to-pink-700 text-white rounded-2xl text-xs md:text-sm font-black shadow-xl shadow-purple-900/40 hover:shadow-purple-700/60 active:scale-95 transition-all flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
-                         >
-                           {isAiAnalyzingLead === d.id ? (
-                             <>
-                               <RotateCw className="w-4 h-4 animate-spin text-white" />
-                               <span className="animate-pulse">{isAr ? 'جاري فحص الصورة وتدقيق الأسعار...' : 'Analyse IA en cours...'}</span>
-                             </>
-                           ) : (
-                             <>
-                               <Sparkles className="w-4 h-4 text-amber-300" />
-                               <span>
-                                 {analysis.isAnalyzedByAI || d.details?.includes('ATELIER_DEVIS')
-                                   ? (isAr ? '🔄 إعادة التحليل وتحديث الحسابات' : '🔄 Relancer l\'Analyse IA')
-                                   : (isAr ? '🧠 إطلاق التحليل الذكي الفوري' : '🧠 Lancer l\'Analyse IA')}
-                               </span>
-                             </>
-                           )}
-                         </button>
-                       </div>
-                     </div>
+                          {/* Chiffrage Montant / Pricing Summary Pills */}
+                          <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                            <div className="px-2.5 py-1 bg-white/10 backdrop-blur-xs rounded-lg border border-white/15 flex items-center gap-1.5">
+                              <span className="text-[10px] text-slate-300 font-medium">{isAr ? 'سعر البياسة :' : 'Prix unitaire :'}</span>
+                              <span className="text-xs font-black text-amber-300 font-mono">{activeUnitPrice} MAD</span>
+                            </div>
+                            <div className="px-2.5 py-1 bg-indigo-600/30 backdrop-blur-xs rounded-lg border border-indigo-400/30 flex items-center gap-1.5">
+                              <span className="text-[10px] text-indigo-200 font-medium">{isAr ? 'المجموع الإجمالي :' : 'Total Devis :'}</span>
+                              <span className="text-xs font-black text-white font-mono">{activeTotalPrice.toLocaleString()} MAD</span>
+                              <span className="text-[10px] text-slate-300">({currentQty} pcs)</span>
+                            </div>
+                            <div className="px-2.5 py-1 bg-slate-800/60 rounded-lg border border-slate-700/60 text-[10px] text-slate-300 font-medium">
+                              {isAr ? `⏱️ مدة الإنجاز: ${analysis.delaiEstime}` : `⏱️ Délai estimé : ${analysis.delaiEstime}`}
+                            </div>
+                          </div>
+                        </div>
 
-                     {/* Active analysis progress bar when analyzing */}
-                     {isAiAnalyzingLead === d.id && (
-                       <div className="mt-4 pt-3 border-t border-white/10 space-y-2">
-                         <div className="flex items-center justify-between text-[11px] text-indigo-200">
-                           <span className="flex items-center gap-2">
-                             <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                             {isAr ? 'جاري الاتصال بنموذج Gemini Vision وتحليل مواصفات الصورة والخياطة...' : 'Connexion à Gemini Vision et calcul des métrages...'}
-                           </span>
-                           <span className="font-mono">75%</span>
-                         </div>
-                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                           <div className="h-full bg-gradient-to-r from-amber-400 via-pink-500 to-indigo-400 rounded-full animate-pulse w-3/4" />
-                         </div>
-                       </div>
-                     )}
-                   </div>
+                        {/* Actualiser le Chiffrage CTA Button */}
+                        <div className="shrink-0 flex items-center gap-2">
+                          <button
+                            type="button"
+                            disabled={isAiAnalyzingLead === d.id}
+                            onClick={() => reanalyzeDemandeWithAI(d)}
+                            className="w-full md:w-auto px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-black shadow-md shadow-indigo-950/40 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                          >
+                            {isAiAnalyzingLead === d.id ? (
+                              <>
+                                <RotateCw className="w-3.5 h-3.5 animate-spin text-white" />
+                                <span className="animate-pulse">{isAr ? 'جاري تحديث الحسابات والتسعير...' : 'Actualisation en cours...'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <RotateCw className="w-3.5 h-3.5 text-indigo-200" />
+                                <span>{isAr ? '🔄 تحديث التسعير والحسابات' : '🔄 Actualiser le Chiffrage'}</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Active analysis progress bar when analyzing */}
+                      {isAiAnalyzingLead === d.id && (
+                        <div className="mt-3 pt-2.5 border-t border-white/10 space-y-1.5">
+                          <div className="flex items-center justify-between text-[10px] text-indigo-200">
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                              {isAr ? 'جاري فحص مواصفات الموديل وتحديث كلفة القماش والمصنعية في ورشة BEYA...' : 'Calcul du métrage et mise à jour du chiffrage atelier...'}
+                            </span>
+                            <span className="font-mono">85%</span>
+                          </div>
+                          <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-amber-400 via-pink-500 to-indigo-400 rounded-full animate-pulse w-4/5" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
                    {/* 1. Professional Minimalist Stepper (No games / Corporate timeline) */}
                     <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-xs mb-4">
@@ -2892,12 +2903,12 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-lg border border-emerald-100">
                                   {isAr ? 'دوفيز رسمي معتمد' : 'Devis Officiel'}
                                 </span>
-                                <span className="px-2.5 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-black rounded-lg border border-purple-100 flex items-center gap-1">
-                                  <Sparkles className="w-3 h-3 text-purple-600" />
-                                  <span>{isAr ? 'مدقق بالذكاء الاصطناعي' : 'Vérifié IA'}</span>
+                                <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-black rounded-lg border border-blue-100 flex items-center gap-1">
+                                  <ShieldCheck className="w-3 h-3 text-blue-600" />
+                                  <span>{isAr ? 'عرض سعر معتمد من الورشة' : 'Devis Atelier Certifié'}</span>
                                 </span>
                               </div>
-                              <h2 className="text-xl font-black text-slate-900 truncate leading-snug">
+                              <h2 className="text-lg md:text-xl font-black text-slate-900 leading-snug break-words">
                                 {analysis.modeleReel}
                               </h2>
                               <p className="text-xs text-slate-500 font-medium">
@@ -3102,6 +3113,73 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                   {activeUnitPrice} MAD <span className="text-[10px] font-medium text-slate-500">/ pc</span>
                                 </span>
                               </div>
+
+                              {/* Explication Claire du Devis : علاش تقامت بهاد الثمن بالتحديد */}
+                              <div className="mt-3 p-3 bg-indigo-50/70 rounded-2xl border border-indigo-100/90 text-xs space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-sm">📋</span>
+                                    <div>
+                                      <span className="font-black text-indigo-950 text-xs block leading-tight">
+                                        {isAr ? 'علاش هاد الموديل تقام بهاد الثمن بالتحديد؟' : 'Pourquoi ce tarif précis ? (Étude Atelier)'}
+                                      </span>
+                                      <span className="text-[9px] text-indigo-700/80 font-medium">
+                                        {isAr ? 'تفاصيل فنية وحسابات الورشة المعتمدة' : 'Spécifications techniques & justification'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <span className="px-2 py-0.5 bg-white text-indigo-800 text-[10px] font-bold rounded-md border border-indigo-200">
+                                    {isAr ? 'دراسة تقنية مضبوطة' : 'Devis Détaillé'}
+                                  </span>
+                                </div>
+
+                                <div className="space-y-1.5 text-[11px] text-slate-700 leading-relaxed pt-1">
+                                  {analysis.techDetails ? (
+                                    <div className="flex items-start gap-2 bg-white/70 p-2 rounded-xl border border-indigo-50">
+                                      <span className="text-indigo-600 font-black shrink-0">•</span>
+                                      <div>
+                                        <strong className="text-indigo-950 block">{isAr ? 'المواصفات الفنية المعتمدة :' : 'Spécifications techniques :'}</strong>
+                                        <span className="text-slate-600">{analysis.techDetails}</span>
+                                      </div>
+                                    </div>
+                                  ) : null}
+
+                                  <div className="flex items-start gap-2 bg-white/70 p-2 rounded-xl border border-indigo-50">
+                                    <span className="text-indigo-600 font-black shrink-0">•</span>
+                                    <div>
+                                      <strong className="text-indigo-950 block">{isAr ? 'استهلاك القماش وسعره فالسوق :' : 'Consommation tissu & Marché :'}</strong>
+                                      <span className="text-slate-600">
+                                        {isAr 
+                                          ? `تم احتساب ${analysis.tissuConsoMeters} متر لكل قطعة من قماش "${analysis.tissuSuggere}" بسعر سوق ${analysis.tissuMarcheNom} (~${analysis.prixMetreEstime} درهم/متر).`
+                                          : `Calculé sur ${analysis.tissuConsoMeters}m par pièce en ${analysis.tissuSuggere} (Marché ${analysis.tissuMarcheNom} ~${analysis.prixMetreEstime} MAD/m).`}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-start gap-2 bg-white/70 p-2 rounded-xl border border-indigo-50">
+                                    <span className="text-indigo-600 font-black shrink-0">•</span>
+                                    <div>
+                                      <strong className="text-indigo-950 block">{isAr ? 'اليد العاملة وتجهيزات الورشة :' : 'Confection & Finitions industrielles :'}</strong>
+                                      <span className="text-slate-600">
+                                        {isAr 
+                                          ? 'فصالة بمقصات كهربائية صناعية، تجميع بدرزات متينة ومزدوجة، سورجي 4 خيوط، وتركيب الإكسسوارات مع المراقبة الدقيقة للجودة.'
+                                          : 'Coupe industrielle, surjet 4 fils, piqûres de renfort, montage zips/accessoires & contrôle qualité strict.'}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {analysis.reponseAtelier ? (
+                                    <div className="p-2.5 bg-white rounded-xl border border-indigo-100 text-slate-800">
+                                      <span className="text-[10px] font-black text-indigo-950 block mb-0.5">
+                                        {isAr ? '💬 توجيه ورأي المعلم بالورشة :' : '💬 Recommandation du chef d\'atelier :'}
+                                      </span>
+                                      <p className="text-[11px] text-slate-600 italic leading-relaxed">
+                                        "{analysis.reponseAtelier}"
+                                      </p>
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
                             </div>
 
                             {/* Dynamic Acompte / Payment Banner */}
@@ -3195,28 +3273,17 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             <div>
                               <div className="flex items-center gap-1.5">
                                 <h3 className="text-sm font-black text-slate-900 leading-none">
-                                  {isAr ? 'مستشار ورشة BEYA الذكي' : 'Assistant Atelier BEYA'}
+                                  {isAr ? 'مستشار ورشة BEYA' : 'Conseiller Atelier BEYA'}
                                 </h3>
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                               </div>
                               <span className="text-[10px] text-slate-400 font-medium">
-                                {isAr ? 'خبير تكلفة الخياطة وأسعار الأقمشة' : 'Expert Confection & Matières'}
+                                {isAr ? 'دراسة التكلفة، الأقمشة والخياطة' : 'Chiffrage, Matières & Confection'}
                               </span>
                             </div>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setApiKeyDraft(geminiApiKey);
-                                setApiKeyTestResult(null);
-                                setShowApiKeyModal(true);
-                              }}
-                              className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors"
-                              title={isAr ? 'إعدادات مفتاح الذكاء الاصطناعي (API Key)' : 'Clé API Gemini'}
-                            >
-                              <Key className="w-3.5 h-3.5" />
-                            </button>
+                            
                             <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg border border-indigo-100">
                               {isAr ? 'رد فوري' : 'Direct'}
                             </span>
@@ -4077,6 +4144,22 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                      </div>
                    </div>
                     )}
+
+                    {/* Floating Shortcut to BEYA NETWORK (الشبكة) */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDemandePage(null);
+                        setActiveTab('network');
+                        window.location.hash = '#/network';
+                      }}
+                      className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2.5 rounded-full shadow-2xl shadow-indigo-600/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-xs font-black border-2 border-white cursor-pointer"
+                      title={isAr ? 'الانتقال إلى شبكة BEYA NETWORK' : 'Accéder à BEYA NETWORK'}
+                    >
+                      <Globe className="w-4 h-4 text-cyan-300" />
+                      <span>{isAr ? '🌐 BEYA NETWORK (الشبكة)' : '🌐 BEYA NETWORK'}</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    </button>
                  </div>
                );
              }
