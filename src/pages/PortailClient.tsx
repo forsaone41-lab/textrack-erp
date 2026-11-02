@@ -733,7 +733,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [virementReceiptFile, setVirementReceiptFile] = useState<string | null>(null);
   const [validatingDevisSending, setValidatingDevisSending] = useState(false);
   const [validatingDevisSuccess, setValidatingDevisSuccess] = useState(false);
-  const [ribCopied, setRibCopied] = useState(false);
 
   const handleValidateDevisAndVirement = async (lead: Lead) => {
     setValidatingDevisSending(true);
@@ -2667,212 +2666,229 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           )}
 
           {activeTab === 'overview' && (
-            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-               {/* VIP BEYA NETWORK Access Banner for forsaone41 */}
-               {isNetworkPilotUser && (
-                 <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 border-2 border-indigo-500/40 rounded-2xl md:rounded-[2.5rem] p-5 md:p-8 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-                   <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl -mr-20 -mt-20 pointer-events-none" />
-                   <div className="flex items-center gap-4 relative z-10">
-                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-indigo-600 to-violet-600 flex items-center justify-center text-white shrink-0 shadow-lg shadow-indigo-500/30">
-                       <Users className="w-7 h-7 text-white" />
-                     </div>
-                     <div>
-                       <div className="flex items-center gap-2">
-                         <span className="font-black text-base md:text-xl tracking-tight text-white">🌐 منصة BEYA NETWORK المستقلة</span>
-                         <span className="px-2 py-0.5 text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 rounded-full shadow-sm">VIP</span>
-                       </div>
-                       <p className="text-xs md:text-sm text-slate-300 mt-1 max-w-xl leading-relaxed">
-                         {isAr ? 'الملتقى المستقل لرواد الموضة، موردي الأقمشة، الشراء المشترك وتبادل التجارب بالمغرب. موقع متكامل مستقل تماماً عن البوابة!' : 'Réseau social & marketplace indépendant pour les créateurs et fournisseurs textiles au Maroc.'}
-                       </p>
-                     </div>
-                   </div>
-                   <button
-                     onClick={() => window.location.hash = '#/network'}
-                     className="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs md:text-sm rounded-xl shadow-xl transition flex items-center justify-center gap-2 shrink-0 active:scale-95 relative z-10"
-                   >
-                     <span>{isAr ? 'الانتقال إلى BEYA NETWORK' : 'Ouvrir BEYA NETWORK'}</span>
-                     <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-                   </button>
-                 </div>
-               )}
-
-               {/* Welcome Hero */}
-               <div className="bg-slate-900 rounded-2xl md:rounded-[3rem] p-4 md:p-12 text-white relative overflow-hidden shadow-2xl">
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -mr-48 -mt-48" />
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -ml-32 -mb-32" />
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               {/* ────────────── WELCOME HERO (Top of Dashboard) ────────────── */}
+               <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden shadow-2xl border border-indigo-500/20">
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -ml-32 -mb-32 pointer-events-none" />
                   
-                  <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
-                    <div className="flex-1 text-center md:text-left">
-                       <h1 className="text-xl md:text-5xl font-black mb-3 md:6 leading-tight">
-                         {isAr ? `مرحباً بك، ${currentUser?.nom || 'عزيزي الزبون'}` : `Heureux de vous revoir, ${currentUser?.nom || 'Cher Client'}`}
-                       </h1>
-                       <p className="text-slate-400 text-sm md:text-lg font-medium max-w-xl mb-8">
-                         {isAr ? 'تبع طلبياتك، حمل فواتيرك، وتواصل مع الفريق ديالنا. حنا هنا باش نسهلو ليك الخدمة.' 
-                              : 'Suivez vos productions, gérez vos documents et communiquez avec notre équipe en toute simplicité.'}
-                       </p>
-                       <button 
-                         onClick={() => {
-                           setEditingDemandeId(null);
-                           setNewOrderForm({
-                             modele: '',
-                             quantite: '',
-                             details: '',
-                             photo: null as string | null,
-                             telephone: currentUser?.telephone || '',
-                             tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
-                           });
-                           setShowNewOrderModal(true);
-                         }}
-                         className="px-8 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:bg-indigo-500 transition-all flex items-center gap-3 mx-auto md:mx-0"
-                       >
-                         <Plus className="w-5 h-5" />
-                         {isAr ? 'طلب جديد' : 'Nouvelle Commande'}
-                       </button>
+                  {/* Top Section: Greeting & Main CTA */}
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/10">
+                    <div className={`space-y-1.5 ${isAr ? 'text-right' : 'text-left'}`}>
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
+                          {isAr ? `مرحباً بك، ${currentUser?.nom || 'عزيزي الزبون'}` : `Bonjour, ${currentUser?.nom || 'Cher Client'}`}
+                        </h1>
+                        <span className="px-2.5 py-0.5 bg-indigo-500/25 text-indigo-300 border border-indigo-400/30 rounded-full text-xs font-bold flex items-center gap-1">
+                          <Check className="w-3 h-3 text-emerald-400" />
+                          <span>{isAr ? 'حساب معتمد' : 'Compte vérifié'}</span>
+                        </span>
+                      </div>
+                      <p className="text-slate-300 text-xs sm:text-sm font-medium max-w-xl leading-relaxed">
+                        {isAr 
+                          ? 'متابعة مباشرة لطلبياتك، دراسات الموديلات، ومراحل الخياطة والتصنيع لدى ورشة BEYA Creative.'
+                          : 'Suivez vos productions, chiffrages de modèles et expéditions en direct avec l\'Atelier BEYA Creative.'}
+                      </p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
-                       <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-3xl text-center">
-                          <p className="text-3xl font-black mb-1">{found.length}</p>
-                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">{isAr ? 'طلبيات' : 'Commandes'}</p>
-                       </div>
-                       <div className="bg-indigo-500 border border-indigo-400 p-6 rounded-3xl text-center shadow-lg shadow-indigo-500/20">
-                          <p className="text-3xl font-black mb-1">{found.filter(c => c.statut === 'en_cours').length}</p>
-                          <p className="text-[10px] text-indigo-100 uppercase font-bold tracking-widest">{isAr ? 'في الإنتاج' : 'Actives'}</p>
-                       </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setEditingDemandeId(null);
+                          setNewOrderForm({
+                            modele: '',
+                            quantite: '',
+                            details: '',
+                            photo: null as string | null,
+                            telephone: currentUser?.telephone || '',
+                            tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
+                          });
+                          setShowNewOrderModal(true);
+                        }}
+                        className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider shadow-xl shadow-indigo-600/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>{isAr ? 'طلب جديد / موديل' : 'Nouvelle Commande'}</span>
+                      </button>
                     </div>
                   </div>
 
-                  {/* WhatsApp Notification — Client's Real Phone Number */}
-                  {(currentUser?.role === 'client' || currentUser?.role === 'merchant') && (
-                    <div className="mt-8 md:mt-12 p-5 md:p-7 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] md:rounded-[2.5rem] shadow-xl">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-white/10">
-                        <div className="flex items-center gap-3.5">
-                          <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/25">
-                            <MessageCircle className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-base font-black text-white uppercase tracking-tight">
-                                {isAr ? 'إشعارات الواتساب المباشرة' : 'Notifications WhatsApp Directes'}
-                              </h4>
-                              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold rounded-full border border-emerald-500/30">
-                                {isAr ? 'تحديثات حية' : 'En Direct'}
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-300 font-medium mt-0.5">
-                              {isAr 
-                                ? 'مستجدات وتحديثات مراحل الإنتاج (الفصالة، الخياطة، العينة، والشحن) كتوصلك مباشرة على رقمك فـ WhatsApp' 
-                                : 'Suivez en direct chaque étape de vos commandes (coupe, confection, échantillon, expédition) sur votre WhatsApp'}
-                            </p>
-                          </div>
-                        </div>
-
-                        {!isEditingPhone && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPhoneInputVal(clientPhone || currentUser?.telephone || '');
-                              setIsEditingPhone(true);
-                            }}
-                            className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 border border-white/10 cursor-pointer self-start sm:self-auto"
-                          >
-                            <Edit2 className="w-3.5 h-3.5 text-indigo-300" />
-                            <span>{isAr ? 'تعديل الرقم' : 'Modifier le numéro'}</span>
-                          </button>
-                        )}
+                  {/* Middle Section: Symmetrical 3-Card KPI Stats */}
+                  <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-6">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('demandes')}
+                      className="p-4 bg-white/5 hover:bg-white/[0.08] border border-white/10 rounded-2xl text-start transition-all cursor-pointer group flex items-center justify-between gap-3"
+                    >
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-slate-400 block uppercase tracking-wider">
+                          {isAr ? 'موديلات قيد الدراسة والتسعير' : 'Demandes à l\'étude'}
+                        </span>
+                        <p className="text-2xl sm:text-3xl font-black text-indigo-300">
+                          {mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__').length}
+                        </p>
+                        <span className="text-[10px] text-slate-400 block font-medium">
+                          {isAr ? 'عرض المواصفات والأثمنة ←' : 'Voir les détails →'}
+                        </span>
                       </div>
+                      <div className="w-11 h-11 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                    </button>
 
-                      {phoneSaveSuccess && (
-                        <div className="mb-4 p-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-xs text-emerald-200 font-bold flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                          <span>{isAr ? 'تم حفظ وتأكيد رقمك بنجاح! ستصلك كافة المستجدات عليه مباشرة.' : 'Votre numéro a été mis à jour avec succès !'}</span>
-                        </div>
-                      )}
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('orders')}
+                      className="p-4 bg-white/5 hover:bg-white/[0.08] border border-white/10 rounded-2xl text-start transition-all cursor-pointer group flex items-center justify-between gap-3"
+                    >
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-slate-400 block uppercase tracking-wider">
+                          {isAr ? 'طلبيات في الإنتاج بالورشة' : 'En production active'}
+                        </span>
+                        <p className="text-2xl sm:text-3xl font-black text-amber-300">
+                          {found.filter(c => c.statut === 'en_cours').length}
+                        </p>
+                        <span className="text-[10px] text-slate-400 block font-medium">
+                          {isAr ? 'مراحل الفصالة والخياطة ←' : 'Suivre la confection →'}
+                        </span>
+                      </div>
+                      <div className="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <RotateCw className="w-5 h-5" />
+                      </div>
+                    </button>
 
-                      {isEditingPhone ? (
-                        <form onSubmit={handleSaveClientPhone} className="bg-black/30 p-4 rounded-2xl border border-white/15 space-y-3">
-                          <label className="block text-xs font-bold text-slate-200">
-                            {isAr ? 'أدخل رقمك الحقيقي (المغرب أو الدولي) لاستقبال التنبيهات:' : 'Votre numéro WhatsApp pour recevoir les notifications :'}
-                          </label>
-                          <div className="flex flex-col sm:flex-row gap-2">
-                            <input
-                              type="tel"
-                              value={phoneInputVal}
-                              onChange={(e) => setPhoneInputVal(e.target.value)}
-                              placeholder="06 XX XX XX XX / +212 6..."
-                              className="flex-1 py-2.5 px-4 bg-white/10 border border-white/20 rounded-xl text-white font-mono font-bold text-sm outline-none focus:border-emerald-400 focus:bg-white/15 transition placeholder:text-white/40"
-                              autoFocus
-                            />
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="submit"
-                                disabled={savingPhone || !phoneInputVal.trim()}
-                                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/30"
-                              >
-                                {savingPhone ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                                <span>{isAr ? 'حفظ وتأكيد' : 'Enregistrer'}</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setIsEditingPhone(false)}
-                                className="px-3.5 py-2.5 bg-white/10 hover:bg-white/15 text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer"
-                              >
-                                {isAr ? 'إلغاء' : 'Annuler'}
-                              </button>
-                            </div>
-                          </div>
-                        </form>
-                      ) : (
-                        <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('orders')}
+                      className="p-4 bg-white/5 hover:bg-white/[0.08] border border-white/10 rounded-2xl text-start transition-all cursor-pointer group flex items-center justify-between gap-3"
+                    >
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-slate-400 block uppercase tracking-wider">
+                          {isAr ? 'إجمالي الطلبيات المسجلة' : 'Total des commandes'}
+                        </span>
+                        <p className="text-2xl sm:text-3xl font-black text-emerald-300">
+                          {found.length}
+                        </p>
+                        <span className="text-[10px] text-slate-400 block font-medium">
+                          {isAr ? 'الأرشيف والسجل الكامل ←' : 'Historique complet →'}
+                        </span>
+                      </div>
+                      <div className="w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Package className="w-5 h-5" />
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Bottom Section: WhatsApp Notification Integrated Strip */}
+                  {(currentUser?.role === 'client' || currentUser?.role === 'merchant') && (
+                    <div className="relative z-10 mt-6 pt-5 border-t border-white/10">
+                      <div className="bg-white/5 hover:bg-white/[0.07] border border-white/10 rounded-2xl p-4 transition-all">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-lg">
-                              📱
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-sm">
+                              <MessageCircle className="w-5 h-5" />
                             </div>
                             <div>
-                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                                {isAr ? 'رقم الهاتف المعتمد لاستقبال المستجدات:' : 'Numéro de réception certifié :'}
-                              </span>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-base font-black text-white font-mono tracking-wider">
-                                  {clientPhone || currentUser?.telephone || (mesDemandes.find(d => d.phone)?.phone) || (isAr ? 'لم تسجل رقمك بعد' : 'Non renseigné')}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs sm:text-sm font-black text-white">
+                                  {isAr ? 'إشعارات الإنتاج المباشرة فـ WhatsApp' : 'Notifications WhatsApp en direct'}
+                                </span>
+                                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-md text-[10px] font-bold">
+                                  {isAr ? 'تحديثات حية' : 'En direct'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-300">
+                                <span className="text-slate-400 text-[11px]">{isAr ? 'الرقم المعتمد:' : 'Numéro certifié :'}</span>
+                                <span className="font-mono font-bold text-white text-xs sm:text-sm">
+                                  {clientPhone || currentUser?.telephone || (mesDemandes.find(d => d.phone)?.phone) || (isAr ? 'غير مسجل' : 'Non renseigné')}
                                 </span>
                                 {(clientPhone || currentUser?.telephone) && (
-                                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-black rounded-md flex items-center gap-1 border border-emerald-500/30">
-                                    <Check className="w-3 h-3 text-emerald-400" />
-                                    <span>{isAr ? 'مربوط ومفعل' : 'Actif'}</span>
+                                  <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                                    <Check className="w-3 h-3" />
+                                    <span>{isAr ? 'مفعل ومربوط' : 'Actif'}</span>
                                   </span>
                                 )}
                               </div>
                             </div>
                           </div>
 
-                          {/* Direct WhatsApp Action to verify or test */}
-                          <a
-                            href={`https://wa.me/212661000000?text=${encodeURIComponent(
-                              isAr
-                                ? `السلام عليكم ورشة BEYA Creative، أنا الزبون ${currentUser?.nom || 'الزبون'} (رقم هاتفي: ${clientPhone || currentUser?.telephone || ''}). بغيت نأكد رقمي لاستقبال مستجدات الإنتاج والطلبيات عبر WhatsApp.`
-                                : `Bonjour Atelier BEYA Creative, je suis le client ${currentUser?.nom || ''} (${clientPhone || currentUser?.telephone || ''}). Je confirme mon numéro pour recevoir les mises à jour de mes commandes sur WhatsApp.`
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 cursor-pointer self-stretch sm:self-auto text-center"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            <span>{isAr ? 'تأكيد الرقم فـ WhatsApp الورشة' : 'Tester sur WhatsApp'}</span>
-                          </a>
-                        </div>
-                      )}
+                          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                            {!isEditingPhone ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPhoneInputVal(clientPhone || currentUser?.telephone || '');
+                                  setIsEditingPhone(true);
+                                }}
+                                className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-white/10 cursor-pointer active:scale-95"
+                              >
+                                <Edit2 className="w-3 h-3 text-indigo-300" />
+                                <span>{isAr ? 'تعديل الرقم' : 'Modifier'}</span>
+                              </button>
+                            ) : (
+                              <form onSubmit={handleSaveClientPhone} className="flex items-center gap-2">
+                                <input
+                                  type="tel"
+                                  value={phoneInputVal}
+                                  onChange={(e) => setPhoneInputVal(e.target.value)}
+                                  placeholder="06 XX XX XX XX"
+                                  className="py-1.5 px-3 bg-white/15 border border-white/25 rounded-xl text-white font-mono text-xs outline-none focus:border-emerald-400 transition"
+                                  autoFocus
+                                />
+                                <button
+                                  type="submit"
+                                  disabled={savingPhone || !phoneInputVal.trim()}
+                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                                >
+                                  {savingPhone ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                                  <span>{isAr ? 'حفظ' : 'OK'}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsEditingPhone(false)}
+                                  className="px-2.5 py-1.5 bg-white/10 hover:bg-white/15 text-slate-300 rounded-xl text-xs cursor-pointer"
+                                >
+                                  ✕
+                                </button>
+                              </form>
+                            )}
 
-                      <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400 font-medium px-1 flex-wrap gap-2">
-                        <span className="flex items-center gap-1 text-emerald-400">
-                          <span>🔒</span>
-                          <span>{isAr ? 'تنبيهات مشفرة ومؤمنة 100%' : 'Notifications 100% sécurisées'}</span>
-                        </span>
-                        <span>{isAr ? 'بدون رسائل سبام • فقط مستجدات الإنتاج والفواتير الرسمية' : 'Zéro spam • Suivi de fabrication & factures uniquement'}</span>
+                            <a
+                              href={`https://wa.me/212661000000?text=${encodeURIComponent(
+                                isAr
+                                  ? `السلام عليكم ورشة BEYA Creative، أنا الزبون ${currentUser?.nom || 'الزبون'} (رقمي: ${clientPhone || currentUser?.telephone || ''}). بغيت نأكد رقمي لاستقبال إشعارات وتحديثات الإنتاج على WhatsApp.`
+                                  : `Bonjour Atelier BEYA Creative, je confirme mon numéro (${clientPhone || currentUser?.telephone || ''}) pour recevoir les notifications de production sur WhatsApp.`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>{isAr ? 'تأكيد الرقم فـ WhatsApp' : 'Tester WhatsApp'}</span>
+                            </a>
+                          </div>
+                        </div>
+
+                        {phoneSaveSuccess && (
+                          <div className="mt-2.5 p-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-xs text-emerald-200 font-bold flex items-center gap-2">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>{isAr ? 'تم حفظ وتأكيد رقمك بنجاح! ستصلك التحديثات عليه مباشرة.' : 'Numéro mis à jour avec succès !'}</span>
+                          </div>
+                        )}
+
+                        <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-400 flex-wrap gap-2">
+                          <span className="flex items-center gap-1 text-emerald-400">
+                            <span>🔒</span>
+                            <span>{isAr ? 'تنبيهات مشفرة ومؤمنة 100%' : '100% sécurisé'}</span>
+                          </span>
+                          <span>{isAr ? 'مستجدات الفصالة، الخياطة، العينة، والفواتير فقط (بدون أي رسائل مزعجة)' : 'Suivi de confection, échantillon et factures officielles uniquement'}</span>
+                        </div>
                       </div>
                     </div>
                   )}
                </div>
-               
+
                {/* BEYA STORE PROMO BANNER */}
                {(currentUser?.role === 'client' || currentUser?.role === 'merchant') && (
                  <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl md:rounded-[2rem] p-6 md:p-8 text-white relative overflow-hidden shadow-xl shadow-blue-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -3913,18 +3929,26 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                         {/* Essential Action Buttons */}
                         <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
                           {!isClientFabric ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedDemandePage(null);
-                                setVirementCommandeId(d.id);
-                                setActiveTab('payments');
-                              }}
-                              className="py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.99] cursor-pointer"
-                            >
-                              <CreditCard className="w-4 h-4" />
-                              <span>{isAr ? 'تأكيد الدوفيز وأداء التسبيق (50%)' : 'Valider le Devis & Verser l\'Acompte'}</span>
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setValidatingDevisLead(d)}
+                                className="py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.99] cursor-pointer"
+                              >
+                                <CreditCard className="w-4 h-4" />
+                                <span>{isAr ? 'تأكيد الدوفيز وأداء التسبيق (50%)' : 'Valider le Devis & Verser l\'Acompte'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handlePrintDevis(d)}
+                                className="py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer border border-slate-700"
+                                title={isAr ? 'تحميل أو طباعة ملف الدوفيز الرسمي PDF' : 'Télécharger Devis PDF'}
+                              >
+                                <Download className="w-4 h-4 text-emerald-400" />
+                                <span>{isAr ? 'تحميل ملف الدوفيز (PDF)' : 'Fichier Devis (PDF)'}</span>
+                              </button>
+                            </>
                           ) : (
                             <a
                               href={waUrl}
@@ -4762,23 +4786,43 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
                                 {/* Top Left Status Badge */}
                                 <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-2">
-                                  {isAccepted && (
-                                    <span className="px-3 py-1.5 bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-md border border-emerald-400/30 flex items-center gap-1.5">
-                                      <CheckCircle className="w-3.5 h-3.5" />
-                                      <span>{isAr ? 'مقبول' : 'Accepté'}</span>
-                                    </span>
-                                  )}
-                                  {isRejected && (
-                                    <span className="px-3 py-1.5 bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-md border border-rose-400/30">
-                                      {isAr ? 'مرفوض ❌' : 'Refusé ❌'}
-                                    </span>
-                                  )}
-                                  {isPending && (
-                                    <span className="px-3 py-1.5 bg-indigo-600/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-md border border-indigo-400/30 flex items-center gap-1.5">
-                                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                                      <span>{isAr ? 'دراسة تقنية 📋' : 'Étude Technique 📋'}</span>
-                                    </span>
-                                  )}
+                                  {(() => {
+                                    let ext: any = {};
+                                    try { ext = JSON.parse(d.details || '{}'); } catch(e) {}
+                                    const devStatus = ext.devisStatus || (d as any).devisStatus || (d.crmStage === 'confirme' ? 'valide' : (d.crmPriceConfirmed || d.unitPrice || analysis.isAnalyzedByAI ? 'devis_pret' : 'en_attente'));
+                                    const isVal = devStatus === 'valide' || devStatus === 'acompte_paye' || d.crmStage === 'confirme';
+                                    const isPr = !isVal && (devStatus === 'devis_pret' || Boolean(d.crmPriceConfirmed || d.unitPrice));
+
+                                    if (isVal) {
+                                      return (
+                                        <span className="px-3 py-1.5 bg-emerald-600/95 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-lg border border-emerald-400/40 flex items-center gap-1.5 ring-2 ring-emerald-500/30">
+                                          <CheckCircle className="w-3.5 h-3.5 text-white" />
+                                          <span>{isAr ? 'تم الاتفاق والموافقة ✅' : 'Devis Validé ✅'}</span>
+                                        </span>
+                                      );
+                                    }
+                                    if (isRejected) {
+                                      return (
+                                        <span className="px-3 py-1.5 bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-md border border-rose-400/30">
+                                          {isAr ? 'مرفوض ❌' : 'Refusé ❌'}
+                                        </span>
+                                      );
+                                    }
+                                    if (isPr) {
+                                      return (
+                                        <span className="px-3 py-1.5 bg-amber-500/95 backdrop-blur-md text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-xl shadow-lg border border-amber-300 flex items-center gap-1.5 animate-pulse">
+                                          <FileText className="w-3.5 h-3.5 text-slate-950" />
+                                          <span>{isAr ? 'دوفيز رسمي جاهز للموافقة 📄' : 'Devis Prêt 📄'}</span>
+                                        </span>
+                                      );
+                                    }
+                                    return (
+                                      <span className="px-3 py-1.5 bg-slate-900/90 backdrop-blur-md text-slate-200 text-[10px] font-black uppercase tracking-wider rounded-xl shadow-md border border-white/20 flex items-center gap-1.5">
+                                        <Clock className="w-3.5 h-3.5 text-amber-400" />
+                                        <span>{isAr ? 'قيد دراسة الورشة ⏳' : 'Étude en cours ⏳'}</span>
+                                      </span>
+                                    );
+                                  })()}
                                 </div>
 
                                 {/* Top Right Reference */}
@@ -4791,7 +4835,6 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 {/* Bottom Image Overlay */}
                                 <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent flex items-end p-4 pointer-events-none">
                                   <span className="text-white/90 text-xs font-black uppercase tracking-wider block">
-
                                     {isAr ? 'تصنيع عالي الجودة' : 'Confection Premium'}
                                   </span>
                                 </div>
@@ -4808,16 +4851,59 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                   </p>
                                 </div>
 
-                                <div className="flex items-center justify-between gap-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
-                                  <div>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{isAr ? 'الكمية المطلوبة' : 'Quantité'}</span>
-                                    <span className="text-sm font-black text-slate-900">{analysis.qty} pcs</span>
-                                  </div>
-                                  <div className={isAr ? 'text-left' : 'text-right'}>
-                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">{isAr ? 'الخياطة من' : 'Façon dès'}</span>
-                                    <span className="text-sm font-black text-indigo-950">{analysis.confectionPrice || analysis.unitPrice} MAD <span className="text-[10px] font-bold text-slate-500">/ pc</span></span>
-                                  </div>
-                                </div>
+                                {(() => {
+                                  let ext: any = {};
+                                  try { ext = JSON.parse(d.details || '{}'); } catch(e) {}
+                                  const devStatus = ext.devisStatus || (d as any).devisStatus || (d.crmStage === 'confirme' ? 'valide' : (d.crmPriceConfirmed || d.unitPrice || analysis.isAnalyzedByAI ? 'devis_pret' : 'en_attente'));
+                                  const isVal = devStatus === 'valide' || devStatus === 'acompte_paye' || d.crmStage === 'confirme';
+                                  const isPr = !isVal && (devStatus === 'devis_pret' || Boolean(d.crmPriceConfirmed || d.unitPrice));
+
+                                  return (
+                                    <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2.5">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{isAr ? 'الكمية' : 'Quantité'}</span>
+                                          <span className="text-sm font-black text-slate-900 font-mono">{analysis.qty} pcs</span>
+                                        </div>
+                                        <div className="text-center">
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{isAr ? 'سعر البياسة' : 'Prix / pc'}</span>
+                                          <span className="text-sm font-black text-slate-900 font-mono">{analysis.unitPrice || 65} MAD</span>
+                                        </div>
+                                        <div className={isAr ? 'text-left' : 'text-right'}>
+                                          <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">{isAr ? 'إجمالي الدوفيز' : 'Total Devis'}</span>
+                                          <span className="text-base font-black text-indigo-950 font-mono">{analysis.totalPrice.toLocaleString()} MAD</span>
+                                        </div>
+                                      </div>
+
+                                      {/* Accord Status Box: واش اتفقنا ولا لا */}
+                                      {isVal ? (
+                                        <div className="p-2.5 bg-emerald-500/15 border border-emerald-500/30 rounded-xl flex items-center justify-between text-xs text-emerald-950 font-black">
+                                          <span className="flex items-center gap-1.5">
+                                            <span className="text-sm">🤝</span>
+                                            <span>{isAr ? 'تم الاتفاق والموافقة على الدوفيز' : 'Accord conclu & devis validé'}</span>
+                                          </span>
+                                          <span className="px-2 py-0.5 bg-emerald-600 text-white rounded-md text-[10px] font-mono">{isAr ? 'مؤكد 100%' : 'Validé'}</span>
+                                        </div>
+                                      ) : isPr ? (
+                                        <div className="p-2.5 bg-amber-500/15 border border-amber-500/30 rounded-xl flex items-center justify-between text-xs text-amber-950 font-black">
+                                          <span className="flex items-center gap-1.5">
+                                            <span className="text-sm">📄</span>
+                                            <span>{isAr ? 'دوفيز الورشة جاهز: في انتظار موافقتك' : 'Devis prêt : en attente validation'}</span>
+                                          </span>
+                                          <span className="px-2 py-0.5 bg-amber-500 text-slate-950 rounded-md text-[10px] font-mono font-black">{isAr ? `تسبيق: ${Math.round(analysis.totalPrice * 0.5).toLocaleString()} DH` : 'Acompte 50%'}</span>
+                                        </div>
+                                      ) : (
+                                        <div className="p-2.5 bg-slate-100 rounded-xl flex items-center justify-between text-xs text-slate-600 font-bold">
+                                          <span className="flex items-center gap-1.5">
+                                            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                            <span>{isAr ? 'الورشة كتقوم بدراسة الموديل وحساب الدوفيز' : 'Étude technique en cours'}</span>
+                                          </span>
+                                          <span className="text-[10px] text-slate-400 font-mono">تحت 24h</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </div>
 
@@ -4829,49 +4915,59 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 className="w-full py-3.5 px-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 hover:shadow-indigo-500/25 cursor-pointer group active:scale-[0.99]"
                               >
                                 <FileText className="w-4 h-4 text-indigo-400 group-hover:text-white transition-colors" />
-                                <span>{isAr ? 'عرض دراسة الموديل والتسعير ←' : 'Voir la Fiche & Devis Complet →'}</span>
+                                <span>{isAr ? 'عرض دراسة الموديل والدوفيز ←' : 'Voir la Fiche & Devis Complet →'}</span>
                               </button>
 
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedDemandePage(d);
-                                  setConsultingDemande(d);
-                                }}
-                                className="w-full py-2.5 px-3 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-2xs hover:shadow-xs active:scale-[0.99] cursor-pointer"
-                              >
-                                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                                <span>{isAr ? '💬 اسأل مستشار الورشة على هاد الموديل' : '💬 Poser une question sur ce modèle'}</span>
-                              </button>
+                              {(() => {
+                                let ext: any = {};
+                                try { ext = JSON.parse(d.details || '{}'); } catch(e) {}
+                                const devStatus = ext.devisStatus || (d as any).devisStatus || (d.crmStage === 'confirme' ? 'valide' : (d.crmPriceConfirmed || d.unitPrice || analysis.isAnalyzedByAI ? 'devis_pret' : 'en_attente'));
+                                const isVal = devStatus === 'valide' || devStatus === 'acompte_paye' || d.crmStage === 'confirme';
+
+                                if (!isVal) {
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setValidatingDevisLead(d);
+                                      }}
+                                      className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-[0.99] cursor-pointer"
+                                    >
+                                      <CheckCircle className="w-3.5 h-3.5" />
+                                      <span>{isAr ? '✅ موافقة على الدوفيز وأداء التسبيق (50%)' : '✅ Valider Devis & Verser Acompte'}</span>
+                                    </button>
+                                  );
+                                }
+                                return null;
+                              })()}
 
                               <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                                {isTestAccount && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setAtelierQuickEditLead(d);
-                                      setQuickEditForm({
-                                        modeleReel: analysis.modeleReel,
-                                        patronagePrice: analysis.patronagePrice,
-                                        prixEchantillon: analysis.echantillonPrice,
-                                        unitPrice: analysis.unitPrice,
-                                        totalPrice: analysis.totalPrice,
-                                        tissuSuggere: analysis.tissuSuggere,
-                                        techDetails: analysis.techDetails,
-                                        delaiEstime: analysis.delaiEstime,
-                                        statusProgression: analysis.statusProgression,
-                                        reponseAtelier: analysis.reponseAtelier
-                                      });
-                                    }}
-                                    className="flex-1 py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/90 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer hover:border-amber-300"
-                                    title={isAr ? 'تعديل دراسة الورشة والتسعير' : 'Réponse & Édition Atelier'}
-                                  >
-                                    <span>⚙️</span>
-                                    <span className="truncate">{isAr ? 'رد وتعديل الورشة' : 'Réponse Atelier'}</span>
-                                  </button>
-                                )}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openQuickEdit(d);
+                                  }}
+                                  className="flex-1 py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-200/90 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer hover:border-amber-300"
+                                  title={isAr ? 'قرار ودوفيز الورشة النهائي' : 'Décision Finale & Devis Atelier'}
+                                >
+                                  <FileText className="w-3.5 h-3.5 text-amber-700" />
+                                  <span className="truncate">{isAr ? '📄 قرار ودوفيز الورشة (DEVIS)' : '📄 Devis Atelier Officiel'}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePrintDevis(d);
+                                  }}
+                                  className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200 cursor-pointer shrink-0"
+                                  title={isAr ? 'تحميل أو طباعة ملف الدوفيز PDF' : 'Télécharger Devis PDF'}
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                  <span className="text-[10px] font-black uppercase">{isAr ? 'ملف Devis' : 'PDF'}</span>
+                                </button>
 
                                 {isPending && (
                                   <button 
