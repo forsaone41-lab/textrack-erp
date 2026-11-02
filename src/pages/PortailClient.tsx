@@ -770,6 +770,11 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   };
 
   const handlePrintDevis = (lead: Lead) => {
+    const devState = getLeadDevisState(lead);
+    if (!devState.isConfirmedByAtelier && !devState.isVal) {
+      alert(isAr ? 'الدوفيز الرسمي قيد الإعداد والمراجعة من طرف الورشة، سيصبح متاحاً للتحميل فور اعتماده.' : "Le devis officiel est en cours de préparation par l'atelier.");
+      return;
+    }
     setPrintingDevisLead(lead);
     setTimeout(() => {
       printElement(`devis-doc-${lead.id}`);
@@ -4069,15 +4074,33 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 );
                               })()}
 
-                              <button
-                                type="button"
-                                onClick={() => handlePrintDevis(d)}
-                                className="py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer border border-slate-700"
-                                title={isAr ? 'تحميل أو طباعة ملف الدوفيز الرسمي PDF' : 'Télécharger Devis PDF'}
-                              >
-                                <Download className="w-4 h-4 text-emerald-400" />
-                                <span>{isAr ? 'تحميل ملف الدوفيز (PDF)' : 'Fichier Devis (PDF)'}</span>
-                              </button>
+                              {(() => {
+                                const isDevisReady = singleDevState.isConfirmedByAtelier || singleDevState.isVal;
+
+                                if (isDevisReady) {
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => handlePrintDevis(d)}
+                                      className="py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer border border-slate-700"
+                                      title={isAr ? 'تحميل أو طباعة ملف الدوفيز الرسمي PDF' : 'Télécharger Devis PDF'}
+                                    >
+                                      <Download className="w-4 h-4 text-emerald-400" />
+                                      <span>{isAr ? 'تحميل ملف الدوفيز (PDF)' : 'Fichier Devis (PDF)'}</span>
+                                    </button>
+                                  );
+                                }
+
+                                return (
+                                  <div
+                                    className="py-3.5 px-4 bg-slate-100 text-slate-400 rounded-2xl text-xs md:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 border border-slate-200 cursor-not-allowed select-none"
+                                    title={isAr ? 'الدوفيز الرسمي قيد الإعداد من طرف الورشة' : 'Devis en cours de préparation'}
+                                  >
+                                    <Clock className="w-4 h-4 text-amber-500" />
+                                    <span>{isAr ? 'الدوفيز قيد الإعداد ⏳' : 'Devis en préparation ⏳'}</span>
+                                  </div>
+                                );
+                              })()}
                             </>
                           ) : (
                             <a
@@ -5068,18 +5091,36 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               })()}
 
                               <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handlePrintDevis(d);
-                                  }}
-                                  className="flex-1 py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
-                                  title={isAr ? 'تحميل أو طباعة ملف الدوفيز PDF' : 'Télécharger Devis PDF'}
-                                >
-                                  <FileText className="w-4 h-4 text-amber-700" />
-                                  <span>{isAr ? '📄 ملف الدوفيز (DEVIS)' : '📄 Devis (PDF)'}</span>
-                                </button>
+                                {(() => {
+                                  const isDevisReady = devState.isConfirmedByAtelier || devState.isVal;
+
+                                  if (isDevisReady) {
+                                    return (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handlePrintDevis(d);
+                                        }}
+                                        className="flex-1 py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+                                        title={isAr ? 'تحميل أو طباعة ملف الدوفيز PDF' : 'Télécharger Devis PDF'}
+                                      >
+                                        <FileText className="w-4 h-4 text-amber-700" />
+                                        <span>{isAr ? '📄 ملف الدوفيز (DEVIS)' : '📄 Devis (PDF)'}</span>
+                                      </button>
+                                    );
+                                  }
+
+                                  return (
+                                    <div
+                                      className="flex-1 py-2.5 px-3 bg-slate-50 text-slate-400 border border-slate-200/80 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed select-none"
+                                      title={isAr ? 'الدوفيز الرسمي قيد الإعداد من طرف الورشة — سيصبح متاحاً للتحميل فور اعتماده' : 'Devis officiel en cours de préparation par l\'atelier'}
+                                    >
+                                      <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                      <span className="truncate">{isAr ? 'الدوفيز قيد الإعداد ⏳' : 'Devis en préparation ⏳'}</span>
+                                    </div>
+                                  );
+                                })()}
 
                                 {isPending && (
                                   <button 
