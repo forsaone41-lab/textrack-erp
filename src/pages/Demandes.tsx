@@ -760,8 +760,26 @@ export default function Demandes() {
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
 
-    // Save price to lead automatically
-    const updatedLead = { ...devisLead, crmPrice: total, crmDevisMode: devisMode, crmStage: (devisLead.crmStage || 'contact_en_cours') as any };
+    // Save price to lead automatically and confirm official devis
+    let extDetails: any = {};
+    try { extDetails = JSON.parse(devisLead.details || '{}'); } catch(e) {}
+    extDetails.devisOfficielConfirmed = true;
+    extDetails.devisStatus = 'devis_confirme_atelier';
+    extDetails.devisOfficielDate = new Date().toISOString();
+
+    const updatedLead = { 
+      ...devisLead, 
+      details: JSON.stringify(extDetails),
+      unitPrice: unitPrice,
+      totalPrice: total,
+      crmPrice: total, 
+      crmPriceConfirmed: true,
+      crmDevisMode: devisMode, 
+      crmStage: (devisLead.crmStage || 'contact_en_cours') as any,
+      reponseAtelierDate: new Date().toISOString()
+    };
+    (updatedLead as any).devisOfficielConfirmed = true;
+    (updatedLead as any).devisStatus = 'devis_confirme_atelier';
     saveRecord('leads', updatedLead);
 
     if (!isPDF) {

@@ -1690,6 +1690,54 @@ function translateFrenchAtelierPhrases(text: string): string {
   return t;
 }
 
+const getLeadDevisState = (d: Lead) => {
+  let ext: any = {};
+  try { ext = JSON.parse(d.details || '{}'); } catch(e) {}
+  
+  // 1. Is it validated by the client / deposit paid?
+  const isVal = ext.devisStatus === 'valide' || 
+                ext.devisStatus === 'acompte_paye' || 
+                (d as any).devisStatus === 'valide' || 
+                (d as any).devisStatus === 'acompte_paye' || 
+                d.crmStage === 'confirme';
+  if (isVal) {
+    return {
+      status: 'valide' as const,
+      isVal: true,
+      isConfirmedByAtelier: true,
+      isInitialEstimate: false
+    };
+  }
+
+  // 2. Is it officially confirmed / created by the workshop?
+  // Only true if the workshop explicitly confirmed it via the modal (devisOfficielConfirmed === true),
+  // or set devisStatus to 'devis_confirme_atelier', or d.crmPriceConfirmed === true (from Demandes admin)
+  const isConfirmedByAtelier = Boolean(
+    ext.devisOfficielConfirmed === true ||
+    (d as any).devisOfficielConfirmed === true ||
+    ext.devisStatus === 'devis_confirme_atelier' ||
+    (d as any).devisStatus === 'devis_confirme_atelier' ||
+    d.crmPriceConfirmed === true
+  );
+
+  if (isConfirmedByAtelier) {
+    return {
+      status: 'devis_pret' as const,
+      isVal: false,
+      isConfirmedByAtelier: true,
+      isInitialEstimate: false
+    };
+  }
+
+  // 3. Otherwise, it is an INITIAL ESTIMATION (taman tqribi bach yakhod fikra)
+  return {
+    status: 'estimation' as const,
+    isVal: false,
+    isConfirmedByAtelier: false,
+    isInitialEstimate: true
+  };
+};
+
 const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const text = `${d.type || ''} ${d.details || ''} ${d.id || ''}`.toLowerCase();
     
@@ -1977,12 +2025,25 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       extDetails.prixEchantillon = Number(quickEditForm.prixEchantillon);
       extDetails.patronageStatus = 'priced';
 
+      if (quickEditForm.isDevisOfficielConfirmed) {
+        extDetails.devisOfficielConfirmed = true;
+        extDetails.devisStatus = 'devis_confirme_atelier';
+        extDetails.devisOfficielDate = new Date().toISOString();
+      } else {
+        extDetails.devisOfficielConfirmed = false;
+        extDetails.devisStatus = 'estimation';
+      }
+
+      const calculatedTotal = Number(quickEditForm.unitPrice) * (atelierQuickEditLead.quantity || 100);
+
       const updatedLead: Lead = {
         ...atelierQuickEditLead,
         details: JSON.stringify(extDetails),
         modeleReel: quickEditForm.modeleReel,
         unitPrice: Number(quickEditForm.unitPrice),
-        totalPrice: Number(quickEditForm.unitPrice) * (atelierQuickEditLead.quantity || 100),
+        totalPrice: calculatedTotal,
+        crmPrice: calculatedTotal,
+        crmPriceConfirmed: quickEditForm.isDevisOfficielConfirmed,
         patronagePrice: Number(quickEditForm.patronagePrice),
         prixEchantillon: Number(quickEditForm.prixEchantillon),
         tissuSuggere: quickEditForm.tissuSuggere,
@@ -1992,6 +2053,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         reponseAtelier: quickEditForm.reponseAtelier,
         reponseAtelierDate: new Date().toISOString()
       };
+      (updatedLead as any).devisOfficielConfirmed = quickEditForm.isDevisOfficielConfirmed;
+      (updatedLead as any).devisStatus = quickEditForm.isDevisOfficielConfirmed ? 'devis_confirme_atelier' : 'estimation';
       await saveRecord('leads', updatedLead);
       setMesDemandes(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
       setSelectedDemandePage(prev => prev?.id === updatedLead.id ? updatedLead : prev);
@@ -2006,6 +2069,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
   const openQuickEdit = (lead: Lead) => {
     const analysis = getDemandeAnalysis(lead, isAr);
+    const devState = getLeadDevisState(lead);
     setAtelierQuickEditLead(lead);
     setQuickEditForm({
       modeleReel: analysis.modeleReel,
@@ -2017,7 +2081,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       techDetails: analysis.techDetails,
       delaiEstime: analysis.delaiEstime,
       statusProgression: analysis.statusProgression,
-      reponseAtelier: analysis.reponseAtelier
+      reponseAtelier: analysis.reponseAtelier,
+      isDevisOfficielConfirmed: devState.isConfirmedByAtelier
     });
   };
 
@@ -3888,22 +3953,49 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                         </div>
 
                         {/* Dynamic Acompte / Payment Banner */}
-                        {!isClientFabric ? (
-                          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
-                            <div>
-                              <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm">
-                                <CreditCard className="w-4 h-4 text-amber-600" />
-                                {isAr ? 'تسبيق شراء القماش وبدء الإنتاج (50%):' : 'Acompte Tissu & Lancement (50%) :'}
-                              </span>
-                              <span className="text-[11px] text-amber-800/80 font-medium block mt-0.5">
-                                {isAr ? 'ضروري لشراء رولوات الثوب وحجز خط الإنتاج' : 'Nécessaire à l\'achat des rouleaux de tissu'}
-                              </span>
-                            </div>
-                            <span className="font-black text-lg text-amber-950 shrink-0 font-mono">
-                              {Math.round(activeTotalPrice * 0.5).toLocaleString()} MAD
-                            </span>
-                          </div>
-                        ) : (
+                        {(() => {
+                          const singleDevState = getLeadDevisState(d);
+
+                          if (singleDevState.isInitialEstimate) {
+                            return (
+                              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-800">
+                                <div>
+                                  <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm text-slate-900">
+                                    <Clock className="w-4 h-4 text-amber-500" />
+                                    {isAr ? 'تقدير أولي تقريبي (قيد دراسة ومراجعة الورشة):' : 'Estimation Indicative (En cours) :'}
+                                  </span>
+                                  <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
+                                    {isAr ? 'هذا السعر تقريبي فقط لأخذ فكرة — الدوفيز الرسمي والنهائي سيصدر من الورشة قريباً' : 'Tarif indicatif. Le devis officiel engageant sera publié par l\'atelier.'}
+                                  </span>
+                                </div>
+                                <span className="font-black text-base text-slate-900 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shrink-0 font-mono">
+                                  ~ {Math.round(activeTotalPrice).toLocaleString()} MAD
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          if (!isClientFabric) {
+                            return (
+                              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+                                <div>
+                                  <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm">
+                                    <CreditCard className="w-4 h-4 text-amber-600" />
+                                    {isAr ? 'تسبيق شراء القماش وبدء الإنتاج (50%):' : 'Acompte Tissu & Lancement (50%) :'}
+                                  </span>
+                                  <span className="text-[11px] text-amber-800/80 font-medium block mt-0.5">
+                                    {isAr ? 'ضروري لشراء رولوات الثوب وحجز خط الإنتاج' : 'Nécessaire à l\'achat des rouleaux de tissu'}
+                                  </span>
+                                </div>
+                                <span className="font-black text-lg text-amber-950 shrink-0 font-mono">
+                                  {Math.round(activeTotalPrice * 0.5).toLocaleString()} MAD
+                                </span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                        {isClientFabric && (
                           <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-emerald-950">
                             <div>
                               <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm text-emerald-800">
@@ -3930,14 +4022,39 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                         <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
                           {!isClientFabric ? (
                             <>
-                              <button
-                                type="button"
-                                onClick={() => setValidatingDevisLead(d)}
-                                className="py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.99] cursor-pointer"
-                              >
-                                <CreditCard className="w-4 h-4" />
-                                <span>{isAr ? 'تأكيد الدوفيز وأداء التسبيق (50%)' : 'Valider le Devis & Verser l\'Acompte'}</span>
-                              </button>
+                              {(() => {
+                                const singleDevState = getLeadDevisState(d);
+                                if (singleDevState.isConfirmedByAtelier && !singleDevState.isVal) {
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => setValidatingDevisLead(d)}
+                                      className="py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.99] cursor-pointer"
+                                    >
+                                      <CreditCard className="w-4 h-4" />
+                                      <span>{isAr ? 'تأكيد الدوفيز وأداء التسبيق (50%)' : 'Valider le Devis & Verser l\'Acompte'}</span>
+                                    </button>
+                                  );
+                                }
+                                if (singleDevState.isVal) {
+                                  return (
+                                    <div className="py-3.5 px-4 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2">
+                                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                      <span>{isAr ? 'تم الاتفاق والموافقة بنجاح' : 'Devis Validé & Confirmé'}</span>
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => openQuickEdit(d)}
+                                    className="py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                                  >
+                                    <FileText className="w-4 h-4 text-slate-950" />
+                                    <span>{isAr ? '📄 قرار ودوفيز الورشة' : 'Devis Atelier'}</span>
+                                  </button>
+                                );
+                              })()}
 
                               <button
                                 type="button"
@@ -4787,13 +4904,9 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 {/* Top Left Status Badge */}
                                 <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-2">
                                   {(() => {
-                                    let ext: any = {};
-                                    try { ext = JSON.parse(d.details || '{}'); } catch(e) {}
-                                    const devStatus = ext.devisStatus || (d as any).devisStatus || (d.crmStage === 'confirme' ? 'valide' : (d.crmPriceConfirmed || d.unitPrice || analysis.isAnalyzedByAI ? 'devis_pret' : 'en_attente'));
-                                    const isVal = devStatus === 'valide' || devStatus === 'acompte_paye' || d.crmStage === 'confirme';
-                                    const isPr = !isVal && (devStatus === 'devis_pret' || Boolean(d.crmPriceConfirmed || d.unitPrice));
+                                    const devState = getLeadDevisState(d);
 
-                                    if (isVal) {
+                                    if (devState.isVal) {
                                       return (
                                         <span className="px-3 py-1.5 bg-emerald-600/95 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-lg border border-emerald-400/40 flex items-center gap-1.5 ring-2 ring-emerald-500/30">
                                           <CheckCircle className="w-3.5 h-3.5 text-white" />
@@ -4808,18 +4921,18 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                         </span>
                                       );
                                     }
-                                    if (isPr) {
+                                    if (devState.isConfirmedByAtelier) {
                                       return (
                                         <span className="px-3 py-1.5 bg-amber-500/95 backdrop-blur-md text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-xl shadow-lg border border-amber-300 flex items-center gap-1.5 animate-pulse">
                                           <FileText className="w-3.5 h-3.5 text-slate-950" />
-                                          <span>{isAr ? 'دوفيز رسمي جاهز للموافقة 📄' : 'Devis Prêt 📄'}</span>
+                                          <span>{isAr ? 'دوفيز رسمي معتمد من الورشة 📄' : 'Devis Officiel Atelier 📄'}</span>
                                         </span>
                                       );
                                     }
                                     return (
                                       <span className="px-3 py-1.5 bg-slate-900/90 backdrop-blur-md text-slate-200 text-[10px] font-black uppercase tracking-wider rounded-xl shadow-md border border-white/20 flex items-center gap-1.5">
                                         <Clock className="w-3.5 h-3.5 text-amber-400" />
-                                        <span>{isAr ? 'قيد دراسة الورشة ⏳' : 'Étude en cours ⏳'}</span>
+                                        <span>{isAr ? '💡 تقدير أولي تقريبي (قيد دراسة الورشة)' : '💡 Estimation Indicative (En cours)'}</span>
                                       </span>
                                     );
                                   })()}
@@ -4831,32 +4944,21 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                     #{d.id.substring(0, 8).toUpperCase()}
                                   </span>
                                 </div>
-
-                                {/* Bottom Image Overlay */}
-                                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent flex items-end p-4 pointer-events-none">
-                                  <span className="text-white/90 text-xs font-black uppercase tracking-wider block">
-                                    {isAr ? 'تصنيع عالي الجودة' : 'Confection Premium'}
-                                  </span>
-                                </div>
                               </div>
 
                               {/* Clean Card Body */}
                               <div className="p-5 space-y-3 cursor-pointer" onClick={() => setSelectedDemandePage(d)}>
-                                <div>
-                                  <h3 className="text-xl font-black text-slate-900 leading-snug line-clamp-1 group-hover:text-indigo-600 transition-colors" title={analysis.modeleReel}>
+                                <div className="space-y-1">
+                                  <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2 min-h-[2.5rem] flex items-center" title={analysis.modeleReel}>
                                     {analysis.modeleReel}
                                   </h3>
-                                  <p className="text-xs text-slate-500 line-clamp-1 mt-1 font-medium">
+                                  <p className="text-xs text-slate-500 line-clamp-2 font-medium leading-relaxed" title={analysis.tissuSuggere}>
                                     {analysis.tissuSuggere}
                                   </p>
                                 </div>
 
                                 {(() => {
-                                  let ext: any = {};
-                                  try { ext = JSON.parse(d.details || '{}'); } catch(e) {}
-                                  const devStatus = ext.devisStatus || (d as any).devisStatus || (d.crmStage === 'confirme' ? 'valide' : (d.crmPriceConfirmed || d.unitPrice || analysis.isAnalyzedByAI ? 'devis_pret' : 'en_attente'));
-                                  const isVal = devStatus === 'valide' || devStatus === 'acompte_paye' || d.crmStage === 'confirme';
-                                  const isPr = !isVal && (devStatus === 'devis_pret' || Boolean(d.crmPriceConfirmed || d.unitPrice));
+                                  const devState = getLeadDevisState(d);
 
                                   return (
                                     <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2.5">
@@ -4866,17 +4968,29 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                           <span className="text-sm font-black text-slate-900 font-mono">{analysis.qty} pcs</span>
                                         </div>
                                         <div className="text-center">
-                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{isAr ? 'سعر البياسة' : 'Prix / pc'}</span>
-                                          <span className="text-sm font-black text-slate-900 font-mono">{analysis.unitPrice || 65} MAD</span>
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                                            {devState.isConfirmedByAtelier || devState.isVal
+                                              ? (isAr ? 'سعر البياسة' : 'Prix / pc')
+                                              : (isAr ? 'السعر التقديري' : 'Prix indicatif')}
+                                          </span>
+                                          <span className="text-sm font-black text-slate-900 font-mono">
+                                            {!devState.isConfirmedByAtelier && !devState.isVal ? '~' : ''}{analysis.unitPrice || 65} MAD
+                                          </span>
                                         </div>
                                         <div className={isAr ? 'text-left' : 'text-right'}>
-                                          <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">{isAr ? 'إجمالي الدوفيز' : 'Total Devis'}</span>
-                                          <span className="text-base font-black text-indigo-950 font-mono">{analysis.totalPrice.toLocaleString()} MAD</span>
+                                          <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">
+                                            {devState.isConfirmedByAtelier || devState.isVal
+                                              ? (isAr ? 'إجمالي الدوفيز' : 'Total Devis')
+                                              : (isAr ? 'المجموع التقديري' : 'Total indicatif')}
+                                          </span>
+                                          <span className="text-base font-black text-indigo-950 font-mono">
+                                            {!devState.isConfirmedByAtelier && !devState.isVal ? '~' : ''}{analysis.totalPrice.toLocaleString()} MAD
+                                          </span>
                                         </div>
                                       </div>
 
                                       {/* Accord Status Box: واش اتفقنا ولا لا */}
-                                      {isVal ? (
+                                      {devState.isVal ? (
                                         <div className="p-2.5 bg-emerald-500/15 border border-emerald-500/30 rounded-xl flex items-center justify-between text-xs text-emerald-950 font-black">
                                           <span className="flex items-center gap-1.5">
                                             <span className="text-sm">🤝</span>
@@ -4884,21 +4998,21 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                           </span>
                                           <span className="px-2 py-0.5 bg-emerald-600 text-white rounded-md text-[10px] font-mono">{isAr ? 'مؤكد 100%' : 'Validé'}</span>
                                         </div>
-                                      ) : isPr ? (
+                                      ) : devState.isConfirmedByAtelier ? (
                                         <div className="p-2.5 bg-amber-500/15 border border-amber-500/30 rounded-xl flex items-center justify-between text-xs text-amber-950 font-black">
                                           <span className="flex items-center gap-1.5">
-                                            <span className="text-sm">📄</span>
+                                            <FileText className="w-3.5 h-3.5 text-amber-700" />
                                             <span>{isAr ? 'دوفيز الورشة جاهز: في انتظار موافقتك' : 'Devis prêt : en attente validation'}</span>
                                           </span>
                                           <span className="px-2 py-0.5 bg-amber-500 text-slate-950 rounded-md text-[10px] font-mono font-black">{isAr ? `تسبيق: ${Math.round(analysis.totalPrice * 0.5).toLocaleString()} DH` : 'Acompte 50%'}</span>
                                         </div>
                                       ) : (
-                                        <div className="p-2.5 bg-slate-100 rounded-xl flex items-center justify-between text-xs text-slate-600 font-bold">
+                                        <div className="p-2.5 bg-slate-100 rounded-xl flex items-center justify-between text-xs text-slate-600 font-bold border border-slate-200/60">
                                           <span className="flex items-center gap-1.5">
-                                            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                            <span>{isAr ? 'الورشة كتقوم بدراسة الموديل وحساب الدوفيز' : 'Étude technique en cours'}</span>
+                                            <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                            <span>{isAr ? 'الورشة تدرس الموديل لحساب الدوفيز النهائي' : 'Étude technique en cours par l\'atelier'}</span>
                                           </span>
-                                          <span className="text-[10px] text-slate-400 font-mono">تحت 24h</span>
+                                          <span className="text-[10px] text-slate-500 font-mono bg-white px-2 py-0.5 rounded-md border border-slate-200">{isAr ? 'تقدير أولي' : 'Indicatif'}</span>
                                         </div>
                                       )}
                                     </div>
@@ -4919,12 +5033,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               </button>
 
                               {(() => {
-                                let ext: any = {};
-                                try { ext = JSON.parse(d.details || '{}'); } catch(e) {}
-                                const devStatus = ext.devisStatus || (d as any).devisStatus || (d.crmStage === 'confirme' ? 'valide' : (d.crmPriceConfirmed || d.unitPrice || analysis.isAnalyzedByAI ? 'devis_pret' : 'en_attente'));
-                                const isVal = devStatus === 'valide' || devStatus === 'acompte_paye' || d.crmStage === 'confirme';
+                                const devState = getLeadDevisState(d);
 
-                                if (!isVal) {
+                                // ONLY allow client to validate if workshop has CONFIRMED the official devis!
+                                if (devState.isConfirmedByAtelier && !devState.isVal) {
                                   return (
                                     <button
                                       type="button"
@@ -4935,7 +5047,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                       className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-[0.99] cursor-pointer"
                                     >
                                       <CheckCircle className="w-3.5 h-3.5" />
-                                      <span>{isAr ? '✅ موافقة على الدوفيز وأداء التسبيق (50%)' : '✅ Valider Devis & Verser Acompte'}</span>
+                                      <span>{isAr ? 'موافقة على الدوفيز وأداء التسبيق (50%)' : 'Valider Devis & Verser Acompte'}</span>
                                     </button>
                                   );
                                 }
@@ -7907,6 +8019,29 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
             </div>
 
             <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+              {/* Workshop Devis Confirmation Switch */}
+              <div className="p-4 bg-amber-50/90 border-2 border-amber-300 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                <div>
+                  <span className="block text-xs font-black text-amber-950 flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-amber-600" />
+                    {isAr ? 'اعتماد وتأكيد الدوفيز الرسمي للزبون' : 'Confirmer & Publier le Devis Officiel'}
+                  </span>
+                  <span className="text-[11px] text-amber-800 font-medium block mt-0.5 leading-relaxed">
+                    {isAr
+                      ? 'عند تفعيل هذا الخيار، سيظهر الدوفيز للزبون في حسابه كـ (دوفيز رسمي معتمد من الورشة) ويتاح له تأكيده وأداء التسبيق (50%). إذا كان غير مفعّل، يبقى كتقدير أولي فقط لأخذ فكرة.'
+                      : 'Rend ce devis officiel et engageant pour le client avec possibilité de valider et verser l\'acompte 50%.'}
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={quickEditForm.isDevisOfficielConfirmed}
+                    onChange={(e) => setQuickEditForm(prev => ({ ...prev, isDevisOfficielConfirmed: e.target.checked }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-12 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
               <div>
                 <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
                   {isAr ? 'اسم الموديل المعتمد' : 'Nom Exact du Modèle'}
