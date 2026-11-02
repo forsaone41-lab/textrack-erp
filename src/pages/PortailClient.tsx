@@ -37,6 +37,73 @@ const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   return <img src={src} className="h-12 object-contain" alt={alt} onError={() => setError(true)} />;
 };
 
+
+export const DELETE_REASON_OPTIONS = [
+  {
+    id: 'price_high',
+    icon: '💰',
+    labelAr: 'السعر جاني غالي شوية / خارج الميزانية',
+    labelFr: 'Le prix estimé dépasse mon budget',
+    subAr: 'كنقلب على خياطة أو ثوب بتكلفة اقتصادية أكثر مناسبة لي',
+    subFr: 'Recherche d\'une alternative plus accessible',
+    isNegotiable: true,
+  },
+  {
+    id: 'delay_long',
+    icon: '⏳',
+    labelAr: 'مدة التسليم طويلة / محتاج السلعة فوقت أسرع ومستعجل',
+    labelFr: 'Délai de fabrication / livraison trop long',
+    subAr: 'عندي موعد تسليم قريب ومحتاج خدمة مستعجلة',
+    subFr: 'Besoin d\'une production express prioritaire',
+    isNegotiable: true,
+  },
+  {
+    id: 'change_model',
+    icon: '🎨',
+    labelAr: 'بغيت نبدل الموديل أو نرفع تصميم جديد مختلف',
+    labelFr: 'Changer de modèle ou tester un autre design',
+    subAr: 'قررت نخدم على قصة أو تصميم مختلف تماماً عن هذا',
+    subFr: 'Nouveau style ou patronage différent',
+    isNegotiable: false,
+  },
+  {
+    id: 'fabric_issue',
+    icon: '🧵',
+    labelAr: 'نوع الثوب المقترح ما ناسبنيش',
+    labelFr: 'Le tissu proposé ne correspond pas à mes attentes',
+    subAr: 'كنفضل قماش أو غراماج أو خامة أخرى في التنفيذ',
+    subFr: 'Souhait d\'une autre matière première',
+    isNegotiable: true,
+  },
+  {
+    id: 'quantity_issue',
+    icon: '📦',
+    labelAr: 'مشكل فالكمية المطلوبة أو توزيع المقاسات',
+    labelFr: 'Problème de quantité minimum ou de tailles',
+    subAr: 'الكونتيتي ما مسلكانيش حالياً وبغيت نعدلها',
+    subFr: 'Volume de commande ou grille à ajuster',
+    isNegotiable: true,
+  },
+  {
+    id: 'curiosity_test',
+    icon: '🎯',
+    labelAr: 'طلب تجريبي لاكتشاف الأسعار والمنصة فقط',
+    labelFr: 'Simple test pour découvrir la plateforme et les tarifs',
+    subAr: 'طلب غير فعلي، تسجل للتجربة والفضول فقط',
+    subFr: 'Créé par curiosité / découverte',
+    isNegotiable: false,
+  },
+  {
+    id: 'other',
+    icon: '✍️',
+    labelAr: 'سبب آخر (اكتب لنا ملاحظتك للتحسين)',
+    labelFr: 'Autre motif (aidez-nous à nous améliorer)',
+    subAr: 'ملاحظة خاصة أو اقتراح مباشر للورشة',
+    subFr: 'Remarque spécifique pour l\'atelier',
+    isNegotiable: false,
+  },
+];
+
 const LeadCardImage = ({
   lead,
   leadPhotos,
@@ -2993,96 +3060,44 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
 
                return (
-                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-28 sm:pb-32">
-                   {/* Top Navigation & Action Header */}
-                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+                 <div className="space-y-3.5 animate-in fade-in slide-in-from-right-4 duration-500 pb-28 sm:pb-32">
+                   {/* Top Navigation & Clean Corner Action Icons */}
+                   <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100">
                      <button
                        type="button"
                        onClick={() => setSelectedDemandePage(null)}
-                       className="inline-flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-100 text-slate-800 rounded-2xl text-xs font-black uppercase tracking-wider border border-slate-200 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer w-fit"
+                       className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 rounded-xl text-xs font-black uppercase tracking-wider border border-slate-200/80 shadow-2xs transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
                      >
-                       <ChevronRight className={`w-4 h-4 ${isAr ? '' : 'rotate-180'}`} />
+                       <ChevronRight className={`w-3.5 h-3.5 ${isAr ? '' : 'rotate-180'}`} />
                        <span>{isAr ? '← الرجوع إلى قائمة طلباتي' : '← Retour à mes demandes'}</span>
                      </button>
 
-                     <div className="flex items-center gap-2">
-                       {isTestAccount && (
-                         <button
-                           type="button"
-                           onClick={() => {
-                             setAtelierQuickEditLead(d);
-                             setQuickEditForm({
-                               modeleReel: analysis.modeleReel,
-                               patronagePrice: analysis.patronagePrice,
-                               prixEchantillon: analysis.echantillonPrice,
-                               unitPrice: analysis.unitPrice,
-                               totalPrice: analysis.totalPrice,
-                               tissuSuggere: analysis.tissuSuggere,
-                               techDetails: analysis.techDetails,
-                               delaiEstime: analysis.delaiEstime,
-                               statusProgression: analysis.statusProgression,
-                               reponseAtelier: analysis.reponseAtelier
-                             });
-                           }}
-                           className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer"
-                         >
-                           <span>⚙️ {isAr ? 'رد وتعديل الورشة' : 'Réponse Atelier'}</span>
-                         </button>
-                       )}
-
-                       <button
-                         type="button"
-                         onClick={() => window.print()}
-                         className="p-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition-all shadow-sm cursor-pointer"
-                         title={isAr ? 'طباعة' : 'Imprimer'}
-                       >
-                         <Printer className="w-5 h-5" />
-                       </button>
-
+                     {/* Discrete Corner Action Icons: Edit & Delete */}
+                     <div className="flex items-center gap-1.5">
                        {isPending && (
                          <button
                            type="button"
-                           onClick={() => {
-                             setEditingDemandeId(d.id);
-                             let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
-                             if (d.tailles) {
-                                (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
-                             } else if (d.sizes) {
-                                try {
-                                  const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
-                                  Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
-                                } catch(e) {}
-                             }
-                             setNewOrderForm({
-                               modele: d.type || '',
-                               quantite: d.quantity?.toString() || '',
-                               photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
-                               details: d.details || '',
-                               telephone: d.phone || currentUser?.telephone || '',
-                               tailles: parsedTailles
-                             });
-                             setShowNewOrderModal(true);
-                           }}
-                           className="p-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition-all shadow-sm cursor-pointer"
-                           title={isAr ? 'تعديل الطلب' : 'Modifier'}
+                           onClick={(e) => handleOpenEditDemande(d, e)}
+                           className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200/80 hover:border-indigo-200 rounded-xl transition-all shadow-2xs cursor-pointer"
+                           title={isAr ? 'تعديل بيانات الموديل' : 'Modifier la demande'}
                          >
-                           <Edit2 className="w-5 h-5" />
+                           <Edit2 className="w-4 h-4" />
                          </button>
                        )}
 
                        <button
                          type="button"
-                         onClick={(e) => handleDeleteDemande(d.id, e)}
-                         className="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-all shadow-sm cursor-pointer"
-                         title={isAr ? 'حذف الطلب' : 'Supprimer'}
+                         onClick={(e) => handleOpenDeleteModal(d, e)}
+                         className="p-2 text-rose-500 hover:text-rose-600 hover:bg-rose-50 border border-rose-200/80 hover:border-rose-300 rounded-xl transition-all shadow-2xs cursor-pointer"
+                         title={isAr ? 'حذف هذا الموديل' : 'Supprimer la demande'}
                        >
-                         <Trash2 className="w-5 h-5" />
+                         <Trash2 className="w-4 h-4" />
                        </button>
                      </div>
                    </div>
 
-{/* 0. Primary Model Title & Devis Chiffrage Atelier Header (Compact, Sleek, No AI mentioned) */}
-                    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-3.5 md:p-4 shadow-lg border border-indigo-500/20 mb-4 relative overflow-hidden">
+                   {/* 0. Primary Model Title & Devis Chiffrage Atelier Header (Compact, Sleek, No AI mentioned) */}
+                    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-3.5 md:p-4 shadow-lg border border-indigo-500/20 mb-2.5 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
                       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
                         <div className="space-y-1.5 min-w-0 flex-1">
@@ -4617,7 +4632,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                      <Edit2 className="w-4 h-4" />
                                    </button>
                                    <button 
-                                     onClick={(e) => handleDeleteDemande(d.id, e)}
+                                     onClick={(e) => handleOpenDeleteModal(d, e)}
                                      className="w-8 h-8 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
                                    >
                                      <Trash2 className="w-4 h-4" />
@@ -4788,7 +4803,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
                                 <button 
                                   type="button"
-                                  onClick={(e) => handleDeleteDemande(d.id, e)}
+                                  onClick={(e) => handleOpenDeleteModal(d, e)}
                                   className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-all cursor-pointer border border-rose-200/80 shrink-0"
                                   title={isAr ? 'حذف الطلب' : 'Supprimer'}
                                 >
@@ -7815,6 +7830,175 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           </div>
         </div>
       )}
+
+      {/* Deletion Survey & Retention Questionnaire Modal */}
+      {deleteModalLead && (() => {
+        const selectedReason = DELETE_REASON_OPTIONS.find(r => r.id === deleteReasonId) || DELETE_REASON_OPTIONS[0];
+        const leadWhatsAppUrl = `https://wa.me/${(company.phone || '+212600000000').replace(/\D/g, '')}?text=${encodeURIComponent(
+          isAr
+            ? `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي للموديل "${deleteModalLead.type || deleteModalLead.modeleReel || 'الموديل'}" (REF: #${deleteModalLead.id.substring(0, 8).toUpperCase()}):
+كنت باغي نحذف الطلب بسباب: (${selectedReason.labelAr}).
+واش ممكن نلقاو شي حل تفاوضي مناسب لميزانيتي أو مدة التسليم؟ شكراً!`
+            : `Bonjour Atelier ${company.name || 'BEYA Creative'}, demande REF: #${deleteModalLead.id.substring(0, 8).toUpperCase()} ("${deleteModalLead.type || deleteModalLead.modeleReel}") :
+Motif d'hésitation : (${selectedReason.labelFr}).
+Est-il possible de négocier un ajustement tarifaire ou de délai avant suppression ? Merci !`
+        )}`;
+
+        return (
+          <div className="fixed inset-0 z-[250] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="bg-white rounded-[2rem] max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
+              {/* Header */}
+              <div className="p-5 md:p-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30">
+                    <Trash2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base md:text-lg font-black text-white leading-tight">
+                      {isAr ? 'تأكيد حذف الموديل' : 'Supprimer cette demande'}
+                    </h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[240px] sm:max-w-xs font-medium">
+                      {deleteModalLead.type || deleteModalLead.modeleReel || 'Modèle'} • REF: #{deleteModalLead.id.substring(0, 8).toUpperCase()}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDeleteModalLead(null)}
+                  className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body with Survey Questions */}
+              <div className="p-5 md:p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-slate-800">
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 leading-snug">
+                    {isAr ? 'شارِكنا سبب اتخاذ قرار الحذف (اختيار سريع):' : 'Pour quelle raison principale souhaitez-vous supprimer ce modèle ?'}
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {isAr
+                      ? 'ملاحظتك كتهمنا بزاف باش نطوروا الأسعار وجودة الخدمات ونلقاو حلول مناسبة لكل زبون.'
+                      : 'Votre retour nous aide directement à ajuster nos offres et nos tarifs pour mieux vous satisfaire.'}
+                  </p>
+                </div>
+
+                {/* Quick Select Grid */}
+                <div className="space-y-2">
+                  {DELETE_REASON_OPTIONS.map((opt) => {
+                    const isSelected = deleteReasonId === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setDeleteReasonId(opt.id)}
+                        className={`w-full p-3 rounded-2xl border text-right transition-all flex items-start gap-3 cursor-pointer ${
+                          isSelected
+                            ? 'bg-indigo-50/90 border-indigo-400 shadow-xs ring-2 ring-indigo-500/20'
+                            : 'bg-slate-50/70 hover:bg-slate-100/80 border-slate-200/80 text-slate-700'
+                        }`}
+                      >
+                        <span className="text-xl shrink-0 mt-0.5">{opt.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs font-black ${isSelected ? 'text-indigo-950' : 'text-slate-900'}`}>
+                              {isAr ? opt.labelAr : opt.labelFr}
+                            </span>
+                            {isSelected && (
+                              <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] shrink-0 font-black">
+                                ✓
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-500 block mt-0.5">
+                            {isAr ? opt.subAr : opt.subFr}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Smart Retention Callout for Negotiable Reasons (Price, Delay, Fabric, Quantity) */}
+                {selectedReason?.isNegotiable && (
+                  <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200/90 flex items-start gap-3 animate-in fade-in">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                      <Sparkles className="w-4 h-4 text-amber-600" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-xs text-amber-950">
+                      <p className="font-bold leading-snug">
+                        {isAr
+                          ? '💡 قبل ما تحذف: واش عرفتي بلي الأثمنة ومدة التسليم قابلة للتفاوض المباشر مع المعلم؟'
+                          : '💡 Bon à savoir : les tarifs et délais peuvent être ajustés sur mesure selon votre budget.'}
+                      </p>
+                      <p className="text-[11px] text-amber-800/90 mt-1">
+                        {isAr
+                          ? 'إدارة الورشة مستعدة تقترح عليك خيارات أقمشة بديلة وتخفيضات مناسبة باش تبدا مشروعك.'
+                          : 'Notre chef d\'atelier peut vous proposer des matières alternatives ou optimiser la série.'}
+                      </p>
+                      <a
+                        href={leadWhatsAppUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 mt-2.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shadow-xs transition-all active:scale-95 cursor-pointer"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>{isAr ? '💬 تفاوض مع المعلم فالواتساب قبل الحذف' : '💬 Négocier sur WhatsApp avant suppression'}</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Optional Custom Note */}
+                <div>
+                  <label className="text-[11px] font-bold text-slate-500 block mb-1">
+                    {isAr ? 'ملاحظة أو توضيح إضافي (اختياري):' : 'Remarque additionnelle (optionnel) :'}
+                  </label>
+                  <textarea
+                    value={deleteCustomNote}
+                    onChange={(e) => setDeleteCustomNote(e.target.value)}
+                    placeholder={isAr ? 'كتب لينا أي اقتراح أو سبب باش نحسنو الخدمة...' : 'Écrivez une remarque ou suggestion pour l\'atelier...'}
+                    rows={2}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 focus:bg-white transition-all text-slate-800 resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="p-4 md:p-5 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-end gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setDeleteModalLead(null)}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  {isAr ? 'التراجع والاحتفاظ بالطلب' : 'Annuler et garder'}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isDeletingLead}
+                  onClick={handleConfirmDeleteWithReason}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md shadow-rose-600/20 active:scale-95 cursor-pointer disabled:opacity-50"
+                >
+                  {isDeletingLead ? (
+                    <>
+                      <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>{isAr ? 'جاري الحذف...' : 'Suppression...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>{isAr ? 'تأكيد حذف الموديل نهائياً' : 'Confirmer la suppression'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
     </div>
   );
 }
