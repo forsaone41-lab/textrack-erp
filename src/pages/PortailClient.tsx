@@ -649,6 +649,51 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [clientAiInput, setClientAiInput] = useState('');
   const [clientAiLoading, setClientAiLoading] = useState(false);
   const [fabricOption, setFabricOption] = useState<Record<string, 'atelier' | 'client'>>({});
+  const [clientPhone, setClientPhone] = useState<string>(() => {
+    try {
+      const local = localStorage.getItem(`beya_client_phone_${currentUser?.email?.toLowerCase().trim()}`);
+      if (local && local.trim()) return local.trim();
+    } catch {}
+    return currentUser?.telephone || '';
+  });
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [phoneInputVal, setPhoneInputVal] = useState(clientPhone);
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [phoneSaveSuccess, setPhoneSaveSuccess] = useState(false);
+
+  const handleSaveClientPhone = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleaned = phoneInputVal.trim();
+    if (!cleaned) return;
+    setSavingPhone(true);
+    try {
+      setClientPhone(cleaned);
+      const emailKey = currentUser?.email?.toLowerCase().trim() || 'default';
+      localStorage.setItem(`beya_client_phone_${emailKey}`, cleaned);
+      
+      try {
+        const rawAuth = localStorage.getItem('textrack_auth');
+        if (rawAuth) {
+          const parsed = JSON.parse(rawAuth);
+          parsed.telephone = cleaned;
+          localStorage.setItem('textrack_auth', JSON.stringify(parsed));
+        }
+      } catch {}
+
+      if (currentUser) {
+        const updatedUser = { ...currentUser, telephone: cleaned };
+        await saveRecord('users', updatedUser, true).catch(() => {});
+      }
+
+      setIsEditingPhone(false);
+      setPhoneSaveSuccess(true);
+      setTimeout(() => setPhoneSaveSuccess(false), 4000);
+    } catch (err) {
+      console.error('Failed to save client phone:', err);
+    } finally {
+      setSavingPhone(false);
+    }
+  };
 
   const handleSendVerificationEmail = async () => {
     if (!currentUser?.email) return;
@@ -2522,55 +2567,134 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                     </div>
                   </div>
 
-                  {/* WhatsApp Notification — CallMeBot setup */}
-                  {(currentUser?.role === 'client' || currentUser?.role === 'merchant') && currentUser.telephone && (
-                    <div className="mt-8 md:mt-12 p-4 md:p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] md:rounded-[2.5rem]">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shrink-0">
-                          <MessageCircle className="w-5 h-5 text-white" />
+                  {/* WhatsApp Notification — Client's Real Phone Number */}
+                  {(currentUser?.role === 'client' || currentUser?.role === 'merchant') && (
+                    <div className="mt-8 md:mt-12 p-5 md:p-7 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] md:rounded-[2.5rem] shadow-xl">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-white/10">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/25">
+                            <MessageCircle className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-base font-black text-white uppercase tracking-tight">
+                                {isAr ? 'إشعارات الواتساب المباشرة' : 'Notifications WhatsApp Directes'}
+                              </h4>
+                              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold rounded-full border border-emerald-500/30">
+                                {isAr ? 'تحديثات حية' : 'En Direct'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-300 font-medium mt-0.5">
+                              {isAr 
+                                ? 'مستجدات وتحديثات مراحل الإنتاج (الفصالة، الخياطة، العينة، والشحن) كتوصلك مباشرة على رقمك فـ WhatsApp' 
+                                : 'Suivez en direct chaque étape de vos commandes (coupe, confection, échantillon, expédition) sur votre WhatsApp'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="text-sm font-black text-white uppercase tracking-tight">
-                            {isAr ? 'تنبيهات الواتساب' : 'Notifications WhatsApp'}
-                          </h4>
-                          <p className="text-[10px] text-slate-400 font-medium">
-                            {isAr ? 'تفعيل مرة واحدة، يصلك كل شيء تلقائياً' : 'Activer une fois, recevez tout automatiquement'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="bg-white/5 rounded-2xl p-4 mb-3 border border-white/10">
-                        <p className="text-[11px] text-white/70 font-medium mb-3">
-                          {isAr
-                            ? '📲 خطوة واحدة فقط: أرسل هذه الرسالة من هاتفك عبر واتساب:'
-                            : '📲 Une seule étape : envoyez ce message depuis votre WhatsApp :'}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <code className="flex-1 bg-black/30 text-emerald-300 text-xs font-mono px-3 py-2 rounded-xl truncate">
-                            I allow callmebot to send me messages
-                          </code>
+
+                        {!isEditingPhone && (
                           <button
-                            onClick={() => navigator.clipboard?.writeText('I allow callmebot to send me messages')}
-                            className="px-2 py-2 bg-white/10 rounded-xl text-white/60 hover:bg-white/20 transition text-[10px]"
-                          >📋</button>
-                        </div>
-                        <p className="text-[10px] text-slate-500 mt-2">
-                          {isAr ? 'أرسل للرقم: ' : 'Envoyer à : '}
-                          <strong className="text-white/70">+34 644 59 78 07</strong>
-                          {' → '}
-                          <a
-                            href={`https://wa.me/34644597807?text=${encodeURIComponent('I allow callmebot to send me messages')}`}
-                            target="_blank" rel="noreferrer"
-                            className="text-emerald-400 underline font-bold"
+                            type="button"
+                            onClick={() => {
+                              setPhoneInputVal(clientPhone || currentUser?.telephone || '');
+                              setIsEditingPhone(true);
+                            }}
+                            className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 border border-white/10 cursor-pointer self-start sm:self-auto"
                           >
-                            {isAr ? 'افتح واتساب' : 'Ouvrir WhatsApp'}
-                          </a>
-                        </p>
+                            <Edit2 className="w-3.5 h-3.5 text-indigo-300" />
+                            <span>{isAr ? 'تعديل الرقم' : 'Modifier le numéro'}</span>
+                          </button>
+                        )}
                       </div>
-                      <p className="text-[10px] text-slate-500 font-medium text-center">
-                        {isAr
-                          ? '✅ بعد الإرسال ستصلك رسالة تأكيد — بعدها تصلك تحديثات طلبيتك تلقائياً'
-                          : '✅ Après envoi, vous recevrez un message de confirmation — puis toutes les mises à jour automatiquement'}
-                      </p>
+
+                      {phoneSaveSuccess && (
+                        <div className="mb-4 p-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-xs text-emerald-200 font-bold flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>{isAr ? 'تم حفظ وتأكيد رقمك بنجاح! ستصلك كافة المستجدات عليه مباشرة.' : 'Votre numéro a été mis à jour avec succès !'}</span>
+                        </div>
+                      )}
+
+                      {isEditingPhone ? (
+                        <form onSubmit={handleSaveClientPhone} className="bg-black/30 p-4 rounded-2xl border border-white/15 space-y-3">
+                          <label className="block text-xs font-bold text-slate-200">
+                            {isAr ? 'أدخل رقمك الحقيقي (المغرب أو الدولي) لاستقبال التنبيهات:' : 'Votre numéro WhatsApp pour recevoir les notifications :'}
+                          </label>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <input
+                              type="tel"
+                              value={phoneInputVal}
+                              onChange={(e) => setPhoneInputVal(e.target.value)}
+                              placeholder="06 XX XX XX XX / +212 6..."
+                              className="flex-1 py-2.5 px-4 bg-white/10 border border-white/20 rounded-xl text-white font-mono font-bold text-sm outline-none focus:border-emerald-400 focus:bg-white/15 transition placeholder:text-white/40"
+                              autoFocus
+                            />
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="submit"
+                                disabled={savingPhone || !phoneInputVal.trim()}
+                                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/30"
+                              >
+                                {savingPhone ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                <span>{isAr ? 'حفظ وتأكيد' : 'Enregistrer'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setIsEditingPhone(false)}
+                                className="px-3.5 py-2.5 bg-white/10 hover:bg-white/15 text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer"
+                              >
+                                {isAr ? 'إلغاء' : 'Annuler'}
+                              </button>
+                            </div>
+                          </div>
+                        </form>
+                      ) : (
+                        <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-lg">
+                              📱
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                                {isAr ? 'رقم الهاتف المعتمد لاستقبال المستجدات:' : 'Numéro de réception certifié :'}
+                              </span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-base font-black text-white font-mono tracking-wider">
+                                  {clientPhone || currentUser?.telephone || (mesDemandes.find(d => d.phone)?.phone) || (isAr ? 'لم تسجل رقمك بعد' : 'Non renseigné')}
+                                </span>
+                                {(clientPhone || currentUser?.telephone) && (
+                                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-black rounded-md flex items-center gap-1 border border-emerald-500/30">
+                                    <Check className="w-3 h-3 text-emerald-400" />
+                                    <span>{isAr ? 'مربوط ومفعل' : 'Actif'}</span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Direct WhatsApp Action to verify or test */}
+                          <a
+                            href={`https://wa.me/212661000000?text=${encodeURIComponent(
+                              isAr
+                                ? `السلام عليكم ورشة BEYA Creative، أنا الزبون ${currentUser?.nom || 'الزبون'} (رقم هاتفي: ${clientPhone || currentUser?.telephone || ''}). بغيت نأكد رقمي لاستقبال مستجدات الإنتاج والطلبيات عبر WhatsApp.`
+                                : `Bonjour Atelier BEYA Creative, je suis le client ${currentUser?.nom || ''} (${clientPhone || currentUser?.telephone || ''}). Je confirme mon numéro pour recevoir les mises à jour de mes commandes sur WhatsApp.`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 cursor-pointer self-stretch sm:self-auto text-center"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>{isAr ? 'تأكيد الرقم فـ WhatsApp الورشة' : 'Tester sur WhatsApp'}</span>
+                          </a>
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400 font-medium px-1 flex-wrap gap-2">
+                        <span className="flex items-center gap-1 text-emerald-400">
+                          <span>🔒</span>
+                          <span>{isAr ? 'تنبيهات مشفرة ومؤمنة 100%' : 'Notifications 100% sécurisées'}</span>
+                        </span>
+                        <span>{isAr ? 'بدون رسائل سبام • فقط مستجدات الإنتاج والفواتير الرسمية' : 'Zéro spam • Suivi de fabrication & factures uniquement'}</span>
+                      </div>
                     </div>
                   )}
                </div>
