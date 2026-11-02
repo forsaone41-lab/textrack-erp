@@ -1457,6 +1457,10 @@ function translateArabicAtelierPhrases(text: string): string {
   t = t.replace(/قماش مخصص ومطابق للمواصفات المطلوبة/g, 'Tissu adapté selon cahier des charges');
   t = t.replace(/قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل/g, 'Patronage et confection sur-mesure de haute précision');
   t = t.replace(/\([^)]*[\u0600-\u06FF][^)]*\)/g, '').trim();
+  if (hasLatin(t) && hasArabic(t)) {
+    t = t.replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+/g, '');
+    t = t.replace(/\s*[\/|:-]+\s*$/g, '').replace(/^\s*[\/|:-]+\s*/g, '').replace(/\s{2,}/g, ' ').trim();
+  }
   return t;
 }
 
@@ -1467,6 +1471,10 @@ function translateFrenchAtelierPhrases(text: string): string {
   t = t.replace(/Tissu adapté selon cahier des charges/gi, 'قماش مخصص ومطابق للمواصفات المطلوبة');
   t = t.replace(/Patronage et confection sur-mesure de haute précision/gi, 'قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل');
   t = t.replace(/\([^)]*[a-zA-Z][^)]*\)/g, '').trim();
+  if (hasArabic(t) && hasLatin(t)) {
+    t = t.replace(/\([a-zA-Z0-9\s.,'%-]+\)/g, '');
+    t = t.replace(/\s*[\/|:-]+\s*$/g, '').replace(/^\s*[\/|:-]+\s*/g, '').replace(/\s{2,}/g, ' ').trim();
+  }
   return t;
 }
 
@@ -5364,7 +5372,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   badgeText: isAr ? 'طلب موديل / دراسة' : 'Demande & Devis',
                   badgeColor: 'bg-purple-600',
                   reference: `#${d.id.slice(0, 8).toUpperCase()}`,
-                  modele: analysis.modeleReel || d.type || (isAr ? 'طلب موديل' : 'Demande Modèle'),
+                  modele: analysis.modeleReel || cleanLangText(d.type, isAr) || (isAr ? 'طلب موديل' : 'Demande Modèle'),
                   quantite: analysis.qty || 1,
                   prixTotal: analysis.totalPrice || (analysis.unitPrice ? analysis.unitPrice * analysis.qty : null),
                   photo: photo,
