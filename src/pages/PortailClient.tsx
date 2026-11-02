@@ -1101,16 +1101,16 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
 أجب فقط بصيغة JSON صحيحة وبدون أي نصوص إضافية قبل أو بعد:
 {
-  "modeleReel": "الاسم الدقيق المخصص لهذا الموديل بالذات بالعربية والفرنسية",
-  "tissuSuggere": "أفضل نوع ثوب مطابق تماماً لصورة هذا الموديل مع غراماج النسيج",
+  "modeleReel": "الاسم الدقيق بالعربية / Nom exact en français",
+  "tissuSuggere": "نوع القماش الدقيق بالعربية / Type de tissu en français",
   "tissuConso": 1.85,
   "prixMetreEstime": 45,
   "unitPrice": 48,
   "patronagePrice": 220,
   "prixEchantillon": 300,
-  "delaiEstime": "5 إلى 8 أيام عمل",
-  "techDetails": "المواصفات التقنية الحقيقية الظاهرة: الخياطة، الأزرار، السحابات، الجيوب، الكول، التطريز أو الطباعة",
-  "reponseAtelier": "تعليق تقني احترافي مباشر من الورشة للزبون حول هذا الموديل بالدارجة المغربية التقنية أو الفرنسية"
+  "delaiEstime": "7 إلى 10 أيام عمل / 7 à 10 jours ouvrables",
+  "techDetails": "المواصفات التقنية بالعربية / Détails techniques en français",
+  "reponseAtelier": "تعليق تقني بالعربية / Commentaire technique atelier en français"
 }`;
 
     const candidateModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-3.8-flash'];
@@ -1358,6 +1358,116 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       : `Bonjour ! Pour votre modèle "${safeModel}", le tissu conseillé est "${safeTissu}" (${safeUnit} MAD/pc pour ${safeQty} pcs). N'hésitez pas à me demander le prix du tissu, le métrage ou les modalités d'échantillon.`;
   };
 
+export function cleanLangText(text: string | undefined | null, isAr: boolean): string {
+  if (!text || typeof text !== 'string') return '';
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+
+  const hasArabic = (s: string) => /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(s);
+  const hasLatin = (s: string) => /[a-zA-Z\u00C0-\u024F]/.test(s);
+
+  // If text does not mix Arabic and Latin
+  if (!hasArabic(trimmed) || !hasLatin(trimmed)) {
+    if (!isAr && hasArabic(trimmed)) {
+      return translateArabicAtelierPhrases(trimmed);
+    }
+    if (isAr && hasLatin(trimmed)) {
+      return translateFrenchAtelierPhrases(trimmed);
+    }
+    return trimmed;
+  }
+
+  // 1. Slash, pipe, or double-slash separator: 'Ar / Fr' or 'Fr / Ar'
+  if (/[\/|]/.test(trimmed)) {
+    const parts = trimmed.split(/\s*[\/|]+\s*/);
+    if (parts.length >= 2) {
+      if (isAr) {
+        const arPart = parts.find(p => hasArabic(p) && !hasLatin(p)) || parts.find(p => hasArabic(p));
+        if (arPart) return cleanParenthesesLang(arPart.trim(), true);
+      } else {
+        const frPart = parts.find(p => hasLatin(p) && !hasArabic(p)) || parts.find(p => hasLatin(p));
+        if (frPart) return cleanParenthesesLang(frPart.trim(), false);
+      }
+    }
+  }
+
+  // 2. Dash separator e.g. 'Ar - Fr'
+  if (/\s+-\s+/.test(trimmed)) {
+    const parts = trimmed.split(/\s+-\s+/);
+    if (parts.length >= 2) {
+      if (isAr) {
+        const arPart = parts.find(p => hasArabic(p) && !hasLatin(p)) || parts.find(p => hasArabic(p));
+        if (arPart) return cleanParenthesesLang(arPart.trim(), true);
+      } else {
+        const frPart = parts.find(p => hasLatin(p) && !hasArabic(p)) || parts.find(p => hasLatin(p));
+        if (frPart) return cleanParenthesesLang(frPart.trim(), false);
+      }
+    }
+  }
+
+  return cleanParenthesesLang(trimmed, isAr);
+}
+
+function cleanParenthesesLang(text: string, isAr: boolean): string {
+  const hasArabic = (s: string) => /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(s);
+  const hasLatin = (s: string) => /[a-zA-Z\u00C0-\u024F]/.test(s);
+
+  const parenMatch = text.match(/\(([^)]+)\)/);
+  if (parenMatch) {
+    const insideParen = parenMatch[1].trim();
+    const outsideParen = text.replace(/\([^)]+\)/g, '').trim().replace(/\s{2,}/g, ' ');
+
+    if (isAr) {
+      if (hasArabic(outsideParen) && hasLatin(insideParen) && !hasArabic(insideParen)) {
+        return outsideParen;
+      }
+      if (!hasArabic(outsideParen) && hasArabic(insideParen)) {
+        return insideParen;
+      }
+    } else {
+      if (hasArabic(outsideParen) && hasLatin(insideParen) && !hasArabic(insideParen)) {
+        return insideParen;
+      }
+      if (hasLatin(outsideParen) && hasArabic(insideParen) && !hasLatin(insideParen)) {
+        return outsideParen;
+      }
+    }
+  }
+
+  if (!isAr) return translateArabicAtelierPhrases(text);
+  if (isAr) return translateFrenchAtelierPhrases(text);
+
+  return text;
+}
+
+function translateArabicAtelierPhrases(text: string): string {
+  let t = text;
+  t = t.replace(/(\d+)\s*(إلى|-)\s*(\d+)\s*يوم\s*عمل/g, (_m, p1, _p2, p3) => `${p1} à ${p3} jours ouvrables`);
+  t = t.replace(/(\d+)\s*(إلى|-)\s*(\d+)\s*أيام\s*عمل/g, (_m, p1, _p2, p3) => `${p1} à ${p3} jours ouvrables`);
+  t = t.replace(/العينة تحت 48 ساعة/g, 'Échantillon sous 48h');
+  t = t.replace(/العينة تحت (\d+)\s*ساعة/g, (_m, p1) => `Échantillon sous ${p1}h`);
+  t = t.replace(/يوم عمل/g, 'jour ouvrable');
+  t = t.replace(/أيام عمل/g, 'jours ouvrables');
+  t = t.replace(/سوق درب عمر \/ القريعة \(الدار البيضاء\)/g, 'Marché Derb Omar (Casablanca)');
+  t = t.replace(/سوق درب عمر \/ ليساسفة/g, 'Marché Derb Omar / Lissasfa');
+  t = t.replace(/سوق كراج علال \/ درب عمر/g, 'Marché Garage Allal / Derb Omar');
+  t = t.replace(/سوق درب عمر/g, 'Marché Derb Omar');
+  t = t.replace(/قماش مخصص ومطابق للمواصفات المطلوبة/g, 'Tissu adapté selon cahier des charges');
+  t = t.replace(/قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل/g, 'Patronage et confection sur-mesure de haute précision');
+  t = t.replace(/\([^)]*[\u0600-\u06FF][^)]*\)/g, '').trim();
+  return t;
+}
+
+function translateFrenchAtelierPhrases(text: string): string {
+  let t = text;
+  t = t.replace(/(\d+)\s*(à|-)\s*(\d+)\s*jours?\s*ouvrables?/gi, (_m, p1, _p2, p3) => `${p1} إلى ${p3} يوم عمل`);
+  t = t.replace(/Échantillon sous (\d+)h/gi, (_m, p1) => `العينة تحت ${p1} ساعة`);
+  t = t.replace(/Tissu adapté selon cahier des charges/gi, 'قماش مخصص ومطابق للمواصفات المطلوبة');
+  t = t.replace(/Patronage et confection sur-mesure de haute précision/gi, 'قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل');
+  t = t.replace(/\([^)]*[a-zA-Z][^)]*\)/g, '').trim();
+  return t;
+}
+
 const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const text = `${d.type || ''} ${d.details || ''} ${d.id || ''}`.toLowerCase();
     
@@ -1434,7 +1544,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     let defaultTissuMarche = isAr ? 'سوق درب عمر / القريعة (الدار البيضاء)' : 'Marché de gros Derb Omar';
 
     if (isTracksuit) {
-      defaultModele = isAr ? 'طقم بدلة رياضية (Ensemble Survêtement Veste Zippée + Pantalon)' : 'Ensemble Survêtement Veste Zippée + Pantalon (2 Pièces)';
+      defaultModele = isAr ? 'طقم بدلة رياضية (فيست بسحاب وسروال)' : 'Ensemble Survêtement Veste Zippée + Pantalon (2 Pièces)';
       defaultTissu = isAr ? 'مولطون قطن بوليستر 300 غرام مع شريط جانبي أبيض' : 'Molleton Coton/Polyester 300g avec bandes contrastées blanches';
       defaultTech = isAr ? 'فيست بسحاب معدني وجيوب جانبية • ياقة مرتفعة • سروال بخصر مطاطي وباندات في الأسفل • شريط رياضي جانبي' : 'Veste zippée col montant avec poches • Bandes contrastées • Pantalon taille élastique et chevilles resserrées';
       defaultUnitPrice = 135;
@@ -1452,8 +1562,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         : "Modèle Ensemble Survêtement (2 pièces) étudié par l'atelier : Molleton 300g avec zip et bandes latérales calculés avec précision. Le tarif (135 MAD) comprend l'ensemble complet veste + pantalon. Prototype prêt à lancer.";
     } else if (isHoodieOrSweat) {
       defaultModele = isAr ? 'هودي بقبعة أوفرسايز مع سيريغرافي في الصدر' : 'Hoodie à Capuche Oversize avec Sérigraphie Poitrine';
-      defaultTissu = isAr ? 'مولطون قطن 320 غرام (Molleton Gratté / French Terry)' : 'Molleton Coton Gratté 320g / French Terry (~1.85m)';
-      defaultTech = isAr ? 'قبعة مبطنة بحبال • جيب كانغورو • بورد-كوط (Bord-côte) مرن • سيريغرافي عالي الجودة على الصدر' : 'Capuche doublée avec cordons • Sérigraphie Poitrine • Bord-côte poignets et bas';
+      defaultTissu = isAr ? 'مولطون قطن 320 غرام مبطن عالي الجودة' : 'Molleton Coton Gratté 320g / French Terry (~1.85m)';
+      defaultTech = isAr ? 'قبعة مبطنة بحبال • جيب كانغورو • حواف مرنة متينة • سيريغرافي عالي الجودة على الصدر' : 'Capuche doublée avec cordons • Sérigraphie Poitrine • Bord-côte poignets et bas';
       defaultUnitPrice = 75;
       defaultDelai = isAr ? '7 - 10 أيام عمل (العينة تحت 48 ساعة)' : '7 - 10 jours ouvrables (Échantillon sous 48h)';
       defaultPatronage = 260;
@@ -1468,7 +1578,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         ? 'موديل الهودي تم تحليله بالكامل: ثوب المولطون 320g ممتاز لهذا التصميم مع طباعة الصدر. العينة التقنية جاهزة للإطلاق فور التأكيد.'
         : 'Modèle Hoodie analysé par notre atelier : tissu Molleton 320g validé avec marquage poitrine. Prototype prêt à lancer.';
     } else if (isTshirt) {
-      defaultModele = isAr ? 'تيشيرت قطن ممشط 100% Coton Peigné' : 'T-Shirt Coton Peigné Col Rond 100% Coton';
+      defaultModele = isAr ? 'تيشيرت قطن ممشط 100%' : 'T-Shirt Coton Peigné Col Rond 100% Coton';
       defaultTissu = isAr ? 'جيرسي قطن ممشط 200g - 220g' : 'Jersey 100% Coton Peigné 200g - 220g';
       defaultTech = isAr ? 'ياقة دائرية بورد-كوط • خياطة مزدوجة • شريط نظافة داخلي' : 'Col rond bord-côte • Double surpiqûre • Bande de propreté';
       defaultUnitPrice = 45;
@@ -1485,8 +1595,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         ? 'تمت دراسة موديل التيشيرت: ثوب الجيرسي 100% قطن ممشط عالي الجودة، جاهز للخياطة والطباعة.'
         : 'Modèle T-shirt analysé : jersey 100% coton peigné de qualité supérieure, prêt pour confection.';
     } else if (isPolo) {
-      defaultModele = isAr ? 'قميص بولو كلاسيك (Polo Piqué Coton)' : 'Polo Piqué Coton Peigné';
-      defaultTissu = isAr ? 'بيكي قطن 220 غرام (Piqué 100% Coton)' : 'Maille Piquée 100% Coton 220g';
+      defaultModele = isAr ? 'قميص بولو كلاسيك قطن' : 'Polo Piqué Coton Peigné';
+      defaultTissu = isAr ? 'بيكي قطن 220 غرام' : 'Maille Piquée 100% Coton 220g';
       defaultTech = isAr ? 'ياقة وأساور بورد-كوط منسوجة • فتحة بزرين • شق جانبي سفلي' : 'Col et bas de manches en côte • Patte de boutonnage 2 boutons • Fentes latérales';
       defaultUnitPrice = 65;
       defaultDelai = isAr ? '7 - 10 أيام عمل' : '7 - 10 jours ouvrables';
@@ -1513,8 +1623,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultPrixConfection = 48;
       defaultTissuMarche = isAr ? 'سوق درب عمر (مولطون قطن)' : 'Marché Derb Omar';
     } else if (isVeste) {
-      defaultModele = isAr ? 'جاكيت رياضية تقنية بسحاب (Veste Sport Coupe-Vent Zippée)' : 'Veste Sport Coupe-Vent Zippée';
-      defaultTissu = isAr ? 'مايكروفايبر تقني مقاوم للرياح والماء (Microfibre Coupe-Vent Imperméable / Nylon Twill)' : 'Microfibre Coupe-Vent Imperméable / Nylon Twill Lourd';
+      defaultModele = isAr ? 'جاكيت رياضية تقنية بسحاب ومقاومة للرياح' : 'Veste Sport Coupe-Vent Zippée';
+      defaultTissu = isAr ? 'مايكروفايبر تقني مقاوم للرياح والماء' : 'Microfibre Coupe-Vent Imperméable / Nylon Twill Lourd';
       defaultTech = isAr ? 'سحاب أمامي كامل مقاوم للماء • جيبين جانبيين بسحاب مخفي • ياقة مرتفعة مع أكمام مطاطية مرنة • خياطة تقنية مع شريط نظافة داخلي' : 'Fermeture zippée métallique intégrale étanche • Poches zippées invisibles • Col montant et poignets élastiqués';
       defaultUnitPrice = 95;
       defaultDelai = isAr ? '7 - 10 أيام عمل (العينة تحت 48 ساعة)' : '7 - 10 jours ouvrables (Échantillon sous 48h)';
@@ -1530,9 +1640,9 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         ? 'موديل الجاكيت التقنية تم تحليله بالكامل من الورشة: ثوب المايكروفايبر المقاوم للماء مع السحاب والبطانة تم تسعيرهم بدقة. العينة جاهزة للإطلاق فور التأكيد.'
         : 'Veste coupe-vent analysée par l\'atelier : microfibre imperméable et zips validés. Prototype prêt à lancer.';
     } else if (isDenimOrTailleur) {
-      defaultModele = isAr ? 'طقم فيست دنيم عصري بحزام (Ensemble Veste Tailleur Denim)' : 'Ensemble Veste Tailleur Denim Ceinturée';
-      defaultTissu = isAr ? 'ثوب دنيم جينز 100% قطن متين 11-12 أونصة معالجة ناعمة (Toile Denim Coton Brut / Twill Jeans)' : 'Toile Denim 100% Coton 11-12oz / Twill Jeans Lourd';
-      defaultTech = isAr ? 'قصة جاكيت مفصلة مع حزام خصر مدمج وحلقة معدنية • درزات مضاعفة بخيط الجينز المتين (Double Surpiqûre) • ياقة كلاسيكية مفتوحة وأكتاف مضبوطة' : 'Veste tailleur avec ceinture intégrée boucle métal • Double surpiqûre fil jean • Col tailleur et emmanchures renforcées';
+      defaultModele = isAr ? 'طقم فيست دنيم عصري بحزام وبنطلون' : 'Ensemble Veste Tailleur Denim Ceinturée';
+      defaultTissu = isAr ? 'ثوب دنيم جينز 100% قطن متين 11-12 أونصة معالجة ناعمة' : 'Toile Denim 100% Coton 11-12oz / Twill Jeans Lourd';
+      defaultTech = isAr ? 'قصة جاكيت مفصلة مع حزام خصر مدمج وحلقة معدنية • درزات مضاعفة بخيط الجينز المتين • ياقة كلاسيكية مفتوحة وأكتاف مضبوطة' : 'Veste tailleur avec ceinture intégrée boucle métal • Double surpiqûre fil jean • Col tailleur et emmanchures renforcées';
       defaultUnitPrice = 115;
       defaultDelai = isAr ? '8 - 12 يوم عمل (العينة تحت 48 ساعة)' : '8 - 12 jours ouvrables (Échantillon sous 48h)';
       defaultPatronage = 350;
@@ -1567,14 +1677,22 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     }
 
     const unitPrice = confectionPrice;
-    const modeleReel = savedModele || defaultModele;
+    const rawModele = savedModele || defaultModele;
+    const rawTissu = savedTissu || defaultTissu;
+    const rawTech = savedTech || defaultTech;
+    const rawDelai = savedDelai || defaultDelai;
+    const rawReponse = savedReponse || defaultReponse;
+
+    const modeleReel = cleanLangText(rawModele, isAr);
+    const tissuSuggere = cleanLangText(rawTissu, isAr);
+    const techDetails = cleanLangText(rawTech, isAr);
+    const delaiEstime = cleanLangText(rawDelai, isAr);
+    const reponseAtelier = cleanLangText(rawReponse, isAr);
+    const tissuMarcheNom = cleanLangText(defaultTissuMarche, isAr);
+
     const qty = Number(d.quantity) > 0 ? Number(d.quantity) : 100;
     const totalPrice = d.totalPrice && d.totalPrice > 0 ? d.totalPrice : (fullPackagePrice * qty);
-    const tissuSuggere = savedTissu || defaultTissu;
-    const techDetails = savedTech || defaultTech;
-    const delaiEstime = savedDelai || defaultDelai;
     const statusProgression = savedProgression;
-    const reponseAtelier = savedReponse || defaultReponse;
     const patronagePrice = savedPatronage || defaultPatronage;
     const echantillonPrice = savedEchantillon || defaultEchantillon;
 
@@ -1586,7 +1704,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       tissuCostPerPiece,
       accessoriesCost: defaultAccessoriesCost,
       prixMetreEstime: defaultPrixMetre,
-      tissuMarcheNom: defaultTissuMarche,
+      tissuMarcheNom,
       totalPrice,
       tissuSuggere,
       techDetails,
@@ -2800,7 +2918,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
                           {/* Model Title (Prominent, Sleek, Clear) */}
                           <h3 className="text-base md:text-lg font-black text-white tracking-tight leading-snug break-words">
-                            {analysis.modeleReel || d.modele || d.type || (isAr ? 'دراسة تقنية وتحديد سعر الموديل' : 'Étude Technique & Chiffrage Modèle')}
+                            {analysis.modeleReel || cleanLangText(d.modele || d.type, isAr) || (isAr ? 'دراسة تقنية وتحديد سعر الموديل' : 'Étude Technique & Chiffrage Modèle')}
                           </h3>
 
                           {/* Chiffrage Montant / Pricing Summary Pills */}
@@ -4302,7 +4420,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                              </div>
                              <div className="p-6">
                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">REF: {d.id.substring(0, 8)}</div>
-                               <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2 truncate" title={d.type}>{d.type}</h3>
+                               <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2 truncate" title={d.type}>{cleanLangText(d.type, isAr)}</h3>
                                <div className="text-sm font-bold text-slate-500 bg-slate-50 px-4 py-2 rounded-xl inline-block">
                                  {isAr ? 'الكمية:' : 'Quantité :'} <span className="text-indigo-600">{d.quantity}</span>
                                </div>
