@@ -4221,89 +4221,6 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                     {/* Extended Technical Study Container (only when toggled) */}
                     {showFullStudy && (
                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-                     {/* Hero Presentation Header */}
-                     <div className="p-6 md:p-8 bg-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
-                       <div className="flex items-center gap-5">
-                         <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-800 shrink-0 border-2 border-white/10 shadow-lg">
-                            <LeadCardImage
-                              lead={d}
-                              leadPhotos={leadPhotos}
-                              onPhotoLoaded={handlePhotoLoaded}
-                              alt={analysis.modeleReel}
-                              dark={true}
-                              iconSize={8}
-                              isAr={isAr}
-                            />
-                         </div>
-                         <div>
-                           <div className="flex flex-wrap items-center gap-2 mb-2">
-                             <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-lg border border-white/10">
-                               REF: #{d.id.substring(0, 8).toUpperCase()}
-                             </span>
-                             {isAccepted && <span className="px-3 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
-                             {isRejected && <span className="px-3 py-1 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
-                             {isPending && <span className="px-3 py-1 bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg">{isAr ? 'دراسة تقنية معتمدة 📋' : 'Étude Technique 📋'}</span>}
-                           </div>
-                           <h2 className="text-2xl md:text-3xl font-black text-white leading-tight">
-                             {analysis.modeleReel}
-                           </h2>
-                           <p className="text-xs text-slate-400 mt-1">
-                             {isAr ? 'الزبون :' : 'Client :'} <strong className="text-white">{d.name || currentUser?.nom || 'Client'}</strong> • {d.date ? new Date(d.date).toLocaleDateString() : new Date().toLocaleDateString()}
-                           </p>
-                         </div>
-                       </div>
-
-                       <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0">
-                         <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/10 text-center sm:text-right md:text-right">
-                           <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">{isAr ? 'الكمية المطلوبة' : 'Quantité'}</span>
-                           <span className="text-xl font-black text-white">{currentQty} pcs</span>
-                         </div>
-                         <div className="px-4 py-2 bg-indigo-500/20 rounded-xl border border-indigo-500/30 text-center sm:text-right md:text-right">
-                           <span className="text-[10px] text-indigo-300 uppercase tracking-widest block font-bold">{isAr ? 'مدة التسليم المقدرة' : 'Délai'}</span>
-                           <span className="text-xs font-black text-indigo-200 flex items-center justify-center sm:justify-end md:justify-end gap-1">
-                             <Clock className="w-3.5 h-3.5" />
-                             {analysis.delaiEstime}
-                           </span>
-                         </div>
-                       </div>
-                     </div>
-
-                     {/* 4-Step Tracker */}
-                     <div className="p-6 md:p-8 border-b border-slate-100 bg-slate-50/50">
-                       <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-slate-500 mb-4">
-                         <span className="flex items-center gap-2">
-                           <Clock className="w-4 h-4 text-indigo-600" />
-                           {isAr ? 'تتبع مراحل طلبك في الورشة' : 'Progression de la Commande'}
-                         </span>
-                         <span className="text-indigo-600 font-black">
-                           {stepLabels[Math.min(currentStepIdx, 3)] ? (isAr ? stepLabels[Math.min(currentStepIdx, 3)].ar : stepLabels[Math.min(currentStepIdx, 3)].fr) : 'Étude'}
-                         </span>
-                       </div>
-                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                         {stepLabels.map((st, sIdx) => {
-                           const isDone = currentStepIdx > sIdx;
-                           const isCurrent = currentStepIdx === sIdx;
-                           return (
-                             <div key={st.key} className={`p-4 rounded-2xl border transition-all ${
-                               isCurrent ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200' :
-                               isDone ? 'bg-emerald-50 text-emerald-900 border-emerald-200' :
-                               'bg-white text-slate-400 border-slate-200'
-                             }`}>
-                               <div className="flex items-center justify-between mb-2">
-                                 <span className="text-lg">{isDone ? '✅' : st.icon}</span>
-                                 <span className={`text-[10px] font-black uppercase tracking-widest ${isCurrent ? 'text-indigo-200' : isDone ? 'text-emerald-600' : 'text-slate-400'}`}>
-                                   Étape {sIdx + 1}
-                                 </span>
-                               </div>
-                               <h4 className={`text-xs font-black ${isCurrent ? 'text-white' : isDone ? 'text-emerald-950' : 'text-slate-700'}`}>
-                                 {isAr ? st.ar.split('. ')[1] : st.fr.split('. ')[1]}
-                               </h4>
-                             </div>
-                           );
-                         })}
-                       </div>
-                     </div>
-
                      {/* The Main Information Body (what was circled by user) */}
                      <div className="p-6 md:p-8 space-y-8">
                        {/* 1. Official Human Atelier Review & Certification Stamp */}
@@ -4341,15 +4258,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               <Scissors className="w-4 h-4 text-indigo-600" />
                               {isAr ? 'خدمات ما قبل الإنتاج (الباترون والعينة)' : 'Pack Pré-Production (Patronage & Échantillon)'}
                             </h3>
-                            {isTestAccount && (
-                              <button
-                                type="button"
-                                onClick={() => openQuickEdit(d)}
-                                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
-                              >
-                                <span>✏️</span> {isAr ? 'تحديد / تعديل أسعار الباترون والعينة' : 'Fixer les Prix Atelier'}
-                              </button>
-                            )}
+
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* 1. Patronage Card (من عند الموديلست) */}
@@ -4752,17 +4661,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 </div>
 
                                 <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                                  {isTestAccount && (
-                                    <button
-                                      type="button"
-                                      onClick={() => openQuickEdit(d)}
-                                      className="px-3 py-1.5 bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                                      title="تعديل معلومات مورد السلعة"
-                                    >
-                                      <span>✏️</span>
-                                      <span>{isAr ? 'تعديل المورد' : 'Modifier'}</span>
-                                    </button>
-                                  )}
+
                                   <button
                                     type="button"
                                     onClick={() => {
