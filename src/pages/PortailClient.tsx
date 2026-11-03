@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Copy, Search, LogOut, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Minus, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator, Phone } from 'lucide-react';
+import { ChevronDown, Copy, Search, LogOut, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Minus, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator, Phone } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
@@ -392,6 +392,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   });
   const [savingQuickEdit, setSavingQuickEdit] = useState(false);
   const [selectedTierQty, setSelectedTierQty] = useState<Record<string, number>>({});
+  const [showQuantitySimulator, setShowQuantitySimulator] = useState<Record<string, boolean>>({});
   const [sourcingCheckActive, setSourcingCheckActive] = useState<Record<string, boolean>>({});
   const [sourcingSelectedColor, setSourcingSelectedColor] = useState<Record<string, string>>({});
   const [fabricOrderSent, setFabricOrderSent] = useState<Record<string, boolean>>({});
@@ -4471,19 +4472,48 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                           </div>
                         </div>
 
-                        {/* 3. Interactive Wholesale Quantity Simulator */}
-                        <div>
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                              <Receipt className="w-4 h-4 text-indigo-600" />
-                              {isAr ? 'حاسبة أسعار الجملة التفاعلية (Simulateur Quantités)' : 'Simulateur de Devis & Paliers de Quantité'}
-                            </h3>
-                            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100 self-start sm:self-auto">
-                              {isAr ? 'كلما زادت الكمية، انخفض سعر القطعة' : 'Tarifs dégressifs selon le volume'}
-                            </span>
-                          </div>
+                        {/* 3. Interactive Wholesale Quantity Simulator (Collapsible to save space) */}
+                        <div className="bg-white rounded-3xl border border-indigo-100 shadow-xs overflow-hidden transition-all">
+                          <button
+                            type="button"
+                            onClick={() => setShowQuantitySimulator(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
+                            className={`w-full p-4 sm:p-5 flex items-center justify-between gap-3 text-left transition-all cursor-pointer group ${
+                              showQuantitySimulator[d.id] ? 'bg-indigo-50/70 border-b border-indigo-100' : 'hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-2xl bg-indigo-100/70 text-indigo-700 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xs shrink-0">
+                                <Calculator className="w-5 h-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="text-xs sm:text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                    {isAr ? 'حاسبة أسعار الجملة التفاعلية (Simulateur Quantités)' : 'Simulateur de Devis & Paliers de Quantité'}
+                                  </h3>
+                                  <span className="text-[10px] font-black text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-full">
+                                    {isAr ? 'توفير حتى -16%' : 'Jusqu\'à -16%'}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
+                                  {isAr 
+                                    ? 'اضغط لتجربة تغير السعر والمجموع حسب الكمية (من 20 إلى 1000 قطعة)' 
+                                    : 'Cliquez pour tester les tarifs dégressifs selon vos volumes'}
+                                </p>
+                              </div>
+                            </div>
 
-                          <div className="p-6 bg-gradient-to-br from-indigo-50/90 via-white to-slate-50/80 rounded-3xl border border-indigo-100 shadow-xs space-y-6">
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-xs font-black px-3 py-1.5 rounded-xl border transition-all text-indigo-700 bg-white border-indigo-200 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 shadow-2xs">
+                                {showQuantitySimulator[d.id] ? (isAr ? 'إخفاء الحاسبة ▲' : 'Masquer ▲') : (isAr ? 'فتح الحاسبة والأسعار ▼' : 'Ouvrir ▼')}
+                              </span>
+                              <div className={`w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 transition-transform ${showQuantitySimulator[d.id] ? 'rotate-180' : ''}`}>
+                                <ChevronDown className="w-4 h-4" />
+                              </div>
+                            </div>
+                          </button>
+
+                          {showQuantitySimulator[d.id] && (
+                            <div className="p-6 bg-gradient-to-br from-indigo-50/70 via-white to-slate-50/60 animate-in fade-in slide-in-from-top-2 duration-300 space-y-6">
                             {/* Quantity Tier Selector Buttons */}
                             <div className="space-y-2">
                               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">
@@ -4606,6 +4636,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               </table>
                             </div>
                           </div>
+                          )}
                         </div>
 
                        {/* Technical Specifications */}
