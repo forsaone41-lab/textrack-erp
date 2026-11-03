@@ -211,6 +211,13 @@ export default function Demandes() {
   const [devisPatronagePrice, setDevisPatronagePrice] = useState<string>('');
   const [devisPrixEchantillon, setDevisPrixEchantillon] = useState<string>('');
   const [devisProgression, setDevisProgression] = useState<'reception' | 'etude' | 'echantillon' | 'production' | 'pret'>('etude');
+  const [devisSupplierNom, setDevisSupplierNom] = useState<string>('');
+  const [devisSupplierTel, setDevisSupplierTel] = useState<string>('');
+  const [devisSupplierCity, setDevisSupplierCity] = useState<string>('');
+  const [devisSupplierCode, setDevisSupplierCode] = useState<string>('BEYA-FABRIC-2026');
+  const [devisSupplierColors, setDevisSupplierColors] = useState<string>('');
+  const [devisSupplierNotes, setDevisSupplierNotes] = useState<string>('');
+  const [devisOfficielConfirmed, setDevisOfficielConfirmed] = useState<boolean>(true);
   const [factureCreated, setFactureCreated] = useState<{numero: string; client: string; montant: number} | null>(null);
   const [pdfProgress, setPdfProgress] = useState<'idle' | 'generating' | 'sharing' | 'done' | 'error'>('idle');
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
@@ -763,9 +770,15 @@ export default function Demandes() {
     // Save price to lead automatically and confirm official devis
     let extDetails: any = {};
     try { extDetails = JSON.parse(devisLead.details || '{}'); } catch(e) {}
-    extDetails.devisOfficielConfirmed = true;
-    extDetails.devisStatus = 'devis_confirme_atelier';
+    extDetails.devisOfficielConfirmed = devisOfficielConfirmed;
+    extDetails.devisStatus = devisOfficielConfirmed ? 'devis_confirme_atelier' : 'estimation';
     extDetails.devisOfficielDate = new Date().toISOString();
+    extDetails.supplierName = devisSupplierNom;
+    extDetails.supplierPhone = devisSupplierTel;
+    extDetails.supplierCity = devisSupplierCity;
+    extDetails.supplierCode = devisSupplierCode;
+    extDetails.supplierColors = devisSupplierColors;
+    extDetails.supplierNotes = devisSupplierNotes;
 
     const updatedLead = { 
       ...devisLead, 
@@ -778,8 +791,15 @@ export default function Demandes() {
       crmStage: (devisLead.crmStage || 'contact_en_cours') as any,
       reponseAtelierDate: new Date().toISOString()
     };
-    (updatedLead as any).devisOfficielConfirmed = true;
-    (updatedLead as any).devisStatus = 'devis_confirme_atelier';
+    (updatedLead as any).devisOfficielConfirmed = devisOfficielConfirmed;
+    (updatedLead as any).devisStatus = devisOfficielConfirmed ? 'devis_confirme_atelier' : 'estimation';
+    (updatedLead as any).fournisseurNom = devisSupplierNom;
+    (updatedLead as any).fournisseurTel = devisSupplierTel;
+    (updatedLead as any).fournisseurVille = devisSupplierCity;
+    (updatedLead as any).fournisseurCode = devisSupplierCode;
+    (updatedLead as any).fournisseurCouleurs = devisSupplierColors;
+    (updatedLead as any).fournisseurNote = devisSupplierNotes;
+    (updatedLead as any).crmPriceConfirmed = devisOfficielConfirmed;
     saveRecord('leads', updatedLead);
 
     if (!isPDF) {
@@ -851,6 +871,13 @@ export default function Demandes() {
     try { ext = JSON.parse(lead.details || '{}'); } catch(e) {}
     setDevisPatronagePrice(lead.patronagePrice ? String(lead.patronagePrice) : ext.patronagePrice ? String(ext.patronagePrice) : '');
     setDevisPrixEchantillon(lead.prixEchantillon ? String(lead.prixEchantillon) : ext.prixEchantillon ? String(ext.prixEchantillon) : '');
+    setDevisSupplierNom(ext.supplierName || (lead as any).fournisseurNom || '');
+    setDevisSupplierTel(ext.supplierPhone || (lead as any).fournisseurTel || '');
+    setDevisSupplierCity(ext.supplierCity || (lead as any).fournisseurVille || '');
+    setDevisSupplierCode(ext.supplierCode || (lead as any).fournisseurCode || 'BEYA-FABRIC-2026');
+    setDevisSupplierColors(ext.supplierColors || (lead as any).fournisseurCouleurs || '');
+    setDevisSupplierNotes(ext.supplierNotes || (lead as any).fournisseurNote || '');
+    setDevisOfficielConfirmed(ext.devisOfficielConfirmed !== undefined ? ext.devisOfficielConfirmed : true);
     if (lead.unitPrice) {
       setMatierePrice(String(Math.round(lead.unitPrice * 0.6)));
       setLaborPrice(String(Math.round(lead.unitPrice * 0.4)));
@@ -1100,7 +1127,7 @@ export default function Demandes() {
       {/* Devis Calculator Modal */}
       {devisLead && (
         <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-slate-100 overflow-hidden">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden my-auto flex flex-col">
 
             {/* Header compact */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-amber-50">
@@ -1121,7 +1148,7 @@ export default function Demandes() {
               </button>
             </div>
 
-            <div className="p-5 space-y-3">
+            <div className="p-5 space-y-3 max-h-[75vh] overflow-y-auto">
               {devisLeadRequests.length > 0 ? (() => {
                 // Multi-model mode: per-model price inputs
                 const multiTotal = devisLeadRequests.reduce((sum, r) => {
@@ -1193,6 +1220,30 @@ export default function Demandes() {
                 );
               })() : (
                 <>
+                  {/* Confirmation Switch */}
+                  <div className="p-3.5 bg-amber-50/90 border-2 border-amber-300 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                    <div>
+                      <span className="block text-xs font-black text-amber-950 flex items-center gap-1.5">
+                        <FileText className="w-4 h-4 text-amber-600" />
+                        {isAr ? 'اعتماد وتأكيد الدوفيز الرسمي للزبون' : 'Confirmer & Publier le Devis Officiel'}
+                      </span>
+                      <span className="text-[10px] text-amber-800 font-medium block mt-0.5 leading-relaxed">
+                        {isAr
+                          ? 'عند تفعيله، سيتاح للزبون تحميل ملف الدوفيز الرسمي وتأكيده مع أداء التسبيق (50%).'
+                          : 'Rend le devis officiel avec bouton de téléchargement actif pour le client.'}
+                      </span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={devisOfficielConfirmed}
+                        onChange={(e) => setDevisOfficielConfirmed(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+
                   {/* Toggle Mode */}
                   <div className="flex bg-slate-100/85 p-1 rounded-xl gap-1 border border-slate-200/50">
                     <button
@@ -1366,6 +1417,120 @@ export default function Demandes() {
                       placeholder={isAr ? 'مثال: تمت دراسة الباترون والثوب متوفر، سنبدأ العينة فور تأكيدكم...' : 'Ex: Patronage étudié et tissu disponible, prêt pour lancer l\'échantillon...'}
                       className={`w-full bg-slate-50 border border-slate-100 rounded-lg py-1.5 px-3 text-xs font-medium text-slate-900 outline-none focus:border-indigo-400 resize-none ${isAr ? 'text-right' : ''}`}
                     />
+                  </div>
+
+                  {/* ─── قسم معلومات مورد السلعة / القماش للزبون ─── */}
+                  <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                        <span>🧵</span>
+                        <span>{isAr ? 'معلومات مورد الثوب والسلعة (كتطلع للكليان)' : 'Fournisseur de Matière (Pour le client)'}</span>
+                      </label>
+                      <span className="text-[9px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md">
+                        {isAr ? 'خاصة بالزبون' : 'Visible client'}
+                      </span>
+                    </div>
+
+                    {/* Quick Selection Presets */}
+                    <div className="space-y-1">
+                      <span className="text-[9px] font-bold text-slate-500 block">
+                        {isAr ? 'اختر مورد معتمد بضغطة واحدة:' : 'Sélection rapide :'}
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {[
+                          { name: 'مجمع أقمشة النخبة - درب عمر (Comptoir Textile Derb Omar)', phone: '0661849201', city: 'الدار البيضاء • درب عمر زنقة فاس', code: 'BEYA-FABRIC-2026', colors: 'أسود كربوني (Noir)، أبيض ناصع (Blanc)، رمادي ملونج (Gris Chiné)، أخضر غابوي (Vert Bouteille)، أزرق داكن (Bleu Marine)' },
+                          { name: 'أقمشة المسيرة الشمالية (Tissus Nord Tanger)', phone: '0662304918', city: 'طنجة • المنطقة الحرة', code: 'BEYA-TANGER-2026', colors: 'كوتون كانفاس، جاباردين سترتش، وتربروف' },
+                          { name: 'مؤسسة النور للأقمشة الفاخرة (Fès)', phone: '0661904215', city: 'فاس • الحي الصناعي سيدي ابراهيم', code: 'BEYA-FES-2026', colors: 'جيرسي صيفي 240g، بيكي قطن، فيلور كوردوروي' },
+                        ].map((p, pIdx) => (
+                          <button
+                            key={pIdx}
+                            type="button"
+                            onClick={() => {
+                              setDevisSupplierNom(p.name);
+                              setDevisSupplierTel(p.phone);
+                              setDevisSupplierCity(p.city);
+                              setDevisSupplierCode(p.code);
+                              setDevisSupplierColors(p.colors);
+                              setDevisSupplierNotes(isAr ? 'متوفر بالستوك بأسعار تفضيلية خاصة بزبناء ورشة BEYA Creative. تواصلوا مع المورد وأعطوه كود التخفيض.' : 'Disponible en stock à tarif préférentiel BEYA Creative.');
+                            }}
+                            className="px-2 py-0.5 bg-white hover:bg-emerald-100 hover:text-emerald-900 text-emerald-800 border border-emerald-300 rounded-lg text-[9px] font-bold transition shadow-2xs cursor-pointer"
+                          >
+                            + {p.name.split(' - ')[0].replace(' (Fès)', '').replace(' (Tissus Nord Tanger)', '')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Inputs */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-600 mb-0.5">{isAr ? 'اسم مورد السلعة / المحل' : 'Nom Fournisseur'}</label>
+                        <input
+                          type="text"
+                          value={devisSupplierNom}
+                          onChange={e => setDevisSupplierNom(e.target.value)}
+                          placeholder={isAr ? 'مثال: مجمع أقمشة النخبة' : 'Ex: Comptoir Textile'}
+                          className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-bold focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-600 mb-0.5">{isAr ? 'الهاتف / الواتساب' : 'WhatsApp / Tel'}</label>
+                        <input
+                          type="text"
+                          value={devisSupplierTel}
+                          onChange={e => setDevisSupplierTel(e.target.value)}
+                          placeholder="0661849201"
+                          dir="ltr"
+                          className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-bold focus:outline-none focus:border-emerald-500 text-left"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-600 mb-0.5">{isAr ? 'المدينة والعنوان' : 'Ville & Marché'}</label>
+                        <input
+                          type="text"
+                          value={devisSupplierCity}
+                          onChange={e => setDevisSupplierCity(e.target.value)}
+                          placeholder={isAr ? 'الدار البيضاء • درب عمر' : 'Casablanca • Derb Omar'}
+                          className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-bold focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-600 mb-0.5">{isAr ? 'كود التخفيض (Code BEYA)' : 'Code Partenaire'}</label>
+                        <input
+                          type="text"
+                          value={devisSupplierCode}
+                          onChange={e => setDevisSupplierCode(e.target.value)}
+                          placeholder="BEYA-FABRIC-2026"
+                          dir="ltr"
+                          className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-mono font-bold focus:outline-none focus:border-emerald-500 text-left"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-600 mb-0.5">{isAr ? 'الألوان المتوفرة فالمخزن' : 'Couleurs disponibles'}</label>
+                      <input
+                        type="text"
+                        value={devisSupplierColors}
+                        onChange={e => setDevisSupplierColors(e.target.value)}
+                        placeholder={isAr ? 'مثال: أسود، أبيض، رمادي...' : 'Ex: Noir, Blanc, Gris...'}
+                        className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-bold focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-600 mb-0.5">{isAr ? 'ملاحظات وتوجيهات خاصة للزبون' : 'Instructions pour le client'}</label>
+                      <textarea
+                        rows={1}
+                        value={devisSupplierNotes}
+                        onChange={e => setDevisSupplierNotes(e.target.value)}
+                        placeholder={isAr ? 'توجيهات للزبون...' : 'Remarques...'}
+                        className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-medium focus:outline-none focus:border-emerald-500 resize-none"
+                      />
+                    </div>
                   </div>
 
                   {/* Total */}
