@@ -3513,6 +3513,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                       ? `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, demande REF: #${d.id.substring(0, 8).toUpperCase()} :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Façon : ${analysis.unitPrice} MAD/pc\nJe fournis le tissu et fournitures (0 MAD acompte). Règlement à la livraison.`
                       : `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, demande REF: #${d.id.substring(0, 8).toUpperCase()} :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Tissu Atelier : ${analysis.tissuSuggere}\nJe valide le devis et souhaite verser l'acompte de 50% pour lancer la production.`);
                 const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
+               const devState = getLeadDevisState(d);
+               const singleDevState = devState;
 
                return (
                  <div className="space-y-3.5 animate-in fade-in slide-in-from-right-4 duration-500 pb-28 sm:pb-32">
@@ -4993,6 +4995,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                        const isRejected = d.crmStage === 'annule';
                        const isPending = !isAccepted && !isRejected;
                        const analysis = getDemandeAnalysis(d, isAr);
+                       const devState = getLeadDevisState(d);
+                       const singleDevState = devState;
                        
                        const isTestAccount = currentUser?.email === 'forsaone41@gmail.com' || currentUser?.role === 'admin' || currentUser?.role === 'manager';
 
