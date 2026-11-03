@@ -375,6 +375,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     totalPrice: 7500,
     patronagePrice: 250,
     prixEchantillon: 350,
+    modelisteName: '',
+    isModelisteValide: false,
     tissuSuggere: '',
     techDetails: '',
     delaiEstime: '7 - 10 jours ouvrables',
@@ -1785,7 +1787,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       : (extDetails.prixEchantillon && Number(extDetails.prixEchantillon) > 0)
       ? Number(extDetails.prixEchantillon)
       : null;
-    const hasCustomPatronage = Boolean(savedPatronage && savedPatronage > 0);
+    const savedModelisteName = extDetails.modelisteName || (d as any).modelisteName || (extDetails.patronageStatus === 'priced' ? 'Mohammed Aboulfateh' : null);
+    const isModelisteValide = extDetails.modelisteValide !== undefined
+      ? Boolean(extDetails.modelisteValide)
+      : Boolean(extDetails.patronageStatus === 'priced' || (savedPatronage && savedModelisteName));
+    const hasCustomPatronage = Boolean(savedPatronage && savedPatronage > 0 && isModelisteValide);
     const hasCustomEchantillon = Boolean(savedEchantillon && savedEchantillon > 0);
 
     // Detect Clothing Categories
@@ -2040,6 +2046,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       echantillonPrice,
       hasCustomPatronage,
       hasCustomEchantillon,
+      modelisteName: savedModelisteName,
+      isModelisteValide,
       tissuConsoMeters: defaultTissuConso,
       tissuPricePerKg: defaultTissuPrixKg,
       hasBroderie,
@@ -2077,7 +2085,9 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       try { extDetails = JSON.parse(atelierQuickEditLead.details || '{}'); } catch(e) {}
       extDetails.patronagePrice = Number(quickEditForm.patronagePrice);
       extDetails.prixEchantillon = Number(quickEditForm.prixEchantillon);
-      extDetails.patronageStatus = 'priced';
+      extDetails.modelisteName = quickEditForm.modelisteName;
+      extDetails.modelisteValide = quickEditForm.isModelisteValide;
+      extDetails.patronageStatus = quickEditForm.isModelisteValide ? 'priced' : 'requested';
 
       if (quickEditForm.isDevisOfficielConfirmed) {
         extDetails.devisOfficielConfirmed = true;
@@ -2100,6 +2110,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         crmPriceConfirmed: quickEditForm.isDevisOfficielConfirmed,
         patronagePrice: Number(quickEditForm.patronagePrice),
         prixEchantillon: Number(quickEditForm.prixEchantillon),
+        modelisteName: quickEditForm.modelisteName,
         tissuSuggere: quickEditForm.tissuSuggere,
         techDetails: quickEditForm.techDetails,
         delaiEstime: quickEditForm.delaiEstime,
@@ -2125,10 +2136,14 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const analysis = getDemandeAnalysis(lead, isAr);
     const devState = getLeadDevisState(lead);
     setAtelierQuickEditLead(lead);
+    let extDetails: any = {};
+    try { extDetails = JSON.parse(lead.details || '{}'); } catch(e) {}
     setQuickEditForm({
       modeleReel: analysis.modeleReel,
       patronagePrice: analysis.hasCustomPatronage ? analysis.patronagePrice : (analysis.patronagePrice || 250),
       prixEchantillon: analysis.hasCustomEchantillon ? analysis.echantillonPrice : (analysis.echantillonPrice || 350),
+      modelisteName: extDetails.modelisteName || (lead as any).modelisteName || 'Mohammed Aboulfateh',
+      isModelisteValide: Boolean(analysis.hasCustomPatronage || extDetails.patronageStatus === 'priced' || extDetails.modelisteValide),
       unitPrice: analysis.unitPrice,
       totalPrice: analysis.totalPrice,
       tissuSuggere: analysis.tissuSuggere,
@@ -4336,92 +4351,122 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             )}
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Patronage Card */}
+                            {/* 1. Patronage Card (من عند الموديلست) */}
                             <div className={`p-5 rounded-3xl border transition-all ${
                               analysis.hasCustomPatronage
-                                ? 'bg-white border-slate-200/80 shadow-xs hover:border-indigo-300'
+                                ? 'bg-white border-slate-200/90 shadow-sm hover:border-indigo-300'
                                 : 'bg-gradient-to-br from-amber-50/50 via-white to-amber-50/20 border-amber-200/80 shadow-xs'
                             }`}>
-                              <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-start justify-between mb-3 gap-2">
                                 {analysis.hasCustomPatronage ? (
-                                  <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1">
-                                    <span>✓</span> {isAr ? 'معتمد من الموديلست' : 'Validé Modéliste'}
+                                  <span className="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 shadow-xs">
+                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>{isAr ? `✓ معتمد من الموديلست: ${analysis.modelisteName || 'Mohammed Aboulfateh'}` : `Validé Modéliste: ${analysis.modelisteName || 'Mohammed Aboulfateh'}`}</span>
                                   </span>
                                 ) : (
-                                  <span className="px-2.5 py-1 bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1">
-                                    <Clock className="w-3 h-3 animate-spin text-amber-700" />
-                                    {isAr ? 'قيد التدقيق الفني' : 'En cours d\'étude'}
+                                  <span className="px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 shadow-xs">
+                                    <Clock className="w-3.5 h-3.5 animate-spin text-amber-700" />
+                                    <span>{isAr ? '⏳ قيد التقييم والتسعير من طرف الموديلست' : 'En attente d\'évaluation Modéliste'}</span>
                                   </span>
                                 )}
                                 
                                 {analysis.hasCustomPatronage ? (
-                                  <span className="text-2xl font-black text-slate-900">
-                                    {analysis.patronagePrice} <span className="text-xs font-bold text-slate-500">MAD</span>
-                                  </span>
+                                  <div className={isAr ? 'text-left' : 'text-right'}>
+                                    <span className="text-2xl font-black text-slate-900 block font-mono">
+                                      {analysis.patronagePrice} <span className="text-xs font-bold text-slate-500">MAD</span>
+                                    </span>
+                                    <span className="text-[10px] font-bold text-emerald-700 block">
+                                      {isAr ? 'ثمن الباطرون من الموديلست' : 'Tarif Modéliste'}
+                                    </span>
+                                  </div>
                                 ) : (
-                                  <span className="px-3 py-1 bg-amber-500/10 text-amber-900 text-xs font-black rounded-lg border border-amber-300/40 flex items-center gap-1.5">
-                                    <span>⏳</span> {isAr ? 'قيد التقييم من طرف الموديلست' : 'À déterminer par le Modéliste'}
+                                  <span className="px-3 py-1 bg-amber-500/10 text-amber-900 text-xs font-black rounded-lg border border-amber-300/40 flex items-center gap-1.5 shrink-0">
+                                    <span>⏳</span> {isAr ? 'في انتظار تسعير الموديلست' : 'À chiffrer par le Modéliste'}
                                   </span>
                                 )}
                               </div>
-                              <h4 className="text-sm font-black text-slate-900 mb-1 flex items-center gap-1.5">
-                                <span>📐</span> {isAr ? 'الباتروناج والتدريج الرقمي (Gradation)' : 'Patronage Numérique & Gradation'}
+
+                              <h4 className="text-sm font-black text-slate-900 mb-1.5 flex items-center gap-1.5">
+                                <span>📐</span> {isAr ? 'باطرون الموديلست وتدريج المقاسات (Patronage CAD)' : 'Patronage Industriel & Gradation Modéliste'}
                               </h4>
-                              <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                                {analysis.hasCustomPatronage ? (
-                                  isAr 
-                                    ? 'تصميم رقمي دقيق لجميع المقاسات (XS-XXL) بنظام CAD معتمد من الموديلست. تدفع لمرة واحدة ويبقى ملكاً لعلامتك لإعادة الإنتاج (Réassort) في أي وقت.' 
-                                    : 'Création du patron industriel aux normes et gradation toutes tailles validée par le modéliste. Réutilisable à vie pour tous vos réassorts.'
-                                ) : (
-                                  isAr 
-                                    ? 'يقوم الموديلست حالياً بدراسة تفاصيل قصة الموديل وتحديد تكلفة الباتروناج والتدريج الرقمي بدقة حسب تعقيد الموديل.' 
-                                    : 'Le modéliste étudie actuellement les détails du modèle pour déterminer le tarif exact du patronage.'
-                                )}
-                              </p>
+
+                              <div className="space-y-2 mt-2">
+                                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-700 space-y-1.5">
+                                  <div className="flex items-start gap-1.5 font-bold">
+                                    <span className="text-indigo-600 font-mono font-black">1.</span>
+                                    <span>
+                                      <strong className="text-slate-900">{isAr ? 'الباترون الأساسي للعينة :' : 'Patron de Base Prototype :'}</strong>{' '}
+                                      {isAr ? 'تصميم الباطرون الأولي بنظام CAD الصناعي بمقاييس دقيقة من طرف الموديلست لبدء خياطة العينة.' : 'Création du patron CAD industriel aux normes pour lancer la confection de l\'échantillon.'}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-start gap-1.5 font-bold pt-1.5 border-t border-slate-200/60">
+                                    <span className="text-indigo-600 font-mono font-black">2.</span>
+                                    <span>
+                                      <strong className="text-indigo-900">{isAr ? 'تدريج باقي المقاسات (Gradation) :' : 'Gradation des Tailles :'}</strong>{' '}
+                                      {isAr ? 'من بعد ما كيكون الباترون واجد وكتوافق على العينة، كاتبقى غير الـ Gradation للمقاسات لي بغيتي تزيد (S, M, L, XL, XXL...). تدفع لمرة واحدة ويبقى ملكك لإعادة الإنتاج دائماً.' : 'Une fois le prototype validé, la gradation est déclinée sur toutes vos tailles (S-XXL). Réutilisable à vie pour tous vos réassorts.'}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 px-1 pt-0.5">
+                                  <span>👤 {isAr ? 'الموديلست المكلف بالدراسة :' : 'Modéliste assigné :'}</span>
+                                  <span className="text-indigo-950 font-black">{analysis.modelisteName || (isAr ? 'مكتب الموديلست BEYA' : 'Bureau Modéliste BEYA')}</span>
+                                </div>
+                              </div>
                             </div>
 
-                            {/* Échantillon Card */}
+                            {/* 2. Échantillon Card (من عندي أنا بالورشة) */}
                             <div className={`p-5 rounded-3xl border transition-all ${
                               analysis.hasCustomEchantillon
-                                ? 'bg-gradient-to-br from-indigo-50/70 to-purple-50/50 border-indigo-200/80 shadow-xs hover:border-indigo-400'
+                                ? 'bg-gradient-to-br from-indigo-50/70 to-purple-50/50 border-indigo-200/90 shadow-sm hover:border-indigo-400'
                                 : 'bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/20 border-indigo-200/50 shadow-xs'
                             }`}>
-                              <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-start justify-between mb-3 gap-2">
                                 {analysis.hasCustomEchantillon ? (
-                                  <span className="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1">
-                                    <span>⭐</span> {isAr ? 'تُخصم من الإنتاج • معتمد' : 'Déductible • Validé'}
+                                  <span className="px-2.5 py-1 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1.5">
+                                    <span>⭐</span> {isAr ? 'خدمة ورشة BEYA • تُخصم 100% من الإنتاج' : 'Confection Atelier BEYA • 100% Déductible'}
                                   </span>
                                 ) : (
-                                  <span className="px-2.5 py-1 bg-indigo-100 text-indigo-800 border border-indigo-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1">
+                                  <span className="px-2.5 py-1 bg-indigo-100 text-indigo-800 border border-indigo-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1 shadow-xs">
                                     <Clock className="w-3 h-3 animate-spin text-indigo-700" />
-                                    {isAr ? 'ورشة النماذج' : 'Atelier Prototype'}
+                                    <span>{isAr ? 'ورشة تفصيل وخياطة النماذج' : 'Atelier Confection Prototype'}</span>
                                   </span>
                                 )}
 
                                 {analysis.hasCustomEchantillon ? (
-                                  <span className="text-2xl font-black text-indigo-950">
-                                    {analysis.echantillonPrice} <span className="text-xs font-bold text-indigo-600">MAD</span>
-                                  </span>
+                                  <div className={isAr ? 'text-left' : 'text-right'}>
+                                    <span className="text-2xl font-black text-indigo-950 block font-mono">
+                                      {analysis.echantillonPrice} <span className="text-xs font-bold text-indigo-600">MAD</span>
+                                    </span>
+                                    <span className="text-[10px] font-bold text-indigo-600 block">
+                                      {isAr ? 'ثمن خدمة الورشة (مسترجع)' : 'Tarif Confection Atelier'}
+                                    </span>
+                                  </div>
                                 ) : (
-                                  <span className="px-3 py-1 bg-indigo-500/10 text-indigo-900 text-xs font-black rounded-lg border border-indigo-300/40 flex items-center gap-1.5">
-                                    <span>⏳</span> {isAr ? 'في انتظار تحديد تكلفة العينة' : 'En attente de chiffrage'}
+                                  <span className="px-3 py-1 bg-indigo-500/10 text-indigo-900 text-xs font-black rounded-lg border border-indigo-300/40 flex items-center gap-1.5 shrink-0">
+                                    <span>⏳</span> {isAr ? 'في انتظار تحديد تكلفة العينة بالورشة' : 'En attente de chiffrage atelier'}
                                   </span>
                                 )}
                               </div>
-                              <h4 className="text-sm font-black text-indigo-950 mb-1 flex items-center gap-1.5">
-                                <span>✂️</span> {isAr ? 'العينة التجريبية الأولية (Prototype)' : 'Échantillon / Prototype Physique'}
+
+                              <h4 className="text-sm font-black text-indigo-950 mb-1.5 flex items-center gap-1.5">
+                                <span>✂️</span> {isAr ? 'تفصيل وخياطة العينة بالورشة (Prototype Atelier)' : 'Confection Prototype Physique (Atelier BEYA)'}
                               </h4>
-                              <p className="text-xs text-indigo-900/80 leading-relaxed font-medium">
-                                {analysis.hasCustomEchantillon ? (
-                                  isAr 
-                                    ? 'حبة نموذجية كاملة للفحص والموافقة على القماش والفينيسيون. يُخصم هذا المبلغ بالكامل من فاتورة الإنتاج عند الاعتماد!' 
-                                    : 'Pièce prototype physique pour valider coupe et finitions. 100% déductible du montant total lors du lancement série.'
-                                ) : (
-                                  isAr 
-                                    ? 'جاري تقييم تكلفة تفصيل وخياطة العينة الأولية بالورشة. هذا المبلغ مسترجع ويُخصم بالكامل 100% من فاتورة الإنتاج عند الاعتماد.' 
-                                    : 'L\'atelier évalue actuellement le coût de confection du prototype (déductible à 100% de la commande de production).'
-                                )}
-                              </p>
+
+                              <div className="space-y-2 mt-2">
+                                <p className="text-xs text-indigo-950/80 leading-relaxed font-medium">
+                                  {isAr 
+                                    ? 'خدمة تفصيل وخياطة العينة الواقعية داخل ورشة BEYA مباشرة بعد تسلّم الباطرون من الموديلست، للتأكد الفعلي من القماش، القصة، والجودة على أرض الواقع.' 
+                                    : 'Confection complète du prototype physique dans notre atelier dès réception du patron pour valider coupe, tissu et finitions avant production.'}
+                                </p>
+                                <div className="p-3 bg-emerald-500/15 border border-emerald-500/30 rounded-2xl text-xs text-emerald-950 font-bold flex items-center gap-2">
+                                  <span className="text-sm">⭐</span>
+                                  <span>
+                                    {isAr 
+                                      ? '100% مسترجع : هذا المبلغ يُخصم بالكامل من مجموع فاتورة الإنتاج الكلي عند طلب الكمية!' 
+                                      : '100% Déductible : Ce montant est intégralement déduit du total de votre commande de production !'}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -8274,28 +8319,86 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    {isAr ? 'ثمن الباتروناج (درهم)' : 'Patronage (MAD)'}
-                  </label>
-                  <input
-                    type="number"
-                    value={quickEditForm.patronagePrice}
-                    onChange={(e) => setQuickEditForm(prev => ({ ...prev, patronagePrice: Number(e.target.value) }))}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black focus:outline-none focus:border-indigo-600 focus:bg-white"
-                  />
+              {/* ─── قسم الباطرون من عند الموديلست + خدمة العينة من الورشة ─── */}
+              <div className="space-y-3">
+                {/* 1. قسم الموديلست والباطرون */}
+                <div className="p-3.5 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>📐</span>
+                      <span>{isAr ? '1. الباطروناج والموديلست (من عند الموديلست) :' : '1. Modéliste & Patronage CAD :'}</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-900 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={quickEditForm.isModelisteValide}
+                        onChange={e => setQuickEditForm(prev => ({ ...prev, isModelisteValide: e.target.checked }))}
+                        className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      />
+                      <span>{isAr ? 'معتمد رسمياً من الموديلست' : 'Validé Modéliste'}</span>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        {isAr ? 'الموديلست المكلف :' : 'Modéliste assigné :'}
+                      </label>
+                      <input
+                        type="text"
+                        value={quickEditForm.modelisteName}
+                        onChange={e => setQuickEditForm(prev => ({ ...prev, modelisteName: e.target.value }))}
+                        placeholder={isAr ? 'Mohammed Aboulfateh' : 'Mohammed Aboulfateh'}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-indigo-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        {isAr ? 'ثمن الباطرون من الموديلست (MAD) :' : 'Prix Patron Modéliste (MAD) :'}
+                      </label>
+                      <input
+                        type="number"
+                        value={quickEditForm.patronagePrice}
+                        onChange={e => setQuickEditForm(prev => ({ ...prev, patronagePrice: Number(e.target.value) }))}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-black focus:outline-none focus:border-indigo-600"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    {isAr 
+                      ? '💡 الباطرون الأولي يحدد للعينة، وتدريج المقاسات (Gradation) يتم بعد فحص العينة واعتمادها.' 
+                      : '💡 Patron initial pour le prototype. La gradation des tailles se fait après validation du prototype.'}
+                  </p>
                 </div>
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    {isAr ? 'ثمن العينة الأولية (درهم)' : 'Échantillon (MAD)'}
-                  </label>
-                  <input
-                    type="number"
-                    value={quickEditForm.prixEchantillon}
-                    onChange={(e) => setQuickEditForm(prev => ({ ...prev, prixEchantillon: Number(e.target.value) }))}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black focus:outline-none focus:border-indigo-600 focus:bg-white"
-                  />
+
+                {/* 2. قسم الورشة وخياطة العينة */}
+                <div className="p-3.5 bg-amber-50/50 rounded-2xl border border-amber-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-amber-950 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>✂️</span>
+                      <span>{isAr ? '2. خدمة خياطة العينة بالورشة (من عندي أنا) :' : '2. Confection Échantillon Atelier (Par l\'atelier) :'}</span>
+                    </label>
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-md">
+                      {isAr ? '⭐ 100% مسترجع عند الإنتاج' : '100% Déductible'}
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      {isAr ? 'ثمن خدمة تفصيل وخياطة العينة بالورشة (MAD) :' : 'Tarif Confection Échantillon Atelier (MAD) :'}
+                    </label>
+                    <input
+                      type="number"
+                      value={quickEditForm.prixEchantillon}
+                      onChange={e => setQuickEditForm(prev => ({ ...prev, prixEchantillon: Number(e.target.value) }))}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-black focus:outline-none focus:border-amber-600"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    {isAr 
+                      ? '💡 تبدأ الخياطة بالورشة فور استلام الباطرون من الموديلست، والمبلغ يخصم بالكامل عند إطلاق السلسلة.' 
+                      : '💡 Confection atelier dès réception du patron. Montant 100% déduit lors du lancement série.'}
+                  </p>
                 </div>
               </div>
 
