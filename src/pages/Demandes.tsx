@@ -1130,14 +1130,16 @@ export default function Demandes() {
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden my-auto flex flex-col">
 
             {/* Header compact */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-amber-50">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-amber-200/80 bg-gradient-to-r from-amber-50 to-amber-100/60">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center">
-                  <Calculator className="w-4 h-4 text-amber-600" />
+                <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shadow-xs">
+                  <FileText className="w-5 h-5 text-slate-950" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{isAr ? 'حساب الديفيز' : 'Calculer le Devis'}</p>
-                  <p className="text-[10px] text-slate-500 font-bold max-w-[180px] line-clamp-2">{devisLead.name} — {devisLead.type}</p>
+                  <p className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
+                    {isAr ? '📄 قرار ودوفيز الورشة الرسمي (DEVIS ATELIER)' : '📄 Décision Finale & Devis Atelier'}
+                  </p>
+                  <p className="text-[10px] text-amber-800 font-bold max-w-[280px] truncate">{devisLead.name} — {devisLead.type}</p>
                 </div>
               </div>
               <button
@@ -1554,8 +1556,8 @@ export default function Demandes() {
                       <MessageSquare className="w-3.5 h-3.5" /> {isAr ? 'واتساب (نص)' : 'Texte WhatsApp'}
                     </button>
                     <button onClick={handleSendToPortail} disabled={!matierePrice && !laborPrice}
-                      className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shadow-sm active:scale-95">
-                      <Globe className="w-3.5 h-3.5" /> {isAr ? 'نشر فبوابة الزبون' : 'Publier au Portail'}
+                      className="h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shadow-sm active:scale-95 border border-amber-400">
+                      <Globe className="w-3.5 h-3.5 text-slate-950" /> {isAr ? '💾 حفظ ونشر بالبورتال' : 'Publier au Portail'}
                     </button>
                   </div>
 
@@ -1645,6 +1647,22 @@ export default function Demandes() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Footer with Workshop Decision Button */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  const targetLead = detailsLead;
+                  setDetailsLead(null);
+                  openDevisModal(targetLead, 'commande');
+                }}
+                className="w-full py-3 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all border border-amber-400 cursor-pointer active:scale-95"
+              >
+                <FileText className="w-4 h-4 text-slate-950" />
+                <span>{isAr ? '📄 قرار ودوفيز الورشة (DEVIS ATELIER)' : '📄 Décision Finale & Devis Atelier'}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -2512,10 +2530,11 @@ export default function Demandes() {
                               setModelPrices(initPrices);
                               setMatierePrice(''); setLaborPrice(''); setFabricType(''); setDevisMode('commande');
                             }}
-                            className="h-9 w-9 rounded-xl flex items-center justify-center border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
-                            title={isAr ? 'إنشاء ديفيز لكل الموديلات' : 'Devis tous modèles'}
+                            className="h-9 px-3 rounded-xl flex items-center gap-1.5 border border-amber-400 bg-amber-500 text-slate-950 font-black hover:bg-amber-600 transition-all shadow-sm text-xs active:scale-95"
+                            title={isAr ? 'قرار ودوفيز الورشة لجميع الموديلات' : 'Devis & Décision Atelier (Tous modèles)'}
                           >
-                            <Calculator className="w-4 h-4" />
+                            <FileText className="w-3.5 h-3.5 text-slate-950" />
+                            <span>{isAr ? '📄 قرار ودوفيز الورشة' : '📄 Devis Atelier'}</span>
                           </button>
                         );
                       })()}
@@ -2787,9 +2806,10 @@ export default function Demandes() {
                           )}
                           
                           {!lead.type.startsWith('RECRUTEMENT:') && (
-                            <button onClick={() => openDevisModal(lead, 'commande')} title="Devis & Réponse Client"
-                              className="w-8 h-8 bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white rounded-lg border border-amber-200 flex items-center justify-center transition-all shadow-sm">
-                              <Calculator className="w-3.5 h-3.5" />
+                            <button onClick={() => openDevisModal(lead, 'commande')} title={isAr ? 'قرار ودوفيز الورشة الرسمي' : 'Devis & Décision Atelier'}
+                              className="h-8 px-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-lg border border-amber-400 flex items-center gap-1 transition-all shadow-sm active:scale-95 text-xs">
+                              <FileText className="w-3.5 h-3.5 text-slate-950" />
+                              <span>{isAr ? '📄 قرار ودوفيز الورشة' : '📄 Devis Atelier'}</span>
                             </button>
                           )}
 

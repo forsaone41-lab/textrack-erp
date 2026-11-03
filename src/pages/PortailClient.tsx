@@ -368,29 +368,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [selectedDemandeFiche, setSelectedDemandeFiche] = useState<Lead | null>(null);
   const [selectedDemandePage, setSelectedDemandePage] = useState<Lead | null>(null);
   const [consultingDemande, setConsultingDemande] = useState<Lead | null>(null);
-  const [atelierQuickEditLead, setAtelierQuickEditLead] = useState<Lead | null>(null);
-  const [quickEditForm, setQuickEditForm] = useState({
-    modeleReel: '',
-    unitPrice: 75,
-    totalPrice: 7500,
-    patronagePrice: 250,
-    prixEchantillon: 350,
-    modelisteName: '',
-    isModelisteValide: false,
-    tissuSuggere: '',
-    techDetails: '',
-    delaiEstime: '7 - 10 jours ouvrables',
-    statusProgression: 'etude' as 'reception' | 'etude' | 'echantillon' | 'production' | 'pret',
-    reponseAtelier: '',
-    isDevisOfficielConfirmed: false,
-    fournisseurNom: '',
-    fournisseurTel: '',
-    fournisseurVille: '',
-    fournisseurCode: 'BEYA-FABRIC-2026',
-    fournisseurCouleurs: '',
-    fournisseurNote: ''
-  });
-  const [savingQuickEdit, setSavingQuickEdit] = useState(false);
   const [selectedTierQty, setSelectedTierQty] = useState<Record<string, number>>({});
   const [showQuantitySimulator, setShowQuantitySimulator] = useState<Record<string, boolean>>({});
   const [sourcingCheckActive, setSourcingCheckActive] = useState<Record<string, boolean>>({});
@@ -2076,84 +2053,6 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       } catch(e) {}
     }
     return sizes;
-  };
-
-  const handleSaveQuickEdit = async () => {
-    if (!atelierQuickEditLead) return;
-    setSavingQuickEdit(true);
-    try {
-      let extDetails: any = {};
-      try { extDetails = JSON.parse(atelierQuickEditLead.details || '{}'); } catch(e) {}
-      extDetails.patronagePrice = Number(quickEditForm.patronagePrice);
-      extDetails.prixEchantillon = Number(quickEditForm.prixEchantillon);
-      extDetails.modelisteName = quickEditForm.modelisteName;
-      extDetails.modelisteValide = quickEditForm.isModelisteValide;
-      extDetails.patronageStatus = quickEditForm.isModelisteValide ? 'priced' : 'requested';
-
-      if (quickEditForm.isDevisOfficielConfirmed) {
-        extDetails.devisOfficielConfirmed = true;
-        extDetails.devisStatus = 'devis_confirme_atelier';
-        extDetails.devisOfficielDate = new Date().toISOString();
-      } else {
-        extDetails.devisOfficielConfirmed = false;
-        extDetails.devisStatus = 'estimation';
-      }
-
-      const calculatedTotal = Number(quickEditForm.unitPrice) * (atelierQuickEditLead.quantity || 100);
-
-      const updatedLead: Lead = {
-        ...atelierQuickEditLead,
-        details: JSON.stringify(extDetails),
-        modeleReel: quickEditForm.modeleReel,
-        unitPrice: Number(quickEditForm.unitPrice),
-        totalPrice: calculatedTotal,
-        crmPrice: calculatedTotal,
-        crmPriceConfirmed: quickEditForm.isDevisOfficielConfirmed,
-        patronagePrice: Number(quickEditForm.patronagePrice),
-        prixEchantillon: Number(quickEditForm.prixEchantillon),
-        modelisteName: quickEditForm.modelisteName,
-        tissuSuggere: quickEditForm.tissuSuggere,
-        techDetails: quickEditForm.techDetails,
-        delaiEstime: quickEditForm.delaiEstime,
-        statusProgression: quickEditForm.statusProgression,
-        reponseAtelier: quickEditForm.reponseAtelier,
-        reponseAtelierDate: new Date().toISOString()
-      };
-      (updatedLead as any).devisOfficielConfirmed = quickEditForm.isDevisOfficielConfirmed;
-      (updatedLead as any).devisStatus = quickEditForm.isDevisOfficielConfirmed ? 'devis_confirme_atelier' : 'estimation';
-      await saveRecord('leads', updatedLead);
-      setMesDemandes(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
-      setSelectedDemandePage(prev => prev?.id === updatedLead.id ? updatedLead : prev);
-      setAtelierQuickEditLead(null);
-    } catch (err) {
-      console.error(err);
-      alert(isAr ? 'وقع خطأ في الحفظ' : "Erreur lors de l'enregistrement");
-    } finally {
-      setSavingQuickEdit(false);
-    }
-  };
-
-  const openQuickEdit = (lead: Lead) => {
-    const analysis = getDemandeAnalysis(lead, isAr);
-    const devState = getLeadDevisState(lead);
-    setAtelierQuickEditLead(lead);
-    let extDetails: any = {};
-    try { extDetails = JSON.parse(lead.details || '{}'); } catch(e) {}
-    setQuickEditForm({
-      modeleReel: analysis.modeleReel,
-      patronagePrice: analysis.hasCustomPatronage ? analysis.patronagePrice : (analysis.patronagePrice || 250),
-      prixEchantillon: analysis.hasCustomEchantillon ? analysis.echantillonPrice : (analysis.echantillonPrice || 350),
-      modelisteName: extDetails.modelisteName || (lead as any).modelisteName || 'Mohammed Aboulfateh',
-      isModelisteValide: Boolean(analysis.hasCustomPatronage || extDetails.patronageStatus === 'priced' || extDetails.modelisteValide),
-      unitPrice: analysis.unitPrice,
-      totalPrice: analysis.totalPrice,
-      tissuSuggere: analysis.tissuSuggere,
-      techDetails: analysis.techDetails,
-      delaiEstime: analysis.delaiEstime,
-      statusProgression: analysis.statusProgression,
-      reponseAtelier: analysis.reponseAtelier,
-      isDevisOfficielConfirmed: devState.isConfirmedByAtelier
-    });
   };
 
   const handleDemandeAnnulation = async () => {
