@@ -4014,17 +4014,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                     </div>
                                   );
                                 }
-                                return (
-                                  <a
-                                    href={waUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                                  >
-                                    <MessageCircle className="w-4 h-4 text-emerald-600" />
-                                    <span>{isAr ? '💬 استفسار ومتابعة مع الورشة' : 'Contacter l\'Atelier'}</span>
-                                  </a>
-                                );
+                                return null;
                               })()}
 
                               {(() => {
