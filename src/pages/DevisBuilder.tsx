@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock, User as UserIcon, Maximize2, X, MessageCircle } from 'lucide-react';
-import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord, loadLeads } from '../types';
+import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord, loadLeads, loadLeadPhoto, loadLeadPhotosBatch } from '../types';
 import type { User, Lead } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { PageLoader } from '../components/PageLoader';
@@ -11,6 +11,7 @@ import { printElement } from '../utils/pdf';
 
 interface ModelItem {
   id: string;
+  leadId?: string;
   name: string;
   image: string;
   quantity: number;
@@ -42,13 +43,77 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
   const [newClientPhone, setNewClientPhone] = useState('');
   
   const [models, setModels] = useState<ModelItem[]>([]);
+  const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>(() => {
+    try {
+      const cached = localStorage.getItem('textrack_lead_photos_cache');
+      return cached ? JSON.parse(cached) : {};
+    } catch {
+      return {};
+    }
+  });
   
   const currentPhone = selectedClient?.telephone || newClientPhone;
   const currentName = selectedClient?.nom || newClientName;
-  const clientLeads = visibleLeads.filter(l => 
-    (currentPhone && l.phone && (l.phone.includes(currentPhone) || currentPhone.includes(l.phone))) ||
-    (currentName && l.name && l.name.toLowerCase() === currentName.toLowerCase())
-  );
+  const clientLeads = useMemo(() => {
+    return visibleLeads.filter(l => 
+      (currentPhone && l.phone && (l.phone.includes(currentPhone) || currentPhone.includes(l.phone))) ||
+      (currentName && l.name && l.name.toLowerCase() === currentName.toLowerCase())
+    );
+  }, [visibleLeads, currentPhone, currentName]);
+
+  // Auto-fetch photos for client leads and link to models
+  const clientLeadIdsKey = clientLeads.map(l => l.id).sort().join(',');
+  useEffect(() => {
+    if (clientLeads.length === 0) return;
+
+    const populateModelImages = (photoMap: Record<string, string>) => {
+      setModels(prevModels => {
+        let changed = false;
+        const updated = prevModels.map(m => {
+          if (m.image) return m;
+          const matchingLead = clientLeads.find(l => 
+            (m.leadId && l.id === m.leadId) ||
+            (l.type && m.name && (l.type.trim() === m.name.trim() || l.type.includes(m.name) || m.name.includes(l.type)))
+          );
+          const photo = matchingLead ? (photoMap[matchingLead.id] || leadPhotos[matchingLead.id] || matchingLead.photo || (matchingLead.photos && matchingLead.photos[0])) : null;
+          if (photo) {
+            changed = true;
+            return { ...m, image: photo, leadId: m.leadId || matchingLead?.id };
+          }
+          return m;
+        });
+        return changed ? updated : prevModels;
+      });
+    };
+
+    const missingIds = clientLeads
+      .filter(l => !leadPhotos[l.id] && !l.photo && (!l.photos || l.photos.length === 0))
+      .map(l => l.id);
+
+    if (missingIds.length === 0) {
+      populateModelImages(leadPhotos);
+      return;
+    }
+
+    loadLeadPhotosBatch(missingIds).then(batch => {
+      const fetchedMap: Record<string, string> = {};
+      Object.entries(batch).forEach(([id, data]) => {
+        if (data?.photo) fetchedMap[id] = data.photo;
+      });
+
+      if (Object.keys(fetchedMap).length > 0) {
+        setLeadPhotos(prev => {
+          const next = { ...prev, ...fetchedMap };
+          try {
+            localStorage.setItem('textrack_lead_photos_cache', JSON.stringify(next));
+          } catch {}
+          return next;
+        });
+        setLeads(prev => prev.map(l => fetchedMap[l.id] ? { ...l, photo: fetchedMap[l.id] } : l));
+        populateModelImages(fetchedMap);
+      }
+    });
+  }, [clientLeadIdsKey, clientLeads]);
 
   const parseAITable = (aiNotes: string | undefined) => {
     if (!aiNotes) return null;
@@ -79,18 +144,36 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
     return { text: itemsText.join(' | '), total };
   };
 
-  const importLeadAsModel = (lead: Lead) => {
+  const importLeadAsModel = async (lead: Lead) => {
     const aiData = parseAITable(lead.aiNotes);
+    const photo = leadPhotos[lead.id] || lead.photo || (lead.photos && lead.photos[0]) || '';
+    const modelId = genId();
     const newModel: ModelItem = {
-      id: genId(),
+      id: modelId,
+      leadId: lead.id,
       name: lead.type || '',
-      image: lead.photo || (lead.photos && lead.photos.length > 0 ? lead.photos[0] : ''),
+      image: photo,
       quantity: lead.quantity || 1,
       matierePrice: aiData ? aiData.total : (lead.prixEchantillon || 0),
       laborPrice: 0,
       fabricType: aiData ? aiData.text : ''
     };
     setModels(prev => [...prev, newModel]);
+
+    if (!photo) {
+      const fetched = await loadLeadPhoto(lead.id);
+      if (fetched) {
+        setLeadPhotos(prev => {
+          const next = { ...prev, [lead.id]: fetched };
+          try {
+            localStorage.setItem('textrack_lead_photos_cache', JSON.stringify(next));
+          } catch {}
+          return next;
+        });
+        setModels(prev => prev.map(m => m.id === modelId ? { ...m, image: fetched } : m));
+        setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, photo: fetched } : l));
+      }
+    }
   };
   
   const [delai, setDelai] = useState('15');
@@ -335,10 +418,12 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
                         if (clientLeadsToImport.length > 0) {
                           const newModels = clientLeadsToImport.map(lead => {
                             const aiData = parseAITable(lead.aiNotes);
+                            const photo = leadPhotos[lead.id] || lead.photo || (lead.photos && lead.photos.length > 0 ? lead.photos[0] : '');
                             return {
                               id: genId(),
+                              leadId: lead.id,
                               name: lead.type || '',
-                              image: lead.photo || (lead.photos && lead.photos.length > 0 ? lead.photos[0] : ''),
+                              image: photo,
                               quantity: lead.quantity || 1,
                               matierePrice: aiData ? aiData.total : (lead.prixEchantillon || 0),
                               laborPrice: 0,
@@ -346,6 +431,32 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
                             };
                           });
                           setModels(newModels);
+
+                          const missingPhotos = clientLeadsToImport.filter(l => !leadPhotos[l.id] && !l.photo && (!l.photos || l.photos.length === 0)).map(l => l.id);
+                          if (missingPhotos.length > 0) {
+                            loadLeadPhotosBatch(missingPhotos).then(batch => {
+                              const fetchedMap: Record<string, string> = {};
+                              Object.entries(batch).forEach(([id, data]) => {
+                                if (data?.photo) fetchedMap[id] = data.photo;
+                              });
+                              if (Object.keys(fetchedMap).length > 0) {
+                                setLeadPhotos(prev => {
+                                  const next = { ...prev, ...fetchedMap };
+                                  try {
+                                    localStorage.setItem('textrack_lead_photos_cache', JSON.stringify(next));
+                                  } catch {}
+                                  return next;
+                                });
+                                setLeads(prev => prev.map(l => fetchedMap[l.id] ? { ...l, photo: fetchedMap[l.id] } : l));
+                                setModels(prevModels => prevModels.map(m => {
+                                  if (m.leadId && fetchedMap[m.leadId]) {
+                                    return { ...m, image: fetchedMap[m.leadId] };
+                                  }
+                                  return m;
+                                }));
+                              }
+                            });
+                          }
                         }
                       }
                     }
@@ -387,27 +498,30 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
                     {isAr ? '✨ طلبات هذا الزبون (انقر لإضافتها للتسعير)' : '✨ Demandes de ce client (Cliquez pour ajouter)'}
                   </label>
                   <div className={`flex gap-3 overflow-x-auto pb-2 custom-scrollbar ${isAr ? 'flex-row-reverse' : ''}`}>
-                    {clientLeads.map(lead => (
-                      <button key={lead.id} onClick={() => importLeadAsModel(lead)}
-                        className={`flex items-center gap-3 p-2 pr-4 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 hover:border-indigo-300 hover:shadow-md transition-all whitespace-nowrap group shrink-0 ${isAr ? 'flex-row-reverse pl-4 pr-2' : ''}`}>
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0 border border-indigo-100">
-                          {(lead.photo || (lead.photos && lead.photos[0])) ? (
-                            <img src={lead.photo || lead.photos![0]} alt={lead.type} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-indigo-50 text-indigo-300">
-                              <FileText className="w-4 h-4" />
-                            </div>
-                          )}
-                        </div>
-                        <div className={isAr ? 'text-right' : 'text-left'}>
-                          <p className="text-xs font-bold text-indigo-900">{lead.type || 'Modèle'}</p>
-                          <p className="text-[10px] font-bold text-indigo-500">{lead.quantity} pcs</p>
-                        </div>
-                        <div className={`w-6 h-6 rounded-full bg-white shadow-sm text-indigo-600 flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all ${isAr ? 'mr-2' : 'ml-2'}`}>
-                          <Plus className="w-4 h-4" />
-                        </div>
-                      </button>
-                    ))}
+                    {clientLeads.map(lead => {
+                      const leadPhoto = leadPhotos[lead.id] || lead.photo || (lead.photos && lead.photos[0]);
+                      return (
+                        <button key={lead.id} onClick={() => importLeadAsModel(lead)}
+                          className={`flex items-center gap-3 p-2 pr-4 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 hover:border-indigo-300 hover:shadow-md transition-all whitespace-nowrap group shrink-0 ${isAr ? 'flex-row-reverse pl-4 pr-2' : ''}`}>
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0 border border-indigo-100">
+                            {leadPhoto ? (
+                              <img src={leadPhoto} alt={lead.type} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-indigo-50 text-indigo-300">
+                                <FileText className="w-4 h-4" />
+                              </div>
+                            )}
+                          </div>
+                          <div className={isAr ? 'text-right' : 'text-left'}>
+                            <p className="text-xs font-bold text-indigo-900">{lead.type || 'Modèle'}</p>
+                            <p className="text-[10px] font-bold text-indigo-500">{lead.quantity} pcs</p>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full bg-white shadow-sm text-indigo-600 flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all ${isAr ? 'mr-2' : 'ml-2'}`}>
+                            <Plus className="w-4 h-4" />
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}

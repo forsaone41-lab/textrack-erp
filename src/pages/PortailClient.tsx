@@ -379,7 +379,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     techDetails: '',
     delaiEstime: '7 - 10 jours ouvrables',
     statusProgression: 'etude' as 'reception' | 'etude' | 'echantillon' | 'production' | 'pret',
-    reponseAtelier: ''
+    reponseAtelier: '',
+    isDevisOfficielConfirmed: false,
+    fournisseurNom: '',
+    fournisseurTel: '',
+    fournisseurVille: '',
+    fournisseurCode: 'BEYA-FABRIC-2026',
+    fournisseurCouleurs: '',
+    fournisseurNote: ''
   });
   const [savingQuickEdit, setSavingQuickEdit] = useState(false);
   const [selectedTierQty, setSelectedTierQty] = useState<Record<string, number>>({});
@@ -1599,6 +1606,17 @@ const extractCleanUserNotes = (rawDetails?: string | null): string => {
   return text;
 };
 
+const cleanPhoneForWa = (phone: string | undefined | null): string => {
+  if (!phone) return '212661849201';
+  let cleaned = phone.replace(/\D/g, '');
+  if (cleaned.startsWith('0')) {
+    cleaned = '212' + cleaned.substring(1);
+  } else if (!cleaned.startsWith('212') && cleaned.length === 9) {
+    cleaned = '212' + cleaned;
+  }
+  return cleaned || '212661849201';
+};
+
 function cleanLangText(text: string | undefined | null, isAr: boolean): string {
   if (!text || typeof text !== 'string') return '';
   const trimmed = text.trim();
@@ -1935,6 +1953,37 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
     const hasBroderie = text.includes('broderie') || text.includes('طرز') || text.includes('طريزة') || text.includes('brodé') || text.includes('brode');
     const hasPrint = text.includes('sérigraphie') || text.includes('serigraphie') || text.includes('dtf') || text.includes('print') || text.includes('طباعة') || text.includes('طبعة') || text.includes('marquage') || isHoodieOrSweat || isTshirt;
+
+    const savedFournisseurNom = extDetails.supplierName || (d as any).fournisseurNom || null;
+    const savedFournisseurTel = extDetails.supplierPhone || (d as any).fournisseurTel || null;
+    const savedFournisseurVille = extDetails.supplierCity || (d as any).fournisseurVille || null;
+    const savedFournisseurCode = extDetails.supplierCode || (d as any).fournisseurCode || null;
+    const savedFournisseurColors = extDetails.supplierColors || (d as any).fournisseurCouleurs || null;
+    const savedFournisseurNotes = extDetails.supplierNotes || (d as any).fournisseurNote || null;
+
+    const defaultFournisseurNom = (isDenimOrTailleur || d.id?.toLowerCase().includes('7eea2877'))
+      ? 'مجمع أقمشة النخبة - درب عمر (Comptoir Textile Derb Omar)'
+      : isTracksuit
+      ? 'أقمشة المسيرة الشمالية (Tissus Nord)'
+      : 'مجمع أقمشة الشرق (Derb Omar زنقة فاس)';
+
+    const defaultFournisseurTel = '0661849201';
+    const defaultFournisseurVille = isAr ? 'الدار البيضاء • درب عمر زنقة فاس' : 'Casablanca • Derb Omar';
+    const defaultFournisseurCode = 'BEYA-FABRIC-2026';
+    const defaultFournisseurColors = isAr 
+      ? 'أسود كربوني (Noir)، أبيض ناصع (Blanc)، رمادي ملونج (Gris Chiné)، أخضر غابوي (Vert Bouteille)، أزرق داكن (Bleu Marine)' 
+      : 'Noir, Blanc, Gris Chiné, Vert Bouteille, Bleu Marine';
+    const defaultFournisseurNote = isAr
+      ? 'متوفر بالستوك بأسعار تفضيلية خاصة بزبناء ورشة BEYA Creative. إذا كان اللون غير متوفر، يتطلب صباغة مخصصة (Teinture Sur-Mesure) بحد أدنى 150kg للطلبية.'
+      : 'Disponible en stock à tarif préférentiel BEYA Creative. Teinture sur-mesure dès 150kg.';
+
+    const fournisseurNom = savedFournisseurNom || defaultFournisseurNom;
+    const fournisseurTel = savedFournisseurTel || defaultFournisseurTel;
+    const fournisseurVille = savedFournisseurVille || defaultFournisseurVille;
+    const fournisseurCode = savedFournisseurCode || defaultFournisseurCode;
+    const fournisseurCouleurs = savedFournisseurColors !== null && savedFournisseurColors !== undefined ? savedFournisseurColors : defaultFournisseurColors;
+    const fournisseurNote = savedFournisseurNotes !== null && savedFournisseurNotes !== undefined ? savedFournisseurNotes : defaultFournisseurNote;
+    const hasCustomFournisseur = Boolean(savedFournisseurNom || savedFournisseurTel);
 
     const isGenericPrice = savedUnitPrice === 65 && !d.crmPriceConfirmed && (isVeste || isDenimOrTailleur || isTracksuit);
     const tissuCostPerPiece = Math.round(defaultTissuConso * defaultPrixMetre);
@@ -4597,21 +4646,117 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               </div>
                             </div>
 
-                            {/* Direct WhatsApp Sourcing Action */}
-                            <div className="pt-2">
-                              <a
-                                href={`https://wa.me/212661000003?text=${encodeURIComponent(
-                                  isAr 
-                                    ? `السلام عليكم، أنا زبون من طرف ورشة BEYA Creative (كود الشراكة: BEYA-FABRIC-2026). عندي طلبية لموديل ${analysis.modeleReel} (${currentQty} قطعة)، محتاج قماش ${analysis.tissuSuggere}. واش متوفر عندكم وبشحال الكيلو؟ شكراً.`
-                                    : `Bonjour, je suis client chez l'Atelier BEYA Creative (Code Partenaire : BEYA-FABRIC-2026). Pour mon modèle ${analysis.modeleReel} (${currentQty} pcs), je souhaite commander le tissu ${analysis.tissuSuggere}. Pouvez-vous me confirmer le tarif ? Merci.`
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/25 cursor-pointer text-center"
-                              >
-                                <MessageCircle className="w-5 h-5" />
-                                <span>{isAr ? 'تواصل مع مورد الثوب (كود BEYA)' : 'Contacter le Fournisseur (Code BEYA)'}</span>
-                              </a>
+                            {/* Dedicated Dynamic Supplier Card (مطابق لما طلبه العميل مع معلومات المورد وكود BEYA) */}
+                            <div className="p-5 md:p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl border border-slate-800 shadow-xl space-y-4">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                    <span className="px-2.5 py-0.5 bg-emerald-500 text-white text-[10px] font-black rounded-lg uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                                      <Check className="w-3 h-3" />
+                                      <span>{isAr ? 'مورد معتمد' : 'Fournisseur Agréé'}</span>
+                                    </span>
+                                    <span className="px-2.5 py-0.5 bg-white/10 text-emerald-300 text-[10px] font-black rounded-lg border border-emerald-500/30 flex items-center gap-1">
+                                      <span>متوفر بالمستودع ✅</span>
+                                    </span>
+                                    <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-lg font-mono">
+                                      كود BEYA: {analysis.fournisseurCode}
+                                    </span>
+                                  </div>
+                                  <h4 className="text-base sm:text-lg font-black text-white">
+                                    {analysis.fournisseurNom}
+                                  </h4>
+                                  <p className="text-xs text-slate-300 mt-0.5 flex items-center gap-1.5 font-medium">
+                                    <MapPin className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                    <span>{analysis.fournisseurVille}</span>
+                                    <span className="text-slate-500">•</span>
+                                    <span className="text-emerald-400 text-[11px] font-bold">بأسعار تفضيلية خاصة بزبناء ورشة BEYA Creative</span>
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                                  {isTestAccount && (
+                                    <button
+                                      type="button"
+                                      onClick={() => openQuickEdit(d)}
+                                      className="px-3 py-1.5 bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                      title="تعديل معلومات مورد السلعة"
+                                    >
+                                      <span>✏️</span>
+                                      <span>{isAr ? 'تعديل المورد' : 'Modifier'}</span>
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(analysis.fournisseurCode);
+                                      alert(isAr ? `تم نسخ كود الشراكة: ${analysis.fournisseurCode}` : `Code BEYA copié: ${analysis.fournisseurCode}`);
+                                    }}
+                                    className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                    title="نسخ كود الشراكة"
+                                  >
+                                    <Copy className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>{isAr ? 'نسخ كود BEYA' : 'Copier le Code'}</span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Available Stock Colors Pills */}
+                              {analysis.fournisseurCouleurs && (
+                                <div className="space-y-1.5">
+                                  <span className="text-[11px] font-bold text-slate-300 block">
+                                    {isAr ? 'الألوان المتوفرة فالحين بالستوك:' : 'Couleurs disponibles en stock :'}
+                                  </span>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {analysis.fournisseurCouleurs.split(/[،,]/).map((col, cIdx) => {
+                                      const colTrim = col.trim();
+                                      if (!colTrim) return null;
+                                      return (
+                                        <span
+                                          key={cIdx}
+                                          className="px-3 py-1 rounded-xl text-xs font-bold bg-white/10 border border-white/15 text-white backdrop-blur-xs flex items-center gap-1.5 shadow-2xs"
+                                        >
+                                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                                          <span>{colTrim}</span>
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Special Instructions Note */}
+                              {analysis.fournisseurNote && (
+                                <p className="text-xs text-amber-200/90 leading-relaxed font-medium bg-amber-500/10 p-3 rounded-2xl border border-amber-500/20">
+                                  💡 {analysis.fournisseurNote}
+                                </p>
+                              )}
+
+                              {/* Direct WhatsApp Contact Button + Direct Phone */}
+                              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+                                <a
+                                  href={`https://wa.me/${cleanPhoneForWa(analysis.fournisseurTel)}?text=${encodeURIComponent(
+                                    isAr 
+                                      ? `السلام عليكم، أنا زبون من طرف ورشة BEYA Creative (كود الشراكة: ${analysis.fournisseurCode}). عندي طلبية لموديل ${analysis.modeleReel} (${currentQty} قطعة)، محتاج قماش ${analysis.tissuSuggere}. واش متوفر عندكم وبشحال الكيلو؟ شكراً.`
+                                      : `Bonjour, je suis client chez l'Atelier BEYA Creative (Code Partenaire : ${analysis.fournisseurCode}). Pour mon modèle ${analysis.modeleReel} (${currentQty} pcs), je souhaite commander le tissu ${analysis.tissuSuggere}. Pouvez-vous me confirmer le tarif ? Merci.`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex-1 py-3.5 px-6 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-500/20 active:scale-[0.99] text-center cursor-pointer"
+                                >
+                                  <MessageCircle className="w-5 h-5 text-slate-950" />
+                                  <span>{isAr ? `تواصل مع مورد الثوب (كود ${analysis.fournisseurCode})` : `Contacter le Fournisseur (${analysis.fournisseurCode})`}</span>
+                                </a>
+
+                                {analysis.fournisseurTel && (
+                                  <a
+                                    href={`tel:${analysis.fournisseurTel.replace(/\s+/g, '')}`}
+                                    className="py-3.5 px-5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 border border-white/15 cursor-pointer text-center"
+                                  >
+                                    <Phone className="w-4 h-4 text-emerald-400" />
+                                    <span dir="ltr">{analysis.fournisseurTel}</span>
+                                  </a>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -8161,6 +8306,140 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   placeholder="Ex: Molleton Coton Gratté 320g / French Terry"
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-indigo-600 focus:bg-white"
                 />
+              </div>
+
+              {/* ─── قسم معلومات مورد السلعة / القماش للزبون ─── */}
+              <div className="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🧵</span>
+                    <span>{isAr ? 'معلومات مورد الثوب والسلعة (للكليان)' : 'Fournisseur de Tissu & Matières'}</span>
+                  </label>
+                  <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md">
+                    {isAr ? 'كتطلع للكليان فالبورتال' : 'Visible au Client'}
+                  </span>
+                </div>
+
+                {/* Quick Selection Presets */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-500 block">
+                    {isAr ? 'اختر مورد معتمد بضغطة واحدة أو دخل معلومات خاصة:' : 'Choix rapide ou saisie personnalisée :'}
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { name: 'مجمع أقمشة النخبة - درب عمر (Comptoir Textile Derb Omar)', phone: '0661849201', city: 'الدار البيضاء • درب عمر زنقة فاس', code: 'BEYA-FABRIC-2026', colors: 'أسود كربوني (Noir)، أبيض ناصع (Blanc)، رمادي ملونج (Gris Chiné)، أخضر غابوي (Vert Bouteille)، أزرق داكن (Bleu Marine)' },
+                      { name: 'أقمشة المسيرة الشمالية (Tissus Nord Tanger)', phone: '0662304918', city: 'طنجة • المنطقة الحرة', code: 'BEYA-TANGER-2026', colors: 'كوتون كانفاس، جاباردين سترتش متين، قماش ووتربروف تقني' },
+                      { name: 'مؤسسة النور للأقمشة الفاخرة (Fès)', phone: '0661904215', city: 'فاس • الحي الصناعي سيدي ابراهيم', code: 'BEYA-FES-2026', colors: 'جيرسي صيفي 240g، بيكي قطن، فيلور كوردوروي' },
+                    ].map((p, pIdx) => (
+                      <button
+                        key={pIdx}
+                        type="button"
+                        onClick={() => {
+                          setQuickEditForm(prev => ({
+                            ...prev,
+                            fournisseurNom: p.name,
+                            fournisseurTel: p.phone,
+                            fournisseurVille: p.city,
+                            fournisseurCode: p.code,
+                            fournisseurCouleurs: p.colors,
+                            fournisseurNote: isAr 
+                              ? 'متوفر بالستوك بأسعار تفضيلية خاصة بزبناء ورشة BEYA Creative. تواصلوا مع المورد وأعطوه كود التخفيض.' 
+                              : 'Disponible en stock à tarif préférentiel BEYA Creative.'
+                          }));
+                        }}
+                        className="px-2.5 py-1 bg-white hover:bg-emerald-100 hover:text-emerald-900 text-emerald-800 border border-emerald-300 rounded-lg text-[10px] font-bold transition shadow-xs cursor-pointer"
+                      >
+                        + {p.name.split(' - ')[0].replace(' (Fès)', '').replace(' (Tissus Nord Tanger)', '')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Supplier Name & Phone */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {isAr ? 'اسم مورد السلعة / المحل :' : 'Nom du Fournisseur :'}
+                    </label>
+                    <input
+                      type="text"
+                      value={quickEditForm.fournisseurNom}
+                      onChange={e => setQuickEditForm(prev => ({ ...prev, fournisseurNom: e.target.value }))}
+                      placeholder={isAr ? 'مثال: مجمع أقمشة النخبة - درب عمر' : 'Ex: Comptoir Textile Derb Omar'}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-emerald-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {isAr ? 'رقم الهاتف / الواتساب للتواصل :' : 'Téléphone / WhatsApp :'}
+                    </label>
+                    <input
+                      type="text"
+                      value={quickEditForm.fournisseurTel}
+                      onChange={e => setQuickEditForm(prev => ({ ...prev, fournisseurTel: e.target.value }))}
+                      placeholder="Ex: 0661849201"
+                      dir="ltr"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-emerald-600 text-left"
+                    />
+                  </div>
+                </div>
+
+                {/* City & Partner Code */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {isAr ? 'المدينة وعنوان المحل :' : 'Ville & Adresse :'}
+                    </label>
+                    <input
+                      type="text"
+                      value={quickEditForm.fournisseurVille}
+                      onChange={e => setQuickEditForm(prev => ({ ...prev, fournisseurVille: e.target.value }))}
+                      placeholder={isAr ? 'الدار البيضاء • درب عمر، زنقة فاس' : 'Casablanca • Derb Omar'}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-emerald-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {isAr ? 'كود التخفيض (Code BEYA) :' : 'Code Partenaire / BEYA :'}
+                    </label>
+                    <input
+                      type="text"
+                      value={quickEditForm.fournisseurCode}
+                      onChange={e => setQuickEditForm(prev => ({ ...prev, fournisseurCode: e.target.value }))}
+                      placeholder="Ex: BEYA-FABRIC-2026"
+                      dir="ltr"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-emerald-600 font-mono text-left"
+                    />
+                  </div>
+                </div>
+
+                {/* Available Stock Colors */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    {isAr ? 'الألوان المتوفرة فالحين بالستوك :' : 'Couleurs disponibles en Stock :'}
+                  </label>
+                  <input
+                    type="text"
+                    value={quickEditForm.fournisseurCouleurs}
+                    onChange={e => setQuickEditForm(prev => ({ ...prev, fournisseurCouleurs: e.target.value }))}
+                    placeholder={isAr ? 'مثال: أسود كربوني، أبيض ناصع، رمادي ملونج، أخضر غابوي...' : 'Ex: Noir, Blanc, Gris chiné...'}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-emerald-600"
+                  />
+                </div>
+
+                {/* Notes for Client */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    {isAr ? 'ملاحظات وتوجيهات خاصة للزبون بخصوص السلعة :' : 'Instructions pour le client :'}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={quickEditForm.fournisseurNote}
+                    onChange={e => setQuickEditForm(prev => ({ ...prev, fournisseurNote: e.target.value }))}
+                    placeholder={isAr ? 'مثال: متوفر بالستوك بأسعار تفضيلية خاصة بزبناء ورشة BEYA Creative...' : 'Ex: En stock à tarif préférentiel BEYA Creative...'}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-emerald-600 resize-none"
+                  />
+                </div>
               </div>
 
               <div>
