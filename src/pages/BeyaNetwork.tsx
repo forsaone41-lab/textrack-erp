@@ -22,7 +22,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const navigate = useNavigate();
   const isAr = true; // BEYA NETWORK is primarily in Arabic / Darija for Moroccan community
   const emailKey = (currentUser?.email || '').toLowerCase().trim();
-  const isPilotAuthorized = emailKey === 'forsaone41@gmail.com' || currentUser?.role === 'admin';
+  const isPilotAuthorized = emailKey === 'forsaone41@gmail.com';
 
   // Navigation tabs in BEYA NETWORK (Feed, Fournisseurs, Modélistes, Clients BEYA, Groupage)
   const [activeTab, setActiveTab] = useState<'feed' | 'suppliers' | 'modelistes' | 'groupage'>('feed');

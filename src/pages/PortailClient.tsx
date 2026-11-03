@@ -398,7 +398,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [fabricOrderSent, setFabricOrderSent] = useState<Record<string, boolean>>({});
 
   // ─── BEYA NETWORK Pilot (Restricted strictly to forsaone41@gmail.com and admin) ───
-  const isNetworkPilotUser = (currentUser?.email || '').toLowerCase().trim() === 'forsaone41@gmail.com' || currentUser?.role === 'admin';
+  const isNetworkPilotUser = (currentUser?.email || '').toLowerCase().trim() === 'forsaone41@gmail.com';
   const [networkSubTab, setNetworkSubTab] = useState<'fournisseurs' | 'forum' | 'groupage'>('fournisseurs');
   const [networkCategoryFilter, setNetworkCategoryFilter] = useState<'all' | 'tissu' | 'impression' | 'broderie' | 'modeliste'>('all');
   const [networkSearchQuery, setNetworkSearchQuery] = useState('');
