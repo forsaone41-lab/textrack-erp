@@ -373,6 +373,24 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [sourcingCheckActive, setSourcingCheckActive] = useState<Record<string, boolean>>({});
   const [sourcingSelectedColor, setSourcingSelectedColor] = useState<Record<string, string>>({});
   const [fabricOrderSent, setFabricOrderSent] = useState<Record<string, boolean>>({});
+  const [notifyModal, setNotifyModal] = useState<{
+    isOpen: boolean;
+    type?: 'success' | 'error' | 'info';
+    title?: string;
+    message: string;
+    detail?: string;
+    badges?: Array<{ label: string; value: string }>;
+  } | null>(null);
+
+  const showNotification = (
+    message: string,
+    title?: string,
+    type: 'success' | 'error' | 'info' = 'success',
+    detail?: string,
+    badges?: Array<{ label: string; value: string }>
+  ) => {
+    setNotifyModal({ isOpen: true, type, title, message, detail, badges });
+  };
 
   // ─── BEYA NETWORK Pilot (Restricted strictly to forsaone41@gmail.com and admin) ───
   const isNetworkPilotUser = (currentUser?.email || '').toLowerCase().trim() === 'forsaone41@gmail.com';
@@ -759,7 +777,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const handlePrintDevis = (lead: Lead) => {
     const devState = getLeadDevisState(lead);
     if (!devState.isConfirmedByAtelier && !devState.isVal) {
-      alert(isAr ? 'الدوفيز الرسمي قيد الإعداد والمراجعة من طرف الورشة، سيصبح متاحاً للتحميل فور اعتماده.' : "Le devis officiel est en cours de préparation par l'atelier.");
+      showNotification(isAr ? 'الدوفيز الرسمي قيد الإعداد والمراجعة من طرف الورشة، سيصبح متاحاً للتحميل فور اعتماده.' : "Le devis officiel est en cours de préparation par l'atelier.", isAr ? '⏳ قيد المراجعة' : '⏳ En cours', 'info');
       return;
     }
     setPrintingDevisLead(lead);
@@ -1385,7 +1403,11 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       } catch (e) {}
     }
     if (!photo) {
-      alert(isAr ? 'المرجو إضافة صورة للموديل أولاً لتشغيل التحليل بالذكاء الاصطناعي' : 'Veuillez ajouter une photo pour lancer l\'analyse IA');
+      showNotification(
+        isAr ? 'المرجو إضافة صورة واضحة للموديل أولاً لتشغيل التحليل والتدقيق بالذكاء الاصطناعي.' : 'Veuillez ajouter une photo pour lancer l\'analyse IA.',
+        isAr ? '📷 صورة الموديل مطلوبة' : '📷 Photo requise',
+        'info'
+      );
       return;
     }
     setIsAiAnalyzingLead(lead.id);
@@ -1433,12 +1455,33 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         await saveRecord('leads', updatedLead);
         setMesDemandes(prev => prev.map(m => m.id === lead.id ? updatedLead : m));
         setSelectedDemandePage(updatedLead);
-        alert(isAr ? 'تم تحليل الموديل وتدقيق الأسعار والأقمشة بالذكاء الاصطناعي بنجاح!' : 'Modèle analysé avec succès par l\'IA ! Prix et tissu mis à jour.');
+        showNotification(
+          isAr
+            ? 'تم تحليل الموديل وتدقيق الأسعار واقتراح القماش الأمثل بالذكاء الاصطناعي بنجاح!'
+            : 'Modèle analysé avec succès par l\'IA ! Prix et tissu mis à jour.',
+          isAr ? '✨ تم تحديث التسعير والحسابات' : '✨ Analyse & Chiffrage IA Réussis',
+          'success',
+          isAr ? 'تم تحيين كافة الأسعار والتفاصيل الفنية مباشرة في بطاقة دراسة الموديل.' : 'Les détails et tarifs ont été actualisés sur votre portail.',
+          [
+            { label: isAr ? 'سعر البياسة' : 'Prix/pc', value: `${aiResult.unitPrice || lead.unitPrice || 65} MAD` },
+            { label: isAr ? 'المجموع الإجمالي' : 'Total Devis', value: `${((aiResult.unitPrice || lead.unitPrice || 65) * (Number(lead.quantity) || 10)).toLocaleString()} MAD` },
+            ...(aiResult.tissuSuggere ? [{ label: isAr ? 'الثوب المقترح' : 'Tissu suggéré', value: aiResult.tissuSuggere }] : []),
+            ...(aiResult.delaiEstime ? [{ label: isAr ? 'مدة الإنجاز' : 'Délai estimé', value: aiResult.delaiEstime }] : [])
+          ]
+        );
       } else {
-        alert(isAr ? 'لم نتمكن من تحليل الصورة. تأكد من صحة مفتاح Gemini API.' : 'Échec de l\'analyse. Vérifiez votre clé Gemini API.');
+        showNotification(
+          isAr ? 'لم نتمكن من تحليل الصورة حالياً. المرجو التأكد من جودة الصورة أو إعادة المحاولة.' : 'Échec de l\'analyse. Vérifiez votre clé Gemini API ou la photo.',
+          isAr ? 'تعذر إتمام التحليل' : 'Analyse non aboutie',
+          'error'
+        );
       }
     } catch (err: any) {
-      alert((isAr ? 'خطأ في التحليل: ' : 'Erreur analyse : ') + (err?.message || ''));
+      showNotification(
+        (isAr ? 'خطأ أثناء التحليل: ' : 'Erreur analyse : ') + (err?.message || ''),
+        isAr ? 'تنبيه خطأ' : 'Erreur',
+        'error'
+      );
     } finally {
       setIsAiAnalyzingLead(null);
     }
@@ -2679,7 +2722,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 <button
                   onClick={() => {
                     navigator.clipboard?.writeText(newSignupCode);
-                    alert(isAr ? 'تم نسخ الرمز السري بنجاح!' : 'Code PIN copié avec succès !');
+                    showNotification(isAr ? 'تم نسخ الرمز السري بنجاح إلى الحافظة.' : 'Code PIN copié avec succès !', isAr ? '📋 تم النسخ' : '📋 Copié', 'success');
                   }}
                   className="px-4 py-3 bg-white text-emerald-900 font-black text-xs rounded-xl shadow-md hover:bg-emerald-50 transition cursor-pointer"
                 >
@@ -4542,7 +4585,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                     type="button"
                                     onClick={() => {
                                       navigator.clipboard.writeText(analysis.fournisseurCode);
-                                      alert(isAr ? `تم نسخ كود الشراكة: ${analysis.fournisseurCode}` : `Code BEYA copié: ${analysis.fournisseurCode}`);
+                                      showNotification(isAr ? `تم نسخ كود الشراكة: ${analysis.fournisseurCode}` : `Code BEYA copié: ${analysis.fournisseurCode}`, isAr ? '🏷️ كود المورد' : '🏷️ Code BEYA', 'success');
                                     }}
                                     className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                                     title="نسخ كود الشراكة"
@@ -6414,7 +6457,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                       navigator.share({ title: `${company.name} — Info`, url });
                     } else {
                       navigator.clipboard.writeText(url);
-                      alert(isAr ? '✅ تم نسخ الرابط' : '✅ Lien copié !');
+                      showNotification(isAr ? 'تم نسخ رابط الدعوة بنجاح إلى الحافظة.' : 'Lien copié avec succès !', isAr ? '🔗 تم النسخ' : '🔗 Copié', 'success');
                     }
                   }}
                   className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-black hover:bg-indigo-100 transition-all"
@@ -8541,6 +8584,90 @@ Est-il possible de négocier un ajustement tarifaire ou de délai avant suppress
           </div>
         );
       })()}
+
+      {/* ─── Premium BEYA In-App Notification / Alert Modal Box ─── */}
+      {notifyModal && notifyModal.isOpen && (
+        <div
+          className="fixed inset-0 z-[300] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          dir={isAr ? 'rtl' : 'ltr'}
+          onClick={() => setNotifyModal(null)}
+        >
+          <div
+            className="bg-white rounded-[2rem] max-w-sm sm:max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200 p-6 sm:p-7 relative text-center flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Close Button */}
+            <button
+              type="button"
+              onClick={() => setNotifyModal(null)}
+              className="absolute top-4 right-4 rtl:right-auto rtl:left-4 p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Glowing Icon Badge */}
+            <div className="flex justify-center mb-4">
+              {notifyModal.type === 'error' ? (
+                <div className="w-16 h-16 rounded-3xl bg-rose-50 border-2 border-rose-200 flex items-center justify-center text-rose-600 shadow-lg shadow-rose-500/10">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+              ) : notifyModal.type === 'info' ? (
+                <div className="w-16 h-16 rounded-3xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center text-amber-600 shadow-lg shadow-amber-500/10">
+                  <Info className="w-8 h-8" />
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-500/15 via-purple-500/20 to-emerald-500/15 border-2 border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-500/15 ring-8 ring-indigo-50/60">
+                  <Sparkles className="w-8 h-8 text-indigo-600 animate-pulse" />
+                </div>
+              )}
+            </div>
+
+            {/* Title */}
+            <h3 className="text-base sm:text-lg font-black text-slate-900 leading-snug mb-2">
+              {notifyModal.title || (notifyModal.type === 'error'
+                ? (isAr ? 'تنبيه' : 'Attention')
+                : notifyModal.type === 'info'
+                ? (isAr ? 'معلومة هامة' : 'Information')
+                : (isAr ? '✨ تم بنجاح' : 'Succès'))}
+            </h3>
+
+            {/* Message Body */}
+            <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed mb-4">
+              {notifyModal.message}
+            </p>
+
+            {/* Badges Grid (if any) */}
+            {notifyModal.badges && notifyModal.badges.length > 0 && (
+              <div className="w-full mb-4 grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/70">
+                {notifyModal.badges.map((b, idx) => (
+                  <div key={idx} className="bg-white p-2 rounded-xl border border-slate-100 shadow-2xs text-center">
+                    <span className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">{b.label}</span>
+                    <span className="block text-xs font-black text-indigo-600 font-mono mt-0.5 truncate">{b.value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Detail Chip if provided */}
+            {notifyModal.detail && (
+              <div className="w-full mb-5 py-2 px-3 bg-emerald-50/80 border border-emerald-200 rounded-xl text-[11px] font-bold text-emerald-800 flex items-center justify-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>{notifyModal.detail}</span>
+              </div>
+            )}
+
+            {/* Primary Action Button */}
+            <button
+              type="button"
+              onClick={() => setNotifyModal(null)}
+              className="w-full py-3.5 px-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg shadow-slate-900/15 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Check className="w-4 h-4 text-emerald-400" />
+              <span>{isAr ? 'حسناً، فهمت' : 'D\'accord, compris'}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
