@@ -373,6 +373,105 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [sourcingCheckActive, setSourcingCheckActive] = useState<Record<string, boolean>>({});
   const [sourcingSelectedColor, setSourcingSelectedColor] = useState<Record<string, string>>({});
   const [fabricOrderSent, setFabricOrderSent] = useState<Record<string, boolean>>({});
+
+  // ─── Apple-style City / Location Selector ───
+  const [showCityModal, setShowCityModal] = useState(false);
+  const [selectedCityDraft, setSelectedCityDraft] = useState('');
+  const [customCityInput, setCustomCityInput] = useState('');
+  const [citySearchQuery, setCitySearchQuery] = useState('');
+  const [cityTab, setCityTab] = useState<'maroc' | 'international'>('maroc');
+  const [savingCity, setSavingCity] = useState(false);
+
+  const [clientCity, setClientCity] = useState<string>(() => {
+    const emailKey = currentUser?.email?.toLowerCase().trim() || '';
+    let saved = '';
+    try {
+      if (emailKey) saved = localStorage.getItem(`beya_client_city_${emailKey}`) || '';
+      if (!saved) saved = currentUser?.ville || (currentUser as any)?.city || '';
+    } catch {}
+    return saved;
+  });
+
+  useEffect(() => {
+    if (!currentUser?.email) return;
+    const emailKey = currentUser.email.toLowerCase().trim();
+    const stored = localStorage.getItem(`beya_client_city_${emailKey}`) || currentUser?.ville || (currentUser as any)?.city || '';
+    const dismissed = localStorage.getItem(`beya_city_popup_dismissed_${emailKey}`) === 'true';
+
+    if (!stored && !dismissed) {
+      const timer = setTimeout(() => {
+        setSelectedCityDraft(stored || 'الدار البيضاء (Casablanca)');
+        setShowCityModal(true);
+      }, 750);
+      return () => clearTimeout(timer);
+    }
+  }, [currentUser?.email, currentUser?.ville]);
+
+  const handleSaveCity = async (chosenCity?: string) => {
+    const finalCity = (chosenCity || customCityInput || selectedCityDraft).trim();
+    if (!finalCity) return;
+    setSavingCity(true);
+    try {
+      const emailKey = currentUser?.email?.toLowerCase().trim() || '';
+      setClientCity(finalCity);
+      if (emailKey) {
+        localStorage.setItem(`beya_client_city_${emailKey}`, finalCity);
+      }
+      try {
+        const rawAuth = localStorage.getItem('textrack_auth');
+        if (rawAuth) {
+          const parsed = JSON.parse(rawAuth);
+          parsed.ville = finalCity;
+          localStorage.setItem('textrack_auth', JSON.stringify(parsed));
+        }
+      } catch {}
+
+      if (currentUser) {
+        const updatedUser: User = { ...currentUser, ville: finalCity };
+        await saveRecord('users', updatedUser, true).catch(() => {});
+      }
+
+      // Update existing leads for this client
+      try {
+        const matchingLeads = mesDemandes.filter(l => 
+          (currentUser?.email && (l.email || '').trim().toLowerCase() === currentUser.email.trim().toLowerCase()) ||
+          (currentUser?.nom && (l.client || l.name || '').trim().toLowerCase() === currentUser.nom.trim().toLowerCase())
+        );
+        for (const l of matchingLeads) {
+          if (l.ville !== finalCity) {
+            const updated = { ...l, ville: finalCity };
+            await saveRecord('leads', updated, true).catch(() => {});
+          }
+        }
+        setMesDemandes(prev => prev.map(l => {
+          const isMatch = (currentUser?.email && (l.email || '').trim().toLowerCase() === currentUser?.email?.trim().toLowerCase()) ||
+                          (currentUser?.nom && (l.client || l.name || '').trim().toLowerCase() === currentUser?.nom?.trim().toLowerCase());
+          return isMatch ? { ...l, ville: finalCity } : l;
+        }));
+      } catch (e) {
+        console.error('Error updating leads with city:', e);
+      }
+
+      setShowCityModal(false);
+      showNotification(
+        isAr ? `تم حفظ موقعك بنجاح (${finalCity}). تم ربط المدينة بطلبياتك لتسهيل التوصيل وتحديد الموردين.` : `Votre ville (${finalCity}) a été enregistrée avec succès.`,
+        isAr ? '📍 تم تحديد المدينة بنجاح' : '📍 Ville confirmée',
+        'success'
+      );
+    } catch (err) {
+      console.error('Error saving city:', err);
+    } finally {
+      setSavingCity(false);
+    }
+  };
+
+  const handleDismissCityModal = () => {
+    const emailKey = currentUser?.email?.toLowerCase().trim() || '';
+    if (emailKey) {
+      localStorage.setItem(`beya_city_popup_dismissed_${emailKey}`, 'true');
+    }
+    setShowCityModal(false);
+  };
   const [notifyModal, setNotifyModal] = useState<{
     isOpen: boolean;
     type?: 'success' | 'error' | 'info';
@@ -2459,7 +2558,15 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                  </div>
                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-black truncate uppercase tracking-tight text-white">{currentUser.nom}</p>
-                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">{isAr ? 'زبون ممتاز' : 'Client Premium'}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">{isAr ? 'زبون ممتاز' : 'Client Premium'}</p>
+                      {clientCity && (
+                        <span className="text-[9px] text-slate-300 truncate flex items-center gap-0.5 bg-white/10 px-1.5 py-0.5 rounded-md border border-white/10">
+                          <MapPin className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
+                          {clientCity}
+                        </span>
+                      )}
+                    </div>
                  </div>
                </div>
              )}
@@ -2527,6 +2634,24 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
            <div className="flex items-center gap-3 sm:gap-4">
               
 
+
+              {/* Apple-style Location Pill */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCityDraft(clientCity || '');
+                  setShowCityModal(true);
+                }}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all border cursor-pointer active:scale-95 ${
+                  clientCity
+                    ? 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/80 shadow-2xs'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 animate-pulse shadow-xs'
+                }`}
+                title={isAr ? 'تغيير أو تحديد مدينتك' : 'Modifier votre ville'}
+              >
+                <MapPin className={`w-3.5 h-3.5 shrink-0 ${clientCity ? 'text-indigo-600' : 'text-amber-600'}`} />
+                <span className="max-w-[110px] sm:max-w-[140px] truncate">{clientCity || (isAr ? '📍 حدد مدينتك' : '📍 Choisir ville')}</span>
+              </button>
 
               <button 
                 onClick={() => window.location.reload()}
@@ -8584,6 +8709,259 @@ Est-il possible de négocier un ajustement tarifaire ou de délai avant suppress
           </div>
         );
       })()}
+
+      
+      {/* ─── Apple-Style City & Location Selector Modal ─── */}
+      {showCityModal && (
+        <div
+          className="fixed inset-0 z-[280] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
+          dir={isAr ? 'rtl' : 'ltr'}
+          onClick={handleDismissCityModal}
+        >
+          <div
+            className="bg-white rounded-[2.5rem] max-w-lg sm:max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 shrink-0 bg-gradient-to-b from-slate-50 to-white">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs shrink-0">
+                  <MapPin className="w-6 h-6 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
+                    {isAr ? 'اختر مدينتك أو منطقتك' : 'Choisissez votre ville ou région'}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    {isAr
+                      ? 'حدد موقع تواجدك لتوفير أفضل خيارات التوصيل وأقرب الموردين لعلامتك التجارية.'
+                      : 'Sélectionnez votre localisation pour optimiser les livraisons et sourcing textile.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleDismissCityModal}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Apple Segmented Tabs & Search */}
+            <div className="px-6 pt-4 pb-2 space-y-3 shrink-0">
+              {/* Apple Segmented Control */}
+              <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => { setCityTab('maroc'); setCitySearchQuery(''); }}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    cityTab === 'maroc'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <span>🇲🇦</span>
+                  <span>{isAr ? 'مدن المغرب' : 'Villes du Maroc'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setCityTab('international'); setCitySearchQuery(''); }}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    cityTab === 'international'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <span>🌍</span>
+                  <span>{isAr ? 'دولي / الجالية' : 'International'}</span>
+                </button>
+              </div>
+
+              {/* Quick Search */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={citySearchQuery}
+                  onChange={(e) => setCitySearchQuery(e.target.value)}
+                  placeholder={isAr ? 'ابحث عن مدينتك (مثال: طنجة، فاس، أكادير، الناظور...)' : 'Rechercher votre ville...'}
+                  className="w-full bg-slate-50 border border-slate-200/80 rounded-xl py-2.5 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:text-slate-400"
+                />
+                {citySearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setCitySearchQuery('')}
+                    className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Scrollable City Selection Grid */}
+            <div className="px-6 py-3 overflow-y-auto custom-scrollbar flex-1 space-y-2">
+              {(() => {
+                const marocCities = [
+                  { id: 'casablanca', nameAr: 'الدار البيضاء', nameFr: 'Casablanca', icon: '🏙️' },
+                  { id: 'rabat', nameAr: 'الرباط', nameFr: 'Rabat', icon: '🏛️' },
+                  { id: 'sale', nameAr: 'سلا', nameFr: 'Salé', icon: '🏰' },
+                  { id: 'tanger', nameAr: 'طنجة', nameFr: 'Tanger', icon: '🌊' },
+                  { id: 'marrakech', nameAr: 'مراكش', nameFr: 'Marrakech', icon: '🌴' },
+                  { id: 'fes', nameAr: 'فاس', nameFr: 'Fès', icon: '🏰' },
+                  { id: 'agadir', nameAr: 'أكادير', nameFr: 'Agadir', icon: '🏖️' },
+                  { id: 'meknes', nameAr: 'مكناس', nameFr: 'Meknès', icon: '🌾' },
+                  { id: 'oujda', nameAr: 'وجدة', nameFr: 'Oujda', icon: '🌅' },
+                  { id: 'kenitra', nameAr: 'القنيطرة', nameFr: 'Kénitra', icon: '🏗️' },
+                  { id: 'tetouan', nameAr: 'تطوان', nameFr: 'Tétouan', icon: '🏔️' },
+                  { id: 'mohammedia', nameAr: 'المحمدية', nameFr: 'Mohammédia', icon: '🏭' },
+                  { id: 'temara', nameAr: 'تمارة', nameFr: 'Témara', icon: '🏡' },
+                  { id: 'bouskoura', nameAr: 'بوسكورة', nameFr: 'Bouskoura', icon: '🌲' },
+                  { id: 'nouaceur', nameAr: 'النواصر', nameFr: 'Nouaceur', icon: '✈️' },
+                  { id: 'safi', nameAr: 'آسفي', nameFr: 'Safi', icon: '🌊' },
+                  { id: 'eljadida', nameAr: 'الجديدة', nameFr: 'El Jadida', icon: '🏖️' },
+                  { id: 'benimellal', nameAr: 'بني ملال', nameFr: 'Béni Mellal', icon: '🌿' },
+                  { id: 'nador', nameAr: 'الناظور', nameFr: 'Nador', icon: '⚓' },
+                  { id: 'khouribga', nameAr: 'خريبكة', nameFr: 'Khouribga', icon: '⛰️' },
+                  { id: 'settat', nameAr: 'سطات', nameFr: 'Settat', icon: '🍇' },
+                  { id: 'berkane', nameAr: 'بركان', nameFr: 'Berkane', icon: '🍊' },
+                  { id: 'taza', nameAr: 'تازة', nameFr: 'Taza', icon: '🏔️' },
+                  { id: 'khemisset', nameAr: 'الخميسات', nameFr: 'Khémisset', icon: '🌾' },
+                  { id: 'larache', nameAr: 'العرائش', nameFr: 'Larache', icon: '🌊' },
+                  { id: 'ksarelkebir', nameAr: 'القصر الكبير', nameFr: 'Ksar El Kebir', icon: '🏰' },
+                  { id: 'chefchaouen', nameAr: 'شفشاون', nameFr: 'Chefchaouen', icon: '🔷' },
+                  { id: 'alhoceima', nameAr: 'الحسيمة', nameFr: 'Al Hoceïma', icon: '🏖️' },
+                  { id: 'taroudant', nameAr: 'تارودانت', nameFr: 'Taroudant', icon: '🌴' },
+                  { id: 'ouarzazate', nameAr: 'ورزازات', nameFr: 'Ouarzazate', icon: '🎬' },
+                  { id: 'essaouira', nameAr: 'الصويرة', nameFr: 'Essaouira', icon: '🌊' },
+                  { id: 'laayoune', nameAr: 'العيون', nameFr: 'Laâyoune', icon: '🏜️' },
+                  { id: 'dakhla', nameAr: 'الداخلة', nameFr: 'Dakhla', icon: '🏄' },
+                  { id: 'guelmim', nameAr: 'كلميم', nameFr: 'Guelmim', icon: '🚪' },
+                  { id: 'tiznit', nameAr: 'تزنيت', nameFr: 'Tiznit', icon: '💍' },
+                  { id: 'ifrane', nameAr: 'إفران', nameFr: 'Ifrane', icon: '🌲' },
+                  { id: 'azrou', nameAr: 'أزرو', nameFr: 'Azrou', icon: '🪵' },
+                  { id: 'midelt', nameAr: 'ميدلت', nameFr: 'Midelt', icon: '🍎' }
+                ];
+
+                const intlCountries = [
+                  { id: 'france', nameAr: 'فرنسا', nameFr: 'France', icon: '🇫🇷' },
+                  { id: 'spain', nameAr: 'إسبانيا', nameFr: 'Espagne', icon: '🇪🇸' },
+                  { id: 'belgium', nameAr: 'بلجيكا', nameFr: 'Belgique', icon: '🇧🇪' },
+                  { id: 'netherlands', nameAr: 'هولندا', nameFr: 'Pays-Bas', icon: '🇳🇱' },
+                  { id: 'italy', nameAr: 'إيطاليا', nameFr: 'Italie', icon: '🇮🇹' },
+                  { id: 'germany', nameAr: 'ألمانيا', nameFr: 'Allemagne', icon: '🇩🇪' },
+                  { id: 'uk', nameAr: 'المملكة المتحدة', nameFr: 'Royaume-Uni (UK)', icon: '🇬🇧' },
+                  { id: 'usa', nameAr: 'الولايات المتحدة', nameFr: 'États-Unis (USA)', icon: '🇺🇸' },
+                  { id: 'canada', nameAr: 'كندا', nameFr: 'Canada', icon: '🇨🇦' },
+                  { id: 'uae', nameAr: 'الإمارات', nameFr: 'Émirats Arabes Unis (UAE)', icon: '🇦🇪' },
+                  { id: 'ksa', nameAr: 'السعودية', nameFr: 'Arabie Saoudite (KSA)', icon: '🇸🇦' },
+                  { id: 'qatar', nameAr: 'قطر', nameFr: 'Qatar', icon: '🇶🇦' }
+                ];
+
+                const currentList = cityTab === 'maroc' ? marocCities : intlCountries;
+                const q = citySearchQuery.trim().toLowerCase();
+                const filtered = q
+                  ? currentList.filter(c => c.nameAr.toLowerCase().includes(q) || c.nameFr.toLowerCase().includes(q))
+                  : currentList;
+
+                return (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {filtered.map(item => {
+                        const cityValue = `${item.nameAr} (${item.nameFr})`;
+                        const isSelected = selectedCityDraft === cityValue || clientCity === cityValue || selectedCityDraft.includes(item.nameFr);
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCityDraft(cityValue);
+                              setCustomCityInput('');
+                            }}
+                            className={`p-3 rounded-2xl border text-right rtl:text-right ltr:text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-indigo-50/80 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/30 shadow-xs'
+                                : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700'
+                            }`}
+                          >
+                            <div className="min-w-0 flex items-center gap-2">
+                              <span className="text-base shrink-0">{item.icon}</span>
+                              <div className="min-w-0">
+                                <span className="block text-xs font-black truncate">{isAr ? item.nameAr : item.nameFr}</span>
+                                <span className="block text-[10px] text-slate-400 font-medium truncate">{isAr ? item.nameFr : item.nameAr}</span>
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {filtered.length === 0 && (
+                      <div className="text-center py-6 text-slate-400 space-y-2">
+                        <p className="text-xs font-bold">{isAr ? 'لم نعثر على نتيجة مطابقة لبحثك' : 'Aucune ville correspondante trouvée'}</p>
+                        <p className="text-[11px]">{isAr ? 'يمكنك كتابة اسم مدينتك في الخانة أسفله مباشرة:' : 'Vous pouvez saisir votre ville ci-dessous :'}</p>
+                      </div>
+                    )}
+
+                    {/* Custom City Manual Input */}
+                    <div className="pt-2">
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                        {isAr ? '✏️ أو اكتب اسم مدينتك / منطقتك يدويًا :' : '✏️ Ou saisissez votre ville manuellement :'}
+                      </label>
+                      <input
+                        type="text"
+                        value={customCityInput}
+                        onChange={(e) => {
+                          setCustomCityInput(e.target.value);
+                          if (e.target.value) setSelectedCityDraft(e.target.value);
+                        }}
+                        placeholder={isAr ? 'مثال: النواصر، تيط مليل، زايو، تيفلت...' : 'Ex: Tit Mellil, Zaio, Tiflet...'}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 transition-all placeholder:text-slate-400"
+                      />
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Footer with Apple-Style Actions */}
+            <div className="p-5 border-t border-slate-100 bg-slate-50/80 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={handleDismissCityModal}
+                className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+              >
+                {isAr ? 'تخطي للآن' : 'Plus tard'}
+              </button>
+
+              <button
+                type="button"
+                disabled={savingCity || (!selectedCityDraft && !customCityInput)}
+                onClick={() => handleSaveCity()}
+                className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg shadow-slate-900/15 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40"
+              >
+                {savingCity ? (
+                  <>
+                    <RotateCw className="w-4 h-4 animate-spin" />
+                    <span>{isAr ? 'جاري الحفظ...' : 'Enregistrement...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span>{isAr ? 'تأكيد واختيار المدينة' : 'Confirmer la ville'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Premium BEYA In-App Notification / Alert Modal Box ─── */}
       {notifyModal && notifyModal.isOpen && (
