@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {
+  useNavigate } from 'react-router-dom';
 import {
   Globe, Users, Package, MessageCircle, ArrowRight, ArrowLeft, Search,
   Send, ThumbsUp, MessageSquare, ShieldCheck, CheckCircle2, Phone,
@@ -8,7 +9,8 @@ import {
   SlidersHorizontal, RefreshCw, AlertCircle, ShoppingBag, Palette,
   Ruler, Eye, Briefcase, FileCode2, Star, Hash, Volume2, Settings,
   Smile, Image as ImageIcon, AtSign, Menu, Flame, Heart, Lightbulb,
-  Radio, Compass, ChevronRight, CheckCheck, Crown, Shield, HelpCircle
+  Radio, Compass, ChevronRight, CheckCheck, Crown, Shield, HelpCircle,
+  ZoomIn, Calculator, Scale, Percent, Truck, Info
 } from 'lucide-react';
 import { User, saveRecord } from '../types';
 import { MODELISTES_DATA, ModelisteProfile } from '../data/modelistesData';
@@ -65,9 +67,16 @@ interface ChatMessage {
   }>;
 }
 
-interface GroupageDeal {
+export interface FabricColor {
+  name: string;
+  hex: string;
+  tagAr: string;
+}
+
+export interface GroupageDeal {
   id: string;
   title: string;
+  category: 'tissu' | 'fournitures';
   material: string;
   supplier: string;
   supplierCity: string;
@@ -75,10 +84,30 @@ interface GroupageDeal {
   currentKg: number;
   participantsCount: number;
   daysLeft: number;
+  // Dual Pricing & Units
+  primaryUnit: 'kg' | 'm' | 'piece';
+  primaryUnitLabelAr: string;
   discountPrice: number;
   regularPrice: number;
+  // Per Meter Specs & Conversion
+  pricePerMeterEstimated: number | null;
+  regularPricePerMeterEstimated: number | null;
+  metersPerKg: number | null;
+  conversionNote: string;
+  garmentYield: string;
   minCommitment: number;
+  minCommitmentLabel: string;
   status: 'active' | 'success' | 'closing_soon';
+  // Technical Specifications (Fiche Technique)
+  gsm: string;
+  composition: string;
+  width: string;
+  treatment: string;
+  shrinkage: string;
+  recommendedUsage: string[];
+  // Gallery & Colors
+  images: string[];
+  colors: FabricColor[];
   whatsappText: string;
 }
 
@@ -99,6 +128,13 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<any | null>(null);
   const [expandedThreadMessageId, setExpandedThreadMessageId] = useState<string | null>(null);
   const [threadReplyDraft, setThreadReplyDraft] = useState('');
+
+  // GROUPAGE FABRIC GALLERY, COLOR & CALCULATOR STATE
+  const [selectedDealForDetail, setSelectedDealForDetail] = useState<GroupageDeal | null>(null);
+  const [selectedDealColor, setSelectedDealColor] = useState<Record<string, string>>({});
+  const [activeDealImageIdx, setActiveDealImageIdx] = useState<Record<string, number>>({});
+  const [dealQuantities, setDealQuantities] = useState<Record<string, number>>({});
+  const [dealUnitView, setDealUnitView] = useState<'both' | 'kg' | 'meter'>('both');
 
   // Sticky message composer state
   const [messageText, setMessageText] = useState('');
@@ -587,56 +623,198 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   });
 
   // ─────────────────────────────────────────────────────────────
-  // GROUPAGE DEALS DATA
+    // GROUPAGE DEALS DATA WITH FABRIC DETAILS, PHOTOS & DUAL PRICING (KG / METER)
   // ─────────────────────────────────────────────────────────────
   const groupageDeals: GroupageDeal[] = [
     {
       id: 'grp-1',
       title: 'دفعة أقمشة الملتون الشتوي 340g (Molleton Gratté 100% Coton)',
-      material: 'مولطون شتوي قطن 100% سميك ومبطن',
+      category: 'tissu',
+      material: 'مولطون شتوي قطن 100% سميك ومبطن مع وبر داخلي ناعم ودافئ (Gratté)',
       supplier: 'مجمع أقمشة الشرق (Derb Omar)',
       supplierCity: 'الدار البيضاء',
       targetKg: 500,
       currentKg: 380,
       participantsCount: 8,
       daysLeft: 4,
+      primaryUnit: 'kg',
+      primaryUnitLabelAr: 'كلغ (kg)',
       discountPrice: 44,
       regularPrice: 52,
+      pricePerMeterEstimated: 20.0,
+      regularPricePerMeterEstimated: 23.6,
+      metersPerKg: 2.2,
+      conversionNote: '1 كلغ يعادل حوالي 2.2 متر فـ الفصالة (بحساب عرض 1.85 متر)',
+      garmentYield: 'الهودي أوفرسايز (L/XL) كاياخد تقريباً 0.8 كلغ (~1.75 متر فـ الفصالة)',
       minCommitment: 25,
+      minCommitmentLabel: '25 كلغ (رولو واحد = ~55 متر يكفي لـ 31 هودي)',
       status: 'active',
-      whatsappText: 'السلام عليكم BEYA NETWORK، أرغب في حجز كمية من عرض الشراء المشترك لثوب الملتون 340g.'
+      gsm: '340 GSM (ثقيل وواقف ومثالي للبراندات الراقية)',
+      composition: '100% Coton Peigné (خيط ممشط فاخر)',
+      width: '1.85 متر (Laize عريضة اقتصادية فالروصي)',
+      treatment: 'معالجة ضد التحبيب (Anti-Pilling) + صباغة تفاعلية ثابتة',
+      shrinkage: 'أقل من 2.5% بعد الغسيل',
+      recommendedUsage: [
+        'هوديز أوفرسايز الشتوية (Heavyweight Hoodies)',
+        'سراويل السويت بانتس الفاخرة (Sweatpants)',
+        'سويت شيرت كرو نيك (Crewneck)',
+        'أطقم رياضية شتوية متناسقة (Sets)'
+      ],
+      images: [
+        'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80'
+      ],
+      colors: [
+        { name: 'أسود فاحم (Noir Profond)', hex: '#121212', tagAr: 'الأكثر طلباً' },
+        { name: 'أوف وايت حليبي (Off-White)', hex: '#EBE5D8', tagAr: 'ترند الشتاء' },
+        { name: 'رمادي ميلونج (Gris Chiné)', hex: '#8E9196', tagAr: 'كلاسيك' },
+        { name: 'أخضر زيتي ملكي (Vert Bouteille)', hex: '#1C352D', tagAr: 'مميز' },
+        { name: 'أزرق كحلي نايڤي (Bleu Marine)', hex: '#14213D', tagAr: 'أساسي' },
+        { name: 'بني شوكولا موكا (Moka Brown)', hex: '#3B261D', tagAr: 'فاخر' },
+        { name: 'بيج رملي دافئ (Beige Sable)', hex: '#CBBBA2', tagAr: 'طبيعي' }
+      ],
+      whatsappText: 'السلام عليكم ورشة BEYA، أرغب في حجز كمية من عرض الشراء المشترك لثوب الملتون 340g.'
     },
     {
       id: 'grp-2',
       title: 'صفقة قماش كانفاس قطني سميك 320g للسترات وسراويل الكارجو',
-      material: 'كانفاس كوتون صلب وفاخر 320 GSM',
+      category: 'tissu',
+      material: 'كانفاس كوتون صلب وفاخر 320 GSM نسيج مبرد مائل فائق التحمل',
       supplier: 'أقمشة المسيرة الشمالية (Tissus Nord Tanger)',
       supplierCity: 'طنجة',
       targetKg: 400,
       currentKg: 310,
       participantsCount: 6,
       daysLeft: 6,
+      primaryUnit: 'm',
+      primaryUnitLabelAr: 'متر (m)',
       discountPrice: 32,
       regularPrice: 40,
+      pricePerMeterEstimated: 32.0,
+      regularPricePerMeterEstimated: 40.0,
+      metersPerKg: 2.1,
+      conversionNote: '1 متر كايوزن ~480 غرام فـ عرض 1.50م (السعر يعادل ~64 MAD/كلغ)',
+      garmentYield: 'سروال الكارجو بجيوب متعددة كاياخد 1.6 متر | السترة كاتاخد 2.0 متر',
       minCommitment: 30,
+      minCommitmentLabel: '30 متر (رولو واحد = يكفي لـ 18 سروال كارجو)',
       status: 'active',
-      whatsappText: 'السلام عليكم BEYA NETWORK، أرغب في حجز كمية من عرض الشراء المشترك لقماش الكانفاس بطنجة.'
+      gsm: '320 GSM (نسيج كانفاس ثقيل ومقاوم للتمزق)',
+      composition: '100% Coton Lourd (مظهر أصيل وصلب)',
+      width: '1.50 متر (Laize عادية للكانفاس)',
+      treatment: 'صباغة ثابتة قابلة لغسيل Stone Wash + متانة استثنائية',
+      shrinkage: 'أقل من 2.0%',
+      recommendedUsage: [
+        'سراويل كارجو بجيوب بارزة (Cargo Pants)',
+        'سترات العمل العصرية (Worker Jackets)',
+        'أفارولات وجيليهات ستريتوير (Tactical Vests)',
+        'حقائب قماشية وتوت باج متينة (Tote Bags)'
+      ],
+      images: [
+        'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=900&q=80'
+      ],
+      colors: [
+        { name: 'كاكي عسكري (Kaki Militaire)', hex: '#485338', tagAr: 'الأكثر مبيعاً' },
+        { name: 'أسود كربوني (Noir Charbon)', hex: '#1C1C1E', tagAr: 'أساسي' },
+        { name: 'بيج جملي صحراوي (Camel Desert)', hex: '#BC935F', tagAr: 'ورك وير' },
+        { name: 'إيكرو ناتشورال (Écru Naturel)', hex: '#EAE5D8', tagAr: 'خام' },
+        { name: 'أزرق كحلي ورك وير (Navy Worker)', hex: '#1D2A44', tagAr: 'كلاسيك' }
+      ],
+      whatsappText: 'السلام عليكم ورشة BEYA، أرغب في حجز كمية من عرض قماش الكانفاس بطنجة.'
     },
     {
       id: 'grp-3',
+      title: 'قماش جيرسي قطني ناعم 240g للتيشرتات الأوفرسايز الفاخرة (Heavyweight Jersey)',
+      category: 'tissu',
+      material: 'جيرسي قطن ممشط 100% سميك ومحكم، ملمس ناعم جداً وغير شفاف',
+      supplier: 'مجمع أقمشة الشرق (Derb Omar)',
+      supplierCity: 'الدار البيضاء',
+      targetKg: 450,
+      currentKg: 340,
+      participantsCount: 9,
+      daysLeft: 5,
+      primaryUnit: 'kg',
+      primaryUnitLabelAr: 'كلغ (kg)',
+      discountPrice: 42,
+      regularPrice: 50,
+      pricePerMeterEstimated: 17.50,
+      regularPricePerMeterEstimated: 20.80,
+      metersPerKg: 2.4,
+      conversionNote: '1 كلغ يعادل حوالي 2.4 متر فـ الفصالة (بحساب عرض 1.90م)',
+      garmentYield: 'التيشرت أوفرسايز (Drop Shoulder) كاياخد 0.38 كلغ (~0.9 متر فقط)',
+      minCommitment: 20,
+      minCommitmentLabel: '20 كلغ (تكفي لإنتاج ~52 تيشيرت أوفرسايز فاخر)',
+      status: 'active',
+      gsm: '240 GSM (ثقل راقي للتيشرتات الستريتوير)',
+      composition: '100% Coton Peigné 24s/1 (ملمس قطن حريري)',
+      width: '1.90 متر (عرض عريض كايوفر الهادر فـ القص)',
+      treatment: 'معالجة Carbon Touch لملمس ناعم ضد الحساسية + مضاد للالتواء',
+      shrinkage: 'أقل من 2%',
+      recommendedUsage: [
+        'تيشرتات أوفرسايز بكتف نازل (Drop Shoulder Tees)',
+        'تيشرتات بوكسي فت (Boxy Fit Streetwear)',
+        'تيشرتات مطبوعة بتقنيات الـ DTF والحريرية'
+      ],
+      images: [
+        'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=80'
+      ],
+      colors: [
+        { name: 'أبيض ناصع (Blanc Optique)', hex: '#FAF9F6', tagAr: 'أساسي' },
+        { name: 'أسود فاحم (Noir Absolu)', hex: '#101010', tagAr: 'الأكثر طلباً' },
+        { name: 'أزرق بترولي مطفأ (Bleu Pétrole)', hex: '#263C4D', tagAr: 'أنيق' },
+        { name: 'بيج رملي دافئ (Sable Chaud)', hex: '#D7C7B0', tagAr: 'ترند' },
+        { name: 'أخضر مريمية خفيف (Sauge)', hex: '#889883', tagAr: 'هادئ' }
+      ],
+      whatsappText: 'السلام عليكم ورشة BEYA، أرغب في حجز كمية من عرض ثوب الجيرسي 240g للتيشرتات.'
+    },
+    {
+      id: 'grp-4',
       title: 'دفعة سحابات معدنية YKK أصلية نمرة 5 مع أكياس بولي باغ مطبوعة',
-      material: 'سحابات YKK + أكياس Polybags Ziplock Mat',
+      category: 'fournitures',
+      material: 'سحابات معدنية أصلية YKK النمرة 5 مقاومة للصدأ + أكياس Polybags Ziplock Mat مع طباعة اللوجو',
       supplier: 'مؤسسة الأناقة للوازم الخياطة والتغليف',
       supplierCity: 'الدار البيضاء',
       targetKg: 1000,
       currentKg: 850,
       participantsCount: 11,
       daysLeft: 3,
+      primaryUnit: 'piece',
+      primaryUnitLabelAr: 'طقم (قطعة)',
       discountPrice: 1.10,
       regularPrice: 1.80,
+      pricePerMeterEstimated: null,
+      regularPricePerMeterEstimated: null,
+      metersPerKg: null,
+      conversionNote: 'كل طقم يشمل سحاب YKK طول 70 سم + كيس بولي باغ بسحاب مات 35x45 سم',
+      garmentYield: 'طقم واحد لكل هودي بسحاب أو سترة شتوية جاهزة للتغليف',
       minCommitment: 100,
+      minCommitmentLabel: '100 طقم (باك متكامل مع طباعة اللوجو)',
       status: 'closing_soon',
-      whatsappText: 'السلام عليكم BEYA NETWORK، أريد الانضمام لصفقة لوازم وسحابات YKK.'
+      gsm: 'سحاب معدني YKK #5 + أكياس 80 ميكرون سميكة',
+      composition: 'زنك وستانلس غير قابل للتآكل + بولي إيثيلين مات صديق للبيئة',
+      width: 'طول السحاب 70 سم (قابل للتقصير حسب الفصالة)',
+      treatment: 'طلاء إلكتروستاتيكي عالي المقاومة للغسيل والصدأ',
+      shrinkage: 'ثابت 100%',
+      recommendedUsage: [
+        'هوديز الشتاء بسحاب كامل (Full Zip Hoodies)',
+        'جاكيتات البومبر والسترات الشتوية (Jackets)',
+        'تغليف وتقديم البراند بشكل احترافي للزبون'
+      ],
+      images: [
+        'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=900&q=80'
+      ],
+      colors: [
+        { name: 'فضي نيكل كلاسيك (Silver)', hex: '#C0C0C0', tagAr: 'ستاندرد' },
+        { name: 'نحاسي عتيق (Antique Brass)', hex: '#9E7245', tagAr: 'فينتاج' },
+        { name: 'أسود جنميتال مطفأ (Matte Gunmetal)', hex: '#262626', tagAr: 'فخم' }
+      ],
+      whatsappText: 'السلام عليكم ورشة BEYA، أريد الانضمام لصفقة سحابات YKK وأكياس البولي باغ.'
     }
   ];
 
@@ -1601,81 +1779,484 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
 
               {/* Groupage Header */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-950 via-slate-900 to-amber-950 border border-amber-500/20 text-white">
-                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-500/30 inline-block mb-2">
-                  عروض الشراء المشترك الجماعي 🛒
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black mb-2">
-                  اجمع كميتك مع براندات أخرى واستفد من سعر الجملة الكبرى
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium max-w-2xl">
-                  تنسق ورشة BEYA طلبات الشراء الجماعي مع مستودعات الأقمشة والمصانع مباشرة لتخفيض السعر حتى 25% مع ضمان جودة السلعة.
-                </p>
+              <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-950/70 via-slate-900 to-amber-950/80 border border-amber-500/30 text-white relative overflow-hidden shadow-2xl">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+                <div className="relative z-10 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-500/30 inline-flex items-center gap-1.5 shadow-sm">
+                      <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+                      <span>عروض الشراء المشترك الجماعي (BEYA GROUPAGE) 🛒</span>
+                    </span>
+                    <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>ضمان الجودة والفحص قبل الشحن</span>
+                    </span>
+                  </div>
+
+                  <h2 className="text-xl sm:text-2xl font-black text-white">
+                    أقمشة ومستلزمات المصانع الكبرى بسعر الجملة المخفض (بالكيلو والمتر)
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium max-w-3xl">
+                    تنسق ورشة BEYA طلبات الشراء الجماعي مع أكبر مستودعات الأقمشة بالمغرب (درب عمر وطنجة) للاستفادة من تخفيضات تصل حتى 25% مع تفاصيل دقيقة، صور حقيقية للنسيج، وتحويل واضح بين ثمن الكيلو وثمن المتر لمساعدتك فـ حساب تكلفة كل بياسة.
+                  </p>
+
+                  {/* Unit View Selector Pill */}
+                  <div className="pt-2 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="text-slate-400 font-bold">طريقة عرض السعر:</span>
+                    <button
+                      onClick={() => setDealUnitView('both')}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                        dealUnitView === 'both'
+                          ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                          : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      عرض السعرين معاً (بالكيلو والمتر ⚖️📏)
+                    </button>
+                    <button
+                      onClick={() => setDealUnitView('kg')}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                        dealUnitView === 'kg'
+                          ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                          : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      سعر الكيلو فقط (MAD/kg)
+                    </button>
+                    <button
+                      onClick={() => setDealUnitView('meter')}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                        dealUnitView === 'meter'
+                          ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                          : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      سعر المتر فقط (MAD/m)
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Deals List */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {groupageDeals.map(deal => {
                   const progressPct = Math.min(100, Math.round((deal.currentKg / deal.targetKg) * 100));
+                  const activeImgIdx = activeDealImageIdx[deal.id] || 0;
+                  const currentImage = deal.images[activeImgIdx] || deal.images[0];
+                  const chosenColor = selectedDealColor[deal.id] || deal.colors[0]?.name || '';
+                  const committedQty = dealQuantities[deal.id] || deal.minCommitment;
+                  const calculatedTotal = committedQty * deal.discountPrice;
+                  const regularTotal = committedQty * deal.regularPrice;
+                  const savingsMad = regularTotal - calculatedTotal;
+
+                  // Estimated yields
+                  const estMeters = deal.metersPerKg
+                    ? Math.round(committedQty * deal.metersPerKg)
+                    : (deal.primaryUnit === 'm' ? committedQty : null);
+
+                  const estGarments = deal.category === 'tissu'
+                    ? (deal.primaryUnit === 'kg'
+                        ? Math.floor(committedQty / (deal.id === 'grp-3' ? 0.38 : 0.8))
+                        : Math.floor(committedQty / (deal.id === 'grp-2' ? 1.6 : 1.8)))
+                    : committedQty;
+
+                  const whatsappBookingUrl = `https://wa.me/212675239885?text=${encodeURIComponent(
+                    `السلام عليكم ورشة BEYA NETWORK، أرغب في حجز كمية من عرض الشراء المشترك:\n\n• العرض: ${deal.title}\n• الكمية المطلوبة: ${committedQty} ${deal.primaryUnitLabelAr}\n• اللون المختار: ${chosenColor}\n• المجموع التقديري: ${calculatedTotal.toLocaleString()} درهم (وفرت ${savingsMad.toLocaleString()} درهم)\n• براند: ${userProfile.brandName || 'علامتي التجارية'}\n• المدينة: ${userProfile.city || 'الدار البيضاء'}`
+                  )}`;
+
                   return (
                     <div
                       key={deal.id}
-                      className="bg-[#2b2d31] rounded-3xl border border-[#383a40] p-5 sm:p-6 text-white space-y-4"
+                      className="bg-[#2b2d31] rounded-3xl border border-[#383a40] p-5 sm:p-6 text-white space-y-6 hover:border-amber-500/30 transition shadow-xl"
                     >
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-black border border-emerald-500/30">
-                              متبقي {deal.daysLeft} أيام
-                            </span>
-                            <span className="text-xs text-slate-400 font-bold">
-                              {deal.supplier} • {deal.supplierCity}
-                            </span>
-                          </div>
-                          <h3 className="text-base sm:text-lg font-black text-white">
-                            {deal.title}
-                          </h3>
+                      {/* Top Supplier & Status Meta */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#383a40] pb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black border border-emerald-500/30 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>متبقي {deal.daysLeft} أيام</span>
+                          </span>
+                          <span className="text-xs text-slate-300 font-bold flex items-center gap-1">
+                            <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>{deal.supplier} • {deal.supplierCity}</span>
+                          </span>
                         </div>
 
-                        {/* Price Badge */}
-                        <div className="text-left sm:text-right">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-xl font-black text-amber-400">{deal.discountPrice} MAD</span>
-                            <span className="text-xs text-slate-500 line-through font-bold">{deal.regularPrice} MAD</span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 text-xs font-black border border-amber-500/20">
+                            {deal.category === 'tissu' ? '🧵 قماش معتمد' : '📦 لوازم وتغليف'}
+                          </span>
+                          <span className="text-xs text-slate-400 font-medium">
+                            {deal.participantsCount} براندات انضمت حتى الآن
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Main Fabric Presentation: Photo Gallery (Left) + Details & Pricing (Right) */}
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+                        {/* COLUMN 1: FABRIC PHOTO & TEXTURE GALLERY (4 cols) */}
+                        <div className="lg:col-span-4 space-y-3">
+                          {/* Main Big Photo Preview */}
+                          <div
+                            onClick={() => setSelectedDealForDetail(deal)}
+                            className="relative aspect-4/3 rounded-2xl overflow-hidden bg-[#1e1f22] border border-[#383a40] group cursor-pointer shadow-lg"
+                          >
+                            <img
+                              src={currentImage}
+                              alt={deal.title}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                            {/* Badges on image */}
+                            <div className="absolute top-2.5 right-2.5 flex flex-col gap-1">
+                              <span className="px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-xs text-amber-300 text-[11px] font-black border border-amber-400/30">
+                                ⚖️ {deal.gsm}
+                              </span>
+                              <span className="px-2.5 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-slate-200 text-[10px] font-bold">
+                                📐 عرض {deal.width}
+                              </span>
+                            </div>
+
+                            {/* Inspection Button on Hover */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-3">
+                              <span className="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-xl">
+                                <ZoomIn className="w-4 h-4" />
+                                <span>تكبير وفحص نسيج الثوب</span>
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-[10px] text-emerald-400 font-bold">توفير 15% إلى 25%</span>
+
+                          {/* Thumbnails strip for fabric texture views */}
+                          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                            {deal.images.map((img, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => setActiveDealImageIdx(prev => ({ ...prev, [deal.id]: idx }))}
+                                className={`w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition cursor-pointer relative ${
+                                  activeImgIdx === idx
+                                    ? 'border-amber-400 shadow-md ring-2 ring-amber-500/30'
+                                    : 'border-transparent opacity-60 hover:opacity-100'
+                                }`}
+                              >
+                                <img src={img} alt="texture" className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                            <button
+                              onClick={() => setSelectedDealForDetail(deal)}
+                              className="h-14 px-3 rounded-xl bg-[#1e1f22] hover:bg-[#35373c] text-slate-300 text-[11px] font-bold flex flex-col items-center justify-center border border-white/5 shrink-0 transition cursor-pointer"
+                              title="عرض كل الصور والتفاصيل"
+                            >
+                              <Eye className="w-4 h-4 text-amber-400 mb-0.5" />
+                              <span>الكل ({deal.images.length})</span>
+                            </button>
+                          </div>
+                          <span className="text-[11px] text-slate-400 block text-center font-medium">
+                            انقر على أي صورة لمعاينة النسيج، الوبر والوقفة عن قرب
+                          </span>
+                        </div>
+
+                        {/* COLUMN 2: TITLE, SPECS & DUAL PRICING (8 cols) */}
+                        <div className="lg:col-span-8 space-y-4">
+                          {/* Title & Material Tagline */}
+                          <div>
+                            <h3 className="text-lg sm:text-xl font-black text-white leading-snug">
+                              {deal.title}
+                            </h3>
+                            <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1 leading-relaxed">
+                              {deal.material}
+                            </p>
+                          </div>
+
+                          {/* THE DUAL PRICING BOX (MAD/kg & MAD/m) */}
+                          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1e1f22] to-[#25272b] border border-amber-500/25 space-y-3">
+                            <div className="flex items-center justify-between text-xs font-bold text-amber-400 border-b border-white/5 pb-2">
+                              <span className="flex items-center gap-1.5">
+                                <Tag className="w-4 h-4 text-amber-400" />
+                                <span>سعر الشراء المشترك بالجملة الكبرى:</span>
+                              </span>
+                              <span className="text-[11px] text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                                توفير 15% إلى 25% مقارنة بسعر السوق
+                              </span>
+                            </div>
+
+                            {/* Dual Price Cards */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {/* Price per Kilo */}
+                              {(dealUnitView === 'both' || dealUnitView === 'kg') && (
+                                <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
+                                  <span className="text-[11px] text-slate-400 font-bold block">
+                                    ⚖️ سعر الكيلو (Prix au Kilo):
+                                  </span>
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-black text-amber-400 font-mono">
+                                      {deal.primaryUnit === 'kg' ? deal.discountPrice : (deal.discountPrice * 2).toFixed(1)} MAD
+                                    </span>
+                                    <span className="text-xs text-slate-400 font-bold">/ كلغ</span>
+                                    <span className="text-xs text-slate-500 line-through font-mono">
+                                      {deal.primaryUnit === 'kg' ? deal.regularPrice : (deal.regularPrice * 2).toFixed(1)} MAD
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-emerald-400 font-semibold block">
+                                    {deal.primaryUnit === 'kg'
+                                      ? `توفير ${deal.regularPrice - deal.discountPrice} درهم فـ كل كيلو`
+                                      : 'سعر تقديري بحساب الوزن'}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Price per Meter */}
+                              {(dealUnitView === 'both' || dealUnitView === 'meter') && deal.pricePerMeterEstimated && (
+                                <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
+                                  <span className="text-[11px] text-slate-400 font-bold block">
+                                    📏 السعر التقديري بالمتر (Prix au Mètre):
+                                  </span>
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-black text-amber-400 font-mono">
+                                      ~{deal.pricePerMeterEstimated.toFixed(2)} MAD
+                                    </span>
+                                    <span className="text-xs text-slate-400 font-bold">/ متر</span>
+                                    {deal.regularPricePerMeterEstimated && (
+                                      <span className="text-xs text-slate-500 line-through font-mono">
+                                        ~{deal.regularPricePerMeterEstimated.toFixed(2)} MAD
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-indigo-300 font-semibold block">
+                                    بحساب عرض الثوب ({deal.width})
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* For Fournitures / Accessories if no meter price */}
+                              {!deal.pricePerMeterEstimated && (
+                                <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
+                                  <span className="text-[11px] text-slate-400 font-bold block">
+                                    📦 سعر الطقم / القطعة:
+                                  </span>
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-black text-amber-400 font-mono">
+                                      {deal.discountPrice} MAD
+                                    </span>
+                                    <span className="text-xs text-slate-400 font-bold">/ طقم</span>
+                                    <span className="text-xs text-slate-500 line-through font-mono">
+                                      {deal.regularPrice} MAD
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-emerald-400 font-semibold block">
+                                    سحاب YKK نمرة 5 + كيس Polybag بسحاب مات
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Conversion Formula & Garment Yield Guidance */}
+                            <div className="p-3 rounded-xl bg-[#18191c] border border-white/5 space-y-1.5 text-xs">
+                              <div className="flex items-start gap-2 text-slate-300">
+                                <Ruler className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                                <div>
+                                  <strong className="text-amber-300">معادلة التحويل: </strong>
+                                  <span>{deal.conversionNote}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-2 text-slate-300">
+                                <Scissors className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                                <div>
+                                  <strong className="text-emerald-300">استهلاك الفصالة: </strong>
+                                  <span>{deal.garmentYield}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* COLOR SWATCHES ("الألوان المتوفرة في المخزن") */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs font-bold">
+                              <span className="text-slate-300 flex items-center gap-1.5">
+                                <Palette className="w-4 h-4 text-amber-400" />
+                                <span>الألوان المتوفرة في هذه الدفعة (انقر لاختيار لونك):</span>
+                              </span>
+                              <span className="text-[11px] text-emerald-400 font-semibold">
+                                ✓ تم اختيار: <strong className="text-white underline">{chosenColor}</strong>
+                              </span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2.5">
+                              {deal.colors.map((c, cIdx) => {
+                                const isSelected = chosenColor === c.name;
+                                return (
+                                  <button
+                                    key={cIdx}
+                                    onClick={() => setSelectedDealColor(prev => ({ ...prev, [deal.id]: c.name }))}
+                                    title={`${c.name} - ${c.tagAr}`}
+                                    className={`group relative flex items-center gap-1.5 p-1.5 pr-2.5 rounded-full border transition cursor-pointer ${
+                                      isSelected
+                                        ? 'bg-amber-500/20 border-amber-400 ring-2 ring-amber-500/30'
+                                        : 'bg-[#1e1f22] border-white/10 hover:border-white/30'
+                                    }`}
+                                  >
+                                    <span
+                                      className="w-5 h-5 rounded-full border border-white/20 shadow-inner shrink-0"
+                                      style={{ backgroundColor: c.hex }}
+                                    />
+                                    <span className="text-xs text-slate-200 font-bold">{c.name.split('(')[0]}</span>
+                                    {isSelected && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* TECHNICAL SPECIFICATIONS GRID (TAFASIL DIAL TOUB) */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                            <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
+                              <span className="text-[10px] text-slate-400 font-bold block">الغراماج والسمك</span>
+                              <span className="text-xs font-black text-amber-300 block font-mono">{deal.gsm.split('(')[0]}</span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
+                              <span className="text-[10px] text-slate-400 font-bold block">التركيبة</span>
+                              <span className="text-xs font-black text-slate-200 block truncate" title={deal.composition}>{deal.composition.split('(')[0]}</span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
+                              <span className="text-[10px] text-slate-400 font-bold block">عرض الثوب (Laize)</span>
+                              <span className="text-xs font-black text-slate-200 block font-mono">{deal.width.split('(')[0]}</span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
+                              <span className="text-[10px] text-slate-400 font-bold block">المعالجة والانكماش</span>
+                              <span className="text-xs font-black text-emerald-400 block truncate" title={deal.treatment}>{deal.shrinkage}</span>
+                            </div>
+                          </div>
+
+                          {/* Recommended garments tags */}
+                          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                            <span className="text-[11px] text-slate-400 font-bold">الاستخدام الموصى به:</span>
+                            {deal.recommendedUsage.map((usage, uIdx) => (
+                              <span key={uIdx} className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-bold border border-white/5">
+                                {usage}
+                              </span>
+                            ))}
+                          </div>
+
                         </div>
                       </div>
 
                       {/* Progress Bar */}
-                      <div>
+                      <div className="pt-2 border-t border-[#383a40]">
                         <div className="flex items-center justify-between text-xs font-bold mb-1.5">
                           <span className="text-slate-300">
-                            تم جمع: <strong className="text-white">{deal.currentKg} كلغ/قطعة</strong> من الهدف ({deal.targetKg})
+                            تم جمع: <strong className="text-white font-mono">{deal.currentKg} {deal.primaryUnitLabelAr}</strong> من الهدف المحدد ({deal.targetKg} {deal.primaryUnitLabelAr})
                           </span>
-                          <span className="text-indigo-400 font-mono font-black">{progressPct}%</span>
+                          <span className="text-amber-400 font-mono font-black">{progressPct}%</span>
                         </div>
-                        <div className="w-full h-2.5 bg-[#1e1f22] rounded-full overflow-hidden border border-white/5">
+                        <div className="w-full h-3 bg-[#1e1f22] rounded-full overflow-hidden border border-white/5">
                           <div
-                            className="h-full bg-gradient-to-r from-amber-500 to-indigo-500 rounded-full transition-all duration-500"
+                            className="h-full bg-gradient-to-r from-amber-500 via-emerald-500 to-indigo-500 rounded-full transition-all duration-500"
                             style={{ width: `${progressPct}%` }}
                           />
                         </div>
                       </div>
 
-                      {/* CTA Join Deal */}
+                      {/* QUANTITY CALCULATOR & INSTANT YIELD SIMULATOR */}
+                      <div className="p-4 rounded-2xl bg-[#1e1f22] border border-[#383a40] space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                          <span className="font-bold text-slate-300 flex items-center gap-1.5">
+                            <Calculator className="w-4 h-4 text-amber-400" />
+                            <span>حاسبة الطلب والإنتاج: اختر كميتك وشوف شحال غاتعطيك:</span>
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            الحد الأدنى: <strong>{deal.minCommitmentLabel}</strong>
+                          </span>
+                        </div>
+
+                        {/* Preset Buttons + Quantity Input */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {[
+                            deal.minCommitment,
+                            deal.minCommitment * 2,
+                            deal.minCommitment * 4,
+                            deal.minCommitment * 8
+                          ].map((qty, qIdx) => (
+                            <button
+                              key={qIdx}
+                              onClick={() => setDealQuantities(prev => ({ ...prev, [deal.id]: qty }))}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                                committedQty === qty
+                                  ? 'bg-amber-500 text-slate-950 font-black shadow-md'
+                                  : 'bg-[#2b2d31] text-slate-300 hover:text-white border border-white/5'
+                              }`}
+                            >
+                              {qty} {deal.primaryUnitLabelAr} {qIdx === 0 ? '(رولو واحد)' : ''}
+                            </button>
+                          ))}
+
+                          <div className="flex items-center gap-1.5 mr-auto">
+                            <label className="text-[11px] text-slate-400 font-bold">كمية مخصصة:</label>
+                            <input
+                              type="number"
+                              min={deal.minCommitment}
+                              step={deal.primaryUnit === 'piece' ? 50 : 5}
+                              value={committedQty}
+                              onChange={e => {
+                                const val = Math.max(deal.minCommitment, parseInt(e.target.value) || deal.minCommitment);
+                                setDealQuantities(prev => ({ ...prev, [deal.id]: val }));
+                              }}
+                              className="w-24 px-2.5 py-1 bg-[#2b2d31] border border-white/10 rounded-lg text-xs font-black text-amber-400 font-mono text-center focus:outline-hidden focus:border-amber-400"
+                            />
+                            <span className="text-xs text-slate-400">{deal.primaryUnitLabelAr}</span>
+                          </div>
+                        </div>
+
+                        {/* Dynamic Summary Cards */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/5 text-center">
+                          <div className="p-2 rounded-xl bg-black/30 border border-white/5">
+                            <span className="text-[10px] text-slate-400 font-bold block">المجموع الصافي</span>
+                            <span className="text-sm font-black text-amber-400 font-mono">
+                              {calculatedTotal.toLocaleString()} MAD
+                            </span>
+                          </div>
+
+                          {estMeters && (
+                            <div className="p-2 rounded-xl bg-black/30 border border-white/5">
+                              <span className="text-[10px] text-slate-400 font-bold block">الأمتار المقدرة</span>
+                              <span className="text-sm font-black text-indigo-300 font-mono">
+                                ~{estMeters} متر
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="p-2 rounded-xl bg-black/30 border border-white/5">
+                            <span className="text-[10px] text-slate-400 font-bold block">الإنتاج المتوقع</span>
+                            <span className="text-sm font-black text-emerald-400 font-mono">
+                              ~{estGarments} {deal.category === 'tissu' ? 'بياسة' : 'طقم'}
+                            </span>
+                          </div>
+
+                          <div className="p-2 rounded-xl bg-black/30 border border-white/5">
+                            <span className="text-[10px] text-slate-400 font-bold block">التوفير الصافي</span>
+                            <span className="text-sm font-black text-emerald-400 font-mono">
+                              +{savingsMad.toLocaleString()} MAD
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* CTA ACTIONS BAR */}
                       <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#383a40]">
-                        <span className="text-xs text-slate-400 font-medium">
-                          الحد الأدنى للمشاركة: <strong>{deal.minCommitment} كلغ/قطعة</strong> • {deal.participantsCount} براندات انضمت
-                        </span>
+                        <button
+                          onClick={() => setSelectedDealForDetail(deal)}
+                          className="w-full sm:w-auto px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 border border-white/10 cursor-pointer"
+                        >
+                          <Eye className="w-4 h-4 text-amber-400" />
+                          <span>عرض الفيش تكنيك والصور الكبيرة</span>
+                        </button>
+
                         <a
-                          href={`https://wa.me/212675239885?text=${encodeURIComponent(deal.whatsappText)}`}
+                          href={whatsappBookingUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full sm:w-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-amber-500/20"
+                          className="w-full sm:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20"
                         >
-                          <ShoppingBag className="w-4 h-4" />
-                          <span>احجز كميتك في هذا العرض</span>
+                          <MessageCircle className="w-4 h-4" />
+                          <span>احجز كميتك بالواتساب ({committedQty} {deal.primaryUnitLabelAr} • {chosenColor.split('(')[0]})</span>
                         </a>
                       </div>
                     </div>
@@ -2058,6 +2639,189 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         </div>
       )}
 
+
+      {/* ─────────────────────────────────────────────────────────────
+          FABRIC DETAILS & HD GALLERY MODAL (FICHE TECHNIQUE)
+      ───────────────────────────────────────────────────────────── */}
+      {selectedDealForDetail && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-3xl bg-[#232428] rounded-3xl overflow-hidden border border-[#383a40] shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white space-y-0"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-950 via-slate-900 to-amber-950 border-b border-[#383a40] flex items-center justify-between">
+              <div>
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-500/30">
+                  البطاقة التقنية ومعاينة الأقمشة (Fiche Technique)
+                </span>
+                <h3 className="text-lg sm:text-xl font-black text-white mt-1">
+                  {selectedDealForDetail.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedDealForDetail(null)}
+                className="p-2 rounded-full bg-black/40 hover:bg-black/70 text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+
+              {/* Large HD Gallery Viewer */}
+              <div className="space-y-3">
+                <div className="relative aspect-16/9 rounded-2xl overflow-hidden bg-black/40 border border-white/10 shadow-lg">
+                  <img
+                    src={selectedDealForDetail.images[activeDealImageIdx[selectedDealForDetail.id] || 0] || selectedDealForDetail.images[0]}
+                    alt={selectedDealForDetail.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-3 left-3 px-3 py-1 rounded-xl bg-black/75 backdrop-blur-xs text-xs font-bold text-slate-200">
+                    معاينة النسيج والألياف بدقة عالية (Macro HD)
+                  </div>
+                </div>
+
+                {/* Thumbnails */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  {selectedDealForDetail.images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveDealImageIdx(prev => ({ ...prev, [selectedDealForDetail.id]: idx }))}
+                      className={`w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition cursor-pointer ${
+                        (activeDealImageIdx[selectedDealForDetail.id] || 0) === idx
+                          ? 'border-amber-400 ring-2 ring-amber-500/30'
+                          : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img} alt="thumb" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Full Technical Specifications Table */}
+              <div className="p-4 rounded-2xl bg-[#1e1f22] border border-white/5 space-y-3">
+                <h4 className="text-sm font-black text-amber-400 flex items-center gap-2">
+                  <FileCode2 className="w-4 h-4" />
+                  <span>المواصفات الفنية المعتمدة من مختبر الجودة:</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-2.5 rounded-xl bg-[#2b2d31] border border-white/5 flex items-center justify-between">
+                    <span className="text-slate-400 font-bold">الوزن والغراماج (GSM):</span>
+                    <span className="font-black text-white font-mono">{selectedDealForDetail.gsm}</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-[#2b2d31] border border-white/5 flex items-center justify-between">
+                    <span className="text-slate-400 font-bold">التركيبة ونوع الخيط:</span>
+                    <span className="font-black text-white">{selectedDealForDetail.composition}</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-[#2b2d31] border border-white/5 flex items-center justify-between">
+                    <span className="text-slate-400 font-bold">عرض الثوب المفيد (Laize):</span>
+                    <span className="font-black text-white font-mono">{selectedDealForDetail.width}</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-[#2b2d31] border border-white/5 flex items-center justify-between">
+                    <span className="text-slate-400 font-bold">نسبة الانكماش بالماء:</span>
+                    <span className="font-black text-emerald-400 font-mono">{selectedDealForDetail.shrinkage}</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-[#2b2d31] border border-white/5 flex items-center justify-between sm:col-span-2">
+                    <span className="text-slate-400 font-bold">المعالجة الخاصة:</span>
+                    <span className="font-black text-slate-200">{selectedDealForDetail.treatment}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dual Price & Yield Detail Table */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-indigo-500/10 border border-amber-500/30 space-y-3">
+                <h4 className="text-sm font-black text-amber-300 flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
+                  <span>جدول مقارنة الأسعار ومردودية الفصالة:</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center text-xs">
+                  <div className="p-3 rounded-xl bg-[#1e1f22] border border-white/5">
+                    <span className="text-slate-400 font-bold block mb-1">سعر الكيلو (بالشراء المشترك)</span>
+                    <span className="text-lg font-black text-amber-400 font-mono">
+                      {selectedDealForDetail.discountPrice} MAD / كلغ
+                    </span>
+                    <span className="text-[10px] text-slate-500 line-through block">
+                      عادي: {selectedDealForDetail.regularPrice} MAD
+                    </span>
+                  </div>
+
+                  {selectedDealForDetail.pricePerMeterEstimated && (
+                    <div className="p-3 rounded-xl bg-[#1e1f22] border border-white/5">
+                      <span className="text-slate-400 font-bold block mb-1">سعر المتر التقديري</span>
+                      <span className="text-lg font-black text-amber-400 font-mono">
+                        ~{selectedDealForDetail.pricePerMeterEstimated.toFixed(2)} MAD / متر
+                      </span>
+                      <span className="text-[10px] text-slate-500 line-through block">
+                        عادي: ~{selectedDealForDetail.regularPricePerMeterEstimated?.toFixed(2)} MAD
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="p-3 rounded-xl bg-[#1e1f22] border border-white/5">
+                    <span className="text-slate-400 font-bold block mb-1">استهلاك البياسة</span>
+                    <span className="text-xs font-black text-emerald-400 block mt-1">
+                      {selectedDealForDetail.garmentYield.split('|')[0]}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Color Catalog */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-slate-300 block">كتالوج الألوان المتوفرة حالياً:</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {selectedDealForDetail.colors.map((c, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedDealColor(prev => ({ ...prev, [selectedDealForDetail.id]: c.name }))}
+                      className={`p-2.5 rounded-xl border flex items-center gap-2.5 cursor-pointer transition ${
+                        (selectedDealColor[selectedDealForDetail.id] || selectedDealForDetail.colors[0]?.name) === c.name
+                          ? 'bg-amber-500/20 border-amber-400'
+                          : 'bg-[#1e1f22] border-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      <span
+                        className="w-6 h-6 rounded-lg border border-white/20 shadow-inner shrink-0"
+                        style={{ backgroundColor: c.hex }}
+                      />
+                      <div className="truncate">
+                        <p className="text-xs font-black text-white truncate">{c.name.split('(')[0]}</p>
+                        <p className="text-[10px] text-slate-400">{c.tagAr}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Direct Booking CTA inside Modal */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#383a40]">
+                <div className="text-xs text-slate-300">
+                  <span>المورد: <strong className="text-white">{selectedDealForDetail.supplier}</strong> ({selectedDealForDetail.supplierCity})</span>
+                </div>
+
+                <a
+                  href={`https://wa.me/212675239885?text=${encodeURIComponent(
+                    `السلام عليكم ورشة BEYA NETWORK، أرغب في حجز كمية من عرض: ${selectedDealForDetail.title}\n• اللون المفضل: ${selectedDealColor[selectedDealForDetail.id] || selectedDealForDetail.colors[0]?.name}\n• الكمية المبدئية: ${dealQuantities[selectedDealForDetail.id] || selectedDealForDetail.minCommitment} ${selectedDealForDetail.primaryUnitLabelAr}\n• براند: ${userProfile.brandName || 'علامتي التجارية'}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>تأكيد الحجز فـ الواتساب مع خبير الأقمشة</span>
+                </a>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
