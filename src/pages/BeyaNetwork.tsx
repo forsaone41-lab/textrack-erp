@@ -522,32 +522,37 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   // ─────────────────────────────────────────────────────────────
   const allProMembers = [
     // 1. Modélistes (Freelancers & Pattern Makers)
-    ...MODELISTES_DATA.map(m => ({
-      id: m.id,
-      name: m.name,
-      avatar: m.avatar,
-      cover: m.cover || 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&auto=format&fit=crop&q=80',
-      pillar: 'modeliste' as const,
-      pillarLabelAr: 'موديليست وباتورناج',
-      roleBadge: '✂️ موديليست معتمد',
-      roleColor: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
-      badgeGradient: 'from-indigo-600 to-purple-600',
-      specialty: m.specialty,
-      city: m.city,
-      whatsapp: m.phone ? m.phone.replace(/\D/g, '') : '212675239885',
-      phone: m.phone || '0675239885',
-      experience: m.experienceYears + ' سنوات خبرة',
-      rating: m.rating,
-      reviewsCount: m.reviewsCount,
-      bio: m.bio,
-      cadSoftware: m.cadSoftware,
-      startingRate: m.specialty.includes('Streetwear') ? 'ابتداءً من 180 MAD' : m.specialty.includes('Denim') ? 'ابتداءً من 220 MAD' : 'ابتداءً من 160 MAD',
-      rateType: 'للباترون والتدرج',
-      skills: m.cadSoftware ? [...m.cadSoftware, 'Gradation XS-XXL', 'Fiche Technique'] : ['Lectra Modaris', 'Patronage 3D', 'Gradation', 'Fiche Technique'],
-      responseTime: '⚡ رد خلال ساعتين',
-      completedJobs: 40 + Math.floor(m.rating * 8),
-      verified: true
-    })),
+    ...MODELISTES_DATA.map(m => {
+      const specialtyText = m.headline || m.categoryLabel || (m.specialities && m.specialities.join(' • ')) || 'موديليست وباترون';
+      const startingPrice = m.startPriceMAD ? `ابتداءً من ${m.startPriceMAD} MAD` : 'ابتداءً من 180 MAD';
+      const softwares = m.software && m.software.length > 0 ? m.software : ['Lectra Modaris', 'CLO 3D'];
+      return {
+        id: m.id,
+        name: m.name,
+        avatar: m.avatar,
+        cover: m.banner || 'https://images.unsplash.com/photo-1558769132-cb1fac08c04a?auto=format&fit=crop&w=1200&q=80',
+        pillar: 'modeliste' as const,
+        pillarLabelAr: 'موديليست وباتورناج',
+        roleBadge: '✂️ موديليست معتمد',
+        roleColor: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+        badgeGradient: 'from-indigo-600 to-purple-600',
+        specialty: specialtyText,
+        city: m.city || 'الدار البيضاء',
+        whatsapp: (m.whatsapp || m.phone || '0675239885').replace(/\D/g, ''),
+        phone: m.phone || '0675239885',
+        experience: String(m.experienceYears || '5 سنوات').includes('سنوات') ? m.experienceYears : `${m.experienceYears} سنوات خبرة`,
+        rating: m.rating || 4.9,
+        reviewsCount: m.reviewsCount || 40,
+        bio: m.desc || m.about || specialtyText,
+        cadSoftware: softwares,
+        startingRate: startingPrice,
+        rateType: 'للباترون والتدرج',
+        skills: [...softwares, 'Gradation XS-XXL', 'Fiche Technique'],
+        responseTime: '⚡ رد خلال ساعتين',
+        completedJobs: m.completedPatterns || (40 + Math.floor((m.rating || 5) * 8)),
+        verified: true
+      };
+    }),
     // 2. Suppliers (Tissu, Fournitures, Impression, Broderie)
     ...SUPPLIERS_DATA.map(s => {
       const pillar = s.category === 'tissu' ? 'tissu' :
@@ -2098,7 +2103,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                                       className="w-5 h-5 rounded-full border border-white/20 shadow-inner shrink-0"
                                       style={{ backgroundColor: c.hex }}
                                     />
-                                    <span className="text-xs text-slate-200 font-bold">{c.name.split('(')[0]}</span>
+                                    <span className="text-xs text-slate-200 font-bold">{String(c.name || '').split('(')[0]}</span>
                                     {isSelected && <Check className="w-3.5 h-3.5 text-amber-400" />}
                                   </button>
                                 );
@@ -2110,15 +2115,15 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                             <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
                               <span className="text-[10px] text-slate-400 font-bold block">الغراماج والسمك</span>
-                              <span className="text-xs font-black text-amber-300 block font-mono">{deal.gsm.split('(')[0]}</span>
+                              <span className="text-xs font-black text-amber-300 block font-mono">{String(deal.gsm || '').split('(')[0]}</span>
                             </div>
                             <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
                               <span className="text-[10px] text-slate-400 font-bold block">التركيبة</span>
-                              <span className="text-xs font-black text-slate-200 block truncate" title={deal.composition}>{deal.composition.split('(')[0]}</span>
+                              <span className="text-xs font-black text-slate-200 block truncate" title={deal.composition}>{String(deal.composition || '').split('(')[0]}</span>
                             </div>
                             <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
                               <span className="text-[10px] text-slate-400 font-bold block">عرض الثوب (Laize)</span>
-                              <span className="text-xs font-black text-slate-200 block font-mono">{deal.width.split('(')[0]}</span>
+                              <span className="text-xs font-black text-slate-200 block font-mono">{String(deal.width || '').split('(')[0]}</span>
                             </div>
                             <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
                               <span className="text-[10px] text-slate-400 font-bold block">المعالجة والانكماش</span>
@@ -2256,7 +2261,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                           className="w-full sm:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20"
                         >
                           <MessageCircle className="w-4 h-4" />
-                          <span>احجز كميتك بالواتساب ({committedQty} {deal.primaryUnitLabelAr} • {chosenColor.split('(')[0]})</span>
+                          <span>احجز كميتك بالواتساب ({committedQty} {deal.primaryUnitLabelAr} • {String(chosenColor || '').split('(')[0]})</span>
                         </a>
                       </div>
                     </div>
@@ -2766,7 +2771,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                   <div className="p-3 rounded-xl bg-[#1e1f22] border border-white/5">
                     <span className="text-slate-400 font-bold block mb-1">استهلاك البياسة</span>
                     <span className="text-xs font-black text-emerald-400 block mt-1">
-                      {selectedDealForDetail.garmentYield.split('|')[0]}
+                      {String(selectedDealForDetail.garmentYield || '').split('|')[0]}
                     </span>
                   </div>
                 </div>
@@ -2791,7 +2796,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                         style={{ backgroundColor: c.hex }}
                       />
                       <div className="truncate">
-                        <p className="text-xs font-black text-white truncate">{c.name.split('(')[0]}</p>
+                        <p className="text-xs font-black text-white truncate">{String(c.name || '').split('(')[0]}</p>
                         <p className="text-[10px] text-slate-400">{c.tagAr}</p>
                       </div>
                     </div>
