@@ -689,7 +689,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       category: 'tissu',
       categoryLabel: 'أقمشة وتوريد قطن',
       city: 'الدار البيضاء (درب عمر)',
-      whatsapp: '212661849201',
+      whatsapp: '212675239885',
       products: ['مولتون شتوي 320g مبطن', 'إنترلوك أصلي 100% قطن', 'جيرسي ليكرا صيفي', 'كوتون كوردوروي'],
       minQty: 'ابتداءً من 25 متر (رولو واحد)',
       rating: 4.9,
@@ -1727,14 +1727,19 @@ const extractCleanUserNotes = (rawDetails?: string | null): string => {
 };
 
 const cleanPhoneForWa = (phone: string | undefined | null): string => {
-  if (!phone) return '212661849201';
+  const DEFAULT_WA = '212675239885'; // Official BEYA Creative Atelier Sourcing WhatsApp
+  if (!phone) return DEFAULT_WA;
   let cleaned = phone.replace(/\D/g, '');
   if (cleaned.startsWith('0')) {
     cleaned = '212' + cleaned.substring(1);
   } else if (!cleaned.startsWith('212') && cleaned.length === 9) {
     cleaned = '212' + cleaned;
   }
-  return cleaned || '212661849201';
+  // Filter out dummy/placeholder test numbers and short invalid numbers
+  if (!cleaned || cleaned === '212661849201' || cleaned === '212600000000' || cleaned.length < 8) {
+    return DEFAULT_WA;
+  }
+  return cleaned;
 };
 
 function cleanLangText(text: string | undefined | null, isAr: boolean): string {
@@ -2085,29 +2090,32 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const savedFournisseurColors = extDetails.supplierColors || (d as any).fournisseurCouleurs || null;
     const savedFournisseurNotes = extDetails.supplierNotes || (d as any).fournisseurNote || null;
 
-    const defaultFournisseurNom = (isDenimOrTailleur || d.id?.toLowerCase().includes('7eea2877'))
-      ? 'مجمع أقمشة النخبة - درب عمر (Comptoir Textile Derb Omar)'
-      : isTracksuit
-      ? 'أقمشة المسيرة الشمالية (Tissus Nord)'
-      : 'مجمع أقمشة الشرق (Derb Omar زنقة فاس)';
+    const officialBeyaPhone = (company.phone && !company.phone.includes('00 00') && !company.phone.includes('000000')) ? company.phone : '0675239885';
 
-    const defaultFournisseurTel = '0661849201';
-    const defaultFournisseurVille = isAr ? 'الدار البيضاء • درب عمر زنقة فاس' : 'Casablanca • Derb Omar';
-    const defaultFournisseurCode = 'BEYA-FABRIC-2026';
+    // Discard dummy placeholder phone numbers like 0661849201
+    const cleanFournisseurTel = (savedFournisseurTel && savedFournisseurTel !== '0661849201' && savedFournisseurTel !== '212661849201' && savedFournisseurTel.length >= 8)
+      ? savedFournisseurTel
+      : null;
+
+    const hasCustomFournisseur = Boolean(savedFournisseurNom && savedFournisseurNom.trim());
+
+    const defaultFournisseurNom = isAr ? 'مكتب ومصلحة توريد الأقمشة (ورشة BEYA)' : 'Bureau Sourcing Tissus Atelier BEYA';
+    const defaultFournisseurTel = officialBeyaPhone;
+    const defaultFournisseurVille = isAr ? 'الورشة المركزية • مكناس / خدمة التوريد الوطنية' : 'Atelier BEYA • Sourcing National';
+    const defaultFournisseurCode = `BEYA-${(d.id || 'ORDER').slice(0, 8).toUpperCase()}`;
     const defaultFournisseurColors = isAr 
       ? 'أسود كربوني (Noir)، أبيض ناصع (Blanc)، رمادي ملونج (Gris Chiné)، أخضر غابوي (Vert Bouteille)، أزرق داكن (Bleu Marine)' 
       : 'Noir, Blanc, Gris Chiné, Vert Bouteille, Bleu Marine';
     const defaultFournisseurNote = isAr
-      ? 'متوفر بالستوك بأسعار تفضيلية خاصة بزبناء ورشة BEYA Creative. إذا كان اللون غير متوفر، يتطلب صباغة مخصصة (Teinture Sur-Mesure) بحد أدنى 150kg للطلبية.'
-      : 'Disponible en stock à tarif préférentiel BEYA Creative. Teinture sur-mesure dès 150kg.';
+      ? 'نوفر لكم خدمة التوريد المباشر لأفضل خامات الأقمشة مع مقارنة عروض المستودعات بالدار البيضاء، طنجة وفاس بأفضل الأسعار التفضيلية المخصصة لزبناء ورشة BEYA Creative.'
+      : 'Service de sourcing direct auprès des meilleurs dépôts partenaires avec tarifs préférentiels exclusifs pour les clients de l\'Atelier BEYA Creative.';
 
-    const fournisseurNom = savedFournisseurNom || defaultFournisseurNom;
-    const fournisseurTel = savedFournisseurTel || defaultFournisseurTel;
-    const fournisseurVille = savedFournisseurVille || defaultFournisseurVille;
-    const fournisseurCode = savedFournisseurCode || defaultFournisseurCode;
+    const fournisseurNom = (savedFournisseurNom && savedFournisseurNom.trim()) ? savedFournisseurNom.trim() : defaultFournisseurNom;
+    const fournisseurTel = cleanFournisseurTel || defaultFournisseurTel;
+    const fournisseurVille = (savedFournisseurVille && savedFournisseurVille.trim()) ? savedFournisseurVille.trim() : defaultFournisseurVille;
+    const fournisseurCode = (savedFournisseurCode && savedFournisseurCode.trim()) ? savedFournisseurCode.trim() : defaultFournisseurCode;
     const fournisseurCouleurs = savedFournisseurColors !== null && savedFournisseurColors !== undefined ? savedFournisseurColors : defaultFournisseurColors;
     const fournisseurNote = savedFournisseurNotes !== null && savedFournisseurNotes !== undefined ? savedFournisseurNotes : defaultFournisseurNote;
-    const hasCustomFournisseur = Boolean(savedFournisseurNom || savedFournisseurTel);
 
     const isGenericPrice = savedUnitPrice === 65 && !d.crmPriceConfirmed && (isVeste || isDenimOrTailleur || isTracksuit);
     const tissuCostPerPiece = Math.round(defaultTissuConso * defaultPrixMetre);
@@ -2170,6 +2178,13 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       tissuPricePerKg: defaultTissuPrixKg,
       hasBroderie,
       hasPrint,
+      fournisseurNom,
+      fournisseurTel,
+      fournisseurVille,
+      fournisseurCode,
+      fournisseurCouleurs,
+      fournisseurNote,
+      hasCustomFournisseur,
       isAnalyzedByAI: Boolean(d.details?.includes('ATELIER_DEVIS') || d.aiNotes || (d as any).aiAnalyzed)
     };
   };
@@ -4682,41 +4697,46 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
                                     <span className="px-2.5 py-0.5 bg-emerald-500 text-white text-[10px] font-black rounded-lg uppercase tracking-wider flex items-center gap-1 shadow-xs">
                                       <Check className="w-3 h-3" />
-                                      <span>{isAr ? 'مورد معتمد' : 'Fournisseur Agréé'}</span>
+                                      <span>{isAr ? (analysis.hasCustomFournisseur ? 'مورد معتمد' : 'خدمة التوريد المعتمدة') : (analysis.hasCustomFournisseur ? 'Fournisseur Agréé' : 'Sourcing Agréé BEYA')}</span>
                                     </span>
                                     <span className="px-2.5 py-0.5 bg-white/10 text-emerald-300 text-[10px] font-black rounded-lg border border-emerald-500/30 flex items-center gap-1">
-                                      <span>متوفر بالمستودع ✅</span>
+                                      <span>{isAr ? 'متوفر بالمستودع ✅' : 'Disponible en stock ✅'}</span>
                                     </span>
-                                    <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-lg font-mono">
-                                      كود BEYA: {analysis.fournisseurCode}
-                                    </span>
+                                    {analysis.fournisseurCode && analysis.fournisseurCode !== 'undefined' && (
+                                      <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-lg font-mono">
+                                        {isAr ? 'كود BEYA:' : 'Code BEYA:'} {analysis.fournisseurCode}
+                                      </span>
+                                    )}
                                   </div>
                                   <h4 className="text-base sm:text-lg font-black text-white">
-                                    {analysis.fournisseurNom}
+                                    {analysis.fournisseurNom || (isAr ? 'مكتب ومصلحة توريد الأقمشة (ورشة BEYA)' : 'Bureau Sourcing Tissus Atelier BEYA')}
                                   </h4>
                                   <p className="text-xs text-slate-300 mt-0.5 flex items-center gap-1.5 font-medium">
                                     <MapPin className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                                    <span>{analysis.fournisseurVille}</span>
+                                    <span>{analysis.fournisseurVille || (isAr ? 'الورشة المركزية • مكناس / خدمة التوريد الوطنية' : 'Atelier BEYA • Sourcing National')}</span>
                                     <span className="text-slate-500">•</span>
-                                    <span className="text-emerald-400 text-[11px] font-bold">بأسعار تفضيلية خاصة بزبناء ورشة BEYA Creative</span>
+                                    <span className="text-emerald-400 text-[11px] font-bold">
+                                      {isAr ? 'بأسعار تفضيلية خاصة بزبناء ورشة BEYA Creative' : 'Tarifs préférentiels clients BEYA Creative'}
+                                    </span>
                                   </p>
                                 </div>
 
-                                <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(analysis.fournisseurCode);
-                                      showNotification(isAr ? `تم نسخ كود الشراكة: ${analysis.fournisseurCode}` : `Code BEYA copié: ${analysis.fournisseurCode}`, isAr ? '🏷️ كود المورد' : '🏷️ Code BEYA', 'success');
-                                    }}
-                                    className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                                    title="نسخ كود الشراكة"
-                                  >
-                                    <Copy className="w-3.5 h-3.5 text-amber-400" />
-                                    <span>{isAr ? 'نسخ كود BEYA' : 'Copier le Code'}</span>
-                                  </button>
-                                </div>
+                                {analysis.fournisseurCode && analysis.fournisseurCode !== 'undefined' && (
+                                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(analysis.fournisseurCode);
+                                        showNotification(isAr ? `تم نسخ كود الشراكة: ${analysis.fournisseurCode}` : `Code BEYA copié: ${analysis.fournisseurCode}`, isAr ? '🏷️ كود المورد' : '🏷️ Code BEYA', 'success');
+                                      }}
+                                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                      title="نسخ كود الشراكة"
+                                    >
+                                      <Copy className="w-3.5 h-3.5 text-amber-400" />
+                                      <span>{isAr ? 'نسخ كود BEYA' : 'Copier le Code'}</span>
+                                    </button>
+                                  </div>
+                                )}
                               </div>
 
                               {/* Available Stock Colors Pills */}
@@ -4754,25 +4774,44 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
                                 <a
                                   href={`https://wa.me/${cleanPhoneForWa(analysis.fournisseurTel)}?text=${encodeURIComponent(
-                                    isAr 
-                                      ? `السلام عليكم، أنا زبون من طرف ورشة BEYA Creative (كود الشراكة: ${analysis.fournisseurCode}). عندي طلبية لموديل ${analysis.modeleReel} (${currentQty} قطعة)، محتاج قماش ${analysis.tissuSuggere}. واش متوفر عندكم وبشحال الكيلو؟ شكراً.`
-                                      : `Bonjour, je suis client chez l'Atelier BEYA Creative (Code Partenaire : ${analysis.fournisseurCode}). Pour mon modèle ${analysis.modeleReel} (${currentQty} pcs), je souhaite commander le tissu ${analysis.tissuSuggere}. Pouvez-vous me confirmer le tarif ? Merci.`
+                                    analysis.hasCustomFournisseur
+                                      ? (isAr 
+                                          ? `السلام عليكم، أنا زبون من طرف ورشة BEYA Creative (كود الشراكة: ${analysis.fournisseurCode || 'BEYA-VIP'}). عندي طلبية لموديل ${analysis.modeleReel} (${currentQty} قطعة)، محتاج قماش ${analysis.tissuSuggere}. واش متوفر عندكم وبشحال الكيلو؟ شكراً.`
+                                          : `Bonjour, je suis client chez l'Atelier BEYA Creative (Code Partenaire : ${analysis.fournisseurCode || 'BEYA-VIP'}). Pour mon modèle ${analysis.modeleReel} (${currentQty} pcs), je souhaite commander le tissu ${analysis.tissuSuggere}. Pouvez-vous me confirmer le tarif ? Merci.`)
+                                      : (isAr
+                                          ? `السلام عليكم ورشة BEYA Creative، أنا زبون عندي طلبية لموديل ${analysis.modeleReel} (رقم الطلب: #${(d.id || '').slice(0, 8).toUpperCase()} - ${currentQty} قطعة). بغيت استفسار وتنسيق بخصوص توفير وتوريد قماش ${analysis.tissuSuggere}. شكراً.`
+                                          : `Bonjour l'Atelier BEYA Creative, je suis client pour le modèle ${analysis.modeleReel} (Réf : #${(d.id || '').slice(0, 8).toUpperCase()} - ${currentQty} pcs). Je souhaite coordonner la fourniture du tissu ${analysis.tissuSuggere}. Merci.`)
                                   )}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex-1 py-3.5 px-6 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-500/20 active:scale-[0.99] text-center cursor-pointer"
+                                  className="flex-1 py-3.5 px-6 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs sm:text-sm tracking-wider transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-500/20 active:scale-[0.99] text-center cursor-pointer"
                                 >
                                   <MessageCircle className="w-5 h-5 text-slate-950" />
-                                  <span>{isAr ? `تواصل مع مورد الثوب (كود ${analysis.fournisseurCode})` : `Contacter le Fournisseur (${analysis.fournisseurCode})`}</span>
+                                  <span>
+                                    {analysis.hasCustomFournisseur
+                                      ? (isAr 
+                                          ? `تواصل مع مورد القماش (${analysis.fournisseurNom})` 
+                                          : `Contacter le Fournisseur (${analysis.fournisseurNom})`)
+                                      : (isAr 
+                                          ? 'تواصل مع خدمة توريد الأقمشة (ورشة BEYA)' 
+                                          : 'Contacter le Bureau Sourcing BEYA')}
+                                  </span>
                                 </a>
 
                                 {analysis.fournisseurTel && (
                                   <a
-                                    href={`tel:${analysis.fournisseurTel.replace(/\s+/g, '')}`}
+                                    href={`tel:${cleanPhoneForWa(analysis.fournisseurTel)}`}
                                     className="py-3.5 px-5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 border border-white/15 cursor-pointer text-center"
+                                    title={isAr ? 'اتصال مباشر' : 'Appel direct'}
                                   >
                                     <Phone className="w-4 h-4 text-emerald-400" />
-                                    <span dir="ltr">{analysis.fournisseurTel}</span>
+                                    <span dir="ltr">
+                                      {analysis.fournisseurTel.startsWith('+') 
+                                        ? analysis.fournisseurTel 
+                                        : analysis.fournisseurTel.startsWith('212') 
+                                        ? '+' + analysis.fournisseurTel 
+                                        : analysis.fournisseurTel}
+                                    </span>
                                   </a>
                                 )}
                               </div>

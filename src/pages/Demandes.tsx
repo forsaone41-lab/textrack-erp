@@ -1440,9 +1440,9 @@ export default function Demandes() {
                       </span>
                       <div className="flex flex-wrap gap-1">
                         {[
-                          { name: 'مجمع أقمشة النخبة - درب عمر (Comptoir Textile Derb Omar)', phone: '0661849201', city: 'الدار البيضاء • درب عمر زنقة فاس', code: 'BEYA-FABRIC-2026', colors: 'أسود كربوني (Noir)، أبيض ناصع (Blanc)، رمادي ملونج (Gris Chiné)، أخضر غابوي (Vert Bouteille)، أزرق داكن (Bleu Marine)' },
-                          { name: 'أقمشة المسيرة الشمالية (Tissus Nord Tanger)', phone: '0662304918', city: 'طنجة • المنطقة الحرة', code: 'BEYA-TANGER-2026', colors: 'كوتون كانفاس، جاباردين سترتش، وتربروف' },
-                          { name: 'مؤسسة النور للأقمشة الفاخرة (Fès)', phone: '0661904215', city: 'فاس • الحي الصناعي سيدي ابراهيم', code: 'BEYA-FES-2026', colors: 'جيرسي صيفي 240g، بيكي قطن، فيلور كوردوروي' },
+                          { name: 'مجمع أقمشة النخبة - درب عمر (Comptoir Textile Derb Omar)', phone: '0675239885', city: 'الدار البيضاء • درب عمر زنقة فاس', code: 'BEYA-FABRIC-2026', colors: 'أسود كربوني (Noir)، أبيض ناصع (Blanc)، رمادي ملونج (Gris Chiné)، أخضر غابوي (Vert Bouteille)، أزرق داكن (Bleu Marine)' },
+                          { name: 'أقمشة المسيرة الشمالية (Tissus Nord Tanger)', phone: '0675239885', city: 'طنجة • المنطقة الحرة', code: 'BEYA-TANGER-2026', colors: 'كوتون كانفاس، جاباردين سترتش، وتربروف' },
+                          { name: 'مؤسسة النور للأقمشة الفاخرة (Fès)', phone: '0675239885', city: 'فاس • الحي الصناعي سيدي ابراهيم', code: 'BEYA-FES-2026', colors: 'جيرسي صيفي 240g، بيكي قطن، فيلور كوردوروي' },
                         ].map((p, pIdx) => (
                           <button
                             key={pIdx}
@@ -1481,7 +1481,7 @@ export default function Demandes() {
                           type="text"
                           value={devisSupplierTel}
                           onChange={e => setDevisSupplierTel(e.target.value)}
-                          placeholder="0661849201"
+                          placeholder="0675239885"
                           dir="ltr"
                           className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-bold focus:outline-none focus:border-emerald-500 text-left"
                         />

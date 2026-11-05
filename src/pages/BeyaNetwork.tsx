@@ -173,7 +173,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         content: 'السلام عليكم الإخوان أصحاب البراندات، دخلات اليوم دفعة جديدة من قماش الملتون الشتوي السميك (Molleton Gratté 340 GSM) قطن ممشط 100%، مخصص للهوديات الأوفرسايز وسراويل السويت بانتس الفاخرة.\n\nالألوان المتوفرة: الأسود الفاحم، بيج أوف وايت، أخضر كاكي، بني شوكولا، كحلي داكن.\n\nالكميات متوفرة ابتداءً من رولو واحد (25 كلغ) مع إمكانية إرسال العينات لجميع المدن.',
         date: 'منذ ساعتين',
         likesCount: 38,
-        whatsapp: '212661849201',
+        whatsapp: '212675239885',
         whatsappText: 'السلام عليكم سي سفيان، شفت المنشور ديالك فـ BEYA NETWORK وبغيت نسولك على ثوب الملتون 340g والألوان المتوفرة.',
         comments: [
           {
@@ -291,8 +291,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       cityTag: 'casablanca',
       district: 'درب عمر، زنقة فاس، رقم 42',
       fabricTags: ['molleton', 'interlock', 'jersey', 'corduroy'],
-      whatsapp: '212661849201',
-      phone: '0661849201',
+      whatsapp: '212675239885',
+      phone: '0675239885',
       rating: 4.9,
       reviewsCount: 38,
       verified: true,
@@ -790,7 +790,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
     const waMsg = encodeURIComponent(
       `السلام عليكم BEYA NETWORK، قمت بحجز ${kg} كلغ من عرض الشراء المشترك: (${showJoinGroupModal.title}). براند: ${userProfile.brandName} - هاتف: ${userProfile.phone}`
     );
-    window.open(`https://wa.me/212661849201?text=${waMsg}`, '_blank');
+    window.open(`https://wa.me/212675239885?text=${waMsg}`, '_blank');
     setShowJoinGroupModal(null);
   };
 
