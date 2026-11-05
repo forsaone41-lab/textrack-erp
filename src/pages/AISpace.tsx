@@ -24,6 +24,254 @@ export const ATELIER_MACHINES_PRESETS = [
   { id: 'finition_main', machine: 'Travail Manuel / Contrôle', labelAr: 'تشطيب ومراقبة يدوية', defaultNomAr: 'تشطيب، تنظيف الخيوط وتغليف', defaultNomFr: 'Épluchage, Contrôle & Emballage', defaultMin: 0.8, role: 'فني تشطيب' },
 ];
 
+export const ADULT_TAILLES = ['S', 'M', 'L', 'XL', 'XXL'];
+export const KIDS_TAILLES = ['4A', '6A', '8A', '10A', '12A', '14A'];
+
+export const CATEGORY_MESURES: Record<
+  'adulte_homme' | 'adulte_femme' | 'enfant_garcon' | 'enfant_fille',
+  Record<string, { nom: string; valeurs: Record<string, number> }[]>
+> = {
+  adulte_homme: {
+    TShirt: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 96, M: 102, L: 108, XL: 114, XXL: 120 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 42, M: 44, L: 46, XL: 48, XXL: 50 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 68, M: 70, L: 72, XL: 74, XXL: 76 } },
+      { nom: 'طول الكم (Manche)', valeurs: { S: 22, M: 23, L: 24, XL: 25, XXL: 26 } },
+      { nom: 'الخصر (Taille)', valeurs: { S: 92, M: 98, L: 104, XL: 110, XXL: 116 } }
+    ],
+    Pantalon: [
+      { nom: 'الخصر (Taille)', valeurs: { S: 76, M: 80, L: 84, XL: 88, XXL: 92 } },
+      { nom: 'الورك (Hanches)', valeurs: { S: 96, M: 100, L: 104, XL: 108, XXL: 112 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 102, M: 104, L: 106, XL: 108, XXL: 110 } },
+      { nom: 'محيط الفخذ (Cuisse)', valeurs: { S: 58, M: 60, L: 62, XL: 64, XXL: 66 } }
+    ],
+    Veste: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 98, M: 104, L: 110, XL: 116, XXL: 122 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 44, M: 46, L: 48, XL: 50, XXL: 52 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 66, M: 68, L: 70, XL: 72, XXL: 74 } },
+      { nom: 'طول الكم (Manche)', valeurs: { S: 62, M: 63, L: 64, XL: 65, XXL: 66 } }
+    ],
+    Sweat: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 102, M: 108, L: 114, XL: 120, XXL: 126 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 46, M: 48, L: 50, XL: 52, XXL: 54 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 68, M: 70, L: 72, XL: 74, XXL: 76 } },
+      { nom: 'طول الكم (Manche)', valeurs: { S: 63, M: 64, L: 65, XL: 66, XXL: 67 } }
+    ],
+    Chemise: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 96, M: 102, L: 108, XL: 114, XXL: 120 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 43, M: 45, L: 47, XL: 49, XXL: 51 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 72, M: 74, L: 76, XL: 78, XXL: 80 } },
+      { nom: 'الكم (Manche)', valeurs: { S: 62, M: 63, L: 64, XL: 65, XXL: 66 } }
+    ],
+    Djellaba: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 106, M: 112, L: 118, XL: 124, XXL: 130 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 46, M: 48, L: 50, XL: 52, XXL: 54 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 140, M: 142, L: 144, XL: 146, XXL: 148 } },
+      { nom: 'طول الكم (Manche)', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } }
+    ]
+  },
+  adulte_femme: {
+    TShirt: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 88, M: 92, L: 96, XL: 100, XXL: 104 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 37, M: 39, L: 41, XL: 43, XXL: 45 } },
+      { nom: 'الخصر (Taille)', valeurs: { S: 72, M: 76, L: 80, XL: 84, XXL: 88 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 62, M: 64, L: 66, XL: 68, XXL: 70 } },
+      { nom: 'طول الكم (Manche)', valeurs: { S: 18, M: 19, L: 20, XL: 21, XXL: 22 } }
+    ],
+    Pantalon: [
+      { nom: 'الخصر (Taille)', valeurs: { S: 68, M: 72, L: 76, XL: 80, XXL: 84 } },
+      { nom: 'الورك (Hanches)', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 98, M: 100, L: 102, XL: 104, XXL: 106 } },
+      { nom: 'محيط الفخذ (Cuisse)', valeurs: { S: 54, M: 56, L: 58, XL: 60, XXL: 62 } }
+    ],
+    Veste: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 90, M: 94, L: 98, XL: 102, XXL: 106 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 38, M: 40, L: 42, XL: 44, XXL: 46 } },
+      { nom: 'الخصر (Taille)', valeurs: { S: 74, M: 78, L: 82, XL: 86, XXL: 90 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 58, M: 60, L: 62, XL: 64, XXL: 66 } },
+      { nom: 'طول الكم (Manche)', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } }
+    ],
+    Sweat: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 96, M: 100, L: 106, XL: 112, XXL: 118 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 40, M: 42, L: 44, XL: 46, XXL: 48 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 62, M: 64, L: 66, XL: 68, XXL: 70 } },
+      { nom: 'طول الكم (Manche)', valeurs: { S: 59, M: 60, L: 61, XL: 62, XXL: 63 } }
+    ],
+    Chemise: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 90, M: 94, L: 98, XL: 102, XXL: 106 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 38, M: 40, L: 42, XL: 44, XXL: 46 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 66, M: 68, L: 70, XL: 72, XXL: 74 } },
+      { nom: 'طول الكم (Manche)', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } }
+    ],
+    Robe: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 92, M: 96, L: 100, XL: 104, XXL: 108 } },
+      { nom: 'الخصر (Taille)', valeurs: { S: 72, M: 76, L: 80, XL: 84, XXL: 88 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 38, M: 39, L: 40, XL: 41, XXL: 42 } },
+      { nom: 'الورك (Hanches)', valeurs: { S: 100, M: 104, L: 108, XL: 112, XXL: 116 } },
+      { nom: 'الطول الكامل (Longueur)', valeurs: { S: 140, M: 142, L: 144, XL: 146, XXL: 148 } },
+      { nom: 'طول الكم (Manche)', valeurs: { S: 59, M: 60, L: 61, XL: 62, XXL: 63 } }
+    ]
+  },
+  enfant_garcon: {
+    TShirt: [
+      { nom: 'الصدر (Poitrine)', valeurs: { '4A': 62, '6A': 66, '8A': 70, '10A': 76, '12A': 82, '14A': 88 } },
+      { nom: 'الكتف (Épaules)', valeurs: { '4A': 26, '6A': 28, '8A': 30, '10A': 33, '12A': 36, '14A': 39 } },
+      { nom: 'الطول (Longueur)', valeurs: { '4A': 42, '6A': 46, '8A': 50, '10A': 54, '12A': 58, '14A': 62 } },
+      { nom: 'طول الكم (Manche)', valeurs: { '4A': 14, '6A': 15, '8A': 16, '10A': 17, '12A': 18, '14A': 19 } }
+    ],
+    Pantalon: [
+      { nom: 'الخصر (Taille)', valeurs: { '4A': 52, '6A': 55, '8A': 58, '10A': 61, '12A': 65, '14A': 69 } },
+      { nom: 'الورك (Hanches)', valeurs: { '4A': 62, '6A': 66, '8A': 70, '10A': 76, '12A': 82, '14A': 88 } },
+      { nom: 'الطول (Longueur)', valeurs: { '4A': 60, '6A': 68, '8A': 76, '10A': 84, '12A': 92, '14A': 98 } },
+      { nom: 'محيط الفخذ (Cuisse)', valeurs: { '4A': 36, '6A': 39, '8A': 42, '10A': 46, '12A': 50, '14A': 54 } }
+    ],
+    Veste: [
+      { nom: 'الصدر (Poitrine)', valeurs: { '4A': 66, '6A': 70, '8A': 75, '10A': 80, '12A': 86, '14A': 92 } },
+      { nom: 'الكتف (Épaules)', valeurs: { '4A': 28, '6A': 30, '8A': 32, '10A': 35, '12A': 38, '14A': 41 } },
+      { nom: 'الطول (Longueur)', valeurs: { '4A': 42, '6A': 46, '8A': 50, '10A': 54, '12A': 58, '14A': 62 } },
+      { nom: 'طول الكم (Manche)', valeurs: { '4A': 36, '6A': 40, '8A': 44, '10A': 48, '12A': 52, '14A': 56 } }
+    ],
+    Sweat: [
+      { nom: 'الصدر (Poitrine)', valeurs: { '4A': 68, '6A': 72, '8A': 76, '10A': 82, '12A': 88, '14A': 94 } },
+      { nom: 'الكتف (Épaules)', valeurs: { '4A': 29, '6A': 31, '8A': 33, '10A': 36, '12A': 39, '14A': 42 } },
+      { nom: 'الطول (Longueur)', valeurs: { '4A': 44, '6A': 48, '8A': 52, '10A': 56, '12A': 60, '14A': 64 } },
+      { nom: 'طول الكم (Manche)', valeurs: { '4A': 37, '6A': 41, '8A': 45, '10A': 49, '12A': 53, '14A': 57 } }
+    ],
+    Chemise: [
+      { nom: 'الصدر (Poitrine)', valeurs: { '4A': 64, '6A': 68, '8A': 72, '10A': 77, '12A': 83, '14A': 89 } },
+      { nom: 'الكتف (Épaules)', valeurs: { '4A': 27, '6A': 29, '8A': 31, '10A': 34, '12A': 37, '14A': 40 } },
+      { nom: 'الطول (Longueur)', valeurs: { '4A': 44, '6A': 48, '8A': 52, '10A': 56, '12A': 60, '14A': 64 } },
+      { nom: 'طول الكم (Manche)', valeurs: { '4A': 36, '6A': 40, '8A': 44, '10A': 48, '12A': 52, '14A': 56 } }
+    ],
+    Djellaba: [
+      { nom: 'الصدر (Poitrine)', valeurs: { '4A': 66, '6A': 70, '8A': 74, '10A': 80, '12A': 86, '14A': 92 } },
+      { nom: 'الكتف (Épaules)', valeurs: { '4A': 28, '6A': 30, '8A': 32, '10A': 35, '12A': 38, '14A': 41 } },
+      { nom: 'الطول الكامل (Longueur)', valeurs: { '4A': 70, '6A': 80, '8A': 90, '10A': 100, '12A': 110, '14A': 120 } },
+      { nom: 'طول الكم (Manche)', valeurs: { '4A': 34, '6A': 38, '8A': 42, '10A': 46, '12A': 50, '14A': 54 } }
+    ]
+  },
+  enfant_fille: {
+    TShirt: [
+      { nom: 'الصدر (Poitrine)', valeurs: { '4A': 60, '6A': 64, '8A': 68, '10A': 73, '12A': 78, '14A': 84 } },
+      { nom: 'الكتف (Épaules)', valeurs: { '4A': 25, '6A': 27, '8A': 29, '10A': 32, '12A': 34, '14A': 37 } },
+      { nom: 'الخصر (Taille)', valeurs: { '4A': 50, '6A': 53, '8A': 56, '10A': 59, '12A': 62, '14A': 66 } },
+      { nom: 'الطول (Longueur)', valeurs: { '4A': 40, '6A': 44, '8A': 48, '10A': 52, '12A': 56, '14A': 60 } },
+      { nom: 'طول الكم (Manche)', valeurs: { '4A': 13, '6A': 14, '8A': 15, '10A': 16, '12A': 17, '14A': 18 } }
+    ],
+    Pantalon: [
+      { nom: 'الخصر (Taille)', valeurs: { '4A': 50, '6A': 53, '8A': 56, '10A': 59, '12A': 63, '14A': 67 } },
+      { nom: 'الورك (Hanches)', valeurs: { '4A': 62, '6A': 66, '8A': 70, '10A': 76, '12A': 82, '14A': 88 } },
+      { nom: 'الطول (Longueur)', valeurs: { '4A': 58, '6A': 66, '8A': 74, '10A': 82, '12A': 90, '14A': 96 } },
+      { nom: 'محيط الفخذ (Cuisse)', valeurs: { '4A': 35, '6A': 38, '8A': 41, '10A': 45, '12A': 49, '14A': 53 } }
+    ],
+    Veste: [
+      { nom: 'الصدر (Poitrine)', valeurs: { '4A': 64, '6A': 68, '8A': 73, '10A': 78, '12A': 84, '14A': 90 } },
+      { nom: 'الكتف (Épaules)', valeurs: { '4A': 26, '6A': 28, '8A': 30, '10A': 33, '12A': 36, '14A': 39 } },
+      { nom: 'الطول (Longueur)', valeurs: { '4A': 40, '6A': 44, '8A': 48, '10A': 52, '12A': 56, '14A': 60 } },
+      { nom: 'طول الكم (Manche)', valeurs: { '4A': 35, '6A': 39, '8A': 43, '10A': 47, '12A': 51, '14A': 55 } }
+    ],
+    Sweat: [
+      { nom: 'الصدر (Poitrine)', valeurs: { '4A': 66, '6A': 70, '8A': 74, '10A': 80, '12A': 86, '14A': 92 } },
+      { nom: 'الكتف (Épaules)', valeurs: { '4A': 27, '6A': 29, '8A': 31, '10A': 34, '12A': 37, '14A': 40 } },
+      { nom: 'الطول (Longueur)', valeurs: { '4A': 42, '6A': 46, '8A': 50, '10A': 54, '12A': 58, '14A': 62 } },
+      { nom: 'طول الكم (Manche)', valeurs: { '4A': 36, '6A': 40, '8A': 44, '10A': 48, '12A': 52, '14A': 56 } }
+    ],
+    Chemise: [
+      { nom: 'الصدر (Poitrine)', valeurs: { '4A': 62, '6A': 66, '8A': 70, '10A': 75, '12A': 81, '14A': 87 } },
+      { nom: 'الكتف (Épaules)', valeurs: { '4A': 25, '6A': 27, '8A': 29, '10A': 32, '12A': 35, '14A': 38 } },
+      { nom: 'الطول (Longueur)', valeurs: { '4A': 42, '6A': 46, '8A': 50, '10A': 54, '12A': 58, '14A': 62 } },
+      { nom: 'طول الكم (Manche)', valeurs: { '4A': 35, '6A': 39, '8A': 43, '10A': 47, '12A': 51, '14A': 55 } }
+    ],
+    Robe: [
+      { nom: 'الصدر (Poitrine)', valeurs: { '4A': 60, '6A': 64, '8A': 68, '10A': 73, '12A': 78, '14A': 84 } },
+      { nom: 'الخصر (Taille)', valeurs: { '4A': 50, '6A': 53, '8A': 56, '10A': 59, '12A': 62, '14A': 65 } },
+      { nom: 'الكتف (Épaules)', valeurs: { '4A': 24, '6A': 26, '8A': 28, '10A': 30, '12A': 32, '14A': 34 } },
+      { nom: 'الورك (Hanches)', valeurs: { '4A': 64, '6A': 68, '8A': 72, '10A': 78, '12A': 84, '14A': 90 } },
+      { nom: 'الطول الكامل (Longueur)', valeurs: { '4A': 65, '6A': 75, '8A': 85, '10A': 95, '12A': 105, '14A': 115 } },
+      { nom: 'طول الكم (Manche)', valeurs: { '4A': 33, '6A': 37, '8A': 41, '10A': 45, '12A': 49, '14A': 53 } }
+    ]
+  }
+};
+
+export function getStandardMesuresForCategory(
+  pieceName: string,
+  audience: 'adultes' | 'enfants' = 'adultes',
+  gender: 'hommes' | 'femmes' = 'hommes'
+): { nom: string; valeurs: Record<string, number> }[] {
+  const profileKey = `${audience === 'enfants' ? 'enfant' : 'adulte'}_${gender === 'femmes' ? (audience === 'enfants' ? 'fille' : 'femme') : (audience === 'enfants' ? 'garcon' : 'homme')}` as const;
+  const pDict = CATEGORY_MESURES[profileKey] || CATEGORY_MESURES.adulte_homme;
+  const low = (pieceName || '').toLowerCase();
+
+  // 1. Pantalon / Jogging / Short / Bas
+  if (
+    low.includes('pantalon') ||
+    low.includes('jogging') ||
+    low.includes('jean') ||
+    low.includes('cargo') ||
+    low.includes('short') ||
+    low.includes('سروال') ||
+    low.includes('شورط') ||
+    low.includes('بنطلون') ||
+    low.includes('بانتالون') ||
+    low.includes('bermuda')
+  ) {
+    return JSON.parse(JSON.stringify(pDict.Pantalon));
+  }
+
+  // 2. Veste / Blouson / Denim / Manteau / Blazer
+  if (
+    low.includes('veste') ||
+    low.includes('jacket') ||
+    low.includes('blouson') ||
+    low.includes('denim') ||
+    low.includes('blazer') ||
+    low.includes('manteau') ||
+    low.includes('سترة') ||
+    low.includes('فيست') ||
+    low.includes('جاكيت')
+  ) {
+    return JSON.parse(JSON.stringify(pDict.Veste));
+  }
+
+  // 3. Sweat / Hoodie / Pull
+  if (
+    low.includes('sweat') ||
+    low.includes('hoodie') ||
+    low.includes('pull') ||
+    low.includes('هودي') ||
+    low.includes('سويت') ||
+    low.includes('بول')
+  ) {
+    return JSON.parse(JSON.stringify(pDict.Sweat));
+  }
+
+  // 4. Robe / Caftan / Djellaba / Abaya / Gandora
+  if (
+    low.includes('robe') ||
+    low.includes('caftan') ||
+    low.includes('djellaba') ||
+    low.includes('abaya') ||
+    low.includes('فستان') ||
+    low.includes('قفطان') ||
+    low.includes('جلابة') ||
+    low.includes('عباية') ||
+    low.includes('gandora') ||
+    low.includes('قندورة') ||
+    low.includes('jabador') ||
+    low.includes('جبادور')
+  ) {
+    return JSON.parse(JSON.stringify(pDict.Robe || pDict.Djellaba || pDict.TShirt));
+  }
+
+  // 5. Chemise / Chemisier
+  if (low.includes('chemise') || low.includes('chemisier') || low.includes('قميص')) {
+    return JSON.parse(JSON.stringify(pDict.Chemise));
+  }
+
+  // 6. Default to TShirt
+  return JSON.parse(JSON.stringify(pDict.TShirt));
+}
+
 const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, number> }[]> = {
   Robe: [
     { nom: 'الصدر (Poitrine)', valeurs: { S: 88, M: 92, L: 96, XL: 100, XXL: 104 } },
@@ -590,7 +838,13 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
 }
 
 // Internal Expert Technical Analysis Engine (Fallback when external API key has limit: 0 or fails)
-function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCount?: number) {
+function buildFallbackAnalysis(
+  contextText: string,
+  isAr: boolean,
+  forcePiecesCount?: number,
+  audience: 'adultes' | 'enfants' = 'adultes',
+  gender: 'hommes' | 'femmes' = 'hommes'
+) {
   const breakdown = getGarmentTechnicalBreakdown(contextText);
   const text = (contextText || '').toLowerCase();
 
@@ -649,8 +903,8 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
       ? 'طقم جينز دنيم راقي قطعتين (فيست دنيم بحزام + سروال جينز)'
       : 'Ensemble Denim 2 Pièces (Veste Denim Ceinturée + Pantalon Jean)';
 
-    const mesuresVeste = JSON.parse(JSON.stringify(STANDARD_MESURES['Veste'] || STANDARD_MESURES['Chemise']));
-    const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
+    const mesuresVeste = getStandardMesuresForCategory('Veste', audience, gender);
+    const mesuresPantalon = getStandardMesuresForCategory('Pantalon', audience, gender);
 
     piecesList = [
       {
@@ -687,7 +941,7 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
     ];
   } else if (isDenimJacket) {
     pieceName = isAr ? 'جاكيت فيست جينز دنيم عصرية (Veste en Jean Denim)' : 'Veste en Jean Denim Casual';
-    defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Veste'] || STANDARD_MESURES['Chemise']));
+    defaultMesures = getStandardMesuresForCategory('Veste', audience, gender);
     piecesList = [{
       name: pieceName,
       consumption: '2.10m',
@@ -708,8 +962,8 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
       ? 'طقم رياضي قطعتين (سويت شيرت كول رون مقلم + سروال جوغينغ)'
       : 'Ensemble Survêtement 2 Pièces (Sweatshirt Col Rond Rayé + Pantalon Jogging)';
 
-    const mesuresSweat = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']));
-    const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
+    const mesuresSweat = getStandardMesuresForCategory('Sweat', audience, gender);
+    const mesuresPantalon = getStandardMesuresForCategory('Pantalon', audience, gender);
 
     piecesList = [
       {
@@ -747,9 +1001,9 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
   } else if (isThreePieces) {
     if (text.includes('trench') || text.includes('ترنش') || text.includes('palazzo')) {
       pieceName = isAr ? 'طقم أنيق 3 قطع (مانطو ترنش + سروال عريض + توب)' : 'Ensemble Chic 3 Pièces (Manteau Trench + Pantalon Large + Top)';
-      const mesuresManteau = JSON.parse(JSON.stringify(STANDARD_MESURES['ManteauLong'] || STANDARD_MESURES['Robe']));
-      const mesuresTop = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
-      const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
+      const mesuresManteau = getStandardMesuresForCategory('Manteau', audience, gender);
+      const mesuresTop = getStandardMesuresForCategory('TShirt', audience, gender);
+      const mesuresPantalon = getStandardMesuresForCategory('Pantalon', audience, gender);
 
       piecesList = [
         {
@@ -801,9 +1055,9 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
       ];
     } else {
       pieceName = isAr ? 'طقم سبوروار 3 قطع (مانطو طويل + هودي + سروال)' : 'Ensemble 3 Pièces Sportswear (Manteau + Hoodie + Pantalon)';
-      const mesuresManteau = JSON.parse(JSON.stringify(STANDARD_MESURES['ManteauLong'] || STANDARD_MESURES['Robe']));
-      const mesuresSweat = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
-      const mesuresPantalon = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
+      const mesuresManteau = getStandardMesuresForCategory('Manteau', audience, gender);
+      const mesuresSweat = getStandardMesuresForCategory('Sweat', audience, gender);
+      const mesuresPantalon = getStandardMesuresForCategory('Pantalon', audience, gender);
       piecesList = [
         {
           name: isAr ? 'مانطو / سترة طويلة سبور بكابوش وسحاب (Manteau Long Zippé)' : 'Manteau Long Sportswear à Capuche Zippée',
@@ -901,7 +1155,7 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
     text.includes('short sleeve') || text.includes('manches courtes')
   ) {
     pieceName = isAr ? 'تيشرت قطن كول رون (T-Shirt Coton)' : 'T-Shirt Coton Col Rond';
-    defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
+    defaultMesures = getStandardMesuresForCategory('TShirt', audience, gender);
     piecesList = [{
       name: pieceName,
       consumption: '0.90m',
@@ -920,7 +1174,7 @@ function buildFallbackAnalysis(contextText: string, isAr: boolean, forcePiecesCo
     }];
   } else if (text.includes('sweat') || text.includes('hoodie') || text.includes('سويت') || text.includes('هودي') || text.includes('توني') || text.includes('pull')) {
     pieceName = isAr ? 'سويت شيرت كول رون (Sweatshirt Col Rond)' : 'Sweatshirt Col Rond Sportswear';
-    defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt'] || STANDARD_MESURES['Chemise']));
+    defaultMesures = getStandardMesuresForCategory('Sweat', audience, gender);
     piecesList = [{
       name: pieceName,
       consumption: '1.50m',
@@ -1401,10 +1655,12 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [customAlert, setCustomAlert] = useState<{ title: string; message: string; onConfirm?: () => void; isError?: boolean } | null>(null);
 
-  // Custom Measurements States
+  // Target Category & Custom Measurements States (Adultes/Enfants & Hommes/Femmes)
+  const [targetAudience, setTargetAudience] = useState<'adultes' | 'enfants'>('adultes');
+  const [targetGender, setTargetGender] = useState<'hommes' | 'femmes'>('hommes');
   const [selectedCategory, setSelectedCategory] = useState<'Robe' | 'Caftan' | 'Djellaba' | 'Chemise' | 'Pantalon'>('Robe');
   const [customMesures, setCustomMesures] = useState<any[]>(() => JSON.parse(JSON.stringify(STANDARD_MESURES['Robe'])));
-  const [selectedTailles] = useState<string[]>(['S', 'M', 'L', 'XL', 'XXL']);
+  const [selectedTailles, setSelectedTailles] = useState<string[]>(ADULT_TAILLES);
 
   // Prospects Integration States
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -1615,6 +1871,99 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }));
   };
 
+  const handleApplyTargetCategory = (newAudience: 'adultes' | 'enfants', newGender: 'hommes' | 'femmes') => {
+    setTargetAudience(newAudience);
+    setTargetGender(newGender);
+    const newTailles = newAudience === 'enfants' ? KIDS_TAILLES : ADULT_TAILLES;
+    setSelectedTailles(newTailles);
+
+    // Update measurements for all pieces in analysisResult
+    if (analysisResult?.pieces && analysisResult.pieces.length > 0) {
+      const updatedPieces = analysisResult.pieces.map((p: any) => {
+        const pieceMesures = getStandardMesuresForCategory(p.name || analysisResult.category || '', newAudience, newGender);
+        return {
+          ...p,
+          mesures: pieceMesures
+        };
+      });
+
+      const updatedPiecesMesures = updatedPieces.map((p: any) => JSON.parse(JSON.stringify(p.mesures)));
+      setPiecesMesures(updatedPiecesMesures);
+      setCustomMesures(updatedPiecesMesures[0] || []);
+
+      // If switched to Enfants, scale down consumption if it's currently adult consumption (> 1.2m)
+      let adjustedConso = analysisResult.consumption;
+      if (newAudience === 'enfants') {
+        const parseNum = (c: string) => parseFloat((c || '').replace(/[^0-9.]/g, '')) || 0;
+        const currentConsoNum = parseNum(analysisResult.consumption);
+        if (currentConsoNum > 1.0) {
+          adjustedConso = `${Math.max(0.65, Number((currentConsoNum * 0.55).toFixed(2)))}m`;
+        }
+      } else if (newAudience === 'adultes') {
+        // If switched back to Adultes, restore reasonable consumption
+        const parseNum = (c: string) => parseFloat((c || '').replace(/[^0-9.]/g, '')) || 0;
+        const currentConsoNum = parseNum(analysisResult.consumption);
+        if (currentConsoNum < 1.1) {
+          adjustedConso = `${Math.max(1.30, Number((currentConsoNum * 1.8).toFixed(2)))}m`;
+        }
+      }
+
+      setAnalysisResult({
+        ...analysisResult,
+        pieces: updatedPieces,
+        consumption: adjustedConso
+      });
+    } else {
+      const std = getStandardMesuresForCategory(selectedCategory, newAudience, newGender);
+      setCustomMesures(std);
+      setPiecesMesures([std]);
+    }
+
+    const labelAr = newAudience === 'enfants'
+      ? (newGender === 'femmes' ? 'صغار (بنات) - مقاسات 4A إلى 14A' : 'صغار (أولاد) - مقاسات 4A إلى 14A')
+      : (newGender === 'femmes' ? 'كبار (نساء) - مقاسات S إلى XXL' : 'كبار (رجال) - مقاسات S إلى XXL');
+
+    const labelFr = newAudience === 'enfants'
+      ? (newGender === 'femmes' ? 'Enfants Filles (4A - 14A)' : 'Enfants Garçons (4A - 14A)')
+      : (newGender === 'femmes' ? 'Adultes Femmes (S - XXL)' : 'Adultes Hommes (S - XXL)');
+
+    setCustomAlert({
+      title: isAr ? 'تم ضبط القياسات بدقة 🎯' : 'Mesures Actualisées 🎯',
+      message: isAr
+        ? `تم تحديث جدول المقاسات تلقائياً ليتطابق مع: ${labelAr}. يمكنك تعديل أي قياس يدوياً.`
+        : `Le barème a été ajusté avec succès pour : ${labelFr}. Vous pouvez modifier chaque valeur.`,
+      isError: false
+    });
+  };
+
+  const handleRecalculateMesuresIA = async () => {
+    if (!image) {
+      setCustomAlert({
+        title: isAr ? 'تنبيه' : 'Attention',
+        message: isAr ? 'يرجى تحميل صورة للموديل أولاً' : 'Veuillez uploader une image du modèle d\'abord',
+        isError: true
+      });
+      return;
+    }
+
+    const targetLabel = targetAudience === 'enfants'
+      ? (targetGender === 'femmes' ? 'أطفال صغار بنات (4A - 14A)' : 'أطفال صغار أولاد (4A - 14A)')
+      : (targetGender === 'femmes' ? 'كبار نساء (S - XXL)' : 'كبار رجال (S - XXL)');
+
+    setAnalyzing(true);
+    setChat(prev => [
+      ...prev,
+      {
+        role: 'user',
+        text: isAr
+          ? `🔄 يرجى إعادة حساب القياسات واستهلاك الثوب بدقة لهذا الموديل لفئة: [ ${targetLabel} ].`
+          : `🔄 Veuillez recalculer les mesures et métrage pour le profil : [ ${targetLabel} ].`
+      }
+    ]);
+
+    await startAnalysis(image, imageFileName);
+  };
+
   const applyPiecePreset = (preset: 'survet_2_pieces' | 'sweatshirt' | 'jogging' | 'tshirt' | 'robe_chemise' | 'abaya' | 'caftan' | 'chemise' | 'pantalon' | 'hoodie' | '3_pieces' | '2_pieces' | 1 | 2 | 3) => {
     let ctx = '';
     let count: number | undefined = undefined;
@@ -1662,7 +2011,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       count = 2;
     }
 
-    const fallbackResult = buildFallbackAnalysis(ctx, isAr, count);
+    const fallbackResult = buildFallbackAnalysis(ctx, isAr, count, targetAudience, targetGender);
     if (analysisResult?.tissuPhoto) {
       fallbackResult.tissuPhoto = analysisResult.tissuPhoto;
     }
@@ -2041,7 +2390,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
     const executeFallbackAnalysis = (noticeMsg?: string, contextOverride?: string) => {
       const ctxToUse = contextOverride || combinedContext;
-      const fallbackResult = buildFallbackAnalysis(ctxToUse, isAr);
+      const fallbackResult = buildFallbackAnalysis(ctxToUse, isAr, undefined, targetAudience, targetGender);
+      setSelectedTailles(targetAudience === 'enfants' ? KIDS_TAILLES : ADULT_TAILLES);
       setCustomMesures(fallbackResult.pieces[0].mesures);
       setPiecesMesures(fallbackResult.pieces.map((p: any) => JSON.parse(JSON.stringify(p.mesures))));
       setAnalysisResult(fallbackResult);
@@ -2095,10 +2445,21 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         return;
       }
 
+      const targetSizesList = targetAudience === 'enfants' ? '4A, 6A, 8A, 10A, 12A, 14A' : 'S, M, L, XL, XXL';
+      const targetProfileDescAr = targetAudience === 'enfants'
+        ? `الفئة المستهدفة المحددة: أطفال صغار (${targetGender === 'femmes' ? 'بنات' : 'أولاد'} من 4 إلى 14 سنة). المقاسات المطلوبة في مصفوفة mesures هي: [${targetSizesList}]. استهلاك القماش مناسب لملابس الأطفال الصغيرة (بين 0.60m و 0.95m للقطعة).`
+        : `الفئة المستهدفة المحددة: كبار (${targetGender === 'femmes' ? 'نساء' : 'رجال'}). المقاسات المطلوبة في مصفوفة mesures هي: [${targetSizesList}]. استهلاك القماش مناسب لملابس الكبار.`;
+
+      const targetProfileDescFr = targetAudience === 'enfants'
+        ? `Profil cible : Enfants (${targetGender === 'femmes' ? 'Filles' : 'Garçons'} 4 à 14 ans). Tailles requises : [${targetSizesList}], métrage adapté aux enfants (0.60m - 0.95m par pièce).`
+        : `Profil cible : Adultes (${targetGender === 'femmes' ? 'Femmes' : 'Hommes'}). Tailles requises : [${targetSizesList}], métrage adapté aux adultes.`;
+
       const analysisPrompt = isAr
         ? `أنت خبير نسيج وخياطة محترف في مصنع مغربي للألبسة الجاهزة (BEYA Expert). حلل هذه الصورة بدقة تقنية عالية جداً للموديل المعروض فيها تحديداً.
 
-⚠️ تنبيه حاسم وإلزامي لتحديد الموديل الحقيقي بدقة:
+⚠️ تنبيه حاسم وإلزامي حول الفئة المستهدفة والموديل:
+- ${targetProfileDescAr}
+- إذا كان الموديل المعروض في الصورة مسطحاً (Packshot / Flat-lay / à plat / مانيكان شبحي) بدون شخص يرتديه، فالتزم حصراً بهذه الفئة واجعل جدول المقاسات ومكونات الباترون واستهلاك القماش متطابقاً تماماً معها!
 - انظر بعناية تامة إلى الصورة المرفقة وحدد نوع الموديل الحقيقي بدقة تامة:
   * إذا كانت الصورة تظهر تيشيرت (T-shirt / Oversize T-shirt / Polo) حتى لو كانت هناك صور متعددة أو مقربة للشعار أو الظهر، حدده فوراً كـ T-shirt (قطعة واحدة فقط) باستهلاك بين 1.10m و 1.35m وتكلفة خياطة وفصالة مناسبة للتيشيرت. لا تخلط أبداً بين التيشيرت والسروال!
   * إذا كان سروالاً أو بنطلون جوغينغ فقط (Pantalon / Jogging)، فضعه كقطعة واحدة فقط (سروال رياضي جوغينغ) باستهلاك حوالي 1.40م وتكلفة 40-55 درهم. لا تخترع سويت شيرت أو كول رون غير موجود!
@@ -2164,6 +2525,11 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   ]
 }`
         : `Tu es un expert textile et confection en atelier industriel marocain (BEYA Expert). Analyse cette image avec une très haute précision.
+
+⚠️ Consigne impérative sur le profil cible :
+- ${targetProfileDescFr}
+- Si le vêtement dans l'image est à plat (Packshot / flat-lay / sans mannequin / mannequin invisible), appliquez strictement ce profil cible, ce barème de tailles et cette consommation de tissu.
+
 Consignes impératives pour les pièces du modèle :
 - Analysez strictement le vêtement visible dans l'image réelle fournie sans aucune invention :
   * Si l'image montre un t-shirt (même avec plusieurs vues superposées: face, dos, zoom logo/étiquette), identifie-le formellement comme T-shirt (1 seule pièce). Ne JAMAIS le confondre avec un pantalon ou un jogging !
@@ -2274,7 +2640,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
           result.components = result.pieces.flatMap((p: any) => p.components);
         } else {
           // If no pieces parsed, enrich from fallback
-          const fb = buildFallbackAnalysis(combinedContext, isAr);
+          const fb = buildFallbackAnalysis(combinedContext, isAr, undefined, targetAudience, targetGender);
           result.pieces = fb.pieces;
           result.components = fb.components;
           if (!result.fabricSuggested) result.fabricSuggested = fb.fabricSuggested;
@@ -2283,24 +2649,10 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
         // Guarantee standard measurements for detected garment if Gemini omitted them
         result.pieces.forEach((p: any) => {
           if (!p.mesures || !Array.isArray(p.mesures) || p.mesures.length === 0) {
-            const lowKey = `${p.name || ''} ${result.category || ''}`.toLowerCase();
-            if (lowKey.includes('t-shirt') || lowKey.includes('tshirt') || lowKey.includes('tee') || lowKey.includes('تيشرت') || lowKey.includes('تيشيرت')) {
-              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
-            } else if (lowKey.includes('pantalon') || lowKey.includes('jogging') || lowKey.includes('سروال') || lowKey.includes('cargo')) {
-              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Pantalon']));
-            } else if (lowKey.includes('chemise') || lowKey.includes('قميص')) {
-              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Chemise']));
-            } else if (lowKey.includes('caftan') || lowKey.includes('قفطان')) {
-              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Caftan']));
-            } else if (lowKey.includes('djellaba') || lowKey.includes('جلابة')) {
-              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Djellaba']));
-            } else if (lowKey.includes('robe') || lowKey.includes('فستان') || lowKey.includes('abaya') || lowKey.includes('عباية')) {
-              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Robe']));
-            } else {
-              p.mesures = JSON.parse(JSON.stringify(STANDARD_MESURES['TShirt']));
-            }
+            p.mesures = getStandardMesuresForCategory(p.name || result.category || '', targetAudience, targetGender);
           }
         });
+        setSelectedTailles(targetAudience === 'enfants' ? KIDS_TAILLES : ADULT_TAILLES);
 
         // Populate tailored Gamme de Montage
         if (parsed.gammeMontage && Array.isArray(parsed.gammeMontage) && parsed.gammeMontage.length > 0) {
@@ -4098,6 +4450,28 @@ ${userMessage}
               )}
             </div>
 
+            {/* Quick Profile Target Selector (Adultes/Enfants - Hommes/Femmes) */}
+            <div className={`flex-shrink-0 bg-slate-900/90 border border-slate-800 p-2.5 sm:p-3 rounded-2xl flex items-center justify-between flex-wrap gap-2 text-white shadow-sm ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                <span className="text-[11px] font-bold text-slate-400">{isAr ? 'فئة الموديل:' : 'Profil Cible :'}</span>
+                <span className="px-2 py-0.5 rounded-lg bg-indigo-950 text-amber-300 border border-indigo-700/60 font-black text-xs">
+                  {targetAudience === 'enfants'
+                    ? (targetGender === 'femmes' ? (isAr ? '👧 أطفال صغار (بنات)' : '👧 Enfants (Filles)') : (isAr ? '👦 أطفال صغار (أولاد)' : '👦 Enfants (Garçons)'))
+                    : (targetGender === 'femmes' ? (isAr ? '👩 كبار (نساء)' : '👩 Adultes (Femmes)') : (isAr ? '👨 كبار (رجال)' : '👨 Adultes (Hommes)'))
+                  }
+                </span>
+              </div>
+              <div className={`flex items-center gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <button
+                  type="button"
+                  onClick={() => handleApplyTargetCategory(targetAudience === 'adultes' ? 'enfants' : 'adultes', targetGender)}
+                  className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-black transition-all border border-slate-700 active:scale-95"
+                >
+                  {targetAudience === 'adultes' ? (isAr ? 'تبديل للصغار 🧒' : 'Passer à Enfants 🧒') : (isAr ? 'تبديل للكبار 🧑' : 'Passer à Adultes 🧑')}
+                </button>
+              </div>
+            </div>
+
             {/* ONE-CLICK DISPATCH ENGINE (Desktop Only Sidebar) */}
             <div className="hidden lg:block flex-shrink-0 bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
               <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
@@ -4861,11 +5235,110 @@ ${userMessage}
 
           {/* TAB 2: TABLEAU DE MESURES S-XXL (activeTab === 'mesures') */}
           {activeTab === 'mesures' && (
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 min-h-0 select-text">
-              <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 min-h-0 select-text">
+              {/* Header Box with Audience & Gender Selectors (Exactly where user drew the red box) */}
+              <div className={`p-4 bg-slate-50 rounded-2xl border border-slate-200/90 flex items-center justify-between flex-wrap gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
                 <div>
-                  <h3 className="font-black text-base text-slate-900">{isAr ? 'جدول المقاسات الكامل (S - XXL)' : 'Tableau de Mesures Complet (S - XXL)'}</h3>
-                  <p className="text-xs text-slate-500 font-bold">{isAr ? 'يمكنك تعديل أي قياس لتخصيص الباترون لورشتك' : 'Modifiez les valeurs selon votre patronage'}</p>
+                  <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <h3 className="font-black text-base text-slate-900">
+                      {targetAudience === 'enfants'
+                        ? (isAr ? 'جدول مقاسات الأطفال (4A - 14A)' : 'Tableau de Mesures Enfants (4A - 14A)')
+                        : (isAr ? 'جدول مقاسات الكبار (S - XXL)' : 'Tableau de Mesures Adultes (S - XXL)')
+                      }
+                    </h3>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black ${
+                      targetAudience === 'enfants'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                        : 'bg-indigo-100 text-indigo-900 border border-indigo-200'
+                    }`}>
+                      {targetAudience === 'enfants'
+                        ? (targetGender === 'femmes' ? (isAr ? 'بنات 👧' : 'Filles 👧') : (isAr ? 'أولاد 👦' : 'Garçons 👦'))
+                        : (targetGender === 'femmes' ? (isAr ? 'نساء 👩' : 'Femmes 👩') : (isAr ? 'رجال 👨' : 'Hommes 👨'))
+                      }
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-bold mt-1">
+                    {isAr ? 'حدّد الفئة (صغار/كبار - ذكور/إناث) لضبط الباترون بدقة للموديلات المسطحة' : 'Modifiez les valeurs selon votre patronage et le profil cible'}
+                  </p>
+                </div>
+
+                {/* USER'S REQUESTED BUTTONS (RED BOX AREA) */}
+                <div className={`flex items-center gap-2 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
+                  {/* Tranche d'Âge: Lkbar vs Sghar */}
+                  <div className="flex items-center p-1 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTargetCategory('adultes', targetGender)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                        targetAudience === 'adultes'
+                          ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
+                          : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+                      }`}
+                      title={isAr ? 'مقاسات الكبار (S إلى XXL)' : 'Tailles Adultes (S à XXL)'}
+                    >
+                      <span>🧑</span>
+                      <span>{isAr ? 'كبار (Adultes)' : 'Adultes'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTargetCategory('enfants', targetGender)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                        targetAudience === 'enfants'
+                          ? 'bg-amber-500 text-slate-950 shadow-sm ring-2 ring-amber-200 font-black'
+                          : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+                      }`}
+                      title={isAr ? 'مقاسات الأطفال الصغار (4A إلى 14A)' : 'Tailles Enfants (4A à 14A)'}
+                    >
+                      <span>🧒</span>
+                      <span>{isAr ? 'صغار (Enfants)' : 'Enfants'}</span>
+                    </button>
+                  </div>
+
+                  {/* Genre: Drari/Rjal vs Bnat/Nsa */}
+                  <div className="flex items-center p-1 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTargetCategory(targetAudience, 'hommes')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                        targetGender === 'hommes'
+                          ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-200'
+                          : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+                      }`}
+                      title={isAr ? (targetAudience === 'enfants' ? 'أولاد (ذكور)' : 'رجال (ذكور)') : (targetAudience === 'enfants' ? 'Garçons' : 'Hommes')}
+                    >
+                      <span>{targetAudience === 'enfants' ? '👦' : '👨'}</span>
+                      <span>{isAr ? (targetAudience === 'enfants' ? 'أولاد (Garçons)' : 'رجال (Hommes)') : (targetAudience === 'enfants' ? 'Garçons' : 'Hommes')}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTargetCategory(targetAudience, 'femmes')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                        targetGender === 'femmes'
+                          ? 'bg-rose-500 text-white shadow-sm ring-2 ring-rose-200'
+                          : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+                      }`}
+                      title={isAr ? (targetAudience === 'enfants' ? 'بنات (إناث)' : 'نساء (إناث)') : (targetAudience === 'enfants' ? 'Filles' : 'Femmes')}
+                    >
+                      <span>{targetAudience === 'enfants' ? '👧' : '👩'}</span>
+                      <span>{isAr ? (targetAudience === 'enfants' ? 'بنات (Filles)' : 'نساء (Femmes)') : (targetAudience === 'enfants' ? 'Filles' : 'Femmes')}</span>
+                    </button>
+                  </div>
+
+                  {/* Recalculate with AI button */}
+                  {image && (
+                    <button
+                      type="button"
+                      onClick={handleRecalculateMesuresIA}
+                      className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+                      title={isAr ? 'إعادة استشارة الذكاء الاصطناعي لحساب المقاسات واستهلاك هذه الفئة' : 'Recalculer les mesures et le métrage avec l\'IA'}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                      <span className="hidden sm:inline">{isAr ? 'تحديث بالذكاء الاصطناعي ⚡' : 'Recalculer IA ⚡'}</span>
+                      <span className="sm:hidden">{isAr ? 'IA ⚡' : 'IA ⚡'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
 

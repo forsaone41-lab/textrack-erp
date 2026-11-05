@@ -382,6 +382,127 @@ export const SUPPLIERS_DATA: SupplierProfile[] = [
         { author: 'ياسين الصقلي', brand: 'Street Label', rating: 5, date: 'منذ أسبوعين', text: 'الأكياس الزيبلوك باللوغو ديالي جاو كيحمقو، بدلو المظهر ديال البراند ديالي 180 درجة.' }
       ]
     }
+  ,
+    {
+      id: 'sup-7',
+      name: 'أتليه كازا برينت تيكستيل (Casa Print Studio)',
+      logo: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=300&auto=format&fit=crop&q=80',
+      cover: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&auto=format&fit=crop&q=80',
+      category: 'impression',
+      categoryLabel: 'سيريغرافي وطباعة مباشرة',
+      city: 'الدار البيضاء (سيدي معروف)',
+      cityTag: 'casablanca',
+      district: 'سيدي معروف، المنطقة التقنية، زنقة الأطلس',
+      fabricTags: ['impression', 'serigraphie', 'puff'],
+      whatsapp: '212675239885',
+      phone: '0675239885',
+      rating: 4.92,
+      reviewsCount: 34,
+      verified: true,
+      verifiedBadge: 'مورد معتمد من ورشة BEYA',
+      desc: 'متخصصون في السيريغرافي الفاخرة للكميات المتوسطة والكبرى، تأثيرات Puff 3D بارزة، Discharge وأحبار مائية خالية من المواد الكيميائية المضرة.',
+      minQty: 'ابتداءً من 30 قطعة',
+      priceRange: '10 - 24 درهم للقطعة',
+      deliveryTime: '48 إلى 72 ساعة',
+      beyaAdvantage: 'عينة مجانية مطبوعة (Épreuve d\'impression) قبل إطلاق كمية الإنتاج الكاملة',
+      products: ['سيريغرافي بارزة Puff 3D', 'طباعة مائية Waterbase عالية النعومة', 'طباعة عاكسة للضوء Reflective'],
+      catalog: [
+        {
+          name: 'سيريغرافي بارزة حرارياً (Puff 3D Screen Print)',
+          type: 'impression',
+          price: '12 - 20 MAD / pc',
+          stockStatus: 'متوفر للطلبيات',
+          colors: ['جميع ألوان Pantone'],
+          specs: 'انتفاخ متناسق وثبات عالي للغسيل مع مظهر عصري راقي لملابس الستريتوير.'
+        },
+        {
+          name: 'طباعة مائية بدون ملمس (Waterbase / Discharge)',
+          type: 'impression',
+          price: '9 - 16 MAD / pc',
+          stockStatus: 'متوفر',
+          colors: ['ألوان ناعمة وممزوجة بالألياف'],
+          specs: 'تندمج مع نسيج القطن 100% بدون أي طبقة بلاستيكية خشنة.'
+        }
+      ],
+      reviews: [
+        { author: 'سفيان الوزاني', brand: 'Nomad Wear', rating: 5, date: 'منذ أسبوع', text: 'أحسن طبعة Puff 3D خدمناها فالمغرب، الارتفاع ديال الطبعة متساوي وفينيسيون خطيرة.' }
+      ]
+    },
+    {
+      id: 'sup-8',
+      name: 'أتوليي الفن الراقي للطرز الإلكتروني (Atelier Broderie Pro)',
+      logo: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=300&auto=format&fit=crop&q=80',
+      cover: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&auto=format&fit=crop&q=80',
+      category: 'broderie',
+      categoryLabel: 'تطريز إلكتروني وبرودري',
+      city: 'الدار البيضاء (درب عمر)',
+      cityTag: 'casablanca',
+      district: 'درب عمر، عمارة الأطلس، الطابق الأرضي',
+      fabricTags: ['broderie', 'patch'],
+      whatsapp: '212675239885',
+      phone: '0675239885',
+      rating: 4.9,
+      reviewsCount: 28,
+      verified: true,
+      verifiedBadge: 'مورد معتمد من ورشة BEYA',
+      desc: 'ورشة تطريز صناعي متقدمة مجهزة بماكينات Barudan اليابانية، متخصصة في تطريز الـ 3D Puff، بادجات مقصوصة بالليزر، وتطريز القبعات والهوديات السميكة.',
+      minQty: 'ابتداءً من 25 قطعة',
+      priceRange: '8 - 25 درهم للقطعة',
+      deliveryTime: '2 إلى 4 أيام عمل',
+      beyaAdvantage: 'تصميم برنامج البكاج (Fichier Broderie DST) مجاناً لأعضاء شبكة BEYA',
+      products: ['تطريز ثلاثي الأبعاد 3D Puff', 'بادجات مطرزة بالليزر', 'تطريز الكابوتش والأكمام'],
+      catalog: [
+        {
+          name: 'تطريز 3D فوم سميك للهوديات (3D Puff Foam Embroidery)',
+          type: 'broderie',
+          price: '14 - 24 MAD / pc',
+          stockStatus: 'متوفر',
+          colors: ['خيوط ألمانية أصلية'],
+          specs: 'بروز قوي بارتفاع 3 مم متين جداً ولا يتأثر بالغسيل المتكرر.'
+        }
+      ],
+      reviews: [
+        { author: 'مهدي الصغير', brand: 'Heritage Brand', rating: 5, date: 'منذ أسبوعين', text: 'طرز ممتاز، الخيوط ثابته والدقة فالحروف الصغيرة كانت مبهرة.' }
+      ]
+    },
+    {
+      id: 'sup-9',
+      name: 'شركة النخبة لحبكات النسيج وفورنيتور الملابس (Élite Rubanerie & Labels)',
+      logo: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=300&auto=format&fit=crop&q=80',
+      cover: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80',
+      category: 'accessoires',
+      categoryLabel: 'حبكات نسيج وليبلات وفورنيتور',
+      city: 'طنجة / الدار البيضاء',
+      cityTag: 'tanger',
+      district: 'طنجة • مغوغة الصناعية، ونقطة توزيع بدرب عمر الدار البيضاء',
+      fabricTags: ['accessoires', 'labels', 'fournitures'],
+      whatsapp: '212675239885',
+      phone: '0675239885',
+      rating: 4.88,
+      reviewsCount: 22,
+      verified: true,
+      verifiedBadge: 'مورد معتمد من ورشة BEYA',
+      desc: 'المصنع الرائد للعلامات المنسوجة (Woven Labels)، الأشرطة المطاطية، سحابات ضد الماء (Zips Étanche)، وريبان القطن المخصص للبراندات.',
+      minQty: 'ابتداءً من 200 قطعة',
+      priceRange: '0.60 - 8 درهم للقطعة',
+      deliveryTime: 'تسليم سريع 48 ساعة',
+      beyaAdvantage: 'إعداد شريط العينات (Ruban Test) بأسماء الماركات مجاناً قبل الإنتاج',
+      products: ['علامات وياقات منسوجة Woven Labels', 'سحابات مخفية ومعدنية', 'أشرطة مطاطية مع اللوغو Jacquard'],
+      catalog: [
+        {
+          name: 'ياقات وعلامات هوية منسوجة (Woven Neck Labels)',
+          type: 'accessoires',
+          price: '0.70 - 1.20 MAD / pc',
+          stockStatus: 'متوفر بالطلب',
+          colors: ['دقة خيوط عالية High Definition Damask'],
+          specs: 'نعومة فائقة على الجلد لا تسبب أي حكة، مقاومة للحرارة والغسيل.'
+        }
+      ],
+      reviews: [
+        { author: 'نوال الشريف', brand: 'Moda Casa', rating: 5, date: 'منذ 3 أسابيع', text: 'الليبلات ناعمين بزاف والكتابة واضحة ومقروءة بدقة متناهية.' }
+      ]
+    }
+
   ];
 
 export const getSupplierById = (id: string): SupplierProfile | undefined => {
