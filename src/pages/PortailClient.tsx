@@ -381,6 +381,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [citySearchQuery, setCitySearchQuery] = useState('');
   const [cityTab, setCityTab] = useState<'maroc' | 'international'>('maroc');
   const [savingCity, setSavingCity] = useState(false);
+  const [cityToastMsg, setCityToastMsg] = useState<string | null>(null);
 
   const [clientCity, setClientCity] = useState<string>(() => {
     const emailKey = currentUser?.email?.toLowerCase().trim() || '';
@@ -453,11 +454,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       }
 
       setShowCityModal(false);
-      showNotification(
-        isAr ? `تم حفظ موقعك بنجاح (${finalCity}). تم ربط المدينة بطلبياتك لتسهيل التوصيل وتحديد الموردين.` : `Votre ville (${finalCity}) a été enregistrée avec succès.`,
-        isAr ? '📍 تم تحديد المدينة بنجاح' : '📍 Ville confirmée',
-        'success'
-      );
+      setCityToastMsg(isAr ? `📍 تم حفظ مدينتك بنجاح: ${finalCity}` : `📍 Ville enregistrée : ${finalCity}`);
+      setTimeout(() => setCityToastMsg(null), 3500);
     } catch (err) {
       console.error('Error saving city:', err);
     } finally {
@@ -8711,7 +8709,7 @@ Est-il possible de négocier un ajustement tarifaire ou de délai avant suppress
       })()}
 
       
-      {/* ─── Apple-Style City & Location Selector Modal ─── */}
+      {/* ─── Apple-Style City & Location Selector Modal (Clean & Professional, Zero Videogame Emojis) ─── */}
       {showCityModal && (
         <div
           className="fixed inset-0 z-[280] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
@@ -8719,23 +8717,23 @@ Est-il possible de négocier un ajustement tarifaire ou de délai avant suppress
           onClick={handleDismissCityModal}
         >
           <div
-            className="bg-white rounded-[2.5rem] max-w-lg sm:max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+            className="bg-white rounded-[2rem] sm:rounded-[2.5rem] max-w-lg sm:max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 shrink-0 bg-gradient-to-b from-slate-50 to-white">
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs shrink-0">
-                  <MapPin className="w-6 h-6 text-indigo-600" />
+            <div className="p-5 sm:p-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 shrink-0 bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs shrink-0">
+                  <MapPin className="w-5 h-5 text-indigo-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
-                    {isAr ? 'اختر مدينتك أو منطقتك' : 'Choisissez votre ville ou région'}
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-tight">
+                    {isAr ? 'اختر مدينتك أو مقر مشروعك' : 'Choisissez votre ville ou région'}
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
                     {isAr
-                      ? 'حدد موقع تواجدك لتوفير أفضل خيارات التوصيل وأقرب الموردين لعلامتك التجارية.'
-                      : 'Sélectionnez votre localisation pour optimiser les livraisons et sourcing textile.'}
+                      ? 'حدد موقعك لنقترح عليك أفضل خيارات التوصيل وأقرب موردي الأقمشة.'
+                      : 'Sélectionnez votre ville pour optimiser les livraisons et le sourcing textile.'}
                   </p>
                 </div>
               </div>
@@ -8748,119 +8746,123 @@ Est-il possible de négocier un ajustement tarifaire ou de délai avant suppress
               </button>
             </div>
 
-            {/* Apple Segmented Tabs & Search */}
-            <div className="px-6 pt-4 pb-2 space-y-3 shrink-0">
-              {/* Apple Segmented Control */}
-              <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
-                <button
-                  type="button"
-                  onClick={() => { setCityTab('maroc'); setCitySearchQuery(''); }}
-                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    cityTab === 'maroc'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <span>🇲🇦</span>
-                  <span>{isAr ? 'مدن المغرب' : 'Villes du Maroc'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setCityTab('international'); setCitySearchQuery(''); }}
-                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    cityTab === 'international'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <span>🌍</span>
-                  <span>{isAr ? 'دولي / الجالية' : 'International'}</span>
-                </button>
-              </div>
-
-              {/* Quick Search */}
+            {/* Smart Search & Input Bar */}
+            <div className="px-5 sm:px-6 pt-4 pb-2 space-y-3 shrink-0">
+              {/* Main Input Field */}
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <MapPin className="w-4 h-4 text-indigo-600 absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
-                  value={citySearchQuery}
-                  onChange={(e) => setCitySearchQuery(e.target.value)}
-                  placeholder={isAr ? 'ابحث عن مدينتك (مثال: طنجة، فاس، أكادير، الناظور...)' : 'Rechercher votre ville...'}
-                  className="w-full bg-slate-50 border border-slate-200/80 rounded-xl py-2.5 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:text-slate-400"
+                  value={selectedCityDraft}
+                  onChange={(e) => {
+                    setSelectedCityDraft(e.target.value);
+                    setCitySearchQuery(e.target.value);
+                  }}
+                  placeholder={isAr ? 'اكتب اسم مدينتك مباشرة أو اخترها من القائمة...' : 'Tapez votre ville ou sélectionnez ci-dessous...'}
+                  className="w-full bg-slate-50 border-2 border-slate-200/90 rounded-2xl py-3 pl-10 pr-10 rtl:pl-10 rtl:pr-10 text-xs sm:text-sm font-bold text-slate-900 focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
                 />
-                {citySearchQuery && (
+                {selectedCityDraft && (
                   <button
                     type="button"
-                    onClick={() => setCitySearchQuery('')}
-                    className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                    onClick={() => {
+                      setSelectedCityDraft('');
+                      setCitySearchQuery('');
+                    }}
+                    className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/60 transition-colors"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
+
+              {/* Clean Tabs (No cartoon emojis) */}
+              <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => { setCityTab('maroc'); setCitySearchQuery(''); }}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    cityTab === 'maroc'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <span>{isAr ? 'مدن المغرب (المحلي)' : 'Villes du Maroc'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setCityTab('international'); setCitySearchQuery(''); }}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    cityTab === 'international'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <span>{isAr ? 'دولي / الجالية' : 'International / Diaspora'}</span>
+                </button>
+              </div>
             </div>
 
-            {/* Scrollable City Selection Grid */}
-            <div className="px-6 py-3 overflow-y-auto custom-scrollbar flex-1 space-y-2">
+            {/* Scrollable City Selection Grid (Pure Clean Typography, Zero Emojis) */}
+            <div className="px-5 sm:px-6 py-2 overflow-y-auto custom-scrollbar flex-1 space-y-2">
               {(() => {
                 const marocCities = [
-                  { id: 'casablanca', nameAr: 'الدار البيضاء', nameFr: 'Casablanca', icon: '🏙️' },
-                  { id: 'rabat', nameAr: 'الرباط', nameFr: 'Rabat', icon: '🏛️' },
-                  { id: 'sale', nameAr: 'سلا', nameFr: 'Salé', icon: '🏰' },
-                  { id: 'tanger', nameAr: 'طنجة', nameFr: 'Tanger', icon: '🌊' },
-                  { id: 'marrakech', nameAr: 'مراكش', nameFr: 'Marrakech', icon: '🌴' },
-                  { id: 'fes', nameAr: 'فاس', nameFr: 'Fès', icon: '🏰' },
-                  { id: 'agadir', nameAr: 'أكادير', nameFr: 'Agadir', icon: '🏖️' },
-                  { id: 'meknes', nameAr: 'مكناس', nameFr: 'Meknès', icon: '🌾' },
-                  { id: 'oujda', nameAr: 'وجدة', nameFr: 'Oujda', icon: '🌅' },
-                  { id: 'kenitra', nameAr: 'القنيطرة', nameFr: 'Kénitra', icon: '🏗️' },
-                  { id: 'tetouan', nameAr: 'تطوان', nameFr: 'Tétouan', icon: '🏔️' },
-                  { id: 'mohammedia', nameAr: 'المحمدية', nameFr: 'Mohammédia', icon: '🏭' },
-                  { id: 'temara', nameAr: 'تمارة', nameFr: 'Témara', icon: '🏡' },
-                  { id: 'bouskoura', nameAr: 'بوسكورة', nameFr: 'Bouskoura', icon: '🌲' },
-                  { id: 'nouaceur', nameAr: 'النواصر', nameFr: 'Nouaceur', icon: '✈️' },
-                  { id: 'safi', nameAr: 'آسفي', nameFr: 'Safi', icon: '🌊' },
-                  { id: 'eljadida', nameAr: 'الجديدة', nameFr: 'El Jadida', icon: '🏖️' },
-                  { id: 'benimellal', nameAr: 'بني ملال', nameFr: 'Béni Mellal', icon: '🌿' },
-                  { id: 'nador', nameAr: 'الناظور', nameFr: 'Nador', icon: '⚓' },
-                  { id: 'khouribga', nameAr: 'خريبكة', nameFr: 'Khouribga', icon: '⛰️' },
-                  { id: 'settat', nameAr: 'سطات', nameFr: 'Settat', icon: '🍇' },
-                  { id: 'berkane', nameAr: 'بركان', nameFr: 'Berkane', icon: '🍊' },
-                  { id: 'taza', nameAr: 'تازة', nameFr: 'Taza', icon: '🏔️' },
-                  { id: 'khemisset', nameAr: 'الخميسات', nameFr: 'Khémisset', icon: '🌾' },
-                  { id: 'larache', nameAr: 'العرائش', nameFr: 'Larache', icon: '🌊' },
-                  { id: 'ksarelkebir', nameAr: 'القصر الكبير', nameFr: 'Ksar El Kebir', icon: '🏰' },
-                  { id: 'chefchaouen', nameAr: 'شفشاون', nameFr: 'Chefchaouen', icon: '🔷' },
-                  { id: 'alhoceima', nameAr: 'الحسيمة', nameFr: 'Al Hoceïma', icon: '🏖️' },
-                  { id: 'taroudant', nameAr: 'تارودانت', nameFr: 'Taroudant', icon: '🌴' },
-                  { id: 'ouarzazate', nameAr: 'ورزازات', nameFr: 'Ouarzazate', icon: '🎬' },
-                  { id: 'essaouira', nameAr: 'الصويرة', nameFr: 'Essaouira', icon: '🌊' },
-                  { id: 'laayoune', nameAr: 'العيون', nameFr: 'Laâyoune', icon: '🏜️' },
-                  { id: 'dakhla', nameAr: 'الداخلة', nameFr: 'Dakhla', icon: '🏄' },
-                  { id: 'guelmim', nameAr: 'كلميم', nameFr: 'Guelmim', icon: '🚪' },
-                  { id: 'tiznit', nameAr: 'تزنيت', nameFr: 'Tiznit', icon: '💍' },
-                  { id: 'ifrane', nameAr: 'إفران', nameFr: 'Ifrane', icon: '🌲' },
-                  { id: 'azrou', nameAr: 'أزرو', nameFr: 'Azrou', icon: '🪵' },
-                  { id: 'midelt', nameAr: 'ميدلت', nameFr: 'Midelt', icon: '🍎' }
+                  { id: 'casablanca', nameAr: 'الدار البيضاء', nameFr: 'Casablanca' },
+                  { id: 'rabat', nameAr: 'الرباط', nameFr: 'Rabat' },
+                  { id: 'tanger', nameAr: 'طنجة', nameFr: 'Tanger' },
+                  { id: 'marrakech', nameAr: 'مراكش', nameFr: 'Marrakech' },
+                  { id: 'fes', nameAr: 'فاس', nameFr: 'Fès' },
+                  { id: 'agadir', nameAr: 'أكادير', nameFr: 'Agadir' },
+                  { id: 'meknes', nameAr: 'مكناس', nameFr: 'Meknès' },
+                  { id: 'oujda', nameAr: 'وجدة', nameFr: 'Oujda' },
+                  { id: 'kenitra', nameAr: 'القنيطرة', nameFr: 'Kénitra' },
+                  { id: 'tetouan', nameAr: 'تطوان', nameFr: 'Tétouan' },
+                  { id: 'mohammedia', nameAr: 'المحمدية', nameFr: 'Mohammédia' },
+                  { id: 'temara', nameAr: 'تمارة', nameFr: 'Témara' },
+                  { id: 'sale', nameAr: 'سلا', nameFr: 'Salé' },
+                  { id: 'eljadida', nameAr: 'الجديدة', nameFr: 'El Jadida' },
+                  { id: 'nador', nameAr: 'الناظور', nameFr: 'Nador' },
+                  { id: 'safi', nameAr: 'آسفي', nameFr: 'Safi' },
+                  { id: 'benimellal', nameAr: 'بني ملال', nameFr: 'Béni Mellal' },
+                  { id: 'laayoune', nameAr: 'العيون', nameFr: 'Laâyoune' },
+                  { id: 'dakhla', nameAr: 'الداخلة', nameFr: 'Dakhla' },
+                  { id: 'khouribga', nameAr: 'خريبكة', nameFr: 'Khouribga' },
+                  { id: 'settat', nameAr: 'سطات', nameFr: 'Settat' },
+                  { id: 'berkane', nameAr: 'بركان', nameFr: 'Berkane' },
+                  { id: 'taza', nameAr: 'تازة', nameFr: 'Taza' },
+                  { id: 'bouskoura', nameAr: 'بوسكورة', nameFr: 'Bouskoura' },
+                  { id: 'nouaceur', nameAr: 'النواصر', nameFr: 'Nouaceur' },
+                  { id: 'essaouira', nameAr: 'الصويرة', nameFr: 'Essaouira' },
+                  { id: 'khemisset', nameAr: 'الخميسات', nameFr: 'Khémisset' },
+                  { id: 'larache', nameAr: 'العرائش', nameFr: 'Larache' },
+                  { id: 'ksarelkebir', nameAr: 'القصر الكبير', nameFr: 'Ksar El Kebir' },
+                  { id: 'chefchaouen', nameAr: 'شفشاون', nameFr: 'Chefchaouen' },
+                  { id: 'alhoceima', nameAr: 'الحسيمة', nameFr: 'Al Hoceïma' },
+                  { id: 'taroudant', nameAr: 'تارودانت', nameFr: 'Taroudant' },
+                  { id: 'ouarzazate', nameAr: 'ورزازات', nameFr: 'Ouarzazate' },
+                  { id: 'guelmim', nameAr: 'كلميم', nameFr: 'Guelmim' },
+                  { id: 'tiznit', nameAr: 'تزنيت', nameFr: 'Tiznit' },
+                  { id: 'ifrane', nameAr: 'إفران', nameFr: 'Ifrane' },
+                  { id: 'azrou', nameAr: 'أزرو', nameFr: 'Azrou' },
+                  { id: 'midelt', nameAr: 'ميدلت', nameFr: 'Midelt' }
                 ];
 
                 const intlCountries = [
-                  { id: 'france', nameAr: 'فرنسا', nameFr: 'France', icon: '🇫🇷' },
-                  { id: 'spain', nameAr: 'إسبانيا', nameFr: 'Espagne', icon: '🇪🇸' },
-                  { id: 'belgium', nameAr: 'بلجيكا', nameFr: 'Belgique', icon: '🇧🇪' },
-                  { id: 'netherlands', nameAr: 'هولندا', nameFr: 'Pays-Bas', icon: '🇳🇱' },
-                  { id: 'italy', nameAr: 'إيطاليا', nameFr: 'Italie', icon: '🇮🇹' },
-                  { id: 'germany', nameAr: 'ألمانيا', nameFr: 'Allemagne', icon: '🇩🇪' },
-                  { id: 'uk', nameAr: 'المملكة المتحدة', nameFr: 'Royaume-Uni (UK)', icon: '🇬🇧' },
-                  { id: 'usa', nameAr: 'الولايات المتحدة', nameFr: 'États-Unis (USA)', icon: '🇺🇸' },
-                  { id: 'canada', nameAr: 'كندا', nameFr: 'Canada', icon: '🇨🇦' },
-                  { id: 'uae', nameAr: 'الإمارات', nameFr: 'Émirats Arabes Unis (UAE)', icon: '🇦🇪' },
-                  { id: 'ksa', nameAr: 'السعودية', nameFr: 'Arabie Saoudite (KSA)', icon: '🇸🇦' },
-                  { id: 'qatar', nameAr: 'قطر', nameFr: 'Qatar', icon: '🇶🇦' }
+                  { id: 'france', nameAr: 'فرنسا', nameFr: 'France' },
+                  { id: 'spain', nameAr: 'إسبانيا', nameFr: 'Espagne' },
+                  { id: 'belgium', nameAr: 'بلجيكا', nameFr: 'Belgique' },
+                  { id: 'netherlands', nameAr: 'هولندا', nameFr: 'Pays-Bas' },
+                  { id: 'italy', nameAr: 'إيطاليا', nameFr: 'Italie' },
+                  { id: 'germany', nameAr: 'ألمانيا', nameFr: 'Allemagne' },
+                  { id: 'uk', nameAr: 'المملكة المتحدة', nameFr: 'Royaume-Uni (UK)' },
+                  { id: 'usa', nameAr: 'الولايات المتحدة', nameFr: 'États-Unis (USA)' },
+                  { id: 'canada', nameAr: 'كندا', nameFr: 'Canada' },
+                  { id: 'uae', nameAr: 'الإمارات', nameFr: 'Émirats Arabes Unis (UAE)' },
+                  { id: 'ksa', nameAr: 'السعودية', nameFr: 'Arabie Saoudite (KSA)' },
+                  { id: 'qatar', nameAr: 'قطر', nameFr: 'Qatar' }
                 ];
 
                 const currentList = cityTab === 'maroc' ? marocCities : intlCountries;
-                const q = citySearchQuery.trim().toLowerCase();
+                const q = (citySearchQuery || selectedCityDraft).trim().toLowerCase();
                 const filtered = q
                   ? currentList.filter(c => c.nameAr.toLowerCase().includes(q) || c.nameFr.toLowerCase().includes(q))
                   : currentList;
@@ -8870,7 +8872,7 @@ Est-il possible de négocier un ajustement tarifaire ou de délai avant suppress
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {filtered.map(item => {
                         const cityValue = `${item.nameAr} (${item.nameFr})`;
-                        const isSelected = selectedCityDraft === cityValue || clientCity === cityValue || selectedCityDraft.includes(item.nameFr);
+                        const isSelected = selectedCityDraft === cityValue || clientCity === cityValue || (selectedCityDraft && (selectedCityDraft.toLowerCase() === item.nameFr.toLowerCase() || selectedCityDraft === item.nameAr));
                         return (
                           <button
                             key={item.id}
@@ -8879,22 +8881,26 @@ Est-il possible de négocier un ajustement tarifaire ou de délai avant suppress
                               setSelectedCityDraft(cityValue);
                               setCustomCityInput('');
                             }}
-                            className={`p-3 rounded-2xl border text-right rtl:text-right ltr:text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                            className={`group p-2.5 rounded-xl border text-right rtl:text-right ltr:text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
                               isSelected
-                                ? 'bg-indigo-50/80 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/30 shadow-xs'
-                                : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700'
+                                ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
+                                : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-800 hover:border-slate-300'
                             }`}
                           >
                             <div className="min-w-0 flex items-center gap-2">
-                              <span className="text-base shrink-0">{item.icon}</span>
+                              <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:text-indigo-600 group-hover:bg-indigo-50'
+                              }`}>
+                                <MapPin className="w-3 h-3" />
+                              </div>
                               <div className="min-w-0">
                                 <span className="block text-xs font-black truncate">{isAr ? item.nameAr : item.nameFr}</span>
                                 <span className="block text-[10px] text-slate-400 font-medium truncate">{isAr ? item.nameFr : item.nameAr}</span>
                               </div>
                             </div>
                             {isSelected && (
-                              <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                                <Check className="w-3 h-3 stroke-[3]" />
+                              <div className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                                <Check className="w-2.5 h-2.5 stroke-[3]" />
                               </div>
                             )}
                           </button>
@@ -8902,49 +8908,36 @@ Est-il possible de négocier un ajustement tarifaire ou de délai avant suppress
                       })}
                     </div>
 
-                    {filtered.length === 0 && (
-                      <div className="text-center py-6 text-slate-400 space-y-2">
-                        <p className="text-xs font-bold">{isAr ? 'لم نعثر على نتيجة مطابقة لبحثك' : 'Aucune ville correspondante trouvée'}</p>
-                        <p className="text-[11px]">{isAr ? 'يمكنك كتابة اسم مدينتك في الخانة أسفله مباشرة:' : 'Vous pouvez saisir votre ville ci-dessous :'}</p>
+                    {filtered.length === 0 && selectedCityDraft && (
+                      <div className="p-4 bg-indigo-50/60 border border-indigo-100 rounded-2xl text-center space-y-1.5 my-2">
+                        <p className="text-xs font-black text-indigo-950">
+                          {isAr ? `سيتم اعتماد: "${selectedCityDraft}" كمدينتك الرسمية` : `Sera enregistré : "${selectedCityDraft}"`}
+                        </p>
+                        <p className="text-[11px] text-indigo-700">
+                          {isAr ? 'اضغط على الزر أسفله للتأكيد والحفظ مباشرة.' : 'Cliquez ci-dessous pour confirmer votre ville.'}
+                        </p>
                       </div>
                     )}
-
-                    {/* Custom City Manual Input */}
-                    <div className="pt-2">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                        {isAr ? '✏️ أو اكتب اسم مدينتك / منطقتك يدويًا :' : '✏️ Ou saisissez votre ville manuellement :'}
-                      </label>
-                      <input
-                        type="text"
-                        value={customCityInput}
-                        onChange={(e) => {
-                          setCustomCityInput(e.target.value);
-                          if (e.target.value) setSelectedCityDraft(e.target.value);
-                        }}
-                        placeholder={isAr ? 'مثال: النواصر، تيط مليل، زايو، تيفلت...' : 'Ex: Tit Mellil, Zaio, Tiflet...'}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 transition-all placeholder:text-slate-400"
-                      />
-                    </div>
                   </>
                 );
               })()}
             </div>
 
-            {/* Footer with Apple-Style Actions */}
-            <div className="p-5 border-t border-slate-100 bg-slate-50/80 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+            {/* Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50/80 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
               <button
                 type="button"
                 onClick={handleDismissCityModal}
-                className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
               >
                 {isAr ? 'تخطي للآن' : 'Plus tard'}
               </button>
 
               <button
                 type="button"
-                disabled={savingCity || (!selectedCityDraft && !customCityInput)}
+                disabled={savingCity || !selectedCityDraft.trim()}
                 onClick={() => handleSaveCity()}
-                className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg shadow-slate-900/15 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40"
+                className="w-full sm:w-auto py-3 px-6 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider shadow-md active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40"
               >
                 {savingCity ? (
                   <>
@@ -8953,13 +8946,23 @@ Est-il possible de négocier un ajustement tarifaire ou de délai avant suppress
                   </>
                 ) : (
                   <>
-                    <Check className="w-4 h-4 text-emerald-400" />
-                    <span>{isAr ? 'تأكيد واختيار المدينة' : 'Confirmer la ville'}</span>
+                    <Check className="w-4 h-4 text-emerald-400 stroke-[3]" />
+                    <span>{isAr ? 'تأكيد واختيار المدينة' : 'CONFIRMER LA VILLE'}</span>
                   </>
                 )}
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Discrete Top Confirmation Toast (No intrusive popup) */}
+      {cityToastMsg && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[350] bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 border border-slate-700 animate-in slide-in-from-top-3 duration-300 pointer-events-none">
+          <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <Check className="w-3.5 h-3.5 stroke-[3]" />
+          </div>
+          <span className="text-xs font-black text-slate-100">{cityToastMsg}</span>
         </div>
       )}
 
@@ -8983,19 +8986,19 @@ Est-il possible de négocier un ajustement tarifaire ou de délai avant suppress
               <X className="w-5 h-5" />
             </button>
 
-            {/* Glowing Icon Badge */}
+            {/* Clean Minimalist Icon Badge (No videogame glowing star) */}
             <div className="flex justify-center mb-4">
               {notifyModal.type === 'error' ? (
-                <div className="w-16 h-16 rounded-3xl bg-rose-50 border-2 border-rose-200 flex items-center justify-center text-rose-600 shadow-lg shadow-rose-500/10">
-                  <AlertCircle className="w-8 h-8" />
+                <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shadow-xs">
+                  <AlertCircle className="w-6 h-6" />
                 </div>
               ) : notifyModal.type === 'info' ? (
-                <div className="w-16 h-16 rounded-3xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center text-amber-600 shadow-lg shadow-amber-500/10">
-                  <Info className="w-8 h-8" />
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shadow-xs">
+                  <Info className="w-6 h-6" />
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-500/15 via-purple-500/20 to-emerald-500/15 border-2 border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-500/15 ring-8 ring-indigo-50/60">
-                  <Sparkles className="w-8 h-8 text-indigo-600 animate-pulse" />
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-xs">
+                  <Check className="w-6 h-6 stroke-[2.5]" />
                 </div>
               )}
             </div>
