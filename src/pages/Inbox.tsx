@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Mail, Phone, Send, MessageSquare, Clock, Search, RefreshCw, 
   User, ShieldCheck, Trash2, PhoneCall, MessageCircle, KeyRound, 
-  ExternalLink, Copy, Check, Users, Sparkles, Building2, MapPin
+  ExternalLink, Copy, Check, Users, Sparkles, Building2, MapPin,
+  Video, X
 } from 'lucide-react';
 import { Lead, User as UserType, loadLeads, loadData, saveRecord, deleteRecord, genId } from '../types';
 import { useLang } from '../contexts/LangContext';
@@ -36,6 +37,9 @@ export default function Inbox() {
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [showCallMenu, setShowCallMenu] = useState(false);
+  const [phonePromptContact, setPhonePromptContact] = useState<ClientContact | null>(null);
+  const [newPhoneInput, setNewPhoneInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageCountRef = useRef(0);
 
@@ -159,6 +163,11 @@ export default function Inbox() {
           messages: [],
           unreadCount: 0
         });
+      } else {
+        const c = map.get(key)!;
+        if (!c.phone && l.phone) c.phone = l.phone;
+        if (!c.email && l.email) c.email = l.email;
+        if (!c.ville && l.ville) c.ville = l.ville;
       }
     });
 
@@ -212,6 +221,22 @@ export default function Inbox() {
       contact.messages.push(msg);
       if (msg.type === '__MESSAGE__' && !msg.contactedAt) {
         contact.unreadCount += 1;
+      }
+    });
+
+    // Cross-link phone from leads for contacts whose telephone was empty
+    map.forEach(c => {
+      if (!c.phone) {
+        const leadWithPhone = leads.find(l => 
+          l.phone && (
+            (c.email && l.email && l.email.toLowerCase().trim() === c.email.toLowerCase().trim()) ||
+            (c.name && l.name && l.name.toLowerCase().trim() === c.name.toLowerCase().trim()) ||
+            (c.name && (l.client || '').toLowerCase().trim() === c.name.toLowerCase().trim())
+          )
+        );
+        if (leadWithPhone && leadWithPhone.phone) {
+          c.phone = leadWithPhone.phone;
+        }
       }
     });
 
@@ -279,6 +304,87 @@ export default function Inbox() {
       await deleteRecord('leads', m.id);
     }
     setMessages(prev => prev.filter(m => !selectedContact.messages.some(sm => sm.id === m.id)));
+  };
+
+    const handleStartVisioCall = async (contact: ClientContact) => {
+    const safeName = (contact.name || 'Client').replace(/[^a-zA-Z0-9]/g, '_');
+    const roomCode = `BEYA_${safeName}_${Date.now().toString().slice(-4)}`;
+    const meetUrl = `https://meet.jit.si/${roomCode}#config.prejoinPageEnabled=false&config.startWithVideoMuted=false`;
+    
+    // 1. Open the meeting window for admin
+    window.open(meetUrl, '_blank', 'width=1000,height=700');
+
+    // 2. Automatically send an invitation link into the chat
+    const inviteText = isAr 
+      ? `📞 دعوة لمكالمة مباشرة (Audio/Visio Call):\nتفضل بالدخول إلى المكالمة المباشرة مع إدارة ورشة BEYA Creative عبر الرابط التالي:\n${meetUrl}`
+      : `📞 Invitation pour un appel direct (Audio/Visio Call) :\nRejoignez la réunion avec l'atelier BEYA Creative ici :\n${meetUrl}`;
+
+    try {
+      const newMsg: Lead = {
+        id: genId(),
+        client: contact.name,
+        name: 'BEYA CREATIVE',
+        phone: contact.phone || '',
+        email: contact.email || '',
+        ville: contact.ville || '',
+        type: '__MESSAGE_REPLY__',
+        details: inviteText,
+        date: new Date().toISOString(),
+        status: 'completed',
+        crmStage: 'confirme',
+        createdAt: new Date().toISOString(),
+        contactedAt: new Date().toISOString(),
+        contactedBy: 'Admin'
+      };
+      await saveRecord('leads', newMsg, true);
+      setMessages(prev => [...prev, newMsg]);
+    } catch (e) {
+      console.error('Error posting call invite:', e);
+    }
+  };
+
+  const handleInitiateCall = (contact: ClientContact, type: 'gsm' | 'whatsapp') => {
+    if (contact.phone) {
+      if (type === 'gsm') {
+        window.location.href = `tel:${cleanPhoneForCall(contact.phone)}`;
+      } else {
+        const waText = isAr 
+          ? `السلام عليكم ${contact.name}، معكم إدارة ورشة BEYA Creative بخصوص طلبكم...` 
+          : `Bonjour ${contact.name}, atelier BEYA Creative...`;
+        window.open(`https://wa.me/${cleanPhoneForWhatsApp(contact.phone)}?text=${encodeURIComponent(waText)}`, '_blank');
+      }
+    } else {
+      setPhonePromptContact(contact);
+      setNewPhoneInput('');
+    }
+  };
+
+  const handleSavePhoneAndCall = async (type: 'gsm' | 'whatsapp') => {
+    if (!phonePromptContact || !newPhoneInput.trim()) return;
+    const cleanP = newPhoneInput.trim();
+    
+    phonePromptContact.phone = cleanP;
+    
+    const matchingUser = users.find(u => 
+      (phonePromptContact.email && u.email && u.email.toLowerCase().trim() === phonePromptContact.email.toLowerCase().trim()) ||
+      (u.nom && u.nom.toLowerCase().trim() === phonePromptContact.name.toLowerCase().trim())
+    );
+    if (matchingUser) {
+      const updatedUser = { ...matchingUser, telephone: cleanP };
+      await saveRecord('users', updatedUser, true);
+      setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+    }
+
+    setPhonePromptContact(null);
+
+    if (type === 'gsm') {
+      window.location.href = `tel:${cleanPhoneForCall(cleanP)}`;
+    } else {
+      const waText = isAr 
+        ? `السلام عليكم ${phonePromptContact.name}، معكم إدارة ورشة BEYA Creative بخصوص طلبكم...` 
+        : `Bonjour ${phonePromptContact.name}, atelier BEYA Creative...`;
+      window.open(`https://wa.me/${cleanPhoneForWhatsApp(cleanP)}?text=${encodeURIComponent(waText)}`, '_blank');
+    }
   };
 
   const handleSend = async () => {
@@ -607,39 +713,42 @@ BEYA Creative ✨`;
                 </div>
               </div>
 
-              {/* Direct Actions: Call, WhatsApp, Credentials, Trash */}
+              {/* Direct Actions: Call, WhatsApp, Visio, Credentials, Trash */}
               <div className="flex items-center gap-2 shrink-0">
                 {/* 1. Direct GSM Call */}
-                {selectedContact.phone && (
-                  <a
-                    href={`tel:${cleanPhoneForCall(selectedContact.phone)}`}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-xs font-black shadow-md shadow-emerald-200 transition-all hover:scale-105 active:scale-95"
-                    title={isAr ? `اتصال هاتفي مباشر (GSM) بـ ${selectedContact.phone}` : `Appel direct GSM vers ${selectedContact.phone}`}
-                  >
-                    <PhoneCall className="w-4 h-4 animate-pulse" />
-                    <span className="hidden sm:inline">{isAr ? 'اتصال هاتفي' : 'Appel Direct'}</span>
-                  </a>
-                )}
+                <button
+                  type="button"
+                  onClick={() => handleInitiateCall(selectedContact, 'gsm')}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-xs font-black shadow-md shadow-emerald-200 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  title={isAr ? (selectedContact.phone ? `اتصال هاتفي مباشر (GSM) بـ ${selectedContact.phone}` : 'إجراء مكالمة هاتفية (GSM)') : 'Appel GSM'}
+                >
+                  <PhoneCall className="w-4 h-4 animate-pulse" />
+                  <span className="hidden sm:inline">{isAr ? 'اتصال هاتفي' : 'Appel Direct'}</span>
+                </button>
 
                 {/* 2. Direct WhatsApp */}
-                {selectedContact.phone && (
-                  <a
-                    href={`https://wa.me/${cleanPhoneForWhatsApp(selectedContact.phone)}?text=${encodeURIComponent(
-                      isAr 
-                        ? `السلام عليكم ${selectedContact.name}، معكم إدارة ورشة BEYA Creative بخصوص طلبكم...` 
-                        : `Bonjour ${selectedContact.name}, atelier BEYA Creative...`
-                    )}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-600 hover:text-white border border-green-200 rounded-xl text-xs font-bold transition-all shadow-sm"
-                    title={isAr ? 'فتح محادثة واتساب' : 'WhatsApp'}
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span className="hidden md:inline">{isAr ? 'واتساب' : 'WhatsApp'}</span>
-                  </a>
-                )}
+                <button
+                  type="button"
+                  onClick={() => handleInitiateCall(selectedContact, 'whatsapp')}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-600 hover:text-white border border-green-200 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                  title={isAr ? 'محادثة أو مكالمة واتساب' : 'WhatsApp'}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="hidden md:inline">{isAr ? 'واتساب' : 'WhatsApp'}</span>
+                </button>
 
-                {/* 3. Send Portal Access info via WhatsApp */}
+                {/* 3. Live Online Visio / Audio Call */}
+                <button
+                  type="button"
+                  onClick={() => handleStartVisioCall(selectedContact)}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-xl text-xs font-black shadow-md shadow-indigo-200 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  title={isAr ? 'مكالمة فيديو وصوت مباشرة عبر البورتال' : 'Démarrer un appel Visio/Audio direct'}
+                >
+                  <Video className="w-4 h-4" />
+                  <span className="hidden sm:inline">{isAr ? 'مكالمة مباشرة' : 'Visio/Audio'}</span>
+                </button>
+
+                {/* 4. Send Portal Access info via WhatsApp */}
                 {selectedContact.phone && (
                   <a
                     href={`https://wa.me/${cleanPhoneForWhatsApp(selectedContact.phone)}?text=${encodeURIComponent(
@@ -809,8 +918,90 @@ BEYA Creative ✨`;
           </div>
 
           {/* Input Area */}
-          <div className="p-4 bg-white border-t border-slate-200 shrink-0">
+          <div className="p-4 bg-white border-t border-slate-200 shrink-0 relative">
             <div className="flex items-end gap-2">
+              {/* Quick Call Action Button & Menu (Placed right next to Send button) */}
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowCallMenu(!showCallMenu)}
+                  className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  title={isAr ? 'إجراء مكالمة (هاتف، واتساب، أو مكالمة مباشرة)' : 'Appeler (Téléphone, WhatsApp ou Visio)'}
+                >
+                  <PhoneCall className="w-5 h-5 animate-pulse" />
+                </button>
+
+                {/* Call Options Popup */}
+                {showCallMenu && (
+                  <div className={`absolute bottom-14 ${isAr ? 'right-0 sm:left-0 sm:right-auto' : 'left-0 sm:right-0 sm:left-auto'} z-50 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 animate-in fade-in slide-in-from-bottom-2 duration-200`}>
+                    <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                        <PhoneCall className="w-3.5 h-3.5 text-emerald-600" />
+                        {isAr ? `إجراء مكالمة مع ${selectedContact.name}` : `Appeler ${selectedContact.name}`}
+                      </span>
+                      <button onClick={() => setShowCallMenu(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="py-1 space-y-1">
+                      {/* Option 1: Direct GSM Call */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCallMenu(false);
+                          handleInitiateCall(selectedContact, 'gsm');
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 rounded-xl text-xs font-bold transition-all text-right cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                          <Phone className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 text-right">
+                          <div className="font-black text-slate-900">{isAr ? 'مكالمة هاتفية عادية (GSM)' : 'Appel Téléphonique GSM'}</div>
+                          <div className="text-[10px] text-slate-400">{selectedContact.phone ? cleanPhoneForCall(selectedContact.phone) : (isAr ? 'أدخل رقم الهاتف للاتصال' : 'Ajouter un numéro')}</div>
+                        </div>
+                      </button>
+
+                      {/* Option 2: WhatsApp Call / Chat */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCallMenu(false);
+                          handleInitiateCall(selectedContact, 'whatsapp');
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-green-50 text-slate-700 hover:text-green-700 rounded-xl text-xs font-bold transition-all text-right cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-green-100 text-green-700 flex items-center justify-center shrink-0">
+                          <MessageCircle className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 text-right">
+                          <div className="font-black text-slate-900">{isAr ? 'مكالمة أو محادثة فالواتساب' : 'Appel WhatsApp'}</div>
+                          <div className="text-[10px] text-slate-400">{isAr ? 'فتح واتساب مباشرة' : 'Ouvrir WhatsApp direct'}</div>
+                        </div>
+                      </button>
+
+                      {/* Option 3: Live Online Audio/Visio Call */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCallMenu(false);
+                          handleStartVisioCall(selectedContact);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 rounded-xl text-xs font-bold transition-all text-right cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                          <Video className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 text-right">
+                          <div className="font-black text-slate-900">{isAr ? 'مكالمة مباشرة أوديو وفيديو (BEYA Meet)' : 'Appel Visio / Audio Direct'}</div>
+                          <div className="text-[10px] text-slate-400">{isAr ? 'بدء مكالمة وإرسال الرابط فوراً للزبون' : 'Lancer réunion et envoyer le lien'}</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <textarea
                 value={replyText}
                 onChange={e => setReplyText(e.target.value)}
@@ -822,7 +1013,7 @@ BEYA Creative ✨`;
               <button
                 onClick={handleSend}
                 disabled={sending || !replyText.trim()}
-                className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shrink-0 hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200 hover:scale-105 active:scale-95"
+                className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shrink-0 hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200 hover:scale-105 active:scale-95 cursor-pointer"
               >
                 {sending ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
               </button>
@@ -846,6 +1037,56 @@ BEYA Creative ✨`;
                 ? 'جميع العملاء المسجلين وأصحاب الطلبات متوفرون في القائمة الجانبية مع إمكانية الاتصال المباشر ومراسلتهم عبر واتساب.'
                 : 'Tous vos clients sont répertoriés dans la barre latérale avec appels directs GSM et WhatsApp.'}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Missing Phone Prompt Modal */}
+      {phonePromptContact && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-slate-100 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2 text-slate-900 font-black text-sm">
+                <PhoneCall className="w-4 h-4 text-emerald-600" />
+                <span>{isAr ? `رقم هاتف ${phonePromptContact.name}` : `Téléphone de ${phonePromptContact.name}`}</span>
+              </div>
+              <button onClick={() => setPhonePromptContact(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {isAr 
+                ? 'لم يتم تسجيل رقم هاتف لهذا الزبون بعد. أدخل رقم هاتفه لإجراء المكالمة وحفظه في حسابه مباشرة:' 
+                : 'Aucun numéro enregistré pour ce client. Entrez son numéro pour l\'appeler et l\'enregistrer :'}
+            </p>
+            <input
+              type="tel"
+              value={newPhoneInput}
+              onChange={e => setNewPhoneInput(e.target.value)}
+              placeholder="06XXXXXXXX"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-emerald-400"
+              autoFocus
+            />
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                disabled={!newPhoneInput.trim()}
+                onClick={() => handleSavePhoneAndCall('gsm')}
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+              >
+                <Phone className="w-4 h-4" />
+                <span>{isAr ? 'اتصال GSM' : 'Appel GSM'}</span>
+              </button>
+              <button
+                type="button"
+                disabled={!newPhoneInput.trim()}
+                onClick={() => handleSavePhoneAndCall('whatsapp')}
+                className="flex-1 py-3 bg-green-50 hover:bg-green-100 disabled:opacity-40 text-green-700 border border-green-200 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>{isAr ? 'واتساب' : 'WhatsApp'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
