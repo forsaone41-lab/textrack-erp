@@ -1130,21 +1130,21 @@ export default function Demandes() {
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden my-auto flex flex-col">
 
             {/* Header compact */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-amber-200/80 bg-gradient-to-r from-amber-50 to-amber-100/60">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-indigo-500/20 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shadow-xs">
-                  <FileText className="w-5 h-5 text-slate-950" />
+                <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-600/30">
+                  <FileText className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-                    {isAr ? '📄 قرار ودوفيز الورشة الرسمي (DEVIS ATELIER)' : '📄 Décision Finale & Devis Atelier'}
+                  <p className="text-xs sm:text-sm font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                    {isAr ? 'قرار ودوفيز الورشة الرسمي (DEVIS ATELIER)' : 'Décision Finale & Devis Atelier'}
                   </p>
-                  <p className="text-[10px] text-amber-800 font-bold max-w-[280px] truncate">{devisLead.name} — {devisLead.type}</p>
+                  <p className="text-[10px] text-indigo-300 font-bold max-w-[280px] truncate">{devisLead.name} — {devisLead.type}</p>
                 </div>
               </div>
               <button
                 onClick={() => { setDevisLead(null); setDevisLeadRequests([]); setModelPrices({}); setMatierePrice(''); setLaborPrice(''); setFabricType(''); }}
-                className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all border border-slate-200 shadow-sm"
+                className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white rounded-xl flex items-center justify-center transition-all border border-white/20 shadow-sm cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1556,8 +1556,8 @@ export default function Demandes() {
                       <MessageSquare className="w-3.5 h-3.5" /> {isAr ? 'واتساب (نص)' : 'Texte WhatsApp'}
                     </button>
                     <button onClick={handleSendToPortail} disabled={!matierePrice && !laborPrice}
-                      className="h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shadow-sm active:scale-95 border border-amber-400">
-                      <Globe className="w-3.5 h-3.5 text-slate-950" /> {isAr ? '💾 حفظ ونشر بالبورتال' : 'Publier au Portail'}
+                      className="h-9 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-lg font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shadow-sm shadow-indigo-600/25 active:scale-95 border border-indigo-400/30 cursor-pointer">
+                      <Globe className="w-3.5 h-3.5 text-indigo-200" /> {isAr ? 'حفظ ونشر بالبورتال' : 'Publier au Portail'}
                     </button>
                   </div>
 
@@ -1658,10 +1658,10 @@ export default function Demandes() {
                   setDetailsLead(null);
                   openDevisModal(targetLead, 'commande');
                 }}
-                className="w-full py-3 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all border border-amber-400 cursor-pointer active:scale-95"
+                className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 text-white font-black rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-indigo-600/25 transition-all border border-indigo-400/30 cursor-pointer active:scale-95"
               >
-                <FileText className="w-4 h-4 text-slate-950" />
-                <span>{isAr ? '📄 قرار ودوفيز الورشة (DEVIS ATELIER)' : '📄 Décision Finale & Devis Atelier'}</span>
+                <FileText className="w-4 h-4 text-indigo-200" />
+                <span>{isAr ? 'قرار ودوفيز الورشة (DEVIS ATELIER)' : 'Décision Finale & Devis Atelier'}</span>
               </button>
             </div>
           </div>
@@ -2516,7 +2516,7 @@ export default function Demandes() {
                         <UserCheck className="w-4 h-4" />
                         {(client as any).commercialUnlocked ? (isAr ? 'صلاحية ممنوحة' : 'Accès Donné') : (isAr ? 'منح الصلاحية' : 'Donner Accès')}
                       </button>
-                      {category !== 'recrutement' && (() => {
+                      {category !== 'recrutement' && requests.length > 1 && (() => {
                         const totalQty = requests.reduce((s, r) => s + (r.quantity || 0), 0);
                         const combinedType = requests.map(r => `${r.type} (${r.quantity} pcs)`).join(' + ');
                         const combinedLead: typeof client = { ...client, type: combinedType, quantity: totalQty };
@@ -2530,11 +2530,11 @@ export default function Demandes() {
                               setModelPrices(initPrices);
                               setMatierePrice(''); setLaborPrice(''); setFabricType(''); setDevisMode('commande');
                             }}
-                            className="h-9 px-3 rounded-xl flex items-center gap-1.5 border border-amber-400 bg-amber-500 text-slate-950 font-black hover:bg-amber-600 transition-all shadow-sm text-xs active:scale-95"
-                            title={isAr ? 'قرار ودوفيز الورشة لجميع الموديلات' : 'Devis & Décision Atelier (Tous modèles)'}
+                            className="h-9 px-3.5 rounded-xl flex items-center gap-1.5 border border-indigo-400/30 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 text-white font-black transition-all shadow-sm shadow-indigo-600/25 text-xs active:scale-95 cursor-pointer"
+                            title={isAr ? 'قرار ودوفيز مجمع لجميع الموديلات' : 'Devis Multi-Modèles'}
                           >
-                            <FileText className="w-3.5 h-3.5 text-slate-950" />
-                            <span>{isAr ? '📄 قرار ودوفيز الورشة' : '📄 Devis Atelier'}</span>
+                            <FileText className="w-3.5 h-3.5 text-indigo-200" />
+                            <span>{isAr ? `دوفيز مجمع (${requests.length} موديلات)` : `Devis Global (${requests.length})`}</span>
                           </button>
                         );
                       })()}
@@ -2692,14 +2692,7 @@ export default function Demandes() {
                         </div>
 
                         {/* REQUEST ACTIONS */}
-                        <div className="flex items-center gap-1.5 flex-wrap w-full md:w-auto justify-start md:justify-end shrink-0 mt-2 md:mt-0">
-                          <button onClick={() => togglePriority(lead)} title={lead.crmPriority ? 'Retirer priorité' : 'Marquer important'}
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all border ${lead.crmPriority ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-200 opacity-50 hover:opacity-100'}`}>
-                            ⭐
-                          </button>
-                          
-                          <div className="w-px h-5 bg-slate-200 mx-1" />
-
+                        <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto justify-start xl:justify-end shrink-0 mt-2 xl:mt-0">
                           {/* Recrutement actions */}
                           {category === 'recrutement' && (
                             <>
@@ -2716,7 +2709,7 @@ export default function Demandes() {
                                   reader.readAsDataURL(file);
                                   e.target.value = '';
                                 }} />
-                                <span className={`h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border flex items-center gap-1 transition-all ${(lead as any).cv ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>
+                                <span className={`h-8.5 px-3 rounded-xl text-[10px] font-black uppercase border flex items-center gap-1.5 transition-all ${(lead as any).cv ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-2xs' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>
                                   <FileText className="w-3.5 h-3.5" />
                                   {(lead as any).cv ? 'CV ✓' : 'CV +'}
                                 </span>
@@ -2741,12 +2734,12 @@ export default function Demandes() {
                                     }
                                   }
                                 }}
-                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-blue-500 text-white border-blue-500 flex items-center gap-1 hover:bg-blue-600 shadow-sm">
+                                  className="h-8.5 px-3 rounded-xl text-[10px] font-black uppercase border bg-blue-500 text-white border-blue-500 flex items-center gap-1 hover:bg-blue-600 shadow-2xs">
                                   <Eye className="w-3.5 h-3.5" /> Voir
                                 </button>
                               )}
                               <button onClick={() => navigate('/liste-attente', { state: { fromRecruitment: lead } })}
-                                className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase flex items-center gap-1 border bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600 shadow-sm">
+                                className="h-8.5 px-3 rounded-xl text-[10px] font-black uppercase flex items-center gap-1 border bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600 shadow-2xs">
                                 <UserPlus className="w-3.5 h-3.5" /> {isAr ? 'لائحة الانتظار' : 'Attente'}
                               </button>
                               <button onClick={async () => {
@@ -2754,73 +2747,129 @@ export default function Demandes() {
                                 setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
                                 await saveRecord('leads', updated, true);
                               }}
-                                className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-sm">✕ Rejeter</button>
+                                className="h-8.5 px-3 rounded-xl text-[10px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-2xs">✕ Rejeter</button>
                             </>
                           )}
 
                           {category !== 'recrutement' && (
                             <>
-                              {lead.crmStage !== 'annule' && lead.crmStage !== 'confirme' && (
-                                <button onClick={async () => {
-                                  if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
-                                    const updated = { ...lead, crmStage: 'annule' as const, rejectedAt: new Date().toISOString() };
-                                    setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
-                                    await saveRecord('leads', updated, true);
-                                  }
-                                }}
-                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-sm">✕ {isAr ? 'رفض' : 'Refuser'}</button>
-                              )}
-                              {lead.crmStage !== 'confirme' && lead.crmStage !== 'annule' && (
-                                <button onClick={() => setConfirmLead(lead)}
-                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">✓ {isAr ? 'تأكيد' : 'Valider'}</button>
-                              )}
-                              {(lead.photo || (lead.photos && lead.photos.length > 0) || photoCache[lead.id]) && !lead.type.startsWith('RECRUTEMENT:') && (
-                                <button onClick={() => setAiAnalysisLead(lead)}
-                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-500 hover:text-white transition-all shadow-sm flex items-center gap-1"
-                                  title={isAr ? 'تحليل الموديل واستخراج القياسات' : 'Analyser le modèle et extraire les mesures'}>
-                                  <Scissors className="w-3.5 h-3.5" /> {isAr ? 'تحليل الموديل' : 'Analyser Modèle'}
-                                </button>
-                              )}
+                              {/* 1. Primary Action: PRO Devis Atelier Button in Royal Indigo Gradient */}
                               {!lead.type.startsWith('RECRUTEMENT:') && (
-                                <button onClick={async () => {
-                                    if (window.confirm(isAr ? 'إرسال طلب تسعير الباترون للمودليست؟' : 'Demander le prix de patronage au modéliste?')) {
-                                      let extras: any = {};
-                                      try { extras = JSON.parse(lead.details || '{}'); } catch(e){ extras = { clientNotes: lead.details }; }
-                                      const updated = { ...lead, details: JSON.stringify({...extras, patronageStatus: 'requested'}) };
-                                      setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
-                                      await saveRecord('leads', updated, true);
-                                    }
-                                  }} title={isAr ? 'طلب تسعير الباترون' : 'Demander Prix Patronage'}
-                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-500 hover:text-white transition-all shadow-sm flex items-center gap-1">
-                                  <Scissors className="w-3.5 h-3.5" /> {isAr ? 'باترون' : 'Prix Patronage'}
+                                <button 
+                                  onClick={() => openDevisModal(lead, 'commande')} 
+                                  title={isAr ? 'قرار وتسعير دوفيز الورشة الرسمي' : 'Devis & Décision Atelier'}
+                                  className="h-9 px-3.5 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 text-white font-black rounded-xl border border-indigo-400/30 flex items-center gap-1.5 transition-all shadow-sm shadow-indigo-600/30 active:scale-95 text-xs cursor-pointer group shrink-0"
+                                >
+                                  <FileText className="w-3.5 h-3.5 text-indigo-200 group-hover:text-white transition-colors" />
+                                  <span>{isAr ? 'قرار ودوفيز الورشة' : 'Devis Atelier'}</span>
                                 </button>
                               )}
+
+                              {/* 2. Validation / Status Buttons */}
+                              {lead.crmStage === 'confirme' ? (
+                                <span className="h-9 px-3 rounded-xl text-xs font-black border bg-emerald-100 text-emerald-800 border-emerald-200 flex items-center gap-1.5 shadow-2xs">
+                                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span>{isAr ? 'مؤكد' : 'Validé'}</span>
+                                </span>
+                              ) : lead.crmStage === 'annule' ? (
+                                <span className="h-9 px-3 rounded-xl text-xs font-black border bg-rose-100 text-rose-800 border-rose-200 flex items-center gap-1.5 shadow-2xs">
+                                  <X className="w-3.5 h-3.5 text-rose-600" />
+                                  <span>{isAr ? 'ملغى' : 'Annulé'}</span>
+                                </span>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <button 
+                                    onClick={() => setConfirmLead(lead)}
+                                    className="h-9 px-2.5 rounded-xl text-xs font-black border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                    title={isAr ? 'تأكيد الطلب' : 'Valider'}
+                                  >
+                                    <CheckCircle className="w-3.5 h-3.5" />
+                                    <span>{isAr ? 'تأكيد' : 'Valider'}</span>
+                                  </button>
+                                  <button 
+                                    onClick={async () => {
+                                      if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
+                                        const updated = { ...lead, crmStage: 'annule' as const, rejectedAt: new Date().toISOString() };
+                                        setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
+                                        await saveRecord('leads', updated, true);
+                                      }
+                                    }}
+                                    className="h-9 px-2.5 rounded-xl text-xs font-black border bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                    title={isAr ? 'رفض الطلب' : 'Refuser'}
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                    <span>{isAr ? 'رفض' : 'Refuser'}</span>
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* 3. Production Technical Tools */}
+                              <div className="flex items-center gap-1">
+                                {(lead.photo || (lead.photos && lead.photos.length > 0) || photoCache[lead.id]) && !lead.type.startsWith('RECRUTEMENT:') && (
+                                  <button 
+                                    onClick={() => setAiAnalysisLead(lead)}
+                                    className="h-9 px-2.5 rounded-xl text-xs font-black border bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 hover:bg-fuchsia-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                    title={isAr ? 'تحليل الموديل واستخراج القياسات' : 'Analyser le modèle et extraire les mesures'}
+                                  >
+                                    <Scissors className="w-3.5 h-3.5" />
+                                    <span>{isAr ? 'تحليل الموديل' : 'Analyse'}</span>
+                                  </button>
+                                )}
+                                {!lead.type.startsWith('RECRUTEMENT:') && (
+                                  <button 
+                                    onClick={async () => {
+                                      if (window.confirm(isAr ? 'إرسال طلب تسعير الباترون للمودليست؟' : 'Demander le prix de patronage au modéliste?')) {
+                                        let extras: any = {};
+                                        try { extras = JSON.parse(lead.details || '{}'); } catch(e){ extras = { clientNotes: lead.details }; }
+                                        const updated = { ...lead, details: JSON.stringify({...extras, patronageStatus: 'requested'}) };
+                                        setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
+                                        await saveRecord('leads', updated, true);
+                                      }
+                                    }} 
+                                    title={isAr ? 'طلب تسعير الباترون' : 'Demander Prix Patronage'}
+                                    className="h-9 px-2.5 rounded-xl text-xs font-black border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <Scissors className="w-3.5 h-3.5" />
+                                    <span>{isAr ? 'باترون' : 'Patronage'}</span>
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* 4. Compact Utilities Toolbar (Details, Star, Edit, Delete) */}
+                              <div className="flex items-center bg-white rounded-xl border border-slate-200/90 p-0.5 shadow-2xs shrink-0">
+                                {(lead.details || (lead.tailles && Object.values(lead.tailles).some(v => v > 0))) && !lead.type.startsWith('RECRUTEMENT:') && (
+                                  <button 
+                                    onClick={() => setDetailsLead(lead)} 
+                                    title={isAr ? 'عرض التفاصيل' : 'Détails'}
+                                    className="w-8 h-8 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition-colors cursor-pointer"
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => togglePriority(lead)} 
+                                  title={lead.crmPriority ? 'Retirer priorité' : 'Marquer important'}
+                                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors cursor-pointer ${lead.crmPriority ? 'bg-amber-100 text-amber-600' : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'}`}
+                                >
+                                  ⭐
+                                </button>
+                                <button 
+                                  onClick={() => { setEditingLead(lead); setEditForm(lead); }} 
+                                  title={isAr ? 'تعديل' : 'Modifier'}
+                                  className="w-8 h-8 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition-colors cursor-pointer"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button 
+                                  onClick={() => setDeleteId(lead.id)} 
+                                  title={isAr ? 'حذف' : 'Supprimer'}
+                                  className="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </>
                           )}
-                          
-                          {(lead.details || (lead.tailles && Object.values(lead.tailles).some(v => v > 0))) && !lead.type.startsWith('RECRUTEMENT:') && (
-                            <button onClick={() => setDetailsLead(lead)} title="Détails"
-                              className="w-8 h-8 bg-white text-slate-500 hover:bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
-                              <MessageSquare className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          
-                          {!lead.type.startsWith('RECRUTEMENT:') && (
-                            <button onClick={() => openDevisModal(lead, 'commande')} title={isAr ? 'قرار ودوفيز الورشة الرسمي' : 'Devis & Décision Atelier'}
-                              className="h-8 px-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-lg border border-amber-400 flex items-center gap-1 transition-all shadow-sm active:scale-95 text-xs">
-                              <FileText className="w-3.5 h-3.5 text-slate-950" />
-                              <span>{isAr ? '📄 قرار ودوفيز الورشة' : '📄 Devis Atelier'}</span>
-                            </button>
-                          )}
-
-                          <button onClick={() => { setEditingLead(lead); setEditForm(lead); }}
-                            className="w-8 h-8 bg-white text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button onClick={() => setDeleteId(lead.id)}
-                            className="w-8 h-8 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
                         </div>
                       </div>
                     ))}
