@@ -94,6 +94,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [activeChannelId, setActiveChannelId] = useState<string>('tissu');
   const [mobileDrawer, setMobileDrawer] = useState<'none' | 'channels' | 'members'>('none');
   const [directoryFilter, setDirectoryFilter] = useState<'all' | 'modeliste' | 'tissu' | 'fournitures' | 'impression' | 'broderie'>('all');
+  const [selectedCityFilter, setSelectedCityFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<any | null>(null);
   const [expandedThreadMessageId, setExpandedThreadMessageId] = useState<string | null>(null);
@@ -484,16 +485,17 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   // ECOSYSTEM DIRECTORY: 5 PILLARS (MODÉLISTES, TISSUS, FOURNITURES, IMPRESSION, BRODERIE)
   // ─────────────────────────────────────────────────────────────
   const allProMembers = [
-    // 1. Modélistes
+    // 1. Modélistes (Freelancers & Pattern Makers)
     ...MODELISTES_DATA.map(m => ({
       id: m.id,
       name: m.name,
       avatar: m.avatar,
-      cover: m.cover,
+      cover: m.cover || 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&auto=format&fit=crop&q=80',
       pillar: 'modeliste' as const,
       pillarLabelAr: 'موديليست وباتورناج',
       roleBadge: '✂️ موديليست معتمد',
-      roleColor: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
+      roleColor: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+      badgeGradient: 'from-indigo-600 to-purple-600',
       specialty: m.specialty,
       city: m.city,
       whatsapp: m.phone ? m.phone.replace(/\D/g, '') : '212675239885',
@@ -503,6 +505,11 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       reviewsCount: m.reviewsCount,
       bio: m.bio,
       cadSoftware: m.cadSoftware,
+      startingRate: m.specialty.includes('Streetwear') ? 'ابتداءً من 180 MAD' : m.specialty.includes('Denim') ? 'ابتداءً من 220 MAD' : 'ابتداءً من 160 MAD',
+      rateType: 'للباترون والتدرج',
+      skills: m.cadSoftware ? [...m.cadSoftware, 'Gradation XS-XXL', 'Fiche Technique'] : ['Lectra Modaris', 'Patronage 3D', 'Gradation', 'Fiche Technique'],
+      responseTime: '⚡ رد خلال ساعتين',
+      completedJobs: 40 + Math.floor(m.rating * 8),
       verified: true
     })),
     // 2. Suppliers (Tissu, Fournitures, Impression, Broderie)
@@ -511,16 +518,30 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                      s.category === 'accessoires' ? 'fournitures' :
                      s.category === 'impression' ? 'impression' :
                      s.category === 'broderie' ? 'broderie' : 'tissu';
-      const pillarLabelAr = pillar === 'tissu' ? 'مورد أقمشة' :
-                            pillar === 'fournitures' ? 'مورد مستلزمات وفورنيتور' :
-                            pillar === 'impression' ? 'ورشة طباعة وسيريغرافي' : 'ورشة تطريز صناعي';
+      const pillarLabelAr = pillar === 'tissu' ? 'مالين الثوب والأقمشة' :
+                            pillar === 'fournitures' ? 'مالين الفورنيتور والمستلزمات' :
+                            pillar === 'impression' ? 'مالين الإمبريسيون والطباعة' : 'مالين الطرز والبرودري';
       const roleBadge = pillar === 'tissu' ? '🧵 مورد ثوب' :
                         pillar === 'fournitures' ? '📦 فورنيتور' :
                         pillar === 'impression' ? '🎨 إمبريسيون' : '🪡 برودري';
-      const roleColor = pillar === 'tissu' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
-                        pillar === 'fournitures' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
-                        pillar === 'impression' ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' :
-                        'bg-rose-500/10 text-rose-400 border-rose-500/30';
+      const roleColor = pillar === 'tissu' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' :
+                        pillar === 'fournitures' ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' :
+                        pillar === 'impression' ? 'bg-sky-500/15 text-sky-300 border-sky-500/30' :
+                        'bg-rose-500/15 text-rose-300 border-rose-500/30';
+      const badgeGradient = pillar === 'tissu' ? 'from-emerald-600 to-teal-600' :
+                            pillar === 'fournitures' ? 'from-amber-500 to-orange-600' :
+                            pillar === 'impression' ? 'from-sky-500 to-cyan-600' :
+                            'from-rose-500 to-pink-600';
+      const startingRate = pillar === 'tissu' ? 'ابتداءً من 34 MAD' :
+                           pillar === 'fournitures' ? 'ابتداءً من 1.20 MAD' :
+                           pillar === 'impression' ? 'ابتداءً من 8 MAD' : 'ابتداءً من 12 MAD';
+      const rateType = pillar === 'tissu' ? 'للمتر / الكيلو' :
+                       pillar === 'fournitures' ? 'للقطعة / السحاب' :
+                       pillar === 'impression' ? 'للطبعة DTF' : 'للطرز 3D';
+      const defaultSkills = pillar === 'tissu' ? ['Molleton 340g', 'Coton 100%', 'Jersey', 'Gabardine'] :
+                            pillar === 'fournitures' ? ['Zips YKK', 'Polybags Ziplock', 'Cordons Coton', 'Hangtags'] :
+                            pillar === 'impression' ? ['DTF HD', 'Sérigraphie Plastisol', 'Puff 3D', 'Cold Peel'] :
+                            ['Broderie 3D', 'Mousse 3mm', 'Tajima 12 Têtes', 'Fils Madeira'];
       return {
         id: s.id,
         name: s.name,
@@ -530,6 +551,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         pillarLabelAr,
         roleBadge,
         roleColor,
+        badgeGradient,
         specialty: s.categoryLabel,
         city: s.city,
         whatsapp: s.whatsapp ? s.whatsapp.replace(/\D/g, '') : '212675239885',
@@ -540,6 +562,11 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         bio: s.desc,
         catalog: s.catalog,
         minQty: s.minQty,
+        startingRate,
+        rateType,
+        skills: s.fabricTags && s.fabricTags.length > 0 ? s.fabricTags : defaultSkills,
+        responseTime: '⚡ رد خلال ساعة',
+        completedJobs: 60 + Math.floor(s.rating * 12),
         verified: true
       };
     })
@@ -548,9 +575,13 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   // Filtered Pro Members for Directory View
   const filteredProMembers = allProMembers.filter(m => {
     if (directoryFilter !== 'all' && m.pillar !== directoryFilter) return false;
+    if (selectedCityFilter !== 'all' && !String(m.city || '').toLowerCase().includes(selectedCityFilter.toLowerCase())) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      return String(m.name || '').toLowerCase().includes(q) || String(m.city || '').toLowerCase().includes(q) || String(m.specialty || '').toLowerCase().includes(q) || String(m.bio || '').toLowerCase().includes(q);
+      return String(m.name || '').toLowerCase().includes(q) ||
+             String(m.city || '').toLowerCase().includes(q) ||
+             String(m.specialty || '').toLowerCase().includes(q) ||
+             String(m.bio || '').toLowerCase().includes(q);
     }
     return true;
   });
@@ -1222,125 +1253,341 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             </div>
           )}
 
-          {/* VIEW B: FULL PRO DIRECTORY (THE 5 PILLARS) */}
+          {/* VIEW B: UPWORK & FREELANCER APP-STYLE MARKETPLACE (THE 5 PILLARS) */}
           {activeView === 'directory' && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6 scrollbar-hide">
 
-              {/* Directory Hero Header */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-500/20 text-white">
-                <div className="max-w-2xl">
-                  <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-black uppercase tracking-wider border border-indigo-500/30 inline-block mb-2">
-                    شبكة المحترفين المعتمدين بالمغرب 🇲🇦
+              {/* 1. APP-LIKE MARKETPLACE HEADER */}
+              <div className="p-5 sm:p-7 rounded-3xl bg-gradient-to-r from-slate-950 via-[#1e1f28] to-slate-950 border border-indigo-500/20 text-white shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="max-w-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-indigo-300 text-xs font-black uppercase tracking-wider border border-indigo-500/30 flex items-center gap-1.5 shadow-xs">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <span>سوق المحترفين وصناع الموضة BEYA PRO</span>
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
+                        14 خبير ومورد معتمد
+                      </span>
+                    </div>
+                    <h2 className="text-xl sm:text-3xl font-black tracking-tight text-white mb-2">
+                      منصة العمل الحر وشبكة توريد النسيج بالمغرب
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+                      اختر التخصص المطلوب وتواصل فورياً مع الموديليست، مستودعات الأقمشة، مصانع المستلزمات، وورشات الطباعة والتطريز المعتمدة.
+                    </p>
+                  </div>
+
+                  {/* Quick Stats Pill */}
+                  <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-3 rounded-2xl shrink-0 backdrop-blur-xs">
+                    <div className="text-center px-3 border-l border-white/10">
+                      <p className="text-lg font-black text-amber-400">4.92 ★</p>
+                      <p className="text-[10px] text-slate-400 font-bold">متوسط التقييم</p>
+                    </div>
+                    <div className="text-center px-3 border-l border-white/10">
+                      <p className="text-lg font-black text-indigo-400">100%</p>
+                      <p className="text-[10px] text-slate-400 font-bold">معتمد BEYA</p>
+                    </div>
+                    <div className="text-center px-3">
+                      <p className="text-lg font-black text-emerald-400">24/48h</p>
+                      <p className="text-[10px] text-slate-400 font-bold">تسليم العينات</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. FREELANCER PLATFORM / APP-STYLE CATEGORIES MENU (NOT SIMPLE TAGS) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-black text-slate-300 flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-indigo-400" />
+                    <span>تصفح حسب قطاع التخصص (Categories) :</span>
                   </span>
-                  <h2 className="text-xl sm:text-2xl font-black mb-2">
-                    دليل الموديليست، الأقمشة، المستلزمات، الطباعة والتطريز
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-                    تواصل مباشرة مع النخبة المعتمدة من ورشة BEYA بأسعار تفضيلية وضمان جودة الفينيسيون.
-                  </p>
+                  <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
+                    اضغط لتصفية المحترفين بضغطة واحدة
+                  </span>
                 </div>
 
-                {/* Filter Pills */}
-                <div className="flex items-center gap-1.5 flex-wrap mt-4">
+                {/* Interactive Category Cards Carousel / Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
                   {[
-                    { id: 'all', label: 'الكل (14)', icon: '🌐' },
-                    { id: 'modeliste', label: '✂️ موديليست (5)', icon: '✂️' },
-                    { id: 'tissu', label: '🧵 مالين الثوب (3)', icon: '🧵' },
-                    { id: 'fournitures', label: '📦 مالين الفورنيتور (2)', icon: '📦' },
-                    { id: 'impression', label: '🎨 مالين الإمبريسيون (2)', icon: '🎨' },
-                    { id: 'broderie', label: '🪡 مالين الطرز (2)', icon: '🪡' }
-                  ].map(f => (
+                    {
+                      id: 'all',
+                      title: 'جميع المنظومة',
+                      subtitle: 'كافة الخبراء والموردين',
+                      icon: Globe,
+                      badge: '14 متاح',
+                      gradient: 'from-purple-600 via-indigo-600 to-blue-600',
+                      borderActive: 'border-indigo-500 shadow-indigo-500/20 ring-2 ring-indigo-500/40',
+                      badgeColor: 'bg-purple-500/20 text-purple-300'
+                    },
+                    {
+                      id: 'modeliste',
+                      title: 'الموديليست',
+                      subtitle: 'باترونات، فصالة وLectra',
+                      icon: Scissors,
+                      badge: '5 موديليست',
+                      gradient: 'from-indigo-600 via-indigo-500 to-blue-600',
+                      borderActive: 'border-indigo-500 shadow-indigo-500/20 ring-2 ring-indigo-500/40',
+                      badgeColor: 'bg-indigo-500/20 text-indigo-300'
+                    },
+                    {
+                      id: 'tissu',
+                      title: 'مالين الثوب',
+                      subtitle: 'ملتون 340g، كانفاس، دنيم',
+                      icon: Layers,
+                      badge: '3 مستودعات',
+                      gradient: 'from-emerald-600 via-teal-600 to-emerald-500',
+                      borderActive: 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/40',
+                      badgeColor: 'bg-emerald-500/20 text-emerald-300'
+                    },
+                    {
+                      id: 'fournitures',
+                      title: 'الفورنيتور واللوازم',
+                      subtitle: 'سحابات YKK، أكياس، حبال',
+                      icon: Package,
+                      badge: '2 موردين',
+                      gradient: 'from-amber-500 via-orange-600 to-amber-600',
+                      borderActive: 'border-amber-500 shadow-amber-500/20 ring-2 ring-amber-500/40',
+                      badgeColor: 'bg-amber-500/20 text-amber-300'
+                    },
+                    {
+                      id: 'impression',
+                      title: 'مالين الإمبريسيون',
+                      subtitle: 'DTF HD، سيريغرافي، Puff',
+                      icon: Palette,
+                      badge: '2 ورشات',
+                      gradient: 'from-sky-500 via-cyan-600 to-blue-600',
+                      borderActive: 'border-sky-500 shadow-sky-500/20 ring-2 ring-sky-500/40',
+                      badgeColor: 'bg-sky-500/20 text-sky-300'
+                    },
+                    {
+                      id: 'broderie',
+                      title: 'مالين الطرز',
+                      subtitle: 'طرز 3D فوم، ماكينات Tajima',
+                      icon: Award,
+                      badge: '2 أتولييه',
+                      gradient: 'from-rose-500 via-pink-600 to-rose-600',
+                      borderActive: 'border-rose-500 shadow-rose-500/20 ring-2 ring-rose-500/40',
+                      badgeColor: 'bg-rose-500/20 text-rose-300'
+                    }
+                  ].map(cat => {
+                    const isSelected = directoryFilter === cat.id;
+                    const IconComp = cat.icon;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setDirectoryFilter(cat.id as any)}
+                        className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 text-right flex flex-col justify-between group cursor-pointer relative overflow-hidden ${
+                          isSelected
+                            ? `bg-[#2b2d31] ${cat.borderActive} shadow-lg scale-[1.02]`
+                            : 'bg-[#232428] hover:bg-[#2b2d31] border border-white/5 hover:border-white/15'
+                        }`}
+                      >
+                        {/* Top: App Icon + Status Badge */}
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${cat.gradient} flex items-center justify-center text-white shadow-md shadow-black/30 group-hover:scale-105 transition-transform`}>
+                            <IconComp className="w-5 h-5" />
+                          </div>
+
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border border-white/5 ${cat.badgeColor}`}>
+                            {cat.badge}
+                          </span>
+                        </div>
+
+                        {/* Middle: Title & Subtitle */}
+                        <div>
+                          <h3 className={`text-xs sm:text-sm font-black transition-colors ${
+                            isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'
+                          }`}>
+                            {cat.title}
+                          </h3>
+                          <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5 font-medium">
+                            {cat.subtitle}
+                          </p>
+                        </div>
+
+                        {/* Bottom Selected Indicator Pill */}
+                        {isSelected && (
+                          <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] font-black text-indigo-400">
+                            <span>نشط الآن</span>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. UPWORK-STYLE SEARCH & FILTER CONTROLS */}
+              <div className="bg-[#2b2d31] p-3 sm:p-4 rounded-2xl border border-[#383a40] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-sm">
+                
+                {/* Search Input */}
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    placeholder="ابحث بالاسم، القماش، أو الماكينة (مثال: باترون هودي، ملتون 340g، سيريغرافي، كازا، طنجة)..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full bg-[#1e1f22] text-xs sm:text-sm text-white placeholder-slate-400 pr-10 pl-9 py-2.5 rounded-xl border border-transparent focus:border-indigo-500 focus:outline-none"
+                  />
+                  {searchQuery && (
                     <button
-                      key={f.id}
-                      onClick={() => setDirectoryFilter(f.id as any)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
-                        directoryFilter === f.id
-                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                          : 'bg-white/10 text-slate-300 hover:bg-white/15'
+                      onClick={() => setSearchQuery('')}
+                      className="absolute left-3 top-3 text-slate-400 hover:text-white"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* City Selector Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide shrink-0 pb-1 md:pb-0">
+                  <span className="text-[11px] font-bold text-slate-400 ml-1 shrink-0 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-indigo-400" />
+                    <span className="hidden sm:inline">المدينة:</span>
+                  </span>
+                  {[
+                    { id: 'all', label: 'كل المدن' },
+                    { id: 'casablanca', label: 'الدار البيضاء' },
+                    { id: 'tanger', label: 'طنجة' },
+                    { id: 'fes', label: 'فاس' }
+                  ].map(city => (
+                    <button
+                      key={city.id}
+                      onClick={() => setSelectedCityFilter(city.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
+                        selectedCityFilter === city.id
+                          ? 'bg-indigo-600 text-white shadow-xs font-black'
+                          : 'bg-[#1e1f22] text-slate-300 hover:bg-[#35373c]'
                       }`}
                     >
-                      <span>{f.label}</span>
+                      {city.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5" />
-                <input
-                  type="text"
-                  placeholder="ابحث عن اسم، تخصص، قماش، أو مدينة (مثال: باترون، ملتون، تطريز 3D، كازا، طنجة)..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#2b2d31] text-xs sm:text-sm text-white placeholder-slate-400 pr-10 pl-4 py-3 rounded-2xl border border-[#383a40] focus:border-indigo-500 focus:outline-none shadow-sm"
-                />
+              {/* 4. ACTIVE RESULTS SUMMARY BAR */}
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 px-1">
+                <span className="text-slate-300">
+                  عرض <strong>{filteredProMembers.length}</strong> من أصل <strong>{allProMembers.length}</strong> مهني ومورد معتمد
+                </span>
+                <span className="text-emerald-400 flex items-center gap-1 text-[11px]">
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  <span>تطبيق أسعار الشراكة التفضيلية BEYA VIP</span>
+                </span>
               </div>
 
-              {/* Pro Cards Grid (Discord Cards Style) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {/* 5. FREELANCE & SUPPLIER TALENT CARDS (UPWORK / FIVERR PRO STYLE) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
                 {filteredProMembers.map(pro => (
                   <div
                     key={pro.id}
-                    className="bg-[#2b2d31] hover:bg-[#35373c] rounded-2xl border border-[#383a40] hover:border-indigo-500/40 p-4 transition-all duration-150 flex flex-col justify-between group shadow-sm"
+                    className="bg-[#2b2d31] hover:bg-[#2f3136] rounded-3xl border border-[#383a40] hover:border-indigo-500/50 transition-all duration-200 overflow-hidden flex flex-col justify-between group shadow-md hover:shadow-xl hover:shadow-indigo-500/5 relative"
                   >
-                    <div>
-                      {/* Top Row: Avatar + Role + Rating */}
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={pro.avatar}
-                            alt={pro.name}
-                            className="w-12 h-12 rounded-2xl object-cover border border-white/10 shadow-xs"
-                          />
-                          <div>
-                            <h3 className="text-sm font-black text-white group-hover:text-indigo-400 transition-colors">
-                              {pro.name}
-                            </h3>
-                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-md border inline-block mt-0.5 ${pro.roleColor}`}>
-                              {pro.roleBadge}
-                            </span>
+                    {/* Card Cover Banner Header */}
+                    <div className="h-20 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 relative overflow-hidden">
+                      {pro.cover && (
+                        <img
+                          src={pro.cover}
+                          alt=""
+                          className="w-full h-full object-cover opacity-25 group-hover:scale-105 transition-transform duration-500"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#2b2d31] via-transparent to-transparent" />
+
+                      {/* Top Badges */}
+                      <div className="absolute top-2.5 inset-x-3 flex items-center justify-between text-xs">
+                        <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-lg border backdrop-blur-md ${pro.roleColor}`}>
+                          {pro.roleBadge}
+                        </span>
+
+                        <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md text-amber-400 px-2 py-0.5 rounded-lg text-xs font-black border border-white/10">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          <span>{pro.rating}</span>
+                          <span className="text-[10px] text-slate-400 font-normal font-mono">({pro.reviewsCount})</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="p-4 sm:p-5 pt-0 relative flex-1 flex flex-col justify-between">
+                      <div>
+                        {/* Avatar & Availability */}
+                        <div className="flex items-end justify-between -mt-8 mb-3">
+                          <div className="relative">
+                            <img
+                              src={pro.avatar}
+                              alt={pro.name}
+                              className="w-14 h-14 rounded-2xl object-cover border-4 border-[#2b2d31] shadow-lg group-hover:scale-105 transition-transform"
+                            />
+                            <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 absolute bottom-0.5 right-0.5 border-2 border-[#2b2d31]" title="متاح للطلبيات" />
+                          </div>
+
+                          {/* Rate Starting Badge */}
+                          <div className="text-left bg-[#1e1f22] px-3 py-1 rounded-xl border border-white/5">
+                            <span className="text-[10px] text-slate-400 block font-bold leading-tight">التسعيرة:</span>
+                            <span className="text-xs font-black text-amber-400 font-mono">{pro.startingRate}</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1 bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-lg text-xs font-bold border border-amber-500/20 shrink-0">
-                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                          <span>{pro.rating}</span>
+                        {/* Name & Title */}
+                        <h3 className="text-base font-black text-white group-hover:text-indigo-400 transition-colors leading-tight mb-1">
+                          {pro.name}
+                        </h3>
+
+                        <p className="text-xs text-slate-300 font-bold mb-1.5 flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                          <span>{pro.city}</span>
+                          <span className="text-slate-600">•</span>
+                          <span className="text-[11px] text-slate-400 font-medium">{pro.experience}</span>
+                        </p>
+
+                        {/* Bio Pitch */}
+                        <p className="text-xs text-[#949ba4] line-clamp-2 leading-relaxed mb-3 font-medium">
+                          {pro.bio}
+                        </p>
+
+                        {/* Skills / Services Tags Chips */}
+                        <div className="flex flex-wrap gap-1 mb-4">
+                          {pro.skills && pro.skills.slice(0, 4).map((skill: string, sIdx: number) => (
+                            <span
+                              key={sIdx}
+                              className="px-2 py-0.5 bg-[#1e1f22] text-slate-300 text-[10px] font-bold rounded-md border border-white/5"
+                            >
+                              {skill}
+                            </span>
+                          ))}
                         </div>
                       </div>
 
-                      {/* City & Specialty */}
-                      <p className="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                        <span>{pro.city}</span>
-                      </p>
+                      {/* Card Bottom CTA Actions */}
+                      <div className="pt-3 border-t border-[#383a40] flex items-center gap-2">
+                        <a
+                          href={`https://wa.me/${pro.whatsapp}?text=${encodeURIComponent(
+                            `السلام عليكم ${pro.name}، تواصلت معكم عبر منصة BEYA NETWORK بخصوص طلب خدماتكم في ${pro.specialty}.`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition text-center flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
+                        >
+                          <MessageCircle className="w-4 h-4 text-slate-950" />
+                          <span>تواصل واطلب فـ الواتساب</span>
+                        </a>
 
-                      <p className="text-xs text-[#949ba4] line-clamp-2 leading-relaxed mb-3">
-                        {pro.bio}
-                      </p>
-                    </div>
-
-                    {/* Bottom Actions */}
-                    <div className="pt-3 border-t border-[#383a40] flex items-center gap-2">
-                      <a
-                        href={`https://wa.me/${pro.whatsapp}?text=${encodeURIComponent(
-                          `السلام عليكم ${pro.name}، تواصلت معكم عبر دليل BEYA NETWORK بخصوص طلب خدماتكم.`
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 py-2 px-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition text-center flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span>واتساب مباشر</span>
-                      </a>
-
-                      <button
-                        onClick={() => setSelectedMemberProfile(pro)}
-                        className="py-2 px-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition flex items-center justify-center cursor-pointer"
-                        title="عرض الملف الكامل والكتالوج"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-indigo-400" />
-                      </button>
+                        <button
+                          onClick={() => setSelectedMemberProfile(pro)}
+                          className="py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition flex items-center justify-center cursor-pointer border border-white/10"
+                          title="استعراض الكتالوج والملف الكامل"
+                        >
+                          <Eye className="w-4 h-4 text-indigo-400" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
