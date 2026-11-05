@@ -111,10 +111,10 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       if (raw) saved = JSON.parse(raw);
     } catch {}
     return {
-      brandName: saved?.brandName || currentUser?.brandName || (currentUser as any)?.store_name || (currentUser as any)?.nom || 'FAS Wear',
-      city: saved?.city || currentUser?.ville || 'الدار البيضاء (Casablanca)',
-      phone: saved?.phone || currentUser?.telephone || '0675239885',
-      activity: saved?.activity || 'ملابس ستريتوير وهوديات أوفرسايز'
+      brandName: (saved?.brandName && String(saved.brandName).trim()) || currentUser?.brandName || (currentUser as any)?.store_name || (currentUser as any)?.nom || 'FAS Wear',
+      city: (saved?.city && String(saved.city).trim()) || currentUser?.ville || 'الدار البيضاء',
+      phone: (saved?.phone && String(saved.phone).trim()) || currentUser?.telephone || '0675239885',
+      activity: (saved?.activity && String(saved.activity).trim()) || 'ملابس ستريتوير وهوديات أوفرسايز'
     };
   });
 
@@ -550,10 +550,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
     if (directoryFilter !== 'all' && m.pillar !== directoryFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      return m.name.toLowerCase().includes(q) ||
-             m.city.toLowerCase().includes(q) ||
-             m.specialty.toLowerCase().includes(q) ||
-             m.bio.toLowerCase().includes(q);
+      return String(m.name || '').toLowerCase().includes(q) || String(m.city || '').toLowerCase().includes(q) || String(m.specialty || '').toLowerCase().includes(q) || String(m.bio || '').toLowerCase().includes(q);
     }
     return true;
   });
@@ -909,13 +906,13 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             <div className="flex items-center gap-2.5 truncate">
               <div className="relative">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                  {userProfile.brandName.charAt(0)}
+                  {((userProfile?.brandName || 'B').charAt(0)).toUpperCase()}
                 </div>
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute bottom-0 right-0 border-2 border-[#232428]" />
               </div>
               <div className="truncate">
                 <p className="text-xs font-black text-white truncate leading-tight">{userProfile.brandName}</p>
-                <p className="text-[10px] text-slate-400 truncate leading-tight">{userProfile.city.split('•')[0]}</p>
+                <p className="text-[10px] text-slate-400 truncate leading-tight">{String(userProfile?.city || 'المغرب').split('•')[0]}</p>
               </div>
             </div>
             <button
@@ -982,7 +979,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
                 {/* Message List */}
                 {channelMessages
-                  .filter(m => !searchQuery.trim() || m.content.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .filter(m => !searchQuery.trim() || String(m.content || '').toLowerCase().includes(searchQuery.toLowerCase()))
                   .map(msg => {
                     const isThreadOpen = expandedThreadMessageId === msg.id;
                     return (
@@ -1000,7 +997,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                               avatar: msg.authorAvatar,
                               roleBadge: msg.authorRole,
                               city: msg.city,
-                              bio: msg.content.slice(0, 150),
+                              bio: String(msg.content || '').slice(0, 150),
                               phone: msg.whatsappContact || '0675239885',
                               whatsapp: msg.whatsappContact || '212675239885',
                               rating: 4.9,
@@ -1070,7 +1067,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black transition-all shadow-xs cursor-pointer"
                               >
                                 <MessageCircle className="w-3.5 h-3.5" />
-                                <span>تواصل عبر واتساب مع {msg.author.split('(')[0]}</span>
+                                <span>تواصل عبر واتساب مع {String(msg.author || '').split('(')[0] || 'صاحب المنشور'}</span>
                               </a>
                             </div>
                           )}
@@ -1448,7 +1445,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
               <div className="p-6 rounded-3xl bg-[#2b2d31] border border-[#383a40] text-white space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl">
-                    {userProfile.brandName.charAt(0)}
+                    {((userProfile?.brandName || 'B').charAt(0)).toUpperCase()}
                   </div>
                   <div>
                     <h2 className="text-lg font-black text-white">{userProfile.brandName}</h2>
@@ -1559,7 +1556,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     </div>
                     <div className="truncate">
                       <p className="text-xs font-bold text-white group-hover:text-indigo-400 truncate">{mod.name}</p>
-                      <p className="text-[10px] text-slate-400 truncate">{mod.specialty.split('•')[0]}</p>
+                      <p className="text-[10px] text-slate-400 truncate">{String(mod.specialty || '').split('•')[0]}</p>
                     </div>
                   </button>
                 ))}
@@ -1680,7 +1677,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 {['FAS Wear (أنت)', 'Street Lab Casablanca', 'Nomad Wear Rabat', 'Urban Style MA'].map((b, idx) => (
                   <div key={idx} className="p-1.5 rounded-xl flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                      {b.charAt(0)}
+                      {((b || 'B').charAt(0)).toUpperCase()}
                     </div>
                     <p className="text-xs text-slate-300 truncate font-medium">{b}</p>
                   </div>

@@ -1414,13 +1414,28 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     }
 
     const prompt = `أنت كبير المهندسين التقنيين وخبير تسعير صناعة الملابس والنسيج في ورشة BEYA Creative بالمغرب بخبرة 20 سنة.
-المهمة: قم بتحليل دقيق وشامل ومخصص جداً للموديل المعروض في الصورة (أو المذكور في الملاحظات) وحساب التكلفة التقديرية الحقيقية والمضبوطة لهذا الموديل بالتحديد.
-تنبيه حاسم: لا تكرر نفس الأرقام لجميع الموديلات! احسب تكلفة متناسبة مع نوع القطعة بدقة:
-- إذا كان تيشيرت: سعر الخياطة unitPrice عادة بين 18 و 32 درهم، واستهلاك القماش 1.00m إلى 1.25m، وسعر المتر 28 إلى 45 درهم.
-- إذا كان هودي شتوي / سويت: سعر الخياطة unitPrice عادة بين 38 و 58 درهم، واستهلاك القماش 1.75m إلى 2.05m، وسعر المتر/الكيلو 42 إلى 65 درهم.
-- إذا كان بنطلون / كارجو / جينز: سعر الخياطة بين 45 و 68 درهم، واستهلاك القماش 1.50m إلى 1.85m.
-- إذا كان جاكيت مبطن / معطف / بدلة: سعر الخياطة بين 75 و 140 درهم حسب التعقيد والبطانة، واستهلاك القماش 2.00m إلى 2.50m.
-- إذا كانت عباية / فستان: سعر الخياطة بين 35 و 70 درهم حسب الموديل، واستهلاك القماش 2.50m إلى 3.50m.
+المهمة: قم بتحليل دقيق وشامل ومخصص جداً للموديل المعروض في الصورة (أو المذكور في الملاحظات) وحساب التكلفة التقديرية الحقيقية والمضبوطة لهذا الموديل بالتحديد لسوق الجملة وإعادة البيع للعلامات والمتاجر (Confection B2B pour revendeurs / grossistes / marques).
+تنبيه حاسم: عملاؤنا تجار وعلامات ومتاجر يعيدون بيع السلع (Revendeurs B2B)، لذلك يجب أن تكون الأسعار واستهلاك القماش دقيقة واحترافية وبأسعار مصنع بالجملة تنافسية تتيح لهم هامش ربح ممتاز!
+احسب التكلفة واستهلاك القماش متناسباً مع نوع القطعة بدقة:
+- إذا كان بودي / بودي ليكرا / توب نسائي / sous-pull / débardeur / crop top:
+  * استهلاك القماش tissuConso بين 0.85m و 1.05m فقط (قماش جيرسي ليكرا / فيسكوز إيلاستين ناعم).
+  * سعر متر القماش prixMetreEstime بين 24 و 30 درهم.
+  * سعر الخياطة unitPrice (façon seule) بين 16 و 22 درهم.
+  * سعر الباترون والتدرج patronagePrice بين 140 و 180 درهم.
+  * سعر العينة الأولية prixEchantillon بين 180 و 240 درهم.
+- إذا كان تيشيرت قطن ممشط (Col Rond / Oversize):
+  * استهلاك القماش 1.00m إلى 1.25m، سعر المتر 26 إلى 34 درهم، سعر الخياطة 18 إلى 26 درهم.
+  * الباترون 150 إلى 190 درهم، العينة 200 إلى 250 درهم.
+- إذا كان قميص بولو (Polo Piqué):
+  * استهلاك القماش 1.20m إلى 1.35m، سعر المتر 32 إلى 38 درهم، سعر الخياطة 25 إلى 34 درهم.
+- إذا كان هودي شتوي / سويت (Molleton Coton):
+  * استهلاك القماش 1.65m إلى 1.90m، سعر المتر 36 إلى 46 درهم، سعر الخياطة 34 إلى 48 درهم.
+- إذا كان بنطلون / كارجو / جوغينغ:
+  * استهلاك القماش 1.35m إلى 1.60m، سعر الخياطة 30 إلى 48 درهم.
+- إذا كان طقم بدلة رياضية كاملة (Ensemble Survêtement 2 pièces):
+  * استهلاك القماش 2.60m إلى 2.90m، سعر الخياطة للطقم كاملاً 55 إلى 85 درهم.
+- إذا كان جاكيت مبطن / معطف / بدلة:
+  * استهلاك القماش 1.90m إلى 2.40m، سعر الخياطة 60 إلى 110 درهم.
 
 الموديل المدخل من الزبون: "${target.modele || ''}"
 ملاحظات الزبون: "${target.details || ''}"
@@ -1429,12 +1444,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 {
   "modeleReel": "الاسم الدقيق بالعربية / Nom exact en français",
   "tissuSuggere": "نوع القماش الدقيق بالعربية / Type de tissu en français",
-  "tissuConso": 1.85,
-  "prixMetreEstime": 45,
-  "unitPrice": 48,
-  "patronagePrice": 220,
-  "prixEchantillon": 300,
-  "delaiEstime": "7 إلى 10 أيام عمل / 7 à 10 jours ouvrables",
+  "tissuConso": 1.05,
+  "prixMetreEstime": 28,
+  "unitPrice": 22,
+  "patronagePrice": 160,
+  "prixEchantillon": 220,
+  "delaiEstime": "5 إلى 7 أيام عمل / 5 à 7 jours ouvrables",
   "techDetails": "المواصفات التقنية بالعربية / Détails techniques en français",
   "reponseAtelier": "تعليق تقني بالعربية / Commentaire technique atelier en français"
 }`;
@@ -1467,14 +1482,22 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         const parsed = JSON.parse(jsonStr);
 
         if (parsed && (parsed.unitPrice || parsed.modeleReel)) {
+          const modText = `${target.modele || ''} ${parsed.modeleReel || ''}`.toLowerCase();
+          const isBoudiOrTop = modText.includes('boudi') || modText.includes('body') || modText.includes('بودي') || modText.includes('بادي') || modText.includes('top') || modText.includes('sous-pull') || modText.includes('débardeur');
+          const fallbackConso = isBoudiOrTop ? 1.05 : 1.45;
+          const fallbackUnitPrice = isBoudiOrTop ? 20 : 35;
+          const fallbackPatronage = isBoudiOrTop ? 160 : 220;
+          const fallbackEchantillon = isBoudiOrTop ? 220 : 300;
+          const fallbackPrixMetre = isBoudiOrTop ? 26 : 38;
+
           return {
             modeleReel: parsed.modeleReel || target.modele,
             tissuSuggere: parsed.tissuSuggere || '',
-            tissuConso: Number(parsed.tissuConso) || 1.85,
-            prixMetreEstime: Number(parsed.prixMetreEstime) || 45,
-            unitPrice: Math.max(15, Math.round(Number(parsed.unitPrice) || 65)),
-            patronagePrice: Math.max(150, Math.round(Number(parsed.patronagePrice) || 280)),
-            prixEchantillon: Math.max(200, Math.round(Number(parsed.prixEchantillon) || 350)),
+            tissuConso: Number(parsed.tissuConso) > 0 ? Number(parsed.tissuConso) : fallbackConso,
+            prixMetreEstime: Number(parsed.prixMetreEstime) > 0 ? Number(parsed.prixMetreEstime) : fallbackPrixMetre,
+            unitPrice: Math.max(15, Math.round(Number(parsed.unitPrice) || fallbackUnitPrice)),
+            patronagePrice: Math.max(120, Math.round(Number(parsed.patronagePrice) || fallbackPatronage)),
+            prixEchantillon: Math.max(160, Math.round(Number(parsed.prixEchantillon) || fallbackEchantillon)),
             delaiEstime: parsed.delaiEstime || '7 إلى 10 أيام عمل (العينة تحت 48 ساعة)',
             techDetails: parsed.techDetails || '',
             reponseAtelier: parsed.reponseAtelier || '',
@@ -1916,9 +1939,32 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       : Boolean(extDetails.patronageStatus === 'priced' || (savedPatronage && savedModelisteName));
     const hasCustomPatronage = Boolean(savedPatronage && savedPatronage > 0 && isModelisteValide);
     const hasCustomEchantillon = Boolean(savedEchantillon && savedEchantillon > 0);
+    const savedTissuConso = (extDetails.tissuConso && Number(extDetails.tissuConso) > 0)
+      ? Number(extDetails.tissuConso)
+      : (d as any).tissuConso && Number((d as any).tissuConso) > 0
+      ? Number((d as any).tissuConso)
+      : null;
+    const savedPrixMetre = (extDetails.prixMetreEstime && Number(extDetails.prixMetreEstime) > 0)
+      ? Number(extDetails.prixMetreEstime)
+      : null;
 
     // Detect Clothing Categories
-    const isDenimOrTailleur = (
+    const isBodyOrTop = (
+      text.includes('boudi') ||
+      text.includes('body') ||
+      text.includes('بودي') ||
+      text.includes('بادي') ||
+      text.includes('sous-pull') ||
+      text.includes('sous pull') ||
+      text.includes('caraco') ||
+      text.includes('débardeur') ||
+      text.includes('debardeur') ||
+      text.includes('crop top') ||
+      text.includes('croptop') ||
+      text.includes('haut moulant') ||
+      (text.includes('top') && !text.includes('laptop') && !text.includes('desktop') && !text.includes('stop'))
+    );
+    const isDenimOrTailleur = !isBodyOrTop && (
       text.includes('modz') ||
       text.includes('denim') ||
       text.includes('jean') ||
@@ -1965,7 +2011,24 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     let defaultPrixConfection = 65;
     let defaultTissuMarche = isAr ? 'سوق درب عمر / القريعة (الدار البيضاء)' : 'Marché de gros Derb Omar';
 
-    if (isTracksuit) {
+    if (isBodyOrTop) {
+      defaultModele = isAr ? 'بودي / توب نسائي كم طويل قصة ممتازة' : 'Body / Top Manches Longues Moulant';
+      defaultTissu = isAr ? 'قماش جيرسي ليكرا أو ريب مطاطي ناعم (Jersey Coton / Viscose Élasthanne)' : 'Jersey Coton Élasthanne / Viscose Lycra';
+      defaultTech = isAr ? 'قصة بودي مطاطية ملائمة للجسم • خياطة مرنة بأربع خيوط (Surjet 4 fils) • درزات مسطحة وأساور دقيقة' : 'Coupe près du corps stretch • Assemblage surjet 4 fils • Ourlets souples';
+      defaultUnitPrice = 20;
+      defaultDelai = isAr ? '5 - 7 أيام عمل (العينة تحت 48 ساعة)' : '5 - 7 jours ouvrables (Échantillon sous 48h)';
+      defaultPatronage = 160;
+      defaultEchantillon = 220;
+      defaultTissuConso = 1.05;
+      defaultTissuPrixKg = 65;
+      defaultPrixMetre = 26;
+      defaultAccessoriesCost = 5;
+      defaultPrixConfection = 20;
+      defaultTissuMarche = isAr ? 'سوق درب عمر / ليساسفة (توب ليكرا / فيسكوز)' : 'Marché Derb Omar (Jersey Lycra / Viscose)';
+      defaultReponse = isAr
+        ? 'تمت دراسة موديل البودي بدقة لسوق الجملة وإعادة البيع: استهلاك الثوب 1.05 متر فقط، وسعر المصنعية تم ضبطه ليكون تنافسياً ومربحاً لإعادة البيع للعلامات والمتاجر.'
+        : 'Modèle Body / Top analysé pour revendeurs B2B : métrage 1.05m et coût de confection optimisé pour rentabilité revendeur.';
+    } else if (isTracksuit) {
       defaultModele = isAr ? 'طقم بدلة رياضية (فيست بسحاب وسروال)' : 'Ensemble Survêtement Veste Zippée + Pantalon (2 Pièces)';
       defaultTissu = isAr ? 'مولطون قطن بوليستر 300 غرام مع شريط جانبي أبيض' : 'Molleton Coton/Polyester 300g avec bandes contrastées blanches';
       defaultTech = isAr ? 'فيست بسحاب معدني وجيوب جانبية • ياقة مرتفعة • سروال بخصر مطاطي وباندات في الأسفل • شريط رياضي جانبي' : 'Veste zippée col montant avec poches • Bandes contrastées • Pantalon taille élastique et chevilles resserrées';
@@ -2080,6 +2143,9 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         : 'Modèle Veste Denim étudié avec soin : toile 100% coton et finitions ceinture calculées. Prêt pour prototypage.';
     }
 
+    if (savedTissuConso) defaultTissuConso = savedTissuConso;
+    if (savedPrixMetre) defaultPrixMetre = savedPrixMetre;
+
     const hasBroderie = text.includes('broderie') || text.includes('طرز') || text.includes('طريزة') || text.includes('brodé') || text.includes('brode');
     const hasPrint = text.includes('sérigraphie') || text.includes('serigraphie') || text.includes('dtf') || text.includes('print') || text.includes('طباعة') || text.includes('طبعة') || text.includes('marquage') || isHoodieOrSweat || isTshirt;
 
@@ -2117,7 +2183,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const fournisseurCouleurs = savedFournisseurColors !== null && savedFournisseurColors !== undefined ? savedFournisseurColors : defaultFournisseurColors;
     const fournisseurNote = savedFournisseurNotes !== null && savedFournisseurNotes !== undefined ? savedFournisseurNotes : defaultFournisseurNote;
 
-    const isGenericPrice = savedUnitPrice === 65 && !d.crmPriceConfirmed && (isVeste || isDenimOrTailleur || isTracksuit);
+    const isGenericPrice = (savedUnitPrice === 65 && !d.crmPriceConfirmed && (isVeste || isDenimOrTailleur || isTracksuit)) ||
+      (isBodyOrTop && savedUnitPrice && savedUnitPrice >= 65 && !d.crmPriceConfirmed);
     const tissuCostPerPiece = Math.round(defaultTissuConso * defaultPrixMetre);
     let confectionPrice = defaultPrixConfection;
     let fullPackagePrice = defaultPrixConfection + tissuCostPerPiece + defaultAccessoriesCost;

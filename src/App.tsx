@@ -1146,10 +1146,10 @@ function AppContent() {
         {/* Shared / Public ERP Routes */}
         <Route path="stocks" element={can('stocks') ? <StockMateriaux /> : <Navigate to="/" replace />} />
         <Route path="achats" element={can('achats') ? <Achats /> : <Navigate to="/" replace />} />
-        <Route path="commandes" element={can('sales_dashboard') ? <Commandes /> : <Navigate to="/" replace />} />
+        <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
         
         <Route path="ai-models" element={<AIModelsLibrary />} />
-        <Route path="manage-order/:id" element={can('sales_dashboard') ? <ManageOrder /> : <Navigate to="/" replace />} />
+        <Route path="manage-order/:id" element={can('commandes') ? <ManageOrder /> : <Navigate to="/" replace />} />
         <Route path="commandes/manage" element={can('commandes') ? <ManageOrder /> : <Navigate to="/" replace />} />
         <Route path="liste-attente" element={can('rh') ? <ListeAttente /> : <Navigate to="/" replace />} />
         <Route path="notifications" element={can('notifications') ? <Notifications /> : <Navigate to="/" replace />} />
