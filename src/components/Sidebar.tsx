@@ -369,8 +369,8 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             <div className="space-y-1">
               {!collapsed && <SectionTitle title={isAr ? 'التجارة الإلكترونية (SaaS)' : 'E-Commerce (SaaS)'} isAr={isAr} />}
               <NavItem to="/store-landing" icon={Store} label={isAr ? 'باقة المتجر (Landing)' : 'Beya Store Landing'} />
-              {currentUser.role === 'admin' && <NavItem to="/store-builder" icon={Globe} label="BEYA STORE (SaaS)" pro />}
-              {currentUser.role === 'admin' && <NavItem to="/beya-dropshipping" icon={Package} label={isAr ? '?????? ????????????' : 'Beya Dropshipping'} pro />}
+              {currentUser.role === 'admin' && <NavItem to="/store-builder" icon={Globe} label="BEYA STORE (SaaS)" />}
+              {currentUser.role === 'admin' && <NavItem to="/beya-dropshipping" icon={Package} label={isAr ? 'منصة الدروبشيبينغ' : 'Beya Dropshipping'} />}
             </div>
           )}
 
@@ -412,7 +412,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               </>
             )}
             {currentUser?.role === 'admin' && (
-              <NavItem to="/beya-studio-tryon" icon={Sparkles} label={isAr ? '?????? ??????? ??????????' : 'Studio Essayage Virtuel'} pro />
+              <NavItem to="/beya-studio-tryon" icon={Sparkles} label={isAr ? 'استوديو التجربة الافتراضية' : 'Studio Essayage Virtuel'} />
             )}
             {can('ordres') && <NavItem to="/ordres-de-coupe" icon={Scissors} label={isAr ? 'أوامر القص' : 'Ordres de Coupe'} />}
             {(can('ordres') || can('fiches')) && <NavItem to="/hpgl-viewer" icon={Scissors} label={isAr ? 'قارئ الباتروناج' : 'Visionneuse HPGL'} />}
