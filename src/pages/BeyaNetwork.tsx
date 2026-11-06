@@ -124,6 +124,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [mobileDrawer, setMobileDrawer] = useState<'none' | 'channels' | 'members'>('none');
   const [directoryFilter, setDirectoryFilter] = useState<'all' | 'modeliste' | 'tissu' | 'fournitures' | 'impression' | 'broderie'>('all');
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>('all');
+  const [selectedFabricSpecialty, setSelectedFabricSpecialty] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<any | null>(null);
   const [expandedThreadMessageId, setExpandedThreadMessageId] = useState<string | null>(null);
@@ -192,7 +193,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       category: 'experts',
       categoryLabelAr: 'غرف الحرفيين والموردين',
       icon: '🧵',
-      topicAr: 'مالين الثوب: أقمشة الهوديات، الملتون 340g، الدنيم، جاباردين، وأسعار الكيلو الحالية بدرب عمر وطنجة'
+      topicAr: 'مالين الثوب: أقمشة الكريب والعبايات، الملتون 340g، الدنيم، الكتان، الجاباردين، وأسعار المتر والكيلو بدرب عمر وطنجة'
     },
     {
       id: 'modelistes',
@@ -301,6 +302,22 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       userReactions: [],
       whatsappContact: '212675239885',
       whatsappMessage: 'السلام عليكم، تواصلت معكم من BEYA NETWORK بخصوص أقمشة الكاباردين والكانفاس بطنجة.'
+    },
+
+        {
+      id: 'msg-tissu-crepe-1',
+      channelId: 'tissu',
+      author: 'دار الكريب والأقمشة النسائية (Maison du Crêpe)',
+      authorAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+      authorRole: 'مورد معتمد • كريب وعبايات BEYA',
+      authorRoleKey: 'tissu',
+      city: 'الدار البيضاء • درب عمر مجمع النخبة',
+      timestamp: 'اليوم، 14:15',
+      content: 'السلام عليكم الإخوان المصممين وأصحاب براندات العبايات، الفساتين والملابس النسائية الراقية 🌸\n\nتنبيه: راه مالين الثوب كل واحد والتخصص ديالو، وحنا فـ دار الكريب متخصصين حصرياً فالأقمشة النسائية المستوردة (كوري وتركي وإيطالي):\n🔹 كريب باربي رويال 220g (Crêpe Barbie): طايح، واقف ومكايتكمشش، أسود ملكي فاحم وألوان باستيل.\n🔹 كريب جورجيت كوري 140g: انسيابي وخفيف بزاف للشيلان والفساتين.\n🔹 كريب سكوبا ستريتش 280g: مخصص للبليزرات والبدلات النسائية الراقية.\n🔹 ساتان دو شيس حريري فاخر للبيجامات والفساتين.\n\n📦 الكوبونات متوفرة ابتداءً من 20 متر مع إرسال بطاقات العينات (Nuancier) مجاناً لأعضاء BEYA VIP.',
+      reactions: { '👗': 38, '🔥': 26, '❤️': 19 },
+      userReactions: [],
+      whatsappContact: '212661902834',
+      whatsappMessage: 'السلام عليكم، تواصلت معكم من BEYA NETWORK بخصوص أقمشة الكريب والعبايات.'
     },
 
     // #modelistes
@@ -562,7 +579,14 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       const pillarLabelAr = pillar === 'tissu' ? 'مالين الثوب والأقمشة' :
                             pillar === 'fournitures' ? 'مالين الفورنيتور والمستلزمات' :
                             pillar === 'impression' ? 'مالين الإمبريسيون والطباعة' : 'مالين الطرز والبرودري';
-      const roleBadge = pillar === 'tissu' ? '🧵 مورد ثوب' :
+      const roleBadge = pillar === 'tissu' ? (
+        (s as any).fabricCategory === 'crepe' ? '👗 كريب وفساتين' :
+        (s as any).fabricCategory === 'denim' ? '👖 جينز ودينيم' :
+        (s as any).fabricCategory === 'cargo' ? '🦺 جاباردين وكارجو' :
+        (s as any).fabricCategory === 'lin' ? '🌿 كتان وبوبلين' :
+        (s as any).fabricCategory === 'velours' ? '❄️ مخمل وشتاء' :
+        (s as any).fabricCategory === 'streetwear' ? '🧥 ستريتوير ومولطون' : '🧵 مورد ثوب'
+      ) :
                         pillar === 'fournitures' ? '📦 فورنيتور' :
                         pillar === 'impression' ? '🎨 إمبريسيون' : '🪡 برودري';
       const roleColor = pillar === 'tissu' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' :
@@ -608,7 +632,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         skills: s.fabricTags && s.fabricTags.length > 0 ? s.fabricTags : defaultSkills,
         responseTime: '⚡ رد خلال ساعة',
         completedJobs: 60 + Math.floor(s.rating * 12),
-        verified: true
+        verified: true,
+        specialtyTag: (s as any).specialtyTag || s.categoryLabel,
+        fabricCategory: (s as any).fabricCategory || 'all'
       };
     })
   ];
@@ -616,13 +642,29 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   // Filtered Pro Members for Directory View
   const filteredProMembers = allProMembers.filter(m => {
     if (directoryFilter !== 'all' && m.pillar !== directoryFilter) return false;
+    if (directoryFilter === 'tissu' && selectedFabricSpecialty !== 'all') {
+      const mCategory = (m as any).fabricCategory;
+      const skills = ((m as any).skills || []).map((sk: string) => String(sk).toLowerCase());
+      let matches = mCategory === selectedFabricSpecialty;
+      if (!matches) {
+        if (selectedFabricSpecialty === 'crepe') matches = skills.some((s: string) => s.includes('crepe') || s.includes('satin') || s.includes('soie') || s.includes('mousseline') || s.includes('viscose') || s.includes('كريب'));
+        else if (selectedFabricSpecialty === 'streetwear') matches = skills.some((s: string) => s.includes('molleton') || s.includes('jersey') || s.includes('interlock') || s.includes('مولطون'));
+        else if (selectedFabricSpecialty === 'denim') matches = skills.some((s: string) => s.includes('denim') || s.includes('chambray') || s.includes('جينز'));
+        else if (selectedFabricSpecialty === 'cargo') matches = skills.some((s: string) => s.includes('gabardine') || s.includes('canvas') || s.includes('waterproof') || s.includes('كارجو'));
+        else if (selectedFabricSpecialty === 'lin') matches = skills.some((s: string) => s.includes('lin') || s.includes('popeline') || s.includes('كتان'));
+        else if (selectedFabricSpecialty === 'velours') matches = skills.some((s: string) => s.includes('corduroy') || s.includes('velours') || s.includes('laine') || s.includes('مخمل'));
+      }
+      if (!matches) return false;
+    }
     if (selectedCityFilter !== 'all' && !String(m.city || '').toLowerCase().includes(selectedCityFilter.toLowerCase())) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       return String(m.name || '').toLowerCase().includes(q) ||
              String(m.city || '').toLowerCase().includes(q) ||
              String(m.specialty || '').toLowerCase().includes(q) ||
-             String(m.bio || '').toLowerCase().includes(q);
+             String((m as any).specialtyTag || '').toLowerCase().includes(q) ||
+             String(m.bio || '').toLowerCase().includes(q) ||
+             ((m as any).skills || []).some((sk: string) => String(sk).toLowerCase().includes(q));
     }
     return true;
   });
@@ -1518,9 +1560,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     {
                       id: 'tissu',
                       title: 'مالين الثوب',
-                      subtitle: 'ملتون 340g، كانفاس، دنيم',
+                      subtitle: 'تخصصات: كريب، مولطوني، جينز، كتان، جاباردين',
                       icon: Layers,
-                      badge: '3 مستودعات',
+                      badge: '6 مستودعات متخصصة',
                       gradient: 'from-emerald-600 via-teal-600 to-emerald-500',
                       borderActive: 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/40',
                       badgeColor: 'bg-emerald-500/20 text-emerald-300'
@@ -1655,6 +1697,58 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 </div>
               </div>
 
+              {/* FABRIC SUB-SPECIALTY FILTER (تخصصات مالين الثوب) */}
+              {directoryFilter === 'tissu' && (
+                <div className="bg-[#2b2d31] p-3 sm:p-4 rounded-2xl border border-emerald-500/30 shadow-md space-y-2.5 animate-in fade-in duration-200">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-xs font-black text-white flex items-center gap-1.5">
+                        <Layers className="w-4 h-4 text-emerald-400" />
+                        <span>اختر تخصص القماش المطلوب (Spécialité Tissu):</span>
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-bold text-emerald-300/80 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">
+                      كل مورد وعنده تخصصه المستقل (كريب، مولطوني، جينز، كارجو...)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+                    {[
+                      { id: 'all', label: 'كافة الأقمشة (الكل)', icon: '🌟', count: allProMembers.filter(m => m.pillar === 'tissu').length },
+                      { id: 'crepe', label: 'الكريب والأقمشة النسائية (Crêpe)', icon: '👗', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'crepe' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('crepe'))))).length },
+                      { id: 'streetwear', label: 'الستريتوير والمولطون 340g (Molleton)', icon: '🧥', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'streetwear' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('molleton'))))).length },
+                      { id: 'denim', label: 'الدينيم والجينز (Denim / Jeans)', icon: '👖', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'denim' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('denim'))))).length },
+                      { id: 'cargo', label: 'الجاباردين والسترات والكانفاس', icon: '🦺', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'cargo' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('gabardine'))))).length },
+                      { id: 'lin', label: 'الكتان والبوبلين الصيفي (Lin & Coton)', icon: '🌿', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'lin' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('lin'))))).length },
+                      { id: 'velours', label: 'المخمل والكوردوروي والشتاء (Velours)', icon: '❄️', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'velours' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('corduroy'))))).length }
+                    ].map(fSpec => {
+                      const isActive = selectedFabricSpecialty === fSpec.id;
+                      return (
+                        <button
+                          key={fSpec.id}
+                          type="button"
+                          onClick={() => setSelectedFabricSpecialty(fSpec.id)}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
+                            isActive
+                              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-400 scale-[1.02]'
+                              : 'bg-[#1e1f22] hover:bg-[#35373c] text-slate-300 border border-white/5 hover:border-white/15'
+                          }`}
+                        >
+                          <span className="text-sm">{fSpec.icon}</span>
+                          <span>{fSpec.label}</span>
+                          <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono ${
+                            isActive ? 'bg-black/30 text-white font-bold' : 'bg-black/40 text-slate-400'
+                          }`}>
+                            {fSpec.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* 4. ACTIVE RESULTS SUMMARY BAR */}
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 px-1">
                 <span className="text-slate-300">
@@ -1736,16 +1830,53 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                           {pro.bio}
                         </p>
 
+                        {/* Specialty Highlight Banner */}
+                        {(pro as any).specialtyTag && (
+                          <div className="mb-2.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] font-black flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span className="truncate">{(pro as any).specialtyTag}</span>
+                          </div>
+                        )}
+
                         {/* Skills / Services Tags Chips */}
                         <div className="flex flex-wrap gap-1 mb-4">
-                          {pro.skills && pro.skills.slice(0, 4).map((skill: string, sIdx: number) => (
-                            <span
-                              key={sIdx}
-                              className="px-2 py-0.5 bg-[#1e1f22] text-slate-300 text-[10px] font-bold rounded-md border border-white/5"
-                            >
-                              {skill}
-                            </span>
-                          ))}
+                          {pro.skills && pro.skills.slice(0, 5).map((skill: string, sIdx: number) => {
+                            const tagLabels: Record<string, string> = {
+                              crepe: 'كريب (Crêpe)',
+                              satin: 'ساتان حرير',
+                              soie: 'حرير ناعم',
+                              mousseline: 'موسلين',
+                              viscose: 'فيسكوز',
+                              molleton: 'مولطون 340g',
+                              jersey: 'جيرسي قطن',
+                              interlock: 'إنترلوك دابل',
+                              corduroy: 'كوردوروي مضلع',
+                              denim: 'دينيم وجينز',
+                              chambray: 'شامبراي خفيف',
+                              gabardine: 'جاباردين ستريتش',
+                              canvas: 'كانفاس قطن',
+                              waterproof: 'ووتربروف عازل',
+                              lin: 'كتان طبيعي 100%',
+                              popeline: 'بوبلين قمصان',
+                              gaze: 'دوبل غاز قطن',
+                              velours: 'قطيفة مخمل',
+                              laine: 'جوخ ودرا دولين',
+                              tweed: 'قماش تويد'
+                            };
+                            const displayLabel = tagLabels[skill.toLowerCase()] || skill;
+                            return (
+                              <span
+                                key={sIdx}
+                                className={`px-2 py-0.5 text-[10px] font-bold rounded-md border ${
+                                  pro.pillar === 'tissu'
+                                    ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/20'
+                                    : 'bg-[#1e1f22] text-slate-300 border-white/5'
+                                }`}
+                              >
+                                {displayLabel}
+                              </span>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -2400,7 +2531,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             <div>
               <div className="px-2 mb-1 text-[10px] font-black text-emerald-400 uppercase tracking-wider flex items-center justify-between">
                 <span>🧵 مالين الثوب</span>
-                <span>(3)</span>
+                <span>({allProMembers.filter(m => m.pillar === 'tissu').length})</span>
               </div>
               <div className="space-y-1">
                 {allProMembers.filter(m => m.pillar === 'tissu').map(sup => (
@@ -2591,6 +2722,12 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     {selectedMemberProfile.city}
                   </span>
                 </div>
+                {selectedMemberProfile.specialtyTag && (
+                  <div className="mt-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-bold flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>{selectedMemberProfile.specialtyTag}</span>
+                  </div>
+                )}
               </div>
 
               {/* Bio & Details */}

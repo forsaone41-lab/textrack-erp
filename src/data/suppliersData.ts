@@ -22,6 +22,8 @@ export interface SupplierProfile {
   cover: string;
   category: string;
   categoryLabel: string;
+  specialtyTag?: string;
+  fabricCategory?: 'crepe' | 'streetwear' | 'denim' | 'cargo' | 'lin' | 'velours' | 'all';
   city: string;
   cityTag: string;
   district: string;
@@ -50,6 +52,8 @@ export const SUPPLIERS_DATA: SupplierProfile[] = [
       cover: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&auto=format&fit=crop&q=80',
       category: 'tissu',
       categoryLabel: 'أقمشة وتوريد قطن',
+      specialtyTag: '🧥 متخصص أقمشة الستريتوير والمولطون 340g والقطن',
+      fabricCategory: 'streetwear',
       city: 'الدار البيضاء (درب عمر)',
       cityTag: 'casablanca',
       district: 'درب عمر، زنقة فاس، رقم 42',
@@ -113,6 +117,8 @@ export const SUPPLIERS_DATA: SupplierProfile[] = [
       cover: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&auto=format&fit=crop&q=80',
       category: 'tissu',
       categoryLabel: 'أقمشة سراويل وجاباردين',
+      specialtyTag: '🦺 متخصص خامات السراويل الكارجو والسترات والكانفاس',
+      fabricCategory: 'cargo',
       city: 'طنجة (المنطقة الحرة)',
       cityTag: 'tanger',
       district: 'المنطقة الحرة كزناية، مستودع C4، طنجة',
@@ -175,6 +181,8 @@ export const SUPPLIERS_DATA: SupplierProfile[] = [
       cover: 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=800&auto=format&fit=crop&q=80',
       category: 'tissu',
       categoryLabel: 'دينيم وجينز خام وستريتش',
+      specialtyTag: '👖 متخصص أقمشة الجينز والدينيم والشامبراي',
+      fabricCategory: 'denim',
       city: 'الدار البيضاء (سيدي معروف / كراج علال)',
       cityTag: 'casablanca',
       district: 'سيدي معروف، مجمع المستودعات النسيجية، الدار البيضاء',
@@ -220,6 +228,164 @@ export const SUPPLIERS_DATA: SupplierProfile[] = [
       reviews: [
         { author: 'رضا العلمي', brand: 'Denim Lab Casa', rating: 5, date: 'منذ أسبوع', text: 'الدينيم الـ 13.5oz حقيقي وممتاز للدلافاج، خدمت بيه كوليكسيون كاملة وخرجت فالمستوى.' },
         { author: 'طارق بنسعيد', brand: 'Streetwear Vintage', rating: 4.9, date: 'منذ شهرين', text: 'السلعة ثابته والمتر محسوب بدقة، أحسن ثمن دجينز فكازا.' }
+      ]
+    },
+    {
+      id: 'sup-crepe',
+      name: 'دار الكريب والأقمشة النسائية والعبايات (Maison du Crêpe)',
+      logo: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=300&auto=format&fit=crop&q=80',
+      cover: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&auto=format&fit=crop&q=80',
+      category: 'tissu',
+      categoryLabel: 'أقمشة الكريب والعبايات والفساتين الراقية',
+      specialtyTag: '👗 متخصص أقمشة الكريب، العبايات، والفساتين الراقية',
+      fabricCategory: 'crepe',
+      city: 'الدار البيضاء (درب عمر / كراج علال)',
+      cityTag: 'casablanca',
+      district: 'درب عمر، مجمع النخبة للأقمشة النسائية، رقم 14، الدار البيضاء',
+      fabricTags: ['crepe', 'satin', 'soie', 'mousseline', 'viscose'],
+      whatsapp: '212661902834',
+      phone: '0661902834',
+      rating: 4.95,
+      reviewsCount: 42,
+      verified: true,
+      verifiedBadge: 'مورد معتمد من ورشة BEYA للأقمشة النسائية',
+      desc: 'الموزع الأول المتخصص في أفخم خامات الكريب الكوري، الإيطالي والتركي للعبايات، الفساتين والبدلات النسائية الراقية. ثوب طايح ومستقيم مع ثبات تام في الصباغة ومقاومة للتجعد.',
+      minQty: 'ابتداءً من 20 متر (كوبون أو رولو)',
+      priceRange: '26 - 46 درهم/متر',
+      deliveryTime: '24 ساعة داخل كازا • 48 ساعة لباقي المدن',
+      beyaAdvantage: 'إرسال بطاقات عينات الألوان (Nuancier) مجاناً للبراندات مع إمكانية أخذ كوبون اختبار 5 أمتار قبل الرولو الكامل',
+      products: ['كريب باربي رويال 220g (Crêpe Barbie)', 'كريب جورجيت كوري خفيف طايح (Georgette)', 'كريب سكوبا ستريتش 280g للبدلات (Scuba)', 'ساتان حريري فاخر Toucher Velouté', 'شيفون وموسلين ألوان صيفية وشتوية'],
+      catalog: [
+        {
+          name: 'كريب باربي رويال الفاخر (Crêpe Barbie Royal 220g)',
+          type: 'crepe',
+          price: '36 - 42 MAD / m',
+          stockStatus: 'متوفر بأكثر من 30 لون',
+          colors: ['أسود ملكي فاحم', 'بيج نيود', 'أزرق بترولي', 'وردي باودر', 'زيتي ملكي', 'عنابي بورغندي'],
+          specs: 'ثوب طايح ومستقيم، ملمس رملي ناعم، غير شفاف بنسبة 100%، مثالي للعبايات الخليجية، الفساتين والبدلات النسائية الراقية.'
+        },
+        {
+          name: 'كريب جورجيت كوري ناعم (Crêpe Georgette Coréen 140g)',
+          type: 'crepe',
+          price: '26 - 32 MAD / m',
+          stockStatus: 'متوفر',
+          colors: ['تشكيلة من 24 لون راقي'],
+          specs: 'خفيف، انسيابي وطايح، ذو تهوية ممتازة للشيلان، الفساتين الصيفية والبطانات الفاخرة.'
+        },
+        {
+          name: 'كريب سكوبا إيطالي ستريتش (Crêpe Scuba Stretch 280g)',
+          type: 'crepe',
+          price: '40 - 46 MAD / m',
+          stockStatus: 'متوفر',
+          colors: ['أسود فاحم', 'أبيض عاجي', 'أخضر زمردي', 'كحلي داكن'],
+          specs: 'نسيج سميك مع مرونة عالية في الاتجاهين، مثالي للسترات والبليزرات النسائية والفساتين الضيقة.'
+        },
+        {
+          name: 'ساتان حريري ناعم (Satin de Soie Toucher Velouté 180g)',
+          type: 'satin',
+          price: '32 - 38 MAD / m',
+          stockStatus: 'متوفر',
+          colors: ['شامبانيا', 'ذهبي هادئ', 'أسود', 'زمردي', 'وردي فاتح'],
+          specs: 'مظهر حريري أنيق بدون لمعان رخيص، ملمس ناعم جداً للبيجامات، الفساتين والقمصان الحريرية.'
+        }
+      ],
+      reviews: [
+        { author: 'كنزة الفيلالي', brand: 'علامة Abaya Couture', rating: 5, date: 'منذ أسبوع', text: 'أحسن كريب باربي جربتو فدرب عمر، الثوب طايح ومكايتكمشش نهائياً، واللون الأسود ديالو فاحم ومكايشهابش فالتصبين.' },
+        { author: 'مريم بنجلون', brand: 'Atelier Mode Féminine', rating: 4.9, date: 'منذ أسبوعين', text: 'كريب سكوبا ديالهم خدمنا بيه بليزرات وبدلات كلاسيكية، الفينيسيون خرجات طوب وواقفة.' }
+      ]
+    },
+    {
+      id: 'sup-lin',
+      name: 'مستودع أقمشة الكتان والصيف الطبيعي (Comptoir du Lin & Coton)',
+      logo: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=300&auto=format&fit=crop&q=80',
+      cover: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&auto=format&fit=crop&q=80',
+      category: 'tissu',
+      categoryLabel: 'أقمشة الكتان الطبيعي والبوبلين الصيفي',
+      specialtyTag: '🌿 متخصص أقمشة الكتان الخالص والبوبلين الصيفي الطبيعي',
+      fabricCategory: 'lin',
+      city: 'طنجة / الدار البيضاء',
+      cityTag: 'tanger',
+      district: 'طنجة • كزناية الصناعية ومستودع توزيع بدرب عمر زنقة القاضي',
+      fabricTags: ['lin', 'popeline', 'coton', 'gaze'],
+      whatsapp: '212662894105',
+      phone: '0662894105',
+      rating: 4.89,
+      reviewsCount: 31,
+      verified: true,
+      verifiedBadge: 'مورد معتمد من ورشة BEYA',
+      desc: 'متخصصون في استيراد أرقى أقمشة الكتان الطبيعي 100% (Pure Linen)، البوبلين القطني والقطن المغسول للقمصان والملابس الصيفية والعبايات الطبيعية.',
+      minQty: 'ابتداءً من 25 متر',
+      priceRange: '34 - 52 درهم/متر',
+      deliveryTime: '24 ساعة لطنجة وكازا • 48 ساعة لباقي المدن',
+      beyaAdvantage: 'شهادة الجودة OEKO-TEX للأقمشة الطبيعية 100% مع ضمان استقرار الأبعاد بعد الغسيل',
+      products: ['كتان طبيعي مغسول (Pure Washed Linen)', 'بوبلين قطني ممشط 100% (Popeline Coton)', 'دوبل غاز قطن ناعم (Double Gaze)'],
+      catalog: [
+        {
+          name: 'كتان طبيعي 100% مغسول (Pure Washed Linen 210g)',
+          type: 'lin',
+          price: '42 - 50 MAD / m',
+          stockStatus: 'متوفر بألوان طبيعية',
+          colors: ['بيج رملي', 'أبيض ناصع', 'أزرق سماوي', 'كاكي فاتح', 'مستردة'],
+          specs: 'ملمس طبيعي ناعم ومريح مع مظهر فنتج راقي للأزياء الصيفية وسراويل الكتان والقمصان.'
+        },
+        {
+          name: 'بوبلين قطني ممشط للقمصان (Popeline 100% Coton Peigné 130g)',
+          type: 'popeline',
+          price: '32 - 38 MAD / m',
+          stockStatus: 'متوفر',
+          colors: ['أبيض ناصع', 'أزرق سماوي ناعم', 'مخطط أزرق كلاسيك'],
+          specs: 'نسيج ناعم ومقاوم للتجعد مخصص للقمصان الرسمية والكاجوال.'
+        }
+      ],
+      reviews: [
+        { author: 'يوسف العمراني', brand: 'Summer Wear', rating: 5, date: 'منذ 3 أسابيع', text: 'الكتان نقي بزاف وبارد للصيف، خدمنا بيه شيميزات وبانتالونات والزبناء شكرو الجودة.' }
+      ]
+    },
+    {
+      id: 'sup-velours',
+      name: 'قصر المخمل والأقمشة الشتوية (Palais du Velours & Lainage)',
+      logo: 'https://images.unsplash.com/photo-1574634534894-89d7576c8259?w=300&auto=format&fit=crop&q=80',
+      cover: 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=800&auto=format&fit=crop&q=80',
+      category: 'tissu',
+      categoryLabel: 'أقمشة المخمل والكوردوروي والشتاء',
+      specialtyTag: '❄️ متخصص أقمشة المخمل المضلع (Corduroy) والجوخ والدرا دولين',
+      fabricCategory: 'velours',
+      city: 'الدار البيضاء (درب عمر)',
+      cityTag: 'casablanca',
+      district: 'درب عمر، زنقة فاس، مجمع المنسوجات الشتوية',
+      fabricTags: ['corduroy', 'velours', 'laine', 'tweed'],
+      whatsapp: '212663847291',
+      phone: '0663847291',
+      rating: 4.91,
+      reviewsCount: 27,
+      verified: true,
+      verifiedBadge: 'مورد معتمد من ورشة BEYA',
+      desc: 'المرجع المتخصص في خامات المخمل المضلع (Velours Côtelé)، القطيفة، أقمشة الجوخ، والدرا دولين للسترات الشتوية والجواكت الراقية.',
+      minQty: 'ابتداءً من 25 متر',
+      priceRange: '42 - 65 درهم/متر',
+      deliveryTime: '24 ساعة لكازا • 48 ساعة لكافة المدن',
+      beyaAdvantage: 'تخفيض 5 دراهم في المتر للكميات فوق 100 متر مع عينات مجانية',
+      products: ['مخمل مضلع كوردوروي سميك (Corduroy 320g)', 'جوخ شتوي درا دولين (Drap de Laine)', 'قطيفة ناعمة ستريتش (Velours Ras)'],
+      catalog: [
+        {
+          name: 'مخمل كوردوروي مضلع سميك (Velours Côtelé 320g)',
+          type: 'corduroy',
+          price: '46 - 54 MAD / m',
+          stockStatus: 'متوفر',
+          colors: ['كراميل دافئ', 'أخضر زيتي', 'أسود', 'كحلي', 'شوكولا'],
+          specs: 'تضليع بارز وأنيق مخصص للقمصان الثقيلة (Overshirts) والسراويل الدافئة.'
+        },
+        {
+          name: 'جوخ شتوي مع صوف (Drap de Laine Mélangée 420g)',
+          type: 'laine',
+          price: '56 - 65 MAD / m',
+          stockStatus: 'متوفر',
+          colors: ['رمادي ميلونج', 'أسود فحمي', 'جملي Camel'],
+          specs: 'سماكة ممتازة وعزل حراري فائق للمعاطف الشتوية والجواكت.'
+        }
+      ],
+      reviews: [
+        { author: 'طارق المهدي', brand: 'Winter Lab', rating: 5, date: 'منذ شهر', text: 'الكوردوروي المضلع طاح روعة فلي شوميز أوفرسايز، ألوان ثابته وجودة عالية.' }
       ]
     },
     {
