@@ -612,9 +612,9 @@ export function getPieceIcon(name: string): string {
 // Intelligent client-side visual classifier to detect garment silhouette & color profile from uploaded image
 function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promise<string> {
   return new Promise((resolve) => {
+    const fn = (fileName || '').toLowerCase();
     // 1. File name hints (if present)
-    if (fileName) {
-      const fn = fileName.toLowerCase();
+    if (fn) {
       // Denim / Jean Ensemble & Veste priority
       if (
         (fn.includes('denim') || fn.includes('jean') || fn.includes('جينز') || fn.includes('دنيم')) &&
@@ -1435,9 +1435,17 @@ function buildFallbackAnalysis(
   const totalConsoNum = piecesList.reduce((acc, p) => acc + (parseFloat(p.consumption) || 0), 0);
   const totalConsoStr = totalConsoNum > 0 ? `${totalConsoNum.toFixed(2)}m` : (piecesList[0]?.consumption || `${breakdown.consommationMetrage}m`);
 
+  const sumMinCost = piecesList.reduce((acc, p) => {
+    const nums = String(p.costEstimate || '').match(/\d+/g);
+    return acc + (nums ? parseInt(nums[0]) : 30);
+  }, 0);
+  const sumMaxCost = piecesList.reduce((acc, p) => {
+    const nums = String(p.costEstimate || '').match(/\d+/g);
+    return acc + (nums && nums[1] ? parseInt(nums[1]) : (nums ? parseInt(nums[0]) + 15 : 45));
+  }, 0);
   const totalCostStr = isThreePieces
     ? '160 - 205 MAD'
-    : (piecesList.length > 1 ? '115 - 135 MAD' : (piecesList[0]?.costEstimate || `${Math.round(breakdown.coutRevientEstime)} - ${Math.round(breakdown.prixVenteConseille)} MAD`));
+    : (piecesList.length > 1 ? `${sumMinCost} - ${sumMaxCost} MAD` : (piecesList[0]?.costEstimate || `${Math.round(breakdown.coutRevientEstime)} - ${Math.round(breakdown.prixVenteConseille)} MAD`));
 
   const result: any = {
     category: pieceName,
@@ -1501,6 +1509,10 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     fabricAlternatives?: { name: string; pros: string; cons: string }[];
     tissuPhoto?: string;
   }>(null);
+  const [costingTierMode, setCostingTierMode] = useState<'1_tier' | '2_tiers' | '3_tiers'>('1_tier');
+  const [customCostOverride, setCustomCostOverride] = useState<string>('');
+  const [isEditingCustomCost, setIsEditingCustomCost] = useState(false);
+  const [tempCustomCost, setTempCustomCost] = useState('');
   const [unsplashPhotos, setUnsplashPhotos] = useState<string[]>([]);
   const [isSearchingFabric, setIsSearchingFabric] = useState(false);
   const fabricPhotoRef = useRef<HTMLInputElement>(null);
@@ -2191,12 +2203,23 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       updatedPieces = [...currentPieces, newPantPiece];
     }
 
+    const sumMin = updatedPieces.reduce((acc: number, p: any) => {
+      const nums = String(p.costEstimate || '').match(/\d+/g);
+      return acc + (nums ? parseInt(nums[0]) : 30);
+    }, 0);
+    const sumMax = updatedPieces.reduce((acc: number, p: any) => {
+      const nums = String(p.costEstimate || '').match(/\d+/g);
+      return acc + (nums && nums[1] ? parseInt(nums[1]) : (nums ? parseInt(nums[0]) + 15 : 45));
+    }, 0);
+    const updatedCost = updatedPieces.length > 1 ? `${sumMin} - ${sumMax} MAD` : analysisResult.costEstimate;
+
     const updatedAnalysis = {
       ...analysisResult,
       category: updatedPieces.length > 1
         ? (isAr ? 'طقم لاونج وير قطعتين (توب + سروال وايد ليغ)' : 'Ensemble 2 Pièces Loungewear (Top + Pantalon Wide-Leg)')
         : analysisResult.category,
       consumption: '2.30m',
+      costEstimate: updatedCost,
       pieces: updatedPieces,
       components: updatedPieces.flatMap((p: any) => p.components || [])
     };
@@ -2560,10 +2583,17 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     const isFemale = (
       vhLow.includes('femme') ||
       vhLow.includes('نسائي') ||
+      vhLow.includes('بنات') ||
+      vhLow.includes('بنت') ||
       vhLow.includes('crop') ||
       vhLow.includes('robe') ||
       vhLow.includes('abaya') ||
       vhLow.includes('jupe') ||
+      vhLow.includes('loungewear') ||
+      vhLow.includes('wide-leg') ||
+      vhLow.includes('wide leg') ||
+      vhLow.includes('côte rib') ||
+      vhLow.includes('cote rib') ||
       fnLow.includes('femme') ||
       fnLow.includes('woman') ||
       fnLow.includes('women') ||
@@ -2655,6 +2685,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
 ⚠️ تنبيه حاسم حول الفئة المستهدفة والأقمشة الحقيقية:
 - ${targetProfileDescAr}
+- حدد بدقة جنس الموديل في حقل gender: ("femmes" إذا كانت عارضة أو موديل نسائي / توب كروب / ملابس نساء، أو "hommes" للرجال).
 - ركز 100% على القماش الحقيقي الظاهر في الصورة بدون أي افتراضات مسبقة:
   * إذا كان طقماً قطنياً / لاونج وير كاجوال (مثل توب ضيق كوت ريب وسروال واسع منسدل مولطون بومبليت French Terry)، فاكتب نوع القماش الحقيقي بالضبط (Côte Rib Knit / French Terry 100% Coton 340 GSM)، وافصل الطقم إلى قطعتين: القطعة الأولى (Haut - Crop Top) والقطعة الثانية (Bas - Pantalon Wide-Leg). لا تخلطه أبداً مع الجينز أو الدنيم!
   * إذا كانت الصورة تظهر تيشيرت فقط، حدده كقطعة واحدة (T-shirt).
@@ -2665,6 +2696,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 أجب بصيغة JSON فقط بدون أي نص إضافي:
 {
   "category": "Ensemble 2 Pièces Loungewear",
+  "gender": "femmes",
   "totalConsumption": "2.30m",
   "totalCost": "65 - 90 MAD",
   "complexity": "متوسطة",
@@ -2723,13 +2755,14 @@ Analyse l'image réelle fournie avec une très haute précision visuelle et tech
 
 ⚠️ Consigne impérative sur les matières et pièces réelles :
 - ${targetProfileDescFr}
+- Analyse visuelle du genre : identifie dans "gender" s'il s'agit d'un mannequin ou modèle féminin ("femmes") ou masculin ("hommes"). Adapte impérativement le barème des mesures S-XXL selon ce genre.
 - Identifiez rigoureusement la matière réelle visible selon son drapé, sa maille et sa texture :
   * S'il s'agit d'un ensemble loungewear / streetwear (ex: top fitté à manches longues en côte rib ou jersey, et pantalon large fluide en molleton bouclette / French Terry non-gratté), spécifiez exactement ces matières (Côte Rib 1x1, French Terry 100% Coton 340 GSM). Ne le confondez JAMAIS avec du denim ou jean !
   * Si l'image montre 2 pièces distinctes (Haut + Pantalon), "pieces" DOIT contenir STRICTEMENT 2 éléments : pièce 1 (Haut) et pièce 2 (Bas Pantalon).
   * Si l'image montre un seul article (t-shirt seul, sweatshirt seul, pantalon seul, robe seule...), "pieces" DOIT contenir EXACTEMENT 1 élément.
 - La consommation totale (totalConsumption) doit être la somme des consommations de chaque pièce.
 - Fournir les mesures S-XXL pour chaque pièce dans son entrée "mesures".
-Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
+Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, gender, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
       const candidateModels = [
         'gemini-1.5-flash',
@@ -2805,6 +2838,12 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
 
       try {
         const parsed = JSON.parse(jsonStr);
+        if (parsed.gender === 'femmes' || parsed.gender === 'femme' || parsed.gender === 'women' || parsed.gender === 'woman' || parsed.gender === 'نساء' || parsed.gender === 'بنات') {
+          if (targetGender !== 'femmes') setTargetGender('femmes');
+        } else if (parsed.gender === 'hommes' || parsed.gender === 'homme' || parsed.gender === 'men' || parsed.gender === 'رجال') {
+          if (targetGender !== 'hommes') setTargetGender('hommes');
+        }
+
         const result: any = {
           category: parsed.category || (isAr ? 'موديل' : 'Modèle'),
           consumption: simplifyConsumption(parsed.totalConsumption || parsed.consumption) || '1.50m',
@@ -2878,6 +2917,18 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
             };
           });
           result.components = result.pieces.flatMap((p: any) => p.components);
+
+          if (result.pieces.length > 1) {
+            const sumMin = result.pieces.reduce((acc: number, p: any) => {
+              const nums = String(p.costEstimate || '').match(/\d+/g);
+              return acc + (nums ? parseInt(nums[0]) : 30);
+            }, 0);
+            const sumMax = result.pieces.reduce((acc: number, p: any) => {
+              const nums = String(p.costEstimate || '').match(/\d+/g);
+              return acc + (nums && nums[1] ? parseInt(nums[1]) : (nums ? parseInt(nums[0]) + 15 : 45));
+            }, 0);
+            result.costEstimate = `${sumMin} - ${sumMax} MAD`;
+          }
         } else {
           // If no pieces parsed, enrich from fallback
           const fb = buildFallbackAnalysis(combinedContext, isAr, undefined, targetAudience, effectiveGender);
@@ -2886,10 +2937,19 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
           if (!result.fabricSuggested) result.fabricSuggested = fb.fabricSuggested;
         }
 
+        const detectedFemaleFromPieces = (result.pieces || []).some((p: any) => {
+          const pName = String(p.name || '').toLowerCase();
+          return pName.includes('crop') || pName.includes('robe') || pName.includes('jupe') || pName.includes('abaya') || pName.includes('femme') || pName.includes('fitté') || pName.includes('rib');
+        });
+        const finalGender: 'hommes' | 'femmes' = (parsed.gender === 'femmes' || detectedFemaleFromPieces || effectiveGender === 'femmes') ? 'femmes' : 'hommes';
+        if (finalGender === 'femmes' && targetGender !== 'femmes') {
+          setTargetGender('femmes');
+        }
+
         // Guarantee standard measurements for detected garment if Gemini omitted them
         result.pieces.forEach((p: any) => {
           if (!p.mesures || !Array.isArray(p.mesures) || p.mesures.length === 0) {
-            p.mesures = getStandardMesuresForCategory(p.name || result.category || '', targetAudience, effectiveGender);
+            p.mesures = getStandardMesuresForCategory(p.name || result.category || '', targetAudience, finalGender);
           }
         });
         setSelectedTailles(targetAudience === 'enfants' ? KIDS_TAILLES : ADULT_TAILLES);
@@ -4428,6 +4488,22 @@ ${userMessage}
     });
   };
 
+  const printEffectiveTechPack = () => {
+    if (!analysisResult) {
+      setCustomAlert({
+        title: isAr ? 'تنبيه' : 'Attention',
+        message: isAr ? 'يرجى تحليل موديل أولاً من الصورة لتصدير الملف التقني الرسمي!' : 'Veuillez analyser un modèle d\'abord pour exporter le Tech Pack !',
+        isError: true
+      });
+      return;
+    }
+    const effectiveAnalysis = {
+      ...analysisResult,
+      costingTierMode: costingTierMode,
+      costEstimate: customCostOverride.trim() || analysisResult.costEstimate
+    };
+    printRapportIA(effectiveAnalysis, image, isAr);
+  };
 
   return (
     <div className={`flex flex-col h-full md:h-[calc(100vh-80px)] ${isBoxMaximized ? 'w-full max-w-full px-2 md:px-6' : 'max-w-7xl mx-auto px-2 md:px-4'} pb-2 md:pb-4 pt-2 md:pt-0 overflow-hidden select-text bg-white md:bg-transparent transition-all duration-300`}>
@@ -4451,17 +4527,7 @@ ${userMessage}
         <div className="flex items-center gap-1.5 md:gap-2">
           {/* BOUTON OFFICIEL: DOSSIER TECHNIQUE / TECH PACK NOIR ET BLANC A4 */}
           <button
-            onClick={() => {
-              if (!analysisResult) {
-                setCustomAlert({
-                  title: isAr ? 'تنبيه' : 'Attention',
-                  message: isAr ? 'يرجى تحليل موديل أولاً من الصورة لتصدير الملف التقني الرسمي!' : 'Veuillez analyser un modèle d\'abord pour exporter le Tech Pack !',
-                  isError: true
-                });
-                return;
-              }
-              printRapportIA(analysisResult, image, isAr);
-            }}
+            onClick={printEffectiveTechPack}
             className="flex items-center gap-1.5 bg-black hover:bg-slate-900 text-white border border-black px-3 py-1.5 md:py-2 rounded-xl font-black text-xs uppercase shadow-sm active:scale-95 transition-all"
             title={isAr ? 'تصدير البطاقة التقنية الصناعية الرسمية A4 بالأبيض والأسود (Tech Pack)' : 'Exporter le Tech Pack Industriel Officiel A4 Noir & Blanc'}
           >
@@ -4942,6 +5008,182 @@ ${userMessage}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0 select-text">
               {analysisResult ? (
                 <>
+                  {/* QUALITY TIER & TOTAL PRICING CONTROL BAR (B2B BRAND LEVEL) */}
+                  <div className="bg-slate-900 text-white rounded-3xl p-4 sm:p-5 shadow-lg border border-slate-800 space-y-4">
+                    <div className={`flex items-center justify-between flex-wrap gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400 shrink-0">
+                          <Sparkles className="w-5 h-5 text-indigo-400" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-sm text-white flex items-center gap-2">
+                            <span>{isAr ? 'التحكم في تسعير الموديل ومستويات الجودة للبراند (Tech Pack B2B)' : 'Contrôle Dossier Technique & Grille de Prix B2B'}</span>
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-black border border-emerald-500/30">
+                              {isAr ? 'معتمد للشركات' : 'Conforme B2B'}
+                            </span>
+                          </h3>
+                          <p className="text-[11px] text-slate-400 font-medium">
+                            {isAr
+                              ? 'حدد مستويات الجودة الظاهرة في الملف التقني A4 وتحكم في سعر الفصالة والخياطة (طقم كامل).'
+                              : 'Sélectionnez les niveaux affichés sur le Tech Pack et personnalisez le coût façon global.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Current Façon Price & Inline Edit */}
+                      <div className={`flex items-center gap-2 bg-slate-800/90 px-3.5 py-2 rounded-2xl border border-slate-700 ${isAr ? 'flex-row-reverse' : ''}`}>
+                        <div className={`text-right ${isAr ? 'text-left' : ''}`}>
+                          <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
+                            {analysisResult.pieces && analysisResult.pieces.length > 1
+                              ? (isAr ? 'ثمن الفصالة والخياطة (طقم كامل)' : 'Façon Ensemble Complet')
+                              : (isAr ? 'ثمن الفصالة والخياطة' : 'Coût Façon Atelier')}
+                          </span>
+                          {isEditingCustomCost ? (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <input
+                                type="text"
+                                autoFocus
+                                value={tempCustomCost}
+                                onChange={(e) => setTempCustomCost(e.target.value)}
+                                placeholder="ex: 68 - 90 MAD"
+                                className="px-2 py-0.5 bg-slate-950 border border-indigo-500 text-white font-mono font-black text-xs rounded-lg w-28 focus:outline-none"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    setCustomCostOverride(tempCustomCost);
+                                    setIsEditingCustomCost(false);
+                                  } else if (e.key === 'Escape') {
+                                    setIsEditingCustomCost(false);
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCustomCostOverride(tempCustomCost);
+                                  setIsEditingCustomCost(false);
+                                }}
+                                className="p-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-bold"
+                                title={isAr ? 'تأكيد' : 'Valider'}
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setIsEditingCustomCost(false)}
+                                className="p-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md text-xs"
+                                title={isAr ? 'إلغاء' : 'Annuler'}
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-black text-emerald-400 font-mono">
+                                {customCostOverride || analysisResult.costEstimate || '—'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTempCustomCost(customCostOverride || analysisResult.costEstimate || '');
+                                  setIsEditingCustomCost(true);
+                                }}
+                                className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition-colors"
+                                title={isAr ? 'تعديل ثمن الفصالة والخياطة' : 'Modifier le coût façon'}
+                              >
+                                <SlidersHorizontal className="w-3 h-3 text-indigo-400" />
+                              </button>
+                              {customCostOverride && (
+                                <button
+                                  type="button"
+                                  onClick={() => setCustomCostOverride('')}
+                                  className="text-[10px] text-amber-400 hover:underline font-bold"
+                                  title={isAr ? 'استرجاع التقدير التلقائي' : 'Rétablir prix auto'}
+                                >
+                                  {isAr ? 'استرجاع' : 'Rétablir'}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tier Selection Buttons */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-800">
+                      {/* Tier 1: 1 Niveau Haut de Gamme Only */}
+                      <button
+                        type="button"
+                        onClick={() => setCostingTierMode('1_tier')}
+                        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
+                          costingTierMode === '1_tier'
+                            ? 'bg-gradient-to-br from-amber-500/20 to-indigo-600/30 border-amber-400/80 ring-2 ring-amber-400/30'
+                            : 'bg-slate-800/60 hover:bg-slate-800 border-slate-700/80 text-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-black text-xs text-white flex items-center gap-1.5">
+                            <span>🏆</span>
+                            <span>{isAr ? 'مستوى 1: جودة براند ممتازة' : '1 Niveau : Marque Premium'}</span>
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[9px] font-black uppercase">
+                            {isAr ? 'الموصى به' : 'Recommandé'}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          {isAr
+                            ? 'إظهار فقط الفينيسيون الراقي للعلامات بدون أي ذكر للجودة الضعيفة أو خدمة السوق.'
+                            : 'Affiche uniquement le haut de gamme marque. Zéro mention de bas de gamme ou souq.'}
+                        </p>
+                      </button>
+
+                      {/* Tier 2: 2 Niveaux Haut de Gamme + Standard */}
+                      <button
+                        type="button"
+                        onClick={() => setCostingTierMode('2_tiers')}
+                        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
+                          costingTierMode === '2_tiers'
+                            ? 'bg-gradient-to-br from-indigo-500/20 to-blue-600/30 border-indigo-400/80 ring-2 ring-indigo-400/30'
+                            : 'bg-slate-800/60 hover:bg-slate-800 border-slate-700/80 text-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-black text-xs text-white flex items-center gap-1.5">
+                            <span>⭐</span>
+                            <span>{isAr ? 'مستويان: براند + تجاري' : '2 Niveaux : Premium + Standard'}</span>
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          {isAr
+                            ? 'إظهار مستوى البراند الفاخر + المستوى التجاري القياسي (بدون المستوى الاقتصادي).'
+                            : 'Affiche le Premium + Standard Commercial. Sans niveau économique faible.'}
+                        </p>
+                      </button>
+
+                      {/* Tier 3: 3 Niveaux Complet */}
+                      <button
+                        type="button"
+                        onClick={() => setCostingTierMode('3_tiers')}
+                        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
+                          costingTierMode === '3_tiers'
+                            ? 'bg-gradient-to-br from-slate-700/50 to-slate-800/50 border-slate-400/80 ring-2 ring-slate-400/30'
+                            : 'bg-slate-800/60 hover:bg-slate-800 border-slate-700/80 text-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-black text-xs text-white flex items-center gap-1.5">
+                            <span>📋</span>
+                            <span>{isAr ? '3 مستويات كاملة' : '3 Niveaux : Tous les Niveaux'}</span>
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          {isAr
+                            ? 'إظهار المستويات الثلاثة: جودة براند ممتازة + قياسي تجاري + اقتصادي.'
+                            : 'Affiche la grille complète : Haut de Gamme + Standard + Économique.'}
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Pieces Navigation Bar (Rendered ONLY if multi-piece ensemble) */}
                   {analysisResult.pieces && analysisResult.pieces.length > 1 && (
                     <div className={`p-2 sm:p-2.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
@@ -5429,7 +5671,7 @@ ${userMessage}
                       <FileText className="w-4 h-4" /> <span>{isAr ? 'إرسال وفتح في صفحة البطاقات التقنية' : 'Ouvrir dans Fiches Techniques'}</span>
                     </button>
                     <button
-                      onClick={() => printRapportIA(analysisResult, image, isAr)}
+                      onClick={printEffectiveTechPack}
                       className="flex items-center gap-2 bg-black hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase shadow-md active:scale-95 transition-all ring-2 ring-slate-900/10 cursor-pointer"
                     >
                       <Printer className="w-4 h-4 text-white" /> <span>{isAr ? '📄 تحميل الفيش تكنيك الرسمية A4 (أبيض وأسود)' : '📄 Télécharger Tech Pack A4 (Noir & Blanc)'}</span>

@@ -806,7 +806,23 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
     return sum + val;
   }, 0).toFixed(2) + 'm');
 
-  const globalCost = analysis.costEstimate || '—';
+  const computedEnsembleMin = pieces.reduce((acc: number, p: any) => {
+    const nums = String(p.costEstimate || '').match(/\d+/g);
+    return acc + (nums ? parseInt(nums[0]) : 30);
+  }, 0);
+  const computedEnsembleMax = pieces.reduce((acc: number, p: any) => {
+    const nums = String(p.costEstimate || '').match(/\d+/g);
+    return acc + (nums && nums[1] ? parseInt(nums[1]) : (nums ? parseInt(nums[0]) + 15 : 45));
+  }, 0);
+
+  // If multi-piece ensemble, make sure cost covers all pieces
+  let globalCost = analysis.costEstimate || (pieces.length > 1 ? `${computedEnsembleMin} - ${computedEnsembleMax} MAD` : '35 - 55 MAD');
+  const parsedFirstNum = parseInt(String(globalCost).match(/\d+/)?.[0] || '0');
+  if (pieces.length > 1 && parsedFirstNum < 40 && computedEnsembleMin >= 50) {
+    globalCost = `${computedEnsembleMin} - ${computedEnsembleMax} MAD`;
+  }
+
+  const tierMode: '1_tier' | '2_tiers' | '3_tiers' = analysis.costingTierMode || '1_tier';
   const globalComplexity = isAr ? cleanLabel(analysis.complexity || 'متوسطة', true) : cleanLabel(analysis.complexity || 'Moyenne', false);
   const globalFit = isAr ? cleanLabel(analysis.fit || pieces[0]?.fit || 'قصة قياسية كاجوال', true) : cleanLabel(analysis.fit || pieces[0]?.fit || 'Regular / Oversize', false);
 
@@ -1090,8 +1106,8 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
               </td>
             </tr>
             <tr>
-              <th>${isAr ? 'تقدير تكلفة الصنع (الخدمة)' : 'Coût Façon Estimé'}</th>
-              <td class="font-bold font-mono">${globalCost}</td>
+              <th>${isAr ? (pieces.length > 1 ? 'تقدير تكلفة الصنع (طقم كامل)' : 'تقدير تكلفة الصنع (الخدمة)') : (pieces.length > 1 ? 'Coût Façon Estimé (Ensemble)' : 'Coût Façon Estimé')}</th>
+              <td class="font-bold font-mono">${globalCost} ${pieces.length > 1 ? `<span style="font-size: 7.5px; font-weight: 700; color: #333;">${isAr ? `(مجموع ${pieces.length} قطع)` : `(${pieces.length} Pièces Réunies)`}</span>` : ''}</td>
               <th>${isAr ? 'التصنيف الصناعي' : 'Segment Marché'}</th>
               <td>${isAr ? 'ملابس جاهزة / ستريتوير B2B' : 'Prêt-à-porter / Streetwear B2B'}</td>
             </tr>
@@ -1312,63 +1328,181 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
       </tbody>
     </table>
 
-    <!-- 7. CHIFFRAGE DE REVIENT ESTIMATIF (3 NIVEAUX QUALITÉ) -->
-    <div class="section-title">
-      <span>${isAr ? '6. شبكة تقدير تكلفة الإنتاج وسعر التكلفة الصناعي (B2B)' : '6. GRILLE DE CHIFFRAGE DE REVIENT INDUSTRIEL (B2B)'}</span>
-      <span>${isAr ? '3 مستويات جودة للمنتج' : '3 NIVEAUX DE QUALITÉ'}</span>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 33%;">${isAr ? '1. جودة عالية وممتازة (PREMIUM)' : '1. HAUT DE GAMME (PREMIUM)'}</th>
-          <th style="width: 33%;">${isAr ? '2. جودة تجارية قياسية (STANDARD)' : '2. STANDARD COMMERCIAL (MOYEN)'}</th>
-          <th style="width: 34%;">${isAr ? '3. جودة اقتصادية (ÉCONOMIQUE)' : '3. ÉCONOMIQUE'}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td style="font-size: 7.5px;">
-            ${isAr ? `
-            • قطن ممشط مرسيريزيه بوزن ثقيل وفاخر<br/>
-            • تشطيبات احترافية، خيط موس، بطاقات منسوجة فائقة الدقة<br/>
-            • <strong>سعر التكلفة التقديري : 65 - 85 درهم</strong><br/>
-            • سعر بيع الجملة المقترح : 120 - 150 درهم
-            ` : `
-            • Coton peigné mercerisé lourd<br/>
-            • Finitions premium, fil mousse, étiquettes tissées HD<br/>
-            • <strong>Coût de revient estimé : 65 - 85 MAD</strong><br/>
-            • Prix vente gros suggéré : 120 - 150 MAD
-            `}
-          </td>
-          <td style="font-size: 7.5px;">
-            ${isAr ? `
-            • قطن تجاري قياسي ممشط كلاسيكي<br/>
-            • خياطة وتجميع متقن في ورشة صناعية معتمدة<br/>
-            • <strong>سعر التكلفة التقديري : 45 - 60 درهم</strong><br/>
-            • سعر بيع الجملة المقترح : 85 - 110 درهم
-            ` : `
-            • Coton standard cardé / peigné classique<br/>
-            • Assemblage régulier atelier B2B conforme<br/>
-            • <strong>Coût de revient estimé : 45 - 60 MAD</strong><br/>
-            • Prix vente gros suggéré : 85 - 110 MAD
-            `}
-          </td>
-          <td style="font-size: 7.5px;">
-            ${isAr ? `
-            • نسيج بولي-قطن خفيف واقتصادي<br/>
-            • إنتاج سريع بدون معالجات غسيل خاصة<br/>
-            • <strong>سعر التكلفة التقديري : 32 - 42 درهم</strong><br/>
-            • سعر بيع الجملة المقترح : 60 - 75 درهم
-            ` : `
-            • Maille poly-coton légère économique<br/>
-            • Confection rapide sans lavage spécial<br/>
-            • <strong>Coût de revient estimé : 32 - 42 MAD</strong><br/>
-            • Prix vente gros suggéré : 60 - 75 MAD
-            `}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- 7. CHIFFRAGE DE REVIENT ESTIMATIF (SÉLECTION CONTRÔLÉE : 1, 2 OU 3 NIVEAUX) -->
+    ${(() => {
+      const isMulti = pieces.length > 1;
+      const mCost = globalCost;
+      const revientMinMziana = isMulti ? 125 : 65;
+      const revientMaxMziana = isMulti ? 165 : 85;
+      const grosMinMziana = isMulti ? 195 : 120;
+      const grosMaxMziana = isMulti ? 240 : 150;
+      const detailMinMziana = isMulti ? 350 : 190;
+      const detailMaxMziana = isMulti ? 480 : 280;
+
+      const revientMinNormal = isMulti ? 90 : 45;
+      const revientMaxNormal = isMulti ? 120 : 60;
+      const grosMinNormal = isMulti ? 140 : 85;
+      const grosMaxNormal = isMulti ? 175 : 110;
+
+      const revientMinFaible = isMulti ? 65 : 32;
+      const revientMaxFaible = isMulti ? 85 : 42;
+      const grosMinFaible = isMulti ? 100 : 60;
+      const grosMaxFaible = isMulti ? 130 : 75;
+
+      if (tierMode === '1_tier') {
+        return `
+        <div class="section-title">
+          <span>${isAr ? '6. تكلفة الإنتاج وجودة البراند المعتمدة (B2B)' : '6. ESTIMATION DU COÛT DE REVIENT · STANDARDS MARQUE B2B'}</span>
+          <span>${isAr ? 'جودة براند ممتازة (HAUT DE GAMME)' : 'CONFECTION HAUT DE GAMME CERTIFIÉE'}</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 100%; text-align: ${align}; padding: 5px 8px;">
+                ${isAr ? '🏆 معايير الجودة العالية للعلامات التجارية (HAUT DE GAMME / PREMIUM BRAND)' : '🏆 HAUT DE GAMME · CONFECTION PREMIUM & FINITIONS MARQUE'}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-size: 8px; padding: 6px 10px; line-height: 1.55;">
+                ${isAr ? `
+                • <strong>نوع القماش والمادة الأولية :</strong> قطن ممشط فاخر 100% عالي الكثافة مع ثبات أبعاد بعد الغسيل الصناعي<br/>
+                • <strong>مواصفات الخياطة والتشطيبات :</strong> درزات دقيقة متناسقة، خيط بوليستر 120/2 عالي المقاومة، خيط موس مرن، بطاقات علامة منسوجة HD، أكياس بولي باغ فردية مثقبة<br/>
+                • <strong>تكلفة الفصالة والخياطة للورشة (Façon) :</strong> <strong class="font-mono">${mCost}</strong> ${isMulti ? `(طقم كامل ${pieces.length} قطع متناسقة)` : '(للقطعة)'}<br/>
+                • <strong>سعر التكلفة الإجمالي التقديري (Prix de Revient) :</strong> <strong class="font-mono" style="font-size: 9px; color: #000;">${revientMinMziana} - ${revientMaxMziana} MAD</strong><br/>
+                • <strong>سعر بيع الجملة المقترح للعلامات (Vente Gros B2B) :</strong> <span class="font-mono font-bold">${grosMinMziana} - ${grosMaxMziana} MAD</span> | المقترح بالتقسيط (Détail) : <span class="font-mono font-bold">${detailMinMziana} - ${detailMaxMziana} MAD</span>
+                ` : `
+                • <strong>Matière Première & Armure :</strong> 100% Coton Peigné Premium haut de gamme, tenue dimensionnelle sanforisée<br/>
+                • <strong>Finitions & Standards Atelier :</strong> Surpiqûres précises, fil mousse haute élasticité, étiquettes tissées HD, polybag individuel micro-perforé<br/>
+                • <strong>Coût Façon Atelier (Coupe & Confection) :</strong> <strong class="font-mono">${mCost}</strong> ${isMulti ? `(Ensemble complet ${pieces.length} pièces)` : '(par pièce)'}<br/>
+                • <strong>Coût de Revient Unitaire Estimé :</strong> <strong class="font-mono" style="font-size: 9px; color: #000;">${revientMinMziana} - ${revientMaxMziana} MAD</strong><br/>
+                • <strong>Prix de Vente Gros Suggéré (B2B) :</strong> <span class="font-mono font-bold">${grosMinMziana} - ${grosMaxMziana} MAD</span> | Prix Conseillé Détail : <span class="font-mono font-bold">${detailMinMziana} - ${detailMaxMziana} MAD</span>
+                `}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        `;
+      }
+
+      if (tierMode === '2_tiers') {
+        return `
+        <div class="section-title">
+          <span>${isAr ? '6. شبكة تقدير تكلفة الإنتاج وسعر التكلفة الصناعي (B2B)' : '6. GRILLE DE CHIFFRAGE DE REVIENT INDUSTRIEL (B2B)'}</span>
+          <span>${isAr ? 'مستويان للجودة المعتمدة' : '2 NIVEAUX DE QUALITÉ ATELIER'}</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50%;">${isAr ? '1. جودة عالية وممتازة (PREMIUM)' : '1. HAUT DE GAMME (PREMIUM)'}</th>
+              <th style="width: 50%;">${isAr ? '2. جودة تجارية قياسية (STANDARD)' : '2. STANDARD COMMERCIAL (MOYEN)'}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-size: 7.5px; padding: 5px 8px; line-height: 1.45;">
+                ${isAr ? `
+                • قطن ممشط فاخر 100% ثقيل مع ثبات عالي<br/>
+                • تشطيبات احترافية، خيط موس، بطاقات منسوجة HD<br/>
+                • كلفة الصنع (Façon) : <strong class="font-mono">${mCost}</strong> ${isMulti ? `(طقم كامل)` : ''}<br/>
+                • <strong>سعر التكلفة التقديري : ${revientMinMziana} - ${revientMaxMziana} درهم</strong><br/>
+                • سعر بيع الجملة المقترح : ${grosMinMziana} - ${grosMaxMziana} درهم
+                ` : `
+                • Coton peigné mercerisé lourd & finitions soignées<br/>
+                • Fil mousse, renforts thermocollés, étiquettes HD<br/>
+                • Coût façon atelier : <strong class="font-mono">${mCost}</strong> ${isMulti ? `(Ensemble)` : ''}<br/>
+                • <strong>Coût de revient estimé : ${revientMinMziana} - ${revientMaxMziana} MAD</strong><br/>
+                • Prix vente gros suggéré : ${grosMinMziana} - ${grosMaxMziana} MAD
+                `}
+              </td>
+              <td style="font-size: 7.5px; padding: 5px 8px; line-height: 1.45;">
+                ${isAr ? `
+                • قطن تجاري قياسي ممشط كلاسيكي متوازن<br/>
+                • خياطة وتجميع متقن في ورشة صناعية معتمدة<br/>
+                • كلفة الصنع (Façon) : <strong class="font-mono">${isMulti ? '50 - 68 درهم' : '20 - 28 درهم'}</strong><br/>
+                • <strong>سعر التكلفة التقديري : ${revientMinNormal} - ${revientMaxNormal} درهم</strong><br/>
+                • سعر بيع الجملة المقترح : ${grosMinNormal} - ${grosMaxNormal} درهم
+                ` : `
+                • Coton standard cardé / peigné classique régulier<br/>
+                • Assemblage régulier atelier B2B conforme<br/>
+                • Coût façon atelier : <strong class="font-mono">${isMulti ? '50 - 68 MAD' : '20 - 28 MAD'}</strong><br/>
+                • <strong>Coût de revient estimé : ${revientMinNormal} - ${revientMaxNormal} MAD</strong><br/>
+                • Prix vente gros suggéré : ${grosMinNormal} - ${grosMaxNormal} MAD
+                `}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        `;
+      }
+
+      // Default 3 tiers
+      return `
+      <div class="section-title">
+        <span>${isAr ? '6. شبكة تقدير تكلفة الإنتاج وسعر التكلفة الصناعي (B2B)' : '6. GRILLE DE CHIFFRAGE DE REVIENT INDUSTRIEL (B2B)'}</span>
+        <span>${isAr ? '3 مستويات جودة للمنتج' : '3 NIVEAUX DE QUALITÉ'}</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 33%;">${isAr ? '1. جودة عالية وممتازة (PREMIUM)' : '1. HAUT DE GAMME (PREMIUM)'}</th>
+            <th style="width: 33%;">${isAr ? '2. جودة تجارية قياسية (STANDARD)' : '2. STANDARD COMMERCIAL (MOYEN)'}</th>
+            <th style="width: 34%;">${isAr ? '3. جودة اقتصادية (ÉCONOMIQUE)' : '3. ÉCONOMIQUE'}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-size: 7.5px;">
+              ${isAr ? `
+              • قطن ممشط مرسيريزيه بوزن ثقيل وفاخر<br/>
+              • تشطيبات احترافية، خيط موس، بطاقات منسوجة فائقة الدقة<br/>
+              • كلفة الصنع : <strong class="font-mono">${mCost}</strong><br/>
+              • <strong>سعر التكلفة التقديري : ${revientMinMziana} - ${revientMaxMziana} درهم</strong><br/>
+              • سعر بيع الجملة المقترح : ${grosMinMziana} - ${grosMaxMziana} درهم
+              ` : `
+              • Coton peigné mercerisé lourd<br/>
+              • Finitions premium, fil mousse, étiquettes tissées HD<br/>
+              • Coût façon : <strong class="font-mono">${mCost}</strong><br/>
+              • <strong>Coût de revient estimé : ${revientMinMziana} - ${revientMaxMziana} MAD</strong><br/>
+              • Prix vente gros suggéré : ${grosMinMziana} - ${grosMaxMziana} MAD
+              `}
+            </td>
+            <td style="font-size: 7.5px;">
+              ${isAr ? `
+              • قطن تجاري قياسي ممشط كلاسيكي<br/>
+              • خياطة وتجميع متقن في ورشة صناعية معتمدة<br/>
+              • كلفة الصنع : <strong class="font-mono">${isMulti ? '50 - 68 درهم' : '20 - 28 درهم'}</strong><br/>
+              • <strong>سعر التكلفة التقديري : ${revientMinNormal} - ${revientMaxNormal} درهم</strong><br/>
+              • سعر بيع الجملة المقترح : ${grosMinNormal} - ${grosMaxNormal} درهم
+              ` : `
+              • Coton standard cardé / peigné classique<br/>
+              • Assemblage régulier atelier B2B conforme<br/>
+              • Coût façon : <strong class="font-mono">${isMulti ? '50 - 68 MAD' : '20 - 28 MAD'}</strong><br/>
+              • <strong>Coût de revient estimé : ${revientMinNormal} - ${revientMaxNormal} MAD</strong><br/>
+              • Prix vente gros suggéré : ${grosMinNormal} - ${grosMaxNormal} MAD
+              `}
+            </td>
+            <td style="font-size: 7.5px;">
+              ${isAr ? `
+              • نسيج بولي-قطن خفيف واقتصادي<br/>
+              • إنتاج سريع بدون معالجات غسيل خاصة<br/>
+              • كلفة الصنع : <strong class="font-mono">${isMulti ? '35 - 50 درهم' : '15 - 20 درهم'}</strong><br/>
+              • <strong>سعر التكلفة التقديري : ${revientMinFaible} - ${revientMaxFaible} درهم</strong><br/>
+              • سعر بيع الجملة المقترح : ${grosMinFaible} - ${grosMaxFaible} درهم
+              ` : `
+              • Maille poly-coton légère économique<br/>
+              • Confection rapide sans lavage spécial<br/>
+              • Coût façon : <strong class="font-mono">${isMulti ? '35 - 50 MAD' : '15 - 20 MAD'}</strong><br/>
+              • <strong>Coût de revient estimé : ${revientMinFaible} - ${revientMaxFaible} MAD</strong><br/>
+              • Prix vente gros suggéré : ${grosMinFaible} - ${grosMaxFaible} MAD
+              `}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      `;
+    })()}
 
     <!-- 8. OFFICIAL SIGN-OFF & APPROBATIONS -->
     <div class="section-title" style="margin-top: 6px;">
