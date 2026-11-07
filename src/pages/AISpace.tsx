@@ -450,111 +450,125 @@ function buildRapportText(result: any, arLang: boolean): string {
 
   let chatMsg = '';
   if (arLang) {
-    chatMsg = `✅ تقرير التحليل التقني والتسعير للموديل (BEYA EXPERT)\n`;
-    chatMsg += `────────────────────────────\n\n`;
-    chatMsg += `🎯 الموديل: [ ${result.category || 'موديل'} ] | درجة التعقيد: [ ${result.complexity || 'متوسطة'} ]\n`;
-    chatMsg += `📏 استهلاك الثوب الإجمالي: [ ${cost.totalM} متر ] (لعرض 1.50م)\n\n`;
+    chatMsg = `═══════════════════════════════════════════════════════════\n`;
+    chatMsg += `DOSSIER TECHNIQUE & FICHE D'INGÉNIERIE (BEYA CREATIVE)\n`;
+    chatMsg += `═══════════════════════════════════════════════════════════\n\n`;
+    chatMsg += `1. الهوية التقنية للموديل:\n`;
+    chatMsg += `──────────────────────────────────────────\n`;
+    chatMsg += `• الصنف / الموديل : [ ${result.category || 'موديل ملابس جاهزة'} ]\n`;
+    chatMsg += `• درجة تعقيد الفصالة : [ ${result.complexity || 'متوسطة'} ]\n`;
+    chatMsg += `• القصة والنزلة (Fit) : [ ${result.fit || result.pieces?.[0]?.fit || 'Regular / Oversize'} ]\n`;
+    chatMsg += `• استهلاك القماش الإجمالي : [ ${cost.totalM} متر ] (لعرض 1.50م)\n\n`;
 
-    chatMsg += `💰 جدول كلفة البياسة حسب 3 مستويات دقيقة للجودة (Prix de Revient):\n`;
-    chatMsg += `────────────────────────────────────────\n`;
-    chatMsg += `💎 1. جودة ممتازة — Qualité Mziana (Haut de Gamme):\n`;
-    chatMsg += `   • نوع الثوب: ${cost.mziana.tissuNomAr}\n`;
-    chatMsg += `   • كلفة الثوب (${cost.totalM}م × ${cost.mziana.prixM} درهم): ${cost.mziana.coutTissu} درهم\n`;
-    chatMsg += `   • اللوازم والميرسري (سنسلة YKK، بورد كوت، كوردون، تيكيت): ${cost.mziana.trims} درهم\n`;
-    chatMsg += `   • الفصالة والخياطة (Finition & Façon soignée): ${cost.mziana.facon} درهم\n`;
-    chatMsg += `   ➡️ كلفة البياسة الكاملة (Prix de Revient): ${cost.mziana.total} درهم\n`;
-    chatMsg += `   🏷️ ثمن البيع بالجملة: ${cost.mziana.gros} درهم | بالتقسيط: ${cost.mziana.detailMin} - ${cost.mziana.detailMax} درهم\n\n`;
+    chatMsg += `2. جدول كلفة البياسة حسب 3 مستويات دقيقة للجودة (Prix de Revient):\n`;
+    chatMsg += `──────────────────────────────────────────\n`;
+    chatMsg += `[ المستوى الأول : جودة ممتازة (Haut de Gamme - Mziana) ]\n`;
+    chatMsg += `• نوع الثوب المقترح : ${cost.mziana.tissuNomAr}\n`;
+    chatMsg += `• كلفة القماش (${cost.totalM}م × ${cost.mziana.prixM} درهم) : ${cost.mziana.coutTissu} درهم\n`;
+    chatMsg += `• لوازم الخياطة والميرسري (Trims & Accessoires) : ${cost.mziana.trims} درهم\n`;
+    chatMsg += `• تكلفة الفصالة والخياطة (Façon Atelier) : ${cost.mziana.facon} درهم\n`;
+    chatMsg += `• إجمالي كلفة البياسة (Prix de Revient) : ${cost.mziana.total} درهم\n`;
+    chatMsg += `• ثمن البيع بالجملة المقترح : ${cost.mziana.gros} درهم | بالتقسيط : ${cost.mziana.detailMin} - ${cost.mziana.detailMax} درهم\n\n`;
 
-    chatMsg += `⚖️ 2. جودة عادية — Qualité Normal (Standard):\n`;
-    chatMsg += `   • نوع الثوب: ${cost.normal.tissuNomAr}\n`;
-    chatMsg += `   • كلفة الثوب (${cost.totalM}م × ${cost.normal.prixM} درهم): ${cost.normal.coutTissu} درهم\n`;
-    chatMsg += `   • اللوازم والميرسري: ${cost.normal.trims} درهم\n`;
-    chatMsg += `   • الفصالة والخياطة: ${cost.normal.facon} درهم\n`;
-    chatMsg += `   ➡️ كلفة البياسة الكاملة (Prix de Revient): ${cost.normal.total} درهم\n`;
-    chatMsg += `   🏷️ ثمن البيع بالجملة: ${cost.normal.gros} درهم | بالتقسيط: ${cost.normal.detailMin} - ${cost.normal.detailMax} درهم\n\n`;
+    chatMsg += `[ المستوى الثاني : جودة قياسية (Standard - Normal) ]\n`;
+    chatMsg += `• نوع الثوب المقترح : ${cost.normal.tissuNomAr}\n`;
+    chatMsg += `• كلفة القماش (${cost.totalM}م × ${cost.normal.prixM} درهم) : ${cost.normal.coutTissu} درهم\n`;
+    chatMsg += `• لوازم الخياطة والميرسري : ${cost.normal.trims} درهم\n`;
+    chatMsg += `• تكلفة الفصالة والخياطة : ${cost.normal.facon} درهم\n`;
+    chatMsg += `• إجمالي كلفة البياسة (Prix de Revient) : ${cost.normal.total} درهم\n`;
+    chatMsg += `• ثمن البيع بالجملة المقترح : ${cost.normal.gros} درهم | بالتقسيط : ${cost.normal.detailMin} - ${cost.normal.detailMax} درهم\n\n`;
 
-    chatMsg += `🪙 3. جودة اقتصادية — Qualité Faible (Fibk / Économique):\n`;
-    chatMsg += `   • نوع الثوب: ${cost.faible.tissuNomAr}\n`;
-    chatMsg += `   • كلفة الثوب (${cost.totalM}م × ${cost.faible.prixM} درهم): ${cost.faible.coutTissu} درهم\n`;
-    chatMsg += `   • اللوازم: ${cost.faible.trims} درهم\n`;
-    chatMsg += `   • الخياطة السريعة: ${cost.faible.facon} درهم\n`;
-    chatMsg += `   ➡️ كلفة البياسة الكاملة (Prix de Revient): ${cost.faible.total} درهم\n`;
-    chatMsg += `   🏷️ ثمن البيع بالجملة: ${cost.faible.gros} درهم | بالتقسيط: ${cost.faible.detailMin} - ${cost.faible.detailMax} درهم\n\n`;
+    chatMsg += `[ المستوى الثالث : جودة اقتصادية (Économique - Faible) ]\n`;
+    chatMsg += `• نوع الثوب المقترح : ${cost.faible.tissuNomAr}\n`;
+    chatMsg += `• كلفة القماش (${cost.totalM}م × ${cost.faible.prixM} درهم) : ${cost.faible.coutTissu} درهم\n`;
+    chatMsg += `• لوازم الخياطة والميرسري : ${cost.faible.trims} درهم\n`;
+    chatMsg += `• تكلفة الفصالة والخياطة : ${cost.faible.facon} درهم\n`;
+    chatMsg += `• إجمالي كلفة البياسة (Prix de Revient) : ${cost.faible.total} درهم\n`;
+    chatMsg += `• ثمن البيع بالجملة المقترح : ${cost.faible.gros} درهم | بالتقسيط : ${cost.faible.detailMin} - ${cost.faible.detailMax} درهم\n\n`;
 
-    chatMsg += `📦 قائمة قطع الموديل ومكوناتها:\n`;
+    chatMsg += `3. تشريح قطع الموديل ومكونات الباترون:\n`;
+    chatMsg += `──────────────────────────────────────────\n`;
     if (result.pieces && result.pieces.length > 0) {
       result.pieces.forEach((p: any, idx: number) => {
-        chatMsg += `   ${idx + 1}. ${p.name} (استهلاك: ${p.consumption || '—'}) — التكلفة: ${p.costEstimate || '—'}\n`;
+        chatMsg += `[القطعة ${idx + 1}] : ${p.name} (استهلاك الثوب: ${p.consumption || '—'}) — التكلفة: ${p.costEstimate || '—'}\n`;
         if (p.components && p.components.length > 0) {
-          chatMsg += `      ▪️ أجزاء الباترون: ${p.components.join('، ')}\n`;
+          chatMsg += `   • أجزاء الباترون : ${p.components.join(' · ')}\n`;
         }
       });
     } else {
-      chatMsg += `   • قطعة واحدة متكاملة للموديل\n`;
+      chatMsg += `• قطعة إنتاج موحدة\n`;
     }
 
-    chatMsg += `\n🏭 لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage):\n`;
-    chatMsg += `   • عدد البوستات / المراحل: ${gammePostes.length} محطات عمل\n`;
-    chatMsg += `   • إجمالي وقت الخياطة للبياسة (SAM): ${totalGammeMin} دقيقة (${totalGammeSec} ثانية)\n`;
+    chatMsg += `\n4. لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage):\n`;
+    chatMsg += `──────────────────────────────────────────\n`;
+    chatMsg += `• عدد محطات العمل : ${gammePostes.length} بوستات متسلسلة\n`;
+    chatMsg += `• إجمالي وقت الإنتاج للبياسة (SAM) : ${totalGammeMin} دقيقة (${totalGammeSec} ثانية)\n`;
     gammePostes.forEach((gp, gIdx) => {
       const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
-      chatMsg += `   ${gIdx + 1}. ${gp.nomAr} — [الآلة: ${gp.machine}] — ⏱️ ${gp.tempsMin} د (${sec} ثانية)\n`;
+      chatMsg += `   [محطة ${gIdx + 1}] : ${gp.nomAr} — [الآلة: ${gp.machine}] — وقت: ${gp.tempsMin} د (${sec} ثانية)\n`;
     });
-    chatMsg += `────────────────────────────\n`;
-    chatMsg += `⚡ اضغط على زر "Atelier Production" لإرسال هاد لاغام (${gammePostes.length} بوستات) مباشرة لحاسبة الإنتاج!`;
+    chatMsg += `═══════════════════════════════════════════════════════════\n`;
+    chatMsg += `لتحميل الوثيقة الرسمية بالأبيض والأسود، اضغط على زر [Tech Pack N&B] في الأعلى.`;
   } else {
-    chatMsg = `✅ RAPPORT D'ANALYSE TECHNIQUE & SOURCING (BEYA EXPERT)\n`;
-    chatMsg += `────────────────────────────\n\n`;
-    chatMsg += `🎯 Modèle : [ ${result.category || 'Modèle'} ] | Complexité : [ ${result.complexity || 'Moyenne'} ]\n`;
-    chatMsg += `📏 Consommation totale : [ ${cost.totalM}m ] (laize 1.50m)\n\n`;
+    chatMsg = `═══════════════════════════════════════════════════════════\n`;
+    chatMsg += `DOSSIER TECHNIQUE & FICHE D'INGÉNIERIE (BEYA CREATIVE)\n`;
+    chatMsg += `═══════════════════════════════════════════════════════════\n\n`;
+    chatMsg += `1. FICHE D'IDENTITÉ TECHNIQUE DU MODÈLE :\n`;
+    chatMsg += `──────────────────────────────────────────\n`;
+    chatMsg += `• Modèle / Désignation : [ ${result.category || 'Article Textile'} ]\n`;
+    chatMsg += `• Niveau de complexité : [ ${result.complexity || 'Moyenne'} ]\n`;
+    chatMsg += `• Coupe & Silhouette (Fit) : [ ${result.fit || result.pieces?.[0]?.fit || 'Regular / Oversize'} ]\n`;
+    chatMsg += `• Consommation tissu totale : [ ${cost.totalM}m ] (laize 1.50m)\n\n`;
 
-    chatMsg += `💰 Grille de Coût Unitaire selon 3 Niveaux de Qualité (Prix de Revient) :\n`;
-    chatMsg += `────────────────────────────────────────\n`;
-    chatMsg += `💎 1. Qualité Supérieure (Mziana / Haut de Gamme) :\n`;
-    chatMsg += `   • Matière : ${cost.mziana.tissuNomFr}\n`;
-    chatMsg += `   • Coût tissu (${cost.totalM}m × ${cost.mziana.prixM} MAD) : ${cost.mziana.coutTissu} MAD\n`;
-    chatMsg += `   • Fournitures & Mercerie premium (Zip YKK, bord-côte, étiquettes) : ${cost.mziana.trims} MAD\n`;
-    chatMsg += `   • Façon atelier & finitions soignées : ${cost.mziana.facon} MAD\n`;
-    chatMsg += `   ➡️ Coût de Revient Unitaire : ${cost.mziana.total} MAD\n`;
-    chatMsg += `   🏷️ Prix suggéré Gros : ${cost.mziana.gros} MAD | Détail / E-com : ${cost.mziana.detailMin} - ${cost.mziana.detailMax} MAD\n\n`;
+    chatMsg += `2. GRILLE DE CHIFFRAGE DE REVIENT (3 NIVEAUX QUALITÉ B2B) :\n`;
+    chatMsg += `──────────────────────────────────────────\n`;
+    chatMsg += `[ 1. HAUT DE GAMME (MZIANA / SUPÉRIEURE) ]\n`;
+    chatMsg += `• Matière conseillée : ${cost.mziana.tissuNomFr}\n`;
+    chatMsg += `• Coût tissu (${cost.totalM}m × ${cost.mziana.prixM} MAD) : ${cost.mziana.coutTissu} MAD\n`;
+    chatMsg += `• Fournitures & Mercerie (Zip YKK, bord-côte, étiquettes) : ${cost.mziana.trims} MAD\n`;
+    chatMsg += `• Façon atelier & finitions soignées : ${cost.mziana.facon} MAD\n`;
+    chatMsg += `• Coût de Revient Unitaire : ${cost.mziana.total} MAD\n`;
+    chatMsg += `• Prix de vente Gros suggéré : ${cost.mziana.gros} MAD | Détail : ${cost.mziana.detailMin} - ${cost.mziana.detailMax} MAD\n\n`;
 
-    chatMsg += `⚖️ 2. Qualité Standard (Normal / Marché Moyen) :\n`;
-    chatMsg += `   • Matière : ${cost.normal.tissuNomFr}\n`;
-    chatMsg += `   • Coût tissu (${cost.totalM}m × ${cost.normal.prixM} MAD) : ${cost.normal.coutTissu} MAD\n`;
-    chatMsg += `   • Fournitures & Mercerie standard : ${cost.normal.trims} MAD\n`;
-    chatMsg += `   • Façon atelier confection standard : ${cost.normal.facon} MAD\n`;
-    chatMsg += `   ➡️ Coût de Revient Unitaire : ${cost.normal.total} MAD\n`;
-    chatMsg += `   🏷️ Prix suggéré Gros : ${cost.normal.gros} MAD | Détail : ${cost.normal.detailMin} - ${cost.normal.detailMax} MAD\n\n`;
+    chatMsg += `[ 2. STANDARD COMMERCIAL (NORMAL / MOYEN) ]\n`;
+    chatMsg += `• Matière conseillée : ${cost.normal.tissuNomFr}\n`;
+    chatMsg += `• Coût tissu (${cost.totalM}m × ${cost.normal.prixM} MAD) : ${cost.normal.coutTissu} MAD\n`;
+    chatMsg += `• Fournitures & Mercerie standard : ${cost.normal.trims} MAD\n`;
+    chatMsg += `• Façon atelier confection : ${cost.normal.facon} MAD\n`;
+    chatMsg += `• Coût de Revient Unitaire : ${cost.normal.total} MAD\n`;
+    chatMsg += `• Prix de vente Gros suggéré : ${cost.normal.gros} MAD | Détail : ${cost.normal.detailMin} - ${cost.normal.detailMax} MAD\n\n`;
 
-    chatMsg += `🪙 3. Qualité Économique (Faible / Fibk / Entrée de Gamme) :\n`;
-    chatMsg += `   • Matière : ${cost.faible.tissuNomFr}\n`;
-    chatMsg += `   • Coût tissu (${cost.totalM}m × ${cost.faible.prixM} MAD) : ${cost.faible.coutTissu} MAD\n`;
-    chatMsg += `   • Fournitures basiques : ${cost.faible.trims} MAD\n`;
-    chatMsg += `   • Façon atelier en grande série : ${cost.faible.facon} MAD\n`;
-    chatMsg += `   ➡️ Coût de Revient Unitaire : ${cost.faible.total} MAD\n`;
-    chatMsg += `   🏷️ Prix suggéré Gros : ${cost.faible.gros} MAD | Détail : ${cost.faible.detailMin} - ${cost.faible.detailMax} MAD\n\n`;
+    chatMsg += `[ 3. ÉCONOMIQUE (FAIBLE / ENTRÉE DE GAMME) ]\n`;
+    chatMsg += `• Matière conseillée : ${cost.faible.tissuNomFr}\n`;
+    chatMsg += `• Coût tissu (${cost.totalM}m × ${cost.faible.prixM} MAD) : ${cost.faible.coutTissu} MAD\n`;
+    chatMsg += `• Fournitures basiques : ${cost.faible.trims} MAD\n`;
+    chatMsg += `• Façon atelier grande série : ${cost.faible.facon} MAD\n`;
+    chatMsg += `• Coût de Revient Unitaire : ${cost.faible.total} MAD\n`;
+    chatMsg += `• Prix de vente Gros suggéré : ${cost.faible.gros} MAD | Détail : ${cost.faible.detailMin} - ${cost.faible.detailMax} MAD\n\n`;
 
-    chatMsg += `📦 Composition & Pièces du modèle :\n`;
+    chatMsg += `3. NOMENCLATURE DES PIÈCES & PATRONAGE :\n`;
+    chatMsg += `──────────────────────────────────────────\n`;
     if (result.pieces && result.pieces.length > 0) {
       result.pieces.forEach((p: any, idx: number) => {
-        chatMsg += `   ${idx + 1}. ${p.name} (Conso: ${p.consumption || '—'}) — Coût: ${p.costEstimate || '—'}\n`;
+        chatMsg += `[Pièce ${idx + 1}] : ${p.name} (Conso: ${p.consumption || '—'}) — Coût: ${p.costEstimate || '—'}\n`;
         if (p.components && p.components.length > 0) {
-          chatMsg += `      ▪️ Patronage : ${p.components.join(', ')}\n`;
+          chatMsg += `   • Composants patronage : ${p.components.join(' · ')}\n`;
         }
       });
     } else {
-      chatMsg += `   • Pièce complète et intégrée\n`;
+      chatMsg += `• Article mono-pièce\n`;
     }
 
-    chatMsg += `\n🏭 Gamme de Montage & Postes de Travail :\n`;
-    chatMsg += `   • Nombre de postes : ${gammePostes.length} postes\n`;
-    chatMsg += `   • Temps total de confection (SAM) : ${totalGammeMin} min (${totalGammeSec} sec)\n`;
+    chatMsg += `\n4. GAMME DE MONTAGE OPÉRATOIRE & MACHINES :\n`;
+    chatMsg += `──────────────────────────────────────────\n`;
+    chatMsg += `• Nombre de postes atelier : ${gammePostes.length} opérations\n`;
+    chatMsg += `• Temps total SAM unitaire : ${totalGammeMin} min (${totalGammeSec} sec)\n`;
     gammePostes.forEach((gp, gIdx) => {
       const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
-      chatMsg += `   ${gIdx + 1}. ${gp.nomFr || gp.nomAr} — [Machine: ${gp.machine}] — ⏱️ ${gp.tempsMin} min (${sec} sec)\n`;
+      chatMsg += `   [Opération ${gIdx + 1}] : ${gp.nomFr || gp.nomAr} — [Machine: ${gp.machine}] — ${gp.tempsMin} min (${sec} sec)\n`;
     });
-    chatMsg += `────────────────────────────\n`;
-    chatMsg += `⚡ Cliquez sur "Atelier Production" pour envoyer directement cette Gamme (${gammePostes.length} postes) au Calculateur d'Atelier !`;
+    chatMsg += `═══════════════════════════════════════════════════════════\n`;
+    chatMsg += `Pour exporter le dossier technique officiel A4 en Noir & Blanc, cliquez sur [Tech Pack N&B] en haut.`;
   }
   return chatMsg;
 }
@@ -3839,19 +3853,17 @@ Posez-moi toute question sur le coût unitaire, le timing atelier, le sourcing t
     }
   };
 
-  const CHAT_AI_SYSTEM_PROMPT = `أنت خبير تحليل وتصميم وتسعير وإنتاج في مصنع نسيج وخياطة مغربي احترافي (BEYA Expert). تكلم بالدارجة المغربية والعربية بأسلوب احترافي، واضح، ومرتب جداً.
-مهمتك الأساسية عند تحليل أي موديل أو الإجابة عن أي طلب إنتاج أو تسعير:
-1. أولاً: حساب استهلاك الثوب بدقة (بالمتر لعرض 1.50م أو بالكيلو للجيرسي/القطن) والسلعة (لاستيك، أزرار، سحاب، خيط...).
-2. ثانياً: إعطاء تقديرات دقيقة للأسعار في السوق المغربي (أثمنة الأثواب والسلعة في درب عمر، القريعة، أو أسواق الجملة بالدار البيضاء).
-3. ثالثاً: تفصيل التكلفة المالية (Prix de revient): ثمن الثوب والسلعة، تكلفة اليد العاملة والخياطة (Façon)، والتكلفة الإجمالية للقطعة الواحدة وللكمية المطلوبة.
-4. رابعاً: نصائح تقنية للورشة وأماكن شراء السلعة في المغرب.
-5. خامساً (إلزامي دائماً في أي تحليل أو دراسة موديل): أدرج قسماً مفصلاً ومرتباً بعنوان:
-"🏭 خامساً: لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage)"
-تذكر فيه جميع مراحل الخياطة المتسلسلة الخاصة بهذا الموديل بالضبط (من الفصالة إلى الكيّ والمراقبة والتغليف)، ولكل مرحلة اذكر:
-- رقم واسم المرحلة
-- الماكينة المستعملة (من بين: Table de Coupe / Ciseaux, Surjeteuse 3/4 Fils, Surjeteuse 5 Fils (Safety), Piqueuse Plate, Piqueuse 2 Aiguilles, Recouvreuse, Boutonnière / Pose Bouton, Presse à Thermocoller, Machine Broderie / Sfifa, Fer Vapeur / Table Aspirante, Travail Manuel / Contrôle)
-- وقت كل مرحلة بالدقيقة والثانية (مثلاً: 0.75 دقيقة / 45 ثانية)
-- وفي نهاية القسم اذكر: إجمالي وقت خياطة البياسة الواحدة (Total SAM) بالدقائق والثواني، وعدد البوستات/الماكينات المقترحة للورشة.
+  const CHAT_AI_SYSTEM_PROMPT = `أنت كبير مهندسي النسيج وتصميم وتصنيع الألبسة الجاهزة في ورشة BEYA Creative بالمغرب (Senior Apparel Engineer & Master Pattern Maker).
+تكلم بأسلوب مهني رسمي، هندسي، ومضبوط جداً، بدون أي عبارات هزلية أو إيموجي عشوائية أو أسلوب ألعاب. رتب أي دراسة أو تحليل على شكل بطاقة تقنية صناعية (Dossier Technique / Tech Pack):
+1. تشريح القطع بياسة بياسة (Haut, Bas, Doublure...).
+2. الهوية التقنية للأقمشة: اسم الثوب الدقيق (FR/EN) واسمه في سوق الجملة المغربي (درب عمر، المسيرة طنجة)، التركيبة المئوية (% Composition: Coton, Lycra, Poly...)، الغراماج الدقيق بالمتر المربع (GSM g/m²)، ونوع النسج (Armure / Tricotage: Côte Rib 1x1, French Terry bouclette non-gratté, Interlock, Popeline...).
+3. المعالجة الصناعية والصباغة والغسيل (Finitions: Garment Dye, Enzyme Wash, Washed Vintage, Sanforisage...).
+4. لوازم وميرسري الخياطة (Trims & BOM: نوع الخيط، السنسلات، لاستيك، عيون الحديد، الكوردون).
+5. حساب استهلاك الثوب الدقيق بالمتر (لعرض 1.50م أو 1.80م) وتكلفة البياسة حسب 3 مستويات جودة (Haut de gamme, Standard, Économique).
+6. قسم إلزامي منظم: "لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage)":
+- رقم واسم المرحلة بالفرنسية والعربية.
+- الماكينة المحددة (Table de Coupe / Ciseaux, Surjeteuse 4 Fils, Piqueuse Plate, Recouvreuse, Boutonnière, Fer Vapeur / Table Aspirante...).
+- وقت كل مرحلة بالدقائق والثواني، وإجمالي وقت البياسة (Total SAM) وعدد البوستات المقترحة.
 
 تنبيه تقني مهم للنظام: في نهاية ردك تماماً (في سطر أخير منفصل)، أضف دائماً كود JSON مخفي يحتوي على مراحل لاغام التي ذكرتها بهذا الشكل الدقيق لكي يقرأه نظام الورشة تلقائياً:
 <<<GAMME_JSON:{"modelName":"اسم الموديل","postes":[{"nomAr":"اسم المرحلة بالعربية","nomFr":"Nom opération FR","machine":"Surjeteuse 3/4 Fils","tempsMin":0.75,"roleOuvrier":"ماكينة Overlock"}]}>>>`;
@@ -4191,14 +4203,34 @@ ${userMessage}
           )}
           <div>
             <div className={`flex items-center gap-1 md:gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-              <h1 className="text-lg md:text-xl font-black text-slate-900 tracking-tight uppercase italic">BEYA <span className="text-indigo-600 not-italic hidden sm:inline">TACTICAL HUD</span></h1>
-              <span className="px-1.5 md:px-2 py-0.5 bg-indigo-50 border border-indigo-100 text-indigo-700 text-[9px] md:text-[10px] font-black rounded-full uppercase tracking-widest whitespace-nowrap">v2.1</span>
+              <h1 className="text-lg md:text-xl font-black text-slate-900 tracking-tight uppercase">BEYA <span className="text-indigo-600 not-italic">TECH LAB</span></h1>
+              <span className="px-2 py-0.5 bg-slate-900 text-white text-[9px] md:text-[10px] font-black rounded-full uppercase tracking-widest whitespace-nowrap">TECH PACK STUDIO</span>
             </div>
-            <p className="text-[9px] md:text-[11px] text-slate-500 font-bold hidden sm:block">{isAr ? 'المستشار الذكي لتحليل وتفصيل ومقاسات الموديل (شاشة موحدة بدون تمرير)' : 'Cockpit d\'Analyse Textile & Confection (Zéro Scroll)'}</p>
+            <p className="text-[9px] md:text-[11px] text-slate-500 font-bold hidden sm:block">{isAr ? 'استوديو التحليل الهندسي وإعداد البطاقات التقنية للملابس الجاهزة (Tech Pack Studio)' : 'Studio d\'Ingénierie Textile & Fiches Techniques de Confection'}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
+          {/* BOUTON OFFICIEL: DOSSIER TECHNIQUE / TECH PACK NOIR ET BLANC A4 */}
+          <button
+            onClick={() => {
+              if (!analysisResult) {
+                setCustomAlert({
+                  title: isAr ? 'تنبيه' : 'Attention',
+                  message: isAr ? 'يرجى تحليل موديل أولاً من الصورة لتصدير الملف التقني الرسمي!' : 'Veuillez analyser un modèle d\'abord pour exporter le Tech Pack !',
+                  isError: true
+                });
+                return;
+              }
+              printRapportIA(analysisResult, image, isAr);
+            }}
+            className="flex items-center gap-1.5 bg-black hover:bg-slate-900 text-white border border-black px-3 py-1.5 md:py-2 rounded-xl font-black text-xs uppercase shadow-sm active:scale-95 transition-all"
+            title={isAr ? 'تصدير البطاقة التقنية الصناعية الرسمية A4 بالأبيض والأسود (Tech Pack)' : 'Exporter le Tech Pack Industriel Officiel A4 Noir & Blanc'}
+          >
+            <Printer className="w-3.5 h-3.5 text-white" />
+            <span>{isAr ? '📄 ملف تقني N&B' : '📄 Tech Pack N&B'}</span>
+          </button>
+
           {/* NOUVEAU: BOUTON CHIFFRAGE SOURCING & COÛT DE REVIENT (DÉTAILS SL3A) */}
           <button
             onClick={() => {
@@ -5160,9 +5192,9 @@ ${userMessage}
                     </button>
                     <button
                       onClick={() => printRapportIA(analysisResult, image, isAr)}
-                      className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase shadow-xs active:scale-95 transition-all"
+                      className="flex items-center gap-2 bg-black hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase shadow-md active:scale-95 transition-all ring-2 ring-slate-900/10 cursor-pointer"
                     >
-                      <Printer className="w-4 h-4" /> <span>{isAr ? 'طباعة تقرير التحليل الكامل A4' : 'Imprimer Rapport A4'}</span>
+                      <Printer className="w-4 h-4 text-white" /> <span>{isAr ? '📄 تحميل الفيش تكنيك الرسمية A4 (أبيض وأسود)' : '📄 Télécharger Tech Pack A4 (Noir & Blanc)'}</span>
                     </button>
                   </div>
                 </>

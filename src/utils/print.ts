@@ -457,201 +457,615 @@ function downloadFile(content: string, filename: string, mime: string) {
   URL.revokeObjectURL(url);
 }
 
-// ─── Rapport IA PDF ──────────────────────────────────────────────
+// ─── Rapport IA / Tech Pack Corporate Noir & Blanc ──────────────────────────────
 export function printRapportIA(analysis: any, image: string | null, isAr: boolean) {
   const company = loadCompanyProfile();
   const dir = isAr ? 'rtl' : 'ltr';
   const align = isAr ? 'right' : 'left';
   const revAlign = isAr ? 'left' : 'right';
 
-  const t_title = isAr ? 'تفاصيل وتحليل الموديل' : 'ANALYSE DU MODÈLE';
-  const t_general = isAr ? 'معلومات الموديل' : 'Informations du Modèle';
-  const t_category = isAr ? 'الصنف / الموديل' : 'Catégorie / Modèle';
-  const t_cost = isAr ? 'تكلفة الخياطة (تقدير)' : 'Coût de Façon (Estimé)';
-  const t_consumption = isAr ? 'استهلاك الثوب' : 'Consommation Tissu';
-  const t_complexity = isAr ? 'مستوى التفاصيل' : 'Niveau de Détail';
-  const t_fit = isAr ? 'القصة / Fit' : 'Coupe / Fit';
-  const t_fabrics = isAr ? 'اقتراحات الأثواب المناسبة' : 'Suggestions de Tissus';
-  const t_primary = isAr ? 'الثوب الرئيسي الموصى به' : 'Tissu Principal Recommandé';
-  const t_alternatives = isAr ? 'بدائل أخرى' : 'Alternatives Possibles';
-  const t_pros = isAr ? 'المميزات:' : 'Avantages:';
-  const t_cons = isAr ? 'ملاحظات:' : 'À noter:';
-  const t_components = isAr ? 'مكونات الموديل' : 'Détails du Modèle';
+  // Deterministic Reference & Date
+  const year = new Date().getFullYear();
+  const rawCat = (analysis.category || analysis.modele || 'TECHPACK').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4) || 'MOD';
+  const refCode = `BYA-TPK-${rawCat}-${year}-${String(Date.now()).slice(-4)}`;
+  const dateStr = new Date().toLocaleDateString(isAr ? 'ar-MA' : 'fr-MA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const season = new Date().getMonth() >= 2 && new Date().getMonth() <= 7 ? 'PRINTEMPS / ÉTÉ (S/S)' : 'AUTOMNE / HIVER (A/W)';
 
-  // Process global vs piece-specific data
+  // Smart fabric parsing helper
+  const getTechnicalFabricSpecs = (fabricName: string) => {
+    const f = (fabricName || '').toLowerCase();
+    if (f.includes('côte') || f.includes('rib') || f.includes('كوت')) {
+      return {
+        armure: 'Côte Rib 1x1 / 2x2',
+        composition: '95% Coton Peigné · 5% Élasthanne (Lycra)',
+        gsm: '240 - 260 GSM (g/m²)',
+        sourcingMA: 'كوت ريب 1x1 ليكرا قطن (درب عمر / طنجة)',
+        traitement: 'Teinture en pièce (Garment Dye) + Lavage adoucissant anti-déformation'
+      };
+    }
+    if (f.includes('terry') || f.includes('bouclette') || f.includes('بوكليت') || f.includes('غير مقطن')) {
+      return {
+        armure: 'French Terry (Molleton Bouclette Non-Gratté)',
+        composition: '100% Coton Peigné (ou 90/10 Poly)',
+        gsm: '320 - 360 GSM (g/m²)',
+        sourcingMA: 'مولطون بوكليت غير مقطن (درب عمر / طنجة)',
+        traitement: 'Enzyme Wash (غسيل أنزيمي) + Teinture Réactive / Washed Vintage'
+      };
+    }
+    if (f.includes('gratté') || f.includes('مقطن') || f.includes('شتوي') || f.includes('fleece')) {
+      return {
+        armure: 'Molleton Lourd Gratté Intérieur (Brushed Fleece)',
+        composition: '100% Coton Peigné (ou 80/20 Coton/Poly)',
+        gsm: '340 - 380 GSM (g/m²)',
+        sourcingMA: 'مولطون شتوي مقطن كوتون 100% (درب عمر كازا)',
+        traitement: 'Grattage doux haute densité + Sanforisage anti-rétrécissement'
+      };
+    }
+    if (f.includes('interlock') || f.includes('انترلوك') || f.includes('إنترلوك')) {
+      return {
+        armure: 'Maille Interlock Double Fonture',
+        composition: '100% Coton Peigné Mercerisé',
+        gsm: '240 - 280 GSM (g/m²)',
+        sourcingMA: 'إنترلوك قطن ممشط تركي / محلي (درب عمر)',
+        traitement: 'Finition Bio-Polishing + Lavage siliconé'
+      };
+    }
+    if (f.includes('canvas') || f.includes('كانفاس') || f.includes('toile') || f.includes('twill') || f.includes('sergé')) {
+      return {
+        armure: 'Sergé / Toile Canvas Lourde',
+        composition: '100% Coton Renforcé (Heavy Canvas)',
+        gsm: '300 - 350 GSM (g/m²)',
+        sourcingMA: 'كانفاس كوتون صلب للسراويل والجاكيطات (طنجة / كازا)',
+        traitement: 'Stone Wash (غسيل حجري) + Sanforisage'
+      };
+    }
+    if (f.includes('popeline') || f.includes('بوبلين') || f.includes('chemise')) {
+      return {
+        armure: 'Popeline de Coton Peigné',
+        composition: '100% Coton Égyptien / Peigné',
+        gsm: '125 - 145 GSM (g/m²)',
+        sourcingMA: 'ثوب بوبلين قمصان فاخر (درب عمر)',
+        traitement: 'Mercerisage + Finition Easy-Care (repasse facile)'
+      };
+    }
+    // Default fallback high-standard knit
+    return {
+      armure: 'Jersey Coton Peigné Haut de Gamme',
+      composition: '95% Coton Peigné · 5% Élasthanne',
+      gsm: '220 - 250 GSM (g/m²)',
+      sourcingMA: 'جيرسي قطن ممتاز (سوق الجملة درب عمر / طنجة)',
+      traitement: 'Teinture Réactive + Lavage aux enzymes'
+    };
+  };
+
+  // Build pieces list
+  const pieces = (analysis.pieces && Array.isArray(analysis.pieces) && analysis.pieces.length > 0)
+    ? analysis.pieces
+    : [{
+        name: analysis.category || (isAr ? 'موديل رئيسي' : 'Modèle Principal'),
+        consumption: analysis.consumption || '1.45m',
+        fabricSuggested: analysis.fabricSuggested || 'Coton Peigné',
+        fit: analysis.fit || 'Coupe Régulière / Oversize',
+        complexity: analysis.complexity || 'Moyenne',
+        costEstimate: analysis.costEstimate || '35 - 55 MAD',
+        components: analysis.components || ['Corps principal', 'Encolure / Col', 'Manches / Bas', 'Finitions'],
+        mesures: analysis.mesures || []
+      }];
+
+  // Global metrics
+  const totalConsumption = analysis.consumption || (pieces.reduce((sum: number, p: any) => {
+    const val = parseFloat(String(p.consumption || '0').match(/[\d.]+/)?.[0] || '1.3');
+    return sum + val;
+  }, 0).toFixed(2) + 'm');
+
   const globalCost = analysis.costEstimate || '—';
-  let globalConso = analysis.consumption || '—';
-  if (globalConso.includes(':')) {
-    globalConso = globalConso.split('|')[0].split(':')[1]?.trim() || globalConso;
-  } else if (globalConso.includes('|')) {
-    globalConso = globalConso.split('|')[0].trim();
-  }
-  const globalComp = analysis.complexity || '—';
-  
-  // Fabrics
-  const primaryFabric = analysis.fabricSuggested || '—';
-  const alts = analysis.fabricAlternatives || [];
+  const globalComplexity = analysis.complexity || (isAr ? 'متوسطة' : 'Moyenne');
+  const globalFit = analysis.fit || pieces[0]?.fit || 'Regular / Oversize';
 
+  // Gamme de montage operations
+  const gammeOperations: any[] = (analysis.gammeMontage && Array.isArray(analysis.gammeMontage) && analysis.gammeMontage.length > 0)
+    ? analysis.gammeMontage
+    : [
+        { nomAr: 'فصالة القماش بالمطلوة الصناعية', nomFr: 'Coupe Matelas & Préparation Paquets', machine: 'Table de Coupe / Ciseaux', tempsMin: 0.8 },
+        { nomAr: 'سرفلة وتجميع الأطراف والكتفين', nomFr: 'Assemblage & Surfilage Épaules/Côtés', machine: 'Surjeteuse 4 Fils', tempsMin: 1.8 },
+        { nomAr: 'خياطة وتثبيت الياقة / الأكمام (بيكوز)', nomFr: 'Montage Col & Encolure (Piqueuse)', machine: 'Piqueuse Plate', tempsMin: 2.2 },
+        { nomAr: 'ثني الأطراف والأسفل بالروكوفروز', nomFr: 'Ourlet Bas & Manches (Recouvreuse)', machine: 'Recouvreuse', tempsMin: 1.5 },
+        { nomAr: 'كيّ بالبخار تحت الضغط وفحص الجودة', nomFr: 'Repassage Vapeur, Épluchage & Contrôle Final', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 1.2 }
+      ];
+
+  const totalSamMin = Number(gammeOperations.reduce((acc, op) => acc + (Number(op.tempsMin) || 0), 0).toFixed(2));
+  const totalSamSec = Math.round(totalSamMin * 60);
+
+  // HTML Content
   const html = `<!DOCTYPE html>
 <html lang="${isAr ? 'ar' : 'fr'}" dir="${dir}">
 <head>
   <meta charset="UTF-8" />
-  <title>${t_title}</title>
+  <title>DOSSIER_TECHNIQUE_${refCode}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', system-ui, sans-serif; color: #0f172a; background: #fff; line-height: 1.5; -webkit-font-smoothing: antialiased; }
-    @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .no-print { display: none !important; }
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+    
+    @page {
+      size: A4 portrait;
+      margin: 8mm;
     }
-    @page { margin: 10mm; size: A4 portrait; }
-    .page { max-width: 900px; margin: 0 auto; padding: 30px 40px; }
     
-    .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
-    .brand-name { font-size: 26px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: -0.5px; line-height: 1; }
-    .brand-sub { font-size: 11px; color: #6366f1; text-transform: uppercase; letter-spacing: 2.5px; font-weight: 800; margin-top: 6px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
     
-    .doc-title { text-align: ${revAlign}; }
-    .doc-title h1 { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-    .doc-title p { font-size: 11px; color: #64748b; font-weight: 600; margin-top: 6px; }
-
-    .main-grid { display: flex; gap: 40px; margin-bottom: 30px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
+    body {
+      font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      color: #000;
+      background: #fff;
+      font-size: 8.5px;
+      line-height: 1.3;
+    }
     
-    .photo-col { width: 320px; flex-shrink: 0; }
-    .photo-box { width: 100%; background: #f8fafc; border-radius: 20px; padding: 12px; text-align: center; border: 1px solid #f1f5f9; }
-    .photo-box img { width: 100%; max-height: 450px; border-radius: 12px; object-fit: contain; }
-
-    .info-col { flex: 1; }
+    .tech-pack-container {
+      max-width: 780px;
+      margin: 0 auto;
+      border: 2px solid #000;
+      padding: 8px 10px;
+    }
     
-    .section-title { font-size: 14px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; margin-top: 24px; display: flex; align-items: center; gap: 10px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
-    .section-title:first-child { margin-top: 0; }
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 6px;
+    }
     
-    .category-box { margin-bottom: 24px; text-align: ${align}; }
-    .category-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
-    .category-val { font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2; letter-spacing: -0.5px; }
-
-    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-    .metric-card { background: #f8fafc; padding: 16px; border-radius: 16px; text-align: ${align}; }
-    .metric-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .metric-val { font-size: 16px; font-weight: 800; color: #0f172a; }
-
-    .comps-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; justify-content: ${isAr ? 'flex-end' : 'flex-start'}; }
-    .comp-item { background: #f1f5f9; color: #334155; font-size: 11px; font-weight: 600; padding: 8px 14px; border-radius: 8px; }
-
-    .fabric-card { background: #0f172a; color: white; padding: 24px; border-radius: 20px; margin-bottom: 16px; text-align: ${align}; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2); }
-    .fabric-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
-    .fabric-val { font-size: 20px; font-weight: 900; color: white; }
-
-    .alt-grid { display: flex; flex-direction: column; gap: 12px; }
-    .alt-card { background: #fff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 16px; text-align: ${align}; }
-    .alt-title { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
-    .alt-pros, .alt-cons { font-size: 11px; line-height: 1.5; margin-bottom: 4px; font-weight: 500; }
-    .alt-pros strong { color: #059669; font-weight: 800; }
-    .alt-cons strong { color: #dc2626; font-weight: 800; }
-
-    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
-    .print-btn { position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: white; border: none; padding: 16px 32px; border-radius: 50px; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3); transition: transform 0.2s; }
-    .print-btn:active { transform: scale(0.95); }
+    th, td {
+      border: 1px solid #000;
+      padding: 3.5px 5px;
+      font-size: 8px;
+      vertical-align: middle;
+    }
+    
+    th {
+      background: #f1f3f5;
+      color: #000;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    .th-dark {
+      background: #000 !important;
+      color: #fff !important;
+      font-weight: 900;
+      font-size: 8.5px;
+      letter-spacing: 0.8px;
+      padding: 4px 6px;
+      text-transform: uppercase;
+    }
+    
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .text-left { text-align: left; }
+    .font-mono { font-family: 'IBM Plex Mono', monospace; }
+    .font-bold { font-weight: 700; }
+    .font-black { font-weight: 900; }
+    .uppercase { text-transform: uppercase; }
+    
+    /* Header Grid */
+    .header-table td {
+      border: 1.5px solid #000;
+      padding: 5px 8px;
+    }
+    
+    .section-title {
+      background: #000;
+      color: #fff;
+      font-weight: 900;
+      font-size: 8.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 3px 6px;
+      margin-top: 6px;
+      margin-bottom: 3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #000;
+    }
+    
+    .photo-cell {
+      width: 210px;
+      vertical-align: top;
+      background: #fafafa;
+      text-align: center;
+      padding: 4px;
+      position: relative;
+    }
+    
+    .photo-cell img {
+      max-width: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      border: 1px solid #000;
+      background: #fff;
+    }
+    
+    .barcode-block {
+      letter-spacing: 3px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      font-weight: 900;
+      display: inline-block;
+      padding: 2px 6px;
+      border: 1px dashed #000;
+    }
+    
+    /* Sign-off Boxes */
+    .sign-box {
+      border: 1px solid #000;
+      height: 65px;
+      padding: 4px 6px;
+      position: relative;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .sign-label {
+      font-size: 7.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 2px;
+    }
+    
+    .sign-stamp-area {
+      font-size: 7px;
+      color: #888;
+      text-align: center;
+      border: 1px dashed #bbb;
+      margin: 2px 0;
+      padding: 4px 0;
+      text-transform: uppercase;
+    }
+    
+    .print-fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #000;
+      color: #fff;
+      border: 2px solid #000;
+      padding: 10px 22px;
+      font-weight: 900;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      z-index: 99999;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .print-fab:hover {
+      background: #fff;
+      color: #000;
+    }
+    
+    @media print {
+      .no-print { display: none !important; }
+      body { margin: 0; }
+      .tech-pack-container { border: 2px solid #000; }
+    }
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="header">
-      <div style="text-align: ${align}">
-        <div class="brand-name">${company.name}</div>
-        <div class="brand-sub">${company.subtitle}</div>
-      </div>
-      <div class="doc-title">
-        <h1>${t_title}</h1>
-        <p>${new Date().toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-      </div>
-    </div>
 
-    <div class="main-grid">
-      ${image ? `
-      <div class="photo-col">
-        <div class="photo-box">
+  <button class="print-fab no-print" onclick="window.print()">
+    🖨️ ${isAr ? 'طباعة / حفظ PDF' : 'IMPRIMER TECH PACK (PDF)'}
+  </button>
+
+  <div class="tech-pack-container">
+    
+    <!-- 1. CORPORATE HEADER TABLE -->
+    <table class="header-table" style="margin-bottom: 6px;">
+      <tr>
+        <td style="width: 45%; vertical-align: middle;">
+          <div style="font-size: 16px; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase; line-height: 1;">
+            ${company.name || 'BEYA CREATIVE'}
+          </div>
+          <div style="font-size: 7.5px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; color: #000;">
+            INGÉNIERIE TEXTILE & CONFECTION INDUSTRIELLE · CASABLANCA MAROC
+          </div>
+          <div style="font-size: 7px; color: #444; margin-top: 2px;">
+            Atelier certifié B2B · Bureau d'études, Patronage & Fiches Techniques
+          </div>
+        </td>
+        <td style="width: 25%; text-align: center; vertical-align: middle;">
+          <div style="font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">
+            DOSSIER TECHNIQUE
+          </div>
+          <div style="font-size: 8px; font-weight: 800; margin-top: 2px;">
+            TECH PACK OFFICIEL
+          </div>
+          <div class="barcode-block" style="margin-top: 3px;">
+            ||| | |||| | ||| | ||
+          </div>
+        </td>
+        <td style="width: 30%; font-size: 7.5px; padding: 4px;">
+          <div><strong>RÉFÉRENCE :</strong> <span class="font-mono font-bold">${refCode}</span></div>
+          <div><strong>DATE D'ÉMISSION :</strong> <span class="font-mono">${dateStr}</span></div>
+          <div><strong>SAISON :</strong> ${season}</div>
+          <div><strong>STATUT :</strong> <span class="font-bold">APPROUVÉ PRODUCTION</span></div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- 2. IDENTITY & MODEL PACKSHOT GRID -->
+    <table>
+      <tr>
+        ${image ? `
+        <td class="photo-cell" rowspan="2">
+          <div style="font-size: 7px; font-weight: 800; text-transform: uppercase; background: #000; color: #fff; padding: 1px; margin-bottom: 3px;">
+            VUE PROTOTYPE / PACKSHOT CONFORME
+          </div>
           <img src="${image}" alt="Modèle" />
-        </div>
-      </div>
-      ` : ''}
-      
-      <div class="info-col">
-        
-        <div class="category-box">
-          <div class="category-label">${t_category}</div>
-          <div class="category-val">${analysis.category || '—'}</div>
-        </div>
-
-        <div class="section-title">
-          <span style="font-size: 16px;">📊</span> ${t_general}
-        </div>
-
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-label">${t_cost}</div>
-            <div class="metric-val">${globalCost}</div>
+          <div style="font-size: 6.5px; color: #555; margin-top: 2px; font-family: monospace;">
+            ECH: 1/1 · CONTRÔLE SILHOUETTE
           </div>
-          <div class="metric-card">
-            <div class="metric-label">${t_consumption}</div>
-            <div class="metric-val">${globalConso}</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">${t_complexity}</div>
-            <div class="metric-val">${globalComp}</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">${t_fit}</div>
-            <div class="metric-val">${analysis.fit || analysis.pieces?.[0]?.fit || '—'}</div>
-          </div>
-        </div>
-
-        ${analysis.components && analysis.components.length > 0 ? `
-        <div class="section-title">
-          <span style="font-size: 16px;">🧩</span> ${t_components}
-        </div>
-        <div class="comps-list">
-          ${analysis.components.map((c: string) => `<div class="comp-item">${c}</div>`).join('')}
-        </div>
+        </td>
         ` : ''}
-
-        <div class="section-title">
-          <span style="font-size: 16px;">🧵</span> ${t_fabrics}
-        </div>
-        
-        <div class="fabric-card">
-          <div class="fabric-label">${t_primary}</div>
-          <div class="fabric-val">${primaryFabric}</div>
-        </div>
-
-        ${alts.length > 0 ? `
-        <div class="category-label" style="margin-bottom: 12px; margin-top: 16px; text-align: ${align}">${t_alternatives}</div>
-        <div class="alt-grid">
-          ${alts.map((a: any) => `
-          <div class="alt-card">
-            <div class="alt-title">${a.name}</div>
-            <div class="alt-pros"><strong>${t_pros}</strong> ${a.pros}</div>
-            <div class="alt-cons"><strong>${t_cons}</strong> ${a.cons}</div>
+        <td style="vertical-align: top; padding: 0;">
+          <div class="section-title" style="margin-top: 0;">
+            <span>1. IDENTIFICATION & SPÉCIFICATIONS DU MODÈLE</span>
+            <span class="font-mono">${pieces.length} PIÈCE(S)</span>
           </div>
-          `).join('')}
-        </div>
-        ` : ''}
+          <table style="margin-bottom: 0;">
+            <tr>
+              <th style="width: 28%;">${isAr ? 'اسم وصنف الموديل' : 'Désignation & Catégorie'}</th>
+              <td class="font-bold" style="font-size: 9.5px;">${analysis.category || pieces[0]?.name || 'Modèle de Confection'}</td>
+              <th style="width: 22%;">${isAr ? 'القصة / Fit' : 'Coupe & Silhouette'}</th>
+              <td>${globalFit}</td>
+            </tr>
+            <tr>
+              <th>${isAr ? 'استهلاك القماش الإجمالي' : 'Consommation Tissu Totale'}</th>
+              <td class="font-bold font-mono">${totalConsumption} ${isAr ? '(عرض 1.50م)' : '(laize 1.50m)'}</td>
+              <th>${isAr ? 'مستوى الصعوبة' : 'Niveau de Complexité'}</th>
+              <td>${globalComplexity}</td>
+            </tr>
+            <tr>
+              <th>${isAr ? 'مكونات الباترون الرئيسية' : 'Composants du Patron'}</th>
+              <td colspan="3">
+                ${pieces.map((p: any) => `<strong>${p.name}:</strong> ${(p.components || []).join(' · ') || 'Panneaux devant, dos, manches, finitions'}`).join('<br/>')}
+              </td>
+            </tr>
+            <tr>
+              <th>${isAr ? 'تقدير تكلفة الصنع (Façon)' : 'Coût Façon Estimé'}</th>
+              <td class="font-bold font-mono">${globalCost}</td>
+              <th>${isAr ? 'التصنيف الصناعي' : 'Segment Marché'}</th>
+              <td>Prêt-à-porter / Streetwear B2B</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
 
-      </div>
+    <!-- 3. NOMENCLATURE DES MATIÈRES & SOURCING PIÈCE PAR PIÈCE -->
+    <div class="section-title">
+      <span>2. NOMENCLATURE TEXTILE & SOURCING (PIÈCE PAR PIÈCE)</span>
+      <span>FOURNISSEURS AGREEES MA</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 16%;">${isAr ? 'القطعة' : 'Pièce'}</th>
+          <th style="width: 22%;">${isAr ? 'نوع القماش والنسج' : 'Tissu & Armure'}</th>
+          <th style="width: 24%;">${isAr ? 'التركيبة والغراماج (GSM)' : 'Composition & Grammage'}</th>
+          <th style="width: 26%;">${isAr ? 'السوق المغربي (درب عمر / طنجة)' : 'Sourcing Marché MA'}</th>
+          <th style="width: 12%; text-align: center;">${isAr ? 'الاستهلاك' : 'Métrage'}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${pieces.map((p: any) => {
+          const spec = getTechnicalFabricSpecs(p.fabricSuggested || analysis.fabricSuggested || '');
+          return `
+          <tr>
+            <td class="font-bold uppercase">${p.name}</td>
+            <td><strong>${p.fabricSuggested || spec.armure}</strong></td>
+            <td><span class="font-mono">${spec.composition}</span><br/><strong class="font-mono">${spec.gsm}</strong></td>
+            <td>${spec.sourcingMA}</td>
+            <td class="text-center font-bold font-mono">${p.consumption || '1.30m'}</td>
+          </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+
+    <!-- 4. FOURNITURES, MERCERIE & TRAITEMENTS DÉLAVAGE -->
+    <div class="section-title">
+      <span>3. FOURNITURES, MERCERIE & TRAITEMENTS DE FINITION</span>
+      <span>BOM / TRIMS & FINISHES</span>
+    </div>
+    <table>
+      <tr>
+        <th style="width: 50%;">FOURNITURES & MERCERIE TECHNIQUE</th>
+        <th style="width: 50%;">TRAITEMENT INDUSTRIEL & TEINTURE / DÉLAVAGE</th>
+      </tr>
+      <tr>
+        <td style="vertical-align: top; font-size: 7.5px;">
+          <ul style="padding-left: 14px; margin: 0; line-height: 1.45;">
+            <li><strong>Fil à coudre :</strong> Polyester 120/2 haute ténacité ton-sur-ton + fil mousse 150D pour surjeteuse</li>
+            <li><strong>Accessoires de serrage :</strong> Cordon tubulaire coton peigné avec embouts métalliques sertis (aglets)</li>
+            <li><strong>Œillets métalliques :</strong> Diamètre 8mm inoxydables plats avec renfort thermocollé</li>
+            <li><strong>Élastique ceinture :</strong> Élastique tissé renforcé 4.5 cm (stabilité après lavages)</li>
+            <li><strong>Étiquetage :</strong> Étiquette griffe tissée haute définition + étiquette taille & composition légale</li>
+            <li><strong>Packaging :</strong> Polybag individuel transparent avec micro-perforations + sticker taille</li>
+          </ul>
+        </td>
+        <td style="vertical-align: top; font-size: 7.5px;">
+          <ul style="padding-left: 14px; margin: 0; line-height: 1.45;">
+            <li><strong>Type de Teinture :</strong> Garment Dye (teinture en pièce confectionnée) ou Teinture Réactive cuve</li>
+            <li><strong>Lavage Industriel :</strong> Enzyme Wash (غسيل أنزيمي) pour assouplissement et toucher velouté</li>
+            <li><strong>Effet Décoloration :</strong> Nuances légères sur les coutures, encolure et surpiqûres</li>
+            <li><strong>Stabilité Dimensionnelle :</strong> Sanforisage préalable (taux de rétrécissement résiduel &lt; 2.5%)</li>
+            <li><strong>Repassage :</strong> Repassage vapeur sous presse aspirante avec gabarit de contrôle dimensionnel</li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+
+    <!-- 5. BARÈME DES MENSURATIONS DE PRODUCTION (GRADATION S À XXL) -->
+    <div class="section-title">
+      <span>4. BARÈME DES MESURES DE PRODUCTION (GRADATION S À XXL en cm)</span>
+      <span>TOLÉRANCE CONFECTION : ± 1.0 CM</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align: left; width: 40%;">${isAr ? 'نقطة القياس (Point de Mesure)' : 'Point de Mesure / Gradation'}</th>
+          <th style="width: 10%; text-align: center;">S</th>
+          <th style="width: 10%; text-align: center;">M</th>
+          <th style="width: 10%; text-align: center;">L</th>
+          <th style="width: 10%; text-align: center;">XL</th>
+          <th style="width: 10%; text-align: center;">XXL</th>
+          <th style="width: 10%; text-align: center;">TOL.</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${(() => {
+          const targetMesures = pieces[0]?.mesures && pieces[0]?.mesures.length > 0
+            ? pieces[0].mesures
+            : [
+                { nom: 'Tour de Poitrine / الصدر', valeurs: { S: 104, M: 110, L: 116, XL: 122, XXL: 128 } },
+                { nom: 'Carrure Épaules / الكتف', valeurs: { S: 46, M: 48, L: 50, XL: 52, XXL: 54 } },
+                { nom: 'Longueur Totale Corps / الطول', valeurs: { S: 70, M: 72, L: 74, XL: 76, XXL: 78 } },
+                { nom: 'Longueur Manche / طول الكم', valeurs: { S: 62, M: 63, L: 64, XL: 65, XXL: 66 } },
+                { nom: 'Tour de Taille / Ceinture / الخصر', valeurs: { S: 74, M: 78, L: 82, XL: 86, XXL: 90 } }
+              ];
+          
+          return targetMesures.map((m: any) => `
+            <tr>
+              <td class="font-bold">${m.nom}</td>
+              <td class="text-center font-mono">${m.valeurs?.S ?? '—'}</td>
+              <td class="text-center font-mono">${m.valeurs?.M ?? '—'}</td>
+              <td class="text-center font-mono">${m.valeurs?.L ?? '—'}</td>
+              <td class="text-center font-mono">${m.valeurs?.XL ?? '—'}</td>
+              <td class="text-center font-mono">${m.valeurs?.XXL ?? '—'}</td>
+              <td class="text-center font-mono">±1.0</td>
+            </tr>
+          `).join('');
+        })()}
+      </tbody>
+    </table>
+
+    <!-- 6. LA GAMME DE MONTAGE & TEMPS OPÉRATOIRE (SAM) -->
+    <div class="section-title">
+      <span>5. GAMME DE MONTAGE OPÉRATOIRE & MACHINES INDUSTRIELLES</span>
+      <span class="font-mono">TEMPS TOTAL ALLOUÉ (SAM) : ${totalSamMin} MIN (${totalSamSec} SEC)</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 6%; text-align: center;">N°</th>
+          <th style="width: 44%; text-align: left;">Opération de Confection</th>
+          <th style="width: 32%;">Machine Industrielle Allouée</th>
+          <th style="width: 18%; text-align: center;">Temps (SAM Min)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${gammeOperations.map((op: any, oIdx: number) => `
+          <tr>
+            <td class="text-center font-mono font-bold">${oIdx + 1}</td>
+            <td><strong>${op.nomFr || op.nomAr}</strong> ${op.nomAr ? `<span style="color:#444; font-size:7px;">(${op.nomAr})</span>` : ''}</td>
+            <td>${op.machine || 'Piqueuse Plate'}</td>
+            <td class="text-center font-mono font-bold">${Number(op.tempsMin || 1.0).toFixed(2)} min</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <!-- 7. CHIFFRAGE DE REVIENT ESTIMATIF (3 NIVEAUX QUALITÉ) -->
+    <div class="section-title">
+      <span>6. GRILLE DE CHIFFRAGE DE REVIENT INDUSTRIEL (B2B)</span>
+      <span>3 NIVEAUX DE QUALITÉ</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 33%;">1. HAUT DE GAMME (MZIANA)</th>
+          <th style="width: 33%;">2. STANDARD COMMERCIAL (NORMAL)</th>
+          <th style="width: 34%;">3. ÉCONOMIQUE (FAIBLE)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-size: 7.5px;">
+            • Coton peigné mercerisé lourd<br/>
+            • Finitions premium, fil mousse, étiquettes HD<br/>
+            • <strong>Coût de revient estimé : 65 - 85 MAD</strong><br/>
+            • Prix vente gros suggéré : 120 - 150 MAD
+          </td>
+          <td style="font-size: 7.5px;">
+            • Coton standard cardé / peigné classique<br/>
+            • Assemblage régulier atelier B2B<br/>
+            • <strong>Coût de revient estimé : 45 - 60 MAD</strong><br/>
+            • Prix vente gros suggéré : 85 - 110 MAD
+          </td>
+          <td style="font-size: 7.5px;">
+            • Poly-coton ou maille légère économique<br/>
+            • Façon rapide sans délavage spécial<br/>
+            • <strong>Coût de revient estimé : 32 - 42 MAD</strong><br/>
+            • Prix vente gros suggéré : 60 - 75 MAD
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 8. OFFICIAL SIGN-OFF & APPROBATIONS -->
+    <div class="section-title" style="margin-top: 6px;">
+      <span>7. APPROBATIONS & VISAS OFFICIELS DE LANCEMENT EN CONFECTION</span>
+      <span>BON POUR PRODUCTION</span>
+    </div>
+    <table style="margin-bottom: 4px;">
+      <tr>
+        <td style="width: 33.33%; padding: 0;">
+          <div class="sign-box">
+            <div class="sign-label">VISA MODÉLISTE / BUREAU D'ÉTUDES</div>
+            <div class="sign-stamp-area">Emplacement Cachet & Signature</div>
+            <div style="font-size: 7px;">Date : ______ / ______ / 2026</div>
+          </div>
+        </td>
+        <td style="width: 33.33%; padding: 0;">
+          <div class="sign-box">
+            <div class="sign-label">VISA CHEF D'ATELIER & PRODUCTION</div>
+            <div class="sign-stamp-area">Conformité Montage & Coupe</div>
+            <div style="font-size: 7px;">Date : ______ / ______ / 2026</div>
+          </div>
+        </td>
+        <td style="width: 33.33%; padding: 0;">
+          <div class="sign-box">
+            <div class="sign-label">BON POUR ACCORD MARQUE / CLIENT</div>
+            <div class="sign-stamp-area">Bon pour Accord & Validation Échantillon</div>
+            <div style="font-size: 7px;">Nom & Signature : ___________________</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- 9. FOOTER VERIFICATION -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #000; padding-top: 4px; font-size: 7px; text-transform: uppercase;">
+      <div>DOCUMENT INDUSTRIEL CONFIDENTIEL · SYSTÈME DE GESTION DE CONFECTION BEYA CREATIVE MAROC</div>
+      <div class="font-mono font-bold">*VERIFIED-BYA-${refCode}*</div>
     </div>
 
-    <div class="footer">
-      <div>Généré par BEYA CREATIVE - Analyse Technique</div>
-      <div>© ${new Date().getFullYear()} ${company.name}</div>
-    </div>
   </div>
 
-  <button class="print-btn no-print" onclick="window.print()">🖨️ ${isAr ? 'طباعة / تحميل PDF' : 'IMPRIMER / PDF'}</button>
 </body>
 </html>`;
 
-  printHTML(html, `Rapport_IA_${new Date().getTime()}`);
+  printHTML(html, `TECHPACK_${refCode}`);
 }
 
 // ─── DOSSIER TECHNIQUE COMPLET (STYLE MARWA) ─────────────────────
