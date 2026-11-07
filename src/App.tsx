@@ -117,6 +117,7 @@ const Privacy         = lazy(() => import('./pages/Privacy'));
 const Cookies         = lazy(() => import('./pages/Cookies'));
 const SaaSAdminPage   = lazy(() => import('./pages/SaaSAdminPage'));
 const BeyaNetwork     = lazy(() => import('./pages/BeyaNetwork'));
+const NetworkRegisterPro = lazy(() => import('./pages/NetworkRegisterPro'));
 const ModelisteProfilePage = lazy(() => import('./pages/ModelisteProfilePage'));
 const SupplierProfilePage  = lazy(() => import('./pages/SupplierProfilePage'));
 import { PageLoader } from './components/PageLoader';
@@ -835,6 +836,13 @@ function AppContent() {
             <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
           </Suspense>
         } />
+        <Route path="/network/register" element={
+          <Suspense fallback={<PageLoader />}>
+            <NetworkRegisterPro />
+          </Suspense>
+        } />
+        <Route path="/network/signup" element={<Navigate to="/network/register" replace />} />
+        <Route path="/register-pro" element={<Navigate to="/network/register" replace />} />
         <Route path="/modeliste/:id" element={
           <Suspense fallback={<PageLoader />}>
             <ModelisteProfilePage />
@@ -940,6 +948,13 @@ function AppContent() {
             <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
           </Suspense>
         } />
+        <Route path="/network/register" element={
+          <Suspense fallback={<PageLoader />}>
+            <NetworkRegisterPro />
+          </Suspense>
+        } />
+        <Route path="/network/signup" element={<Navigate to="/network/register" replace />} />
+        <Route path="/register-pro" element={<Navigate to="/network/register" replace />} />
         <Route path="/modeliste/:id" element={
           <Suspense fallback={<PageLoader />}>
             <ModelisteProfilePage />
@@ -1182,6 +1197,13 @@ function AppContent() {
             <BeyaNetwork currentUser={currentUser} onLogout={handleLogout} />
           </Suspense>
         } />
+        <Route path="/network/register" element={
+          <Suspense fallback={<PageLoader />}>
+            <NetworkRegisterPro />
+          </Suspense>
+        } />
+        <Route path="/network/signup" element={<Navigate to="/network/register" replace />} />
+        <Route path="/register-pro" element={<Navigate to="/network/register" replace />} />
         <Route path="/modeliste/:id" element={
           <Suspense fallback={<PageLoader />}>
             <ModelisteProfilePage />

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Globe, Users, Package, MessageCircle, ArrowRight, ArrowLeft, Search,
   Send, ThumbsUp, MessageSquare, ShieldCheck, CheckCircle2, Phone,
@@ -136,6 +135,26 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [activeDealImageIdx, setActiveDealImageIdx] = useState<Record<string, number>>({});
   const [dealQuantities, setDealQuantities] = useState<Record<string, number>>({});
   const [dealUnitView, setDealUnitView] = useState<'both' | 'kg' | 'meter'>('both');
+
+  // Custom registered pros & suppliers from localStorage
+  const [registeredPros] = useState<any[]>(() => {
+    try {
+      const raw = localStorage.getItem('beya_network_registered_pros');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Current user's registered pro account if any
+  const [myProAccount] = useState<any | null>(() => {
+    try {
+      const raw = localStorage.getItem('beya_network_my_pro_account');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Sticky message composer state
   const [messageText, setMessageText] = useState('');
@@ -538,6 +557,12 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   // ECOSYSTEM DIRECTORY: 5 PILLARS (MODÉLISTES, TISSUS, FOURNITURES, IMPRESSION, BRODERIE)
   // ─────────────────────────────────────────────────────────────
   const allProMembers = [
+    // 0. Registered Modélistes & Suppliers (Live newly enrolled members)
+    ...registeredPros.map(p => ({
+      ...p,
+      roleBadge: p.roleBadge ? `🌟 ${p.roleBadge}` : '🌟 عضو مسجل جديد',
+      isRegisteredUser: true
+    })),
     // 1. Modélistes (Freelancers & Pattern Makers)
     ...MODELISTES_DATA.map(m => {
       const specialtyText = m.headline || m.categoryLabel || (m.specialities && m.specialities.join(' • ')) || 'موديليست وباترون';
@@ -883,13 +908,23 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         <p className="text-slate-400 max-w-md text-sm mb-6 leading-relaxed">
           فضاء ديسكورد التفاعلي المخصص لربط أصحاب البراندات مع نخبة الموديليست، وموردي الأقمشة، وورشات الطباعة والتطريز، وموردي المستلزمات.
         </p>
-        <button
-          onClick={() => navigate('/portal')}
-          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-indigo-600/30 flex items-center gap-2 cursor-pointer"
-        >
-          <ArrowRight className="w-4 h-4" />
-          <span>العودة إلى لوحة تحكم الطلبيات (BEYAPORTAL)</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <Link
+            to="/network/register"
+            className="px-6 py-3.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 rounded-2xl font-black text-sm transition shadow-xl shadow-amber-500/25 flex items-center gap-2 cursor-pointer active:scale-95"
+          >
+            <Sparkles className="w-4 h-4 text-slate-950" />
+            <span>تسجيل حساب مهني (موديليست / مورد) 🚀</span>
+          </Link>
+
+          <button
+            onClick={() => navigate('/portal')}
+            className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl text-sm transition border border-white/10 flex items-center gap-2 cursor-pointer"
+          >
+            <ArrowRight className="w-4 h-4" />
+            <span>العودة إلى لوحة تحكم الطلبيات (BEYAPORTAL)</span>
+          </button>
+        </div>
       </div>
     );
   }
@@ -975,6 +1010,17 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
         {/* Right Action Buttons */}
         <div className="flex items-center gap-2">
+          {/* Register Pro / Supplier Button */}
+          <Link
+            to="/network/register"
+            className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer shrink-0"
+            title="تسجيل موديليست أو مورد جديد في BEYA NETWORK"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+            <span className="hidden sm:inline">+ تسجيل مهني / مورد</span>
+            <span className="sm:hidden text-[10px]">+ تسجيل Pro</span>
+          </Link>
+
           {/* Members Sidebar Toggle (Mobile & Desktop) */}
           <button
             onClick={() => setMobileDrawer(prev => prev === 'members' ? 'none' : 'members')}
@@ -1520,6 +1566,35 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     </div>
                   </div>
                 </div>
+              </div>
+
+              
+              {/* PRO / SUPPLIER REGISTRATION CALLOUT BANNER */}
+              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-950/70 via-[#23242b] to-indigo-950/70 border border-amber-500/30 text-white flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
+                <div className="space-y-1.5 max-w-xl">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase border border-amber-500/30 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-amber-400" />
+                      <span>فضاء تسجيل الموديليست والموردين 🚀</span>
+                    </span>
+                    <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                      تسجيل مجاني فوري
+                    </span>
+                  </div>
+                  <h3 className="text-sm sm:text-base font-black text-white">
+                    واش نتا موديليست أو عندك محل/مستودع د الأقمشة والمستلزمات أو ورشة طباعة وتطريز؟
+                  </h3>
+                  <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                    قاد حسابك المهني دابا فـ BEYA NETWORK باش يبان كرتك فـ هاد الدليل وتبدا تستقبل طلبيات الباترون والتوريد من أصحاب البراندات مباشرة على الواتساب وبلا وسيط.
+                  </p>
+                </div>
+                <Link
+                  to="/network/register"
+                  className="shrink-0 px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-2xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <Scissors className="w-4 h-4 text-slate-950" />
+                  <span>فتح حساب مهني (موديليست / مورد) 🚀</span>
+                </Link>
               </div>
 
               {/* 2. FREELANCER PLATFORM / APP-STYLE CATEGORIES MENU (NOT SIMPLE TAGS) */}
