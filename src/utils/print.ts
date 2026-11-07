@@ -457,6 +457,319 @@ function downloadFile(content: string, filename: string, mime: string) {
   URL.revokeObjectURL(url);
 }
 
+// ─── Helpers pour l'isolation linguistique stricte (AR / FR) ─────────────
+export function cleanLabel(raw: string, isAr: boolean): string {
+  if (!raw) return '';
+  let s = String(raw).trim();
+
+  // Supprimer les annotations de sourcing de ville
+  s = s.replace(/\([^)]*(?:طنجة|كازا|درب عمر|سوق الجملة|Marché|Derb Omar)[^)]*\)/gi, '');
+
+  if (isAr) {
+    const hasArabic = /[\u0600-\u06FF]/.test(s);
+    if (hasArabic) {
+      s = s.replace(/\([a-zA-Z\s\/\-0-9%&]+\)/g, '');
+      s = s.replace(/[a-zA-Z]{3,}/g, '');
+    } else {
+      const low = s.toLowerCase();
+      if (low.includes('crop') || low.includes('top')) return 'توب بأكمام طويلة ملاصق للجسم (كروب توب)';
+      if (low.includes('pantalon') || low.includes('sweatpant') || low.includes('wide-leg')) return 'سروال رياضي بقصة عريضة منسدلة (وايد ليغ)';
+      if (low.includes('jersey')) return 'جيرسي قطن ممشط ممتاز';
+      if (low.includes('terry') || low.includes('bouclette')) return 'مولطون بوكليت غير مقطن (فرنش تيري قطن)';
+      if (low.includes('gratté') || low.includes('fleece')) return 'مولطون شتوي مقطن 100% قطن';
+      if (low.includes('rib') || low.includes('côte')) return 'كوت ريب 1×1 ليكرا قطن ممشط';
+      if (low.includes('denim') || low.includes('jean')) return 'قماش دنيم جينز أصيل 12.5 أونصة';
+      if (low.includes('t-shirt')) return 'تيشرت قطني كلاسيكي كول غوند';
+      if (low.includes('hoodie')) return 'هودي سويت شيرت كابوشون';
+    }
+  } else {
+    // Mode Français : aucune lettre arabe
+    const hasLatin = /[a-zA-Z]{2,}/.test(s);
+    if (hasLatin) {
+      s = s.replace(/[\u0600-\u06FF]/g, '');
+    } else {
+      const low = s.toLowerCase();
+      if (low.includes('جيرسي')) return 'Single Jersey Coton Peigné Stretch';
+      if (low.includes('بوكليت') || low.includes('غير مقطن')) return 'French Terry Coton Non-Gratté Bouclette';
+      if (low.includes('مقطن') || low.includes('شتوي')) return 'Molleton Lourd Gratté 100% Coton';
+      if (low.includes('كوت') || low.includes('ريب')) return 'Côte Rib 1x1 Lycra Coton Peigné';
+      if (low.includes('دنيم') || low.includes('جينز')) return 'Toile Denim Coton 12.5oz';
+      if (low.includes('كانفاس')) return 'Heavy Cotton Canvas (Toile Coton Renforcée)';
+      if (low.includes('بوبلين')) return 'Popeline de Coton Peigné';
+      if (low.includes('توب') || low.includes('كروب')) return 'Top Manches Longues Près du Corps (Crop Top)';
+      if (low.includes('سروال') || low.includes('بنطلون')) return 'Pantalon Sweatpants Coupe Wide-Leg / Évasé';
+      if (low.includes('طقم')) return 'Ensemble 2 Pièces Confection B2B';
+      if (low.includes('تيشرت')) return 'T-Shirt Coton Col Rond';
+      if (low.includes('هودي')) return 'Hoodie Sweatshirt à Capuche';
+      s = s.replace(/[\u0600-\u06FF]/g, '');
+    }
+  }
+
+  // Nettoyer les parenthèses orphelines et les délimiteurs vides
+  s = s.replace(/\(\s*\)/g, '').replace(/\[\s*\]/g, '').replace(/\s*[\/\-·]\s*$/g, '').replace(/^\s*[\/\-·]\s*/g, '').replace(/\s{2,}/g, ' ').trim();
+  if (s.startsWith('(') && s.endsWith(')')) s = s.slice(1, -1).trim();
+  return s;
+}
+
+export function cleanMeasurementName(raw: string, isAr: boolean): string {
+  if (!raw) return isAr ? 'نقطة القياس' : 'Point de Mesure';
+  const low = raw.toLowerCase();
+
+  if (low.includes('poitrine') || low.includes('صدر') || low.includes('buste') || low.includes('chest')) {
+    return isAr ? 'محيط الصدر' : 'Tour de Poitrine';
+  }
+  if (low.includes('épaules') || low.includes('epaule') || low.includes('كتف') || low.includes('carrure') || low.includes('shoulder')) {
+    return isAr ? 'عرض الكتفين' : 'Carrure Épaules';
+  }
+  if (low.includes('manche') || low.includes('كم') || low.includes('sleeve')) {
+    return isAr ? (low.includes('longue') || low.includes('طويل') ? 'طول الأكمام الطويلة' : 'طول الأكمام') : (low.includes('longue') ? 'Longueur Manches Longues' : 'Longueur Manches');
+  }
+  if (low.includes('taille') || low.includes('خصر') || low.includes('ceinture') || low.includes('waist')) {
+    return isAr ? 'محيط الخصر (المطاطي)' : 'Tour de Taille / Ceinture';
+  }
+  if (low.includes('hanche') || low.includes('bassin') || low.includes('ورك') || low.includes('حوض') || low.includes('hip')) {
+    return isAr ? 'محيط الحوض والورك' : 'Tour de Bassin / Hanches';
+  }
+  if (low.includes('cuisse') || low.includes('فخذ') || low.includes('thigh')) {
+    return isAr ? 'محيط الفخذ' : 'Tour de Cuisse';
+  }
+  if (low.includes('bas') || low.includes('cheville') || low.includes('ساق') || low.includes('كاحل') || low.includes('opening')) {
+    return isAr ? 'عرض أسفل الساق' : 'Largeur Bas de Jambe';
+  }
+  if (low.includes('longueur') || low.includes('طول') || low.includes('length')) {
+    return isAr ? 'الطول الإجمالي' : 'Longueur Totale';
+  }
+
+  if (isAr) {
+    const arOnly = raw.replace(/[a-zA-Z]/g, '').replace(/[()\/]/g, ' ').replace(/\s+/g, ' ').trim();
+    return arOnly || raw;
+  } else {
+    const frOnly = raw.replace(/[\u0600-\u06FF]/g, '').replace(/[()\/]/g, ' ').replace(/\s+/g, ' ').trim();
+    return frOnly || raw;
+  }
+}
+
+export function cleanPieceName(rawName: string, isAr: boolean): string {
+  if (!rawName) return isAr ? 'قطعة الموديل الرئيسية' : 'Pièce Principale';
+  const low = rawName.toLowerCase();
+
+  if (low.includes('crop') || (low.includes('top') && !low.includes('pantalon') && !low.includes('bas'))) {
+    return isAr ? 'توب بأكمام طويلة ملاصق للجسم (كروب توب)' : 'Top Manches Longues Près du Corps (Crop Top)';
+  }
+  if (low.includes('pantalon') || low.includes('sweatpant') || low.includes('wide-leg') || low.includes('wide leg') || low.includes('سروال') || low.includes('بنطلون') || low.includes('palazzo')) {
+    return isAr ? 'سروال رياضي بقصة عريضة منسدلة (وايد ليغ)' : 'Pantalon Sweatpants Coupe Wide-Leg / Évasé';
+  }
+  if (low.includes('veste') || low.includes('jacket') || low.includes('فيست') || low.includes('جاكيت') || low.includes('سترة')) {
+    return isAr ? 'فيست جاكيت دنيم بحزام وقصة عصرية' : 'Veste en Jean Denim Ceinturée';
+  }
+  if (low.includes('t-shirt') || low.includes('tshirt') || low.includes('تيشرت') || low.includes('تي شيرت')) {
+    return isAr ? 'تيشرت قطني كلاسيكي كول غوند' : 'T-Shirt Coton Col Rond';
+  }
+  if (low.includes('hoodie') || low.includes('sweat') || low.includes('هودي') || low.includes('سويت')) {
+    return isAr ? 'هودي كابوشون قطني ثقيل' : 'Hoodie Sweatshirt à Capuche';
+  }
+  if (low.includes('short') || low.includes('شورت')) {
+    return isAr ? 'شورت برمودا قطني مريح' : 'Short Bermuda Molleton';
+  }
+  if (low.includes('robe') || low.includes('فستان')) {
+    return isAr ? 'فستان نسائي كاجوال طويل' : 'Robe Longue Fluide Casual';
+  }
+
+  return cleanLabel(rawName, isAr);
+}
+
+export function cleanCategoryTitle(rawCat: string, isAr: boolean): string {
+  if (!rawCat) return isAr ? 'موديل من الذكاء الاصطناعي' : 'Modèle de Confection';
+  const low = rawCat.toLowerCase();
+
+  if (low.includes('ensemble') || low.includes('طقم') || low.includes('2 pièces') || low.includes('2 pieces') || low.includes('قطعتين')) {
+    if (low.includes('denim') || low.includes('jean') || low.includes('جينز')) {
+      return isAr ? 'طقم دنيم جينز قطعتين (فيست جاكيت + سروال جينز)' : 'Ensemble Denim 2 Pièces (Veste Denim Ceinturée + Pantalon Jean)';
+    }
+    return isAr ? 'طقم لاونج وير قطعتين (توب كروب + سروال واسع)' : 'Ensemble 2 Pièces Loungewear (Top Crop + Pantalon Wide-Leg)';
+  }
+  if (low.includes('t-shirt') || low.includes('تيشرت')) {
+    return isAr ? 'تيشرت قطني كلاسيكي كول غوند' : 'T-Shirt Coton Col Rond';
+  }
+  if (low.includes('hoodie') || low.includes('هودي')) {
+    return isAr ? 'هودي سويت شيرت كابوشون' : 'Hoodie Sweatshirt à Capuche';
+  }
+  if (low.includes('pantalon') || low.includes('سروال') || low.includes('بنطلون')) {
+    return isAr ? 'سروال رياضي بقصة عريضة منسدلة' : 'Pantalon Sweatpants Coupe Wide-Leg';
+  }
+
+  return cleanLabel(rawCat, isAr);
+}
+
+export function cleanOperation(op: any, isAr: boolean): { nom: string; machine: string } {
+  let nom = '';
+  let machine = '';
+
+  if (isAr) {
+    nom = op.nomAr || op.nom || op.nomFr || 'عملية خياطة وتجميع';
+    machine = op.machine || 'بيكوز عادية';
+    const mLow = (machine || '').toLowerCase();
+    if (mLow.includes('coupe') || mLow.includes('ciseaux')) machine = 'طاولة الفصالة / مقص كهربائي';
+    else if (mLow.includes('surjet')) machine = 'سورجي 4 خيوط';
+    else if (mLow.includes('recouv') || mLow.includes('ourle')) machine = 'روكوفروز (ثني الأطراف)';
+    else if (mLow.includes('piqueuse')) machine = 'بيكوز عادية (إبرة واحدة)';
+    else if (mLow.includes('fer') || mLow.includes('vapeur') || mLow.includes('aspirant')) machine = 'مكواة بخار صناعية / طاولة شفط';
+
+    nom = nom.replace(/\([a-zA-Z\s\/\-0-9%&]+\)/g, '').replace(/[a-zA-Z]{3,}/g, '').trim();
+  } else {
+    nom = op.nomFr || op.nom || op.nomAr || 'Opération de confection';
+    machine = op.machine || 'Piqueuse Plate';
+    if (machine.includes('فصالة') || machine.includes('قص')) machine = 'Table de Coupe / Ciseaux';
+    else if (machine.includes('سورجي') || machine.includes('سرفلة')) machine = 'Surjeteuse 4 Fils';
+    else if (machine.includes('روكوفروز') || machine.includes('ثني')) machine = 'Recouvreuse';
+    else if (machine.includes('بيكوز') || machine.includes('خياطة')) machine = 'Piqueuse Plate';
+    else if (machine.includes('مكواة') || machine.includes('بخار')) machine = 'Fer Vapeur / Table Aspirante';
+
+    nom = nom.replace(/[\u0600-\u06FF]/g, '').replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ').trim();
+  }
+
+  return { nom, machine };
+}
+
+export function getTechnicalFabricSpecs(fabricName: string, isAr: boolean) {
+  const f = (fabricName || '').toLowerCase();
+  if (f.includes('côte') || f.includes('rib') || f.includes('كوت')) {
+    return isAr ? {
+      armure: 'كوت ريب 1×1 / 2×2',
+      composition: '95% قطن ممشط · 5% إيلاسطان (ليكرا)',
+      gsm: '240 - 260 غرام/م²',
+      appellationCommerciale: 'كوت ريب 1×1 ليكرا قطن ممشط فاخر',
+      sourcingMA: 'كوت ريب 1×1 ليكرا قطن ممشط فاخر',
+      traitement: 'صباغة القطع (Garment Dye) + غسيل منعم ضد التمدد'
+    } : {
+      armure: 'Côte Rib 1x1 / 2x2',
+      composition: '95% Coton Peigné · 5% Élasthanne (Lycra)',
+      gsm: '240 - 260 GSM (g/m²)',
+      appellationCommerciale: 'Côte Rib 1x1 Lycra Coton Peigné',
+      sourcingMA: 'Côte Rib 1x1 Lycra Coton Peigné',
+      traitement: 'Teinture en pièce (Garment Dye) + Lavage adoucissant anti-déformation'
+    };
+  }
+  if (f.includes('terry') || f.includes('bouclette') || f.includes('بوكليت') || f.includes('غير مقطن')) {
+    return isAr ? {
+      armure: 'مولطون بوكليت غير مقطن (فرنش تيري)',
+      composition: '100% قطن ممشط (أو 90/10 بوليستر)',
+      gsm: '320 - 360 غرام/م²',
+      appellationCommerciale: 'مولطون بوكليت غير مقطن (فرنش تيري قطن)',
+      sourcingMA: 'مولطون بوكليت غير مقطن (فرنش تيري قطن)',
+      traitement: 'غسيل أنزيمي منعم (Enzyme Wash) + صباغة تفاعلية ثابتة'
+    } : {
+      armure: 'French Terry (Molleton Bouclette Non-Gratté)',
+      composition: '100% Coton Peigné (ou 90/10 Poly)',
+      gsm: '320 - 360 GSM (g/m²)',
+      appellationCommerciale: 'French Terry Coton Non-Gratté Bouclette',
+      sourcingMA: 'French Terry Coton Non-Gratté Bouclette',
+      traitement: 'Enzyme Wash (Lavage aux enzymes) + Teinture Réactive / Washed Vintage'
+    };
+  }
+  if (f.includes('gratté') || f.includes('مقطن') || f.includes('شتوي') || f.includes('fleece')) {
+    return isAr ? {
+      armure: 'مولطون شتوي مقطن من الداخل (فليس دافئ)',
+      composition: '100% قطن ممشط (أو 80/20 بولي-قطن)',
+      gsm: '340 - 380 غرام/م²',
+      appellationCommerciale: 'مولطون شتوي مقطن 100% قطن ممتاز',
+      sourcingMA: 'مولطون شتوي مقطن 100% قطن ممتاز',
+      traitement: 'تقطين داخلي ناعم وعالي الكثافة + معالجة سانفوريز ضد الانكماش'
+    } : {
+      armure: 'Molleton Lourd Gratté Intérieur (Brushed Fleece)',
+      composition: '100% Coton Peigné (ou 80/20 Coton/Poly)',
+      gsm: '340 - 380 GSM (g/m²)',
+      appellationCommerciale: 'Molleton Lourd Gratté 100% Coton',
+      sourcingMA: 'Molleton Lourd Gratté 100% Coton',
+      traitement: 'Grattage doux haute densité + Sanforisage anti-rétrécissement'
+    };
+  }
+  if (f.includes('interlock') || f.includes('انترلوك') || f.includes('إنترلوك')) {
+    return isAr ? {
+      armure: 'حياكة إنترلوك مزدوجة الوجهين (Double Fonture)',
+      composition: '100% قطن ممشط معالج (مرسيريزيه)',
+      gsm: '240 - 280 غرام/م²',
+      appellationCommerciale: 'إنترلوك قطن ممشط فاخر ناعم الوجهين',
+      sourcingMA: 'إنترلوك قطن ممشط فاخر ناعم الوجهين',
+      traitement: 'معالجة حيوية (Bio-Polishing) + غسيل سيليكوني منعم'
+    } : {
+      armure: 'Maille Interlock Double Fonture',
+      composition: '100% Coton Peigné Mercerisé',
+      gsm: '240 - 280 GSM (g/m²)',
+      appellationCommerciale: 'Interlock Double Fonture Coton Peigné',
+      sourcingMA: 'Interlock Double Fonture Coton Peigné',
+      traitement: 'Finition Bio-Polishing + Lavage siliconé adoucissant'
+    };
+  }
+  if (f.includes('canvas') || f.includes('كانفاس') || f.includes('toile') || f.includes('twill') || f.includes('sergé')) {
+    return isAr ? {
+      armure: 'نسيج مبرد سيرجي / قماش كانفاس سميك',
+      composition: '100% قطن مقوى عالي المتانة',
+      gsm: '300 - 350 غرام/م²',
+      appellationCommerciale: 'كانفاس قطني صلب ومقاوم (قماش سميك)',
+      sourcingMA: 'كانفاس قطني صلب ومقاوم (قماش سميك)',
+      traitement: 'غسيل حجري (Stone Wash) + تثبيت الأبعاد ضد الانكماش'
+    } : {
+      armure: 'Sergé / Toile Canvas Lourde (Bâche)',
+      composition: '100% Coton Renforcé (Heavy Canvas)',
+      gsm: '300 - 350 GSM (g/m²)',
+      appellationCommerciale: 'Heavy Cotton Canvas (Toile Coton Renforcée)',
+      sourcingMA: 'Heavy Cotton Canvas (Toile Coton Renforcée)',
+      traitement: 'Stone Wash (Lavage à la pierre ponce) + Sanforisage'
+    };
+  }
+  if (f.includes('popeline') || f.includes('بوبلين') || f.includes('chemise')) {
+    return isAr ? {
+      armure: 'نسيج بوبلين قطن ممشط للقمصان',
+      composition: '100% قطن مصري / ممشط فاخر',
+      gsm: '125 - 145 غرام/م²',
+      appellationCommerciale: 'بوبلين قطن قمصان ناعم وممتاز',
+      sourcingMA: 'بوبلين قطن قمصان ناعم وممتاز',
+      traitement: 'معالجة مرسرة لإضفاء اللمعان + معالجة تسهيل الكيّ'
+    } : {
+      armure: 'Popeline de Coton Peigné Tissé-Teint',
+      composition: '100% Coton Peigné Égyptien',
+      gsm: '125 - 145 GSM (g/m²)',
+      appellationCommerciale: 'Popeline de Coton Peigné Haut de Gamme',
+      sourcingMA: 'Popeline de Coton Peigné Haut de Gamme',
+      traitement: 'Mercerisage + Finition Easy-Care (Repassage Facile)'
+    };
+  }
+  if (f.includes('denim') || f.includes('jean') || f.includes('جينز') || f.includes('دنيم')) {
+    return isAr ? {
+      armure: 'نسيج دنيم مبرد ثلاثي (جينز كلاسيكي 3/1)',
+      composition: '100% قطن مقوى عالي المقاومة (12.5 أونصة)',
+      gsm: '380 - 420 غرام/م² (12.5 أونصة)',
+      appellationCommerciale: 'قماش دنيم جينز أصيل 12.5 أونصة',
+      sourcingMA: 'قماش دنيم جينز أصيل 12.5 أونصة',
+      traitement: 'معالجة سانفوريز + غسيل أنزيمي لإبراز تأثيرات الجينز'
+    } : {
+      armure: 'Sergé Croisé Denim Coton (Armure Jean 3/1)',
+      composition: '100% Coton Renforcé (Heavy Denim 12.5oz)',
+      gsm: '380 - 420 GSM (12.5 oz)',
+      appellationCommerciale: 'Toile Denim 100% Coton Brut 12.5oz',
+      sourcingMA: 'Toile Denim 100% Coton Brut 12.5oz',
+      traitement: 'Sanforisage + Enzyme Wash & Moustaches Vintage'
+    };
+  }
+  // Fallback Jersey
+  return isAr ? {
+    armure: 'حياكة جيرسي مفردة قطن ممشط',
+    composition: '95% قطن ممشط · 5% إيلاسطان',
+    gsm: '220 - 250 غرام/م²',
+    appellationCommerciale: 'جيرسي قطن ممشط مطاطي ممتاز',
+    sourcingMA: 'جيرسي قطن ممشط مطاطي ممتاز',
+    traitement: 'صباغة تفاعلية ثابتة + غسيل أنزيمي منعم'
+  } : {
+    armure: 'Jersey Simple Fonture Coton Peigné',
+    composition: '95% Coton Peigné · 5% Élasthanne',
+    gsm: '220 - 250 GSM (g/m²)',
+    appellationCommerciale: 'Single Jersey Coton Peigné Stretch',
+    sourcingMA: 'Single Jersey Coton Peigné Stretch',
+    traitement: 'Teinture Réactive + Lavage aux enzymes adoucissant'
+  };
+}
+
 // ─── Rapport IA / Tech Pack Corporate Noir & Blanc ──────────────────────────────
 export function printRapportIA(analysis: any, image: string | null, isAr: boolean) {
   const company = loadCompanyProfile();
@@ -469,103 +782,21 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
   const rawCat = (analysis.category || analysis.modele || 'TECHPACK').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4) || 'MOD';
   const refCode = `BYA-TPK-${rawCat}-${year}-${String(Date.now()).slice(-4)}`;
   const dateStr = new Date().toLocaleDateString(isAr ? 'ar-MA' : 'fr-MA', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const season = new Date().getMonth() >= 2 && new Date().getMonth() <= 7 ? 'PRINTEMPS / ÉTÉ (S/S)' : 'AUTOMNE / HIVER (A/W)';
-
-  // Smart fabric parsing helper
-  const getTechnicalFabricSpecs = (fabricName: string) => {
-    const f = (fabricName || '').toLowerCase();
-    if (f.includes('côte') || f.includes('rib') || f.includes('كوت')) {
-      return {
-        armure: 'Côte Rib 1x1 / 2x2',
-        composition: '95% Coton Peigné · 5% Élasthanne (Lycra)',
-        gsm: '240 - 260 GSM (g/m²)',
-        appellationCommerciale: 'كوت ريب 1x1 ليكرا قطن ممشط (Côte Rib Knit)',
-        sourcingMA: 'كوت ريب 1x1 ليكرا قطن ممشط (Côte Rib Knit)',
-        traitement: 'Teinture en pièce (Garment Dye) + Lavage adoucissant anti-déformation'
-      };
-    }
-    if (f.includes('terry') || f.includes('bouclette') || f.includes('بوكليت') || f.includes('غير مقطن')) {
-      return {
-        armure: 'French Terry (Molleton Bouclette Non-Gratté)',
-        composition: '100% Coton Peigné (ou 90/10 Poly)',
-        gsm: '320 - 360 GSM (g/m²)',
-        appellationCommerciale: 'مولطون بوكليت غير مقطن (French Terry Coton)',
-        sourcingMA: 'مولطون بوكليت غير مقطن (French Terry Coton)',
-        traitement: 'Enzyme Wash (غسيل أنزيمي) + Teinture Réactive / Washed Vintage'
-      };
-    }
-    if (f.includes('gratté') || f.includes('مقطن') || f.includes('شتوي') || f.includes('fleece')) {
-      return {
-        armure: 'Molleton Lourd Gratté Intérieur (Brushed Fleece)',
-        composition: '100% Coton Peigné (ou 80/20 Coton/Poly)',
-        gsm: '340 - 380 GSM (g/m²)',
-        appellationCommerciale: 'مولطون شتوي مقطن 100% قطن (Brushed Fleece)',
-        sourcingMA: 'مولطون شتوي مقطن 100% قطن (Brushed Fleece)',
-        traitement: 'Grattage doux haute densité + Sanforisage anti-rétrécissement'
-      };
-    }
-    if (f.includes('interlock') || f.includes('انترلوك') || f.includes('إنترلوك')) {
-      return {
-        armure: 'Maille Interlock Double Fonture',
-        composition: '100% Coton Peigné Mercerisé',
-        gsm: '240 - 280 GSM (g/m²)',
-        appellationCommerciale: 'إنترلوك قطن ممشط فاخر (Interlock Double Fonture)',
-        sourcingMA: 'إنترلوك قطن ممشط فاخر (Interlock Double Fonture)',
-        traitement: 'Finition Bio-Polishing + Lavage siliconé'
-      };
-    }
-    if (f.includes('canvas') || f.includes('كانفاس') || f.includes('toile') || f.includes('twill') || f.includes('sergé')) {
-      return {
-        armure: 'Sergé / Toile Canvas Lourde',
-        composition: '100% Coton Renforcé (Heavy Canvas)',
-        gsm: '300 - 350 GSM (g/m²)',
-        appellationCommerciale: 'كانفاس قطني صلب ومقاوم (Heavy Cotton Canvas)',
-        sourcingMA: 'كانفاس قطني صلب ومقاوم (Heavy Cotton Canvas)',
-        traitement: 'Stone Wash (غسيل حجري) + Sanforisage'
-      };
-    }
-    if (f.includes('popeline') || f.includes('بوبلين') || f.includes('chemise')) {
-      return {
-        armure: 'Popeline de Coton Peigné',
-        composition: '100% Coton Égyptien / Peigné',
-        gsm: '125 - 145 GSM (g/m²)',
-        appellationCommerciale: 'بوبلين قطن قمصان فاخر (Popeline Coton Peigné)',
-        sourcingMA: 'بوبلين قطن قمصان فاخر (Popeline Coton Peigné)',
-        traitement: 'Mercerisage + Finition Easy-Care (repasse facile)'
-      };
-    }
-    if (f.includes('denim') || f.includes('jean') || f.includes('جينز') || f.includes('دنيم')) {
-      return {
-        armure: 'Sergé Croisé Denim Coton',
-        composition: '100% Coton Renforcé (Heavy Denim 12.5oz)',
-        gsm: '380 - 420 GSM (12.5 oz)',
-        appellationCommerciale: 'قماش دنيم جينز أصيل (Toile Denim Coton)',
-        sourcingMA: 'قماش دنيم جينز أصيل (Toile Denim Coton)',
-        traitement: 'Sanforisage + Stone Wash / Enzyme Wash'
-      };
-    }
-    // Default fallback high-standard knit
-    return {
-      armure: 'Jersey Coton Peigné Haut de Gamme',
-      composition: '95% Coton Peigné · 5% Élasthanne',
-      gsm: '220 - 250 GSM (g/m²)',
-      appellationCommerciale: 'جيرسي قطن ممشط ممتاز (Single Jersey Coton)',
-      sourcingMA: 'جيرسي قطن ممشط ممتاز (Single Jersey Coton)',
-      traitement: 'Teinture Réactive + Lavage aux enzymes'
-    };
-  };
+  const seasonFr = new Date().getMonth() >= 2 && new Date().getMonth() <= 7 ? 'PRINTEMPS / ÉTÉ (S/S)' : 'AUTOMNE / HIVER (A/W)';
+  const seasonAr = new Date().getMonth() >= 2 && new Date().getMonth() <= 7 ? 'ربيع / صيف (S/S)' : 'خريف / شتاء (A/W)';
+  const season = isAr ? seasonAr : seasonFr;
 
   // Build pieces list
   const pieces = (analysis.pieces && Array.isArray(analysis.pieces) && analysis.pieces.length > 0)
     ? analysis.pieces
     : [{
-        name: analysis.category || (isAr ? 'موديل رئيسي' : 'Modèle Principal'),
+        name: cleanCategoryTitle(analysis.category, isAr),
         consumption: analysis.consumption || '1.45m',
         fabricSuggested: analysis.fabricSuggested || 'Coton Peigné',
-        fit: analysis.fit || 'Coupe Régulière / Oversize',
-        complexity: analysis.complexity || 'Moyenne',
+        fit: analysis.fit || (isAr ? 'قصة مريحة قياسية' : 'Coupe Régulière / Oversize'),
+        complexity: analysis.complexity || (isAr ? 'متوسطة' : 'Moyenne'),
         costEstimate: analysis.costEstimate || '35 - 55 MAD',
-        components: analysis.components || ['Corps principal', 'Encolure / Col', 'Manches / Bas', 'Finitions'],
+        components: analysis.components || (isAr ? ['صدر أمامي', 'ظهر كامل', 'أكمام', 'تشطيبات نهائية'] : ['Corps principal', 'Encolure / Col', 'Manches / Bas', 'Finitions']),
         mesures: analysis.mesures || []
       }];
 
@@ -576,18 +807,18 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
   }, 0).toFixed(2) + 'm');
 
   const globalCost = analysis.costEstimate || '—';
-  const globalComplexity = analysis.complexity || (isAr ? 'متوسطة' : 'Moyenne');
-  const globalFit = analysis.fit || pieces[0]?.fit || 'Regular / Oversize';
+  const globalComplexity = isAr ? cleanLabel(analysis.complexity || 'متوسطة', true) : cleanLabel(analysis.complexity || 'Moyenne', false);
+  const globalFit = isAr ? cleanLabel(analysis.fit || pieces[0]?.fit || 'قصة قياسية كاجوال', true) : cleanLabel(analysis.fit || pieces[0]?.fit || 'Regular / Oversize', false);
 
   // Gamme de montage operations
   const gammeOperations: any[] = (analysis.gammeMontage && Array.isArray(analysis.gammeMontage) && analysis.gammeMontage.length > 0)
     ? analysis.gammeMontage
     : [
-        { nomAr: 'فصالة القماش بالمطلوة الصناعية', nomFr: 'Coupe Matelas & Préparation Paquets', machine: 'Table de Coupe / Ciseaux', tempsMin: 0.8 },
+        { nomAr: 'فصالة القماش بالمطلوة الصناعية وتحضير الرزم', nomFr: 'Coupe Matelas & Préparation Paquets', machine: 'Table de Coupe / Ciseaux', tempsMin: 0.8 },
         { nomAr: 'سرفلة وتجميع الأطراف والكتفين', nomFr: 'Assemblage & Surfilage Épaules/Côtés', machine: 'Surjeteuse 4 Fils', tempsMin: 1.8 },
-        { nomAr: 'خياطة وتثبيت الياقة / الأكمام (بيكوز)', nomFr: 'Montage Col & Encolure (Piqueuse)', machine: 'Piqueuse Plate', tempsMin: 2.2 },
+        { nomAr: 'خياطة وتثبيت الياقة والأكمام بالبيكوز', nomFr: 'Montage Col & Encolure (Piqueuse)', machine: 'Piqueuse Plate', tempsMin: 2.2 },
         { nomAr: 'ثني الأطراف والأسفل بالروكوفروز', nomFr: 'Ourlet Bas & Manches (Recouvreuse)', machine: 'Recouvreuse', tempsMin: 1.5 },
-        { nomAr: 'كيّ بالبخار تحت الضغط وفحص الجودة', nomFr: 'Repassage Vapeur, Épluchage & Contrôle Final', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 1.2 }
+        { nomAr: 'كيّ بالبخار تحت الضغط وفحص الجودة النهائي', nomFr: 'Repassage Vapeur, Épluchage & Contrôle Final', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 1.2 }
       ];
 
   const totalSamMin = Number(gammeOperations.reduce((acc, op) => acc + (Number(op.tempsMin) || 0), 0).toFixed(2));
@@ -794,28 +1025,28 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
             ${company.name || 'BEYA CREATIVE'}
           </div>
           <div style="font-size: 7.5px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; color: #000;">
-            INGÉNIERIE TEXTILE & CONFECTION INDUSTRIELLE · CASABLANCA MAROC
+            ${isAr ? 'هندسة النسيج والخياطة الصناعية · الدار البيضاء المغرب' : 'INGÉNIERIE TEXTILE & CONFECTION INDUSTRIELLE · CASABLANCA MAROC'}
           </div>
           <div style="font-size: 7px; color: #444; margin-top: 2px;">
-            Atelier certifié B2B · Bureau d'études, Patronage & Fiches Techniques
+            ${isAr ? 'ورشة معتمدة للماركات · مكتب دراسات، باترون وبطاقات تقنية صناعية' : "Atelier certifié B2B · Bureau d'études, Patronage & Fiches Techniques"}
           </div>
         </td>
         <td style="width: 25%; text-align: center; vertical-align: middle;">
           <div style="font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">
-            DOSSIER TECHNIQUE
+            ${isAr ? 'الملف التقني المعتمد' : 'DOSSIER TECHNIQUE'}
           </div>
           <div style="font-size: 8px; font-weight: 800; margin-top: 2px;">
-            TECH PACK OFFICIEL
+            ${isAr ? 'TECH PACK رسمي للإنتاج' : 'TECH PACK OFFICIEL'}
           </div>
           <div class="barcode-block" style="margin-top: 3px;">
             ||| | |||| | ||| | ||
           </div>
         </td>
         <td style="width: 30%; font-size: 7.5px; padding: 4px;">
-          <div><strong>RÉFÉRENCE :</strong> <span class="font-mono font-bold">${refCode}</span></div>
-          <div><strong>DATE D'ÉMISSION :</strong> <span class="font-mono">${dateStr}</span></div>
-          <div><strong>SAISON :</strong> ${season}</div>
-          <div><strong>STATUT :</strong> <span class="font-bold">APPROUVÉ PRODUCTION</span></div>
+          <div><strong>${isAr ? 'المرجع :' : 'RÉFÉRENCE :'}</strong> <span class="font-mono font-bold">${refCode}</span></div>
+          <div><strong>${isAr ? 'تاريخ الإصدار :' : "DATE D'ÉMISSION :"}</strong> <span class="font-mono">${dateStr}</span></div>
+          <div><strong>${isAr ? 'الموسم :' : 'SAISON :'}</strong> ${season}</div>
+          <div><strong>${isAr ? 'الحالة :' : 'STATUT :'}</strong> <span class="font-bold">${isAr ? 'مصادق عليه للإنتاج' : 'APPROUVÉ PRODUCTION'}</span></div>
         </td>
       </tr>
     </table>
@@ -826,24 +1057,24 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
         ${image ? `
         <td class="photo-cell" rowspan="2">
           <div style="font-size: 7px; font-weight: 800; text-transform: uppercase; background: #000; color: #fff; padding: 1px; margin-bottom: 3px;">
-            VUE PROTOTYPE / PACKSHOT CONFORME
+            ${isAr ? 'صورة الموديل / العينة المعتمدة' : 'VUE PROTOTYPE / PACKSHOT CONFORME'}
           </div>
           <img src="${image}" alt="Modèle" />
           <div style="font-size: 6.5px; color: #555; margin-top: 2px; font-family: monospace;">
-            ECH: 1/1 · CONTRÔLE SILHOUETTE
+            ${isAr ? 'مراقبة التصميم والشكل الهندسي 1/1' : 'ECH: 1/1 · CONTRÔLE SILHOUETTE'}
           </div>
         </td>
         ` : ''}
         <td style="vertical-align: top; padding: 0;">
           <div class="section-title" style="margin-top: 0;">
-            <span>1. IDENTIFICATION & SPÉCIFICATIONS DU MODÈLE</span>
-            <span class="font-mono">${pieces.length} PIÈCE(S)</span>
+            <span>${isAr ? '1. مواصفات وتحديد الموديل' : '1. IDENTIFICATION & SPÉCIFICATIONS DU MODÈLE'}</span>
+            <span class="font-mono">${isAr ? `${pieces.length} قطعة` : `${pieces.length} PIÈCE(S)`}</span>
           </div>
           <table style="margin-bottom: 0;">
             <tr>
               <th style="width: 28%;">${isAr ? 'اسم وصنف الموديل' : 'Désignation & Catégorie'}</th>
-              <td class="font-bold" style="font-size: 9.5px;">${analysis.category || pieces[0]?.name || 'Modèle de Confection'}</td>
-              <th style="width: 22%;">${isAr ? 'القصة / Fit' : 'Coupe & Silhouette'}</th>
+              <td class="font-bold" style="font-size: 9.5px;">${cleanCategoryTitle(analysis.category || pieces[0]?.name, isAr)}</td>
+              <th style="width: 22%;">${isAr ? 'القصة والشكل الهيكلي' : 'Coupe & Silhouette'}</th>
               <td>${globalFit}</td>
             </tr>
             <tr>
@@ -855,14 +1086,14 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
             <tr>
               <th>${isAr ? 'مكونات الباترون الرئيسية' : 'Composants du Patron'}</th>
               <td colspan="3">
-                ${pieces.map((p: any) => `<strong>${p.name}:</strong> ${(p.components || []).join(' · ') || 'Panneaux devant, dos, manches, finitions'}`).join('<br/>')}
+                ${pieces.map((p: any) => `<strong>${cleanPieceName(p.name, isAr)}:</strong> ${(p.components || []).map((c: string) => cleanLabel(c, isAr)).join(' · ') || (isAr ? 'صدر، ظهر، أكمام، تشطيبات' : 'Panneaux devant, dos, manches, finitions')}`).join('<br/>')}
               </td>
             </tr>
             <tr>
-              <th>${isAr ? 'تقدير تكلفة الصنع (Façon)' : 'Coût Façon Estimé'}</th>
+              <th>${isAr ? 'تقدير تكلفة الصنع (الخدمة)' : 'Coût Façon Estimé'}</th>
               <td class="font-bold font-mono">${globalCost}</td>
               <th>${isAr ? 'التصنيف الصناعي' : 'Segment Marché'}</th>
-              <td>Prêt-à-porter / Streetwear B2B</td>
+              <td>${isAr ? 'ملابس جاهزة / ستريتوير B2B' : 'Prêt-à-porter / Streetwear B2B'}</td>
             </tr>
           </table>
         </td>
@@ -871,8 +1102,8 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 
     <!-- 3. NOMENCLATURE DES MATIÈRES & SOURCING PIÈCE PAR PIÈCE -->
     <div class="section-title">
-      <span>2. NOMENCLATURE TEXTILE & SOURCING (PIÈCE PAR PIÈCE)</span>
-      <span>SPÉCIFICATIONS TEXTILES</span>
+      <span>${isAr ? '2. جدول الأقمشة والمواد الأولية (لكل قطعة)' : '2. NOMENCLATURE TEXTILE & SOURCING (PIÈCE PAR PIÈCE)'}</span>
+      <span>${isAr ? 'المواصفات التقنية للأقمشة' : 'SPÉCIFICATIONS TEXTILES'}</span>
     </div>
     <table>
       <thead>
@@ -886,11 +1117,11 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
       </thead>
       <tbody>
         ${pieces.map((p: any) => {
-          const spec = getTechnicalFabricSpecs(p.fabricSuggested || analysis.fabricSuggested || '');
+          const spec = getTechnicalFabricSpecs(p.fabricSuggested || analysis.fabricSuggested || '', isAr);
           return `
           <tr>
-            <td class="font-bold uppercase">${p.name}</td>
-            <td><strong>${p.fabricSuggested || spec.armure}</strong></td>
+            <td class="font-bold uppercase">${cleanPieceName(p.name, isAr)}</td>
+            <td><strong>${cleanLabel(p.fabricSuggested || spec.armure, isAr)}</strong></td>
             <td><span class="font-mono">${spec.composition}</span><br/><strong class="font-mono">${spec.gsm}</strong></td>
             <td>${spec.appellationCommerciale || spec.sourcingMA}</td>
             <td class="text-center font-bold font-mono">${p.consumption || '1.30m'}</td>
@@ -902,16 +1133,26 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 
     <!-- 4. FOURNITURES, MERCERIE & TRAITEMENTS DÉLAVAGE -->
     <div class="section-title">
-      <span>3. FOURNITURES, MERCERIE & TRAITEMENTS DE FINITION</span>
-      <span>BOM / TRIMS & FINISHES</span>
+      <span>${isAr ? '3. لوازم الخياطة والمعالجات الصناعية' : '3. FOURNITURES, MERCERIE & TRAITEMENTS DE FINITION'}</span>
+      <span>${isAr ? 'قائمة المستلزمات والإنهاء (BOM)' : 'BOM / TRIMS & FINISHES'}</span>
     </div>
     <table>
       <tr>
-        <th style="width: 50%;">FOURNITURES & MERCERIE TECHNIQUE</th>
-        <th style="width: 50%;">TRAITEMENT INDUSTRIEL & TEINTURE / DÉLAVAGE</th>
+        <th style="width: 50%;">${isAr ? 'لوازم الخياطة والإكسسوارات التقنية' : 'FOURNITURES & MERCERIE TECHNIQUE'}</th>
+        <th style="width: 50%;">${isAr ? 'المعالجة الصناعية والصباغة والغسيل' : 'TRAITEMENT INDUSTRIEL & TEINTURE / DÉLAVAGE'}</th>
       </tr>
       <tr>
         <td style="vertical-align: top; font-size: 7.5px;">
+          ${isAr ? `
+          <ul style="padding-right: 14px; margin: 0; line-height: 1.45;">
+            <li><strong>خيط الخياطة :</strong> بوليستر 120/2 عالي المقاومة متناسق اللون + خيط موس 150D للسورجي</li>
+            <li><strong>حبل الشد :</strong> حبل قطني أنبوبي ممشط مع رؤوس معدنية مثبتة (أغليتس)</li>
+            <li><strong>حلقات معدنية (أويي) :</strong> قطر 8 مم غير قابلة للصدأ مع تدعيم فازلين حراري</li>
+            <li><strong>لاستيك الخصر :</strong> شريط مطاطي منسوج ومقوى 4.5 سم (ثبات عالي بعد الغسيل)</li>
+            <li><strong>العلامات والبطاقات :</strong> بطاقة علامة منسوجة عالية الدقة + بطاقة المقاس والتركيبة القانونية</li>
+            <li><strong>التغليف النهائي :</strong> كيس بولي باغ شفاف فردي مثقب + ملصق المقاس والباركود</li>
+          </ul>
+          ` : `
           <ul style="padding-left: 14px; margin: 0; line-height: 1.45;">
             <li><strong>Fil à coudre :</strong> Polyester 120/2 haute ténacité ton-sur-ton + fil mousse 150D pour surjeteuse</li>
             <li><strong>Accessoires de serrage :</strong> Cordon tubulaire coton peigné avec embouts métalliques sertis (aglets)</li>
@@ -920,34 +1161,45 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
             <li><strong>Étiquetage :</strong> Étiquette griffe tissée haute définition + étiquette taille & composition légale</li>
             <li><strong>Packaging :</strong> Polybag individuel transparent avec micro-perforations + sticker taille</li>
           </ul>
+          `}
         </td>
         <td style="vertical-align: top; font-size: 7.5px;">
+          ${isAr ? `
+          <ul style="padding-right: 14px; margin: 0; line-height: 1.45;">
+            <li><strong>نوع الصباغة :</strong> صباغة القطع الجاهزة (Garment Dye) أو صباغة تفاعلية في الحوض</li>
+            <li><strong>الغسيل الصناعي :</strong> غسيل أنزيمي منعم لإعطاء ملمس مخملي ناعم وفاخر</li>
+            <li><strong>تأثير اللون :</strong> تدرجات خفيفة متجانسة على الخياطات والياقة والأطراف</li>
+            <li><strong>ثبات القياسات :</strong> معالجة سانفوريز ضد الانكماش (نسبة انكماش متبقية أقل من 2.5%)</li>
+            <li><strong>الكيّ النهائي :</strong> كيّ بالبخار تحت الضغط على طاولة شفط مع قالب مراقبة الأبعاد</li>
+          </ul>
+          ` : `
           <ul style="padding-left: 14px; margin: 0; line-height: 1.45;">
             <li><strong>Type de Teinture :</strong> Garment Dye (teinture en pièce confectionnée) ou Teinture Réactive cuve</li>
-            <li><strong>Lavage Industriel :</strong> Enzyme Wash (غسيل أنزيمي) pour assouplissement et toucher velouté</li>
+            <li><strong>Lavage Industriel :</strong> Enzyme Wash pour assouplissement et toucher velouté</li>
             <li><strong>Effet Décoloration :</strong> Nuances légères sur les coutures, encolure et surpiqûres</li>
             <li><strong>Stabilité Dimensionnelle :</strong> Sanforisage préalable (taux de rétrécissement résiduel &lt; 2.5%)</li>
             <li><strong>Repassage :</strong> Repassage vapeur sous presse aspirante avec gabarit de contrôle dimensionnel</li>
           </ul>
+          `}
         </td>
       </tr>
     </table>
 
     <!-- 5. BARÈME DES MENSURATIONS DE PRODUCTION (GRADATION S À XXL) -->
     <div class="section-title">
-      <span>4. BARÈME DES MESURES DE PRODUCTION (GRADATION S À XXL en cm)</span>
-      <span>TOLÉRANCE CONFECTION : ± 1.0 CM</span>
+      <span>${isAr ? '4. جدول القياسات وتدرج المقاسات (من S إلى XXL بالسنتيمتر)' : '4. BARÈME DES MESURES DE PRODUCTION (GRADATION S À XXL en cm)'}</span>
+      <span>${isAr ? 'نسبة التفاوت المسموح بها : ± 1.0 سم' : 'TOLÉRANCE CONFECTION : ± 1.0 CM'}</span>
     </div>
     <table>
       <thead>
         <tr>
-          <th style="text-align: left; width: 40%;">${isAr ? 'نقطة القياس (Point de Mesure)' : 'Point de Mesure / Gradation'}</th>
+          <th style="text-align: ${align}; width: 40%;">${isAr ? 'نقطة القياس / المقاس' : 'Point de Mesure / Gradation'}</th>
           <th style="width: 10%; text-align: center;">S</th>
           <th style="width: 10%; text-align: center;">M</th>
           <th style="width: 10%; text-align: center;">L</th>
           <th style="width: 10%; text-align: center;">XL</th>
           <th style="width: 10%; text-align: center;">XXL</th>
-          <th style="width: 10%; text-align: center;">TOL.</th>
+          <th style="width: 10%; text-align: center;">${isAr ? 'التفاوت' : 'TOL.'}</th>
         </tr>
       </thead>
       <tbody>
@@ -965,32 +1217,33 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
                 ? pc.mesures
                 : (isPants
                     ? [
-                        { nom: 'Tour de Taille / Ceinture / الخصر المطاطي', valeurs: { S: 68, M: 72, L: 76, XL: 80, XXL: 84 } },
-                        { nom: 'Tour de Bassin / Hanches / الورك والحوض', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
-                        { nom: 'Longueur Totale / الطول الخارجي للسروال', valeurs: { S: 98, M: 100, L: 102, XL: 104, XXL: 106 } },
-                        { nom: 'Tour de Cuisse / محيط الفخذ', valeurs: { S: 54, M: 56, L: 58, XL: 60, XXL: 62 } },
-                        { nom: 'Largeur Bas de Jambe / عرض أسفل الساق', valeurs: { S: 26, M: 27, L: 28, XL: 29, XXL: 30 } }
+                        { nom: isAr ? 'محيط الخصر (المطاطي)' : 'Tour de Taille / Ceinture', valeurs: { S: 68, M: 72, L: 76, XL: 80, XXL: 84 } },
+                        { nom: isAr ? 'محيط الحوض والورك' : 'Tour de Bassin / Hanches', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
+                        { nom: isAr ? 'الطول الإجمالي للسروال' : 'Longueur Totale Pantalon', valeurs: { S: 98, M: 100, L: 102, XL: 104, XXL: 106 } },
+                        { nom: isAr ? 'محيط الفخذ' : 'Tour de Cuisse', valeurs: { S: 54, M: 56, L: 58, XL: 60, XXL: 62 } },
+                        { nom: isAr ? 'عرض أسفل الساق' : 'Largeur Bas de Jambe', valeurs: { S: 26, M: 27, L: 28, XL: 29, XXL: 30 } }
                       ]
                     : [
-                        { nom: 'Tour de Poitrine / محيط الصدر', valeurs: { S: 84, M: 88, L: 94, XL: 100, XXL: 106 } },
-                        { nom: 'Carrure Épaules / عرض الكتفين', valeurs: { S: 36, M: 38, L: 40, XL: 42, XXL: 44 } },
-                        { nom: 'Tour de Taille / محيط الخصر', valeurs: { S: 66, M: 70, L: 76, XL: 82, XXL: 88 } },
-                        { nom: 'Longueur Totale / الطول الإجمالي للتوب', valeurs: { S: 44, M: 46, L: 48, XL: 50, XXL: 52 } },
-                        { nom: 'Longueur Manches / طول الكم', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } }
+                        { nom: isAr ? 'محيط الصدر' : 'Tour de Poitrine', valeurs: { S: 84, M: 88, L: 94, XL: 100, XXL: 106 } },
+                        { nom: isAr ? 'عرض الكتفين' : 'Carrure Épaules', valeurs: { S: 36, M: 38, L: 40, XL: 42, XXL: 44 } },
+                        { nom: isAr ? 'محيط الخصر' : 'Tour de Taille', valeurs: { S: 66, M: 70, L: 76, XL: 82, XXL: 88 } },
+                        { nom: isAr ? 'الطول الإجمالي للقطعة' : 'Longueur Totale Corps', valeurs: { S: 44, M: 46, L: 48, XL: 50, XXL: 52 } },
+                        { nom: isAr ? 'طول الأكمام' : 'Longueur Manches', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } }
                       ]);
 
               const pieceIcon = isPants ? '👖' : '👕';
+              const pieceTitle = cleanPieceName(pc.name, isAr);
               const subHeader = `
                 <tr style="background: #e2e8f0;">
                   <td colspan="7" style="font-weight: 900; font-size: 8.5px; text-transform: uppercase; padding: 4.5px 6px; letter-spacing: 0.5px;">
-                    ${pieceIcon} PIÈCE ${pcIdx + 1} : ${pc.name}
+                    ${pieceIcon} ${isAr ? `القطعة ${pcIdx + 1} : ${pieceTitle}` : `PIÈCE ${pcIdx + 1} : ${pieceTitle}`}
                   </td>
                 </tr>
               `;
 
               const rows = pMesures.map((m: any) => `
                 <tr>
-                  <td class="font-bold">${m.nom}</td>
+                  <td class="font-bold">${cleanMeasurementName(m.nom, isAr)}</td>
                   <td class="text-center font-mono">${m.valeurs?.S ?? '—'}</td>
                   <td class="text-center font-mono">${m.valeurs?.M ?? '—'}</td>
                   <td class="text-center font-mono">${m.valeurs?.L ?? '—'}</td>
@@ -1008,16 +1261,16 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
           const targetMesures = pieces[0]?.mesures && pieces[0]?.mesures.length > 0
             ? pieces[0].mesures
             : [
-                { nom: 'Tour de Poitrine / الصدر', valeurs: { S: 88, M: 94, L: 100, XL: 106, XXL: 112 } },
-                { nom: 'Carrure Épaules / الكتف', valeurs: { S: 38, M: 40, L: 42, XL: 44, XXL: 46 } },
-                { nom: 'Longueur Totale Corps / الطول', valeurs: { S: 46, M: 48, L: 50, XL: 52, XXL: 54 } },
-                { nom: 'Longueur Manche / طول الكم', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } },
-                { nom: 'Tour de Taille / Ceinture / الخصر', valeurs: { S: 68, M: 72, L: 76, XL: 80, XXL: 84 } }
+                { nom: isAr ? 'محيط الصدر' : 'Tour de Poitrine', valeurs: { S: 88, M: 94, L: 100, XL: 106, XXL: 112 } },
+                { nom: isAr ? 'عرض الكتفين' : 'Carrure Épaules', valeurs: { S: 38, M: 40, L: 42, XL: 44, XXL: 46 } },
+                { nom: isAr ? 'الطول الإجمالي للقطعة' : 'Longueur Totale Corps', valeurs: { S: 46, M: 48, L: 50, XL: 52, XXL: 54 } },
+                { nom: isAr ? 'طول الأكمام' : 'Longueur Manches', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } },
+                { nom: isAr ? 'محيط الخصر (المطاطي)' : 'Tour de Taille / Ceinture', valeurs: { S: 68, M: 72, L: 76, XL: 80, XXL: 84 } }
               ];
           
           return targetMesures.map((m: any) => `
             <tr>
-              <td class="font-bold">${m.nom}</td>
+              <td class="font-bold">${cleanMeasurementName(m.nom, isAr)}</td>
               <td class="text-center font-mono">${m.valeurs?.S ?? '—'}</td>
               <td class="text-center font-mono">${m.valeurs?.M ?? '—'}</td>
               <td class="text-center font-mono">${m.valeurs?.L ?? '—'}</td>
@@ -1032,62 +1285,86 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 
     <!-- 6. LA GAMME DE MONTAGE & TEMPS OPÉRATOIRE (SAM) -->
     <div class="section-title">
-      <span>5. GAMME DE MONTAGE OPÉRATOIRE & MACHINES INDUSTRIELLES</span>
-      <span class="font-mono">TEMPS TOTAL ALLOUÉ (SAM) : ${totalSamMin} MIN (${totalSamSec} SEC)</span>
+      <span>${isAr ? '5. تسلسل مراحل الخياطة الصناعية والآلات' : '5. GAMME DE MONTAGE OPÉRATOIRE & MACHINES INDUSTRIELLES'}</span>
+      <span class="font-mono">${isAr ? `الوقت الإجمالي المخصص (SAM) : ${totalSamMin} دقيقة (${totalSamSec} ثانية)` : `TEMPS TOTAL ALLOUÉ (SAM) : ${totalSamMin} MIN (${totalSamSec} SEC)`}</span>
     </div>
     <table>
       <thead>
         <tr>
-          <th style="width: 6%; text-align: center;">N°</th>
-          <th style="width: 44%; text-align: left;">Opération de Confection</th>
-          <th style="width: 32%;">Machine Industrielle Allouée</th>
-          <th style="width: 18%; text-align: center;">Temps (SAM Min)</th>
+          <th style="width: 6%; text-align: center;">${isAr ? 'الرقم' : 'N°'}</th>
+          <th style="width: 44%; text-align: ${align};">${isAr ? 'مرحلة الخياطة والتشغيل' : 'Opération de Confection'}</th>
+          <th style="width: 32%;">${isAr ? 'الآلة الصناعية المستخدمة' : 'Machine Industrielle Allouée'}</th>
+          <th style="width: 18%; text-align: center;">${isAr ? 'الوقت (بالدقيقة)' : 'Temps (SAM Min)'}</th>
         </tr>
       </thead>
       <tbody>
-        ${gammeOperations.map((op: any, oIdx: number) => `
+        ${gammeOperations.map((op: any, oIdx: number) => {
+          const cleanOp = cleanOperation(op, isAr);
+          return `
           <tr>
             <td class="text-center font-mono font-bold">${oIdx + 1}</td>
-            <td><strong>${op.nomFr || op.nomAr}</strong> ${op.nomAr ? `<span style="color:#444; font-size:7px;">(${op.nomAr})</span>` : ''}</td>
-            <td>${op.machine || 'Piqueuse Plate'}</td>
+            <td><strong>${cleanOp.nom}</strong></td>
+            <td>${cleanOp.machine}</td>
             <td class="text-center font-mono font-bold">${Number(op.tempsMin || 1.0).toFixed(2)} min</td>
           </tr>
-        `).join('')}
+          `;
+        }).join('')}
       </tbody>
     </table>
 
     <!-- 7. CHIFFRAGE DE REVIENT ESTIMATIF (3 NIVEAUX QUALITÉ) -->
     <div class="section-title">
-      <span>6. GRILLE DE CHIFFRAGE DE REVIENT INDUSTRIEL (B2B)</span>
-      <span>3 NIVEAUX DE QUALITÉ</span>
+      <span>${isAr ? '6. شبكة تقدير تكلفة الإنتاج وسعر التكلفة الصناعي (B2B)' : '6. GRILLE DE CHIFFRAGE DE REVIENT INDUSTRIEL (B2B)'}</span>
+      <span>${isAr ? '3 مستويات جودة للمنتج' : '3 NIVEAUX DE QUALITÉ'}</span>
     </div>
     <table>
       <thead>
         <tr>
-          <th style="width: 33%;">1. HAUT DE GAMME (MZIANA)</th>
-          <th style="width: 33%;">2. STANDARD COMMERCIAL (NORMAL)</th>
-          <th style="width: 34%;">3. ÉCONOMIQUE (FAIBLE)</th>
+          <th style="width: 33%;">${isAr ? '1. جودة عالية وممتازة (PREMIUM)' : '1. HAUT DE GAMME (PREMIUM)'}</th>
+          <th style="width: 33%;">${isAr ? '2. جودة تجارية قياسية (STANDARD)' : '2. STANDARD COMMERCIAL (MOYEN)'}</th>
+          <th style="width: 34%;">${isAr ? '3. جودة اقتصادية (ÉCONOMIQUE)' : '3. ÉCONOMIQUE'}</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td style="font-size: 7.5px;">
+            ${isAr ? `
+            • قطن ممشط مرسيريزيه بوزن ثقيل وفاخر<br/>
+            • تشطيبات احترافية، خيط موس، بطاقات منسوجة فائقة الدقة<br/>
+            • <strong>سعر التكلفة التقديري : 65 - 85 درهم</strong><br/>
+            • سعر بيع الجملة المقترح : 120 - 150 درهم
+            ` : `
             • Coton peigné mercerisé lourd<br/>
-            • Finitions premium, fil mousse, étiquettes HD<br/>
+            • Finitions premium, fil mousse, étiquettes tissées HD<br/>
             • <strong>Coût de revient estimé : 65 - 85 MAD</strong><br/>
             • Prix vente gros suggéré : 120 - 150 MAD
+            `}
           </td>
           <td style="font-size: 7.5px;">
+            ${isAr ? `
+            • قطن تجاري قياسي ممشط كلاسيكي<br/>
+            • خياطة وتجميع متقن في ورشة صناعية معتمدة<br/>
+            • <strong>سعر التكلفة التقديري : 45 - 60 درهم</strong><br/>
+            • سعر بيع الجملة المقترح : 85 - 110 درهم
+            ` : `
             • Coton standard cardé / peigné classique<br/>
-            • Assemblage régulier atelier B2B<br/>
+            • Assemblage régulier atelier B2B conforme<br/>
             • <strong>Coût de revient estimé : 45 - 60 MAD</strong><br/>
             • Prix vente gros suggéré : 85 - 110 MAD
+            `}
           </td>
           <td style="font-size: 7.5px;">
-            • Poly-coton ou maille légère économique<br/>
-            • Façon rapide sans délavage spécial<br/>
+            ${isAr ? `
+            • نسيج بولي-قطن خفيف واقتصادي<br/>
+            • إنتاج سريع بدون معالجات غسيل خاصة<br/>
+            • <strong>سعر التكلفة التقديري : 32 - 42 درهم</strong><br/>
+            • سعر بيع الجملة المقترح : 60 - 75 درهم
+            ` : `
+            • Maille poly-coton légère économique<br/>
+            • Confection rapide sans lavage spécial<br/>
             • <strong>Coût de revient estimé : 32 - 42 MAD</strong><br/>
             • Prix vente gros suggéré : 60 - 75 MAD
+            `}
           </td>
         </tr>
       </tbody>
@@ -1095,30 +1372,30 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 
     <!-- 8. OFFICIAL SIGN-OFF & APPROBATIONS -->
     <div class="section-title" style="margin-top: 6px;">
-      <span>7. APPROBATIONS & VISAS OFFICIELS DE LANCEMENT EN CONFECTION</span>
-      <span>BON POUR PRODUCTION</span>
+      <span>${isAr ? '7. المصادقة والتأشيرات الرسمية لإطلاق الإنتاج' : '7. APPROBATIONS & VISAS OFFICIELS DE LANCEMENT EN CONFECTION'}</span>
+      <span>${isAr ? 'صالح للإنتاج (BON POUR PRODUCTION)' : 'BON POUR PRODUCTION'}</span>
     </div>
     <table style="margin-bottom: 4px;">
       <tr>
         <td style="width: 33.33%; padding: 0;">
           <div class="sign-box">
-            <div class="sign-label">VISA MODÉLISTE / BUREAU D'ÉTUDES</div>
-            <div class="sign-stamp-area">Emplacement Cachet & Signature</div>
-            <div style="font-size: 7px;">Date : ______ / ______ / 2026</div>
+            <div class="sign-label">${isAr ? 'تأشيرة الموديلست / مكتب الدراسات' : "VISA MODÉLISTE / BUREAU D'ÉTUDES"}</div>
+            <div class="sign-stamp-area">${isAr ? 'مكان الختم والتوقيع الرسمي' : 'Emplacement Cachet & Signature'}</div>
+            <div style="font-size: 7px;">${isAr ? 'التاريخ :' : 'Date :'} ______ / ______ / ${year}</div>
           </div>
         </td>
         <td style="width: 33.33%; padding: 0;">
           <div class="sign-box">
-            <div class="sign-label">VISA CHEF D'ATELIER & PRODUCTION</div>
-            <div class="sign-stamp-area">Conformité Montage & Coupe</div>
-            <div style="font-size: 7px;">Date : ______ / ______ / 2026</div>
+            <div class="sign-label">${isAr ? 'تأشيرة رئيس الورشة والإنتاج' : "VISA CHEF D'ATELIER & PRODUCTION"}</div>
+            <div class="sign-stamp-area">${isAr ? 'مطابقة الفصالة والخياطة الصناعية' : 'Conformité Montage & Coupe'}</div>
+            <div style="font-size: 7px;">${isAr ? 'التاريخ :' : 'Date :'} ______ / ______ / ${year}</div>
           </div>
         </td>
         <td style="width: 33.33%; padding: 0;">
           <div class="sign-box">
-            <div class="sign-label">BON POUR ACCORD MARQUE / CLIENT</div>
-            <div class="sign-stamp-area">Bon pour Accord & Validation Échantillon</div>
-            <div style="font-size: 7px;">Nom & Signature : ___________________</div>
+            <div class="sign-label">${isAr ? 'موافقة العلامة التجارية / الزبون' : 'BON POUR ACCORD MARQUE / CLIENT'}</div>
+            <div class="sign-stamp-area">${isAr ? 'الموافقة النهائية ومصادقة العينة الأولية' : 'Bon pour Accord & Validation Échantillon'}</div>
+            <div style="font-size: 7px;">${isAr ? 'الاسم والتوقيع :' : 'Nom & Signature :'} ___________________</div>
           </div>
         </td>
       </tr>
@@ -1126,7 +1403,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 
     <!-- 9. FOOTER VERIFICATION -->
     <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #000; padding-top: 4px; font-size: 7px; text-transform: uppercase;">
-      <div>DOCUMENT INDUSTRIEL CONFIDENTIEL · SYSTÈME DE GESTION DE CONFECTION BEYA CREATIVE MAROC</div>
+      <div>${isAr ? 'وثيقة صناعية سرية · نظام إدارة وتطوير الخياطة الصناعية BEYA CREATIVE MAROC' : 'DOCUMENT INDUSTRIEL CONFIDENTIEL · SYSTÈME DE GESTION DE CONFECTION BEYA CREATIVE MAROC'}</div>
       <div class="font-mono font-bold">*VERIFIED-BYA-${refCode}*</div>
     </div>
 

@@ -505,9 +505,10 @@ export default function AIModelsLibrary() {
               <div className="p-4 sm:p-6 overflow-y-auto space-y-2.5 flex-1">
                 {gamme.postes.map((p, idx) => {
                   const sec = Math.round((p.tempsMin || 0) * 60);
-                  const isPiqueuse = p.machine.toLowerCase().includes('piqueuse');
-                  const isSurjet = p.machine.toLowerCase().includes('surjet');
-                  const isRecouvreuse = p.machine.toLowerCase().includes('recouvr') || p.machine.toLowerCase().includes('ourle');
+                  const mStr = String(p.machine || '').toLowerCase();
+                  const isPiqueuse = mStr.includes('piqueuse');
+                  const isSurjet = mStr.includes('surjet');
+                  const isRecouvreuse = mStr.includes('recouvr') || mStr.includes('ourle');
 
                   const badgeColor = isPiqueuse
                     ? 'bg-blue-50 text-blue-700 border-blue-200'

@@ -5,7 +5,7 @@ import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch } from '../types';
 import { printElement } from '../utils/pdf';
-import { printRapportIA } from '../utils/print';
+import { printRapportIA, cleanMeasurementName, cleanPieceName, cleanCategoryTitle, cleanLabel } from '../utils/print';
 import { PosteTravail, getGarmentTechnicalBreakdown, parseGammeText } from '../lib/atelierAi';
 import { ClientQuoteModal } from '../components/ClientQuoteModal';
 
@@ -473,61 +473,62 @@ function buildRapportText(result: any, arLang: boolean): string {
   let chatMsg = '';
   if (arLang) {
     chatMsg = `═══════════════════════════════════════════════════════════\n`;
-    chatMsg += `DOSSIER TECHNIQUE & FICHE D'INGÉNIERIE (BEYA CREATIVE)\n`;
+    chatMsg += `الملف التقني وبطاقة الهندسة الصناعية (BEYA CREATIVE)\n`;
     chatMsg += `═══════════════════════════════════════════════════════════\n\n`;
     chatMsg += `1. الهوية التقنية للموديل:\n`;
     chatMsg += `──────────────────────────────────────────\n`;
-    chatMsg += `• الصنف / الموديل : [ ${result.category || 'موديل ملابس جاهزة'} ]\n`;
-    chatMsg += `• درجة تعقيد الفصالة : [ ${result.complexity || 'متوسطة'} ]\n`;
-    chatMsg += `• القصة والنزلة (Fit) : [ ${result.fit || result.pieces?.[0]?.fit || 'Regular / Oversize'} ]\n`;
+    chatMsg += `• الصنف / الموديل : [ ${cleanCategoryTitle(result.category, true)} ]\n`;
+    chatMsg += `• درجة تعقيد الفصالة : [ ${cleanLabel(result.complexity || 'متوسطة', true)} ]\n`;
+    chatMsg += `• القصة والنزلة الهيكلية : [ ${cleanLabel(result.fit || result.pieces?.[0]?.fit || 'قصة قياسية كاجوال', true)} ]\n`;
     chatMsg += `• استهلاك القماش الإجمالي : [ ${cost.totalM} متر ] (لعرض 1.50م)\n\n`;
 
-    chatMsg += `2. جدول كلفة البياسة حسب 3 مستويات دقيقة للجودة (Prix de Revient):\n`;
+    chatMsg += `2. جدول كلفة البياسة حسب 3 مستويات دقيقة للجودة (سعر التكلفة):\n`;
     chatMsg += `──────────────────────────────────────────\n`;
-    chatMsg += `[ المستوى الأول : جودة ممتازة (Haut de Gamme - Mziana) ]\n`;
+    chatMsg += `[ المستوى الأول : جودة ممتازة (Haut de Gamme - بريميوم) ]\n`;
     chatMsg += `• نوع الثوب المقترح : ${cost.mziana.tissuNomAr}\n`;
     chatMsg += `• كلفة القماش (${cost.totalM}م × ${cost.mziana.prixM} درهم) : ${cost.mziana.coutTissu} درهم\n`;
-    chatMsg += `• لوازم الخياطة والميرسري (Trims & Accessoires) : ${cost.mziana.trims} درهم\n`;
-    chatMsg += `• تكلفة الفصالة والخياطة (Façon Atelier) : ${cost.mziana.facon} درهم\n`;
-    chatMsg += `• إجمالي كلفة البياسة (Prix de Revient) : ${cost.mziana.total} درهم\n`;
+    chatMsg += `• لوازم الخياطة والميرسري (سحابات، ريب، بطاقات) : ${cost.mziana.trims} درهم\n`;
+    chatMsg += `• تكلفة الفصالة والخياطة والتشطيب : ${cost.mziana.facon} درهم\n`;
+    chatMsg += `• إجمالي كلفة البياسة التقديري : ${cost.mziana.total} درهم\n`;
     chatMsg += `• ثمن البيع بالجملة المقترح : ${cost.mziana.gros} درهم | بالتقسيط : ${cost.mziana.detailMin} - ${cost.mziana.detailMax} درهم\n\n`;
 
-    chatMsg += `[ المستوى الثاني : جودة قياسية (Standard - Normal) ]\n`;
+    chatMsg += `[ المستوى الثاني : جودة قياسية (Standard - ستاندار) ]\n`;
     chatMsg += `• نوع الثوب المقترح : ${cost.normal.tissuNomAr}\n`;
     chatMsg += `• كلفة القماش (${cost.totalM}م × ${cost.normal.prixM} درهم) : ${cost.normal.coutTissu} درهم\n`;
     chatMsg += `• لوازم الخياطة والميرسري : ${cost.normal.trims} درهم\n`;
     chatMsg += `• تكلفة الفصالة والخياطة : ${cost.normal.facon} درهم\n`;
-    chatMsg += `• إجمالي كلفة البياسة (Prix de Revient) : ${cost.normal.total} درهم\n`;
+    chatMsg += `• إجمالي كلفة البياسة التقديري : ${cost.normal.total} درهم\n`;
     chatMsg += `• ثمن البيع بالجملة المقترح : ${cost.normal.gros} درهم | بالتقسيط : ${cost.normal.detailMin} - ${cost.normal.detailMax} درهم\n\n`;
 
-    chatMsg += `[ المستوى الثالث : جودة اقتصادية (Économique - Faible) ]\n`;
+    chatMsg += `[ المستوى الثالث : جودة اقتصادية (Économique - اقتصادي) ]\n`;
     chatMsg += `• نوع الثوب المقترح : ${cost.faible.tissuNomAr}\n`;
     chatMsg += `• كلفة القماش (${cost.totalM}م × ${cost.faible.prixM} درهم) : ${cost.faible.coutTissu} درهم\n`;
     chatMsg += `• لوازم الخياطة والميرسري : ${cost.faible.trims} درهم\n`;
     chatMsg += `• تكلفة الفصالة والخياطة : ${cost.faible.facon} درهم\n`;
-    chatMsg += `• إجمالي كلفة البياسة (Prix de Revient) : ${cost.faible.total} درهم\n`;
+    chatMsg += `• إجمالي كلفة البياسة التقديري : ${cost.faible.total} درهم\n`;
     chatMsg += `• ثمن البيع بالجملة المقترح : ${cost.faible.gros} درهم | بالتقسيط : ${cost.faible.detailMin} - ${cost.faible.detailMax} درهم\n\n`;
 
     chatMsg += `3. تشريح قطع الموديل ومكونات الباترون:\n`;
     chatMsg += `──────────────────────────────────────────\n`;
     if (result.pieces && result.pieces.length > 0) {
       result.pieces.forEach((p: any, idx: number) => {
-        chatMsg += `[القطعة ${idx + 1}] : ${p.name} (استهلاك الثوب: ${p.consumption || '—'}) — التكلفة: ${p.costEstimate || '—'}\n`;
+        chatMsg += `[القطعة ${idx + 1}] : ${cleanPieceName(p.name, true)} (استهلاك الثوب: ${p.consumption || '—'}) — التكلفة: ${p.costEstimate || '—'}\n`;
         if (p.components && p.components.length > 0) {
-          chatMsg += `   • أجزاء الباترون : ${p.components.join(' · ')}\n`;
+          chatMsg += `   • أجزاء الباترون : ${p.components.map((c: string) => cleanLabel(c, true)).join(' · ')}\n`;
         }
       });
     } else {
       chatMsg += `• قطعة إنتاج موحدة\n`;
     }
 
-    chatMsg += `\n4. لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage):\n`;
+    chatMsg += `\n4. تسلسل مراحل الخياطة الصناعية والآلات (Gamme de Montage):\n`;
     chatMsg += `──────────────────────────────────────────\n`;
     chatMsg += `• عدد محطات العمل : ${gammePostes.length} بوستات متسلسلة\n`;
     chatMsg += `• إجمالي وقت الإنتاج للبياسة (SAM) : ${totalGammeMin} دقيقة (${totalGammeSec} ثانية)\n`;
     gammePostes.forEach((gp, gIdx) => {
       const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
-      chatMsg += `   [محطة ${gIdx + 1}] : ${gp.nomAr} — [الآلة: ${gp.machine}] — وقت: ${gp.tempsMin} د (${sec} ثانية)\n`;
+      const cleanOp = cleanOperation(gp, true);
+      chatMsg += `   [محطة ${gIdx + 1}] : ${cleanOp.nom} — [الآلة: ${cleanOp.machine}] — وقت: ${gp.tempsMin} د (${sec} ثانية)\n`;
     });
     chatMsg += `═══════════════════════════════════════════════════════════\n`;
     chatMsg += `لتحميل الوثيقة الرسمية بالأبيض والأسود، اضغط على زر [Tech Pack N&B] في الأعلى.`;
@@ -537,14 +538,14 @@ function buildRapportText(result: any, arLang: boolean): string {
     chatMsg += `═══════════════════════════════════════════════════════════\n\n`;
     chatMsg += `1. FICHE D'IDENTITÉ TECHNIQUE DU MODÈLE :\n`;
     chatMsg += `──────────────────────────────────────────\n`;
-    chatMsg += `• Modèle / Désignation : [ ${result.category || 'Article Textile'} ]\n`;
-    chatMsg += `• Niveau de complexité : [ ${result.complexity || 'Moyenne'} ]\n`;
-    chatMsg += `• Coupe & Silhouette (Fit) : [ ${result.fit || result.pieces?.[0]?.fit || 'Regular / Oversize'} ]\n`;
+    chatMsg += `• Modèle / Désignation : [ ${cleanCategoryTitle(result.category, false)} ]\n`;
+    chatMsg += `• Niveau de complexité : [ ${cleanLabel(result.complexity || 'Moyenne', false)} ]\n`;
+    chatMsg += `• Coupe & Silhouette (Fit) : [ ${cleanLabel(result.fit || result.pieces?.[0]?.fit || 'Regular / Oversize', false)} ]\n`;
     chatMsg += `• Consommation tissu totale : [ ${cost.totalM}m ] (laize 1.50m)\n\n`;
 
     chatMsg += `2. GRILLE DE CHIFFRAGE DE REVIENT (3 NIVEAUX QUALITÉ B2B) :\n`;
     chatMsg += `──────────────────────────────────────────\n`;
-    chatMsg += `[ 1. HAUT DE GAMME (MZIANA / SUPÉRIEURE) ]\n`;
+    chatMsg += `[ 1. HAUT DE GAMME (PREMIUM / SUPÉRIEURE) ]\n`;
     chatMsg += `• Matière conseillée : ${cost.mziana.tissuNomFr}\n`;
     chatMsg += `• Coût tissu (${cost.totalM}m × ${cost.mziana.prixM} MAD) : ${cost.mziana.coutTissu} MAD\n`;
     chatMsg += `• Fournitures & Mercerie (Zip YKK, bord-côte, étiquettes) : ${cost.mziana.trims} MAD\n`;
@@ -552,7 +553,7 @@ function buildRapportText(result: any, arLang: boolean): string {
     chatMsg += `• Coût de Revient Unitaire : ${cost.mziana.total} MAD\n`;
     chatMsg += `• Prix de vente Gros suggéré : ${cost.mziana.gros} MAD | Détail : ${cost.mziana.detailMin} - ${cost.mziana.detailMax} MAD\n\n`;
 
-    chatMsg += `[ 2. STANDARD COMMERCIAL (NORMAL / MOYEN) ]\n`;
+    chatMsg += `[ 2. STANDARD COMMERCIAL (STANDARD / MOYEN) ]\n`;
     chatMsg += `• Matière conseillée : ${cost.normal.tissuNomFr}\n`;
     chatMsg += `• Coût tissu (${cost.totalM}m × ${cost.normal.prixM} MAD) : ${cost.normal.coutTissu} MAD\n`;
     chatMsg += `• Fournitures & Mercerie standard : ${cost.normal.trims} MAD\n`;
@@ -560,7 +561,7 @@ function buildRapportText(result: any, arLang: boolean): string {
     chatMsg += `• Coût de Revient Unitaire : ${cost.normal.total} MAD\n`;
     chatMsg += `• Prix de vente Gros suggéré : ${cost.normal.gros} MAD | Détail : ${cost.normal.detailMin} - ${cost.normal.detailMax} MAD\n\n`;
 
-    chatMsg += `[ 3. ÉCONOMIQUE (FAIBLE / ENTRÉE DE GAMME) ]\n`;
+    chatMsg += `[ 3. ÉCONOMIQUE (ÉCONOMIQUE / ENTRÉE DE GAMME) ]\n`;
     chatMsg += `• Matière conseillée : ${cost.faible.tissuNomFr}\n`;
     chatMsg += `• Coût tissu (${cost.totalM}m × ${cost.faible.prixM} MAD) : ${cost.faible.coutTissu} MAD\n`;
     chatMsg += `• Fournitures basiques : ${cost.faible.trims} MAD\n`;
@@ -572,9 +573,9 @@ function buildRapportText(result: any, arLang: boolean): string {
     chatMsg += `──────────────────────────────────────────\n`;
     if (result.pieces && result.pieces.length > 0) {
       result.pieces.forEach((p: any, idx: number) => {
-        chatMsg += `[Pièce ${idx + 1}] : ${p.name} (Conso: ${p.consumption || '—'}) — Coût: ${p.costEstimate || '—'}\n`;
+        chatMsg += `[Pièce ${idx + 1}] : ${cleanPieceName(p.name, false)} (Conso: ${p.consumption || '—'}) — Coût: ${p.costEstimate || '—'}\n`;
         if (p.components && p.components.length > 0) {
-          chatMsg += `   • Composants patronage : ${p.components.join(' · ')}\n`;
+          chatMsg += `   • Composants patronage : ${p.components.map((c: string) => cleanLabel(c, false)).join(' · ')}\n`;
         }
       });
     } else {
@@ -587,7 +588,8 @@ function buildRapportText(result: any, arLang: boolean): string {
     chatMsg += `• Temps total SAM unitaire : ${totalGammeMin} min (${totalGammeSec} sec)\n`;
     gammePostes.forEach((gp, gIdx) => {
       const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
-      chatMsg += `   [Opération ${gIdx + 1}] : ${gp.nomFr || gp.nomAr} — [Machine: ${gp.machine}] — ${gp.tempsMin} min (${sec} sec)\n`;
+      const cleanOp = cleanOperation(gp, false);
+      chatMsg += `   [Opération ${gIdx + 1}] : ${cleanOp.nom} — [Machine: ${cleanOp.machine}] — ${gp.tempsMin} min (${sec} sec)\n`;
     });
     chatMsg += `═══════════════════════════════════════════════════════════\n`;
     chatMsg += `Pour exporter le dossier technique officiel A4 en Noir & Blanc, cliquez sur [Tech Pack N&B] en haut.`;
@@ -972,15 +974,15 @@ function buildFallbackAnalysis(
 
     piecesList = [
       {
-        name: isAr ? 'توب بأكمام طويلة ملاصق للجسم (Crop Top Rib)' : 'Top Manches Longues Près du Corps (Crop Top)',
+        name: isAr ? 'توب بأكمام طويلة ملاصق للجسم (كروب توب)' : 'Top Manches Longues Près du Corps (Crop Top)',
         consumption: '0.85m',
-        fit: isAr ? 'قصة لاصقة محددة للقوام (Près du corps / Fit)' : 'Coupe Près du Corps / Fitted',
+        fit: isAr ? 'قصة لاصقة محددة للقوام' : 'Coupe Près du Corps / Fitted',
         complexity: isAr ? 'بسيطة' : 'Simple',
         costEstimate: '22 - 32 MAD',
         components: isAr
           ? ['صدر أمامي قصة ريب', 'ظهر كامل متناسق', 'أكمام طويلة ضيقة', 'ياقة كول رون محاكة بنعومة']
           : ['Devant près du corps', 'Dos complet ajusté', 'Manches longues fittées', 'Encolure col rond finie bandelette'],
-        fabricSuggested: isAr ? 'كوت ريب 1x1 ليكرا 95% قطن ممشط و 5% إيلاسطان 250g' : 'Côte Rib 1x1 95% Coton Peigné / 5% Élasthanne 250 GSM',
+        fabricSuggested: isAr ? 'كوت ريب 1×1 ليكرا 95% قطن ممشط و 5% إيلاسطان 250g' : 'Côte Rib 1x1 95% Coton Peigné / 5% Élasthanne 250 GSM',
         fabricAlternatives: [
           { name: isAr ? 'جيرسي قطن ستريتش 230g' : 'Jersey Coton Stretch 230g', pros: isAr ? 'سطح أملس وناعم جداً' : 'Toucher très lisse', cons: isAr ? 'بدون تأثير التضليع العمودي' : 'Sans effet de côte' },
           { name: isAr ? 'فيسكوز ليكرا مضلع 220g' : 'Viscose Rib Stretch 220g', pros: isAr ? 'انسيابية وبرودة فائقة' : 'Très fluide et frais', cons: isAr ? 'أقل تماسكاً من القطن' : 'Moins structuré' }
@@ -988,15 +990,15 @@ function buildFallbackAnalysis(
         mesures: mesuresTop
       },
       {
-        name: isAr ? 'سروال رياضي بقصة عريضة منسدلة (Pantalon Wide-Leg)' : 'Pantalon Sweatpants Coupe Wide-Leg / Évasé',
+        name: isAr ? 'سروال رياضي بقصة عريضة منسدلة (وايد ليغ)' : 'Pantalon Sweatpants Coupe Wide-Leg / Évasé',
         consumption: '1.45m',
-        fit: isAr ? 'قصة واسعة متهدلة كاجوال (Wide-Leg Slouchy)' : 'Coupe Ample Wide-Leg / Palazzo',
+        fit: isAr ? 'قصة واسعة متهدلة كاجوال' : 'Coupe Ample Wide-Leg / Palazzo',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
         costEstimate: '42 - 58 MAD',
         components: isAr
           ? ['رجلين أمامية وخلفية بقصة عريضة منسدلة', 'حزام مطاطي عريض مع 3 خياطات متوازية', 'عيون حديدية غير قابلة للصدأ مع قيطان قطني وأطراف معدنية', 'جيوب جانبية مدمجة بالدرزة', 'ثنية أسفل الرِجلين واسعة ومسدولة']
           : ['Jambes évasées tombé lourd fluide', 'Ceinture élastiquée avec surpiqûres 3 aiguilles', 'Œillets métal inox avec cordon tubulaire et aglets métal', 'Poches latérales italiennes dans la couture', 'Ourlets bas larges droits'],
-        fabricSuggested: isAr ? 'مولطون بومبليت غير مقطن 100% قطن ممشط 340g (French Terry)' : 'French Terry Molleton Non-Gratté 100% Coton 340 GSM',
+        fabricSuggested: isAr ? 'مولطون بوكليت غير مقطن 100% قطن ممشط 340g (فرنش تيري)' : 'French Terry Molleton Non-Gratté 100% Coton 340 GSM',
         fabricAlternatives: [
           { name: isAr ? 'مولطون شتوي مقطن 340g' : 'Molleton Gratté Lourd 340g', pros: isAr ? 'دافئ جداً لموسم الشتاء' : 'Très chaud pour l\'hiver', cons: isAr ? 'أكثر انتفاخاً وأقل انسيابية فالنزلة' : 'Moins fluide au tombé' },
           { name: isAr ? 'إنترلوك قطن ثقيل 290g' : 'Interlock Coton Lourd 290g', pros: isAr ? 'وجهان ناعمان بدون حلقات' : 'Double face lisse', cons: isAr ? 'أخف وزناً' : 'Moins d\'épaisseur' }
@@ -1016,29 +1018,29 @@ function buildFallbackAnalysis(
       {
         name: isAr ? 'فيست جاكيت دنيم بحزام وقصة عصرية' : 'Veste en Jean Denim Ceinturée',
         consumption: '2.10m',
-        fit: isAr ? 'قصة محددة بحزام مع درزات بارزة (Coupe Structurée Ceinturée)' : 'Coupe Structurée Ceinturée',
+        fit: isAr ? 'قصة محددة بحزام مع درزات بارزة' : 'Coupe Structurée Ceinturée',
         complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
         costEstimate: '55 - 75 MAD',
         components: isAr
           ? ['صدر أمامي مع قفل أزرار معدنية بارزة', 'ياقة جاكيت رسمية كلاسيكية', 'حزام خصر دنيم متناسق مع عرى التثبيت', 'أكمام طويلة مع أساور وبوانيات بأزرار كبس', 'درزات مزدوجة بخيط نحاسي سميك متين', 'جيوب صدرية وجيوب جانبية مدمجة']
           : ['Devants avec boutonnage boutons clous jean', 'Col chemisier tailleur', 'Ceinture denim assortie avec passants', 'Manches longues avec poignets boutonnés', 'Surpiqûres 2 aiguilles fil épais orange/caramel', 'Poches poitrine à rabat et passepoils'],
-        fabricSuggested: isAr ? 'قماش دنيم 100% قطن متين 12.5oz (Toile Denim Coton / Jean)' : 'Toile Denim 100% Coton 12.5oz / Jean',
+        fabricSuggested: isAr ? 'قماش دنيم 100% قطن متين 12.5oz' : 'Toile Denim 100% Coton 12.5oz / Jean',
         fabricAlternatives: [
-          { name: isAr ? 'دنيم قطن ستريتش 11.5oz (Denim Stretch)' : 'Denim Stretch 11.5oz', pros: isAr ? 'مرونة عالية وراحة فائقة فالحركة' : 'Très confortable et extensible', cons: isAr ? 'أقل صلابة في المظهر' : 'Tenue plus souple' },
-          { name: isAr ? 'تويل قطن ثقيل مصبوغ 280g (Twill Coton Lourd)' : 'Twill Coton Lourd 280g', pros: isAr ? 'ألوان متعددة وملمس ناعم' : 'Variété de coloris et toucher doux', cons: isAr ? 'ليس دنيم أصيل' : 'Texture différente du vrai denim' }
+          { name: isAr ? 'دنيم قطن ستريتش 11.5oz' : 'Denim Stretch 11.5oz', pros: isAr ? 'مرونة عالية وراحة فائقة فالحركة' : 'Très confortable et extensible', cons: isAr ? 'أقل صلابة في المظهر' : 'Tenue plus souple' },
+          { name: isAr ? 'تويل قطن ثقيل مصبوغ 280g' : 'Twill Coton Lourd 280g', pros: isAr ? 'ألوان متعددة وملمس ناعم' : 'Variété de coloris et toucher doux', cons: isAr ? 'ألوان متنوعة' : 'Texture différente du vrai denim' }
         ],
         mesures: mesuresVeste
       },
       {
         name: isAr ? 'سروال جينز دنيم مطابق بقصة مستقيمة' : 'Pantalon Jean Denim Assorti',
         consumption: '1.45m',
-        fit: isAr ? 'قصة مستقيمة مريحة كلاسيك (Regular Straight)' : 'Coupe Droite Regular Jean',
+        fit: isAr ? 'قصة مستقيمة مريحة كلاسيك' : 'Coupe Droite Regular Jean',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
         costEstimate: '45 - 65 MAD',
         components: isAr
           ? ['أرجل جينز أمامية وخلفية بدرزات جانبية مقواة', 'حزام خصر مع عرى حزام جينز', 'سحاب معدني أمامي مع زر كبس نحاسي', 'جيوب أمامية دائرية مع جيب ساعة صغير', 'جيوب خلفية بارزة مع تطريز درزات الجينز الكلاسيكية']
           : ['Jambes devant et dos avec surpiqûres renforcées', 'Ceinture jean avec passants', 'Fermeture zip métal et bouton clou', 'Poches cavalières et poche ticket', 'Poches plaquées dos avec surpiqûres décoratives'],
-        fabricSuggested: isAr ? 'قماش دنيم 100% قطن مطابق 12.5oz (Toile Denim Assortie)' : 'Toile Denim Assortie 12.5oz',
+        fabricSuggested: isAr ? 'قماش دنيم 100% قطن مطابق 12.5oz' : 'Toile Denim Assortie 12.5oz',
         fabricAlternatives: [
           { name: isAr ? 'دنيم قطن ستريتش مريح' : 'Denim Stretch Confort', pros: isAr ? 'مريح عند الجلوس والحركة' : 'Confort d\'assise et d\'aisance', cons: isAr ? 'قد يتمدد قليلاً مع الاستعمال' : 'Légère détente à l\'usage' }
         ],
@@ -4948,7 +4950,7 @@ ${userMessage}
                         {analysisResult.pieces.map((p: any, idx: number) => {
                           const icon = getPieceIcon(p.name);
                           const isSelected = activePieceIdx === idx;
-                          const shortName = (p.name || '').split('(')[0].trim();
+                          const shortName = cleanPieceName(p.name, isAr).split('(')[0].trim();
                           return (
                             <button
                               key={idx}
@@ -5045,7 +5047,7 @@ ${userMessage}
                                   ) : (
                                     <div className="flex items-center gap-2 flex-wrap">
                                       <h4 className="text-xs sm:text-sm font-black text-indigo-950 leading-tight">
-                                        {p.name}
+                                        {cleanPieceName(p.name, isAr)}
                                       </h4>
                                       <button
                                         type="button"
@@ -5762,7 +5764,7 @@ ${userMessage}
                         <tbody className="divide-y divide-slate-100 bg-white">
                           {(customMesures && customMesures.length > 0 ? customMesures : getStandardMesuresForCategory('CropTop', targetAudience, targetGender)).map((row: any, rowIndex: number) => (
                             <tr key={rowIndex} className="hover:bg-slate-50/80 transition-colors">
-                              <td className="p-3 text-xs font-black text-slate-800">{row.nom}</td>
+                              <td className="p-3 text-xs font-black text-slate-800">{cleanMeasurementName(row.nom, isAr)}</td>
                               {selectedTailles.map(size => (
                                 <td key={size} className="p-3 text-center">
                                   <input
@@ -5785,7 +5787,7 @@ ${userMessage}
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                       <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
                         <span>👖</span>
-                        <span>{isAr ? 'القطعة 2: سروال واسع منسدل (Pantalon Wide-Leg / Sweatpants)' : 'Pièce 2 : Pantalon Sweatpants Wide-Leg (French Terry)'}</span>
+                        <span>{isAr ? 'القطعة 2 : سروال واسع منسدل (وايد ليغ)' : 'Pièce 2 : Pantalon Sweatpants Wide-Leg (French Terry)'}</span>
                       </h4>
                       <span className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-[11px] border border-indigo-200">
                         {targetGender === 'femmes' ? (isAr ? 'مقاسات نسائية 👩' : 'Femmes 👩') : (isAr ? 'مقاسات رجالية 👨' : 'Hommes 👨')}
@@ -5805,7 +5807,7 @@ ${userMessage}
                         <tbody className="divide-y divide-slate-100 bg-white">
                           {getStandardMesuresForCategory('Pantalon', targetAudience, targetGender).map((row: any, rowIndex: number) => (
                             <tr key={rowIndex} className="hover:bg-slate-50/80 transition-colors">
-                              <td className="p-3 text-xs font-black text-slate-800">{row.nom}</td>
+                              <td className="p-3 text-xs font-black text-slate-800">{cleanMeasurementName(row.nom, isAr)}</td>
                               {selectedTailles.map(size => (
                                 <td key={size} className="p-3 text-center">
                                   <input
@@ -6028,10 +6030,11 @@ ${userMessage}
                     const sec = Math.round(currentMin * 60);
                     const proTime = getPosteTimeForCadence(gp, 'pro');
                     const debTime = getPosteTimeForCadence(gp, 'debutant');
-                    const isCoupe = (gp.machine || '').toLowerCase().includes('coupe') || (gp.nomAr || '').includes('فصالة');
-                    const isPiqueuse = gp.machine.toLowerCase().includes('piqueuse');
-                    const isSurjet = gp.machine.toLowerCase().includes('surjet');
-                    const isRecouvreuse = gp.machine.toLowerCase().includes('recouvr') || gp.machine.toLowerCase().includes('ourle');
+                    const mStr = String(gp.machine || '').toLowerCase();
+                    const isCoupe = mStr.includes('coupe') || (gp.nomAr || '').includes('فصالة');
+                    const isPiqueuse = mStr.includes('piqueuse');
+                    const isSurjet = mStr.includes('surjet');
+                    const isRecouvreuse = mStr.includes('recouvr') || mStr.includes('ourle');
 
                     const badgeColor = isPiqueuse
                       ? 'bg-blue-50 text-blue-700 border-blue-200'
