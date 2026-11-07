@@ -805,17 +805,17 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           const hasPantsLegs = lowerRowCount > 3 && (legSeparationRows / lowerRowCount) >= 0.35;
           const isAthleticColor = (upperBlueNavy > 20 || upperDark > upperCount * 0.35) && (lowerBlueNavy > 20 || lowerDark > 80);
           const hasStripes = stripeContrast > 28 || (upperLight > 20 && upperDark > 20);
-          const isDenimBlueTone = (upperBlueNavy > 14 || lowerBlueNavy > 14);
+          const isExplicitDenim = (fn.includes('denim') || fn.includes('jean') || fn.includes('جينز') || fn.includes('دنيم'));
           const isFullBodyWithLegs = hasPantsLegs && (aspectRatio > 1.25 || bodyH > H * 0.55);
 
-          // 1. Denim / Jean Ensemble 2 Pièces (Tall silhouette, legs visible, denim/blue tones)
-          if (isFullBodyWithLegs && isDenimBlueTone) {
+          // 1. Denim / Jean Ensemble ONLY if explicitly indicated by file/text
+          if (isFullBodyWithLegs && isExplicitDenim) {
             return resolve('ensemble denim veste et pantalon jean طقم جينز دنيم (فيست + سروال)');
           }
 
-          // 2. Tracksuit / Survêtement 2 Pièces
-          if (isFullBodyWithLegs && (isAthleticColor || hasStripes)) {
-            return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond pantalon jogging طقم رياضي قطعتين');
+          // 2. Tracksuit / Loungewear / Streetwear 2 Pièces (Top + Pantalon Wide Leg / Jogging)
+          if (isFullBodyWithLegs) {
+            return resolve('ensemble 2 pièces loungewear streetwear haut manches longues crop top et pantalon wide leg sweatpants طقم لاونج ستريتوير قطعتين');
           }
 
           // 3. Pants / Joggers alone (Strict: only if aspect ratio is tall and body width is narrow like real trousers)
@@ -897,8 +897,19 @@ function buildFallbackAnalysis(
     )
   );
 
+  // Loungewear / Streetwear 2 Pièces (Top Rib / Manches Longues + Pantalon Wide-Leg / French Terry)
+  const isLoungewearEnsemble = (
+    forcePiecesCount !== 1 &&
+    !isThreePieces && (
+      text.includes('lounge') || text.includes('streetwear') || text.includes('crop') ||
+      text.includes('wide leg') || text.includes('sweatpant') || text.includes('palazzo') ||
+      text.includes('طقم لاونج') || text.includes('لاونج') || (text.includes('pantalon') && (text.includes('top') || text.includes('manches longues') || text.includes('rib')))
+    )
+  );
+
   // Denim / Jean Ensemble 2 Pièces (Veste Jean + Pantalon Jean)
   const isDenimEnsemble = (
+    !isLoungewearEnsemble &&
     forcePiecesCount !== 1 &&
     !isThreePieces && (
       (text.includes('denim') || text.includes('jean') || text.includes('جينز') || text.includes('دنيم')) &&
@@ -912,7 +923,49 @@ function buildFallbackAnalysis(
     (text.includes('veste') || text.includes('jacket') || text.includes('jakit') || text.includes('فيست') || text.includes('جاكيت'))
   );
 
-  if (isDenimEnsemble) {
+  if (isLoungewearEnsemble) {
+    pieceName = isAr
+      ? 'طقم لاونج وير قطعتين (توب كوت ريب + سروال وايد ليغ بومبليت)'
+      : 'Ensemble 2 Pièces Loungewear (Crop Top Côte Rib + Pantalon Wide-Leg French Terry)';
+
+    const mesuresTop = getStandardMesuresForCategory('TShirt', audience, gender);
+    const mesuresPantalon = getStandardMesuresForCategory('Pantalon', audience, gender);
+
+    piecesList = [
+      {
+        name: isAr ? 'توب بأكمام طويلة ملاصق للجسم (Crop Top Rib)' : 'Top Manches Longues Près du Corps (Crop Top)',
+        consumption: '0.85m',
+        fit: isAr ? 'قصة لاصقة محددة للقوام (Près du corps / Fit)' : 'Coupe Près du Corps / Fitted',
+        complexity: isAr ? 'بسيطة' : 'Simple',
+        costEstimate: '22 - 32 MAD',
+        components: isAr
+          ? ['صدر أمامي قصة ريب', 'ظهر كامل متناسق', 'أكمام طويلة ضيقة', 'ياقة كول رون محاكة بنعومة']
+          : ['Devant près du corps', 'Dos complet ajusté', 'Manches longues fittées', 'Encolure col rond finie bandelette'],
+        fabricSuggested: isAr ? 'كوت ريب 1x1 ليكرا 95% قطن ممشط و 5% إيلاسطان 250g' : 'Côte Rib 1x1 95% Coton Peigné / 5% Élasthanne 250 GSM',
+        fabricAlternatives: [
+          { name: isAr ? 'جيرسي قطن ستريتش 230g' : 'Jersey Coton Stretch 230g', pros: isAr ? 'سطح أملس وناعم جداً' : 'Toucher très lisse', cons: isAr ? 'بدون تأثير التضليع العمودي' : 'Sans effet de côte' },
+          { name: isAr ? 'فيسكوز ليكرا مضلع 220g' : 'Viscose Rib Stretch 220g', pros: isAr ? 'انسيابية وبرودة فائقة' : 'Très fluide et frais', cons: isAr ? 'أقل تماسكاً من القطن' : 'Moins structuré' }
+        ],
+        mesures: mesuresTop
+      },
+      {
+        name: isAr ? 'سروال رياضي بقصة عريضة منسدلة (Pantalon Wide-Leg)' : 'Pantalon Sweatpants Coupe Wide-Leg / Évasé',
+        consumption: '1.45m',
+        fit: isAr ? 'قصة واسعة متهدلة كاجوال (Wide-Leg Slouchy)' : 'Coupe Ample Wide-Leg / Palazzo',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: '42 - 58 MAD',
+        components: isAr
+          ? ['رجلين أمامية وخلفية بقصة عريضة منسدلة', 'حزام مطاطي عريض مع 3 خياطات متوازية', 'عيون حديدية غير قابلة للصدأ مع قيطان قطني وأطراف معدنية', 'جيوب جانبية مدمجة بالدرزة', 'ثنية أسفل الرِجلين واسعة ومسدولة']
+          : ['Jambes évasées tombé lourd fluide', 'Ceinture élastiquée avec surpiqûres 3 aiguilles', 'Œillets métal inox avec cordon tubulaire et aglets métal', 'Poches latérales italiennes dans la couture', 'Ourlets bas larges droits'],
+        fabricSuggested: isAr ? 'مولطون بومبليت غير مقطن 100% قطن ممشط 340g (French Terry)' : 'French Terry Molleton Non-Gratté 100% Coton 340 GSM',
+        fabricAlternatives: [
+          { name: isAr ? 'مولطون شتوي مقطن 340g' : 'Molleton Gratté Lourd 340g', pros: isAr ? 'دافئ جداً لموسم الشتاء' : 'Très chaud pour l\'hiver', cons: isAr ? 'أكثر انتفاخاً وأقل انسيابية فالنزلة' : 'Moins fluide au tombé' },
+          { name: isAr ? 'إنترلوك قطن ثقيل 290g' : 'Interlock Coton Lourd 290g', pros: isAr ? 'وجهان ناعمان بدون حلقات' : 'Double face lisse', cons: isAr ? 'أخف وزناً' : 'Moins d\'épaisseur' }
+        ],
+        mesures: mesuresPantalon
+      }
+    ];
+  } else if (isDenimEnsemble) {
     pieceName = isAr
       ? 'طقم جينز دنيم راقي قطعتين (فيست دنيم بحزام + سروال جينز)'
       : 'Ensemble Denim 2 Pièces (Veste Denim Ceinturée + Pantalon Jean)';
@@ -2442,13 +2495,17 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
           const resp = await fetch(targetImage);
           const blob = await resp.blob();
           mimeType = blob.type || 'image/jpeg';
-          const buf = await blob.arrayBuffer();
-          let binary = '';
-          const bytes = new Uint8Array(buf);
-          for (let i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-          }
-          base64Data = btoa(binary);
+          const reader = new FileReader();
+          const b64Promise = new Promise<string>((resolve) => {
+            reader.onloadend = () => {
+              const res = reader.result as string;
+              const m = res.match(/^data:([^;]+);base64,(.+)$/);
+              resolve(m ? m[2] : '');
+            };
+            reader.onerror = () => resolve('');
+          });
+          reader.readAsDataURL(blob);
+          base64Data = await b64Promise;
         } catch (e) {
           console.warn('Error fetching image for base64:', e);
         }
@@ -2469,90 +2526,84 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         : `Profil cible : Adultes (${targetGender === 'femmes' ? 'Femmes' : 'Hommes'}). Tailles requises : [${targetSizesList}], métrage adapté aux adultes.`;
 
       const analysisPrompt = isAr
-        ? `أنت خبير نسيج وخياطة محترف في مصنع مغربي للألبسة الجاهزة (BEYA Expert). حلل هذه الصورة بدقة تقنية عالية جداً للموديل المعروض فيها تحديداً.
+        ? `أنت كبير مهندسي النسيج وتصنيع الملابس الجاهزة في ورشة BEYA Creative بالمغرب (BEYA Expert).
+حلل هذه الصورة المرفقة بدقة بصرية وهندسية فائقة للموديل الحقيقي المعروض فيها فقط.
 
-⚠️ تنبيه حاسم وإلزامي حول الفئة المستهدفة والموديل:
+⚠️ تنبيه حاسم حول الفئة المستهدفة والأقمشة الحقيقية:
 - ${targetProfileDescAr}
-- إذا كان الموديل المعروض في الصورة مسطحاً (Packshot / Flat-lay / à plat / مانيكان شبحي) بدون شخص يرتديه، فالتزم حصراً بهذه الفئة واجعل جدول المقاسات ومكونات الباترون واستهلاك القماش متطابقاً تماماً معها!
-- انظر بعناية تامة إلى الصورة المرفقة وحدد نوع الموديل الحقيقي بدقة تامة:
-  * إذا كانت الصورة تظهر تيشيرت (T-shirt / Oversize T-shirt / Polo) حتى لو كانت هناك صور متعددة أو مقربة للشعار أو الظهر، حدده فوراً كـ T-shirt (قطعة واحدة فقط) باستهلاك بين 1.10m و 1.35m وتكلفة خياطة وفصالة مناسبة للتيشيرت. لا تخلط أبداً بين التيشيرت والسروال!
-  * إذا كان سروالاً أو بنطلون جوغينغ فقط (Pantalon / Jogging)، فضعه كقطعة واحدة فقط (سروال رياضي جوغينغ) باستهلاك حوالي 1.40م وتكلفة 40-55 درهم. لا تخترع سويت شيرت أو كول رون غير موجود!
-  * إذا كان تيشيرت أو سويت شيرت فقط، ضعه كقطعة واحدة مطابقة للصورة.
-  * إذا كان فستاناً أو عباية أو قفطاناً، حللها كقطعة واحدة مطابقة للصورة.
-  * إذا كان طقماً رياضياً من قطعتين ظاهرتين معاً في الصورة (سويت شيرت + سروال)، حلله كقطعتين.
-  * لا تخترع أي قطع إضافية أو معاطف أو ألبسة لم تظهر في الصورة!
-
-لكل قطعة في مصفوفة "pieces" أعطيني بدقة:
-1. اسم القطعة (name): مثلاً "سويت شيرت كول رون مقلم"، "تيشيرت أوفرسايز"، "سروال رياضي جوغينغ".
-2. كمية الثوب بالمتر (consumption): لعرض 1.50م (مثلاً "1.20m").
-3. نوع القصة (fit): لاصق/سليم، عادي/ريغولار، واسع/أوفرسايز.
-4. مستوى التعقيد (complexity): بسيط، متوسط، معقد.
-5. التكلفة التقديرية (costEstimate): بالدرهم المغربي MAD.
-6. مكونات القطعة (components): أجزاء الباترون (صدر، ظهر، أكمام، أساور، جيوب، سحاب...).
-7. جدول المقاسات (mesures) لكل مقاس (S, M, L, XL, XXL).
-8. الثوب المقترح (fabricSuggested) مع البدائل (fabricAlternatives).
-9. لاغام ديال الخياطة وبوستات العمل (gammeMontage).
+- ركز 100% على القماش الحقيقي الظاهر في الصورة بدون أي افتراضات مسبقة:
+  * إذا كان طقماً قطنياً / لاونج وير كاجوال (مثل توب ضيق كوت ريب وسروال واسع منسدل مولطون بومبليت French Terry)، فاكتب نوع القماش الحقيقي بالضبط (Côte Rib Knit / French Terry 100% Coton 340 GSM)، وافصل الطقم إلى قطعتين: القطعة الأولى (Haut - Crop Top) والقطعة الثانية (Bas - Pantalon Wide-Leg). لا تخلطه أبداً مع الجينز أو الدنيم!
+  * إذا كانت الصورة تظهر تيشيرت فقط، حدده كقطعة واحدة (T-shirt).
+  * إذا كان سروالاً فقط، حدده كقطعة واحدة (Pantalon).
+  * إذا كان فستاناً أو عباية، حددها كقطعة واحدة (Robe / Abaya).
+  * لا تخترع أي قطع إضافية أو جاكيتات لم تظهر في الصورة!
 
 أجب بصيغة JSON فقط بدون أي نص إضافي:
 {
-  "category": "T-shirt Oversize Coton",
-  "totalConsumption": "1.20m",
-  "totalCost": "35 - 50 MAD",
-  "complexity": "بسيطة إلى متوسطة",
-  "fabricSuggested": "100% قطن إنترلوك ممتاز 240g",
+  "category": "Ensemble 2 Pièces Loungewear",
+  "totalConsumption": "2.30m",
+  "totalCost": "65 - 90 MAD",
+  "complexity": "متوسطة",
+  "fabricSuggested": "Haut: Côte Rib 1x1 250 GSM · Bas: French Terry Bouclette 340 GSM",
   "fabricAlternatives": [
     {
-      "name": "جيرسي قطن 100% 220g",
-      "pros": "خفيف ومريح ومناسب للصيف",
-      "cons": "أقل سمكاً من الإنترلوك"
+      "name": "جيرسي قطن ستريتش 230g",
+      "pros": "ملمس ناعم جداً ومريح",
+      "cons": "بدون تضليع عمودي"
     }
   ],
   "gammeMontage": [
     {
-      "nomAr": "فصالة التيشيرت بالمطلوة الصناعية",
-      "nomFr": "Coupe T-shirt Matelas",
+      "nomAr": "فصالة القماش بالمطلوة الصناعية",
+      "nomFr": "Coupe Matelas & Préparation Paquets",
       "machine": "Table de Coupe / Ciseaux",
-      "tempsMin": 0.8,
-      "tempsPro": 0.8,
-      "tempsStandard": 1.5,
-      "tempsDebutant": 2.5,
-      "roleOuvrier": "فصالة وباترون"
+      "tempsMin": 0.8
     }
   ],
   "pieces": [
     {
-      "name": "تيشيرت أوفرسايز عصري",
-      "consumption": "1.20m",
-      "fit": "أوفرسايز واسع (Oversize Fit)",
+      "name": "Haut - Crop Top Manches Longues (كوت ريب)",
+      "consumption": "0.85m",
+      "fit": "Près du corps / Fitté",
       "complexity": "بسيطة",
       "costEstimate": "25 - 35 MAD",
-      "components": ["صدر أمامي مع طباعة", "ظهر كامل", "أكمام قصيرة واسعة", "كول رون بورد-كوت مطاطي"],
-      "fabricSuggested": "قطن إنترلوك 240g",
+      "components": ["صدر أمامي", "ظهر كامل", "أكمام طويلة", "ياقة كول رون"],
+      "fabricSuggested": "كوت ريب 1x1 ليكرا 95% قطن ممشط و 5% إيلاسطان 250g",
       "fabricAlternatives": [],
       "mesures": [
-        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 104, "M": 110, "L": 116, "XL": 122, "XXL": 128}},
-        {"nom": "الكتف (Épaules)", "valeurs": {"S": 48, "M": 50, "L": 52, "XL": 54, "XXL": 56}},
-        {"nom": "الطول (Longueur)", "valeurs": {"S": 70, "M": 72, "L": 74, "XL": 76, "XXL": 78}},
-        {"nom": "طول الكم (Manche)", "valeurs": {"S": 22, "M": 23, "L": 24, "XL": 25, "XXL": 26}}
+        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 88, "M": 94, "L": 100, "XL": 106, "XXL": 112}},
+        {"nom": "الكتف (Épaules)", "valeurs": {"S": 38, "M": 40, "L": 42, "XL": 44, "XXL": 46}},
+        {"nom": "الطول (Longueur)", "valeurs": {"S": 46, "M": 48, "L": 50, "XL": 52, "XXL": 54}},
+        {"nom": "طول الكم (Manche)", "valeurs": {"S": 58, "M": 59, "L": 60, "XL": 61, "XXL": 62}}
+      ]
+    },
+    {
+      "name": "Bas - Pantalon Wide-Leg / Sweatpants (مولطون بومبليت)",
+      "consumption": "1.45m",
+      "fit": "Coupe Wide-Leg Évasée / Ample",
+      "complexity": "متوسطة",
+      "costEstimate": "42 - 58 MAD",
+      "components": ["رجلين عريضة", "حزام مطاطي مع عيون حديدية وكوردون", "جيوب جانبية"],
+      "fabricSuggested": "مولطون بومبليت غير مقطن 100% قطن 340g (French Terry)",
+      "fabricAlternatives": [],
+      "mesures": [
+        {"nom": "الخصر (Taille)", "valeurs": {"S": 68, "M": 72, "L": 76, "XL": 80, "XXL": 84}},
+        {"nom": "الورك (Hanches)", "valeurs": {"S": 102, "M": 106, "L": 110, "XL": 114, "XXL": 118}},
+        {"nom": "الطول (Longueur)", "valeurs": {"S": 104, "M": 106, "L": 108, "XL": 110, "XXL": 112}}
       ]
     }
   ]
 }`
-        : `Tu es un expert textile et confection en atelier industriel marocain (BEYA Expert). Analyse cette image avec une très haute précision.
+        : `Tu es un expert textile et confection en atelier industriel marocain (BEYA Expert).
+Analyse l'image réelle fournie avec une très haute précision visuelle et technique.
 
-⚠️ Consigne impérative sur le profil cible :
+⚠️ Consigne impérative sur les matières et pièces réelles :
 - ${targetProfileDescFr}
-- Si le vêtement dans l'image est à plat (Packshot / flat-lay / sans mannequin / mannequin invisible), appliquez strictement ce profil cible, ce barème de tailles et cette consommation de tissu.
-
-Consignes impératives pour les pièces du modèle :
-- Analysez strictement le vêtement visible dans l'image réelle fournie sans aucune invention :
-  * Si l'image montre un t-shirt (même avec plusieurs vues superposées: face, dos, zoom logo/étiquette), identifie-le formellement comme T-shirt (1 seule pièce). Ne JAMAIS le confondre avec un pantalon ou un jogging !
-  * Si l'image montre un pantalon, jogging ou cargo seul, identifie-le comme Pantalon (1 seule pièce).
-  * Si l'image montre un hoodie ou sweat seul, identifie-le comme Sweatshirt / Hoodie (1 seule pièce).
-  * Si l'image montre un survêtement sport 2 pièces distinctes (Sweatshirt + Pantalon), le tableau "pieces" DOIT contenir STRICTEMENT 2 éléments : pièce 1 (Sweatshirt) et pièce 2 (Pantalon Jogging).
+- Identifiez rigoureusement la matière réelle visible selon son drapé, sa maille et sa texture :
+  * S'il s'agit d'un ensemble loungewear / streetwear (ex: top fitté à manches longues en côte rib ou jersey, et pantalon large fluide en molleton bouclette / French Terry non-gratté), spécifiez exactement ces matières (Côte Rib 1x1, French Terry 100% Coton 340 GSM). Ne le confondez JAMAIS avec du denim ou jean !
+  * Si l'image montre 2 pièces distinctes (Haut + Pantalon), "pieces" DOIT contenir STRICTEMENT 2 éléments : pièce 1 (Haut) et pièce 2 (Bas Pantalon).
   * Si l'image montre un seul article (t-shirt seul, sweatshirt seul, pantalon seul, robe seule...), "pieces" DOIT contenir EXACTEMENT 1 élément.
-- La consommation totale (totalConsumption) doit être la somme des consommations de chaque pièce (ex: 1.20m pour un t-shirt, 1.85m pour un hoodie, 1.40m pour un pantalon).
-- Le coût total (totalCost) doit être la somme des coûts de chaque pièce.
+- La consommation totale (totalConsumption) doit être la somme des consommations de chaque pièce.
 - Fournir les mesures S-XXL pour chaque pièce dans son entrée "mesures".
 Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
@@ -2562,37 +2613,46 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
         'gemini-2.5-pro'
       ];
 
+      const keysToTry = [
+        apiKey,
+        DEFAULT_GEMINI_KEY
+      ].filter(Boolean);
+      const uniqueKeys = Array.from(new Set(keysToTry));
+
       let data: any = null;
 
-      for (const mod of candidateModels) {
-        try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                role: "user",
-                parts: [
-                  { text: analysisPrompt },
-                  { inlineData: { data: base64Data, mimeType } }
-                ]
-              }],
-              generationConfig: {
-                temperature: 0.2,
-                responseMimeType: "application/json"
-              }
-            })
-          });
+      for (const keyCandidate of uniqueKeys) {
+        if (data) break;
+        for (const mod of candidateModels) {
+          try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${keyCandidate}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  role: "user",
+                  parts: [
+                    { text: analysisPrompt },
+                    { inlineData: { data: base64Data, mimeType } }
+                  ]
+                }],
+                generationConfig: {
+                  temperature: 0.2,
+                  responseMimeType: "application/json"
+                }
+              })
+            });
 
-          if (res.ok) {
-            const j = await res.json();
-            if (j.candidates && j.candidates.length > 0 && !j.error) {
-              data = j;
-              break;
+            if (res.ok) {
+              const j = await res.json();
+              if (j.candidates && j.candidates.length > 0 && !j.error) {
+                data = j;
+                break;
+              }
             }
+          } catch (apiTryErr) {
+            console.warn('Model try failed:', mod, apiTryErr);
           }
-        } catch (apiTryErr) {
-          console.warn('Model try failed:', mod, apiTryErr);
         }
       }
 
@@ -2633,8 +2693,48 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
           rawAnalysis: rawText
         };
 
-        if (parsed.pieces && Array.isArray(parsed.pieces) && parsed.pieces.length > 0) {
-          result.pieces = parsed.pieces.map((p: any) => {
+        // Normalize parsed.pieces: handle both Array and Object formats from Gemini
+        let rawPiecesList: any[] = [];
+        if (Array.isArray(parsed.pieces) && parsed.pieces.length > 0) {
+          rawPiecesList = parsed.pieces;
+        } else if (parsed.pieces && typeof parsed.pieces === 'object' && Object.keys(parsed.pieces).length > 0) {
+          rawPiecesList = Object.entries(parsed.pieces).map(([k, v]: [string, any]) => {
+            const isBottom = k.toLowerCase().includes('bas') || k.toLowerCase().includes('pantalon') || k.toLowerCase().includes('jogging');
+            const defaultName = isBottom
+              ? (isAr ? 'التحتاني (سروال وايد ليغ / رياضي)' : 'Bas (Pantalon Wide-Leg / Sweatpants)')
+              : (isAr ? 'الفوقاني (توب ضيق / كوت ريب)' : 'Haut (Top Fitté / Côte Rib)');
+            if (Array.isArray(v)) {
+              return {
+                name: defaultName,
+                components: v.map(String),
+                consumption: isBottom ? '1.45m' : '0.85m',
+                fit: parsed.fit || (isBottom ? 'Wide-Leg / Évasé' : 'Près du corps / Fitté'),
+                complexity: parsed.complexity || (isAr ? 'متوسطة' : 'Moyenne'),
+                costEstimate: isBottom ? '42 - 58 MAD' : '22 - 32 MAD',
+                fabricSuggested: parsed.fabricSuggested || '',
+                fabricAlternatives: parsed.fabricAlternatives || [],
+                mesures: []
+              };
+            }
+            if (v && typeof v === 'object') {
+              return {
+                name: v.name || v.titre || defaultName,
+                components: Array.isArray(v.components) ? v.components : (Array.isArray(v.parts) ? v.parts : []),
+                consumption: v.consumption || (isBottom ? '1.45m' : '0.85m'),
+                fit: v.fit || parsed.fit || (isBottom ? 'Wide-Leg' : 'Fitted'),
+                complexity: v.complexity || parsed.complexity || 'Moyenne',
+                costEstimate: v.costEstimate || (isBottom ? '42 - 58 MAD' : '22 - 32 MAD'),
+                fabricSuggested: v.fabricSuggested || parsed.fabricSuggested || '',
+                fabricAlternatives: v.fabricAlternatives || parsed.fabricAlternatives || [],
+                mesures: v.mesures || []
+              };
+            }
+            return { name: defaultName, components: [String(v)] };
+          });
+        }
+
+        if (rawPiecesList.length > 0) {
+          result.pieces = rawPiecesList.map((p: any) => {
             const pieceTitle = p.name || p.type || p.piece || p.titre || p.nom || (parsed.category ? parsed.category : (isAr ? 'قطعة ملابس' : 'Pièce Confection'));
             return {
               name: pieceTitle,
@@ -2668,9 +2768,21 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
         });
         setSelectedTailles(targetAudience === 'enfants' ? KIDS_TAILLES : ADULT_TAILLES);
 
-        // Populate tailored Gamme de Montage
+        // Populate tailored Gamme de Montage (handles both Array and Object from Gemini)
+        let rawGammeList: any[] = [];
         if (parsed.gammeMontage && Array.isArray(parsed.gammeMontage) && parsed.gammeMontage.length > 0) {
-          result.gammeMontage = parsed.gammeMontage.map((g: any) => {
+          rawGammeList = parsed.gammeMontage;
+        } else if (parsed.gammeMontage && typeof parsed.gammeMontage === 'object') {
+          rawGammeList = Object.entries(parsed.gammeMontage).flatMap(([k, steps]: [string, any]) => {
+            if (Array.isArray(steps)) {
+              return steps.map((s: any) => typeof s === 'string' ? { nomFr: `${k}: ${s}`, nomAr: `${k}: ${s}`, machine: s.toLowerCase().includes('surjet') ? 'Surjeteuse 4 Fils' : s.toLowerCase().includes('recouv') ? 'Recouvreuse' : 'Piqueuse Plate', tempsMin: 1.2 } : s);
+            }
+            return [];
+          });
+        }
+
+        if (rawGammeList.length > 0) {
+          result.gammeMontage = rawGammeList.map((g: any) => {
             const rawPro = g.tempsPro || g.tempsMin || 1;
             const tPro = Math.max(0.1, Number(parseFloat(String(rawPro)).toFixed(2)));
             const tStd = g.tempsStandard ? Math.max(0.1, Number(parseFloat(String(g.tempsStandard)).toFixed(2))) : Number((tPro * 1.35).toFixed(2));
