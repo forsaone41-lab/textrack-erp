@@ -669,7 +669,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
     if (directoryFilter !== 'all' && m.pillar !== directoryFilter) return false;
     if (directoryFilter === 'tissu' && selectedFabricSpecialty !== 'all') {
       const mCategory = (m as any).fabricCategory;
-      const skills = ((m as any).skills || []).map((sk: string) => String(sk).toLowerCase());
+      const rawSkills = Array.isArray((m as any).skills) ? (m as any).skills : [];
+      const skills = rawSkills.map((sk: any) => String(sk || '').toLowerCase());
       let matches = mCategory === selectedFabricSpecialty;
       if (!matches) {
         if (selectedFabricSpecialty === 'crepe') matches = skills.some((s: string) => s.includes('crepe') || s.includes('satin') || s.includes('soie') || s.includes('mousseline') || s.includes('viscose') || s.includes('كريب'));
@@ -684,12 +685,13 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
     if (selectedCityFilter !== 'all' && !String(m.city || '').toLowerCase().includes(selectedCityFilter.toLowerCase())) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
+      const rawSkills = Array.isArray((m as any).skills) ? (m as any).skills : [];
       return String(m.name || '').toLowerCase().includes(q) ||
              String(m.city || '').toLowerCase().includes(q) ||
              String(m.specialty || '').toLowerCase().includes(q) ||
              String((m as any).specialtyTag || '').toLowerCase().includes(q) ||
              String(m.bio || '').toLowerCase().includes(q) ||
-             ((m as any).skills || []).some((sk: string) => String(sk).toLowerCase().includes(q));
+             rawSkills.some((sk: any) => String(sk || '').toLowerCase().includes(q));
     }
     return true;
   });
@@ -1789,15 +1791,21 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                   </div>
 
                   <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
-                    {[
-                      { id: 'all', label: 'كافة الأقمشة (الكل)', icon: '🌟', count: allProMembers.filter(m => m.pillar === 'tissu').length },
-                      { id: 'crepe', label: 'الكريب والأقمشة النسائية (Crêpe)', icon: '👗', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'crepe' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('crepe'))))).length },
-                      { id: 'streetwear', label: 'الستريتوير والمولطون 340g (Molleton)', icon: '🧥', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'streetwear' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('molleton'))))).length },
-                      { id: 'denim', label: 'الدينيم والجينز (Denim / Jeans)', icon: '👖', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'denim' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('denim'))))).length },
-                      { id: 'cargo', label: 'الجاباردين والسترات والكانفاس', icon: '🦺', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'cargo' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('gabardine'))))).length },
-                      { id: 'lin', label: 'الكتان والبوبلين الصيفي (Lin & Coton)', icon: '🌿', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'lin' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('lin'))))).length },
-                      { id: 'velours', label: 'المخمل والكوردوروي والشتاء (Velours)', icon: '❄️', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'velours' || (m.skills && m.skills.some((s: string) => s.toLowerCase().includes('corduroy'))))).length }
-                    ].map(fSpec => {
+                    {(() => {
+                      const hasSkill = (m: any, term: string) => {
+                        const skillsArr = Array.isArray(m?.skills) ? m.skills : [];
+                        return skillsArr.some((s: any) => String(s || '').toLowerCase().includes(term));
+                      };
+                      return [
+                        { id: 'all', label: 'كافة الأقمشة (الكل)', icon: '🌟', count: allProMembers.filter(m => m.pillar === 'tissu').length },
+                        { id: 'crepe', label: 'الكريب والأقمشة النسائية (Crêpe)', icon: '👗', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'crepe' || hasSkill(m, 'crepe'))).length },
+                        { id: 'streetwear', label: 'الستريتوير والمولطون 340g (Molleton)', icon: '🧥', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'streetwear' || hasSkill(m, 'molleton'))).length },
+                        { id: 'denim', label: 'الدينيم والجينز (Denim / Jeans)', icon: '👖', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'denim' || hasSkill(m, 'denim'))).length },
+                        { id: 'cargo', label: 'الجاباردين والسترات والكانفاس', icon: '🦺', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'cargo' || hasSkill(m, 'gabardine'))).length },
+                        { id: 'lin', label: 'الكتان والبوبلين الصيفي (Lin & Coton)', icon: '🌿', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'lin' || hasSkill(m, 'lin'))).length },
+                        { id: 'velours', label: 'المخمل والكوردوروي والشتاء (Velours)', icon: '❄️', count: allProMembers.filter(m => m.pillar === 'tissu' && ((m as any).fabricCategory === 'velours' || hasSkill(m, 'corduroy'))).length }
+                      ];
+                    })().map(fSpec => {
                       const isActive = selectedFabricSpecialty === fSpec.id;
                       return (
                         <button

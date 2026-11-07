@@ -219,17 +219,17 @@ export default function SupplierProfilePage({ supplierId: propSupplierId, onBack
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-6">
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">الحد الأدنى للطلب (MOQ)</span>
-                <span className="text-sm sm:text-base font-black text-indigo-300">{supplier.minQty}</span>
+                <span className="text-sm sm:text-base font-black text-indigo-300">{supplier.minQty || 'حسب الطلب'}</span>
               </div>
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">متوسط الأسعار (سعر الجملة)</span>
-                <span className="text-sm sm:text-base font-black text-emerald-400">{supplier.priceRange}</span>
+                <span className="text-sm sm:text-base font-black text-emerald-400">{supplier.priceRange || 'أسعار تفضيلية'}</span>
               </div>
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">سرعة التوصيل</span>
                 <span className="text-sm sm:text-base font-black text-amber-300 flex items-center gap-1">
                   <Truck className="w-4 h-4 text-amber-400" />
-                  <span>{supplier.deliveryTime.split('•')[0]}</span>
+                  <span>{String(supplier.deliveryTime || '24 إلى 48 ساعة').split('•')[0]}</span>
                 </span>
               </div>
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">

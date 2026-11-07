@@ -479,7 +479,8 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
         armure: 'Côte Rib 1x1 / 2x2',
         composition: '95% Coton Peigné · 5% Élasthanne (Lycra)',
         gsm: '240 - 260 GSM (g/m²)',
-        sourcingMA: 'كوت ريب 1x1 ليكرا قطن (درب عمر / طنجة)',
+        appellationCommerciale: 'كوت ريب 1x1 ليكرا قطن ممشط (Côte Rib Knit)',
+        sourcingMA: 'كوت ريب 1x1 ليكرا قطن ممشط (Côte Rib Knit)',
         traitement: 'Teinture en pièce (Garment Dye) + Lavage adoucissant anti-déformation'
       };
     }
@@ -488,7 +489,8 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
         armure: 'French Terry (Molleton Bouclette Non-Gratté)',
         composition: '100% Coton Peigné (ou 90/10 Poly)',
         gsm: '320 - 360 GSM (g/m²)',
-        sourcingMA: 'مولطون بوكليت غير مقطن (درب عمر / طنجة)',
+        appellationCommerciale: 'مولطون بوكليت غير مقطن (French Terry Coton)',
+        sourcingMA: 'مولطون بوكليت غير مقطن (French Terry Coton)',
         traitement: 'Enzyme Wash (غسيل أنزيمي) + Teinture Réactive / Washed Vintage'
       };
     }
@@ -497,7 +499,8 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
         armure: 'Molleton Lourd Gratté Intérieur (Brushed Fleece)',
         composition: '100% Coton Peigné (ou 80/20 Coton/Poly)',
         gsm: '340 - 380 GSM (g/m²)',
-        sourcingMA: 'مولطون شتوي مقطن كوتون 100% (درب عمر كازا)',
+        appellationCommerciale: 'مولطون شتوي مقطن 100% قطن (Brushed Fleece)',
+        sourcingMA: 'مولطون شتوي مقطن 100% قطن (Brushed Fleece)',
         traitement: 'Grattage doux haute densité + Sanforisage anti-rétrécissement'
       };
     }
@@ -506,7 +509,8 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
         armure: 'Maille Interlock Double Fonture',
         composition: '100% Coton Peigné Mercerisé',
         gsm: '240 - 280 GSM (g/m²)',
-        sourcingMA: 'إنترلوك قطن ممشط تركي / محلي (درب عمر)',
+        appellationCommerciale: 'إنترلوك قطن ممشط فاخر (Interlock Double Fonture)',
+        sourcingMA: 'إنترلوك قطن ممشط فاخر (Interlock Double Fonture)',
         traitement: 'Finition Bio-Polishing + Lavage siliconé'
       };
     }
@@ -515,7 +519,8 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
         armure: 'Sergé / Toile Canvas Lourde',
         composition: '100% Coton Renforcé (Heavy Canvas)',
         gsm: '300 - 350 GSM (g/m²)',
-        sourcingMA: 'كانفاس كوتون صلب للسراويل والجاكيطات (طنجة / كازا)',
+        appellationCommerciale: 'كانفاس قطني صلب ومقاوم (Heavy Cotton Canvas)',
+        sourcingMA: 'كانفاس قطني صلب ومقاوم (Heavy Cotton Canvas)',
         traitement: 'Stone Wash (غسيل حجري) + Sanforisage'
       };
     }
@@ -524,8 +529,19 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
         armure: 'Popeline de Coton Peigné',
         composition: '100% Coton Égyptien / Peigné',
         gsm: '125 - 145 GSM (g/m²)',
-        sourcingMA: 'ثوب بوبلين قمصان فاخر (درب عمر)',
+        appellationCommerciale: 'بوبلين قطن قمصان فاخر (Popeline Coton Peigné)',
+        sourcingMA: 'بوبلين قطن قمصان فاخر (Popeline Coton Peigné)',
         traitement: 'Mercerisage + Finition Easy-Care (repasse facile)'
+      };
+    }
+    if (f.includes('denim') || f.includes('jean') || f.includes('جينز') || f.includes('دنيم')) {
+      return {
+        armure: 'Sergé Croisé Denim Coton',
+        composition: '100% Coton Renforcé (Heavy Denim 12.5oz)',
+        gsm: '380 - 420 GSM (12.5 oz)',
+        appellationCommerciale: 'قماش دنيم جينز أصيل (Toile Denim Coton)',
+        sourcingMA: 'قماش دنيم جينز أصيل (Toile Denim Coton)',
+        traitement: 'Sanforisage + Stone Wash / Enzyme Wash'
       };
     }
     // Default fallback high-standard knit
@@ -533,7 +549,8 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
       armure: 'Jersey Coton Peigné Haut de Gamme',
       composition: '95% Coton Peigné · 5% Élasthanne',
       gsm: '220 - 250 GSM (g/m²)',
-      sourcingMA: 'جيرسي قطن ممتاز (سوق الجملة درب عمر / طنجة)',
+      appellationCommerciale: 'جيرسي قطن ممشط ممتاز (Single Jersey Coton)',
+      sourcingMA: 'جيرسي قطن ممشط ممتاز (Single Jersey Coton)',
       traitement: 'Teinture Réactive + Lavage aux enzymes'
     };
   };
@@ -855,7 +872,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
     <!-- 3. NOMENCLATURE DES MATIÈRES & SOURCING PIÈCE PAR PIÈCE -->
     <div class="section-title">
       <span>2. NOMENCLATURE TEXTILE & SOURCING (PIÈCE PAR PIÈCE)</span>
-      <span>FOURNISSEURS AGREEES MA</span>
+      <span>SPÉCIFICATIONS TEXTILES</span>
     </div>
     <table>
       <thead>
@@ -863,7 +880,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
           <th style="width: 16%;">${isAr ? 'القطعة' : 'Pièce'}</th>
           <th style="width: 22%;">${isAr ? 'نوع القماش والنسج' : 'Tissu & Armure'}</th>
           <th style="width: 24%;">${isAr ? 'التركيبة والغراماج (GSM)' : 'Composition & Grammage'}</th>
-          <th style="width: 26%;">${isAr ? 'السوق المغربي (درب عمر / طنجة)' : 'Sourcing Marché MA'}</th>
+          <th style="width: 26%;">${isAr ? 'الاسم التجاري للثوب' : 'Désignation Commerciale du Tissu'}</th>
           <th style="width: 12%; text-align: center;">${isAr ? 'الاستهلاك' : 'Métrage'}</th>
         </tr>
       </thead>
@@ -875,7 +892,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
             <td class="font-bold uppercase">${p.name}</td>
             <td><strong>${p.fabricSuggested || spec.armure}</strong></td>
             <td><span class="font-mono">${spec.composition}</span><br/><strong class="font-mono">${spec.gsm}</strong></td>
-            <td>${spec.sourcingMA}</td>
+            <td>${spec.appellationCommerciale || spec.sourcingMA}</td>
             <td class="text-center font-bold font-mono">${p.consumption || '1.30m'}</td>
           </tr>
           `;

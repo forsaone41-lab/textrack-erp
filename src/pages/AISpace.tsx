@@ -806,33 +806,34 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           const isAthleticColor = (upperBlueNavy > 20 || upperDark > upperCount * 0.35) && (lowerBlueNavy > 20 || lowerDark > 80);
           const hasStripes = stripeContrast > 28 || (upperLight > 20 && upperDark > 20);
           const isExplicitDenim = (fn.includes('denim') || fn.includes('jean') || fn.includes('جينز') || fn.includes('دنيم'));
-          const isFullBodyWithLegs = hasPantsLegs && (aspectRatio > 1.25 || bodyH > H * 0.55);
+          const isFullBody = (aspectRatio > 1.20 || bodyH > H * 0.50);
 
-          // 1. Denim / Jean Ensemble ONLY if explicitly indicated by file/text
-          if (isFullBodyWithLegs && isExplicitDenim) {
+          // 1. Denim / Jean Ensemble ONLY if explicitly indicated by file name or text
+          if (isFullBody && isExplicitDenim) {
             return resolve('ensemble denim veste et pantalon jean طقم جينز دنيم (فيست + سروال)');
           }
 
-          // 2. Tracksuit / Loungewear / Streetwear 2 Pièces (Top + Pantalon Wide Leg / Jogging)
-          if (isFullBodyWithLegs) {
+          // 2. Full Body Dress / Abaya (No leg gap, very tall continuous silhouette)
+          if (aspectRatio > 1.55 && !hasPantsLegs && bodyH > H * 0.72) {
+            return resolve('robe abaya فستان عصري أو عباية');
+          }
+
+          // 3. Tracksuit / Loungewear / Streetwear 2 Pièces (Top Rib / Manches Longues + Pantalon Wide Leg / Sweatpants)
+          // Default for full body fashion model portraits
+          if (isFullBody || hasPantsLegs) {
             return resolve('ensemble 2 pièces loungewear streetwear haut manches longues crop top et pantalon wide leg sweatpants طقم لاونج ستريتوير قطعتين');
           }
 
-          // 3. Pants / Joggers alone (Strict: only if aspect ratio is tall and body width is narrow like real trousers)
-          if (hasPantsLegs && aspectRatio > 1.35 && bodyW < bodyH * 0.65) {
-            if (lowerBlueNavy > 18) {
+          // 4. Pants / Joggers alone (Strict: only if aspect ratio is tall and body width is narrow like real trousers)
+          if (aspectRatio > 1.35 && bodyW < bodyH * 0.65) {
+            if (isExplicitDenim) {
               return resolve('pantalon jean denim سروال جينز دنيم كاجوال');
             }
             return resolve('pantalon jogging سروال رياضي جوغينغ كاجوال');
           }
 
-          // 4. Full Body Dress / Abaya (No leg gap, elongated flowing silhouette)
-          if (aspectRatio > 1.5 && !hasPantsLegs && bodyH > H * 0.70) {
-            return resolve('robe abaya فستان عصري أو عباية');
-          }
-
-          // 5. Upper body (Veste Denim Jean vs Sweatshirt vs T-shirt)
-          if (upperBlueNavy > 15) {
+          // 5. Upper body garments (Sweatshirt vs T-shirt, NEVER guess denim from background colors)
+          if (isExplicitDenim) {
             return resolve('veste en jean denim جاكيت فيست جينز دنيم');
           }
           if (hasStripes || upperDark > upperCount * 0.35) {
@@ -2608,9 +2609,11 @@ Analyse l'image réelle fournie avec une très haute précision visuelle et tech
 Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
       const candidateModels = [
-        'gemini-2.5-flash',
+        'gemini-1.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-pro',
         'gemini-flash-latest',
-        'gemini-2.5-pro'
+        'gemini-2.5-flash'
       ];
 
       const keysToTry = [
