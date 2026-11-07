@@ -43,7 +43,8 @@ export const CATEGORY_MESURES: Record<
       { nom: 'الخصر (Taille)', valeurs: { S: 76, M: 80, L: 84, XL: 88, XXL: 92 } },
       { nom: 'الورك (Hanches)', valeurs: { S: 96, M: 100, L: 104, XL: 108, XXL: 112 } },
       { nom: 'الطول (Longueur)', valeurs: { S: 102, M: 104, L: 106, XL: 108, XXL: 110 } },
-      { nom: 'محيط الفخذ (Cuisse)', valeurs: { S: 58, M: 60, L: 62, XL: 64, XXL: 66 } }
+      { nom: 'محيط الفخذ (Cuisse)', valeurs: { S: 58, M: 60, L: 62, XL: 64, XXL: 66 } },
+      { nom: 'عرض أسفل الساق (Bas de Jambe)', valeurs: { S: 20, M: 21, L: 22, XL: 23, XXL: 24 } }
     ],
     Veste: [
       { nom: 'الصدر (Poitrine)', valeurs: { S: 98, M: 104, L: 110, XL: 116, XXL: 122 } },
@@ -71,6 +72,13 @@ export const CATEGORY_MESURES: Record<
     ]
   },
   adulte_femme: {
+    CropTop: [
+      { nom: 'الصدر (Poitrine)', valeurs: { S: 84, M: 88, L: 94, XL: 100, XXL: 106 } },
+      { nom: 'الكتف (Épaules)', valeurs: { S: 36, M: 38, L: 40, XL: 42, XXL: 44 } },
+      { nom: 'الخصر (Taille)', valeurs: { S: 66, M: 70, L: 76, XL: 82, XXL: 88 } },
+      { nom: 'الطول (Longueur)', valeurs: { S: 44, M: 46, L: 48, XL: 50, XXL: 52 } },
+      { nom: 'طول الكم (Manche Longue)', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } }
+    ],
     TShirt: [
       { nom: 'الصدر (Poitrine)', valeurs: { S: 88, M: 92, L: 96, XL: 100, XXL: 104 } },
       { nom: 'الكتف (Épaules)', valeurs: { S: 37, M: 39, L: 41, XL: 43, XXL: 45 } },
@@ -79,10 +87,11 @@ export const CATEGORY_MESURES: Record<
       { nom: 'طول الكم (Manche)', valeurs: { S: 18, M: 19, L: 20, XL: 21, XXL: 22 } }
     ],
     Pantalon: [
-      { nom: 'الخصر (Taille)', valeurs: { S: 68, M: 72, L: 76, XL: 80, XXL: 84 } },
-      { nom: 'الورك (Hanches)', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
-      { nom: 'الطول (Longueur)', valeurs: { S: 98, M: 100, L: 102, XL: 104, XXL: 106 } },
-      { nom: 'محيط الفخذ (Cuisse)', valeurs: { S: 54, M: 56, L: 58, XL: 60, XXL: 62 } }
+      { nom: 'الخصر المطاطي (Taille / Ceinture)', valeurs: { S: 68, M: 72, L: 76, XL: 80, XXL: 84 } },
+      { nom: 'الورك / الحوض (Hanches / Bassin)', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
+      { nom: 'الطول الخارجي (Longueur Totale)', valeurs: { S: 98, M: 100, L: 102, XL: 104, XXL: 106 } },
+      { nom: 'محيط الفخذ (Cuisse)', valeurs: { S: 54, M: 56, L: 58, XL: 60, XXL: 62 } },
+      { nom: 'عرض أسفل الساق (Bas de Jambe)', valeurs: { S: 26, M: 27, L: 28, XL: 29, XXL: 30 } }
     ],
     Veste: [
       { nom: 'الصدر (Poitrine)', valeurs: { S: 90, M: 94, L: 98, XL: 102, XXL: 106 } },
@@ -202,7 +211,14 @@ export function getStandardMesuresForCategory(
   const pDict = CATEGORY_MESURES[profileKey] || CATEGORY_MESURES.adulte_homme;
   const low = (pieceName || '').toLowerCase();
 
-  // 1. Pantalon / Jogging / Short / Bas
+  // 0. Crop Top / Top Fitté
+  if (low.includes('crop') || (low.includes('top') && !low.includes('pantalon') && !low.includes('bas'))) {
+    if (gender === 'femmes' && (pDict as any).CropTop) {
+      return JSON.parse(JSON.stringify((pDict as any).CropTop));
+    }
+  }
+
+  // 1. Pantalon / Jogging / Short / Bas / Wide-Leg
   if (
     low.includes('pantalon') ||
     low.includes('jogging') ||
@@ -213,7 +229,13 @@ export function getStandardMesuresForCategory(
     low.includes('شورط') ||
     low.includes('بنطلون') ||
     low.includes('بانتالون') ||
-    low.includes('bermuda')
+    low.includes('bermuda') ||
+    low.includes('wide-leg') ||
+    low.includes('wide leg') ||
+    low.includes('sweatpant') ||
+    low.includes('palazzo') ||
+    low.includes('bas') ||
+    low.includes('التحتاني')
   ) {
     return JSON.parse(JSON.stringify(pDict.Pantalon));
   }
@@ -667,15 +689,32 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
       }
     }
 
-    if (!imageSrc || !imageSrc.startsWith('data:image')) {
-      return resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
+    if (!imageSrc) {
+      return resolve('ensemble 2 pièces loungewear streetwear femme haut manches longues crop top et pantalon wide leg sweatpants طقم لاونج ستريتوير نسائي قطعتين (توب + سروال)');
     }
 
     try {
       const img = new Image();
-      img.crossOrigin = 'anonymous';
+      if (imageSrc.startsWith('http')) {
+        img.crossOrigin = 'anonymous';
+      }
       img.onload = () => {
         try {
+          const natRatio = (img.naturalHeight || img.height || 1) / Math.max(1, img.naturalWidth || img.width || 1);
+          const isExplicitDenim = (fn.includes('denim') || fn.includes('jean') || fn.includes('جينز') || fn.includes('دنيم'));
+
+          // Portrait full-body fashion model (tall vertical photo like the user's woman model)
+          if (natRatio >= 1.15 && !isExplicitDenim) {
+            return resolve('ensemble 2 pièces loungewear streetwear femme haut manches longues crop top et pantalon wide leg sweatpants طقم لاونج ستريتوير نسائي قطعتين (توب + سروال)');
+          }
+
+          if (fn.includes('sweat') || fn.includes('hoodie') || fn.includes('سويت') || fn.includes('هودي')) {
+            return resolve('sweatshirt col rond سويت شيرت كول رون');
+          }
+          if (fn.includes('tshirt') || fn.includes('t-shirt') || fn.includes('تيشرت')) {
+            return resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
+          }
+
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           if (!ctx) {
@@ -805,7 +844,6 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           const hasPantsLegs = lowerRowCount > 3 && (legSeparationRows / lowerRowCount) >= 0.35;
           const isAthleticColor = (upperBlueNavy > 20 || upperDark > upperCount * 0.35) && (lowerBlueNavy > 20 || lowerDark > 80);
           const hasStripes = stripeContrast > 28 || (upperLight > 20 && upperDark > 20);
-          const isExplicitDenim = (fn.includes('denim') || fn.includes('jean') || fn.includes('جينز') || fn.includes('دنيم'));
           const isFullBody = (aspectRatio > 1.20 || bodyH > H * 0.50);
 
           // 1. Denim / Jean Ensemble ONLY if explicitly indicated by file name or text
@@ -821,7 +859,7 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           // 3. Tracksuit / Loungewear / Streetwear 2 Pièces (Top Rib / Manches Longues + Pantalon Wide Leg / Sweatpants)
           // Default for full body fashion model portraits
           if (isFullBody || hasPantsLegs) {
-            return resolve('ensemble 2 pièces loungewear streetwear haut manches longues crop top et pantalon wide leg sweatpants طقم لاونج ستريتوير قطعتين');
+            return resolve('ensemble 2 pièces loungewear streetwear femme haut manches longues crop top et pantalon wide leg sweatpants طقم لاونج ستريتوير نسائي قطعتين (توب + سروال)');
           }
 
           // 4. Pants / Joggers alone (Strict: only if aspect ratio is tall and body width is narrow like real trousers)
@@ -929,7 +967,7 @@ function buildFallbackAnalysis(
       ? 'طقم لاونج وير قطعتين (توب كوت ريب + سروال وايد ليغ بومبليت)'
       : 'Ensemble 2 Pièces Loungewear (Crop Top Côte Rib + Pantalon Wide-Leg French Terry)';
 
-    const mesuresTop = getStandardMesuresForCategory('TShirt', audience, gender);
+    const mesuresTop = getStandardMesuresForCategory('CropTop', audience, gender);
     const mesuresPantalon = getStandardMesuresForCategory('Pantalon', audience, gender);
 
     piecesList = [
@@ -1729,6 +1767,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [selectedCategory, setSelectedCategory] = useState<'Robe' | 'Caftan' | 'Djellaba' | 'Chemise' | 'Pantalon'>('Robe');
   const [customMesures, setCustomMesures] = useState<any[]>(() => JSON.parse(JSON.stringify(STANDARD_MESURES['Robe'])));
   const [selectedTailles, setSelectedTailles] = useState<string[]>(ADULT_TAILLES);
+  const [selectedMesuresPieceIdx, setSelectedMesuresPieceIdx] = useState<number | 'all'>('all');
 
   // Prospects Integration States
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -2103,6 +2142,68 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     ]);
   };
 
+  const handleAddPantalonToEnsemble = () => {
+    const pantsMesures = getStandardMesuresForCategory('Pantalon', targetAudience, targetGender);
+    const newPantPiece = {
+      name: isAr ? 'سروال رياضي بقصة عريضة منسدلة (Pantalon Wide-Leg)' : 'Pantalon Sweatpants Coupe Wide-Leg / Évasé',
+      consumption: targetAudience === 'enfants' ? '0.80m' : '1.45m',
+      fit: isAr ? 'قصة واسعة متهدلة كاجوال (Wide-Leg Slouchy)' : 'Coupe Ample Wide-Leg / Palazzo',
+      complexity: isAr ? 'متوسطة' : 'Moyenne',
+      costEstimate: '42 - 58 MAD',
+      components: isAr
+        ? ['رجلين أمامية وخلفية بقصة عريضة منسدلة', 'حزام مطاطي عريض مع 3 خياطات متوازية', 'عيون حديدية غير قابلة للصدأ مع قيطان قطني وأطراف معدنية', 'جيوب جانبية مدمجة بالدرزة', 'ثنية أسفل الرِجلين واسعة ومسدولة']
+        : ['Jambes évasées tombé lourd fluide', 'Ceinture élastiquée avec surpiqûres 3 aiguilles', 'Œillets métal inox avec cordon tubulaire et aglets métal', 'Poches latérales italiennes dans la couture', 'Ourlets bas larges droits'],
+      fabricSuggested: isAr ? 'مولطون بومبليت غير مقطن 100% قطن ممشط 340g (French Terry)' : 'French Terry Molleton Non-Gratté 100% Coton 340 GSM',
+      fabricAlternatives: [
+        { name: isAr ? 'مولطون شتوي مقطن 340g' : 'Molleton Gratté Lourd 340g', pros: isAr ? 'دافئ جداً لموسم الشتاء' : 'Très chaud pour l\'hiver', cons: isAr ? 'أكثر انتفاخاً وأقل انسيابية فالنزلة' : 'Moins fluide au tombé' },
+        { name: isAr ? 'إنترلوك قطن ثقيل 290g' : 'Interlock Coton Lourd 290g', pros: isAr ? 'وجهان ناعمان بدون حلقات' : 'Double face lisse', cons: isAr ? 'أخف وزناً' : 'Moins d\'épaisseur' }
+      ],
+      mesures: pantsMesures
+    };
+
+    if (!analysisResult) {
+      const fb = buildFallbackAnalysis('ensemble 2 pièces loungewear crop top rib et pantalon wide leg sweatpants', isAr, 2, targetAudience, targetGender);
+      setAnalysisResult(fb);
+      setCustomMesures(fb.pieces[0].mesures);
+      setPiecesMesures(fb.pieces.map((p: any) => JSON.parse(JSON.stringify(p.mesures))));
+      setSelectedMesuresPieceIdx('all');
+      return;
+    }
+
+    const currentPieces = analysisResult.pieces || [];
+    const hasPantalon = currentPieces.some((p: any) => {
+      const n = (p.name || '').toLowerCase();
+      return n.includes('pantalon') || n.includes('jogging') || n.includes('سروال') || n.includes('bas');
+    });
+
+    let updatedPieces: any[] = [];
+    if (hasPantalon) {
+      updatedPieces = currentPieces.map((p: any) => {
+        const n = (p.name || '').toLowerCase();
+        if (n.includes('pantalon') || n.includes('jogging') || n.includes('سروال') || n.includes('bas')) {
+          return { ...p, mesures: pantsMesures };
+        }
+        return p;
+      });
+    } else {
+      updatedPieces = [...currentPieces, newPantPiece];
+    }
+
+    const updatedAnalysis = {
+      ...analysisResult,
+      category: updatedPieces.length > 1
+        ? (isAr ? 'طقم لاونج وير قطعتين (توب + سروال وايد ليغ)' : 'Ensemble 2 Pièces Loungewear (Top + Pantalon Wide-Leg)')
+        : analysisResult.category,
+      consumption: '2.30m',
+      pieces: updatedPieces,
+      components: updatedPieces.flatMap((p: any) => p.components || [])
+    };
+
+    setAnalysisResult(updatedAnalysis);
+    setPiecesMesures(updatedPieces.map((p: any) => JSON.parse(JSON.stringify(p.mesures))));
+    setSelectedMesuresPieceIdx('all');
+  };
+
   const exportToFicheTechnique = async (mode: 'current' | 'complete' = 'current') => {
     setActiveTab('fiche');
     setExporting(true);
@@ -2452,13 +2553,33 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
     const visualHint = await detectGarmentFromImageAsync(targetImage, targetFileName);
 
+    const vhLow = (visualHint || '').toLowerCase();
+    const fnLow = (targetFileName || '').toLowerCase();
+    const isFemale = (
+      vhLow.includes('femme') ||
+      vhLow.includes('نسائي') ||
+      vhLow.includes('crop') ||
+      vhLow.includes('robe') ||
+      vhLow.includes('abaya') ||
+      vhLow.includes('jupe') ||
+      fnLow.includes('femme') ||
+      fnLow.includes('woman') ||
+      fnLow.includes('women') ||
+      fnLow.includes('girl') ||
+      fnLow.includes('fille')
+    );
+    const effectiveGender: 'hommes' | 'femmes' = isFemale ? 'femmes' : targetGender;
+    if (isFemale && targetGender !== 'femmes') {
+      setTargetGender('femmes');
+    }
+
     const apiKey = getActiveApiKey();
     // Isolate new analysis: never contaminate new model analysis with old user chats
     const combinedContext = visualHint || (selectedLead?.type ? selectedLead.type : 't-shirt premium coton col rond');
 
     const executeFallbackAnalysis = (noticeMsg?: string, contextOverride?: string) => {
       const ctxToUse = contextOverride || combinedContext;
-      const fallbackResult = buildFallbackAnalysis(ctxToUse, isAr, undefined, targetAudience, targetGender);
+      const fallbackResult = buildFallbackAnalysis(ctxToUse, isAr, undefined, targetAudience, effectiveGender);
       setSelectedTailles(targetAudience === 'enfants' ? KIDS_TAILLES : ADULT_TAILLES);
       setCustomMesures(fallbackResult.pieces[0].mesures);
       setPiecesMesures(fallbackResult.pieces.map((p: any) => JSON.parse(JSON.stringify(p.mesures))));
@@ -2519,12 +2640,12 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
       const targetSizesList = targetAudience === 'enfants' ? '4A, 6A, 8A, 10A, 12A, 14A' : 'S, M, L, XL, XXL';
       const targetProfileDescAr = targetAudience === 'enfants'
-        ? `الفئة المستهدفة المحددة: أطفال صغار (${targetGender === 'femmes' ? 'بنات' : 'أولاد'} من 4 إلى 14 سنة). المقاسات المطلوبة في مصفوفة mesures هي: [${targetSizesList}]. استهلاك القماش مناسب لملابس الأطفال الصغيرة (بين 0.60m و 0.95m للقطعة).`
-        : `الفئة المستهدفة المحددة: كبار (${targetGender === 'femmes' ? 'نساء' : 'رجال'}). المقاسات المطلوبة في مصفوفة mesures هي: [${targetSizesList}]. استهلاك القماش مناسب لملابس الكبار.`;
+        ? `الفئة المستهدفة المحددة: أطفال صغار (${effectiveGender === 'femmes' ? 'بنات' : 'أولاد'} من 4 إلى 14 سنة). المقاسات المطلوبة في مصفوفة mesures هي: [${targetSizesList}]. استهلاك القماش مناسب لملابس الأطفال الصغيرة (بين 0.60m و 0.95m للقطعة).`
+        : `الفئة المستهدفة المحددة: كبار (${effectiveGender === 'femmes' ? 'نساء' : 'رجال'}). المقاسات المطلوبة في مصفوفة mesures هي: [${targetSizesList}]. استهلاك القماش مناسب لملابس الكبار.`;
 
       const targetProfileDescFr = targetAudience === 'enfants'
-        ? `Profil cible : Enfants (${targetGender === 'femmes' ? 'Filles' : 'Garçons'} 4 à 14 ans). Tailles requises : [${targetSizesList}], métrage adapté aux enfants (0.60m - 0.95m par pièce).`
-        : `Profil cible : Adultes (${targetGender === 'femmes' ? 'Femmes' : 'Hommes'}). Tailles requises : [${targetSizesList}], métrage adapté aux adultes.`;
+        ? `Profil cible : Enfants (${effectiveGender === 'femmes' ? 'Filles' : 'Garçons'} 4 à 14 ans). Tailles requises : [${targetSizesList}], métrage adapté aux enfants (0.60m - 0.95m par pièce).`
+        : `Profil cible : Adultes (${effectiveGender === 'femmes' ? 'Femmes' : 'Hommes'}). Tailles requises : [${targetSizesList}], métrage adapté aux adultes.`;
 
       const analysisPrompt = isAr
         ? `أنت كبير مهندسي النسيج وتصنيع الملابس الجاهزة في ورشة BEYA Creative بالمغرب (BEYA Expert).
@@ -2757,7 +2878,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
           result.components = result.pieces.flatMap((p: any) => p.components);
         } else {
           // If no pieces parsed, enrich from fallback
-          const fb = buildFallbackAnalysis(combinedContext, isAr, undefined, targetAudience, targetGender);
+          const fb = buildFallbackAnalysis(combinedContext, isAr, undefined, targetAudience, effectiveGender);
           result.pieces = fb.pieces;
           result.components = fb.components;
           if (!result.fabricSuggested) result.fabricSuggested = fb.fabricSuggested;
@@ -2766,7 +2887,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, totalCo
         // Guarantee standard measurements for detected garment if Gemini omitted them
         result.pieces.forEach((p: any) => {
           if (!p.mesures || !Array.isArray(p.mesures) || p.mesures.length === 0) {
-            p.mesures = getStandardMesuresForCategory(p.name || result.category || '', targetAudience, targetGender);
+            p.mesures = getStandardMesuresForCategory(p.name || result.category || '', targetAudience, effectiveGender);
           }
         });
         setSelectedTailles(targetAudience === 'enfants' ? KIDS_TAILLES : ADULT_TAILLES);
@@ -5489,32 +5610,165 @@ ${userMessage}
                 </div>
               </div>
 
+              {/* PIECE SWITCHER / FILTER BAR FOR MULTI-PIECE ENSEMBLES */}
+              {analysisResult?.pieces && analysisResult.pieces.length > 1 && (
+                <div className={`flex items-center gap-2 overflow-x-auto pb-1 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMesuresPieceIdx('all')}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                      selectedMesuresPieceIdx === 'all'
+                        ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300'
+                        : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                  >
+                    <span>📋</span>
+                    <span>{isAr ? 'عرض كل القطع (طقم كامل)' : 'Toutes les pièces (Ensemble complet)'}</span>
+                    <span className="px-1.5 py-0.2 rounded-full bg-black/20 text-[10px]">{analysisResult.pieces.length}</span>
+                  </button>
+
+                  {analysisResult.pieces.map((p, pIdx) => {
+                    const isPants = String(p.name || '').toLowerCase().includes('pantalon') ||
+                                    String(p.name || '').toLowerCase().includes('bas') ||
+                                    String(p.name || '').includes('سروال') ||
+                                    String(p.name || '').includes('التحتاني');
+                    const icon = isPants ? '👖' : '👕';
+                    return (
+                      <button
+                        key={pIdx}
+                        type="button"
+                        onClick={() => setSelectedMesuresPieceIdx(pIdx)}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                          selectedMesuresPieceIdx === pIdx
+                            ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300'
+                            : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                        }`}
+                      >
+                        <span>{icon}</span>
+                        <span>{p.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* SINGLE PIECE HELPER BANNER: ADD PANTS TO MAKE FULL 2-PIECE ENSEMBLE */}
+              {analysisResult?.pieces && analysisResult.pieces.length === 1 && (
+                <div className="p-3.5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-indigo-500/10 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xl">👖</span>
+                    <div>
+                      <strong className="text-slate-900 block font-black">
+                        {isAr ? 'الصورة تظهر طقماً من قطعتين (توب + سروال)؟' : 'Votre modèle comporte un pantalon / bas assorti ?'}
+                      </strong>
+                      <span className="text-slate-500 text-[11px]">
+                        {isAr ? 'أضف قياسات السروال الواسع (Wide-Leg Sweatpants) بضغطة واحدة لإكمال الطقم.' : 'Ajoutez le barème complet du pantalon en 1 clic pour un ensemble 2 pièces.'}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddPantalonToEnsemble}
+                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black rounded-xl text-xs shadow-md transition flex items-center gap-2 cursor-pointer shrink-0 active:scale-95"
+                  >
+                    <span>➕</span>
+                    <span>{isAr ? 'إضافة قياسات السروال 👖' : 'Ajouter Barème Pantalon 👖'}</span>
+                  </button>
+                </div>
+              )}
+
               {analysisResult?.pieces && analysisResult.pieces.length > 0 && piecesMesures.length > 0 ? (
-                analysisResult.pieces.map((p, pIdx) => (
-                  <div key={pIdx} className="space-y-2">
-                    {analysisResult.pieces && analysisResult.pieces.length > 1 && (
-                      <h4 className="text-sm font-black text-indigo-700 flex items-center gap-2">📦 {p.name}</h4>
-                    )}
-                    <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
+                analysisResult.pieces.map((p, pIdx) => {
+                  if (selectedMesuresPieceIdx !== 'all' && selectedMesuresPieceIdx !== pIdx) return null;
+                  const isPants = String(p.name || '').toLowerCase().includes('pantalon') ||
+                                  String(p.name || '').toLowerCase().includes('bas') ||
+                                  String(p.name || '').includes('سروال') ||
+                                  String(p.name || '').includes('التحتاني');
+                  const pieceIcon = isPants ? '👖' : '👕';
+                  return (
+                    <div key={pIdx} className="space-y-2 bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                      <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
+                        <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                          <span className="text-base">{pieceIcon}</span>
+                          <span>{p.name}</span>
+                        </h4>
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-[11px] border border-indigo-200">
+                            {targetGender === 'femmes' ? (isAr ? 'مقاسات نسائية 👩' : 'Femmes 👩') : (isAr ? 'مقاسات رجالية 👨' : 'Hommes 👨')}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-[11px]">
+                            {p.fit || 'Regular'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100/80 border-b border-slate-200">
+                              <th className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider">{isAr ? 'نقطة القياس' : 'Point de Mesure'}</th>
+                              {selectedTailles.map(size => (
+                                <th key={size} className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider text-center">{size}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 bg-white">
+                            {(piecesMesures[pIdx] || p.mesures || []).map((row: any, rowIndex: number) => (
+                              <tr key={rowIndex} className="hover:bg-slate-50/80 transition-colors">
+                                <td className="p-3 text-xs font-black text-slate-800">{row.nom}</td>
+                                {selectedTailles.map(size => (
+                                  <td key={size} className="p-3 text-center">
+                                    <input
+                                      type="number"
+                                      value={row.valeurs?.[size] ?? ''}
+                                      onChange={e => handlePieceCellChange(pIdx, rowIndex, size, Number(e.target.value))}
+                                      className="w-16 p-1.5 text-center text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-indigo-600 focus:outline-none"
+                                    />
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                /* Fallback State: Show both Top and Pants so user is never stuck with missing pants */
+                <div className="space-y-5">
+                  {/* Top Piece Table */}
+                  <div className="space-y-2 bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                        <span>👕</span>
+                        <span>{isAr ? 'القطعة 1: توب كوت ريب (Crop Top Rib Knit)' : 'Pièce 1 : Crop Top Manches Longues (Côte Rib)'}</span>
+                      </h4>
+                      <span className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-[11px] border border-indigo-200">
+                        {targetGender === 'femmes' ? (isAr ? 'مقاسات نسائية 👩' : 'Femmes 👩') : (isAr ? 'مقاسات رجالية 👨' : 'Hommes 👨')}
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-slate-100 border-b border-slate-200">
-                            <th className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider">{isAr ? 'القياس' : 'Mesure'}</th>
+                          <tr className="bg-slate-100/80 border-b border-slate-200">
+                            <th className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider">{isAr ? 'نقطة القياس' : 'Point de Mesure'}</th>
                             {selectedTailles.map(size => (
                               <th key={size} className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider text-center">{size}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
-                          {(piecesMesures[pIdx] || []).map((row, rowIndex) => (
-                            <tr key={rowIndex} className="hover:bg-slate-50 transition-colors">
+                          {(customMesures && customMesures.length > 0 ? customMesures : getStandardMesuresForCategory('CropTop', targetAudience, targetGender)).map((row: any, rowIndex: number) => (
+                            <tr key={rowIndex} className="hover:bg-slate-50/80 transition-colors">
                               <td className="p-3 text-xs font-black text-slate-800">{row.nom}</td>
                               {selectedTailles.map(size => (
                                 <td key={size} className="p-3 text-center">
                                   <input
                                     type="number"
-                                    value={row.valeurs[size] || ''}
-                                    onChange={e => handlePieceCellChange(pIdx, rowIndex, size, Number(e.target.value))}
+                                    value={row.valeurs?.[size] ?? ''}
+                                    onChange={e => handleCellChange(rowIndex, size, Number(e.target.value))}
                                     className="w-16 p-1.5 text-center text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-indigo-600 focus:outline-none"
                                   />
                                 </td>
@@ -5525,36 +5779,49 @@ ${userMessage}
                       </table>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-100 border-b border-slate-200">
-                        <th className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider">{isAr ? 'القياس' : 'Mesure'}</th>
-                        {selectedTailles.map(size => (
-                          <th key={size} className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider text-center">{size}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      {customMesures.map((row, rowIndex) => (
-                        <tr key={rowIndex} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3 text-xs font-black text-slate-800">{row.nom}</td>
-                          {selectedTailles.map(size => (
-                            <td key={size} className="p-3 text-center">
-                              <input
-                                type="number"
-                                value={row.valeurs[size] || ''}
-                                onChange={e => handleCellChange(rowIndex, size, Number(e.target.value))}
-                                className="w-16 p-1.5 text-center text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-indigo-600 focus:outline-none"
-                              />
-                            </td>
+
+                  {/* Pants Piece Table */}
+                  <div className="space-y-2 bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                        <span>👖</span>
+                        <span>{isAr ? 'القطعة 2: سروال واسع منسدل (Pantalon Wide-Leg / Sweatpants)' : 'Pièce 2 : Pantalon Sweatpants Wide-Leg (French Terry)'}</span>
+                      </h4>
+                      <span className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-[11px] border border-indigo-200">
+                        {targetGender === 'femmes' ? (isAr ? 'مقاسات نسائية 👩' : 'Femmes 👩') : (isAr ? 'مقاسات رجالية 👨' : 'Hommes 👨')}
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-100/80 border-b border-slate-200">
+                            <th className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider">{isAr ? 'نقطة القياس' : 'Point de Mesure'}</th>
+                            {selectedTailles.map(size => (
+                              <th key={size} className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider text-center">{size}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          {getStandardMesuresForCategory('Pantalon', targetAudience, targetGender).map((row: any, rowIndex: number) => (
+                            <tr key={rowIndex} className="hover:bg-slate-50/80 transition-colors">
+                              <td className="p-3 text-xs font-black text-slate-800">{row.nom}</td>
+                              {selectedTailles.map(size => (
+                                <td key={size} className="p-3 text-center">
+                                  <input
+                                    type="number"
+                                    value={row.valeurs?.[size] ?? ''}
+                                    onChange={e => handleCellChange(rowIndex, size, Number(e.target.value))}
+                                    className="w-16 p-1.5 text-center text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-indigo-600 focus:outline-none"
+                                  />
+                                </td>
+                              ))}
+                            </tr>
                           ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

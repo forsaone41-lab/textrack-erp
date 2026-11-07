@@ -952,14 +952,67 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
       </thead>
       <tbody>
         ${(() => {
+          if (pieces.length > 1) {
+            return pieces.map((pc: any, pcIdx: number) => {
+              const isPants = String(pc.name || '').toLowerCase().includes('pantalon') ||
+                              String(pc.name || '').toLowerCase().includes('bas') ||
+                              String(pc.name || '').toLowerCase().includes('sweatpant') ||
+                              String(pc.name || '').toLowerCase().includes('wide-leg') ||
+                              String(pc.name || '').includes('سروال') ||
+                              String(pc.name || '').includes('التحتاني');
+
+              const pMesures = pc.mesures && pc.mesures.length > 0
+                ? pc.mesures
+                : (isPants
+                    ? [
+                        { nom: 'Tour de Taille / Ceinture / الخصر المطاطي', valeurs: { S: 68, M: 72, L: 76, XL: 80, XXL: 84 } },
+                        { nom: 'Tour de Bassin / Hanches / الورك والحوض', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
+                        { nom: 'Longueur Totale / الطول الخارجي للسروال', valeurs: { S: 98, M: 100, L: 102, XL: 104, XXL: 106 } },
+                        { nom: 'Tour de Cuisse / محيط الفخذ', valeurs: { S: 54, M: 56, L: 58, XL: 60, XXL: 62 } },
+                        { nom: 'Largeur Bas de Jambe / عرض أسفل الساق', valeurs: { S: 26, M: 27, L: 28, XL: 29, XXL: 30 } }
+                      ]
+                    : [
+                        { nom: 'Tour de Poitrine / محيط الصدر', valeurs: { S: 84, M: 88, L: 94, XL: 100, XXL: 106 } },
+                        { nom: 'Carrure Épaules / عرض الكتفين', valeurs: { S: 36, M: 38, L: 40, XL: 42, XXL: 44 } },
+                        { nom: 'Tour de Taille / محيط الخصر', valeurs: { S: 66, M: 70, L: 76, XL: 82, XXL: 88 } },
+                        { nom: 'Longueur Totale / الطول الإجمالي للتوب', valeurs: { S: 44, M: 46, L: 48, XL: 50, XXL: 52 } },
+                        { nom: 'Longueur Manches / طول الكم', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } }
+                      ]);
+
+              const pieceIcon = isPants ? '👖' : '👕';
+              const subHeader = `
+                <tr style="background: #e2e8f0;">
+                  <td colspan="7" style="font-weight: 900; font-size: 8.5px; text-transform: uppercase; padding: 4.5px 6px; letter-spacing: 0.5px;">
+                    ${pieceIcon} PIÈCE ${pcIdx + 1} : ${pc.name}
+                  </td>
+                </tr>
+              `;
+
+              const rows = pMesures.map((m: any) => `
+                <tr>
+                  <td class="font-bold">${m.nom}</td>
+                  <td class="text-center font-mono">${m.valeurs?.S ?? '—'}</td>
+                  <td class="text-center font-mono">${m.valeurs?.M ?? '—'}</td>
+                  <td class="text-center font-mono">${m.valeurs?.L ?? '—'}</td>
+                  <td class="text-center font-mono">${m.valeurs?.XL ?? '—'}</td>
+                  <td class="text-center font-mono">${m.valeurs?.XXL ?? '—'}</td>
+                  <td class="text-center font-mono">±1.0</td>
+                </tr>
+              `).join('');
+
+              return subHeader + rows;
+            }).join('');
+          }
+
+          // Single Piece Case
           const targetMesures = pieces[0]?.mesures && pieces[0]?.mesures.length > 0
             ? pieces[0].mesures
             : [
-                { nom: 'Tour de Poitrine / الصدر', valeurs: { S: 104, M: 110, L: 116, XL: 122, XXL: 128 } },
-                { nom: 'Carrure Épaules / الكتف', valeurs: { S: 46, M: 48, L: 50, XL: 52, XXL: 54 } },
-                { nom: 'Longueur Totale Corps / الطول', valeurs: { S: 70, M: 72, L: 74, XL: 76, XXL: 78 } },
-                { nom: 'Longueur Manche / طول الكم', valeurs: { S: 62, M: 63, L: 64, XL: 65, XXL: 66 } },
-                { nom: 'Tour de Taille / Ceinture / الخصر', valeurs: { S: 74, M: 78, L: 82, XL: 86, XXL: 90 } }
+                { nom: 'Tour de Poitrine / الصدر', valeurs: { S: 88, M: 94, L: 100, XL: 106, XXL: 112 } },
+                { nom: 'Carrure Épaules / الكتف', valeurs: { S: 38, M: 40, L: 42, XL: 44, XXL: 46 } },
+                { nom: 'Longueur Totale Corps / الطول', valeurs: { S: 46, M: 48, L: 50, XL: 52, XXL: 54 } },
+                { nom: 'Longueur Manche / طول الكم', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } },
+                { nom: 'Tour de Taille / Ceinture / الخصر', valeurs: { S: 68, M: 72, L: 76, XL: 80, XXL: 84 } }
               ];
           
           return targetMesures.map((m: any) => `
