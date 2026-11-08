@@ -705,11 +705,6 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           const natRatio = (img.naturalHeight || img.height || 1) / Math.max(1, img.naturalWidth || img.width || 1);
           const isExplicitDenim = (fn.includes('denim') || fn.includes('jean') || fn.includes('جينز') || fn.includes('دنيم'));
 
-          // Portrait full-body fashion model (tall vertical photo like the user's woman model)
-          if (natRatio >= 1.15 && !isExplicitDenim) {
-            return resolve('ensemble 2 pièces loungewear streetwear femme haut manches longues crop top et pantalon wide leg sweatpants طقم لاونج ستريتوير نسائي قطعتين (توب + سروال)');
-          }
-
           if (fn.includes('sweat') || fn.includes('hoodie') || fn.includes('سويت') || fn.includes('هودي')) {
             return resolve('sweatshirt col rond سويت شيرت كول رون');
           }
@@ -938,19 +933,26 @@ function buildFallbackAnalysis(
     )
   );
 
+  const isVesteCasual = (
+    (text.includes('veste') || text.includes('jacket') || text.includes('jakit') || text.includes('فيست') || text.includes('جاكيت') || text.includes('manteau') || text.includes('blouson') || text.includes('kimono') || text.includes('officier') || text.includes('brandebourg') || text.includes('matelass') || text.includes('معطف')) &&
+    !text.includes('pantalon') && !text.includes('jean') && !text.includes('سروال')
+  );
+
   // Loungewear / Streetwear 2 Pièces (Top Rib / Manches Longues + Pantalon Wide-Leg / French Terry)
   const isLoungewearEnsemble = (
+    !isVesteCasual &&
     forcePiecesCount !== 1 &&
     !isThreePieces && (
-      text.includes('lounge') || text.includes('streetwear') || text.includes('crop') ||
-      text.includes('wide leg') || text.includes('sweatpant') || text.includes('palazzo') ||
-      text.includes('طقم لاونج') || text.includes('لاونج') || (text.includes('pantalon') && (text.includes('top') || text.includes('manches longues') || text.includes('rib')))
+      (text.includes('lounge') && (text.includes('pantalon') || text.includes('ensemble') || text.includes('طقم'))) ||
+      (text.includes('crop') && (text.includes('pantalon') || text.includes('wide leg') || text.includes('سروال'))) ||
+      text.includes('طقم لاونج') || (text.includes('pantalon') && (text.includes('top') || text.includes('manches longues') || text.includes('rib')))
     )
   );
 
   // Denim / Jean Ensemble 2 Pièces (Veste Jean + Pantalon Jean)
   const isDenimEnsemble = (
     !isLoungewearEnsemble &&
+    !isVesteCasual &&
     forcePiecesCount !== 1 &&
     !isThreePieces && (
       (text.includes('denim') || text.includes('jean') || text.includes('جينز') || text.includes('دنيم')) &&
@@ -1062,6 +1064,28 @@ function buildFallbackAnalysis(
       fabricSuggested: isAr ? 'قماش دنيم 100% قطن متين 12oz / 13oz (Toile Denim Jean)' : 'Toile Denim 100% Coton 12oz / 13oz',
       fabricAlternatives: [
         { name: isAr ? 'دنيم قطن ستريتش 11.5oz' : 'Denim Stretch 11.5oz', pros: isAr ? 'مرونة عالية ومريح' : 'Extensible et confortable', cons: isAr ? 'أخف وزناً' : 'Plus léger' }
+      ],
+      mesures: defaultMesures
+    }];
+  } else if (isVesteCasual) {
+    const isBrandebourg = text.includes('brandebourg') || text.includes('officier') || text.includes('mao') || text.includes('matelass') || text.includes('ecru') || text.includes('écru') || text.includes('chinois');
+    pieceName = isBrandebourg
+      ? (isAr ? 'جاكيت عصرية كول أوفيسييه وأزرار براندبورغ (Veste Col Officier)' : 'Veste Col Officier & Boutonnage Brandebourg')
+      : (isAr ? 'جاكيت سترة عصرية مهيكلة (Veste Casual)' : 'Veste Structurée Casual');
+    defaultMesures = getStandardMesuresForCategory('Veste', audience, gender);
+    piecesList = [{
+      name: pieceName,
+      consumption: '1.90m',
+      fit: isAr ? 'قصة مستقيمة مريحة (Coupe Droite)' : 'Coupe Droite Structurée',
+      complexity: isAr ? 'متوسطة إلى عالية' : 'Moyenne à Avancée',
+      costEstimate: '65 - 85 MAD',
+      components: isAr
+        ? ['صدر أمامي بأزرار براندبورغ قفل تقليدي/عصري', 'ظهر مستقيم متناسق', 'أكمام طويلة واسعة ومريحة', 'ياقة كول أوفيسييه / كول ماو مرتفعة', 'سجاف وبطانة داخلية ناعمة']
+        : ['Devants avec boutonnage brandebourgs / nœuds chinois', 'Dos droit confort', 'Manches longues montées', 'Col officier / col mao montant', 'Parementure et doublure intérieure'],
+      fabricSuggested: isAr ? 'قماش تويل قطن إيكرو ثقيل مبطن (Toile Coton Écru / Twill Lourd)' : 'Toile de Coton Écru / Twill Coton Lourd Doublé',
+      fabricAlternatives: [
+        { name: isAr ? 'صوف مخلوط خفيف (Laine Mélangée)' : 'Laine Mélangée / Molleton Épais', pros: isAr ? 'دفء عالي ومظهر شتوي أنيق' : 'Chaud, doux et structuré', cons: isAr ? 'ثمن المتر أعلى' : 'Prix au mètre supérieur' },
+        { name: isAr ? 'كتان خشن سميك (Lin Lourd)' : 'Toile de Lin / Coton Brut', pros: isAr ? 'مظهر طبيعي فاخر بأسلوب ناتشورال' : 'Style brut et éco-chic', cons: isAr ? 'يحتاج عناية بالغسيل' : 'Entretien délicat' }
       ],
       mesures: defaultMesures
     }];
@@ -2681,17 +2705,17 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
       const analysisPrompt = isAr
         ? `أنت كبير مهندسي النسيج وتصنيع الملابس الجاهزة في ورشة BEYA Creative بالمغرب (BEYA Expert).
-حلل هذه الصورة المرفقة بدقة بصرية وهندسية فائقة للموديل الحقيقي المعروض فيها فقط.
+حلل هذه الصورة المرفقة بدقة بصرية وهندسية فائقة للموديل الحقيقي المعروض فيها فقط بدون أي افتراضات مسبقة.
 
-⚠️ تنبيه حاسم حول الفئة المستهدفة والأقمشة الحقيقية:
-- ${targetProfileDescAr}
-- حدد بدقة جنس الموديل في حقل gender: ("femmes" إذا كانت عارضة أو موديل نسائي / توب كروب / ملابس نساء، أو "hommes" للرجال).
-- ركز 100% على القماش الحقيقي الظاهر في الصورة بدون أي افتراضات مسبقة:
-  * إذا كان طقماً قطنياً / لاونج وير كاجوال (مثل توب ضيق كوت ريب وسروال واسع منسدل مولطون بومبليت French Terry)، فاكتب نوع القماش الحقيقي بالضبط (Côte Rib Knit / French Terry 100% Coton 340 GSM)، وافصل الطقم إلى قطعتين: القطعة الأولى (Haut - Crop Top) والقطعة الثانية (Bas - Pantalon Wide-Leg). لا تخلطه أبداً مع الجينز أو الدنيم!
-  * إذا كانت الصورة تظهر تيشيرت فقط، حدده كقطعة واحدة (T-shirt).
-  * إذا كان سروالاً فقط، حدده كقطعة واحدة (Pantalon).
-  * إذا كان فستاناً أو عباية، حددها كقطعة واحدة (Robe / Abaya).
-  * لا تخترع أي قطع إضافية أو جاكيتات لم تظهر في الصورة!
+⚠️ تنبيهات حاسمة:
+1. تعرف بدقة على نوع الموديل الحقيقي الظاهر في الصورة:
+   - إذا كانت جاكيت أو فيست (مثلاً: جاكيت كول أوفيسييه / ماو، أزرار براندبورغ أو عقد صينية، جاكيت مبطن، فيست كاجوال)، حددها كقطعة واحدة جاكيت ("Veste") مع تفاصيلها الحقيقية، وقماشها الواقعي (تويل قطن إيكرو، صوف، قماش مبطن)، ومكوناتها (صدر، ظهر، أكمام، كول أوفيسييه، أزرار براندبورغ). لا تضيف أي سروال خيالي!
+   - إذا كان طقماً من قطعتين حقيقيتين في الصورة (توب + سروال)، حدده كقطعتين (Haut + Bas).
+   - إذا كان تيشيرت، حدده كقطعة واحدة (T-shirt).
+   - إذا كان سروالاً فقط، حدده كقطعة واحدة (Pantalon).
+   - إذا كان فستاناً أو عباية، حدده كقطعة واحدة (Robe / Abaya).
+2. حدد الجنس (gender): "femmes" أو "hommes" حسب الموديل.
+3. اكتب استهلاك القماش وتكلفة الصنع بالدرهم المغربي (MAD) المناسبة لنوع القطعة.
 
 أجب بصيغة JSON فقط بدون أي نص إضافي:
 {
@@ -2750,26 +2774,23 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }
   ]
 }`
-        : `Tu es un expert textile et confection en atelier industriel marocain (BEYA Expert).
-Analyse l'image réelle fournie avec une très haute précision visuelle et technique.
+        : `Tu es un expert textile et chef d'atelier de confection industrielle au Maroc (BEYA Expert).
+Analyse l'image réelle fournie avec une précision visuelle absolue sans aucun préjugé.
 
-⚠️ Consigne impérative sur les matières et pièces réelles :
-- ${targetProfileDescFr}
-- Analyse visuelle du genre : identifie dans "gender" s'il s'agit d'un mannequin ou modèle féminin ("femmes") ou masculin ("hommes"). Adapte impérativement le barème des mesures S-XXL selon ce genre.
-- Identifiez rigoureusement la matière réelle visible selon son drapé, sa maille et sa texture :
-  * S'il s'agit d'un ensemble loungewear / streetwear (ex: top fitté à manches longues en côte rib ou jersey, et pantalon large fluide en molleton bouclette / French Terry non-gratté), spécifiez exactement ces matières (Côte Rib 1x1, French Terry 100% Coton 340 GSM). Ne le confondez JAMAIS avec du denim ou jean !
-  * Si l'image montre 2 pièces distinctes (Haut + Pantalon), "pieces" DOIT contenir STRICTEMENT 2 éléments : pièce 1 (Haut) et pièce 2 (Bas Pantalon).
-  * Si l'image montre un seul article (t-shirt seul, sweatshirt seul, pantalon seul, robe seule...), "pieces" DOIT contenir EXACTEMENT 1 élément.
-- La consommation totale (totalConsumption) doit être la somme des consommations de chaque pièce.
-- Fournir les mesures S-XXL pour chaque pièce dans son entrée "mesures".
-Réponds UNIQUEMENT au format JSON sans texte additionnel avec category, gender, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
+⚠️ Consignes impératives :
+1. Identifie le vêtement réel visible dans l'image :
+   - S'il s'agit d'une veste ou blouson (ex: veste col officier/mao, veste matelassée écru avec boutons brandebourgs ou nœuds chinois, veste tailleur, veste zippée), décris fidèlement ce modèle : catégorie "Veste", 1 seule pièce, matière réelle (Toile de coton écru, twill lourd doublé, lainage, etc.) et ses composants exacts (col officier, pattes brandebourg, manches, devant, dos, doublure). Ne rajoute AUCUN pantalon imaginaire si l'image ne montre qu'une veste !
+   - S'il s'agit d'un ensemble 2 pièces (haut + pantalon visibles dans l'image), inclus alors strictement les 2 pièces.
+   - S'il s'agit d'un seul article (t-shirt, sweatshirt, pantalon, robe), analyse fidèlement cette pièce unique.
+2. Détecte le genre ("femmes" ou "hommes") et adapte les mensurations S-XXL.
+3. Coût façon en dirhams (MAD) et métrage adaptés à la confection industrielle de ce vêtement.
+
+Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
       const candidateModels = [
-        'gemini-1.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-pro',
+        'gemini-2.5-flash',
         'gemini-flash-latest',
-        'gemini-2.5-flash'
+        'gemini-2.5-pro'
       ];
 
       const keysToTry = [
@@ -4535,7 +4556,7 @@ ${userMessage}
             <span>{isAr ? '📄 ملف تقني N&B' : '📄 Tech Pack N&B'}</span>
           </button>
 
-          {/* NOUVEAU: BOUTON CHIFFRAGE SOURCING & COÛT DE REVIENT (DÉTAILS SL3A) */}
+          {/* BOUTON CHIFFRAGE SOURCING & COÛT DE REVIENT (DÉTAILS SL3A) */}
           <button
             onClick={() => {
               if (!analysisResult) {
@@ -4556,48 +4577,20 @@ ${userMessage}
             <span>{isAr ? 'كلفة السلعة والتوريد' : 'Chiffrage Sourcing'}</span>
           </button>
 
-          {/* NOUVEAU: BOUTON DEVIS & FICHE CLIENT B2B */}
           <button
-            onClick={() => {
-              if (!analysisResult) {
-                setCustomAlert({
-                  title: isAr ? 'تنبيه' : 'Attention',
-                  message: isAr ? 'يرجى تحليل موديل أولاً من الصورة لتجهيز ملف ودوڤي الزبون!' : 'Veuillez analyser un modèle d\'abord pour générer le devis client !',
-                  isError: true
-                });
-                return;
-              }
-              setQuoteInitialMode('devis');
-              setShowClientQuoteModal(true);
-            }}
-            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200/90 px-3 py-1.5 md:py-2 rounded-xl font-bold text-xs uppercase shadow-xs active:scale-95 transition-all"
-            title={isAr ? 'إنشاء ملف الزبون وعرض السعر مع إمكانية تعديل الأثواب والأسعار (PDF Client)' : 'Fiche & Devis Client B2B (PDF & WhatsApp)'}
+            onClick={handleResetNewModel}
+            title={isAr ? 'تحليل موديل جديد ومسح الذاكرة السابقة' : 'Nouveau modèle (Réinitialiser)'}
+            className="flex items-center gap-1 bg-rose-50 border border-rose-200 text-rose-700 px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-rose-100 transition-all shadow-sm active:scale-95"
           >
-            <FileText className="w-3.5 h-3.5 text-indigo-600" />
-            <span>{isAr ? 'ملف ودوڤي الزبون' : 'Devis & Fiche Client'}</span>
+            <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
+            <span className="hidden sm:inline">{isAr ? 'موديل جديد' : 'Nouveau Modèle'}</span>
           </button>
 
-          {/* Top Header Export/Send Button (Red boxed in user diagram 1) */}
-          <button
-            onClick={() => {
-              if (!analysisResult) {
-                setCustomAlert({
-                  title: isAr ? 'تنبيه' : 'Attention',
-                  message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
-                  isError: true
-                });
-                return;
-              }
-              setShowDispatchModal(true);
-            }}
-            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 md:py-2 rounded-xl font-bold text-xs uppercase shadow-xs active:scale-95 transition-all"
-            title={isAr ? 'تصدير البيانات وإرسالها إلى Devis, Atelier, Achats...' : 'Exporter vers les modules'}
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>{isAr ? 'تصدير' : 'Exporter'}</span>
+          <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-indigo-700 transition-all shadow-sm">
+            <Upload className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{isAr ? 'رفع صورة' : 'Uploader Image'}</span>
           </button>
 
-          {/* Language Switcher Button (Moved to top header as requested) */}
+          {/* Language Switcher Button */}
           <button
             onClick={() => {
               const nextIsAr = !isAr;
@@ -4621,33 +4614,6 @@ ${userMessage}
             <span className="font-black text-xs uppercase">{isAr ? 'AR' : 'FR'}</span>
           </button>
 
-          <button
-            onClick={() => setShowLeadsModal(true)}
-            className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-indigo-100 transition-all shadow-sm"
-          >
-            <Package className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{isAr ? 'اختيار من الطلبات' : 'Demandes Prospects'}</span>
-          </button>
-          <button
-            onClick={handleResetNewModel}
-            title={isAr ? 'تحليل موديل جديد ومسح الذاكرة السابقة' : 'Nouveau modèle (Réinitialiser)'}
-            className="flex items-center gap-1 bg-rose-50 border border-rose-200 text-rose-700 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-rose-100 transition-all shadow-sm active:scale-95"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
-            <span className="hidden sm:inline">{isAr ? 'موديل جديد' : 'Nouveau Modèle'}</span>
-          </button>
-          <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 bg-indigo-600 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-indigo-700 transition-all shadow-sm">
-            <Upload className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{isAr ? 'رفع صورة' : 'Uploader Image'}</span>
-          </button>
-          {canInstall && !isInstalled && (
-            <button
-              onClick={promptInstall}
-              title={isAr ? 'تثبيت كتطبيق مستقل على الهاتف' : 'Installer comme application'}
-              className="flex items-center gap-1 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:brightness-110 transition-all shadow-md active:scale-95 animate-pulse"
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isAr ? 'تثبيت APP' : 'Installer'}</span>
-            </button>
-          )}
           <button
             onClick={() => setShowApiKeyModal(true)}
             title={isAr ? 'إعدادات مفتاح الذكاء الاصطناعي' : 'Paramètres clé API'}
