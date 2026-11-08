@@ -295,6 +295,75 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [consultationClientPhone, setConsultationClientPhone] = useState<string>('');
   const [consultationConfirmedSlip, setConsultationConfirmedSlip] = useState<any | null>(null);
 
+  // CONSULTING WORKSPACE STATE (TABS, LIVE BOOKING & CLIENT FEEDBACK)
+  const [consultingTab, setConsultingTab] = useState<'consultants' | 'live_booking' | 'feedback'>('consultants');
+  const [consultingSearchQuery, setConsultingSearchQuery] = useState('');
+  const [consultingCategoryFilter, setConsultingCategoryFilter] = useState<'all' | 'streetwear' | 'denim' | 'femme' | 'sport'>('all');
+  const [showAddReviewModal, setShowAddReviewModal] = useState(false);
+  const [newReviewAuthor, setNewReviewAuthor] = useState('');
+  const [newReviewBrand, setNewReviewBrand] = useState('');
+  const [newReviewCity, setNewReviewCity] = useState('الدار البيضاء');
+  const [newReviewConsultant, setNewReviewConsultant] = useState('ياسين الصنهاجي');
+  const [newReviewRating, setNewReviewRating] = useState(5);
+  const [newReviewSessionType, setNewReviewSessionType] = useState<'visio' | 'office'>('visio');
+  const [newReviewComment, setNewReviewComment] = useState('');
+  const [consultationReviews, setConsultationReviews] = useState<any[]>(() => {
+    try {
+      const stored = localStorage.getItem('beya_consultation_reviews');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return [
+      {
+        id: 'rev-1',
+        authorName: 'كريم بناني',
+        brandName: 'Casablanca Streetwear',
+        city: 'الدار البيضاء',
+        consultantName: 'ياسين الصنهاجي',
+        rating: 5,
+        date: 'منذ يومين',
+        sessionType: 'visio',
+        comment: 'وفرت أكثر من 22% من قماش الملتون بعد ما راجع معايا ياسين تعشيق الباترون على برنامج Lectra Modaris. الجلسة في Live Visio كانت ممتازة ومشاركة الشاشة خلاتنا نلقاو الخطأ ونصلحوه فـ 10 دقائق.',
+        verified: true
+      },
+      {
+        id: 'rev-2',
+        authorName: 'كنزة التازي',
+        brandName: 'Atelier Kenza Couture',
+        city: 'الرباط',
+        consultantName: 'فاطمة الزهراء العمراني',
+        rating: 5,
+        date: 'منذ 4 أيام',
+        sessionType: 'office',
+        comment: 'استشارة حضورية بمكتب الدار البيضاء لمراجعة باترونات العبايات والفساتين. التعديلات في جدول القياسات جنبتنا مشاكل المقاسات في الكوليكسيون الجديدة. احترافية عالية جداً.',
+        verified: true
+      },
+      {
+        id: 'rev-3',
+        authorName: 'مهدي العلوي',
+        brandName: 'Atlas Active Tech',
+        city: 'طنجة',
+        consultantName: 'كريم العلمي',
+        rating: 5,
+        date: 'منذ أسبوع',
+        sessionType: 'visio',
+        comment: 'جلسة Live Visio حول ملابس الرياضة وتدقيق خيوط الحياكة ودرزات الأوفرلوك. نصائح تقنية دقيقة جداً سهلت علينا صياغة دفتر الشروط والتفاوض مع معمل الخياطة بطنجة.',
+        verified: true
+      },
+      {
+        id: 'rev-4',
+        authorName: 'سلمى المنصوري',
+        brandName: 'Urban Modest Wear',
+        city: 'فاس',
+        consultantName: 'سلمى المنصوري',
+        rating: 5,
+        date: 'منذ أسبوعين',
+        sessionType: 'visio',
+        comment: 'مراجعة وتجربة التلبيس الافتراضي 3D على CLO 3D قبل ما نقطعو الثوب وفرت علينا وقت كبير وتكلفة عينات بالملايين. تجربة مفيدة لكل صاحب علامة أزياء.',
+        verified: true
+      }
+    ];
+  });
+
   // PORTFOLIO LIGHTBOX STATE
   const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<{ item: any; author: string; proId?: string } | null>(null);
 
@@ -2192,199 +2261,670 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             </div>
           )}
 
-          {/* VIEW: CONSULTING & EXPERT ADVICE SPACE */}
+          {/* VIEW: CONSULTING & EXPERT ADVICE SPACE (APPLE TYPOGRAPHY & UPWORK LIGHT DESIGN SYSTEM) */}
           {activeView === 'consulting' && (
-            <div className="flex-1 flex flex-col h-full overflow-y-auto bg-[#0b0f19]">
-              {/* Header Banner */}
-              <div className="bg-gradient-to-b from-[#141b2b] via-[#1e2336] to-[#0b0f19] border-b border-slate-800/80 p-6 sm:p-8 shrink-0">
-                <div className="max-w-7xl mx-auto space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="px-3.5 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-black border border-cyan-500/30 flex items-center gap-2 shadow-xs">
-                      <Video className="w-4 h-4 text-cyan-400" />
-                      <span>جلسات 1-à-1 خاصة مع كبار مهندسي النسيج والموديليست</span>
-                    </span>
+            <div className="flex-1 flex flex-col h-full overflow-y-auto bg-[#f9fafb] text-slate-900 font-sans">
 
-                    <span className="text-xs text-slate-300 bg-black/40 px-3.5 py-1.5 rounded-full border border-white/10 font-bold">
-                      ⏱️ مدة الجلسة: 45 دقيقة مركزة
-                    </span>
+              {/* ── 1. APPLE / UPWORK HERO CONTAINER (DEEP EMERALD #13544e CONTAINER) ── */}
+              <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 pt-6 pb-2">
+                <div className="rounded-[28px] sm:rounded-[36px] bg-[#13544e] text-white p-7 sm:p-12 relative overflow-hidden shadow-xs">
+                  {/* Subtle Background Glow */}
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+
+                  {/* Mode Switcher Pill */}
+                  <div className="inline-flex items-center p-1 bg-black/25 backdrop-blur-md rounded-full border border-white/10 mb-6 flex-wrap gap-1">
+                    <button
+                      onClick={() => setConsultingTab('consultants')}
+                      className={`px-5 py-2 rounded-full text-xs font-semibold transition cursor-pointer ${
+                        consultingTab === 'consultants'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-white/80 hover:text-white'
+                      }`}
+                    >
+                      قائمة المستشارين والأسعار
+                    </button>
+                    <button
+                      onClick={() => setConsultingTab('live_booking')}
+                      className={`px-5 py-2 rounded-full text-xs font-semibold transition cursor-pointer ${
+                        consultingTab === 'live_booking'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-white/80 hover:text-white'
+                      }`}
+                    >
+                      حجز استشارة Live عن بعد
+                    </button>
+                    <button
+                      onClick={() => setConsultingTab('feedback')}
+                      className={`px-5 py-2 rounded-full text-xs font-semibold transition cursor-pointer ${
+                        consultingTab === 'feedback'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-white/80 hover:text-white'
+                      }`}
+                    >
+                      آراء وتقييمات العملاء ({consultationReviews.length})
+                    </button>
                   </div>
 
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
-                      <span>فضاء الاستشارات التقنية وتوجيه العلامات التجارية</span>
-                      <span className="text-xs px-3 py-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black rounded-full uppercase tracking-wider">
-                        Consulting
-                      </span>
-                    </h1>
-                    <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-4xl leading-relaxed font-medium">
-                      قبل ما تقص الثوب وتضيع ميزانيتك، احجز استشارة مع خبير متخصص. راجع ملفات الباترون، اضبط جدول المقاسات (Gradation)، واعرف نوعية الثوب والتطريز الأنسب لموديلك لحماية كلفة الإنتاج وتفادي مشاكل الفيتينغ (Fitting).
-                    </p>
+                  {/* Headline */}
+                  <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.15] max-w-3xl">
+                    فضاء الاستشارات التقنية وتوجيه العلامات التجارية
+                  </h1>
+
+                  {/* Subtitle */}
+                  <p className="text-sm sm:text-base text-white/85 mt-4 max-w-2xl leading-relaxed font-normal">
+                    جلسات 1-à-1 خاصة (45 دقيقة مركزة) مباشرة مع كبار مهندسي النسيج ومصممي الباترون الصناعي بالمغرب لمراجعة تصاميمك، ضبط تدرج المقاسات، وحماية ميزانية الإنتاج من الهدر قبل قص الأقمشة.
+                  </p>
+
+                  {/* Action CTAs */}
+                  <div className="flex flex-wrap items-center gap-3 mt-8">
+                    <button
+                      onClick={() => setConsultingTab('live_booking')}
+                      className="px-6 py-3.5 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-full text-sm transition shadow-xs flex items-center gap-2 cursor-pointer"
+                    >
+                      <Video className="w-4 h-4" />
+                      <span>حجز موعد استشارة Live الآن</span>
+                      <ArrowLeft className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      onClick={() => setConsultingTab('feedback')}
+                      className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-full text-sm transition border border-white/20 flex items-center gap-2 cursor-pointer backdrop-blur-xs"
+                    >
+                      <Star className="w-4 h-4 text-amber-300 fill-amber-300" />
+                      <span>تصفح آراء وتقييمات العملاء</span>
+                    </button>
                   </div>
 
-                  {/* Two Modes Comparison Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    {/* Mode 1: Visio Live */}
-                    <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/60 to-black/50 border border-indigo-500/30 space-y-3 shadow-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-indigo-300 text-sm font-black">
-                          <Video className="w-5 h-5 text-indigo-400" />
-                          <span>1. استشارة Live Visio (عن بعد - 45 دقيقة)</span>
-                        </div>
-                        <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">
-                          Google Meet / Zoom
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        مثالية للمراجعة السريعة وحل المشاكل الرقمية. يمكنك مشاركة الشاشة لمراجعة ملفات CAD والباترون (DXF / CLO 3D)، والتدقيق في استهلاك الثوب وتكلفة البياسة من أي مدينة بالمغرب أو من الخارج.
-                      </p>
-                      <div className="flex items-center justify-between text-xs pt-2 border-t border-white/5">
-                        <span className="text-slate-400">التعريفة: <strong className="text-indigo-300 font-mono">200 - 300 MAD</strong></span>
-                        <span className="text-emerald-400 font-bold">⚡ رابط فوري للاتصال</span>
-                      </div>
+                  {/* Guarantees Bar (Text + Lucide SVG Icons - Zero Emojis) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 mt-8 border-t border-white/10 text-xs text-white/90">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-300 shrink-0" />
+                      <span>حماية المعاملات BEYA Escrow 100%</span>
                     </div>
-
-                    {/* Mode 2: In-Person Office */}
-                    <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-950/60 to-black/50 border border-amber-500/30 space-y-3 shadow-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-amber-300 text-sm font-black">
-                          <Briefcase className="w-5 h-5 text-amber-400" />
-                          <span>2. استشارة حضورية بالاستوديو / Atelier</span>
-                        </div>
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">
-                          لقاء مباشر في المكتب
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        جلسة عمل مباشرة في مكتب الموديليست (الدار البيضاء، الرباط، أو طنجة). لمس عينات الأقمشة الحقيقية (Swatches)، تجربة التلبيس على المانيكان الحي، واستلام نسخة ورقية مطبوعة على ورق البلوتر الصناعي (Plotter 1:1).
-                      </p>
-                      <div className="flex items-center justify-between text-xs pt-2 border-t border-white/5">
-                        <span className="text-slate-400">التعريفة: <strong className="text-amber-300 font-mono">250 - 350 MAD</strong></span>
-                        <span className="text-amber-400 font-bold">🏢 تجربة عملية يداً بيد</span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Video className="w-4 h-4 text-emerald-300 shrink-0" />
+                      <span>رابط قاعة افتراضية مع مشاركة الشاشة</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-emerald-300 shrink-0" />
+                      <span>استشارة حضورية متوفرة في كازا والرباط وطنجة</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-emerald-300 shrink-0" />
+                      <span>مدة الجلسة: 45 دقيقة تدقيق عملي</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Consultants Grid */}
-              <div className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
-                <div>
-                  <h2 className="text-lg font-black text-white flex items-center gap-2">
-                    <UserCheck className="w-5 h-5 text-cyan-400" />
-                    <span>قائمة المستشارين المعتمدين والمتاحين للحجز الفوري</span>
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    اختر الخبير المناسب لنوع قطعتك واحجز موعدك مباشرة عبر المنصة.
-                  </p>
-                </div>
+              {/* ── 2. SUB-TABS NAVIGATION (APPLE UNDERLINE SYSTEM) ── */}
+              <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 pt-4">
+                <div className="flex items-center justify-between border-b border-[#e4ebe4] overflow-x-auto scrollbar-hide">
+                  <div className="flex items-center gap-6">
+                    <button
+                      onClick={() => setConsultingTab('consultants')}
+                      className={`py-3.5 text-sm font-semibold transition border-b-2 whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+                        consultingTab === 'consultants'
+                          ? 'border-[#108a00] text-[#108a00]'
+                          : 'border-transparent text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <UserCheck className="w-4 h-4" />
+                      <span>قائمة المستشارين والأسعار</span>
+                    </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {allProMembers
-                    .filter(m => m.pillar === 'modelistes')
-                    .map(m => (
-                      <div
-                        key={m.id}
-                        className="bg-[#2b2d31] rounded-2xl border border-[#383a40] hover:border-cyan-500/40 p-5 space-y-4 shadow-xl flex flex-col justify-between transition"
-                      >
-                        <div className="space-y-3">
-                          <div className="flex items-start gap-3">
-                            <img
-                              src={m.avatar}
-                              alt={m.name}
-                              className="w-14 h-14 rounded-2xl object-cover border-2 border-cyan-500/30"
-                            />
-                            <div>
-                              <h3 className="text-sm font-black text-white">{m.name}</h3>
-                              <p className="text-xs text-cyan-300 font-bold">{m.categoryLabel || m.specialty}</p>
-                              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-1">
-                                <MapPin className="w-3 h-3 text-indigo-400" />
-                                <span>{m.city}</span>
+                    <button
+                      onClick={() => setConsultingTab('live_booking')}
+                      className={`py-3.5 text-sm font-semibold transition border-b-2 whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+                        consultingTab === 'live_booking'
+                          ? 'border-[#108a00] text-[#108a00]'
+                          : 'border-transparent text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Video className="w-4 h-4" />
+                      <span>حجز استشارة Live عن بعد (قاعة افتراضية)</span>
+                    </button>
+
+                    <button
+                      onClick={() => setConsultingTab('feedback')}
+                      className={`py-3.5 text-sm font-semibold transition border-b-2 whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+                        consultingTab === 'feedback'
+                          ? 'border-[#108a00] text-[#108a00]'
+                          : 'border-transparent text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>آراء وتقييمات العملاء ({consultationReviews.length})</span>
+                    </button>
+                  </div>
+
+                  {consultingTab === 'feedback' && (
+                    <button
+                      onClick={() => setShowAddReviewModal(true)}
+                      className="px-4 py-2 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-full text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      <span>+ أضف تقييمك</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* ── 3A. TAB 1: CONSULTANTS & CLEAR PRICING CARDS ── */}
+              {consultingTab === 'consultants' && (
+                <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 py-6 space-y-6">
+                  {/* Two Consultation Modes Explainer Cards (White Apple Cards) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Mode 1: Visio Live */}
+                    <div className="p-6 rounded-2xl bg-white border border-[#e4ebe4] hover:border-[#108a00] transition shadow-xs space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5 text-slate-900 text-sm font-bold">
+                          <div className="w-8 h-8 rounded-full bg-[#f2f7f2] text-[#108a00] flex items-center justify-center">
+                            <Video className="w-4 h-4" />
+                          </div>
+                          <span>1. استشارة Live Visio (عن بعد - 45 دقيقة)</span>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#f2f7f2] text-[#108a00] text-xs font-semibold border border-[#d4e5d4]">
+                          Google Meet / Zoom
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                        مثالية للمراجعة السريعة وحل المشاكل الرقمية. يمكنك مشاركة الشاشة لمراجعة ملفات CAD والباترون (DXF / CLO 3D)، والتدقيق في استهلاك الثوب وتكلفة البياسة من أي مدينة بالمغرب أو من الخارج.
+                      </p>
+                      <div className="flex items-center justify-between text-xs pt-3 border-t border-slate-100">
+                        <span className="text-slate-500 font-medium">التعريفة المعتمدة: <strong className="text-slate-900 font-bold font-mono">200 - 250 MAD</strong></span>
+                        <span className="text-[#108a00] font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>رابط فوري مع مشاركة الشاشة</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Mode 2: In-Person Atelier */}
+                    <div className="p-6 rounded-2xl bg-white border border-[#e4ebe4] hover:border-[#108a00] transition shadow-xs space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5 text-slate-900 text-sm font-bold">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-800 flex items-center justify-center">
+                            <Building2 className="w-4 h-4" />
+                          </div>
+                          <span>2. استشارة حضورية بالاستوديو / Atelier</span>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200">
+                          لقاء مباشر في المكتب
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                        جلسة عمل مباشرة في مكتب الموديليست (الدار البيضاء، الرباط، أو طنجة). لمس عينات الأقمشة الحقيقية (Swatches)، تجربة التلبيس على المانيكان الحي، واستلام نسخة ورقية مطبوعة على ورق البلوتر الصناعي (Plotter 1:1).
+                      </p>
+                      <div className="flex items-center justify-between text-xs pt-3 border-t border-slate-100">
+                        <span className="text-slate-500 font-medium">التعريفة المعتمدة: <strong className="text-slate-900 font-bold font-mono">250 - 350 MAD</strong></span>
+                        <span className="text-slate-700 font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-slate-600" />
+                          <span>فحص العينات يداً بيد</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section Title */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900">
+                        نخبة المستشارين المعتمدين وجدول الأسعار
+                      </h2>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        اختر الخبير المناسب لنوع قطعتك واحجز موعدك مباشرة عبر المنصة
+                      </p>
+                    </div>
+
+                    <div className="relative w-full sm:w-72">
+                      <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3" />
+                      <input
+                        type="text"
+                        placeholder="ابحث بالاسم، المدينة، أو التخصص..."
+                        value={consultingSearchQuery}
+                        onChange={e => setConsultingSearchQuery(e.target.value)}
+                        className="w-full bg-white text-xs text-slate-900 placeholder-slate-400 pr-10 pl-3 py-2.5 rounded-xl border border-[#e4ebe4] focus:border-[#108a00] focus:outline-none shadow-2xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Consultant Cards Grid (Pure White Cards) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {allProMembers
+                      .filter(m => m.pillar === 'modelistes')
+                      .filter(m => {
+                        if (!consultingSearchQuery.trim()) return true;
+                        const q = consultingSearchQuery.toLowerCase();
+                        return m.name.toLowerCase().includes(q) ||
+                          m.city.toLowerCase().includes(q) ||
+                          (m.categoryLabel || '').toLowerCase().includes(q) ||
+                          (m.specialty || '').toLowerCase().includes(q);
+                      })
+                      .map(m => (
+                        <div
+                          key={m.id}
+                          className="bg-white rounded-2xl border border-[#e4ebe4] hover:border-[#108a00] p-6 space-y-4 shadow-xs hover:shadow-md transition flex flex-col justify-between"
+                        >
+                          <div className="space-y-3.5">
+                            {/* Consultant Header */}
+                            <div className="flex items-start gap-3.5">
+                              <div className="relative shrink-0">
+                                <img
+                                  src={m.avatar}
+                                  alt={m.name}
+                                  className="w-14 h-14 rounded-full object-cover border border-slate-200"
+                                />
+                                <span className="w-3.5 h-3.5 rounded-full bg-[#108a00] absolute bottom-0 right-0 border-2 border-white" title="متاح للاستشارة" />
+                              </div>
+
+                              <div className="space-y-0.5">
+                                <h3 className="text-base font-bold text-slate-900 leading-snug">{m.name}</h3>
+                                <p className="text-xs font-semibold text-[#108a00]">{m.categoryLabel || m.specialty}</p>
+                                <div className="flex items-center gap-2 text-xs text-slate-500 pt-0.5">
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                    <span>{m.city}</span>
+                                  </span>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-1 text-slate-800 font-semibold">
+                                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                                    <span>5.0</span>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Office Address if Available */}
+                            {m.officeAddress && (
+                              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-start gap-2">
+                                <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
+                                <span><strong>مقر الاستشارة الحضورية:</strong> {m.officeAddress}</span>
+                              </div>
+                            )}
+
+                            {/* Brands Advised */}
+                            {m.brandsWorkedWith && m.brandsWorkedWith.length > 0 && (
+                              <div className="text-xs text-slate-500 space-y-1">
+                                <span className="font-semibold text-slate-700 block">استشارات سابقة لعلامات:</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {m.brandsWorkedWith.slice(0, 3).map((b: string, bIdx: number) => (
+                                    <span key={bIdx} className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200">
+                                      {b}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Transparent Pricing Grid */}
+                            <div className="p-3 rounded-xl bg-[#f9fafb] border border-[#e4ebe4] space-y-1.5 text-xs">
+                              <div className="flex items-center justify-between">
+                                <span className="text-slate-600 flex items-center gap-1">
+                                  <Video className="w-3.5 h-3.5 text-[#108a00]" />
+                                  <span>جلسة Live Visio (45د):</span>
+                                </span>
+                                <strong className="text-slate-900 font-bold font-mono">200 MAD</strong>
+                              </div>
+                              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                                <span className="text-slate-600 flex items-center gap-1">
+                                  <Building2 className="w-3.5 h-3.5 text-slate-600" />
+                                  <span>جلسة حضورية بالمكتب (45د):</span>
+                                </span>
+                                <strong className="text-slate-900 font-bold font-mono">{m.consultationPriceMAD || 250} MAD</strong>
                               </div>
                             </div>
                           </div>
 
-                          {m.officeAddress && (
-                            <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 text-[11px] text-slate-300 flex items-start gap-2">
-                              <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                              <span><strong>عنوان المكتب/Atelier:</strong> {m.officeAddress}</span>
-                            </div>
-                          )}
+                          {/* Action Buttons */}
+                          <div className="pt-2 border-t border-slate-100 space-y-2">
+                            <button
+                              onClick={() => {
+                                setConsultationTarget(m);
+                                setConsultationConfirmedSlip(null);
+                                setShowConsultationModal(true);
+                              }}
+                              className="w-full py-2.5 px-4 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-full text-xs transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                            >
+                              <Calendar className="w-4 h-4" />
+                              <span>حجز موعد استشارة (Live / حضوري)</span>
+                            </button>
 
-                          {m.brandsWorkedWith && m.brandsWorkedWith.length > 0 && (
-                            <div className="text-[11px] text-slate-400">
-                              <span className="text-slate-400 font-bold block mb-1">استشارات سابقة لبراندات:</span>
-                              <div className="flex flex-wrap gap-1">
-                                {m.brandsWorkedWith.slice(0, 3).map((b: string, bIdx: number) => (
-                                  <span key={bIdx} className="px-2 py-0.5 rounded bg-white/5 text-slate-200 text-[10px] font-bold">
-                                    {b}
-                                  </span>
-                                ))}
+                            <a
+                              href={`https://wa.me/${m.whatsapp}?text=${encodeURIComponent(
+                                `السلام عليكم أستاذ(ة) ${m.name}، أرغب في الاستفسار عن موعد متاح لاستشارة تقنية عبر منصة BEYA NETWORK.`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-2 text-center text-xs text-slate-600 hover:text-slate-900 font-semibold flex items-center justify-center gap-1.5 transition rounded-full hover:bg-slate-50 border border-slate-200"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>استفسار مسبق عبر الواتساب</span>
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 3B. TAB 2: LIVE REMOTE CONSULTATION (حجز استشارة Live عن بعد) ── */}
+              {consultingTab === 'live_booking' && (
+                <div className="max-w-4xl mx-auto w-full px-4 sm:px-8 py-6 space-y-6">
+                  {/* Interactive Live Studio Studio Container */}
+                  <div className="bg-white rounded-3xl border border-[#e4ebe4] p-6 sm:p-10 shadow-xs space-y-6">
+                    {/* Live Room Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-[#f2f7f2] text-[#108a00] flex items-center justify-center border border-[#d4e5d4]">
+                          <Video className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold text-slate-900">
+                            قاعة الاستشارة الافتراضية المباشرة (Live Visio Room)
+                          </h2>
+                          <p className="text-xs text-slate-600">
+                            احجز توقيتك واحصل على رابط فوري عالي الدقة لمراجعة ملفات التصميم والباترون ومشاركة الشاشة
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="px-3 py-1 rounded-full bg-[#f2f7f2] text-[#108a00] text-xs font-semibold border border-[#d4e5d4] shrink-0 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#108a00] animate-ping" />
+                        <span>بث مباشر فوري</span>
+                      </span>
+                    </div>
+
+                    {/* Step 1: Select Consultant */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-900 block">1. اختر المستشار التقني المطلوب:</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {allProMembers.filter(m => m.pillar === 'modelistes').slice(0, 4).map(pro => (
+                          <div
+                            key={pro.id}
+                            onClick={() => setConsultationTarget(pro)}
+                            className={`p-3.5 rounded-2xl border cursor-pointer transition flex items-center justify-between ${
+                              consultationTarget?.id === pro.id
+                                ? 'border-[#108a00] bg-[#f2f7f2]/50 ring-1 ring-[#108a00]'
+                                : 'border-[#e4ebe4] bg-white hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <img src={pro.avatar} alt={pro.name} className="w-11 h-11 rounded-full object-cover border border-slate-200" />
+                              <div>
+                                <h4 className="text-xs font-bold text-slate-900">{pro.name}</h4>
+                                <p className="text-[11px] text-[#108a00] font-medium">{pro.categoryLabel || pro.specialty}</p>
                               </div>
                             </div>
-                          )}
+                            <span className="text-xs font-bold text-slate-900 font-mono">200 MAD</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
 
-                          <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-xs">
-                            <span className="text-slate-400">سعر الجلسة (45 دقيقة):</span>
-                            <span className="font-black text-amber-400 text-sm font-mono">
-                              {m.consultationPriceMAD || 250} MAD
-                            </span>
+                    {/* Step 2: Date & Time Picker */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div className="space-y-1.5">
+                        <label className="text-slate-900 font-bold block">2. حدد تاريخ الاستشارة:</label>
+                        <input
+                          type="date"
+                          value={consultationDate}
+                          onChange={e => setConsultationDate(e.target.value)}
+                          className="w-full bg-[#f9fafb] text-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-slate-900 font-bold block">3. توقيت الجلسة (45 دقيقة):</label>
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {['10:00', '11:30', '15:00', '17:00'].map(t => (
+                            <button
+                              type="button"
+                              key={t}
+                              onClick={() => setConsultationTime(t)}
+                              className={`py-2 rounded-xl text-xs font-bold transition border cursor-pointer font-mono ${
+                                consultationTime === t
+                                  ? 'bg-[#108a00] text-white border-[#108a00]'
+                                  : 'bg-[#f9fafb] text-slate-700 border-slate-200 hover:border-slate-400'
+                              }`}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3: Topic Selection */}
+                    <div className="space-y-1.5 text-xs">
+                      <label className="text-slate-900 font-bold block">4. موضوع الاستشارة الرئيسي:</label>
+                      <select
+                        value={consultationTopic}
+                        onChange={e => setConsultationTopic(e.target.value)}
+                        className="w-full bg-[#f9fafb] text-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
+                      >
+                        <option value="اختيار وتدقيق الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج">
+                          اختيار وتدقيق الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج
+                        </option>
+                        <option value="مراجعة وتدقيق باترون موجود وحل مشاكل الفيتينغ والقصة (Fitting)">
+                          مراجعة وتدقيق باترون موجود وحل مشاكل الفيتينغ والقصة (Fitting)
+                        </option>
+                        <option value="دراسة فنية لكوليكسيون جديدة كاملة وضبط جدول تدرج المقاسات (Gradation)">
+                          دراسة فنية لكوليكسيون جديدة كاملة وضبط جدول تدرج المقاسات (Gradation)
+                        </option>
+                        <option value="إعداد البطاقة التقنية (Fiche Technique) وشروط التعامل مع معامل الخياطة">
+                          إعداد البطاقة التقنية (Fiche Technique) وشروط التعامل مع معامل الخياطة
+                        </option>
+                      </select>
+                    </div>
+
+                    {/* Step 4: Client Name & Phone */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div className="space-y-1.5">
+                        <label className="text-slate-900 font-bold block">اسمك أو اسم علامتك التجارية: *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="مثال: Casablanca Streetwear"
+                          value={consultationClientName}
+                          onChange={e => setConsultationClientName(e.target.value)}
+                          className="w-full bg-[#f9fafb] text-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-slate-900 font-bold block">رقم الواتساب للتواصل: *</label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="06XXXXXXXX"
+                          value={consultationClientPhone}
+                          onChange={e => setConsultationClientPhone(e.target.value)}
+                          className="w-full bg-[#f9fafb] text-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Real Meeting Room Launcher Box */}
+                    <div className="p-4 rounded-2xl bg-[#f2f7f2] border border-[#d4e5d4] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                          <Video className="w-4 h-4 text-[#108a00]" />
+                          <span>رابط القاعة الافتراضية المباشرة (Live Room):</span>
+                        </span>
+                        <span className="text-[11px] font-mono font-bold text-[#108a00]">
+                          BEYA-LIVE-{Date.now().toString().slice(-4)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={`https://meet.jit.si/BEYA-CONSULT-${consultationTarget ? consultationTarget.id : 'mode'}-${Date.now().toString(36)}`}
+                          className="flex-1 bg-white text-xs text-slate-700 px-3 py-2 rounded-xl border border-slate-200 font-mono select-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = `https://meet.jit.si/BEYA-CONSULT-${consultationTarget ? consultationTarget.id : 'mode'}-${Date.now().toString(36)}`;
+                            window.open(url, '_blank');
+                          }}
+                          className="px-4 py-2 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>دخول القاعة الآن</span>
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-slate-600">
+                        يمكنك تجربة دخول القاعة الافتراضية مباشرة الآن للتأكد من المايك والكاميرا ومشاركة الشاشة.
+                      </p>
+                    </div>
+
+                    {/* Confirmation Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = consultationTarget || allProMembers.find(m => m.pillar === 'modelistes');
+                        if (!target) return;
+                        const slip = {
+                          code: `BYA-RDV-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+                          consultantName: target.name,
+                          mode: 'visio',
+                          modeLabel: 'استشارة Live Visio (عن بعد مع مشاركة الشاشة)',
+                          date: consultationDate,
+                          time: consultationTime,
+                          topic: consultationTopic,
+                          clientName: consultationClientName || userProfile.brandName || 'صاحب علامة أزياء',
+                          clientPhone: consultationClientPhone || '0600000000'
+                        };
+                        setConsultationTarget(target);
+                        setConsultationConfirmedSlip(slip);
+                        setShowConsultationModal(true);
+                      }}
+                      className="w-full py-3.5 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-full text-sm transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-5 h-5" />
+                      <span>تأكيد حجز الموعد واستلام بطاقة الدخول</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── 3C. TAB 3: FEEDBACK & REVIEWS (آراء وتقييمات العملاء) ── */}
+              {consultingTab === 'feedback' && (
+                <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 py-6 space-y-6">
+                  {/* Summary Rating Banner */}
+                  <div className="bg-white rounded-3xl border border-[#e4ebe4] p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
+                    <div className="flex items-center gap-5">
+                      <div className="text-center sm:text-right shrink-0">
+                        <span className="text-4xl sm:text-5xl font-extrabold text-slate-900 font-mono tracking-tight">
+                          4.9
+                        </span>
+                        <div className="flex items-center gap-1 justify-center sm:justify-start mt-1">
+                          {[1, 2, 3, 4, 5].map(s => (
+                            <Star key={s} className="w-4 h-4 text-amber-500 fill-amber-500" />
+                          ))}
+                        </div>
+                        <span className="text-[11px] text-slate-500 block mt-0.5">من أصل 5.0 نجوم</span>
+                      </div>
+
+                      <div className="h-12 w-px bg-slate-200 hidden sm:block" />
+
+                      <div className="space-y-1">
+                        <h3 className="text-base font-bold text-slate-900">
+                          تقييمات موثقة من أصحاب علامات الأزياء ومصانع الألبسة
+                        </h3>
+                        <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
+                          تجارب حقيقية لعملاء استفادوا من استشارات مهندسي الباترون في تصحيح المقاسات، خفض استهلاك الأقمشة، وتفادي مشاكل ورشات الخياطة.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <button
+                        onClick={() => setShowAddReviewModal(true)}
+                        className="px-5 py-3 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-full text-xs transition shadow-xs flex items-center gap-2 cursor-pointer"
+                      >
+                        <PlusCircle className="w-4 h-4" />
+                        <span>شارك تجربتك / أضف تقييمك</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Reviews Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {consultationReviews.map(rev => (
+                      <div
+                        key={rev.id}
+                        className="bg-white rounded-2xl border border-[#e4ebe4] hover:border-[#108a00] p-6 space-y-4 shadow-xs transition"
+                      >
+                        {/* Review Header */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-800 font-bold flex items-center justify-center text-sm border border-slate-200">
+                              {(rev.authorName || 'B').charAt(0)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-bold text-slate-900">{rev.authorName}</h4>
+                                <span className="px-2 py-0.5 rounded-full bg-[#f2f7f2] text-[#108a00] text-[10px] font-semibold border border-[#d4e5d4]">
+                                  عميل موثق
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500">{rev.brandName} • {rev.city}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-0.5">
+                            {[...Array(rev.rating || 5)].map((_, i) => (
+                              <Star key={i} className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                            ))}
                           </div>
                         </div>
 
-                        <div className="pt-2 border-t border-[#383a40] space-y-2">
-                          <button
-                            onClick={() => {
-                              setConsultationTarget(m);
-                              setConsultationConfirmedSlip(null);
-                              setShowConsultationModal(true);
-                            }}
-                            className="w-full py-2.5 px-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-cyan-600/20 cursor-pointer"
-                          >
-                            <Calendar className="w-4 h-4" />
-                            <span>حجز موعد استشارة (Visio / مكتب)</span>
-                          </button>
+                        {/* Review Content */}
+                        <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal bg-[#f9fafb] p-3.5 rounded-xl border border-slate-100">
+                          "{rev.comment}"
+                        </p>
 
-                          <a
-                            href={`https://wa.me/${m.whatsapp}?text=${encodeURIComponent(
-                              `السلام عليكم أستاذ(ة) ${m.name}، أرغب في الاستفسار عن موعد متاح لاستشارة تقنية حول مشروع ملابس جديد.`
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full py-2 text-center text-xs text-slate-400 hover:text-white font-bold flex items-center justify-center gap-1 transition"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>استفسار مسبق عبر الواتساب</span>
-                          </a>
+                        {/* Review Footer Meta */}
+                        <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+                          <span>المستشار: <strong className="text-slate-800 font-semibold">{rev.consultantName}</strong></span>
+                          <span>{rev.date}</span>
                         </div>
                       </div>
                     ))}
+                  </div>
                 </div>
+              )}
 
-                {/* Educational Banner for Brands */}
-                <div className="p-5 rounded-3xl bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-black/50 border border-indigo-500/20 space-y-3">
-                  <h3 className="text-sm font-black text-white flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4 text-amber-400" />
-                    <span>كيف تحمي استشارة BEYA ميزانية كوليكسيونك؟</span>
+              {/* Educational Banner for Brands (Apple White Style) */}
+              <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 pb-12">
+                <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#e4ebe4] space-y-4 shadow-xs">
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-[#108a00]" />
+                    <span>كيف تحمي استشارة BEYA التقنية ميزانية كوليكسيونك؟</span>
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-300">
-                    <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
-                      <strong className="text-amber-300 block">1. توفير 15% إلى 30% من استهلاك الثوب</strong>
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
-                        يقوم الموديليست بتحسين تعشيق الباترون (Placement & Nesting) لتفادي الهدر على الطاولة قبل القص.
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-700">
+                    <div className="p-4 rounded-xl bg-[#f9fafb] border border-slate-200/70 space-y-1.5">
+                      <strong className="text-slate-900 font-bold block text-sm">1. توفير 15% إلى 30% من استهلاك القماش</strong>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        يقوم الموديليست بتحسين تعشيق الباترون (Placement & Nesting) لتفادي الهدر على الطاولة قبل القص الصناعي.
                       </p>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
-                      <strong className="text-cyan-300 block">2. مطابقة القياسات لجمهورك المستهدف</strong>
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
-                        تفادي المقاسات العشوائية التي تؤدي إلى إرجاع الزبائن للمنتجات وتراجع مبيعات البراند.
+                    <div className="p-4 rounded-xl bg-[#f9fafb] border border-slate-200/70 space-y-1.5">
+                      <strong className="text-slate-900 font-bold block text-sm">2. مطابقة القياسات لجمهورك المستهدف</strong>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        تفادي المقاسات العشوائية التي تؤدي إلى إرجاع الزبائن للمنتجات وتراجع مبيعات البراند في السوق.
                       </p>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
-                      <strong className="text-emerald-300 block">3. بطاقة تقنية (Fiche Tech) تحميك مع المعمل</strong>
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
-                        وثيقة قانونية وتقنية تفرض على ورشة الخياطة احترام خيوط الحياكة، والدرزات، وتفاصيل الفينيسيون.
+                    <div className="p-4 rounded-xl bg-[#f9fafb] border border-slate-200/70 space-y-1.5">
+                      <strong className="text-slate-900 font-bold block text-sm">3. بطاقة تقنية (Fiche Tech) تلزم المصنع</strong>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        وثيقة مرجعية وقانونية تفرض على ورشة الخياطة احترام خيوط الحياكة والدرزات وتفاصيل الفينيسيون بدقة.
                       </p>
                     </div>
                   </div>
@@ -4965,97 +5505,116 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          CONSULTATION BOOKING MODAL (LIVE VISIO / ATELIER MEETING)
+          CONSULTATION BOOKING MODAL (APPLE / UPWORK LIGHT DESIGN SYSTEM)
       ───────────────────────────────────────────────────────────── */}
       {showConsultationModal && consultationTarget && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <div
-            className="w-full max-w-xl bg-[#232428] rounded-3xl overflow-hidden border border-[#383a40] shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white space-y-0"
+            className="w-full max-w-xl bg-white rounded-3xl overflow-hidden border border-[#e4ebe4] shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-slate-900 space-y-0"
             onClick={e => e.stopPropagation()}
             dir="rtl"
           >
             {/* Header */}
-            <div className="p-4 sm:p-5 bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 border-b border-[#383a40] flex items-center justify-between">
+            <div className="p-4 sm:p-5 bg-white border-b border-[#e4ebe4] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30">
-                  <Calendar className="w-6 h-6" />
+                <div className="w-10 h-10 rounded-2xl bg-[#f2f7f2] text-[#108a00] flex items-center justify-center border border-[#d4e5d4]">
+                  <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <span>حجز جلسة استشارة تقنية وتوجيه فني</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">1-à-1 مخصص</span>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#f2f7f2] text-[#108a00] font-semibold border border-[#d4e5d4]">
+                      1-à-1 مخصص
+                    </span>
                   </h3>
-                  <p className="text-xs text-slate-400">جلسة 45 دقيقة مع خبير النسيج والموديليست لضبط مشروعك</p>
+                  <p className="text-xs text-slate-500">جلسة 45 دقيقة مع خبير النسيج والموديليست لضبط مشروعك</p>
                 </div>
               </div>
 
               <button
                 onClick={() => { setShowConsultationModal(false); setConsultationConfirmedSlip(null); }}
-                className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
+                className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* If Confirmed -> Render Confirmation Slip */}
             {consultationConfirmedSlip ? (
               <div className="p-6 space-y-5">
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-cyan-950/60 to-black/60 border border-cyan-500/40 text-center space-y-3">
-                  <div className="w-14 h-14 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto border-2 border-cyan-500/40">
-                    <CheckCircle className="w-8 h-8" />
+                <div className="p-5 rounded-2xl bg-[#f2f7f2] border border-[#d4e5d4] text-center space-y-2.5">
+                  <div className="w-12 h-12 rounded-full bg-[#108a00] text-white flex items-center justify-center mx-auto shadow-xs">
+                    <CheckCircle className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-black border border-cyan-500/30 inline-block mb-1">
+                    <span className="px-3 py-0.5 rounded-full bg-white text-[#108a00] text-xs font-semibold border border-[#d4e5d4] inline-block mb-1">
                       تم تأكيد حجز موعد الاستشارة بنجاح
                     </span>
-                    <h4 className="text-lg font-black text-white">بطاقة الموعد التقني الرسمي</h4>
-                    <p className="text-xs text-slate-300 mt-1">كود الموعد: <strong className="font-mono text-cyan-400">{consultationConfirmedSlip.code}</strong></p>
+                    <h4 className="text-lg font-bold text-slate-900">بطاقة الموعد التقني المعتمد</h4>
+                    <p className="text-xs text-slate-600 mt-0.5">كود الموعد: <strong className="font-mono text-slate-900">{consultationConfirmedSlip.code}</strong></p>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-[#1e1f22] border border-white/5 space-y-2.5 text-xs">
-                  <div className="flex justify-between py-1 border-b border-white/5">
-                    <span className="text-slate-400">المستشار التقني:</span>
-                    <strong className="text-white">{consultationConfirmedSlip.consultantName}</strong>
+                <div className="p-4 rounded-2xl bg-white border border-[#e4ebe4] space-y-2 text-xs">
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">المستشار التقني:</span>
+                    <strong className="text-slate-900">{consultationConfirmedSlip.consultantName}</strong>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-white/5">
-                    <span className="text-slate-400">نمط الاستشارة:</span>
-                    <strong className="text-amber-300">{consultationConfirmedSlip.modeLabel}</strong>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">نمط الاستشارة:</span>
+                    <strong className="text-[#108a00]">{consultationConfirmedSlip.modeLabel}</strong>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-white/5">
-                    <span className="text-slate-400">التاريخ والوقت:</span>
-                    <span className="text-white font-bold font-mono">{consultationConfirmedSlip.date} في تمام الساعة {consultationConfirmedSlip.time}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">التاريخ والوقت:</span>
+                    <span className="text-slate-900 font-semibold font-mono">{consultationConfirmedSlip.date} في تمام الساعة {consultationConfirmedSlip.time}</span>
                   </div>
                   {consultationConfirmedSlip.mode === 'office' && (
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">عنوان المقر/Atelier:</span>
-                      <span className="text-cyan-300 font-bold text-left">{consultationTarget.officeAddress}</span>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">عنوان المقر/Atelier:</span>
+                      <span className="text-slate-800 font-semibold text-left">{consultationTarget.officeAddress}</span>
                     </div>
                   )}
                   {consultationConfirmedSlip.mode === 'visio' && (
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">رابط القاعة الافتراضية:</span>
-                      <span className="text-cyan-300 font-bold font-mono">meet.google.com/bya-rdv-pro</span>
+                    <div className="py-2 border-b border-slate-100 space-y-2">
+                      <span className="text-slate-500 block">رابط القاعة الافتراضية المباشرة:</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={`https://meet.jit.si/BEYA-CONSULT-${consultationTarget.id}-${consultationConfirmedSlip.code}`}
+                          className="flex-1 bg-slate-50 text-slate-700 font-mono text-[11px] p-2 rounded-lg border border-slate-200 select-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            window.open(`https://meet.jit.si/BEYA-CONSULT-${consultationTarget.id}-${consultationConfirmedSlip.code}`, '_blank');
+                          }}
+                          className="px-3 py-2 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-lg text-xs transition flex items-center gap-1 cursor-pointer shrink-0"
+                        >
+                          <Video className="w-3.5 h-3.5" />
+                          <span>دخول القاعة الآن</span>
+                        </button>
+                      </div>
                     </div>
                   )}
-                  <div className="flex justify-between py-1 border-b border-white/5">
-                    <span className="text-slate-400">موضوع الاستشارة:</span>
-                    <span className="text-slate-200">{consultationConfirmedSlip.topic}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">موضوع الاستشارة:</span>
+                    <span className="text-slate-800 max-w-xs text-left truncate">{consultationConfirmedSlip.topic}</span>
                   </div>
                   <div className="flex justify-between py-1">
-                    <span className="text-slate-400">رسوم الجلسة:</span>
-                    <strong className="text-amber-400 font-mono text-sm">{consultationTarget.consultationPriceMAD || 250} MAD</strong>
+                    <span className="text-slate-500">رسوم الجلسة (45د):</span>
+                    <strong className="text-slate-900 font-mono text-sm">{consultationTarget.consultationPriceMAD || 250} MAD</strong>
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3">
                   <a
                     href={`https://wa.me/${consultationTarget.whatsapp}?text=${encodeURIComponent(
-                      `السلام عليكم أستاذ(ة) ${consultationTarget.name}، لقد حجزت موعد استشارة رسمية عبر منصة BEYA Consulting:\n• كود الموعد: ${consultationConfirmedSlip.code}\n• النمط: ${consultationConfirmedSlip.modeLabel}\n• الموعد: ${consultationConfirmedSlip.date} في الساعة ${consultationConfirmedSlip.time}\n• الموضوع: ${consultationConfirmedSlip.topic}\n• البراند/العميل: ${consultationConfirmedSlip.clientName || userProfile.brandName}`
+                      `السلام عليكم أستاذ(ة) ${consultationTarget.name}، لقد حجزت موعد استشارة رسمية عبر منصة BEYA NETWORK:\n• كود الموعد: ${consultationConfirmedSlip.code}\n• النمط: ${consultationConfirmedSlip.modeLabel}\n• الموعد: ${consultationConfirmedSlip.date} في الساعة ${consultationConfirmedSlip.time}\n• الموضوع: ${consultationConfirmedSlip.topic}\n• البراند/العميل: ${consultationConfirmedSlip.clientName || userProfile.brandName}`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full sm:flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                    className="w-full sm:flex-1 py-3 px-4 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-full text-xs transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span>تأكيد الموعد فـ الواتساب مع المستشار</span>
@@ -5063,75 +5622,79 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
                   <button
                     onClick={() => { setShowConsultationModal(false); setConsultationConfirmedSlip(null); }}
-                    className="w-full sm:w-auto py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 border border-white/10 cursor-pointer"
+                    className="w-full sm:w-auto py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-full text-xs transition cursor-pointer"
                   >
-                    <span>تم / إنهاء</span>
+                    إغلاق النافذة
                   </button>
                 </div>
               </div>
             ) : (
               /* Consultation Booking Form */
-              <div className="p-5 sm:p-6 space-y-5">
+              <div className="p-5 sm:p-6 space-y-4">
                 {/* Consultant Summary */}
-                <div className="p-3.5 rounded-2xl bg-[#1e1f22] border border-white/5 flex items-center justify-between gap-3">
+                <div className="p-3.5 rounded-2xl bg-[#f9fafb] border border-[#e4ebe4] flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <img src={consultationTarget.avatar} alt={consultationTarget.name} className="w-12 h-12 rounded-xl object-cover border border-cyan-500/30" />
+                    <img src={consultationTarget.avatar} alt={consultationTarget.name} className="w-12 h-12 rounded-full object-cover border border-slate-200" />
                     <div>
-                      <h4 className="text-sm font-black text-white">{consultationTarget.name}</h4>
-                      <p className="text-xs text-cyan-300">{consultationTarget.categoryLabel || consultationTarget.specialty}</p>
-                      <span className="text-[11px] text-slate-400">📍 {consultationTarget.city}</span>
+                      <h4 className="text-sm font-bold text-slate-900">{consultationTarget.name}</h4>
+                      <p className="text-xs text-[#108a00] font-medium">{consultationTarget.categoryLabel || consultationTarget.specialty}</p>
+                      <span className="text-[11px] text-slate-500">{consultationTarget.city}</span>
                     </div>
                   </div>
                   <div className="text-left shrink-0">
-                    <span className="text-[10px] text-slate-400 block">سعر الجلسة (45د)</span>
-                    <span className="text-sm font-black text-amber-400 font-mono">{consultationTarget.consultationPriceMAD || 250} MAD</span>
+                    <span className="text-[10px] text-slate-500 block">سعر الجلسة (45د)</span>
+                    <span className="text-sm font-bold text-slate-900 font-mono">
+                      {consultationMode === 'visio' ? '200 MAD' : `${consultationTarget.consultationPriceMAD || 250} MAD`}
+                    </span>
                   </div>
                 </div>
 
                 {/* Step 1: Mode Switcher */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300 block">1. اختر نمط الجلسة المفضل لديك:</label>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-900 block">1. اختر نمط الجلسة المفضل لديك:</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div
                       onClick={() => setConsultationMode('visio')}
-                      className={`p-3.5 rounded-2xl border cursor-pointer transition space-y-1.5 ${
+                      className={`p-3.5 rounded-2xl border cursor-pointer transition space-y-1 ${
                         consultationMode === 'visio'
-                          ? 'bg-gradient-to-br from-indigo-950/60 to-black/60 border-indigo-400 text-white'
-                          : 'bg-[#1e1f22] border-white/5 text-slate-400 hover:border-white/20'
+                          ? 'border-[#108a00] bg-[#f2f7f2]/50 ring-1 ring-[#108a00]'
+                          : 'border-[#e4ebe4] bg-white hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-black text-xs text-white flex items-center gap-1.5">
-                          <Video className="w-4 h-4 text-indigo-400" />
+                        <span className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                          <Video className="w-4 h-4 text-[#108a00]" />
                           <span>جلسة Live Visio (عن بعد)</span>
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold">Google Meet</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f2f7f2] text-[#108a00] font-semibold border border-[#d4e5d4]">200 MAD</span>
                       </div>
-                      <p className="text-[11px] text-slate-300 leading-tight">مشاركة الشاشة لمراجعة ملفات التصميم والباترون وحساب كلفة البياسة من أي مكان.</p>
+                      <p className="text-[11px] text-slate-600 leading-tight">مشاركة الشاشة لمراجعة ملفات CAD والباترون وحساب كلفة البياسة.</p>
                     </div>
 
                     <div
                       onClick={() => setConsultationMode('office')}
-                      className={`p-3.5 rounded-2xl border cursor-pointer transition space-y-1.5 ${
+                      className={`p-3.5 rounded-2xl border cursor-pointer transition space-y-1 ${
                         consultationMode === 'office'
-                          ? 'bg-gradient-to-br from-amber-950/60 to-black/60 border-amber-400 text-white'
-                          : 'bg-[#1e1f22] border-white/5 text-slate-400 hover:border-white/20'
+                          ? 'border-[#108a00] bg-[#f2f7f2]/50 ring-1 ring-[#108a00]'
+                          : 'border-[#e4ebe4] bg-white hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-black text-xs text-white flex items-center gap-1.5">
-                          <Briefcase className="w-4 h-4 text-amber-400" />
+                        <span className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                          <Building2 className="w-4 h-4 text-slate-700" />
                           <span>حضوري بالمكتب / Atelier</span>
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">لقاء وجهاً لوجه</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+                          {consultationTarget.consultationPriceMAD || 250} MAD
+                        </span>
                       </div>
-                      <p className="text-[11px] text-slate-300 leading-tight">لمس عينات الأقمشة وتجربة المانيكان في استوديو الموديليست ({consultationTarget.city}).</p>
+                      <p className="text-[11px] text-slate-600 leading-tight">لمس عينات الأقمشة وتجربة المانيكان في استوديو الموديليست ({consultationTarget.city}).</p>
                     </div>
                   </div>
 
                   {consultationMode === 'office' && consultationTarget.officeAddress && (
-                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-slate-500 shrink-0" />
                       <span><strong>العنوان المعتمد للزيارة:</strong> {consultationTarget.officeAddress}</span>
                     </div>
                   )}
@@ -5139,18 +5702,18 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
                 {/* Step 2: Date & Time Picker */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <label className="text-slate-300 font-bold block mb-1">2. حدد تاريخ الموعد:</label>
+                  <div className="space-y-1">
+                    <label className="text-slate-900 font-bold block">2. حدد تاريخ الموعد:</label>
                     <input
                       type="date"
                       value={consultationDate}
                       onChange={e => setConsultationDate(e.target.value)}
-                      className="w-full bg-[#1e1f22] text-white px-3 py-2 rounded-xl border border-white/10 focus:border-cyan-500 focus:outline-none"
+                      className="w-full bg-[#f9fafb] text-slate-900 px-3 py-2 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
                     />
                   </div>
 
-                  <div>
-                    <label className="text-slate-300 font-bold block mb-1">3. اختر التوقيت المفضل:</label>
+                  <div className="space-y-1">
+                    <label className="text-slate-900 font-bold block">3. التوقيت المفضل (45 دقيقة):</label>
                     <div className="grid grid-cols-4 gap-1.5">
                       {['10:00', '11:30', '15:00', '17:00'].map(t => (
                         <button
@@ -5159,8 +5722,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                           onClick={() => setConsultationTime(t)}
                           className={`py-2 rounded-xl text-xs font-bold transition border cursor-pointer font-mono ${
                             consultationTime === t
-                              ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-black'
-                              : 'bg-[#1e1f22] text-slate-300 border-white/5 hover:border-white/20'
+                              ? 'bg-[#108a00] text-white border-[#108a00]'
+                              : 'bg-[#f9fafb] text-slate-700 border-slate-200 hover:border-slate-400'
                           }`}
                         >
                           {t}
@@ -5171,12 +5734,12 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 </div>
 
                 {/* Step 3: Topic Selection */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-300 block">4. ما هو الموضوع الرئيسي للاستشارة؟</label>
+                <div className="space-y-1 text-xs">
+                  <label className="text-slate-900 font-bold block">4. ما هو الموضوع الرئيسي للاستشارة؟</label>
                   <select
                     value={consultationTopic}
                     onChange={e => setConsultationTopic(e.target.value)}
-                    className="w-full bg-[#1e1f22] text-xs text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-cyan-500 focus:outline-none"
+                    className="w-full bg-[#f9fafb] text-slate-900 px-3 py-2.5 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
                   >
                     <option value="اختيار وتدقيق الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج">
                       اختيار وتدقيق الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج
@@ -5194,26 +5757,28 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 </div>
 
                 {/* Step 4: Client Contact */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                  <div>
-                    <label className="text-slate-300 block mb-1">اسمك / اسم علامتك التجارية: *</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="space-y-1">
+                    <label className="text-slate-900 font-bold block">اسمك / اسم علامتك التجارية: *</label>
                     <input
                       type="text"
+                      required
                       placeholder="اسمك أو اسم البراند"
                       value={consultationClientName}
                       onChange={e => setConsultationClientName(e.target.value)}
-                      className="w-full bg-[#1e1f22] text-white px-3 py-2 rounded-xl border border-white/10 focus:border-cyan-500 focus:outline-none"
+                      className="w-full bg-[#f9fafb] text-slate-900 px-3 py-2 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
                     />
                   </div>
 
-                  <div>
-                    <label className="text-slate-300 block mb-1">رقم الهاتف / الواتساب: *</label>
+                  <div className="space-y-1">
+                    <label className="text-slate-900 font-bold block">رقم الهاتف / الواتساب: *</label>
                     <input
                       type="tel"
-                      placeholder="0661234567"
+                      required
+                      placeholder="06XXXXXXXX"
                       value={consultationClientPhone}
                       onChange={e => setConsultationClientPhone(e.target.value)}
-                      className="w-full bg-[#1e1f22] text-white px-3 py-2 rounded-xl border border-white/10 focus:border-cyan-500 focus:outline-none"
+                      className="w-full bg-[#f9fafb] text-slate-900 px-3 py-2 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none font-mono"
                     />
                   </div>
                 </div>
@@ -5226,7 +5791,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                       code: `BYA-RDV-2026-${Math.floor(1000 + Math.random() * 9000)}`,
                       consultantName: consultationTarget.name,
                       mode: consultationMode,
-                      modeLabel: consultationMode === 'visio' ? '💻 استشارة Live Visio (Google Meet)' : '🏢 استشارة حضورية بالمكتب / Atelier',
+                      modeLabel: consultationMode === 'visio' ? 'استشارة Live Visio (عن بعد مع مشاركة الشاشة)' : 'استشارة حضورية بالمكتب / Atelier',
                       date: consultationDate,
                       time: consultationTime,
                       topic: consultationTopic,
@@ -5234,13 +5799,186 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     };
                     setConsultationConfirmedSlip(slip);
                   }}
-                  className="w-full py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black rounded-2xl text-sm transition flex items-center justify-center gap-2 shadow-xl shadow-cyan-600/20 cursor-pointer"
+                  className="w-full py-3 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-full text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                 >
-                  <Calendar className="w-5 h-5" />
-                  <span>تأكيد حجز موعد الاستشارة ({consultationTarget.consultationPriceMAD || 250} MAD)</span>
+                  <Calendar className="w-4 h-4" />
+                  <span>تأكيد حجز موعد الاستشارة ({consultationMode === 'visio' ? 200 : (consultationTarget.consultationPriceMAD || 250)} MAD)</span>
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          MODAL: ADD CLIENT FEEDBACK & REVIEW (إضافة تقييم ورأي العميل)
+      ───────────────────────────────────────────────────────────── */}
+      {showAddReviewModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-lg bg-white rounded-3xl overflow-hidden border border-[#e4ebe4] shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-slate-900 space-y-0"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            {/* Header */}
+            <div className="p-4 sm:p-5 bg-white border-b border-[#e4ebe4] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#f2f7f2] text-[#108a00] flex items-center justify-center border border-[#d4e5d4]">
+                  <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    شارك تجربتك مع استشارات BEYA
+                  </h3>
+                  <p className="text-xs text-slate-500">تقييمك يساعد علامات الأزياء الأخرى على اختيار المستشار المناسب</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowAddReviewModal(false)}
+                className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                if (!newReviewComment.trim()) return;
+                const newRev = {
+                  id: `rev-${Date.now()}`,
+                  authorName: newReviewAuthor || userProfile.name || 'صاحب علامة أزياء',
+                  brandName: newReviewBrand || userProfile.brandName || 'علامة تجارية مستقلة',
+                  city: newReviewCity || 'الدار البيضاء',
+                  consultantName: newReviewConsultant,
+                  rating: newReviewRating,
+                  date: 'الآن',
+                  sessionType: newReviewSessionType,
+                  comment: newReviewComment,
+                  verified: true
+                };
+                const updated = [newRev, ...consultationReviews];
+                setConsultationReviews(updated);
+                try {
+                  localStorage.setItem('beya_consultation_reviews', JSON.stringify(updated));
+                } catch {}
+                setShowAddReviewModal(false);
+                setNewReviewComment('');
+              }}
+              className="p-5 sm:p-6 space-y-4 text-xs"
+            >
+              {/* Rating Stars Selector */}
+              <div className="space-y-1.5 text-center bg-[#f9fafb] p-3 rounded-2xl border border-slate-100">
+                <label className="text-xs font-bold text-slate-900 block">حدد تقييمك للجلسة:</label>
+                <div className="flex items-center justify-center gap-2">
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <button
+                      type="button"
+                      key={s}
+                      onClick={() => setNewReviewRating(s)}
+                      className="p-1 cursor-pointer transition hover:scale-110"
+                    >
+                      <Star
+                        className={`w-7 h-7 ${
+                          s <= newReviewRating ? 'text-amber-500 fill-amber-500' : 'text-slate-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Author & Brand Name */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-slate-900 font-bold block">اسمك الكامل: *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="مثال: يونس العلمي"
+                    value={newReviewAuthor}
+                    onChange={e => setNewReviewAuthor(e.target.value)}
+                    className="w-full bg-[#f9fafb] text-slate-900 px-3 py-2 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-900 font-bold block">اسم العلامة التجارية / المصنع: *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="مثال: Urban Couture"
+                    value={newReviewBrand}
+                    onChange={e => setNewReviewBrand(e.target.value)}
+                    className="w-full bg-[#f9fafb] text-slate-900 px-3 py-2 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* City & Consultant */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-slate-900 font-bold block">المدينة:</label>
+                  <select
+                    value={newReviewCity}
+                    onChange={e => setNewReviewCity(e.target.value)}
+                    className="w-full bg-[#f9fafb] text-slate-900 px-3 py-2 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
+                  >
+                    <option value="الدار البيضاء">الدار البيضاء</option>
+                    <option value="الرباط">الرباط</option>
+                    <option value="طنجة">طنجة</option>
+                    <option value="فاس">فاس</option>
+                    <option value="مراكش">مراكش</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-900 font-bold block">المستشار الذي تعاملت معه:</label>
+                  <select
+                    value={newReviewConsultant}
+                    onChange={e => setNewReviewConsultant(e.target.value)}
+                    className="w-full bg-[#f9fafb] text-slate-900 px-3 py-2 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
+                  >
+                    {allProMembers.filter(m => m.pillar === 'modelistes').map(m => (
+                      <option key={m.id} value={m.name}>{m.name} ({m.categoryLabel || m.specialty})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Review Comment */}
+              <div className="space-y-1">
+                <label className="text-slate-900 font-bold block">تفاصيل تجربتك وملاحظاتك الفنية: *</label>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="كيف ساعدتك الاستشارة؟ كم وفرت في استهلاك القماش؟ كيف كانت جودة مشاركة الشاشة في Visio أو اللقاء بالمكتب؟..."
+                  value={newReviewComment}
+                  onChange={e => setNewReviewComment(e.target.value)}
+                  className="w-full bg-[#f9fafb] text-slate-900 px-3 py-2.5 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none leading-relaxed"
+                />
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddReviewModal(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-full transition cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-full transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>نشر التقييم في المنصة</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
