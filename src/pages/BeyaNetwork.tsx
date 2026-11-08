@@ -977,42 +977,44 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   // MAIN DISCORD INTERFACE RENDER
   // ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#1e1f22] text-[#dbdee1] flex flex-col font-sans select-none antialiased overflow-hidden h-screen" dir="rtl">
+    <div className={`min-h-screen ${activeView === 'chat' ? 'bg-[#1e1f22]' : 'bg-[#0b0f19]'} text-[#dbdee1] flex flex-col font-sans select-none antialiased overflow-hidden h-screen`} dir="rtl">
 
-      {/* TOP DISCORD BAR */}
-      <header className="h-13 bg-[#1e1f22] border-b border-[#111214] px-4 flex items-center justify-between shrink-0 z-30">
+      {/* TOP HEADER BAR (UPWORK / FREELANCE PLATFORM STYLE) */}
+      <header className="h-14 bg-[#111622] border-b border-slate-800/80 px-4 flex items-center justify-between shrink-0 z-30 shadow-md">
         <div className="flex items-center gap-3">
-          {/* Mobile Drawer Hamburger */}
-          <button
-            onClick={() => setMobileDrawer(prev => prev === 'channels' ? 'none' : 'channels')}
-            className="md:hidden p-2 text-slate-300 hover:text-white bg-[#2b2d31] rounded-xl cursor-pointer"
-            title="فتح القنوات"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          {/* Mobile Drawer Hamburger (Chat Only) */}
+          {activeView === 'chat' && (
+            <button
+              onClick={() => setMobileDrawer(prev => prev === 'channels' ? 'none' : 'channels')}
+              className="md:hidden p-2 text-slate-300 hover:text-white bg-[#2b2d31] rounded-xl cursor-pointer"
+              title="فتح القنوات"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
 
-          {/* Server Icon & Title */}
+          {/* Brand Icon & Title (Upwork / Freelance Marketplace Identity) */}
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-black shadow-md shadow-indigo-500/20 shrink-0">
-              <span className="text-sm font-black">B</span>
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-black shadow-md shadow-amber-500/20 shrink-0">
+              <Briefcase className="w-5 h-5 text-slate-950" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-black text-white text-sm tracking-wide">BEYA NETWORK</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase border border-indigo-500/30">
-                  DISCORD
+                <span className="font-black text-white text-sm tracking-wide">BEYA FREELANCE</span>
+                <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase border border-amber-500/30">
+                  MARKETPLACE
                 </span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" title="متصل الآن" />
               </div>
               <p className="text-[11px] text-slate-400 hidden sm:block font-medium">
-                سيرفر صناع الموضة، الموديليست، والموردين بالمغرب
+                سوق العمل الحر للموديليست والباترون الصناعي بالمغرب (Upwork Style)
               </p>
             </div>
           </div>
         </div>
 
-        {/* View Switcher Tabs (Discord / Freelance Platform Style) */}
-        <div className="flex items-center gap-1.5 bg-[#2b2d31] p-1 rounded-xl border border-[#383a40] overflow-x-auto scrollbar-hide">
+        {/* View Switcher Tabs (Freelance & Upwork Navigation) */}
+        <div className="flex items-center gap-1.5 bg-[#1b202e] p-1 rounded-xl border border-slate-700/60 overflow-x-auto scrollbar-hide">
           <button
             onClick={() => { setActiveView('freelance'); setMobileDrawer('none'); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
@@ -1039,18 +1041,6 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
           </button>
 
           <button
-            onClick={() => { setActiveView('chat'); setMobileDrawer('none'); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-              activeView === 'chat'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Hash className="w-3.5 h-3.5" />
-            <span>ملتقى المبدعين (Discord)</span>
-          </button>
-
-          <button
             onClick={() => { setActiveView('directory'); setMobileDrawer('none'); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeView === 'directory'
@@ -1059,7 +1049,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>دليل الموردين والمحترفين</span>
+            <span>دليل الموردين والأقمشة</span>
             <span className="px-1.5 py-0.2 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">14</span>
           </button>
 
@@ -1075,6 +1065,18 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             <span>الشراء المشترك</span>
             <span className="px-1.5 py-0.2 rounded-full bg-amber-500/30 text-amber-300 text-[10px] font-mono">-25%</span>
           </button>
+
+          <button
+            onClick={() => { setActiveView('chat'); setMobileDrawer('none'); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              activeView === 'chat'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Hash className="w-3.5 h-3.5" />
+            <span>ملتقى المبدعين (Discord Lounge)</span>
+          </button>
         </div>
 
         {/* Right Action Buttons */}
@@ -1083,22 +1085,24 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
           <Link
             to="/network/register"
             className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer shrink-0"
-            title="تسجيل موديليست أو مورد جديد في BEYA NETWORK"
+            title="تسجيل موديليست أو مورد جديد في BEYA FREELANCE"
           >
             <Sparkles className="w-3.5 h-3.5 text-slate-950" />
             <span className="hidden sm:inline">+ تسجيل مهني / مورد</span>
             <span className="sm:hidden text-[10px]">+ تسجيل Pro</span>
           </Link>
 
-          {/* Members Sidebar Toggle (Mobile & Desktop) */}
-          <button
-            onClick={() => setMobileDrawer(prev => prev === 'members' ? 'none' : 'members')}
-            className="p-2 text-slate-300 hover:text-white bg-[#2b2d31] hover:bg-[#35373c] rounded-xl transition flex items-center gap-1.5 text-xs font-bold cursor-pointer"
-            title="قائمة المهنيين والأعضاء"
-          >
-            <Users className="w-4 h-4 text-indigo-400" />
-            <span className="hidden lg:inline text-[11px]">الأعضاء ({allProMembers.length})</span>
-          </button>
+          {/* Members Sidebar Toggle (Only in Discord Chat View) */}
+          {activeView === 'chat' && (
+            <button
+              onClick={() => setMobileDrawer(prev => prev === 'members' ? 'none' : 'members')}
+              className="p-2 text-slate-300 hover:text-white bg-[#2b2d31] hover:bg-[#35373c] rounded-xl transition flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+              title="قائمة المهنيين والأعضاء"
+            >
+              <Users className="w-4 h-4 text-indigo-400" />
+              <span className="hidden lg:inline text-[11px]">الأعضاء ({allProMembers.length})</span>
+            </button>
+          )}
 
           {/* Return to BEYAPORTAL Button */}
           <button
@@ -1112,17 +1116,18 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         </div>
       </header>
 
-      {/* DISCORD WORKSPACE BODY: 3 COLUMNS */}
+      {/* MAIN PLATFORM WORKSPACE */}
       <div className="flex-1 flex overflow-hidden relative">
 
         {/* ─────────────────────────────────────────────────────────────
-            COLUMN 1: DISCORD CHANNELS SIDEBAR
+            COLUMN 1: DISCORD CHANNELS SIDEBAR (ONLY IN DISCORD CHAT VIEW)
         ───────────────────────────────────────────────────────────── */}
-        <aside
-          className={`w-64 bg-[#2b2d31] border-l border-[#202225] flex flex-col shrink-0 z-20 transition-all duration-200 absolute md:static inset-y-0 right-0 ${
-            mobileDrawer === 'channels' ? 'translate-x-0 shadow-2xl' : 'translate-x-full md:translate-x-0'
-          }`}
-        >
+        {activeView === 'chat' && (
+          <aside
+            className={`w-64 bg-[#2b2d31] border-l border-[#202225] flex flex-col shrink-0 z-20 transition-all duration-200 absolute md:static inset-y-0 right-0 ${
+              mobileDrawer === 'channels' ? 'translate-x-0 shadow-2xl' : 'translate-x-full md:translate-x-0'
+            }`}
+          >
           {/* Server Sub-Header */}
           <div className="h-12 px-4 border-b border-[#202225] flex items-center justify-between shadow-xs">
             <div className="flex items-center gap-2">
@@ -1295,91 +1300,94 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             </button>
           </div>
         </aside>
+      )}
 
-        {/* ─────────────────────────────────────────────────────────────
-            COLUMN 2: MAIN DISCORD CONTENT AREA
-        ───────────────────────────────────────────────────────────── */}
-        <main className="flex-1 bg-[#313338] flex flex-col overflow-hidden min-w-0">
+      {/* ─────────────────────────────────────────────────────────────
+          COLUMN 2: MAIN WORKSPACE (FULL WIDTH FOR FREELANCE & DIRECTORY)
+      ───────────────────────────────────────────────────────────── */}
+      <main className={`flex-1 ${activeView === 'chat' ? 'bg-[#313338]' : 'bg-[#0b0f19]'} flex flex-col overflow-hidden min-w-0`}>
 
-          {/* VIEW: FREELANCE MODELISTES & PATTERN MAKERS MARKETPLACE */}
+          {/* VIEW: FREELANCE MODELISTES & PATTERN MAKERS MARKETPLACE (UPWORK STYLE) */}
           {activeView === 'freelance' && (
-            <div className="flex-1 flex flex-col h-full overflow-y-auto">
-              {/* Hero Banner */}
-              <div className="bg-gradient-to-b from-[#1e1f22] via-[#2b2d31] to-[#313338] border-b border-[#202225] p-5 sm:p-6 shrink-0">
-                <div className="max-w-6xl mx-auto space-y-4">
+            <div className="flex-1 flex flex-col h-full overflow-y-auto bg-[#0b0f19]">
+              {/* Upwork Marketplace Top Hero */}
+              <div className="bg-gradient-to-b from-[#111625] via-[#151c2d] to-[#0b0f19] border-b border-slate-800/80 p-6 sm:p-8 shrink-0">
+                <div className="max-w-7xl mx-auto space-y-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-500/30 flex items-center gap-1.5 shadow-xs">
+                      <span className="px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-black border border-amber-500/30 flex items-center gap-2 shadow-xs">
                         <ShieldCheck className="w-4 h-4 text-amber-400" />
-                        <span>BEYA Escrow Protection • نظام حماية الأموال 100%</span>
+                        <span>BEYA Escrow Protection • نظام حماية المستحقات 100%</span>
                       </span>
-                      <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[11px] font-bold border border-indigo-500/30">
-                        ⚡ فحص ومعاينة قبل تحويل المستحقات
+                      <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-bold border border-emerald-500/25">
+                        ⚡ لا يتم تحويل الأموال إلا بعد استلام الباترون ومطابقة القياسات
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 text-xs text-slate-300">
-                      <span className="flex items-center gap-1 bg-black/30 px-2.5 py-1 rounded-lg border border-white/5">
-                        🇲🇦 <strong>تحويل بنكي محلي (CIH / التجاري)</strong>
+                      <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
+                        🇲🇦 <strong>تحويل بنكي مغربي (CIH / التجاري)</strong>
                       </span>
-                      <span className="flex items-center gap-1 bg-black/30 px-2.5 py-1 rounded-lg border border-white/5">
-                        🌍 <strong>PayPal دولي للبراندات بالخارج</strong>
+                      <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
+                        🌍 <strong>PayPal للبراندات والمغتربين بالخارج</strong>
                       </span>
                     </div>
                   </div>
 
                   <div>
-                    <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
+                    <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
                       <span>سوق العمل الحر للموديليست ومصممي الباترون</span>
-                      <span className="text-xs px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-full">BEYA Freelance</span>
+                      <span className="text-xs px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-full uppercase tracking-wider">
+                        Upwork Style
+                      </span>
                     </h1>
-                    <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-4xl leading-relaxed">
-                      وظّف أفضل موديليست فالمغرب بالقطعة (Freelance) مع ضمان حماية الأموال BEYA Escrow. تصفح بورتفوليو حقيقي، وتعرف على البراندات العالمية اللي خدمو معاها (Zara, Adidas, Mango, Bershka...) واطلب باترونك بصيغة DXF AAMA و RUL و PDF 1:1 جاهزة للفصالة.
+                    <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-4xl leading-relaxed font-medium">
+                      وظّف أفضل موديليست فالمغرب بالقطعة (Freelance). تصفح بورتفوليو حقيقي، وتعرف على البراندات العالمية اللي خدمو معاها (Zara, Adidas, Mango, Bershka...)، واطلب باترونك بضمان BEYA Escrow أو احجز استشارة خاصة 1-on-1 (عن بعد أو بالمكتب).
                     </p>
                   </div>
 
-                  {/* 4 Guarantees Strip */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 pt-2">
-                    <div className="p-3 rounded-xl bg-black/25 border border-white/5">
-                      <div className="flex items-center gap-2 text-amber-400 text-xs font-black mb-1">
+                  {/* 4 Trust & Guarantees Strips */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                    <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                      <div className="flex items-center gap-2 text-amber-400 text-xs font-black">
                         <Shield className="w-4 h-4 shrink-0" />
                         <span>ضمان BEYA Escrow</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 leading-tight">أموالك محفوظة حتى تستلم وتوافق على الباترون وتجرب الفيتينغ.</p>
+                      <p className="text-[11px] text-slate-400 leading-tight">أموالك محفوظة في الضمان حتى تفحص الباترون وتجرب الفيتينغ.</p>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-black/25 border border-white/5">
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-black mb-1">
+                    <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-black">
                         <Crown className="w-4 h-4 shrink-0" />
-                        <span>خبرات مع كبار الماركات</span>
+                        <span>خبرات مع كبرى العلامات</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 leading-tight">موديليست شاركوا في تصاميم وإنتاج سلاسل Zara, Adidas, Mango.</p>
+                      <p className="text-[11px] text-slate-400 leading-tight">موديليست شاركوا في سلاسل إنتاج Zara, Adidas, Mango, Nike.</p>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-black/25 border border-white/5">
-                      <div className="flex items-center gap-2 text-cyan-400 text-xs font-black mb-1">
+                    <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                      <div className="flex items-center gap-2 text-cyan-400 text-xs font-black">
                         <FileCode2 className="w-4 h-4 shrink-0" />
                         <span>ملفات صناعية معتمدة</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 leading-tight">Lectra Modaris, CLO 3D, Gerber، تدريج المقاسات وبطاقة تقنية Fiche Tech.</p>
+                      <p className="text-[11px] text-slate-400 leading-tight">Lectra Modaris, CLO 3D, Gerber، تدريج XS-XXL، وبطاقة Fiche Tech.</p>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-black/25 border border-white/5">
-                      <div className="flex items-center gap-2 text-indigo-400 text-xs font-black mb-1">
+                    <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                      <div className="flex items-center gap-2 text-indigo-400 text-xs font-black">
                         <Video className="w-4 h-4 shrink-0" />
                         <span>استشارة Visio أو حضورية</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 leading-tight">جلسات تدقيق على الشاشة أو لقاء في المكتب لتجربة الأقمشة والمانيكان.</p>
+                      <p className="text-[11px] text-slate-400 leading-tight">جلسات فحص رقمية 45د أو لقاء بمكتب الموديليست لتجربة الأقمشة.</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Filters & Search Header */}
-              <div className="bg-[#2b2d31] border-b border-[#202225] px-4 py-3 sticky top-0 z-10">
-                <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+              {/* Upwork-style Search & Category Filter Header */}
+              <div className="bg-[#111625] border-b border-slate-800/80 px-4 sm:px-8 py-4 sticky top-0 z-10 shadow-md">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                   {/* Category Pills */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto scrollbar-hide py-0.5">
+                  <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto scrollbar-hide py-0.5">
                     {[
                       { id: 'all', label: 'الكل (5 خبراء)', icon: '✨' },
                       { id: 'streetwear', label: 'ستريت وير وهوديز', icon: '🧥' },
@@ -1390,10 +1398,10 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                       <button
                         key={tab.id}
                         onClick={() => setFreelanceCategoryFilter(tab.id as any)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                           freelanceCategoryFilter === tab.id
-                            ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20'
-                            : 'bg-[#1e1f22] text-slate-300 hover:text-white hover:bg-white/5 border border-white/5'
+                            ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/25'
+                            : 'bg-[#1a2030] text-slate-300 hover:text-white hover:bg-[#222a40] border border-white/5'
                         }`}
                       >
                         <span>{tab.icon}</span>
@@ -1402,23 +1410,23 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     ))}
                   </div>
 
-                  {/* Search Bar */}
-                  <div className="relative w-full md:w-64">
-                    <Search className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
+                  {/* Upwork Search Bar */}
+                  <div className="relative w-full md:w-80">
+                    <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3" />
                     <input
                       type="text"
-                      placeholder="بحث بالاسم، البراند، أو البرنامج..."
+                      placeholder="ابحث بالاسم، البراند (Zara)، أو البرنامج (CLO)..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="w-full bg-[#1e1f22] text-xs text-white placeholder-slate-500 pr-9 pl-3 py-2 rounded-xl border border-white/5 focus:border-amber-500 focus:outline-none"
+                      className="w-full bg-[#1a2030] text-xs text-white placeholder-slate-400 pr-10 pl-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none shadow-inner"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Freelancers Cards Grid */}
-              <div className="flex-1 p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Freelancers Talent Cards (Full-Width Upwork Horizontal Cards) */}
+              <div className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
+                <div className="space-y-6">
                   {allProMembers
                     .filter(m => m.pillar === 'modelistes')
                     .filter(m => {
@@ -1442,175 +1450,165 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     .map(m => (
                       <div
                         key={m.id}
-                        className="bg-[#2b2d31] rounded-3xl border border-[#383a40] hover:border-amber-500/50 transition-all duration-200 overflow-hidden shadow-xl flex flex-col justify-between group"
+                        className="bg-[#121624] rounded-3xl border border-slate-800/90 hover:border-amber-500/50 transition-all duration-200 overflow-hidden shadow-2xl p-6 sm:p-7 space-y-5 group"
                       >
-                        {/* Card Top: Avatar, Name, Specialization */}
-                        <div className="p-5 space-y-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-3.5">
-                              <div className="relative shrink-0">
-                                <img
-                                  src={m.avatar}
-                                  alt={m.name}
-                                  className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500/30 group-hover:border-amber-400 transition"
-                                />
-                                <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 absolute bottom-0 right-0 border-2 border-[#2b2d31]" />
-                              </div>
-
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3
-                                    className="text-base font-black text-white hover:text-amber-400 cursor-pointer transition"
-                                    onClick={() => setSelectedMemberProfile(m)}
-                                  >
-                                    {m.name}
-                                  </h3>
-                                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-500/30 flex items-center gap-1">
-                                    <CheckCircle className="w-3 h-3" />
-                                    <span>معتمد BEYA</span>
-                                  </span>
-                                </div>
-
-                                <p className="text-xs text-amber-300 font-bold">
-                                  {m.categoryLabel || m.specialty}
-                                </p>
-
-                                <div className="flex items-center gap-3 text-[11px] text-slate-400 flex-wrap">
-                                  <span className="flex items-center gap-1">
-                                    <MapPin className="w-3 h-3 text-indigo-400" />
-                                    <span>{m.city}</span>
-                                  </span>
-                                  <span className="flex items-center gap-1 text-amber-400 font-black">
-                                    <Star className="w-3 h-3 fill-amber-400" />
-                                    <span>{m.rating} ({m.reviewsCount || 35} مراجعة)</span>
-                                  </span>
-                                  <span className="text-slate-300 font-bold">
-                                    ✂️ {m.completedJobs || 120} باترون منجز
-                                  </span>
-                                </div>
-                              </div>
+                        {/* Top Header Row: Avatar, Info, Badges, and Upwork Rate */}
+                        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
+                          <div className="flex items-start gap-4">
+                            {/* Large Talent Avatar */}
+                            <div className="relative shrink-0">
+                              <img
+                                src={m.avatar}
+                                alt={m.name}
+                                className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500/30 group-hover:border-amber-400 shadow-lg transition"
+                              />
+                              <span className="w-4 h-4 rounded-full bg-emerald-500 absolute bottom-0 right-0 border-2 border-[#121624]" title="متصل الآن" />
                             </div>
 
-                            <button
-                              onClick={() => setSelectedMemberProfile(m)}
-                              className="p-2 text-slate-400 hover:text-white bg-[#1e1f22] hover:bg-[#35373c] rounded-xl transition cursor-pointer shrink-0"
-                              title="عرض الملف الكامل والمراجعات"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h3
+                                  onClick={() => setSelectedMemberProfile(m)}
+                                  className="text-lg sm:text-xl font-black text-white hover:text-amber-400 cursor-pointer transition"
+                                >
+                                  {m.name}
+                                </h3>
+                                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-black border border-amber-500/30 flex items-center gap-1 shadow-xs">
+                                  <Award className="w-3.5 h-3.5 text-amber-400" />
+                                  <span>TOP RATED 🏆</span>
+                                </span>
+                                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold border border-emerald-500/25">
+                                  100% Job Success
+                                </span>
+                              </div>
+
+                              <p className="text-xs sm:text-sm text-amber-300 font-bold">
+                                {m.categoryLabel || m.specialty}
+                              </p>
+
+                              <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap pt-0.5">
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-3.5 h-3.5 text-indigo-400" />
+                                  <span>{m.city}</span>
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-400 font-black">
+                                  <Star className="w-3.5 h-3.5 fill-amber-400" />
+                                  <span>{m.rating} ({m.reviewsCount || 40} مراجعة معتمدة)</span>
+                                </span>
+                                <span className="text-slate-300 font-bold">
+                                  ✂️ {m.completedJobs || 120} باترون منجز بدون أخطاء
+                                </span>
+                                <span className="text-emerald-400 font-medium">
+                                  ⚡ رد خلال ساعتين
+                                </span>
+                              </div>
+                            </div>
                           </div>
 
-                          {/* BRANDS WORKED WITH (البراندات اللي خدمو معاها) */}
-                          {m.brandsWorkedWith && m.brandsWorkedWith.length > 0 && (
-                            <div className="p-2.5 rounded-2xl bg-black/30 border border-amber-500/20 space-y-1.5">
-                              <div className="flex items-center justify-between text-[11px]">
-                                <span className="font-black text-amber-300 flex items-center gap-1.5">
-                                  <Crown className="w-3.5 h-3.5 text-amber-400" />
-                                  <span>خبرة سابقة مع كبرى العلامات التجارية:</span>
-                                </span>
-                                <span className="text-[10px] text-slate-400">ملفات معتمدة B2B</span>
-                              </div>
-                              <div className="flex flex-wrap gap-1.5 pt-0.5">
-                                {m.brandsWorkedWith.map((brand: string, bIdx: number) => (
-                                  <span
-                                    key={bIdx}
-                                    className="px-2.5 py-0.5 rounded-lg bg-[#1e1f22] text-white font-black text-[11px] border border-white/10 shadow-xs flex items-center gap-1"
-                                  >
-                                    <span className="text-amber-400">✓</span>
-                                    <span>{brand}</span>
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* CAD Softwares & Tech Skills */}
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {(m.cadSoftware || []).map((cad: string, cIdx: number) => (
-                              <span
-                                key={cIdx}
-                                className="px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 text-[10px] font-mono font-bold border border-indigo-500/25"
-                              >
-                                {cad}
-                              </span>
-                            ))}
-                            <span className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-bold">
-                              تدريج المقاسات XS-XXL
-                            </span>
-                            <span className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-bold">
-                              Fiche Technique PDF
-                            </span>
-                          </div>
-
-                          {/* Real Portfolio Showcase Thumbnails */}
-                          {m.portfolio && m.portfolio.length > 0 && (
-                            <div className="space-y-1.5 pt-1">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="font-bold text-slate-300 flex items-center gap-1.5">
-                                  <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
-                                  <span>عينة من الموديلات والباترونات المنجزة:</span>
-                                </span>
-                                <span className="text-[10px] text-slate-400">انقر للتكبير والتفاصيل</span>
-                              </div>
-
-                              <div className="grid grid-cols-3 gap-2">
-                                {m.portfolio.slice(0, 3).map((item: any, pIdx: number) => (
-                                  <div
-                                    key={pIdx}
-                                    onClick={() => setSelectedPortfolioItem({ item, author: m.name, proId: m.id })}
-                                    className="group/thumb relative rounded-xl overflow-hidden border border-white/10 hover:border-amber-400 cursor-pointer bg-black/40 aspect-4/3 transition duration-200"
-                                  >
-                                    <img
-                                      src={item.image}
-                                      alt={item.title}
-                                      className="w-full h-full object-cover group-hover/thumb:scale-110 transition duration-300"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-1.5">
-                                      <span className="text-[9px] font-black text-white truncate">{item.title}</span>
-                                      <span className="text-[8px] text-amber-300 font-bold">{item.tag}</span>
-                                    </div>
-                                    <div className="absolute top-1 left-1 opacity-0 group-hover/thumb:opacity-100 transition p-1 bg-black/60 rounded-md text-white">
-                                      <ZoomIn className="w-3 h-3 text-amber-400" />
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Transparent Rates Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-2xl bg-[#1e1f22] border border-white/5 text-center">
-                            <div>
-                              <span className="text-[10px] text-slate-400 block">باترون أساسي</span>
-                              <span className="text-xs font-black text-amber-400 font-mono">
+                          {/* Upwork Rates & Pricing Box */}
+                          <div className="flex sm:flex-col items-center lg:items-end justify-between p-3 lg:p-0 rounded-2xl bg-black/40 lg:bg-transparent border lg:border-0 border-white/5 shrink-0">
+                            <div className="text-right lg:text-left">
+                              <span className="text-[11px] text-slate-400 block font-medium">سعر الباترون الأساسي:</span>
+                              <span className="text-2xl font-black text-amber-400 font-mono">
                                 {m.pricing?.basePattern || 250} MAD
                               </span>
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-slate-400 block">تدريج مقاس</span>
-                              <span className="text-xs font-black text-white font-mono">
-                                +{m.pricing?.gradation || 40} MAD
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-slate-400 block">محاكاة 3D</span>
-                              <span className="text-xs font-black text-cyan-300 font-mono">
-                                {m.pricing?.simulation3d || 120} MAD
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-slate-400 block">استشارة 45د</span>
-                              <span className="text-xs font-black text-emerald-400 font-mono">
-                                {m.consultationPriceMAD || 250} MAD
-                              </span>
+                              <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                                <span>تدريج: <strong className="text-white font-mono">+{m.pricing?.gradation || 40} MAD</strong></span>
+                                <span>• 3D: <strong className="text-cyan-300 font-mono">{m.pricing?.simulation3d || 120} MAD</strong></span>
+                              </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Card Footer: Action CTAs */}
-                        <div className="p-4 bg-[#232428] border-t border-[#383a40] space-y-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {/* Hire with Escrow Button */}
+                        {/* Bio Pitch */}
+                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+                          {m.bio}
+                        </p>
+
+                        {/* BRANDS WORKED WITH (UPWORK CLIENT SHOWCASE) */}
+                        {m.brandsWorkedWith && m.brandsWorkedWith.length > 0 && (
+                          <div className="p-3.5 rounded-2xl bg-black/40 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                            <span className="font-black text-amber-300 flex items-center gap-2 shrink-0">
+                              <Crown className="w-4 h-4 text-amber-400" />
+                              <span>علامات تجارية ودور أزياء تعاون معها (Clients):</span>
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {m.brandsWorkedWith.map((brand: string, bIdx: number) => (
+                                <span
+                                  key={bIdx}
+                                  className="px-3 py-1 rounded-xl bg-[#1b2133] text-white font-black text-xs border border-white/10 shadow-xs flex items-center gap-1.5"
+                                >
+                                  <span className="text-amber-400 text-[10px]">✓</span>
+                                  <span>{brand}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Skills Tags Cloud */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {(m.cadSoftware || []).map((cad: string, cIdx: number) => (
+                            <span
+                              key={cIdx}
+                              className="px-3 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 text-xs font-mono font-bold border border-indigo-500/25"
+                            >
+                              {cad}
+                            </span>
+                          ))}
+                          <span className="px-3 py-1 rounded-lg bg-white/5 text-slate-300 text-xs font-bold border border-white/5">
+                            تدريج المقاسات XS-XXL
+                          </span>
+                          <span className="px-3 py-1 rounded-lg bg-white/5 text-slate-300 text-xs font-bold border border-white/5">
+                            Fiche Technique PDF
+                          </span>
+                          <span className="px-3 py-1 rounded-lg bg-white/5 text-slate-300 text-xs font-bold border border-white/5">
+                            Patron DXF AAMA
+                          </span>
+                          <span className="px-3 py-1 rounded-lg bg-white/5 text-slate-300 text-xs font-bold border border-white/5">
+                            Simulation 3D CLO
+                          </span>
+                        </div>
+
+                        {/* Real Portfolio Showcase Gallery */}
+                        {m.portfolio && m.portfolio.length > 0 && (
+                          <div className="space-y-2 pt-2 border-t border-slate-800">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-bold text-slate-300 flex items-center gap-2">
+                                <ImageIcon className="w-4 h-4 text-amber-400" />
+                                <span>نماذج الباترون والأعمال المنجزة (Portfolio):</span>
+                              </span>
+                              <span className="text-[11px] text-slate-400">انقر على أي تصميم لتكبير التفاصيل الفنية</span>
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                              {m.portfolio.map((item: any, pIdx: number) => (
+                                <div
+                                  key={pIdx}
+                                  onClick={() => setSelectedPortfolioItem({ item, author: m.name, proId: m.id })}
+                                  className="group/thumb relative rounded-2xl overflow-hidden border border-white/10 hover:border-amber-400 cursor-pointer bg-black/50 aspect-4/3 transition duration-200"
+                                >
+                                  <img
+                                    src={item.image}
+                                    alt={item.title}
+                                    className="w-full h-full object-cover group-hover/thumb:scale-105 transition duration-300"
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-2.5">
+                                    <span className="text-xs font-black text-white truncate">{item.title}</span>
+                                    <span className="text-[10px] text-amber-300 font-bold">{item.tag}</span>
+                                  </div>
+                                  <div className="absolute top-2 left-2 opacity-0 group-hover/thumb:opacity-100 transition p-1.5 bg-black/70 rounded-lg text-white">
+                                    <ZoomIn className="w-4 h-4 text-amber-400" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Upwork Action Buttons Bar */}
+                        <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
                             <button
                               onClick={() => {
                                 setEscrowTarget(m);
@@ -1619,44 +1617,43 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                                 setEscrowSuccessSlip(null);
                                 setShowEscrowModal(true);
                               }}
-                              className="w-full py-2.5 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer"
+                              className="flex-1 sm:flex-initial py-3 px-5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"
                             >
                               <ShieldCheck className="w-4 h-4 text-slate-950" />
                               <span>طلب باترون (BEYA Escrow)</span>
                             </button>
 
-                            {/* Book Consultation Button */}
                             <button
                               onClick={() => {
                                 setConsultationTarget(m);
                                 setConsultationConfirmedSlip(null);
                                 setShowConsultationModal(true);
                               }}
-                              className="w-full py-2.5 px-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer"
+                              className="flex-1 sm:flex-initial py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md shadow-indigo-600/20 cursor-pointer"
                             >
                               <Calendar className="w-4 h-4 text-cyan-300" />
                               <span>حجز استشارة (Visio / مكتب)</span>
                             </button>
                           </div>
 
-                          <div className="flex items-center justify-between gap-2 pt-1 text-xs">
+                          <div className="flex items-center gap-3 text-xs w-full sm:w-auto justify-end">
                             <a
                               href={`https://wa.me/${m.whatsapp}?text=${encodeURIComponent(
                                 `السلام عليكم أستاذ(ة) ${m.name}، تواصلت معك عبر منصة BEYA Freelance بخصوص طلب فصالة وباترون لموديل جديد.`
                               )}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 transition"
+                              className="px-3.5 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/20 flex items-center gap-1.5 transition"
                             >
-                              <MessageCircle className="w-3.5 h-3.5" />
+                              <MessageCircle className="w-4 h-4" />
                               <span>واتساب مباشر</span>
                             </a>
 
                             <button
                               onClick={() => setSelectedMemberProfile(m)}
-                              className="text-slate-400 hover:text-white font-bold flex items-center gap-1 transition cursor-pointer"
+                              className="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white font-bold border border-white/5 flex items-center gap-1 transition cursor-pointer"
                             >
-                              <span>الملف والمراجعات</span>
+                              <span>الملف الكامل</span>
                               <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -1670,27 +1667,29 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
           {/* VIEW: CONSULTING & EXPERT ADVICE SPACE */}
           {activeView === 'consulting' && (
-            <div className="flex-1 flex flex-col h-full overflow-y-auto">
+            <div className="flex-1 flex flex-col h-full overflow-y-auto bg-[#0b0f19]">
               {/* Header Banner */}
-              <div className="bg-gradient-to-b from-[#141b2b] via-[#1e2336] to-[#313338] border-b border-[#202225] p-5 sm:p-6 shrink-0">
-                <div className="max-w-6xl mx-auto space-y-4">
+              <div className="bg-gradient-to-b from-[#141b2b] via-[#1e2336] to-[#0b0f19] border-b border-slate-800/80 p-6 sm:p-8 shrink-0">
+                <div className="max-w-7xl mx-auto space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-black border border-cyan-500/30 flex items-center gap-1.5 shadow-xs">
+                    <span className="px-3.5 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-black border border-cyan-500/30 flex items-center gap-2 shadow-xs">
                       <Video className="w-4 h-4 text-cyan-400" />
                       <span>جلسات 1-à-1 خاصة مع كبار مهندسي النسيج والموديليست</span>
                     </span>
 
-                    <span className="text-xs text-slate-300 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                    <span className="text-xs text-slate-300 bg-black/40 px-3.5 py-1.5 rounded-full border border-white/10 font-bold">
                       ⏱️ مدة الجلسة: 45 دقيقة مركزة
                     </span>
                   </div>
 
                   <div>
-                    <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
+                    <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
                       <span>فضاء الاستشارات التقنية وتوجيه العلامات التجارية</span>
-                      <span className="text-xs px-2.5 py-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black rounded-full">BEYA Consulting</span>
+                      <span className="text-xs px-3 py-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black rounded-full uppercase tracking-wider">
+                        Consulting
+                      </span>
                     </h1>
-                    <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-4xl leading-relaxed">
+                    <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-4xl leading-relaxed font-medium">
                       قبل ما تقص الثوب وتضيع ميزانيتك، احجز استشارة مع خبير متخصص. راجع ملفات الباترون، اضبط جدول المقاسات (Gradation)، واعرف نوعية الثوب والتطريز الأنسب لموديلك لحماية كلفة الإنتاج وتفادي مشاكل الفيتينغ (Fitting).
                     </p>
                   </div>
@@ -1698,41 +1697,41 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                   {/* Two Modes Comparison Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                     {/* Mode 1: Visio Live */}
-                    <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/60 to-black/40 border border-indigo-500/30 space-y-3">
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/60 to-black/50 border border-indigo-500/30 space-y-3 shadow-lg">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-indigo-300 text-sm font-black">
                           <Video className="w-5 h-5 text-indigo-400" />
                           <span>1. استشارة Live Visio (عن بعد - 45 دقيقة)</span>
                         </div>
-                        <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">
+                        <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">
                           Google Meet / Zoom
                         </span>
                       </div>
                       <p className="text-xs text-slate-300 leading-relaxed">
                         مثالية للمراجعة السريعة وحل المشاكل الرقمية. يمكنك مشاركة الشاشة لمراجعة ملفات CAD والباترون (DXF / CLO 3D)، والتدقيق في استهلاك الثوب وتكلفة البياسة من أي مدينة بالمغرب أو من الخارج.
                       </p>
-                      <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-                        <span className="text-slate-400">التعريفة: <strong className="text-indigo-300">200 - 300 MAD</strong></span>
+                      <div className="flex items-center justify-between text-xs pt-2 border-t border-white/5">
+                        <span className="text-slate-400">التعريفة: <strong className="text-indigo-300 font-mono">200 - 300 MAD</strong></span>
                         <span className="text-emerald-400 font-bold">⚡ رابط فوري للاتصال</span>
                       </div>
                     </div>
 
                     {/* Mode 2: In-Person Office */}
-                    <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-950/60 to-black/40 border border-amber-500/30 space-y-3">
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-950/60 to-black/50 border border-amber-500/30 space-y-3 shadow-lg">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-amber-300 text-sm font-black">
                           <Briefcase className="w-5 h-5 text-amber-400" />
                           <span>2. استشارة حضورية بالاستوديو / Atelier</span>
                         </div>
-                        <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">
                           لقاء مباشر في المكتب
                         </span>
                       </div>
                       <p className="text-xs text-slate-300 leading-relaxed">
                         جلسة عمل مباشرة في مكتب الموديليست (الدار البيضاء، الرباط، أو طنجة). لمس عينات الأقمشة الحقيقية (Swatches)، تجربة التلبيس على المانيكان الحي، واستلام نسخة ورقية مطبوعة على ورق البلوتر الصناعي (Plotter 1:1).
                       </p>
-                      <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-                        <span className="text-slate-400">التعريفة: <strong className="text-amber-300">250 - 350 MAD</strong></span>
+                      <div className="flex items-center justify-between text-xs pt-2 border-t border-white/5">
+                        <span className="text-slate-400">التعريفة: <strong className="text-amber-300 font-mono">250 - 350 MAD</strong></span>
                         <span className="text-amber-400 font-bold">🏢 تجربة عملية يداً بيد</span>
                       </div>
                     </div>
@@ -1741,10 +1740,10 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
               </div>
 
               {/* Consultants Grid */}
-              <div className="flex-1 p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-6">
+              <div className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
                 <div>
-                  <h2 className="text-base font-black text-white flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-cyan-400" />
+                  <h2 className="text-lg font-black text-white flex items-center gap-2">
+                    <UserCheck className="w-5 h-5 text-cyan-400" />
                     <span>قائمة المستشارين المعتمدين والمتاحين للحجز الفوري</span>
                   </h2>
                   <p className="text-xs text-slate-400 mt-0.5">
@@ -2161,7 +2160,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
           {/* VIEW B: UPWORK & FREELANCER APP-STYLE MARKETPLACE (THE 5 PILLARS) */}
           {activeView === 'directory' && (
-            <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 scrollbar-hide bg-[#0b0f19]">
+              <div className="max-w-7xl mx-auto w-full space-y-6">
 
               {/* 1. APP-LIKE MARKETPLACE HEADER */}
               <div className="p-5 sm:p-7 rounded-3xl bg-gradient-to-r from-slate-950 via-[#1e1f28] to-slate-950 border border-indigo-500/20 text-white shadow-xl relative overflow-hidden">
@@ -2623,12 +2623,14 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 ))}
               </div>
 
+              </div>
             </div>
           )}
 
           {/* VIEW C: GROUPAGE DEALS (الشراء المشترك) */}
           {activeView === 'groupage' && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 bg-[#0b0f19]">
+              <div className="max-w-7xl mx-auto w-full space-y-6">
 
               {/* Groupage Header */}
               <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-950/70 via-slate-900 to-amber-950/80 border border-amber-500/30 text-white relative overflow-hidden shadow-2xl">
@@ -3116,6 +3118,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 })}
               </div>
 
+              </div>
             </div>
           )}
 
@@ -3193,13 +3196,14 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         </main>
 
         {/* ─────────────────────────────────────────────────────────────
-            COLUMN 3: DISCORD MEMBERS & SPECIALISTS LIST (RIGHT SIDEBAR)
+            COLUMN 3: DISCORD MEMBERS & SPECIALISTS LIST (ONLY IN CHAT VIEW)
         ───────────────────────────────────────────────────────────── */}
-        <aside
-          className={`w-60 bg-[#2b2d31] border-r border-[#202225] flex flex-col shrink-0 z-20 transition-all duration-200 absolute md:static inset-y-0 left-0 md:left-auto md:right-auto ${
-            mobileDrawer === 'members' ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'
-          }`}
-        >
+        {activeView === 'chat' && (
+          <aside
+            className={`w-60 bg-[#2b2d31] border-r border-[#202225] flex flex-col shrink-0 z-20 transition-all duration-200 absolute md:static inset-y-0 left-0 md:left-auto md:right-auto ${
+              mobileDrawer === 'members' ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'
+            }`}
+          >
           {/* Header */}
           <div className="h-12 px-3 border-b border-[#202225] flex items-center justify-between shadow-xs">
             <span className="font-black text-white text-xs">الأعضاء والمهنيين</span>
@@ -3367,6 +3371,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
           </div>
         </aside>
+      )}
 
       </div>
 
