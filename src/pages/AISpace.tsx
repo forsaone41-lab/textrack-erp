@@ -693,7 +693,7 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
     }
 
     if (!imageSrc) {
-      return resolve('ensemble 2 pièces loungewear streetwear femme haut manches longues crop top et pantalon wide leg sweatpants طقم لاونج ستريتوير نسائي قطعتين (توب + سروال)');
+      return resolve('veste col officier boutonnage brandebourg drap de laine ecru جاكيت كول أوفيسييه بأزرار براندبورغ');
     }
 
     try {
@@ -839,13 +839,13 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
             }
           }
 
-          const hasPantsLegs = lowerRowCount > 3 && (legSeparationRows / lowerRowCount) >= 0.35;
+          const hasPantsLegs = lowerRowCount > 3 && (legSeparationRows / lowerRowCount) >= 0.40;
           const isAthleticColor = (upperBlueNavy > 20 || upperDark > upperCount * 0.35) && (lowerBlueNavy > 20 || lowerDark > 80);
           const hasStripes = stripeContrast > 28 || (upperLight > 20 && upperDark > 20);
-          const isFullBody = (aspectRatio > 1.20 || bodyH > H * 0.50);
+          const isFullBody = (aspectRatio > 1.35 && bodyH > H * 0.65);
 
           // 1. Denim / Jean Ensemble ONLY if explicitly indicated by file name or text
-          if (isFullBody && isExplicitDenim) {
+          if (isFullBody && isExplicitDenim && hasPantsLegs) {
             return resolve('ensemble denim veste et pantalon jean طقم جينز دنيم (فيست + سروال)');
           }
 
@@ -854,28 +854,31 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
             return resolve('robe abaya فستان عصري أو عباية');
           }
 
-          // 3. Tracksuit / Loungewear / Streetwear 2 Pièces (Top Rib / Manches Longues + Pantalon Wide Leg / Sweatpants)
-          // Default for full body fashion model portraits
-          if (isFullBody || hasPantsLegs) {
-            return resolve('ensemble 2 pièces loungewear streetwear femme haut manches longues crop top et pantalon wide leg sweatpants طقم لاونج ستريتوير نسائي قطعتين (توب + سروال)');
-          }
-
-          // 4. Pants / Joggers alone (Strict: only if aspect ratio is tall and body width is narrow like real trousers)
-          if (aspectRatio > 1.35 && bodyW < bodyH * 0.65) {
+          // 3. Pants / Joggers alone (Strict: only if aspect ratio is tall and body width is narrow like real trousers)
+          if (aspectRatio > 1.35 && bodyW < bodyH * 0.65 && hasPantsLegs) {
             if (isExplicitDenim) {
               return resolve('pantalon jean denim سروال جينز دنيم كاجوال');
             }
             return resolve('pantalon jogging سروال رياضي جوغينغ كاجوال');
           }
 
-          // 5. Upper body garments (Sweatshirt vs T-shirt, NEVER guess denim from background colors)
+          // 4. Two-piece tracksuit ONLY when actual distinct pants legs are present
+          if (hasPantsLegs && aspectRatio > 1.35) {
+            return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging طقم رياضي قطعتين');
+          }
+
+          // 5. Upper body garments: Veste / Manteau / Col Officier Brandebourg vs Sweatshirt vs T-shirt
           if (isExplicitDenim) {
             return resolve('veste en jean denim جاكيت فيست جينز دنيم');
+          }
+          // If light/ecru color or structured jacket silhouette without pants legs:
+          if (!hasPantsLegs && (aspectRatio <= 1.35 || upperLight > 20)) {
+            return resolve('veste col officier boutonnage brandebourg drap de laine ecru جاكيت كول أوفيسييه بأزرار براندبورغ');
           }
           if (hasStripes || upperDark > upperCount * 0.35) {
             return resolve('sweatshirt col rond سويت شيرت كول رون');
           }
-          return resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
+          return resolve('veste col officier boutonnage brandebourg drap de laine ecru جاكيت كول أوفيسييه بأزرار براندبورغ');
         } catch {
           resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
         }
@@ -935,8 +938,15 @@ function buildFallbackAnalysis(
   );
 
   const isVesteCasual = (
-    (text.includes('veste') || text.includes('jacket') || text.includes('jakit') || text.includes('فيست') || text.includes('جاكيت') || text.includes('manteau') || text.includes('blouson') || text.includes('kimono') || text.includes('officier') || text.includes('brandebourg') || text.includes('matelass') || text.includes('معطف')) &&
-    !text.includes('pantalon') && !text.includes('jean') && !text.includes('سروال')
+    (
+      text.includes('veste') || text.includes('jacket') || text.includes('jakit') || 
+      text.includes('فيست') || text.includes('جاكيت') || text.includes('manteau') || 
+      text.includes('blouson') || text.includes('kimono') || text.includes('officier') || 
+      text.includes('brandebourg') || text.includes('matelass') || text.includes('معطف') ||
+      text.includes('laine') || text.includes('drap') || text.includes('chinois')
+    ) &&
+    forcePiecesCount !== 2 && forcePiecesCount !== 3 &&
+    !(text.includes('ensemble') && (text.includes('pantalon') || text.includes('سروال') || text.includes('jogging')))
   );
 
   // Loungewear / Streetwear 2 Pièces (Top Rib / Manches Longues + Pantalon Wide-Leg / French Terry)
@@ -967,7 +977,29 @@ function buildFallbackAnalysis(
     (text.includes('veste') || text.includes('jacket') || text.includes('jakit') || text.includes('فيست') || text.includes('جاكيت'))
   );
 
-  if (isLoungewearEnsemble) {
+  if (isVesteCasual) {
+    const isBrandebourg = text.includes('brandebourg') || text.includes('officier') || text.includes('mao') || text.includes('matelass') || text.includes('ecru') || text.includes('écru') || text.includes('chinois') || text.includes('laine') || text.includes('drap');
+    pieceName = isBrandebourg
+      ? (isAr ? 'جاكيت عصرية كول أوفيسييه وأزرار براندبورغ (Veste Col Officier)' : 'Veste Col Officier & Boutonnage Brandebourg')
+      : (isAr ? 'جاكيت سترة عصرية مهيكلة (Veste Casual)' : 'Veste Structurée Casual');
+    defaultMesures = getStandardMesuresForCategory('Veste', audience, gender);
+    piecesList = [{
+      name: pieceName,
+      consumption: '1.75m',
+      fit: isAr ? 'قصة مستقيمة مريحة (Coupe Droite)' : 'Coupe Droite Structurée',
+      complexity: isAr ? 'متوسطة إلى عالية' : 'Moyenne à Avancée',
+      costEstimate: '75 - 110 MAD',
+      components: isAr
+        ? ['صدر أمامي بأزرار براندبورغ قفل تقليدي وعقد صينية', 'ظهر مستقيم متناسق', 'أكمام طويلة واسعة ومريحة', 'ياقة كول أوفيسييه / كول ماو مرتفعة', 'سجاف وبطانة داخلية ناعمة من الساتان', 'جيوب باسبوال مدمجة']
+        : ['Devants avec boutonnage brandebourgs tressés / nœuds chinois (4-5 paires)', 'Dos droit confort', 'Manches longues montées', 'Col officier / col mao montant rigide', 'Parementure et doublure intérieure satinée', 'Poches passepoilées'],
+      fabricSuggested: isAr ? 'دوب دو لين صوف شتوي فاخر 420g مع تبطين ساتان (Drap de Laine Écru)' : 'Drap de Laine Écru Lourd (380 - 420 GSM) & Doublure Satinée',
+      fabricAlternatives: [
+        { name: isAr ? 'تويل قطن إيكرو ثقيل مبطن 320g' : 'Toile de Coton Écru / Twill Lourd Doublé', pros: isAr ? 'قوام واقف وسعر اقتصادي ممتاز' : 'Très structuré et économique', cons: isAr ? 'أقل دفئاً من الصوف' : 'Moins chaud que la laine' },
+        { name: isAr ? 'صوف مخلوط كشمير 420g' : 'Mélange Laine & Cachemire', pros: isAr ? 'دفء عالي ومظهر شتوي فخم' : 'Chaud, doux et luxueux', cons: isAr ? 'ثمن المتر في أسواق الجملة أعلى' : 'Prix au mètre supérieur' }
+      ],
+      mesures: defaultMesures
+    }];
+  } else if (isLoungewearEnsemble) {
     pieceName = isAr
       ? 'طقم لاونج وير قطعتين (توب كوت ريب + سروال وايد ليغ بومبليت)'
       : 'Ensemble 2 Pièces Loungewear (Crop Top Côte Rib + Pantalon Wide-Leg French Terry)';
@@ -1065,28 +1097,6 @@ function buildFallbackAnalysis(
       fabricSuggested: isAr ? 'قماش دنيم 100% قطن متين 12oz / 13oz (Toile Denim Jean)' : 'Toile Denim 100% Coton 12oz / 13oz',
       fabricAlternatives: [
         { name: isAr ? 'دنيم قطن ستريتش 11.5oz' : 'Denim Stretch 11.5oz', pros: isAr ? 'مرونة عالية ومريح' : 'Extensible et confortable', cons: isAr ? 'أخف وزناً' : 'Plus léger' }
-      ],
-      mesures: defaultMesures
-    }];
-  } else if (isVesteCasual) {
-    const isBrandebourg = text.includes('brandebourg') || text.includes('officier') || text.includes('mao') || text.includes('matelass') || text.includes('ecru') || text.includes('écru') || text.includes('chinois');
-    pieceName = isBrandebourg
-      ? (isAr ? 'جاكيت عصرية كول أوفيسييه وأزرار براندبورغ (Veste Col Officier)' : 'Veste Col Officier & Boutonnage Brandebourg')
-      : (isAr ? 'جاكيت سترة عصرية مهيكلة (Veste Casual)' : 'Veste Structurée Casual');
-    defaultMesures = getStandardMesuresForCategory('Veste', audience, gender);
-    piecesList = [{
-      name: pieceName,
-      consumption: '1.90m',
-      fit: isAr ? 'قصة مستقيمة مريحة (Coupe Droite)' : 'Coupe Droite Structurée',
-      complexity: isAr ? 'متوسطة إلى عالية' : 'Moyenne à Avancée',
-      costEstimate: '65 - 85 MAD',
-      components: isAr
-        ? ['صدر أمامي بأزرار براندبورغ قفل تقليدي/عصري', 'ظهر مستقيم متناسق', 'أكمام طويلة واسعة ومريحة', 'ياقة كول أوفيسييه / كول ماو مرتفعة', 'سجاف وبطانة داخلية ناعمة']
-        : ['Devants avec boutonnage brandebourgs / nœuds chinois', 'Dos droit confort', 'Manches longues montées', 'Col officier / col mao montant', 'Parementure et doublure intérieure'],
-      fabricSuggested: isAr ? 'قماش تويل قطن إيكرو ثقيل مبطن (Toile Coton Écru / Twill Lourd)' : 'Toile de Coton Écru / Twill Coton Lourd Doublé',
-      fabricAlternatives: [
-        { name: isAr ? 'صوف مخلوط خفيف (Laine Mélangée)' : 'Laine Mélangée / Molleton Épais', pros: isAr ? 'دفء عالي ومظهر شتوي أنيق' : 'Chaud, doux et structuré', cons: isAr ? 'ثمن المتر أعلى' : 'Prix au mètre supérieur' },
-        { name: isAr ? 'كتان خشن سميك (Lin Lourd)' : 'Toile de Lin / Coton Brut', pros: isAr ? 'مظهر طبيعي فاخر بأسلوب ناتشورال' : 'Style brut et éco-chic', cons: isAr ? 'يحتاج عناية بالغسيل' : 'Entretien délicat' }
       ],
       mesures: defaultMesures
     }];
@@ -2110,11 +2120,20 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     await startAnalysis(image, imageFileName);
   };
 
-  const applyPiecePreset = (preset: 'survet_2_pieces' | 'sweatshirt' | 'jogging' | 'tshirt' | 'robe_chemise' | 'abaya' | 'caftan' | 'chemise' | 'pantalon' | 'hoodie' | '3_pieces' | '2_pieces' | 1 | 2 | 3) => {
+  const applyPiecePreset = (preset: 'veste_brandebourg' | 'veste_casual' | 'denim_veste' | 'survet_2_pieces' | 'sweatshirt' | 'jogging' | 'tshirt' | 'robe_chemise' | 'abaya' | 'caftan' | 'chemise' | 'pantalon' | 'hoodie' | '3_pieces' | '2_pieces' | 1 | 2 | 3) => {
     let ctx = '';
     let count: number | undefined = undefined;
 
-    if (preset === 'survet_2_pieces' || preset === 2 || preset === '2_pieces') {
+    if (preset === 'veste_brandebourg') {
+      ctx = 'veste col officier boutonnage brandebourgs nœuds chinois drap de laine écru doublure satinée جاكيت كول أوفيسييه بأزرار براندبورغ';
+      count = 1;
+    } else if (preset === 'veste_casual') {
+      ctx = 'veste structurée casual twill lourd doublée جاكيت كاجوال عصرية';
+      count = 1;
+    } else if (preset === 'denim_veste') {
+      ctx = 'veste en jean denim جاكيت فيست جينز دنيم';
+      count = 1;
+    } else if (preset === 'survet_2_pieces' || preset === 2 || preset === '2_pieces') {
       ctx = 'ensemble 2 pièces survêtement sport sweatshirt col rond rayé pantalon jogging molleton gratté';
       count = 2;
     } else if (preset === 'sweatshirt') {
@@ -2708,69 +2727,63 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         ? `أنت كبير مهندسي النسيج وتصنيع الملابس الجاهزة في ورشة BEYA Creative بالمغرب (BEYA Expert).
 حلل هذه الصورة المرفقة بدقة بصرية وهندسية فائقة للموديل الحقيقي المعروض فيها فقط بدون أي افتراضات مسبقة.
 
-⚠️ تنبيهات حاسمة:
+⚠️ تنبيهات حاسمة ومشددة:
 1. تعرف بدقة على نوع الموديل الحقيقي الظاهر في الصورة:
-   - إذا كانت جاكيت أو فيست (مثلاً: جاكيت كول أوفيسييه / ماو، أزرار براندبورغ أو عقد صينية، جاكيت مبطن، فيست كاجوال)، حددها كقطعة واحدة جاكيت ("Veste") مع تفاصيلها الحقيقية، وقماشها الواقعي (تويل قطن إيكرو، صوف، قماش مبطن)، ومكوناتها (صدر، ظهر، أكمام، كول أوفيسييه، أزرار براندبورغ). لا تضيف أي سروال خيالي!
-   - إذا كان طقماً من قطعتين حقيقيتين في الصورة (توب + سروال)، حدده كقطعتين (Haut + Bas).
-   - إذا كان تيشيرت، حدده كقطعة واحدة (T-shirt).
+   - إذا كانت جاكيت أو فيست أو معطف (مثلاً: جاكيت صوف كول أوفيسييه / ماو، أزرار براندبورغ أو عقد صينية brandebourgs/nœuds chinois، جاكيت تويل قطن إيكرو مبطن، فيست كاجوال، بليزر):
+     * اجعل category: "Veste Col Officier & Brandebourgs" أو نوع الفيست الحقيقي
+     * اجعل pieces تحتوي على قطعة واحدة فقط (جاكيت)
+     * القماش fabricSuggested: "دريب دو لين إيكرو 420g مبطن (Drap de Laine Écru 420 GSM) مع دوبلور ساتان" أو القماش الحقيقي المناسب
+     * الأزرار والمكونات components: ["صدر أمامي بأزرار براندبورغ حبلية مغلقة", "ظهر مسطح", "أكمام طويلة مهيكلة", "ياقة كول أوفيسييه / ماو واقفة", "دوبلور داخلي كامل", "جيوب مائلة passepoilées"]
+     * الاستهلاك: حوالي 1.70m قماش + 1.35m دوبلور
+     * تكلفة الصنع: 75 - 110 MAD
+     * حذارِ تماماً من إضافة أي سروال خيالي! الصورة تحتوي على قطعة علوية فقط!
+   - إذا كان الموديل طقماً كاملاً من قطعتين حقيقيتين في الصورة (توب + سروال): اجعل pieces قطعتين (Haut + Bas).
+   - إذا كان تيشيرت، حدده كقطعة واحدة (T-shirt) من قماش جيرسي قطن (استهلاك 1.05m - 1.25m، صنع 22-35 MAD).
+   - إذا كان هودي، حدده كقطعة واحدة (Hoodie) من قماش مولطون (استهلاك 1.65m - 1.85m، صنع 45-65 MAD).
    - إذا كان سروالاً فقط، حدده كقطعة واحدة (Pantalon).
    - إذا كان فستاناً أو عباية، حدده كقطعة واحدة (Robe / Abaya).
 2. حدد الجنس (gender): "femmes" أو "hommes" حسب الموديل.
-3. اكتب استهلاك القماش وتكلفة الصنع بالدرهم المغربي (MAD) المناسبة لنوع القطعة.
+3. ${targetProfileDescAr}
+4. اكتب استهلاك القماش وتكلفة الصنع بالدرهم المغربي (MAD) الواقعية في السوق المغربي (درب عمر / طنجة / فاس).
 
-أجب بصيغة JSON فقط بدون أي نص إضافي:
+أجب بصيغة JSON فقط بهذا الهيكل:
 {
-  "category": "Ensemble 2 Pièces Loungewear",
+  "category": "اسم فئة الموديل الحقيقي المعروض",
   "gender": "femmes",
-  "totalConsumption": "2.30m",
-  "totalCost": "65 - 90 MAD",
+  "totalConsumption": "1.70m",
+  "totalCost": "75 - 110 MAD",
   "complexity": "متوسطة",
-  "fabricSuggested": "Haut: Côte Rib 1x1 250 GSM · Bas: French Terry Bouclette 340 GSM",
+  "fabricSuggested": "اسم ونوع القماش الدقيق مع الغراماج (GSM)",
   "fabricAlternatives": [
     {
-      "name": "جيرسي قطن ستريتش 230g",
-      "pros": "ملمس ناعم جداً ومريح",
-      "cons": "بدون تضليع عمودي"
+      "name": "اسم القماش البديل",
+      "pros": "ميزة",
+      "cons": "عيب"
     }
   ],
   "gammeMontage": [
     {
-      "nomAr": "فصالة القماش بالمطلوة الصناعية",
-      "nomFr": "Coupe Matelas & Préparation Paquets",
-      "machine": "Table de Coupe / Ciseaux",
-      "tempsMin": 0.8
+      "nomAr": "اسم المرحلة بالعربية",
+      "nomFr": "Phase en Français",
+      "machine": "Table de Coupe / Piqueuse Plate / Surjeteuse",
+      "tempsMin": 1.2
     }
   ],
   "pieces": [
     {
-      "name": "Haut - Crop Top Manches Longues (كوت ريب)",
-      "consumption": "0.85m",
-      "fit": "Près du corps / Fitté",
-      "complexity": "بسيطة",
-      "costEstimate": "25 - 35 MAD",
-      "components": ["صدر أمامي", "ظهر كامل", "أكمام طويلة", "ياقة كول رون"],
-      "fabricSuggested": "كوت ريب 1x1 ليكرا 95% قطن ممشط و 5% إيلاسطان 250g",
-      "fabricAlternatives": [],
-      "mesures": [
-        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 88, "M": 94, "L": 100, "XL": 106, "XXL": 112}},
-        {"nom": "الكتف (Épaules)", "valeurs": {"S": 38, "M": 40, "L": 42, "XL": 44, "XXL": 46}},
-        {"nom": "الطول (Longueur)", "valeurs": {"S": 46, "M": 48, "L": 50, "XL": 52, "XXL": 54}},
-        {"nom": "طول الكم (Manche)", "valeurs": {"S": 58, "M": 59, "L": 60, "XL": 61, "XXL": 62}}
-      ]
-    },
-    {
-      "name": "Bas - Pantalon Wide-Leg / Sweatpants (مولطون بومبليت)",
-      "consumption": "1.45m",
-      "fit": "Coupe Wide-Leg Évasée / Ample",
+      "name": "اسم القطعة الواقعية",
+      "consumption": "1.70m",
+      "fit": "Coupe Structurée Droite",
       "complexity": "متوسطة",
-      "costEstimate": "42 - 58 MAD",
-      "components": ["رجلين عريضة", "حزام مطاطي مع عيون حديدية وكوردون", "جيوب جانبية"],
-      "fabricSuggested": "مولطون بومبليت غير مقطن 100% قطن 340g (French Terry)",
+      "costEstimate": "75 - 110 MAD",
+      "components": ["صدر أمامي", "ظهر كامل", "أكمام طويلة"],
+      "fabricSuggested": "نوع القماش الموصى به",
       "fabricAlternatives": [],
       "mesures": [
-        {"nom": "الخصر (Taille)", "valeurs": {"S": 68, "M": 72, "L": 76, "XL": 80, "XXL": 84}},
-        {"nom": "الورك (Hanches)", "valeurs": {"S": 102, "M": 106, "L": 110, "XL": 114, "XXL": 118}},
-        {"nom": "الطول (Longueur)", "valeurs": {"S": 104, "M": 106, "L": 108, "XL": 110, "XXL": 112}}
+        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 92, "M": 98, "L": 104, "XL": 110, "XXL": 116}},
+        {"nom": "الكتف (Épaules)", "valeurs": {"S": 40, "M": 42, "L": 44, "XL": 46, "XXL": 48}},
+        {"nom": "الطول (Longueur)", "valeurs": {"S": 58, "M": 60, "L": 62, "XL": 64, "XXL": 66}},
+        {"nom": "طول الكم (Manche)", "valeurs": {"S": 58, "M": 59, "L": 60, "XL": 61, "XXL": 62}}
       ]
     }
   ]
@@ -2780,18 +2793,24 @@ Analyse l'image réelle fournie avec une précision visuelle absolue sans aucun 
 
 ⚠️ Consignes impératives :
 1. Identifie le vêtement réel visible dans l'image :
-   - S'il s'agit d'une veste ou blouson (ex: veste col officier/mao, veste matelassée écru avec boutons brandebourgs ou nœuds chinois, veste tailleur, veste zippée), décris fidèlement ce modèle : catégorie "Veste", 1 seule pièce, matière réelle (Toile de coton écru, twill lourd doublé, lainage, etc.) et ses composants exacts (col officier, pattes brandebourg, manches, devant, dos, doublure). Ne rajoute AUCUN pantalon imaginaire si l'image ne montre qu'une veste !
-   - S'il s'agit d'un ensemble 2 pièces (haut + pantalon visibles dans l'image, par exemple crop top manches longues + pantalon wide-leg sweatpants), inclus alors STRICTEMENT les 2 pièces avec leurs mesures S à XXL respectives (Top: Poitrine, Épaules, Longueur, Longueur Manche 58-62cm si manches longues ; Pantalon: Taille, Hanches, Longueur Totale, Cuisse).
-   - S'il s'agit d'un seul article (t-shirt, sweatshirt, pantalon, robe), analyse fidèlement cette pièce unique.
-2. Détecte le genre ("femmes" ou "hommes") selon le modèle ou le vêtement (ex: mannequin femme, crop top, silhouette féminine -> gender: "femmes") et adapte les mensurations S-XXL.
-3. Coût façon en dirhams (MAD) et métrage adaptés à la confection industrielle de ce vêtement.
+   - S'il s'agit d'une veste ou blouson (ex: veste col officier/mao, veste écru avec boutons brandebourgs ou nœuds chinois, veste tailleur, veste zippée) :
+     * Catégorie "Veste Col Officier & Brandebourgs" ou type réel
+     * STRICTEMENT 1 seule pièce ("pieces": [ { "name": "Veste Col Officier Brandebourgs", ... } ])
+     * Matière réelle : Drap de Laine Écru 420 GSM doublé ou Twill lourd écru
+     * Composants : col officier montant, boutons brandebourgs tressés, manches structurées, doublure intégrale
+     * Consommation : 1.70m tissu + 1.35m doublure, Façon : 75 - 110 MAD
+     * Ne rajoute AUCUN pantalon imaginaire si l'image ne montre qu'une veste !
+   - S'il s'agit d'un ensemble 2 pièces (haut + pantalon visibles dans l'image), inclus alors STRICTEMENT les 2 pièces avec leurs mesures S à XXL respectives.
+   - S'il s'agit d'un seul article (t-shirt, sweatshirt, hoodie, pantalon, robe), analyse fidèlement cette pièce unique.
+2. Détecte le genre ("femmes" ou "hommes") selon le modèle ou le vêtement.
+3. Coût façon en dirhams (MAD) et métrage réels adaptés au marché marocain (Casablanca / Tanger).
 
 Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
 
       const candidateModels = [
         'gemini-2.5-flash',
         'gemini-flash-latest',
-        'gemini-2.5-pro'
+        'gemini-2.5-flash-lite'
       ];
 
       const keysToTry = [
@@ -3063,6 +3082,23 @@ Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender
     if (/(parle.*francais|parle.*français|dwi.*fransya|dwi.*fransia|dwi.*lfransya|french|francais|français|الفرنسية)/i.test(m)) {
       setAiLangOverride('fr');
       return "D'accord ! 😊 À partir de maintenant, je vais vous répondre en français. Comment puis-je vous aider aujourd'hui ?";
+    }
+
+    // JACKET / VESTE / BRANDEBOURG / MANTEAU SWITCHING INTENTS
+    if (/(veste|jacket|jakit|manteau|blouson|officier|brandebourg|chinois|laine|drap de laine|جاكيت|فيست|معطف|براندبورغ|كابوت)/i.test(m)) {
+      setTimeout(() => applyPiecePreset('veste_brandebourg'), 100);
+      return speakAr
+        ? `🧥 تم تصحيح الموديل فوراً إلى **جاكيت كول أوفيسييه بأزرار براندبورغ (Veste Col Officier & Brandebourg)**:
+• القماش الرئيسي: **دوب دو لين صوف شتوي فاخر 420g مع تبطين ساتان (Drap de Laine Écru)**
+• ثمن القماش في أسواق الجملة (درب عمر / طنجة): **75 - 120 درهم/متر**
+• استهلاك الثوب: **1.70 متر** (عرض 1.50م) + **1.35 متر** بطانة ساتان
+• كلفة الخياطة والتصنيع بالورشة (Façon Atelier): **75 - 110 درهم**
+• التفاصيل: ياقة كول أوفيسييه مرتفعة، 4 إلى 5 أزواج أزرار براندبورغ حبل وعقد صينية، جيوب باسبوال وبطانة داخلية كاملة.`
+        : `🧥 Modèle corrigé et mis à jour vers **Veste Col Officier & Boutonnage Brandebourg** :
+• Tissu principal : **Drap de Laine / Lainage Écru Lourd 420 GSM & Doublure Satinée**
+• Prix tissu au mètre (Marché de Gros Casablanca / Tanger) : **75 - 120 MAD/mètre**
+• Consommation tissu : **1.70m** (laize 1.50m) + **1.35m** doublure satinée
+• Coût façon confection atelier : **75 - 110 MAD** (col officier montant rigide, 4-5 paires brandebourgs tressés, poches passepoilées, doublure intégrale).`;
     }
 
     // DRESS / ROBE CHEMISE / ABAYA SWITCHING INTENTS
@@ -4956,6 +4992,71 @@ ${userMessage}
               <span className="text-[11px] font-black">
                 {isBoxMaximized ? (isAr ? 'تصغير الشاشة' : 'Réduire') : (isAr ? 'تكبير كامل الصفحة' : 'Plein écran')}
               </span>
+            </button>
+          </div>
+
+          {/* Quick Garment Preset Switcher Strip */}
+          <div className={`px-3 sm:px-4 py-2 bg-indigo-50/70 border-b border-indigo-100/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <span className="text-[11px] font-bold text-indigo-900 shrink-0 flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <span>{isAr ? 'نوع الموديل بنقرة واحدة:' : 'Type de pièce :'}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => applyPiecePreset('veste_brandebourg')}
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-indigo-950 border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
+              title={isAr ? 'فيست كول أوفيسييه بأزرار براندبورغ من قماش الصوف الإيكرو' : 'Veste col officier et nœuds brandebourgs'}
+            >
+              <span>🧥</span>
+              <span>{isAr ? 'فيست براندبورغ كول أوفيسييه' : 'Veste Brandebourgs'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPiecePreset('veste_casual')}
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
+            >
+              <span>🧥</span>
+              <span>{isAr ? 'فيست كاجوال' : 'Veste Casual'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPiecePreset('tshirt')}
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
+            >
+              <span>👕</span>
+              <span>{isAr ? 'تيشيرت' : 'T-Shirt'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPiecePreset('hoodie')}
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
+            >
+              <span>🧥</span>
+              <span>{isAr ? 'هودي' : 'Hoodie'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPiecePreset('pantalon')}
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
+            >
+              <span>👖</span>
+              <span>{isAr ? 'سروال' : 'Pantalon'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPiecePreset('survet_2_pieces')}
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
+            >
+              <span>🏃</span>
+              <span>{isAr ? 'طقم قطعتين (Survêt)' : 'Ensemble 2P'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPiecePreset('robe_chemise')}
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
+            >
+              <span>👗</span>
+              <span>{isAr ? 'فستان / عباية' : 'Robe / Abaya'}</span>
             </button>
           </div>
 

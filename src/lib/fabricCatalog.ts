@@ -43,6 +43,20 @@ export const FABRIC_CATALOG: Record<string, FabricInfo> = {
     avgPricePerMeter: 55,
     techSpec: '100% Coton Naturel Écru · 320 GSM · Armure Twill / Toile'
   },
+  'drap_de_laine': {
+    arName: 'دوب دو لين صوف شتوي فاخر (Drap de Laine Écru Lourd 420g)',
+    frName: 'Drap de Laine / Lainage Écru Lourd 420 GSM & Doublure Satinée',
+    pricePerMeterMAD: '75 - 120 درهم/متر (سوق الجملة درب عمر / طنجة)',
+    pricePerMeterMADFr: '75 - 120 MAD/mètre (Marché de Gros Casablanca / Tanger)',
+    markets: 'مستوردو أقمشة الصوف والسترات الشتوية (الدار البيضاء: زنقة سيدي بليوط / درب عمر - طنجة)',
+    marketsFr: 'Distributeurs & Importateurs Grossistes Laine & Manteaux (Casablanca / Tanger)',
+    pros: 'فخامة ودفء عالي جداً، قوام واقف مهيكل للسترات والمعاطف، مثالي لقصات الكول أوفيسييه وأزرار البراندبورغ الفاخرة',
+    prosFr: 'Chaleur et tenue exceptionnelles, tombé très structuré, parfait pour vestes chic, manteaux col officier et brandebourgs',
+    cons: 'يحتاج بطانة داخلية ساتان حريرية وتقفيل نظيف بالمكواة البخارية الصناعية تحت الضغط',
+    consFr: 'Nécessite une doublure satinée intérieure soignée et un repassage vapeur sous presse industrielle',
+    avgPricePerMeter: 90,
+    techSpec: '80% Laine · 20% Polyamide (ou 100% Laine) · 420 GSM'
+  },
   'denim': {
     arName: 'قماش دنيم جينز أصيل 100% قطن 12.5oz (Heavy Denim)',
     frName: 'Toile Denim 100% Coton Brut 12.5oz / Jean',
@@ -239,13 +253,16 @@ export const FABRIC_CATALOG: Record<string, FabricInfo> = {
 export function getFabricInfo(fabricName: string = ''): FabricInfo {
   const lower = fabricName.toLowerCase();
   
+  if (lower.includes('drap de laine') || lower.includes('drap_de_laine') || lower.includes('lainage') || lower.includes('laine') || lower.includes('صوف') || lower.includes('feutr') || lower.includes('brandebourg') || lower.includes('chinois') || (lower.includes('veste') && lower.includes('ecru')) || (lower.includes('veste') && lower.includes('officier'))) {
+    return FABRIC_CATALOG['drap_de_laine'];
+  }
   if (lower.includes('rib') || lower.includes('côte') || lower.includes('cote') || lower.includes('كوت')) {
     return FABRIC_CATALOG['rib'];
   }
   if (lower.includes('french terry') || lower.includes('bouclette') || lower.includes('فرنش تيري') || lower.includes('بوكليت') || lower.includes('غير مقطن')) {
     return FABRIC_CATALOG['french_terry'];
   }
-  if (lower.includes('brandebourg') || lower.includes('officier') || lower.includes('mao') || lower.includes('matelass') || lower.includes('ecru') || lower.includes('écru') || (lower.includes('toile') && lower.includes('coton')) || (lower.includes('twill') && (lower.includes('lourd') || lower.includes('coton')))) {
+  if (lower.includes('officier') || lower.includes('mao') || lower.includes('matelass') || lower.includes('ecru') || lower.includes('écru') || (lower.includes('toile') && lower.includes('coton')) || (lower.includes('twill') && (lower.includes('lourd') || lower.includes('coton')))) {
     return FABRIC_CATALOG['toile_coton'];
   }
   if (lower.includes('denim') || lower.includes('jean') || lower.includes('جينز') || lower.includes('دنيم')) {
