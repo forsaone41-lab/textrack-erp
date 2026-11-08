@@ -11,7 +11,7 @@ import {
   Radio, Compass, ChevronRight, CheckCheck, Crown, Shield, HelpCircle,
   ZoomIn, Calculator, Scale, Percent, Truck, Info,
   Calendar, Video, CreditCard, DollarSign, UploadCloud, FileCheck,
-  CheckCircle, Copy, Download, UserCheck, ShieldAlert
+  CheckCircle, Copy, Download, UserCheck, ShieldAlert, PlusCircle, FileText
 } from 'lucide-react';
 import { User, saveRecord } from '../types';
 import { MODELISTES_DATA, ModelisteProfile } from '../data/modelistesData';
@@ -131,6 +131,142 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<any | null>(null);
   const [expandedThreadMessageId, setExpandedThreadMessageId] = useState<string | null>(null);
   const [threadReplyDraft, setThreadReplyDraft] = useState('');
+
+  // ─────────────────────────────────────────────────────────────
+  // FREELANCE DUAL MODE: 'talents' (أنا باغي موديليست) VS 'jobs' (أنا موديليست باغي خدمة - خمسات)
+  // ─────────────────────────────────────────────────────────────
+  const [freelanceTab, setFreelanceTab] = useState<'talents' | 'jobs'>('talents');
+  const [jobSearchQuery, setJobSearchQuery] = useState('');
+  const [jobCategoryFilter, setJobCategoryFilter] = useState<'all' | 'streetwear' | 'denim' | 'femme' | 'sport'>('all');
+  const [jobBudgetFilter, setJobBudgetFilter] = useState<'all' | 'under500' | '500to1500' | 'above1500'>('all');
+
+  // POST A JOB MODAL STATE (للعملاء وأصحاب البراندات)
+  const [showPostJobModal, setShowPostJobModal] = useState<boolean>(false);
+  const [newJobTitle, setNewJobTitle] = useState('');
+  const [newJobBrand, setNewJobBrand] = useState('');
+  const [newJobCity, setNewJobCity] = useState('الدار البيضاء');
+  const [newJobBudget, setNewJobBudget] = useState(350);
+  const [newJobCategory, setNewJobCategory] = useState<'streetwear' | 'denim' | 'femme' | 'sport'>('streetwear');
+  const [newJobDescription, setNewJobDescription] = useState('');
+  const [newJobWhatsapp, setNewJobWhatsapp] = useState('');
+  const [newJobWorkMode, setNewJobWorkMode] = useState<'remote' | 'office'>('remote');
+  const [jobPostedSuccessSlip, setJobPostedSuccessSlip] = useState<any | null>(null);
+
+  // SUBMIT PROPOSAL MODAL STATE (للموديليست للتقديم على عروض العملاء)
+  const [showProposalModal, setShowProposalModal] = useState<boolean>(false);
+  const [selectedJobForProposal, setSelectedJobForProposal] = useState<any | null>(null);
+  const [proposalPrice, setProposalPrice] = useState<number>(300);
+  const [proposalDuration, setProposalDuration] = useState<string>('يومان (48 ساعة)');
+  const [proposalMessage, setProposalMessage] = useState<string>('');
+  const [proposalAuthorName, setProposalAuthorName] = useState<string>('');
+  const [proposalAuthorPhone, setProposalAuthorPhone] = useState<string>('');
+  const [proposalSubmittedSlip, setProposalSubmittedSlip] = useState<any | null>(null);
+
+  // INITIAL JOB FEED LIST (RICH MOROCCAN B2B FASHION JOBS LIKE KHAMSAT)
+  const [jobsList, setJobsList] = useState<any[]>(() => {
+    try {
+      const stored = localStorage.getItem('beya_freelance_jobs');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return [
+      {
+        id: 'job-1',
+        title: 'مطلوب موديليست محترف لإنجاز باترون هودي أوفرسايز 380g مع تدريج المقاسات S-XXL وبطاقة تقنية لمصنع الخياطة',
+        brand: 'North Wear Casablanca',
+        city: 'الدار البيضاء',
+        budgetMAD: 350,
+        category: 'streetwear',
+        categoryLabel: 'ستريت وير وهوديز',
+        description: 'السلام عليكم، عندنا براند كوليكسيون شتوية محتاجين باترون مضبوط لهودي أوفرسايز Drop Shoulder كابوش كبير وجيب كانغورو. مطلوب ملفات DXF AAMA صالحة للقص الأوتوماتيكي مع تدرج المقاسات وبطاقة Fiche Technique واضحة لمعمل الخياطة.',
+        skills: ['Lectra Modaris', 'CLO 3D', 'Gradation S-XXL', 'Fiche Technique', 'Drop Shoulder'],
+        proposalsCount: 3,
+        postedAt: 'منذ ساعتين',
+        urgent: true,
+        contactWhatsapp: '212675239885',
+        workMode: 'remote'
+      },
+      {
+        id: 'job-2',
+        title: 'فصالة وتدقيق باترون سروال كارجو مع جيوب منفوخة (Poches Soufflet) وجيوب سرية وتدريج كامل',
+        brand: 'Tactical Gear MA',
+        city: 'الدار البيضاء (سيدي معروف)',
+        budgetMAD: 450,
+        category: 'denim',
+        categoryLabel: 'جينز ودينيم وكارجو',
+        description: 'محتاجين خبير فصالة وباتورناج لسروال كارجو قماش كانفاس أو ريبستوب 6 جيوب مع تفاصيل تكتيكية (سحابات YKK مخفية وتدريج المقاسات 28-38). يفضل إمكانية إرسال محاكاة 3D قبل قص العينة.',
+        skills: ['Gerber', 'CLO 3D', 'Cargo Pants', 'Gradation 28-38', 'Canvas'],
+        proposalsCount: 2,
+        postedAt: 'منذ 4 ساعات',
+        urgent: false,
+        contactWhatsapp: '212675239885',
+        workMode: 'remote'
+      },
+      {
+        id: 'job-3',
+        title: 'كوليكسيون كاملة للصيف (عبايات وقفاطين عصرية 6 موديلات) مع ملفات DXF جاهزة لمصانع طنجة والرباط',
+        brand: 'Noor Chic Couture',
+        city: 'الرباط (حي الرياض)',
+        budgetMAD: 1800,
+        category: 'femme',
+        categoryLabel: 'أزياء نسائية ومودست',
+        description: 'مشروع كوليكسيون كاملة لصيف 2026: 4 عبايات بقصات خليجية ومغربية + 2 فساتين كتان وبوبلين. نريد موديليست مبدعة تفهم طيحة الثوب (Crêpe de Soie & Lin) مع تدريج 3 مقاسات لكل موديل وبطاقات تقنية مفصلة.',
+        skills: ['Lectra Modaris', 'Abaya Pattern', 'Gradation', 'Fiches Techniques', 'Lin 100%'],
+        proposalsCount: 5,
+        postedAt: 'منذ 6 ساعات',
+        urgent: true,
+        contactWhatsapp: '212675239885',
+        workMode: 'remote'
+      },
+      {
+        id: 'job-4',
+        title: 'محاكاة 3D وفيتينغ رقمي لجاكيت بومبر وسويت بانتس قبل قص الثوب لتفادي الهدر',
+        brand: 'Urban Velocity',
+        city: 'طنجة',
+        budgetMAD: 300,
+        category: 'streetwear',
+        categoryLabel: 'ستريت وير وهوديز',
+        description: 'عندنا الباترون واجد محتاجين خبير CLO 3D يدير لينا محاكاة افتراضية للقطعة على مانيكان ويقيس توازن القصة وطول الأكمام والخصر قبل ما نبدأو إنتاج 500 حبة.',
+        skills: ['CLO 3D V7', 'Simulation 3D', 'Virtual Fitting', 'Textile Rendering'],
+        proposalsCount: 1,
+        postedAt: 'منذ يوم',
+        urgent: false,
+        contactWhatsapp: '212675239885',
+        workMode: 'remote'
+      },
+      {
+        id: 'job-5',
+        title: 'باترون طقم رياضي نسائي (Legging Seamless + Sport Bra) بتقنية التمدد 4-Way Stretch',
+        brand: 'Athletica Morocco',
+        city: 'الدار البيضاء',
+        budgetMAD: 400,
+        category: 'sport',
+        categoryLabel: 'ملابس رياضية وتقنية',
+        description: 'مطلوب باترون هندسي لطقم رياضي عالي الأداء مع احتساب نسبة التمدد (Élasthanne 18%) وغرز الحياكة المسطحة (Flatlock). التسليم بصيغة DXF مع باريم القياسات.',
+        skills: ['Optitex', 'Flatlock Stitch', 'Gradation XS-L', 'Activewear'],
+        proposalsCount: 2,
+        postedAt: 'منذ يوم',
+        urgent: false,
+        contactWhatsapp: '212675239885',
+        workMode: 'remote'
+      },
+      {
+        id: 'job-6',
+        title: 'استشارة حضورية بمكتب الموديليست بالدار البيضاء لمراجعة كوليكسيون أولى واختيار أقمشة المصانع',
+        brand: 'Atlas Atelier B2B',
+        city: 'الدار البيضاء (أنفا)',
+        budgetMAD: 250,
+        category: 'streetwear',
+        categoryLabel: 'استشارة وتوجيه',
+        description: 'كنطلقو أول براند ملابس شبابية وبغينا جلسة عمل 45 دقيقة مع موديليست خبير فـ كازا لمراجعة الرسومات التقنية وفحص عينات الأقمشة وإعطائنا نصائح تفادي أخطاء المعامل.',
+        skills: ['استشارة حضورية', 'Fabric Swatches', 'مانيكان Fitting', 'Coût Façon'],
+        proposalsCount: 4,
+        postedAt: 'منذ يومين',
+        urgent: false,
+        contactWhatsapp: '212675239885',
+        workMode: 'office'
+      }
+    ];
+  });
 
   // ESCROW & PAYMENT STATE (Local Virement / Cash Plus / PayPal International)
   const [showEscrowModal, setShowEscrowModal] = useState<boolean>(false);
@@ -980,138 +1116,167 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
     <div className={`min-h-screen ${activeView === 'chat' ? 'bg-[#1e1f22]' : 'bg-[#0b0f19]'} text-[#dbdee1] flex flex-col font-sans select-none antialiased overflow-hidden h-screen`} dir="rtl">
 
       {/* TOP HEADER BAR (UPWORK / FREELANCE PLATFORM STYLE) */}
-      <header className="h-14 bg-[#111622] border-b border-slate-800/80 px-4 flex items-center justify-between shrink-0 z-30 shadow-md">
-        <div className="flex items-center gap-3">
+      <header className="h-14 bg-[#111622] border-b border-slate-800/80 px-3 sm:px-4 flex items-center justify-between shrink-0 z-30 shadow-md gap-2 w-full">
+        {/* Left Side: Brand Logo & Title */}
+        <div className="flex items-center gap-2.5 shrink-0">
           {/* Mobile Drawer Hamburger (Chat Only) */}
           {activeView === 'chat' && (
             <button
               onClick={() => setMobileDrawer(prev => prev === 'channels' ? 'none' : 'channels')}
-              className="md:hidden p-2 text-slate-300 hover:text-white bg-[#2b2d31] rounded-xl cursor-pointer"
+              className="md:hidden p-1.5 text-slate-300 hover:text-white bg-[#2b2d31] rounded-xl cursor-pointer"
               title="فتح القنوات"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
             </button>
           )}
 
-          {/* Brand Icon & Title (Upwork / Freelance Marketplace Identity) */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-black shadow-md shadow-amber-500/20 shrink-0">
-              <Briefcase className="w-5 h-5 text-slate-950" />
+          {/* Brand Icon & Title */}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-black shadow-md shadow-amber-500/20 shrink-0">
+              <Briefcase className="w-4 h-4 text-slate-950" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-black text-white text-sm tracking-wide">BEYA FREELANCE</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase border border-amber-500/30">
-                  MARKETPLACE
+                <span className="font-black text-white text-xs sm:text-sm tracking-wide">BEYA FREELANCE</span>
+                <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[9px] font-black uppercase border border-amber-500/30">
+                  MARKET
                 </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" title="متصل الآن" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="متصل الآن" />
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block font-medium">
-                سوق العمل الحر للموديليست والباترون الصناعي بالمغرب (Upwork Style)
-              </p>
             </div>
           </div>
         </div>
 
-        {/* View Switcher Tabs (Freelance & Upwork Navigation) */}
-        <div className="flex items-center gap-1.5 bg-[#1b202e] p-1 rounded-xl border border-slate-700/60 overflow-x-auto scrollbar-hide">
+        {/* Center: Compact View Switcher Tabs */}
+        <div className="flex items-center gap-1 bg-[#1b202e] p-1 rounded-xl border border-slate-700/60 overflow-x-auto scrollbar-hide max-w-full shrink min-w-0">
+          {/* Tab 1: طلبات ومشاريع العملاء (خمسات) */}
           <button
-            onClick={() => { setActiveView('freelance'); setMobileDrawer('none'); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-              activeView === 'freelance'
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20'
+            onClick={() => { setActiveView('freelance'); setFreelanceTab('jobs'); setMobileDrawer('none'); }}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+              activeView === 'freelance' && freelanceTab === 'jobs'
+                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-950 font-black shadow-md shadow-emerald-500/20'
                 : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
             <Briefcase className="w-3.5 h-3.5" />
-            <span>سوق العمل الحر للموديليست</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px] font-mono">5 خبراء</span>
+            <span>طلبات المشاريع</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[9px] font-mono">خمسات</span>
           </button>
 
+          {/* Tab 2: كفاءات الموديليست (Upwork) */}
+          <button
+            onClick={() => { setActiveView('freelance'); setFreelanceTab('talents'); setMobileDrawer('none'); }}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+              activeView === 'freelance' && freelanceTab === 'talents'
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md shadow-amber-500/20'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Scissors className="w-3.5 h-3.5" />
+            <span>الموديليست</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[9px] font-mono">5 خبراء</span>
+          </button>
+
+          {/* Tab 3: الاستشارات */}
           <button
             onClick={() => { setActiveView('consulting'); setMobileDrawer('none'); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               activeView === 'consulting'
-                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-xs'
+                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-black shadow-xs'
                 : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
             <Video className="w-3.5 h-3.5 text-cyan-300" />
-            <span>فضاء الاستشارات (Visio / مكتب)</span>
+            <span>الاستشارات</span>
           </button>
 
+          {/* Tab 4: الموردين */}
           <button
             onClick={() => { setActiveView('directory'); setMobileDrawer('none'); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               activeView === 'directory'
-                ? 'bg-indigo-600 text-white shadow-xs'
+                ? 'bg-indigo-600 text-white font-black shadow-xs'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>دليل الموردين والأقمشة</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">14</span>
+            <span>الموردين</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-indigo-500/30 text-indigo-200 text-[9px] font-mono">14</span>
           </button>
 
+          {/* Tab 5: الشراء المشترك */}
           <button
             onClick={() => { setActiveView('groupage'); setMobileDrawer('none'); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               activeView === 'groupage'
-                ? 'bg-indigo-600 text-white shadow-xs'
+                ? 'bg-indigo-600 text-white font-black shadow-xs'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
             <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
             <span>الشراء المشترك</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-amber-500/30 text-amber-300 text-[10px] font-mono">-25%</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-amber-500/30 text-amber-300 text-[9px] font-mono">-25%</span>
           </button>
 
+          {/* Tab 6: الديسكورد */}
           <button
             onClick={() => { setActiveView('chat'); setMobileDrawer('none'); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               activeView === 'chat'
-                ? 'bg-indigo-600 text-white shadow-xs'
+                ? 'bg-indigo-600 text-white font-black shadow-xs'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
             <Hash className="w-3.5 h-3.5" />
-            <span>ملتقى المبدعين (Discord Lounge)</span>
+            <span>الديسكورد</span>
           </button>
         </div>
 
         {/* Right Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Post Job CTA Button */}
+          <button
+            onClick={() => {
+              setJobPostedSuccessSlip(null);
+              setShowPostJobModal(true);
+            }}
+            className="px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer shrink-0"
+            title="نشر مشروع أو طلب فصالة وباترون جديد"
+          >
+            <PlusCircle className="w-3.5 h-3.5 text-slate-950" />
+            <span className="hidden md:inline">+ نشر مشروع</span>
+          </button>
+
           {/* Register Pro / Supplier Button */}
           <Link
             to="/network/register"
-            className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer shrink-0"
+            className="hidden sm:flex px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-xl text-xs transition items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer shrink-0"
             title="تسجيل موديليست أو مورد جديد في BEYA FREELANCE"
           >
             <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-            <span className="hidden sm:inline">+ تسجيل مهني / مورد</span>
-            <span className="sm:hidden text-[10px]">+ تسجيل Pro</span>
+            <span className="hidden lg:inline">+ تسجيل مهني</span>
           </Link>
 
           {/* Members Sidebar Toggle (Only in Discord Chat View) */}
           {activeView === 'chat' && (
             <button
               onClick={() => setMobileDrawer(prev => prev === 'members' ? 'none' : 'members')}
-              className="p-2 text-slate-300 hover:text-white bg-[#2b2d31] hover:bg-[#35373c] rounded-xl transition flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+              className="p-1.5 text-slate-300 hover:text-white bg-[#2b2d31] hover:bg-[#35373c] rounded-xl transition flex items-center gap-1.5 text-xs font-bold cursor-pointer shrink-0"
               title="قائمة المهنيين والأعضاء"
             >
-              <Users className="w-4 h-4 text-indigo-400" />
-              <span className="hidden lg:inline text-[11px]">الأعضاء ({allProMembers.length})</span>
+              <Users className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden xl:inline text-[11px]">الأعضاء ({allProMembers.length})</span>
             </button>
           )}
 
-          {/* Return to BEYAPORTAL Button */}
+          {/* Return to BEYAPORTAL Button (Guaranteed NEVER Truncated) */}
           <button
             onClick={() => navigate('/portal')}
-            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 border border-white/10 cursor-pointer"
+            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 border border-white/10 cursor-pointer shrink-0"
             title="الرجوع إلى لوحة BEYAPORTAL"
           >
-            <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">BEYAPORTAL</span>
+            <ArrowRight className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="shrink-0 font-bold">BEYAPORTAL</span>
           </button>
         </div>
       </header>
@@ -1310,78 +1475,458 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
           {/* VIEW: FREELANCE MODELISTES & PATTERN MAKERS MARKETPLACE (UPWORK STYLE) */}
           {activeView === 'freelance' && (
             <div className="flex-1 flex flex-col h-full overflow-y-auto bg-[#0b0f19]">
-              {/* Upwork Marketplace Top Hero */}
-              <div className="bg-gradient-to-b from-[#111625] via-[#151c2d] to-[#0b0f19] border-b border-slate-800/80 p-6 sm:p-8 shrink-0">
-                <div className="max-w-7xl mx-auto space-y-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-black border border-amber-500/30 flex items-center gap-2 shadow-xs">
-                        <ShieldCheck className="w-4 h-4 text-amber-400" />
-                        <span>BEYA Escrow Protection • نظام حماية المستحقات 100%</span>
-                      </span>
-                      <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-bold border border-emerald-500/25">
-                        ⚡ لا يتم تحويل الأموال إلا بعد استلام الباترون ومطابقة القياسات
-                      </span>
-                    </div>
 
-                    <div className="flex items-center gap-2 text-xs text-slate-300">
-                      <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
-                        🇲🇦 <strong>تحويل بنكي مغربي (CIH / التجاري)</strong>
+              {/* ── FREELANCE DUAL-ROLE SELECTOR BAR ── */}
+              <div className="bg-[#111625] border-b border-slate-800/80 px-4 sm:px-8 py-3 shrink-0">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+                  {/* Dual Mode Switcher */}
+                  <div className="p-1 bg-[#181e2e] rounded-2xl border border-white/10 flex items-center gap-1.5 w-full md:w-auto shadow-inner">
+                    {/* Mode 1: أنا موديليست باغي خدمة (طلبات ومشاريع العملاء - خمسات) */}
+                    <button
+                      onClick={() => setFreelanceTab('jobs')}
+                      className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer ${
+                        freelanceTab === 'jobs'
+                          ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-950 shadow-md shadow-emerald-500/20'
+                          : 'text-slate-300 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Briefcase className="w-4 h-4" />
+                      <span>💼 أنا موديليست باغي خدمة (طلبات ومشاريع العملاء • خمسات)</span>
+                      <span className="px-2 py-0.5 rounded-full bg-black/30 text-[10px] font-mono font-bold">
+                        {jobsList.length} طلبات
                       </span>
-                      <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
-                        🌍 <strong>PayPal للبراندات والمغتربين بالخارج</strong>
+                    </button>
+
+                    {/* Mode 2: أنا باغي نوظف موديليست (تصفح الكفاءات - Upwork) */}
+                    <button
+                      onClick={() => setFreelanceTab('talents')}
+                      className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer ${
+                        freelanceTab === 'talents'
+                          ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20'
+                          : 'text-slate-300 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>👔 أنا باغي نوظف موديليست (تصفح الكفاءات • Upwork)</span>
+                      <span className="px-2 py-0.5 rounded-full bg-black/30 text-[10px] font-mono font-bold">
+                        5 خبراء
                       </span>
-                    </div>
+                    </button>
                   </div>
 
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
-                      <span>سوق العمل الحر للموديليست ومصممي الباترون</span>
-                      <span className="text-xs px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-full uppercase tracking-wider">
-                        Upwork Style
-                      </span>
-                    </h1>
-                    <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-4xl leading-relaxed font-medium">
-                      وظّف أفضل موديليست فالمغرب بالقطعة (Freelance). تصفح بورتفوليو حقيقي، وتعرف على البراندات العالمية اللي خدمو معاها (Zara, Adidas, Mango, Bershka...)، واطلب باترونك بضمان BEYA Escrow أو احجز استشارة خاصة 1-on-1 (عن بعد أو بالمكتب).
-                    </p>
-                  </div>
-
-                  {/* 4 Trust & Guarantees Strips */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-                    <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                      <div className="flex items-center gap-2 text-amber-400 text-xs font-black">
-                        <Shield className="w-4 h-4 shrink-0" />
-                        <span>ضمان BEYA Escrow</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-tight">أموالك محفوظة في الضمان حتى تفحص الباترون وتجرب الفيتينغ.</p>
-                    </div>
-
-                    <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-black">
-                        <Crown className="w-4 h-4 shrink-0" />
-                        <span>خبرات مع كبرى العلامات</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-tight">موديليست شاركوا في سلاسل إنتاج Zara, Adidas, Mango, Nike.</p>
-                    </div>
-
-                    <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                      <div className="flex items-center gap-2 text-cyan-400 text-xs font-black">
-                        <FileCode2 className="w-4 h-4 shrink-0" />
-                        <span>ملفات صناعية معتمدة</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-tight">Lectra Modaris, CLO 3D, Gerber، تدريج XS-XXL، وبطاقة Fiche Tech.</p>
-                    </div>
-
-                    <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                      <div className="flex items-center gap-2 text-indigo-400 text-xs font-black">
-                        <Video className="w-4 h-4 shrink-0" />
-                        <span>استشارة Visio أو حضورية</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-tight">جلسات فحص رقمية 45د أو لقاء بمكتب الموديليست لتجربة الأقمشة.</p>
-                    </div>
-                  </div>
+                  {/* Post a Job CTA */}
+                  <button
+                    onClick={() => {
+                      setJobPostedSuccessSlip(null);
+                      setShowPostJobModal(true);
+                    }}
+                    className="w-full md:w-auto px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 cursor-pointer shrink-0"
+                  >
+                    <PlusCircle className="w-4 h-4 text-slate-950" />
+                    <span>+ انشر طلبك / مشروعك مجاناً</span>
+                  </button>
                 </div>
               </div>
+
+              {/* ─────────────────────────────────────────────────────────────
+                  TAB 1: KHAMSAT JOBS FEED (للموديليست اللي كيقلبو على خدمة من أصحاب البراندات)
+              ───────────────────────────────────────────────────────────── */}
+              {freelanceTab === 'jobs' && (
+                <>
+                  {/* Hero Banner for Jobs / Khamsat */}
+                  <div className="bg-gradient-to-b from-[#111625] via-[#151c2d] to-[#0b0f19] border-b border-slate-800/80 p-6 sm:p-8 shrink-0">
+                    <div className="max-w-7xl mx-auto space-y-5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-black border border-emerald-500/30 flex items-center gap-2 shadow-xs">
+                            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                            <span>BEYA Escrow Protection • ميزانية المشاريع مجمدة ومحمية 100%</span>
+                          </span>
+                          <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-300 text-xs font-bold border border-cyan-500/25">
+                            ⚡ قدّم عرضك المالي وتواصل مباشرة مع أصحاب العلامات والمصانع
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-slate-300">
+                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
+                            🇲🇦 <strong>دفع بنكي مغربي (CIH / التجاري)</strong>
+                          </span>
+                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
+                            🌍 <strong>PayPal للمشاريع الدولية</strong>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
+                          <span>طلبات ومشاريع العمل الحر للموديليست بالمغرب</span>
+                          <span className="text-xs px-3 py-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-950 font-black rounded-full uppercase tracking-wider">
+                            Khamsat Feed
+                          </span>
+                        </h1>
+                        <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-4xl leading-relaxed font-medium">
+                          تصفح أحدث طلبات الفصالة والباترونات المطلوبة من أصحاب الماركات ومصانع الملابس الجاهزة. اختر المشروع المناسب لاختصاصك، قدّم سعرك ومدة التسليم، واستلم أتعابك بضمان رسمي من BEYA Escrow بعد إتمام العمل وموافقة العميل.
+                        </p>
+                      </div>
+
+                      {/* 4 Guarantees */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <div className="flex items-center gap-2 text-emerald-400 text-xs font-black">
+                            <Shield className="w-4 h-4 shrink-0" />
+                            <span>حماية المستحقات</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-tight">أموال المشروع محجوزة لدى BEYA Escrow قبل أن تبدأ العمل.</p>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <div className="flex items-center gap-2 text-amber-400 text-xs font-black">
+                            <Briefcase className="w-4 h-4 shrink-0" />
+                            <span>مشاريع جادة ومطلوبة</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-tight">طلبات حقيقية لهوديز، جينز، عبايات، وملابس تقنية من براندات مغربية.</p>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <div className="flex items-center gap-2 text-cyan-400 text-xs font-black">
+                            <FileCode2 className="w-4 h-4 shrink-0" />
+                            <span>ملفات التسليم الرقمية</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-tight">تسليم ملفات DXF AAMA، ومحاكاة CLO 3D، وبطاقات Fiche Technique.</p>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <div className="flex items-center gap-2 text-indigo-400 text-xs font-black">
+                            <MessageCircle className="w-4 h-4 shrink-0" />
+                            <span>تواصل واتساب مباشر</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-tight">تواصل سريع مع صاحب الطلب لمناقشة التفاصيل قبل توقيع الاتفاق.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dedicated Search & Filter Bar ("page box dial rochirch") */}
+                  <div className="bg-[#111625] border-b border-slate-800/80 px-4 sm:px-8 py-4 sticky top-0 z-10 shadow-md space-y-3">
+                    <div className="max-w-7xl mx-auto space-y-3">
+                      {/* Big Search Input Box */}
+                      <div className="relative w-full">
+                        <Search className="w-5 h-5 text-slate-400 absolute right-4 top-3.5" />
+                        <input
+                          type="text"
+                          placeholder="ابحث في طلبات المشاريع (مثال: باترون هودي أوفرسايز، فصالة سروال كارجو، عبايات، كوليكسيون صيفية، 3D، كازا...)"
+                          value={jobSearchQuery}
+                          onChange={e => setJobSearchQuery(e.target.value)}
+                          className="w-full bg-[#181e2e] text-sm text-white placeholder-slate-400 pr-12 pl-10 py-3 rounded-2xl border border-white/10 focus:border-emerald-500 focus:outline-none shadow-inner"
+                        />
+                        {jobSearchQuery && (
+                          <button
+                            onClick={() => setJobSearchQuery('')}
+                            className="absolute left-3.5 top-3 p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Category & Budget Filters */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                        {/* Category Filter Pills */}
+                        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1">
+                          {[
+                            { id: 'all', label: 'الكل', icon: '✨' },
+                            { id: 'streetwear', label: 'ستريت وير وهوديز', icon: '🧥' },
+                            { id: 'denim', label: 'جينز وكارجو', icon: '👖' },
+                            { id: 'femme', label: 'أزياء نسائية ومودست', icon: '👗' },
+                            { id: 'sport', label: 'ملابس رياضية', icon: '⚡' }
+                          ].map(cat => (
+                            <button
+                              key={cat.id}
+                              onClick={() => setJobCategoryFilter(cat.id as any)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                                jobCategoryFilter === cat.id
+                                  ? 'bg-emerald-500 text-slate-950 font-black shadow-md shadow-emerald-500/25'
+                                  : 'bg-[#181e2e] text-slate-300 hover:text-white hover:bg-[#222a40] border border-white/5'
+                              }`}
+                            >
+                              <span>{cat.icon}</span>
+                              <span>{cat.label}</span>
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Budget Filter Buttons */}
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="text-slate-400 text-[11px] font-bold">الميزانية:</span>
+                          {[
+                            { id: 'all', label: 'الكل' },
+                            { id: 'under500', label: '< 500 DH' },
+                            { id: '500to1500', label: '500 - 1500 DH' },
+                            { id: 'above1500', label: '> 1500 DH' }
+                          ].map(b => (
+                            <button
+                              key={b.id}
+                              onClick={() => setJobBudgetFilter(b.id as any)}
+                              className={`px-2.5 py-1 rounded-lg font-mono font-bold transition cursor-pointer ${
+                                jobBudgetFilter === b.id
+                                  ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
+                                  : 'bg-[#181e2e] text-slate-400 hover:text-white border border-white/5'
+                              }`}
+                            >
+                              {b.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Jobs List Feed */}
+                  <div className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
+                    {/* Feed Counter */}
+                    <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                      <span>
+                        يتم عرض <strong className="text-white font-mono">{
+                          jobsList
+                            .filter(j => jobCategoryFilter === 'all' || j.category === jobCategoryFilter)
+                            .filter(j => {
+                              if (jobBudgetFilter === 'under500') return j.budgetMAD < 500;
+                              if (jobBudgetFilter === '500to1500') return j.budgetMAD >= 500 && j.budgetMAD <= 1500;
+                              if (jobBudgetFilter === 'above1500') return j.budgetMAD > 1500;
+                              return true;
+                            })
+                            .filter(j => {
+                              if (!jobSearchQuery.trim()) return true;
+                              const q = jobSearchQuery.toLowerCase();
+                              return j.title.toLowerCase().includes(q) ||
+                                j.brand.toLowerCase().includes(q) ||
+                                j.description.toLowerCase().includes(q) ||
+                                j.city.toLowerCase().includes(q) ||
+                                (j.skills || []).some((s: string) => s.toLowerCase().includes(q));
+                            }).length
+                        }</strong> طلب مشروع متاح للتقديم
+                      </span>
+                      <button
+                        onClick={() => {
+                          setJobSearchQuery('');
+                          setJobCategoryFilter('all');
+                          setJobBudgetFilter('all');
+                        }}
+                        className="text-amber-400 hover:underline cursor-pointer"
+                      >
+                        إعادة ضبط الفلاتر
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {jobsList
+                        .filter(j => jobCategoryFilter === 'all' || j.category === jobCategoryFilter)
+                        .filter(j => {
+                          if (jobBudgetFilter === 'under500') return j.budgetMAD < 500;
+                          if (jobBudgetFilter === '500to1500') return j.budgetMAD >= 500 && j.budgetMAD <= 1500;
+                          if (jobBudgetFilter === 'above1500') return j.budgetMAD > 1500;
+                          return true;
+                        })
+                        .filter(j => {
+                          if (!jobSearchQuery.trim()) return true;
+                          const q = jobSearchQuery.toLowerCase();
+                          return j.title.toLowerCase().includes(q) ||
+                            j.brand.toLowerCase().includes(q) ||
+                            j.description.toLowerCase().includes(q) ||
+                            j.city.toLowerCase().includes(q) ||
+                            (j.skills || []).some((s: string) => s.toLowerCase().includes(q));
+                        })
+                        .map(job => (
+                          <div
+                            key={job.id}
+                            className="bg-[#121624] rounded-3xl border border-slate-800/90 hover:border-emerald-500/50 transition-all duration-200 overflow-hidden shadow-2xl p-6 sm:p-7 space-y-4 group"
+                          >
+                            {/* Job Header: Brand, Meta, Budget */}
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                              <div className="space-y-1.5">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-black text-white text-sm flex items-center gap-1.5">
+                                    <Building2 className="w-4 h-4 text-amber-400" />
+                                    <span>{job.brand}</span>
+                                  </span>
+                                  <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold border border-white/5 flex items-center gap-1">
+                                    <MapPin className="w-3 h-3 text-slate-400" />
+                                    <span>{job.city}</span>
+                                  </span>
+                                  <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 text-[10px] font-bold border border-indigo-500/25">
+                                    {job.workMode === 'office' ? '🏢 عمل حضوري بالمكتب' : '🌐 عمل عن بعد (Remote)'}
+                                  </span>
+                                  {job.urgent && (
+                                    <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-black border border-rose-500/30 animate-pulse">
+                                      🔥 عاجل
+                                    </span>
+                                  )}
+                                  <span className="text-[11px] text-slate-400 mr-2">
+                                    ⏱️ {job.postedAt}
+                                  </span>
+                                </div>
+
+                                <h3 className="text-base sm:text-lg font-black text-white group-hover:text-amber-300 transition leading-snug">
+                                  {job.title}
+                                </h3>
+                              </div>
+
+                              {/* Budget Badge */}
+                              <div className="text-left shrink-0 bg-black/40 px-4 py-2.5 rounded-2xl border border-white/5">
+                                <div className="flex items-center gap-1 text-emerald-400 text-xs font-black">
+                                  <ShieldCheck className="w-3.5 h-3.5" />
+                                  <span>ميزانية مضمونة</span>
+                                </div>
+                                <div className="text-xl sm:text-2xl font-black text-amber-400 font-mono">
+                                  {job.budgetMAD} <span className="text-xs font-sans text-slate-300">MAD</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Job Description Brief */}
+                            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal bg-[#181e2e]/50 p-4 rounded-2xl border border-white/5">
+                              {job.description}
+                            </p>
+
+                            {/* Required Skills & CAD Software */}
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                              <span className="text-[11px] font-bold text-slate-400 ml-1">المهارات والبرامج المطلوبة:</span>
+                              {(job.skills || []).map((skill: string, sIdx: number) => (
+                                <span
+                                  key={sIdx}
+                                  className="px-2.5 py-1 rounded-lg bg-[#1c2336] text-slate-300 text-[11px] font-medium border border-white/5"
+                                >
+                                  #{skill}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Actions Footer */}
+                            <div className="pt-3 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                              <div className="flex items-center gap-2 text-xs text-slate-400">
+                                <MessageSquare className="w-4 h-4 text-emerald-400" />
+                                <span>
+                                  تم تقديم <strong className="text-white font-mono">{job.proposalsCount || 0}</strong> عروض على هذا الطلب
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-3 w-full sm:w-auto">
+                                {/* WhatsApp Direct with Client */}
+                                <a
+                                  href={`https://wa.me/${job.contactWhatsapp || '212675239885'}?text=${encodeURIComponent(
+                                    `السلام عليكم أخي بخصوص طلبك في BEYA Freelance:\n"${job.title}"\nأنا موديليست ومستعد لتنفيذ العمل بميزانية ${job.budgetMAD} درهم.`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/20 flex items-center justify-center gap-1.5 text-xs transition"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  <span>واتساب العميل</span>
+                                </a>
+
+                                {/* Submit Proposal Button */}
+                                <button
+                                  onClick={() => {
+                                    setSelectedJobForProposal(job);
+                                    setProposalPrice(job.budgetMAD);
+                                    setProposalDuration('يومان (48 ساعة)');
+                                    setProposalMessage(`السلام عليكم، اطلعت على تفاصيل طلبك بخصوص ${job.title}. لدي خبرة كبيرة في إنجاز هذا النوع من الباترونات وتدريج المقاسات بدقة عالية على برنامج Lectra Modaris و CLO 3D، وجاهز لتسليم ملفات DXF AAMA صالحة للقص وبطاقة تقنية متكاملة.`);
+                                    setProposalAuthorName(userProfile.name || '');
+                                    setProposalAuthorPhone('');
+                                    setProposalSubmittedSlip(null);
+                                    setShowProposalModal(true);
+                                  }}
+                                  className="flex-1 sm:flex-initial px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                                >
+                                  <Send className="w-3.5 h-3.5 text-slate-950" />
+                                  <span>تقديم عرض على المشروع (Postuler)</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* ─────────────────────────────────────────────────────────────
+                  TAB 2: UPWORK TALENTS DIRECTORY (للعملاء اللي باغيين يوظفوا موديليست)
+              ───────────────────────────────────────────────────────────── */}
+              {freelanceTab === 'talents' && (
+                <>
+                  {/* Upwork Marketplace Top Hero */}
+                  <div className="bg-gradient-to-b from-[#111625] via-[#151c2d] to-[#0b0f19] border-b border-slate-800/80 p-6 sm:p-8 shrink-0">
+                    <div className="max-w-7xl mx-auto space-y-5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-black border border-amber-500/30 flex items-center gap-2 shadow-xs">
+                            <ShieldCheck className="w-4 h-4 text-amber-400" />
+                            <span>BEYA Escrow Protection • نظام حماية المستحقات 100%</span>
+                          </span>
+                          <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-bold border border-emerald-500/25">
+                            ⚡ لا يتم تحويل الأموال إلا بعد استلام الباترون ومطابقة القياسات
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-slate-300">
+                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
+                            🇲🇦 <strong>تحويل بنكي مغربي (CIH / التجاري)</strong>
+                          </span>
+                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
+                            🌍 <strong>PayPal للبراندات والمغتربين بالخارج</strong>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
+                          <span>سوق العمل الحر للموديليست ومصممي الباترون</span>
+                          <span className="text-xs px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-full uppercase tracking-wider">
+                            Upwork Style
+                          </span>
+                        </h1>
+                        <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-4xl leading-relaxed font-medium">
+                          وظّف أفضل موديليست فالمغرب بالقطعة (Freelance). تصفح بورتفوليو حقيقي، وتعرف على البراندات العالمية اللي خدمو معاها (Zara, Adidas, Mango, Bershka...)، واطلب باترونك بضمان BEYA Escrow أو احجز استشارة خاصة 1-on-1 (عن بعد أو بالمكتب).
+                        </p>
+                      </div>
+
+                      {/* 4 Trust & Guarantees Strips */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <div className="flex items-center gap-2 text-amber-400 text-xs font-black">
+                            <Shield className="w-4 h-4 shrink-0" />
+                            <span>ضمان BEYA Escrow</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-tight">أموالك محفوظة في الضمان حتى تفحص الباترون وتجرب الفيتينغ.</p>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <div className="flex items-center gap-2 text-emerald-400 text-xs font-black">
+                            <Crown className="w-4 h-4 shrink-0" />
+                            <span>خبرات مع كبرى العلامات</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-tight">موديليست شاركوا في سلاسل إنتاج Zara, Adidas, Mango, Nike.</p>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <div className="flex items-center gap-2 text-cyan-400 text-xs font-black">
+                            <FileCode2 className="w-4 h-4 shrink-0" />
+                            <span>ملفات صناعية معتمدة</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-tight">Lectra Modaris, CLO 3D, Gerber، تدريج XS-XXL، وبطاقة Fiche Tech.</p>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <div className="flex items-center gap-2 text-indigo-400 text-xs font-black">
+                            <Video className="w-4 h-4 shrink-0" />
+                            <span>استشارة Visio أو حضورية</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-tight">جلسات فحص رقمية 45د أو لقاء بمكتب الموديليست لتجربة الأقمشة.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
               {/* Upwork-style Search & Category Filter Header */}
               <div className="bg-[#111625] border-b border-slate-800/80 px-4 sm:px-8 py-4 sticky top-0 z-10 shadow-md">
@@ -1662,6 +2207,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     ))}
                 </div>
               </div>
+            </>
+          )}
             </div>
           )}
 
@@ -3571,6 +4118,514 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 <span>عضو معتمد رسمي من طرف ورشة BEYA Creative مع تطبيق أسعار الشراكة التفضيلية.</span>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          MODAL: SUBMIT PROPOSAL ON CLIENT JOB REQUEST (تقديم عرض على مشروع)
+      ───────────────────────────────────────────────────────────── */}
+      {showProposalModal && selectedJobForProposal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-xl bg-[#232428] rounded-3xl overflow-hidden border border-[#383a40] shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white space-y-0"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border-b border-[#383a40] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                  <Send className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <span>تقديم عرض على طلب مشروع</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                      خمسات B2B
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">قدّم عرضك المالي وموعد التسليم ليدرس العميل ملفك ويقبله</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => { setShowProposalModal(false); setProposalSubmittedSlip(null); }}
+                className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* If Proposal Submitted -> Show Confirmation Slip */}
+            {proposalSubmittedSlip ? (
+              <div className="p-6 space-y-5">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/60 to-black/60 border border-emerald-500/40 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border-2 border-emerald-500/40">
+                    <CheckCircle className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black border border-emerald-500/30 inline-block mb-1">
+                      تم تسجيل وإرسال عرضك بنجاح
+                    </span>
+                    <h4 className="text-lg font-black text-white">بطاقة العرض المقدم الرسمي</h4>
+                    <p className="text-xs text-slate-300 mt-1">كود العرض: <strong className="font-mono text-emerald-400">{proposalSubmittedSlip.ref}</strong></p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#1e1f22] border border-white/5 space-y-2.5 text-xs">
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">المشروع المطلوب:</span>
+                    <strong className="text-white text-left max-w-xs truncate">{proposalSubmittedSlip.jobTitle}</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">العميل / البراند:</span>
+                    <strong className="text-amber-300">{proposalSubmittedSlip.brandName}</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">الموديليست المتقدم:</span>
+                    <span className="text-white font-bold">{proposalSubmittedSlip.authorName} ({proposalSubmittedSlip.authorPhone || 'واتساب'})</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">سعر العرض المقدم:</span>
+                    <strong className="text-amber-400 font-mono text-sm">{proposalSubmittedSlip.proposedPrice} MAD</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">مدة التسليم المقترحة:</span>
+                    <span className="text-emerald-300 font-bold">{proposalSubmittedSlip.duration}</span>
+                  </div>
+                  <div className="py-1">
+                    <span className="text-slate-400 block mb-1">تفاصيل خطة العمل:</span>
+                    <p className="text-slate-300 bg-black/40 p-2.5 rounded-xl border border-white/5 leading-relaxed">{proposalSubmittedSlip.message}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <a
+                    href={`https://wa.me/${proposalSubmittedSlip.clientWhatsapp}?text=${encodeURIComponent(
+                      `السلام عليكم أخي صاحب براند ${proposalSubmittedSlip.brandName}، لقد قدمت لك عرضاً رسمياً على منصة BEYA Freelance بخصوص مشروعك:\n"${proposalSubmittedSlip.jobTitle}"\n• كود العرض: ${proposalSubmittedSlip.ref}\n• السعر: ${proposalSubmittedSlip.proposedPrice} MAD\n• المدة: ${proposalSubmittedSlip.duration}\n• مقدم العرض: الموديليست ${proposalSubmittedSlip.authorName}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>تأكيد العرض فـ الواتساب مع العميل</span>
+                  </a>
+
+                  <button
+                    onClick={() => { setShowProposalModal(false); setProposalSubmittedSlip(null); }}
+                    className="w-full sm:w-auto py-3 px-5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition cursor-pointer"
+                  >
+                    إغلاق النافذة
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  if (!selectedJobForProposal) return;
+                  const slip = {
+                    ref: `BYA-PROP-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+                    jobTitle: selectedJobForProposal.title,
+                    brandName: selectedJobForProposal.brand,
+                    clientWhatsapp: selectedJobForProposal.contactWhatsapp || '212675239885',
+                    authorName: proposalAuthorName || userProfile.name || 'موديليست محترف',
+                    authorPhone: proposalAuthorPhone || '0600000000',
+                    proposedPrice: proposalPrice,
+                    duration: proposalDuration,
+                    message: proposalMessage,
+                    date: new Date().toLocaleDateString('ar-MA')
+                  };
+                  setProposalSubmittedSlip(slip);
+
+                  // Update job proposal count
+                  const updated = jobsList.map(j => {
+                    if (j.id === selectedJobForProposal.id) {
+                      return { ...j, proposalsCount: (j.proposalsCount || 0) + 1 };
+                    }
+                    return j;
+                  });
+                  setJobsList(updated);
+                  try {
+                    localStorage.setItem('beya_freelance_jobs', JSON.stringify(updated));
+                  } catch {}
+                }}
+                className="p-5 sm:p-6 space-y-4 text-xs"
+              >
+                {/* Target Job Info Card */}
+                <div className="p-3.5 rounded-2xl bg-[#1e1f22] border border-emerald-500/20 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-emerald-400 font-bold">الطلب المستهدف:</span>
+                    <span className="text-[10px] font-mono text-amber-400 font-black">ميزانية العميل: {selectedJobForProposal.budgetMAD} MAD</span>
+                  </div>
+                  <h4 className="font-bold text-white text-xs leading-snug">{selectedJobForProposal.title}</h4>
+                  <p className="text-[11px] text-slate-400">{selectedJobForProposal.brand} • {selectedJobForProposal.city}</p>
+                </div>
+
+                {/* Modéliste Name & Phone */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold block">اسم الموديليست / الاستوديو:</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="مثال: يونس الفاسي - Fashion Modéliste"
+                      value={proposalAuthorName}
+                      onChange={e => setProposalAuthorName(e.target.value)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold block">رقم الواتساب للتواصل:</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="06XXXXXXXX"
+                      value={proposalAuthorPhone}
+                      onChange={e => setProposalAuthorPhone(e.target.value)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-emerald-500 focus:outline-none font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Price & Duration */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold block">قيمتك المقترحة (بالدرهم MAD):</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        required
+                        min={50}
+                        max={10000}
+                        value={proposalPrice}
+                        onChange={e => setProposalPrice(Number(e.target.value) || 0)}
+                        className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-emerald-500 focus:outline-none font-mono font-bold"
+                      />
+                      <span className="absolute left-3 top-2.5 text-slate-400 font-bold text-[11px]">MAD</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold block">مدة التسليم المتوقعة:</label>
+                    <select
+                      value={proposalDuration}
+                      onChange={e => setProposalDuration(e.target.value)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-emerald-500 focus:outline-none"
+                    >
+                      <option value="24 ساعة (عاجل)">⚡ 24 ساعة (عاجل)</option>
+                      <option value="يومان (48 ساعة)">⏱️ يومان (48 ساعة)</option>
+                      <option value="3 إلى 4 أيام">📅 3 إلى 4 أيام</option>
+                      <option value="أسبوع كامل">🗓️ أسبوع كامل</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Pitch Message */}
+                <div className="space-y-1.5">
+                  <label className="text-slate-300 font-bold block">تفاصيل العرض وطريقة العمل (Pitch):</label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={proposalMessage}
+                    onChange={e => setProposalMessage(e.target.value)}
+                    placeholder="اشرح للعميل كيف ستنجز الباترون، البرامج المستعملة (Lectra / CLO 3D)، والملفات التي ستسلمها..."
+                    className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-emerald-500 focus:outline-none leading-relaxed"
+                  />
+                </div>
+
+                {/* Escrow Guarantee Notice */}
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 flex items-center gap-2 text-[11px]">
+                  <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400" />
+                  <span>مستحقاتك محمية بواسطة BEYA Escrow. لن تبدأ العمل حتى يودع العميل المبلغ في حساب الضمان.</span>
+                </div>
+
+                {/* Submit CTA */}
+                <div className="pt-2 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowProposalModal(false)}
+                    className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 font-bold rounded-xl transition cursor-pointer"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black rounded-xl transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4 text-slate-950" />
+                    <span>تأكيد وإرسال العرض للعميل</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          MODAL: POST A NEW JOB / PROJECT REQUEST (نشر طلب أو مشروع جديد)
+      ───────────────────────────────────────────────────────────── */}
+      {showPostJobModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-xl bg-[#232428] rounded-3xl overflow-hidden border border-[#383a40] shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white space-y-0"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            {/* Header */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-950 via-slate-900 to-amber-950 border-b border-[#383a40] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                  <PlusCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <span>نشر طلب أو مشروع فصالة وباترون</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                      مجاني 100%
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">انشر طلبك وسيصلك عروض فورية من أفضل الموديليست المعتمدين</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => { setShowPostJobModal(false); setJobPostedSuccessSlip(null); }}
+                className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* If Posted Successfully -> Slip */}
+            {jobPostedSuccessSlip ? (
+              <div className="p-6 space-y-5">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/60 to-black/60 border border-emerald-500/40 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border-2 border-emerald-500/40">
+                    <CheckCircle className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black border border-emerald-500/30 inline-block mb-1">
+                      تم نشر مشروعك بنجاح في المنصة
+                    </span>
+                    <h4 className="text-lg font-black text-white">بطاقة المشروع المعلن</h4>
+                    <p className="text-xs text-slate-300 mt-1">كود المشروع: <strong className="font-mono text-amber-400">{jobPostedSuccessSlip.ref}</strong></p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#1e1f22] border border-white/5 space-y-2.5 text-xs">
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">عنوان المشروع:</span>
+                    <strong className="text-white text-left max-w-xs truncate">{jobPostedSuccessSlip.title}</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">البراند المعلن:</span>
+                    <strong className="text-amber-300">{jobPostedSuccessSlip.brand} ({jobPostedSuccessSlip.city})</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">الميزانية المرصودة:</span>
+                    <strong className="text-amber-400 font-mono text-sm">{jobPostedSuccessSlip.budget} MAD</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">الحالة:</span>
+                    <span className="text-emerald-400 font-bold">🟢 مفتوح لاستقبال عروض الموديليست</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setShowPostJobModal(false);
+                      setJobPostedSuccessSlip(null);
+                      setFreelanceTab('jobs');
+                    }}
+                    className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black rounded-xl text-xs transition cursor-pointer"
+                  >
+                    تصفح المشروع في قائمة الطلبات (خمسات)
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  if (!newJobTitle.trim()) return;
+                  const newJob = {
+                    id: `job-${Date.now()}`,
+                    title: newJobTitle,
+                    brand: newJobBrand || 'علامة تجارية مستقلة',
+                    city: newJobCity,
+                    budgetMAD: Number(newJobBudget) || 350,
+                    category: newJobCategory,
+                    categoryLabel: newJobCategory === 'streetwear' ? 'ستريت وير وهوديز' :
+                                   newJobCategory === 'denim' ? 'جينز ودينيم وكارجو' :
+                                   newJobCategory === 'femme' ? 'أزياء نسائية ومودست' : 'ملابس رياضية وتقنية',
+                    description: newJobDescription,
+                    skills: ['Lectra Modaris', 'CLO 3D', 'Gradation S-XXL', 'Fiche Technique'],
+                    proposalsCount: 0,
+                    postedAt: 'الآن',
+                    urgent: true,
+                    contactWhatsapp: newJobWhatsapp.replace(/\D/g, '') || '212675239885',
+                    workMode: newJobWorkMode
+                  };
+
+                  const updated = [newJob, ...jobsList];
+                  setJobsList(updated);
+                  try {
+                    localStorage.setItem('beya_freelance_jobs', JSON.stringify(updated));
+                  } catch {}
+
+                  setJobPostedSuccessSlip({
+                    ref: `BYA-JOB-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+                    title: newJob.title,
+                    brand: newJob.brand,
+                    city: newJob.city,
+                    budget: newJob.budgetMAD,
+                    date: new Date().toLocaleDateString('ar-MA')
+                  });
+                }}
+                className="p-5 sm:p-6 space-y-4 text-xs"
+              >
+                {/* Job Title */}
+                <div className="space-y-1.5">
+                  <label className="text-slate-300 font-bold block">عنوان المشروع أو الطلب:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="مثال: مطلوب موديليست لإنجاز باترون هودي أوفرسايز 380g مع تدريج S-XXL"
+                    value={newJobTitle}
+                    onChange={e => setNewJobTitle(e.target.value)}
+                    className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none font-bold"
+                  />
+                </div>
+
+                {/* Brand & City */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold block">اسم البراند أو الورشة:</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="مثال: Casablanca Street Wear"
+                      value={newJobBrand}
+                      onChange={e => setNewJobBrand(e.target.value)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold block">المدينة:</label>
+                    <select
+                      value={newJobCity}
+                      onChange={e => setNewJobCity(e.target.value)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none"
+                    >
+                      <option value="الدار البيضاء">الدار البيضاء</option>
+                      <option value="طنجة">طنجة</option>
+                      <option value="الرباط">الرباط</option>
+                      <option value="فاس">فاس</option>
+                      <option value="مراكش">مراكش</option>
+                      <option value="أكادير">أكادير</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Category & Budget */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold block">القسم والتخصص:</label>
+                    <select
+                      value={newJobCategory}
+                      onChange={e => setNewJobCategory(e.target.value as any)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none"
+                    >
+                      <option value="streetwear">🧥 ستريت وير وهوديز</option>
+                      <option value="denim">👖 جينز وكارجو ودينيم</option>
+                      <option value="femme">👗 أزياء نسائية ومودست</option>
+                      <option value="sport">⚡ ملابس رياضية وتقنية</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold block">الميزانية المرصودة (MAD):</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        required
+                        min={100}
+                        max={20000}
+                        value={newJobBudget}
+                        onChange={e => setNewJobBudget(Number(e.target.value) || 0)}
+                        className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none font-mono font-bold"
+                      />
+                      <span className="absolute left-3 top-2.5 text-amber-400 font-bold text-[11px]">MAD</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Work Mode & WhatsApp */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold block">نمط العمل:</label>
+                    <select
+                      value={newJobWorkMode}
+                      onChange={e => setNewJobWorkMode(e.target.value as any)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none"
+                    >
+                      <option value="remote">🌐 عن بعد (تسليم ملفات DXF / CLO 3D)</option>
+                      <option value="office">🏢 حضوري (جلسة عمل فـ Atelier)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold block">رقم الواتساب للتواصل:</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="06XXXXXXXX"
+                      value={newJobWhatsapp}
+                      onChange={e => setNewJobWhatsapp(e.target.value)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <label className="text-slate-300 font-bold block">تفاصيل ومتطلبات الموديل والباترون:</label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={newJobDescription}
+                    onChange={e => setNewJobDescription(e.target.value)}
+                    placeholder="اكتب بالتفصيل: نوع القماش، الوزن، جدول المقاسات المطلوب (S-XXL)، تفاصيل الجيوب والقصات، وهل تحتاج محاكاة 3D..."
+                    className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none leading-relaxed"
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="pt-2 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowPostJobModal(false)}
+                    className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 font-bold rounded-xl transition cursor-pointer"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl transition flex items-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"
+                  >
+                    <PlusCircle className="w-4 h-4 text-slate-950" />
+                    <span>نشر المشروع الآن في المنصة</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
