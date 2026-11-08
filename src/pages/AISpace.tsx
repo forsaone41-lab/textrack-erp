@@ -211,11 +211,12 @@ export function getStandardMesuresForCategory(
   const pDict = CATEGORY_MESURES[profileKey] || CATEGORY_MESURES.adulte_homme;
   const low = (pieceName || '').toLowerCase();
 
-  // 0. Crop Top / Top Fitté
-  if (low.includes('crop') || (low.includes('top') && !low.includes('pantalon') && !low.includes('bas'))) {
-    if (gender === 'femmes' && (pDict as any).CropTop) {
+  // 0. Crop Top / Top Fitté / Top Manches Longues Rib
+  if (low.includes('crop') || low.includes('rib') || (low.includes('top') && !low.includes('pantalon') && !low.includes('bas'))) {
+    if ((pDict as any).CropTop) {
       return JSON.parse(JSON.stringify((pDict as any).CropTop));
     }
+    return JSON.parse(JSON.stringify(CATEGORY_MESURES.adulte_femme.CropTop));
   }
 
   // 1. Pantalon / Jogging / Short / Bas / Wide-Leg
@@ -2780,9 +2781,9 @@ Analyse l'image réelle fournie avec une précision visuelle absolue sans aucun 
 ⚠️ Consignes impératives :
 1. Identifie le vêtement réel visible dans l'image :
    - S'il s'agit d'une veste ou blouson (ex: veste col officier/mao, veste matelassée écru avec boutons brandebourgs ou nœuds chinois, veste tailleur, veste zippée), décris fidèlement ce modèle : catégorie "Veste", 1 seule pièce, matière réelle (Toile de coton écru, twill lourd doublé, lainage, etc.) et ses composants exacts (col officier, pattes brandebourg, manches, devant, dos, doublure). Ne rajoute AUCUN pantalon imaginaire si l'image ne montre qu'une veste !
-   - S'il s'agit d'un ensemble 2 pièces (haut + pantalon visibles dans l'image), inclus alors strictement les 2 pièces.
+   - S'il s'agit d'un ensemble 2 pièces (haut + pantalon visibles dans l'image, par exemple crop top manches longues + pantalon wide-leg sweatpants), inclus alors STRICTEMENT les 2 pièces avec leurs mesures S à XXL respectives (Top: Poitrine, Épaules, Longueur, Longueur Manche 58-62cm si manches longues ; Pantalon: Taille, Hanches, Longueur Totale, Cuisse).
    - S'il s'agit d'un seul article (t-shirt, sweatshirt, pantalon, robe), analyse fidèlement cette pièce unique.
-2. Détecte le genre ("femmes" ou "hommes") et adapte les mensurations S-XXL.
+2. Détecte le genre ("femmes" ou "hommes") selon le modèle ou le vêtement (ex: mannequin femme, crop top, silhouette féminine -> gender: "femmes") et adapte les mensurations S-XXL.
 3. Coût façon en dirhams (MAD) et métrage adaptés à la confection industrielle de ce vêtement.
 
 Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
@@ -4518,10 +4519,21 @@ ${userMessage}
       });
       return;
     }
+    const effectivePieces = (analysisResult.pieces || []).map((p: any, idx: number) => {
+      const pm = (piecesMesures && piecesMesures[idx] && piecesMesures[idx].length > 0)
+        ? piecesMesures[idx]
+        : (p.mesures && p.mesures.length > 0 ? p.mesures : (idx === 0 && customMesures && customMesures.length > 0 ? customMesures : []));
+      return {
+        ...p,
+        mesures: pm
+      };
+    });
+
     const effectiveAnalysis = {
       ...analysisResult,
       costingTierMode: costingTierMode,
-      costEstimate: customCostOverride.trim() || analysisResult.costEstimate
+      costEstimate: customCostOverride.trim() || analysisResult.costEstimate,
+      pieces: effectivePieces.length > 0 ? effectivePieces : analysisResult.pieces
     };
     printRapportIA(effectiveAnalysis, image, isAr);
   };
@@ -4750,28 +4762,6 @@ ${userMessage}
                   )}
                 </div>
               )}
-            </div>
-
-            {/* Quick Profile Target Selector (Adultes/Enfants - Hommes/Femmes) */}
-            <div className={`flex-shrink-0 bg-slate-900/90 border border-slate-800 p-2.5 sm:p-3 rounded-2xl flex items-center justify-between flex-wrap gap-2 text-white shadow-sm ${isAr ? 'flex-row-reverse' : ''}`}>
-              <div className={`flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                <span className="text-[11px] font-bold text-slate-400">{isAr ? 'فئة الموديل:' : 'Profil Cible :'}</span>
-                <span className="px-2 py-0.5 rounded-lg bg-indigo-950 text-amber-300 border border-indigo-700/60 font-black text-xs">
-                  {targetAudience === 'enfants'
-                    ? (targetGender === 'femmes' ? (isAr ? '👧 أطفال صغار (بنات)' : '👧 Enfants (Filles)') : (isAr ? '👦 أطفال صغار (أولاد)' : '👦 Enfants (Garçons)'))
-                    : (targetGender === 'femmes' ? (isAr ? '👩 كبار (نساء)' : '👩 Adultes (Femmes)') : (isAr ? '👨 كبار (رجال)' : '👨 Adultes (Hommes)'))
-                  }
-                </span>
-              </div>
-              <div className={`flex items-center gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>
-                <button
-                  type="button"
-                  onClick={() => handleApplyTargetCategory(targetAudience === 'adultes' ? 'enfants' : 'adultes', targetGender)}
-                  className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-black transition-all border border-slate-700 active:scale-95"
-                >
-                  {targetAudience === 'adultes' ? (isAr ? 'تبديل للصغار 🧒' : 'Passer à Enfants 🧒') : (isAr ? 'تبديل للكبار 🧑' : 'Passer à Adultes 🧑')}
-                </button>
-              </div>
             </div>
 
             {/* ONE-CLICK DISPATCH ENGINE (Desktop Only Sidebar) */}
@@ -5372,8 +5362,17 @@ ${userMessage}
                                   <Copy className="w-3.5 h-3.5" />
                                 </button>
                               </div>
-                              <p className="text-base font-black text-slate-900 select-text cursor-text selection:bg-indigo-100 selection:text-indigo-950">{pFabInfo.arName}</p>
-                              <p className="text-xs font-bold text-indigo-600 mb-2 select-text cursor-text selection:bg-indigo-100 selection:text-indigo-950">{pFabInfo.frName}</p>
+                              {isAr ? (
+                                <>
+                                  <p className="text-base font-black text-slate-900 select-text cursor-text selection:bg-indigo-100 selection:text-indigo-950">{cleanLabel(pFabInfo.arName, true)}</p>
+                                  <p className="text-xs font-bold text-indigo-600 mb-2 select-text cursor-text selection:bg-indigo-100 selection:text-indigo-950">{cleanLabel(pFabInfo.frName, true)}</p>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="text-base font-black text-slate-900 select-text cursor-text selection:bg-indigo-100 selection:text-indigo-950">{cleanLabel(pFabInfo.frName, false)}</p>
+                                  <p className="text-xs font-bold text-slate-500 mb-2 select-text cursor-text selection:bg-indigo-100 selection:text-indigo-950">{cleanLabel(pFabInfo.techSpec || pFabInfo.prosFr || '', false)}</p>
+                                </>
+                              )}
                               
                               <div className="mt-3">
                                 {analysisResult.tissuPhoto ? (

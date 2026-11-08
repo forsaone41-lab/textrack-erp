@@ -559,8 +559,14 @@ export function cleanPieceName(rawName: string, isAr: boolean): string {
   if (low.includes('pantalon') || low.includes('sweatpant') || low.includes('wide-leg') || low.includes('wide leg') || low.includes('سروال') || low.includes('بنطلون') || low.includes('palazzo')) {
     return isAr ? 'سروال رياضي بقصة عريضة منسدلة (وايد ليغ)' : 'Pantalon Sweatpants Coupe Wide-Leg / Évasé';
   }
-  if (low.includes('veste') || low.includes('jacket') || low.includes('فيست') || low.includes('جاكيت') || low.includes('سترة')) {
-    return isAr ? 'فيست جاكيت دنيم بحزام وقصة عصرية' : 'Veste en Jean Denim Ceinturée';
+  if (low.includes('brandebourg') || low.includes('officier') || low.includes('mao') || low.includes('matelass') || low.includes('ecru') || low.includes('écru') || low.includes('chinois')) {
+    return isAr ? 'جاكيت عصرية كول أوفيسييه وأزرار براندبورغ' : 'Veste Col Officier & Boutonnage Brandebourg';
+  }
+  if (low.includes('denim') || low.includes('jean') || low.includes('جينز')) {
+    return isAr ? 'فيست جاكيت دنيم عصرية' : 'Veste en Jean Denim Casual';
+  }
+  if (low.includes('veste') || low.includes('jacket') || low.includes('فيست') || low.includes('جاكيت') || low.includes('سترة') || low.includes('blouson')) {
+    return isAr ? 'جاكيت سترة عصرية مهيكلة' : 'Veste Structurée Casual';
   }
   if (low.includes('t-shirt') || low.includes('tshirt') || low.includes('تيشرت') || low.includes('تي شيرت')) {
     return isAr ? 'تيشرت قطني كلاسيكي كول غوند' : 'T-Shirt Coton Col Rond';
@@ -587,6 +593,15 @@ export function cleanCategoryTitle(rawCat: string, isAr: boolean): string {
       return isAr ? 'طقم دنيم جينز قطعتين (فيست جاكيت + سروال جينز)' : 'Ensemble Denim 2 Pièces (Veste Denim Ceinturée + Pantalon Jean)';
     }
     return isAr ? 'طقم لاونج وير قطعتين (توب كروب + سروال واسع)' : 'Ensemble 2 Pièces Loungewear (Top Crop + Pantalon Wide-Leg)';
+  }
+  if (low.includes('brandebourg') || low.includes('officier') || low.includes('mao') || low.includes('matelass') || low.includes('ecru') || low.includes('écru')) {
+    return isAr ? 'جاكيت عصرية كول أوفيسييه وأزرار براندبورغ' : 'Veste Col Officier & Boutonnage Brandebourg';
+  }
+  if (low.includes('veste') || low.includes('jacket') || low.includes('فيست') || low.includes('جاكيت') || low.includes('blouson')) {
+    if (low.includes('denim') || low.includes('jean') || low.includes('جينز')) {
+      return isAr ? 'جاكيت فيست جينز دنيم عصرية' : 'Veste en Jean Denim Casual';
+    }
+    return isAr ? 'جاكيت سترة عصرية مهيكلة' : 'Veste Structurée Casual';
   }
   if (low.includes('t-shirt') || low.includes('تيشرت')) {
     return isAr ? 'تيشرت قطني كلاسيكي كول غوند' : 'T-Shirt Coton Col Rond';
@@ -699,6 +714,23 @@ export function getTechnicalFabricSpecs(fabricName: string, isAr: boolean) {
       appellationCommerciale: 'Interlock Double Fonture Coton Peigné',
       sourcingMA: 'Interlock Double Fonture Coton Peigné',
       traitement: 'Finition Bio-Polishing + Lavage siliconé adoucissant'
+    };
+  }
+  if (f.includes('écru') || f.includes('ecru') || f.includes('brandebourg') || f.includes('officier') || (f.includes('veste') && (f.includes('toile') || f.includes('twill')))) {
+    return isAr ? {
+      armure: 'تويل قطن إيكرو مبطن فاخر للسترات',
+      composition: '100% قطن طبيعي عالي المتانة + بطانة داخلية ناعمة',
+      gsm: '280 - 340 غرام/م²',
+      appellationCommerciale: 'تويل قطن إيكرو مهيكل للجاكيتات',
+      sourcingMA: 'تويل قطن إيكرو مهيكل للجاكيتات',
+      traitement: 'معالجة ناعمة + تثبيت حراري للأبعاد والبطانة'
+    } : {
+      armure: 'Twill Coton Écru Doublé Haute Finition',
+      composition: '100% Coton Naturel Écru + Doublure Soyeuse',
+      gsm: '280 - 340 GSM (g/m²)',
+      appellationCommerciale: 'Toile de Coton Écru / Twill Lourd Doublé',
+      sourcingMA: 'Toile de Coton Écru / Twill Lourd Doublé',
+      traitement: 'Adoucissage thermique + Stabilisation dimensionnelle'
     };
   }
   if (f.includes('canvas') || f.includes('كانفاس') || f.includes('toile') || f.includes('twill') || f.includes('sergé')) {

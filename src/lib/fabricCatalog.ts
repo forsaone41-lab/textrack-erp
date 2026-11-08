@@ -10,107 +10,172 @@ export interface FabricInfo {
   cons: string;
   consFr: string;
   avgPricePerMeter?: number;
+  techSpec?: string;
+  composition?: string;
 }
 
 export const FABRIC_CATALOG: Record<string, FabricInfo> = {
+  'rib': {
+    arName: 'كوت ريب 1×1 ليكرا قطن ممشط 250g (Côte Rib Stretch)',
+    frName: 'Côte Rib 1x1 Lycra 95% Coton Peigné / 5% Élasthanne 250 GSM',
+    pricePerMeterMAD: '28 - 45 درهم/متر (أو 75 - 95 درهم/كيلو)',
+    pricePerMeterMADFr: '28 - 45 MAD/mètre (ou 75 - 95 MAD/kg)',
+    markets: 'موردو النسيج الصناعي المعتمدون (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs & Fournisseurs Textiles Industriels Agréés (Casablanca / Tanger)',
+    pros: 'مرونة وتمدد عالي، تضليع عمودي أنيق، مثالي للتوبات والكروب توب والموديلات الضيقة ومحددات الأطراف',
+    prosFr: 'Excellente élasticité, côtes verticales élégantes, idéal pour tops fittés, crop tops, encolures et poignets',
+    cons: 'يحتاج ضبط شد الخياطة واستعمال ماكينة سورجي وروكوفروز لمرونة الغرزات',
+    consFr: 'Nécessite un réglage précis de la tension machine et des surjeteuses/recouvreuses adaptées',
+    avgPricePerMeter: 36,
+    techSpec: '95% Coton Peigné · 5% Élasthanne · 250 GSM'
+  },
+  'toile_coton': {
+    arName: 'تويل قطن إيكرو ثقيل مبطن (Toile Coton Écru / Twill Lourd)',
+    frName: 'Toile de Coton Écru / Twill Coton Lourd Doublé',
+    pricePerMeterMAD: '45 - 65 درهم/متر',
+    pricePerMeterMADFr: '45 - 65 MAD/mètre',
+    markets: 'مستوردو وموزعو أقمشة السترات والجاكيتات الصناعية المعتمدون (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs Textiles Industriels Agréés & Importateurs Directs (Casablanca / Tanger)',
+    pros: 'قوام واقف وهيكلي فخم، متانة عالية ومقاومة للارتداء، مظهر كوتور راقي للعلامات التجارية',
+    prosFr: 'Structure impeccable, excellente tenue, haute résistance à l\'usure, aspect haut de gamme pour marques',
+    cons: 'يحتاج بطانة داخلية ناعمة لراحة الارتداء ومكواة بخار صناعية تحت الضغط',
+    consFr: 'Nécessite une doublure intérieure soignée et un repassage vapeur sous presse',
+    avgPricePerMeter: 55,
+    techSpec: '100% Coton Naturel Écru · 320 GSM · Armure Twill / Toile'
+  },
+  'denim': {
+    arName: 'قماش دنيم جينز أصيل 100% قطن 12.5oz (Heavy Denim)',
+    frName: 'Toile Denim 100% Coton Brut 12.5oz / Jean',
+    pricePerMeterMAD: '34 - 48 درهم/متر',
+    pricePerMeterMADFr: '34 - 48 MAD/mètre',
+    markets: 'موردو أقمشة الجينز والمنسوجات الصناعية المعتمدون (الدار البيضاء / طنجة)',
+    marketsFr: 'Fournisseurs Spécialisés Denim & Importateurs Certifiés (Casablanca / Tanger)',
+    pros: 'قماش أصيل متين، يتحمل كافة أنواع الغسيل الأنزيمي والحجري ومعالجات الصباغة',
+    prosFr: 'Toile authentique et robuste, tolère tous types de délavages industriels et enzymatiques',
+    cons: 'يتطلب ماكينات خياطة خيط ثقيل وإبر قوية 110/18',
+    consFr: 'Exige des piqueuses renforcées avec fil épais et aiguilles fortes 110/18',
+    avgPricePerMeter: 42,
+    techSpec: '100% Coton Renforcé · 12.5 oz (380-420 GSM) · Armure Jean 3/1'
+  },
   'interlock': {
     arName: 'إنترلوك قطن ممتاز 100% (Interlock Double Knit)',
     frName: 'Interlock 100% Coton Double Knit',
-    pricePerMeterMAD: '32 - 48 درهم/متر (أو 75 - 90 درهم/كيلو جملة)',
+    pricePerMeterMAD: '32 - 48 درهم/متر (أو 75 - 90 درهم/كيلو)',
     pricePerMeterMADFr: '32 - 48 MAD/mètre (ou 75 - 90 MAD/kg)',
-    markets: 'درب عمر (سوق المسيرة)، سوق القريعة، درب السلطان (الدار البيضاء)',
-    marketsFr: 'Derb Omar, Souk Griaa, Derb Sultan (Casablanca)',
+    markets: 'موردو النسيج الصناعي المعتمدون (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs Textiles Industriels Agréés (Casablanca / Tanger)',
     pros: 'ما كيتلواش في الفصالة نهائياً (نهائي الرولاج)، وجهين متطابقين، ناعم وثقيل ومثالي للتيشرتات والسويت شيرت الراقية',
     prosFr: 'Ne roule pas sur les bords à la coupe, double face identique, dense et doux, parfait pour t-shirts et sweats premium',
     cons: 'أثقل من الجيرسي العادي وكيتطلب إبرة Ball Point (Stretch) باش ما يتقبش الثوب',
     consFr: 'Plus lourd que le jersey simple, nécessite une aiguille pointe boule (stretch) en machine',
-    avgPricePerMeter: 40
+    avgPricePerMeter: 40,
+    techSpec: '100% Coton Peigné · 260 GSM · Double Fonture'
   },
   'molleton': {
     arName: 'مولتون شتوي مبطن / قطن فليس (Molleton / Cotton Fleece)',
     frName: 'Molleton Coton / Fleece Gratté',
     pricePerMeterMAD: '38 - 60 درهم/متر (أو 80 - 110 درهم/كيلو)',
     pricePerMeterMADFr: '38 - 60 MAD/mètre (ou 80 - 110 MAD/kg)',
-    markets: 'درب عمر، سوق القريعة، المنطقة الصناعية عين السبع',
-    marketsFr: 'Derb Omar, Souk Griaa, Aïn Sebaâ',
-    pros: 'دافي بزاف، ملمس قطني مريح، قوام واقف للهودي والسويت شيرت أوفر سايز',
-    prosFr: 'Très chaud, toucher doux molletonné, excellente tenue pour hoodies et sweats oversize',
+    markets: 'موردو الأقمشة الشتوية والمحيكة الصناعية (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs & Fournisseurs Textiles Industriels Agréés (Casablanca / Tanger)',
+    pros: 'دافي بزاف، ملمس قطني مريح، قوام واقف للهودي والسويت شيرت وسراويل الجوغينغ',
+    prosFr: 'Très chaud, toucher doux molletonné, excellente tenue pour hoodies, sweats et joggings',
     cons: 'كيحتاج شفرات مقص حادة في الفصالة وماكينة سورجي 4 خيوط قوية',
     consFr: 'Nécessite des lames affûtées pour la coupe et une surjeteuse 4 fils robuste',
-    avgPricePerMeter: 48
+    avgPricePerMeter: 48,
+    techSpec: '100% Coton (ou 80/20 Coton/Poly) · 340 GSM'
+  },
+  'french_terry': {
+    arName: 'مولطون بوكليت غير مقطن (فرنش تيري 100% قطن)',
+    frName: 'French Terry Molleton Non-Gratté 100% Coton 340 GSM',
+    pricePerMeterMAD: '35 - 55 درهم/متر (أو 85 - 105 درهم/كيلو)',
+    pricePerMeterMADFr: '35 - 55 MAD/mètre (ou 85 - 105 MAD/kg)',
+    markets: 'موردو ومستوردو أقمشة الستريتوير الصناعية (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs Textiles Industriels Agréés (Casablanca / Tanger)',
+    pros: 'مظهر ستريتوير راقي، حلقات بوكليت قطنية ناعمة، انسيابية ووزن ممتاز لسراويل الوايد ليغ والسويت شيرت',
+    prosFr: 'Look streetwear raffiné, bouclettes confortables, excellent tombé fluide pour pantalons wide-leg et sweats',
+    cons: 'يحتاج مكواة بخار بدرجة حرارة مضبوطة وغسيل أنزيمي أولي',
+    consFr: 'Nécessite un repassage vapeur calibré et un lavage enzymatique préliminaire',
+    avgPricePerMeter: 45,
+    techSpec: '100% Coton Peigné · 340 GSM · Bouclette Non-Grattée'
   },
   'jersey': {
     arName: 'جيرسي قطن ليكرا (Jersey Coton 95% + Élasthanne 5%)',
     frName: 'Jersey Coton Lycra / Spandex',
-    pricePerMeterMAD: '24 - 42 درهم/متر (أو 65 - 80 درهم/كيلو جملة)',
+    pricePerMeterMAD: '24 - 42 درهم/متر (أو 65 - 80 درهم/كيلو)',
     pricePerMeterMADFr: '24 - 42 MAD/mètre (ou 65 - 80 MAD/kg)',
-    markets: 'درب عمر، سوق القريعة، درب السلطان',
-    marketsFr: 'Derb Omar, Souk Griaa, Derb Sultan',
+    markets: 'موردو أقمشة الحياكة الصناعية المعتمدون (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs & Fournisseurs de Maille Industrielle (Casablanca / Tanger)',
     pros: 'مطاطي ومريح جداً على الجسم، مثالي للبوكسرات، الملابس الداخلية، والتيشرتات الصيفية',
     prosFr: 'Extensible et très confortable, idéal pour sous-vêtements, boxers et t-shirts',
     cons: 'كيرولي في الجوانب وقت الفصالة وكيتطلب ماكينات السورجي والروكوفروز لمرونة الخياطة',
     consFr: 'Tendance à rouler sur les bords à la coupe, nécessite surjeteuse et recouvreuse',
-    avgPricePerMeter: 32
+    avgPricePerMeter: 32,
+    techSpec: '95% Coton Peigné · 5% Élasthanne · 200 GSM'
   },
   'gabardine': {
     arName: 'جاباردين كوتون متين (Gabardine Coton / Stretch)',
     frName: 'Gabardine Coton / Stretch',
     pricePerMeterMAD: '28 - 50 درهم/متر',
     pricePerMeterMADFr: '28 - 50 MAD/mètre',
-    markets: 'درب عمر، سوق القريعة',
-    marketsFr: 'Derb Omar, Souk Griaa',
+    markets: 'موردو الأقمشة المنسوجة الصناعية (الدار البيضاء / طنجة)',
+    marketsFr: 'Fournisseurs Textiles Industriels Agréés (Casablanca / Tanger)',
     pros: 'متين، واقف، ما كيتقطعش بسهولة، ممتاز للسراويل الكارجو والفيستات',
     prosFr: 'Robuste, bonne tenue, indéchirable, excellent pour pantalons cargo et vestes',
     cons: 'قاصح شوية في الفصالة وكيحتاج إبر سميكة 90/14 أو 100/16',
     consFr: 'Plus rigide à la coupe, nécessite des aiguilles fortes 90/14 ou 100/16',
-    avgPricePerMeter: 38
+    avgPricePerMeter: 38,
+    techSpec: '98% Coton · 2% Élasthanne · 280 GSM'
   },
   'popeline': {
     arName: 'بوبلين قطن ناعم 100% (Popeline Coton)',
-    frName: 'Popeline 100% Coton',
+    frName: 'Popeline 100% Coton Peigné',
     pricePerMeterMAD: '22 - 38 درهم/متر',
     pricePerMeterMADFr: '22 - 38 MAD/mètre',
-    markets: 'درب عمر، سوق القريعة، القيساريات',
-    marketsFr: 'Derb Omar, Souk Griaa, Kissariat',
+    markets: 'موردو ومستوردو أقمشة القمصان الصناعية (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs & Importateurs Spécialisés Chemiserie (Casablanca / Tanger)',
     pros: 'خفيف وناعم وتنفس عالي، كلاسيكي ومثالي للقمصان والشوميزات',
     prosFr: 'Léger, doux, très respirant, classique parfait pour chemises et blouses',
     cons: 'كيبغي التحديد بالحديد والمصلوح بانتظام',
     consFr: 'Nécessite repassage régulier',
-    avgPricePerMeter: 28
+    avgPricePerMeter: 28,
+    techSpec: '100% Coton Peigné · 130 GSM'
   },
   'crêpe': {
     arName: 'كريب دي شين / كريب جورجيت (Crêpe)',
     frName: 'Crêpe de Chine / Georgette',
-    pricePerMeterMAD: '25 - 45 درهم/متر (جملة)',
-    pricePerMeterMADFr: '25 - 45 MAD/mètre (gros)',
-    markets: 'درب عمر (الدار البيضاء)، سوق القريعة، القيساريات الكبرى',
-    marketsFr: 'Derb Omar (Casablanca), Souk Griaa, grandes Kissariat',
+    pricePerMeterMAD: '25 - 45 درهم/متر',
+    pricePerMeterMADFr: '25 - 45 MAD/mètre',
+    markets: 'موردو ومستوردو أقمشة الأزياء النسائية (الدار البيضاء / طنجة)',
+    marketsFr: 'Fournisseurs & Importateurs Textiles Féminins (Casablanca / Tanger)',
     pros: 'طايح وخفيف، مريح في اللبس، ما كيتكمش بسهولة، ممتاز للفساتين والعبايات',
     prosFr: 'Fluide et léger, confortable, ne se froisse pas facilement, excellent pour robes et abayas',
     cons: 'كيتطلب عناية خاصة في الخياطة باش ما يزلقش في الماكينة',
     consFr: 'Nécessite un soin particulier à la couture pour éviter le glissement sous la machine',
-    avgPricePerMeter: 34
+    avgPricePerMeter: 34,
+    techSpec: '100% Polyester / Viscose Fluide · 160 GSM'
   },
   'satin': {
     arName: 'ساتان حرير / ساتان دوتشيس (Satin)',
     frName: 'Satin de Soie / Satin Duchesse',
-    pricePerMeterMAD: '30 - 65 درهم/متر (جملة)',
-    pricePerMeterMADFr: '30 - 65 MAD/mètre (gros)',
-    markets: 'درب عمر (الدار البيضاء)، سوق القريعة، سوق الأثواب',
-    marketsFr: 'Derb Omar (Casablanca), Souk Griaa, Souk des tissus',
+    pricePerMeterMAD: '30 - 65 درهم/متر',
+    pricePerMeterMADFr: '30 - 65 MAD/mètre',
+    markets: 'مستوردو أقمشة السهرات والمناسبات (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs Textiles Industriels Agréés (Casablanca / Tanger)',
     pros: 'لمعة فاخرة، ملمس ناعم، يعطي قيمة عالية للبياسة في السهرات والمناسبات',
     prosFr: 'Brillance luxueuse, toucher doux, apporte une haute valeur pour les tenues de soirée',
     cons: 'حساس للحرارة والماء، كيبين عيوب الخياطة إذا ما كانتش متقنة 100%',
     consFr: 'Sensible à la chaleur et à l\'eau, révèle les défauts de couture si non parfaitement exécutée',
-    avgPricePerMeter: 45
+    avgPricePerMeter: 45,
+    techSpec: '100% Satin Soyeux · 180 GSM'
   },
   'dentelle': {
-    arName: 'دانتيلا / كيبير فرنسي (Dentelle / Guipure)',
+    arName: 'دانتيلا / كيبير فاخر (Dentelle / Guipure)',
     frName: 'Dentelle / Guipure de luxe',
     pricePerMeterMAD: '60 - 180 درهم/متر',
     pricePerMeterMADFr: '60 - 180 MAD/mètre',
-    markets: 'درب عمر (شارع القصور)، محلات الأثواب المستوردة',
-    marketsFr: 'Derb Omar (rue des palais), boutiques de tissus importés',
+    markets: 'مستوردو الأقمشة الراقية والمطرزات (الدار البيضاء / طنجة)',
+    marketsFr: 'Boutiques & Distributeurs de Tissus Importés (Casablanca / Tanger)',
     pros: 'مظهر راقي جداً، يضيف لمسة كوتور (Couture) وتفاصيل فاخرة للبياسة',
     prosFr: 'Aspect très raffiné, apporte une touche couture et des détails luxueux',
     cons: 'سعر مرتفع، يحتاج تبطين (Doublure) ودقة عالية في التفصيل والقص',
@@ -120,12 +185,12 @@ export const FABRIC_CATALOG: Record<string, FabricInfo> = {
   'lin': {
     arName: 'كتان طبيعي / لينن ممتاز (Lin)',
     frName: 'Lin naturel de qualité',
-    pricePerMeterMAD: '40 - 75 درهم/متر (جملة)',
-    pricePerMeterMADFr: '40 - 75 MAD/mètre (gros)',
-    markets: 'درب عمر، القيساريات التجارية بالمغرب',
-    marketsFr: 'Derb Omar, Kissariat commerciales du Maroc',
-    pros: 'بارد وممتاز للصيف، متين جداً، موضة مطلوبة بكثرة في السوق المغربي',
-    prosFr: 'Frais et idéal pour l\'été, très résistant, forte demande sur le marché marocain',
+    pricePerMeterMAD: '40 - 75 درهم/متر',
+    pricePerMeterMADFr: '40 - 75 MAD/mètre',
+    markets: 'موردو أقمشة الكتان والألياف الطبيعية (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs Textiles Industriels Agréés (Casablanca / Tanger)',
+    pros: 'بارد وممتاز للصيف، متين جداً، موضة مطلوبة بكثرة في السوق المغربي والعالمي',
+    prosFr: 'Frais et idéal pour l\'été, très résistant, forte demande sur les marchés de mode',
     cons: 'كيتكمش بسرعة وكيتطلب التحديد (الحديد) المستمر',
     consFr: 'Se froisse rapidement et nécessite un repassage fréquent',
     avgPricePerMeter: 52
@@ -135,8 +200,8 @@ export const FABRIC_CATALOG: Record<string, FabricInfo> = {
     frName: 'Brocart / Bahja Traditionnelle',
     pricePerMeterMAD: '120 - 350 درهم/متر',
     pricePerMeterMADFr: '120 - 350 MAD/mètre',
-    markets: 'سوق الغزل بفاس، درب السلطان والدرب الكبير بالدار البيضاء',
-    marketsFr: 'Souk Ghezel à Fès, Derb Sultan et Derb Kebir à Casablanca',
+    markets: 'موزعو المنسوجات التقليدية الفاخرة (فاس / الدار البيضاء)',
+    marketsFr: 'Distributeurs de Tissus Traditionnels Haut de Gamme (Fès / Casablanca)',
     pros: 'فخامة مغربية أصيلة، قوام واقف ومناسب للقفطان والتكشيطة والمناسبات الكبرى',
     prosFr: 'Luxe marocain authentique, tenue rigide idéale pour caftan, takchita et grandes occasions',
     cons: 'ثقيل في اللبس، مكلف من ناحية السلع والخياطة اليدوية (المعلم)',
@@ -146,10 +211,10 @@ export const FABRIC_CATALOG: Record<string, FabricInfo> = {
   'mousseline': {
     arName: 'موسلين / شيفون شفاف (Mousseline / Chiffon)',
     frName: 'Mousseline / Chiffon',
-    pricePerMeterMAD: '15 - 35 درهم/متر (جملة)',
-    pricePerMeterMADFr: '15 - 35 MAD/mètre (gros)',
-    markets: 'درب عمر، القريعة، قيسارية الأثواب',
-    marketsFr: 'Derb Omar, Griaa, Kissariat des tissus',
+    pricePerMeterMAD: '15 - 35 درهم/متر',
+    pricePerMeterMADFr: '15 - 35 MAD/mètre',
+    markets: 'موردو الأقمشة النسائية الحريرية (الدار البيضاء / طنجة)',
+    marketsFr: 'Fournisseurs & Importateurs Textiles Féminins (Casablanca / Tanger)',
     pros: 'خفيف جداً، انسيابي ورومانسي، رائع للطبقات والفساتين الصيفية',
     prosFr: 'Très léger, fluide et romantique, parfait pour les superpositions et robes d\'été',
     cons: 'شفاف يحتاج بطانة، حساس جداً للتمزق في الخياطة',
@@ -159,10 +224,10 @@ export const FABRIC_CATALOG: Record<string, FabricInfo> = {
   'tartan': {
     arName: 'قماش كاروهات صوف خفيف / كريب تويل ترتان 240g (Tartan / Carreaux)',
     frName: 'Tissu à Carreaux / Crêpe Twill Tartan 240g',
-    pricePerMeterMAD: '28 - 48 درهم/متر (جملة)',
-    pricePerMeterMADFr: '28 - 48 MAD/mètre (gros)',
-    markets: 'درب عمر (سوق المسيرة)، سوق القريعة، القيساريات التجارية (الدار البيضاء)',
-    marketsFr: 'Derb Omar (Souk Al Massira), Souk Griaa (Casablanca)',
+    pricePerMeterMAD: '28 - 48 درهم/متر',
+    pricePerMeterMADFr: '28 - 48 MAD/mètre',
+    markets: 'موردو الأقمشة المنسوجة والشتوية (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs Textiles Industriels Agréés (Casablanca / Tanger)',
     pros: 'ثبات ممتاز للكسرات والبليات (Plis Creux)، مظهر شتوي وخريفي راقي، انسيابية عالية ولا يتجعد بسرعة',
     prosFr: 'Excellente tenue des plis creux, look chic automne/hiver, grande fluidité et infroissable',
     cons: 'يتطلب ضبط تطابق الكاروهات (Raccord des Carreaux) في خطوط الفصالة بالمطلوة',
@@ -173,6 +238,20 @@ export const FABRIC_CATALOG: Record<string, FabricInfo> = {
 
 export function getFabricInfo(fabricName: string = ''): FabricInfo {
   const lower = fabricName.toLowerCase();
+  
+  if (lower.includes('rib') || lower.includes('côte') || lower.includes('cote') || lower.includes('كوت')) {
+    return FABRIC_CATALOG['rib'];
+  }
+  if (lower.includes('french terry') || lower.includes('bouclette') || lower.includes('فرنش تيري') || lower.includes('بوكليت') || lower.includes('غير مقطن')) {
+    return FABRIC_CATALOG['french_terry'];
+  }
+  if (lower.includes('brandebourg') || lower.includes('officier') || lower.includes('mao') || lower.includes('matelass') || lower.includes('ecru') || lower.includes('écru') || (lower.includes('toile') && lower.includes('coton')) || (lower.includes('twill') && (lower.includes('lourd') || lower.includes('coton')))) {
+    return FABRIC_CATALOG['toile_coton'];
+  }
+  if (lower.includes('denim') || lower.includes('jean') || lower.includes('جينز') || lower.includes('دنيم')) {
+    return FABRIC_CATALOG['denim'];
+  }
+
   for (const key of Object.keys(FABRIC_CATALOG)) {
     if (
       lower.includes(key) ||
@@ -181,7 +260,7 @@ export function getFabricInfo(fabricName: string = ''): FabricInfo {
       (key === 'satin' && (lower.includes('satin') || lower.includes('ساتان'))) ||
       (key === 'dentelle' && (lower.includes('dentelle') || lower.includes('lace') || lower.includes('دانتيلا'))) ||
       (key === 'interlock' && (lower.includes('interlock') || lower.includes('انترلوك') || lower.includes('إنترلوك'))) ||
-      (key === 'molleton' && (lower.includes('molleton') || lower.includes('مولتون') || lower.includes('ميلتون') || lower.includes('fleece') || lower.includes('french terry') || lower.includes('فرينش تيري'))) ||
+      (key === 'molleton' && (lower.includes('molleton') || lower.includes('مولتون') || lower.includes('ميلتون') || lower.includes('fleece'))) ||
       (key === 'jersey' && (lower.includes('jersey') || lower.includes('جيرسي') || lower.includes('جيرزي'))) ||
       (key === 'gabardine' && (lower.includes('gabardine') || lower.includes('جاباردين') || lower.includes('كاباردين'))) ||
       (key === 'popeline' && (lower.includes('popeline') || lower.includes('بوبلين')))
@@ -189,18 +268,23 @@ export function getFabricInfo(fabricName: string = ''): FabricInfo {
       return FABRIC_CATALOG[key];
     }
   }
+
+  const isFrenchOrLatin = /[a-zA-Z]{3,}/.test(fabricName);
+  const cleanDisplayName = isFrenchOrLatin
+    ? fabricName.replace(/[\u0600-\u06FF]/g, '').trim()
+    : fabricName.replace(/[a-zA-Z]/g, '').trim();
+
   return {
-    arName: fabricName || 'ثوب مناسب للموديل (توصية عامة)',
-    frName: fabricName || 'Tissu adapté au modèle',
-    pricePerMeterMAD: '25 - 55 درهم/متر (تقديري حسب الجودة)',
-    pricePerMeterMADFr: '25 - 55 MAD/mètre (estimatif selon qualité)',
-    markets: 'درب عمر (الدار البيضاء)، سوق القريعة، القيساريات المحلية',
-    marketsFr: 'Derb Omar (Casablanca), Souk Griaa, Kissariat locales',
-    pros: 'جودة ممتازة وسهل في التفصيل والخياطة بالورشة',
-    prosFr: 'Excellente qualité et facile à travailler à l\'atelier',
-    cons: 'يجب التأكد من جودة الغزل وغسله أو تجربته قبل القص النهائي',
-    consFr: 'Vérifier la qualité du fil et le tester avant la coupe finale',
-    avgPricePerMeter: 38
+    arName: fabricName || 'ثوب ممشط فاخر مطابق للموديل',
+    frName: cleanDisplayName || 'Tissu Technique Haute Qualité Conforme au Modèle',
+    pricePerMeterMAD: '30 - 55 درهم/متر',
+    pricePerMeterMADFr: '30 - 55 MAD/mètre',
+    markets: 'موردو النسيج الصناعي المعتمدون (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs & Fournisseurs Textiles Industriels Agréés (Casablanca / Tanger)',
+    pros: 'جودة ممتازة وسهل في التفصيل والخياطة بالورشة ومناسب لعلامات الأزياء',
+    prosFr: 'Excellente qualité, tombé soigné et confection industrielle aisée pour marques de mode',
+    cons: 'يتطلب معايرة مقاسات الإبر والضغط في الماكينات الصناعية',
+    consFr: 'Nécessite un réglage adapté du calibre des aiguilles et de la presse industrielle'
   };
 }
 
