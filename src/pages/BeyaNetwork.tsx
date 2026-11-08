@@ -9,7 +9,9 @@ import {
   Ruler, Eye, Briefcase, FileCode2, Star, Hash, Volume2, Settings,
   Smile, Image as ImageIcon, AtSign, Menu, Flame, Heart, Lightbulb,
   Radio, Compass, ChevronRight, CheckCheck, Crown, Shield, HelpCircle,
-  ZoomIn, Calculator, Scale, Percent, Truck, Info
+  ZoomIn, Calculator, Scale, Percent, Truck, Info,
+  Calendar, Video, CreditCard, DollarSign, UploadCloud, FileCheck,
+  CheckCircle, Copy, Download, UserCheck, ShieldAlert
 } from 'lucide-react';
 import { User, saveRecord } from '../types';
 import { MODELISTES_DATA, ModelisteProfile } from '../data/modelistesData';
@@ -118,8 +120,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   // ─────────────────────────────────────────────────────────────
   // NAVIGATION & UI STATE
   // ─────────────────────────────────────────────────────────────
-  const [activeView, setActiveView] = useState<'chat' | 'directory' | 'groupage' | 'profile'>('chat');
-  const [activeChannelId, setActiveChannelId] = useState<string>('tissu');
+  const [activeView, setActiveView] = useState<'freelance' | 'consulting' | 'chat' | 'directory' | 'groupage' | 'profile'>('freelance');
+  const [freelanceCategoryFilter, setFreelanceCategoryFilter] = useState<'all' | 'streetwear' | 'denim' | 'femme' | 'sport'>('all');
+  const [activeChannelId, setActiveChannelId] = useState<string>('general-mode');
   const [mobileDrawer, setMobileDrawer] = useState<'none' | 'channels' | 'members'>('none');
   const [directoryFilter, setDirectoryFilter] = useState<'all' | 'modeliste' | 'tissu' | 'fournitures' | 'impression' | 'broderie'>('all');
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>('all');
@@ -128,6 +131,36 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<any | null>(null);
   const [expandedThreadMessageId, setExpandedThreadMessageId] = useState<string | null>(null);
   const [threadReplyDraft, setThreadReplyDraft] = useState('');
+
+  // ESCROW & PAYMENT STATE (Local Virement / Cash Plus / PayPal International)
+  const [showEscrowModal, setShowEscrowModal] = useState<boolean>(false);
+  const [escrowTarget, setEscrowTarget] = useState<any | null>(null);
+  const [escrowPaymentMethod, setEscrowPaymentMethod] = useState<'local' | 'paypal'>('local');
+  const [escrowAmount, setEscrowAmount] = useState<number>(350);
+  const [escrowServiceTitle, setEscrowServiceTitle] = useState<string>('باترون رقمي متكامل + تدريج المقاسات XS-XXL + ملفات Fiche Tech');
+  const [escrowPayerName, setEscrowPayerName] = useState<string>('');
+  const [escrowPayerPhone, setEscrowPayerPhone] = useState<string>('');
+  const [escrowReceiptFile, setEscrowReceiptFile] = useState<string | null>(null);
+  const [escrowPaypalTxId, setEscrowPaypalTxId] = useState<string>('');
+  const [escrowSuccessSlip, setEscrowSuccessSlip] = useState<any | null>(null);
+
+  // CONSULTATION BOOKING STATE (Live Visio / Présentiel au Bureau)
+  const [showConsultationModal, setShowConsultationModal] = useState<boolean>(false);
+  const [consultationTarget, setConsultationTarget] = useState<any | null>(null);
+  const [consultationMode, setConsultationMode] = useState<'visio' | 'office'>('visio');
+  const [consultationDate, setConsultationDate] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 2);
+    return d.toISOString().split('T')[0];
+  });
+  const [consultationTime, setConsultationTime] = useState<string>('15:00');
+  const [consultationTopic, setConsultationTopic] = useState<string>('اختيار الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج');
+  const [consultationClientName, setConsultationClientName] = useState<string>('');
+  const [consultationClientPhone, setConsultationClientPhone] = useState<string>('');
+  const [consultationConfirmedSlip, setConsultationConfirmedSlip] = useState<any | null>(null);
+
+  // PORTFOLIO LIGHTBOX STATE
+  const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<{ item: any; author: string; proId?: string } | null>(null);
 
   // GROUPAGE FABRIC GALLERY, COLOR & CALCULATOR STATE
   const [selectedDealForDetail, setSelectedDealForDetail] = useState<GroupageDeal | null>(null);
@@ -592,7 +625,16 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         skills: [...softwares, 'Gradation XS-XXL', 'Fiche Technique'],
         responseTime: '⚡ رد خلال ساعتين',
         completedJobs: m.completedPatterns || (40 + Math.floor((m.rating || 5) * 8)),
-        verified: true
+        verified: true,
+        category: m.category,
+        categoryLabel: m.categoryLabel,
+        brandsWorkedWith: m.brandsWorkedWith || [],
+        portfolio: m.portfolio || [],
+        consultationPriceMAD: m.consultationPriceMAD || 250,
+        consultationModes: m.consultationModes || ['visio', 'office'],
+        officeAddress: m.officeAddress || '',
+        pricing: m.pricing,
+        rawProfile: m
       };
     }),
     // 2. Suppliers (Tissu, Fournitures, Impression, Broderie)
@@ -969,36 +1011,61 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
           </div>
         </div>
 
-        {/* View Switcher Tabs (Discord Style) */}
-        <div className="flex items-center gap-1.5 bg-[#2b2d31] p-1 rounded-xl border border-[#383a40]">
+        {/* View Switcher Tabs (Discord / Freelance Platform Style) */}
+        <div className="flex items-center gap-1.5 bg-[#2b2d31] p-1 rounded-xl border border-[#383a40] overflow-x-auto scrollbar-hide">
+          <button
+            onClick={() => { setActiveView('freelance'); setMobileDrawer('none'); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              activeView === 'freelance'
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Briefcase className="w-3.5 h-3.5" />
+            <span>سوق العمل الحر للموديليست</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px] font-mono">5 خبراء</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveView('consulting'); setMobileDrawer('none'); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              activeView === 'consulting'
+                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Video className="w-3.5 h-3.5 text-cyan-300" />
+            <span>فضاء الاستشارات (Visio / مكتب)</span>
+          </button>
+
           <button
             onClick={() => { setActiveView('chat'); setMobileDrawer('none'); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeView === 'chat'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
             <Hash className="w-3.5 h-3.5" />
-            <span>المحادثات</span>
+            <span>ملتقى المبدعين (Discord)</span>
           </button>
 
           <button
             onClick={() => { setActiveView('directory'); setMobileDrawer('none'); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeView === 'directory'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <Users className="w-3.5 h-3.5" />
-            <span>دليل المهنيين</span>
+            <Layers className="w-3.5 h-3.5" />
+            <span>دليل الموردين والمحترفين</span>
             <span className="px-1.5 py-0.2 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">14</span>
           </button>
 
           <button
             onClick={() => { setActiveView('groupage'); setMobileDrawer('none'); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeView === 'groupage'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -1233,6 +1300,572 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             COLUMN 2: MAIN DISCORD CONTENT AREA
         ───────────────────────────────────────────────────────────── */}
         <main className="flex-1 bg-[#313338] flex flex-col overflow-hidden min-w-0">
+
+          {/* VIEW: FREELANCE MODELISTES & PATTERN MAKERS MARKETPLACE */}
+          {activeView === 'freelance' && (
+            <div className="flex-1 flex flex-col h-full overflow-y-auto">
+              {/* Hero Banner */}
+              <div className="bg-gradient-to-b from-[#1e1f22] via-[#2b2d31] to-[#313338] border-b border-[#202225] p-5 sm:p-6 shrink-0">
+                <div className="max-w-6xl mx-auto space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-500/30 flex items-center gap-1.5 shadow-xs">
+                        <ShieldCheck className="w-4 h-4 text-amber-400" />
+                        <span>BEYA Escrow Protection • نظام حماية الأموال 100%</span>
+                      </span>
+                      <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[11px] font-bold border border-indigo-500/30">
+                        ⚡ فحص ومعاينة قبل تحويل المستحقات
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs text-slate-300">
+                      <span className="flex items-center gap-1 bg-black/30 px-2.5 py-1 rounded-lg border border-white/5">
+                        🇲🇦 <strong>تحويل بنكي محلي (CIH / التجاري)</strong>
+                      </span>
+                      <span className="flex items-center gap-1 bg-black/30 px-2.5 py-1 rounded-lg border border-white/5">
+                        🌍 <strong>PayPal دولي للبراندات بالخارج</strong>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
+                      <span>سوق العمل الحر للموديليست ومصممي الباترون</span>
+                      <span className="text-xs px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-full">BEYA Freelance</span>
+                    </h1>
+                    <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-4xl leading-relaxed">
+                      وظّف أفضل موديليست فالمغرب بالقطعة (Freelance) مع ضمان حماية الأموال BEYA Escrow. تصفح بورتفوليو حقيقي، وتعرف على البراندات العالمية اللي خدمو معاها (Zara, Adidas, Mango, Bershka...) واطلب باترونك بصيغة DXF AAMA و RUL و PDF 1:1 جاهزة للفصالة.
+                    </p>
+                  </div>
+
+                  {/* 4 Guarantees Strip */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 pt-2">
+                    <div className="p-3 rounded-xl bg-black/25 border border-white/5">
+                      <div className="flex items-center gap-2 text-amber-400 text-xs font-black mb-1">
+                        <Shield className="w-4 h-4 shrink-0" />
+                        <span>ضمان BEYA Escrow</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-tight">أموالك محفوظة حتى تستلم وتوافق على الباترون وتجرب الفيتينغ.</p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/25 border border-white/5">
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-black mb-1">
+                        <Crown className="w-4 h-4 shrink-0" />
+                        <span>خبرات مع كبار الماركات</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-tight">موديليست شاركوا في تصاميم وإنتاج سلاسل Zara, Adidas, Mango.</p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/25 border border-white/5">
+                      <div className="flex items-center gap-2 text-cyan-400 text-xs font-black mb-1">
+                        <FileCode2 className="w-4 h-4 shrink-0" />
+                        <span>ملفات صناعية معتمدة</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-tight">Lectra Modaris, CLO 3D, Gerber، تدريج المقاسات وبطاقة تقنية Fiche Tech.</p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/25 border border-white/5">
+                      <div className="flex items-center gap-2 text-indigo-400 text-xs font-black mb-1">
+                        <Video className="w-4 h-4 shrink-0" />
+                        <span>استشارة Visio أو حضورية</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-tight">جلسات تدقيق على الشاشة أو لقاء في المكتب لتجربة الأقمشة والمانيكان.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Filters & Search Header */}
+              <div className="bg-[#2b2d31] border-b border-[#202225] px-4 py-3 sticky top-0 z-10">
+                <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+                  {/* Category Pills */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto scrollbar-hide py-0.5">
+                    {[
+                      { id: 'all', label: 'الكل (5 خبراء)', icon: '✨' },
+                      { id: 'streetwear', label: 'ستريت وير وهوديز', icon: '🧥' },
+                      { id: 'denim', label: 'جينز وكارجو ودينيم', icon: '👖' },
+                      { id: 'femme', label: 'أزياء نسائية ومودست', icon: '👗' },
+                      { id: 'sport', label: 'ملابس رياضية وتقنية', icon: '⚡' }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setFreelanceCategoryFilter(tab.id as any)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                          freelanceCategoryFilter === tab.id
+                            ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20'
+                            : 'bg-[#1e1f22] text-slate-300 hover:text-white hover:bg-white/5 border border-white/5'
+                        }`}
+                      >
+                        <span>{tab.icon}</span>
+                        <span>{tab.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="relative w-full md:w-64">
+                    <Search className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="بحث بالاسم، البراند، أو البرنامج..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="w-full bg-[#1e1f22] text-xs text-white placeholder-slate-500 pr-9 pl-3 py-2 rounded-xl border border-white/5 focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Freelancers Cards Grid */}
+              <div className="flex-1 p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {allProMembers
+                    .filter(m => m.pillar === 'modelistes')
+                    .filter(m => {
+                      if (freelanceCategoryFilter === 'all') return true;
+                      if (freelanceCategoryFilter === 'streetwear') return m.category === 'streetwear';
+                      if (freelanceCategoryFilter === 'denim') return m.category === 'denim';
+                      if (freelanceCategoryFilter === 'femme') return m.category === 'femme' || m.category === 'tailoring';
+                      if (freelanceCategoryFilter === 'sport') return m.category === 'sport';
+                      return true;
+                    })
+                    .filter(m => {
+                      if (!searchQuery.trim()) return true;
+                      const q = searchQuery.toLowerCase();
+                      const brands = (m.brandsWorkedWith || []).join(' ').toLowerCase();
+                      return m.name.toLowerCase().includes(q) ||
+                        m.city.toLowerCase().includes(q) ||
+                        (m.bio || '').toLowerCase().includes(q) ||
+                        brands.includes(q) ||
+                        (m.cadSoftware || []).join(' ').toLowerCase().includes(q);
+                    })
+                    .map(m => (
+                      <div
+                        key={m.id}
+                        className="bg-[#2b2d31] rounded-3xl border border-[#383a40] hover:border-amber-500/50 transition-all duration-200 overflow-hidden shadow-xl flex flex-col justify-between group"
+                      >
+                        {/* Card Top: Avatar, Name, Specialization */}
+                        <div className="p-5 space-y-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3.5">
+                              <div className="relative shrink-0">
+                                <img
+                                  src={m.avatar}
+                                  alt={m.name}
+                                  className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500/30 group-hover:border-amber-400 transition"
+                                />
+                                <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 absolute bottom-0 right-0 border-2 border-[#2b2d31]" />
+                              </div>
+
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3
+                                    className="text-base font-black text-white hover:text-amber-400 cursor-pointer transition"
+                                    onClick={() => setSelectedMemberProfile(m)}
+                                  >
+                                    {m.name}
+                                  </h3>
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-500/30 flex items-center gap-1">
+                                    <CheckCircle className="w-3 h-3" />
+                                    <span>معتمد BEYA</span>
+                                  </span>
+                                </div>
+
+                                <p className="text-xs text-amber-300 font-bold">
+                                  {m.categoryLabel || m.specialty}
+                                </p>
+
+                                <div className="flex items-center gap-3 text-[11px] text-slate-400 flex-wrap">
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3 text-indigo-400" />
+                                    <span>{m.city}</span>
+                                  </span>
+                                  <span className="flex items-center gap-1 text-amber-400 font-black">
+                                    <Star className="w-3 h-3 fill-amber-400" />
+                                    <span>{m.rating} ({m.reviewsCount || 35} مراجعة)</span>
+                                  </span>
+                                  <span className="text-slate-300 font-bold">
+                                    ✂️ {m.completedJobs || 120} باترون منجز
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => setSelectedMemberProfile(m)}
+                              className="p-2 text-slate-400 hover:text-white bg-[#1e1f22] hover:bg-[#35373c] rounded-xl transition cursor-pointer shrink-0"
+                              title="عرض الملف الكامل والمراجعات"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* BRANDS WORKED WITH (البراندات اللي خدمو معاها) */}
+                          {m.brandsWorkedWith && m.brandsWorkedWith.length > 0 && (
+                            <div className="p-2.5 rounded-2xl bg-black/30 border border-amber-500/20 space-y-1.5">
+                              <div className="flex items-center justify-between text-[11px]">
+                                <span className="font-black text-amber-300 flex items-center gap-1.5">
+                                  <Crown className="w-3.5 h-3.5 text-amber-400" />
+                                  <span>خبرة سابقة مع كبرى العلامات التجارية:</span>
+                                </span>
+                                <span className="text-[10px] text-slate-400">ملفات معتمدة B2B</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                {m.brandsWorkedWith.map((brand: string, bIdx: number) => (
+                                  <span
+                                    key={bIdx}
+                                    className="px-2.5 py-0.5 rounded-lg bg-[#1e1f22] text-white font-black text-[11px] border border-white/10 shadow-xs flex items-center gap-1"
+                                  >
+                                    <span className="text-amber-400">✓</span>
+                                    <span>{brand}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* CAD Softwares & Tech Skills */}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {(m.cadSoftware || []).map((cad: string, cIdx: number) => (
+                              <span
+                                key={cIdx}
+                                className="px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 text-[10px] font-mono font-bold border border-indigo-500/25"
+                              >
+                                {cad}
+                              </span>
+                            ))}
+                            <span className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-bold">
+                              تدريج المقاسات XS-XXL
+                            </span>
+                            <span className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-bold">
+                              Fiche Technique PDF
+                            </span>
+                          </div>
+
+                          {/* Real Portfolio Showcase Thumbnails */}
+                          {m.portfolio && m.portfolio.length > 0 && (
+                            <div className="space-y-1.5 pt-1">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="font-bold text-slate-300 flex items-center gap-1.5">
+                                  <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
+                                  <span>عينة من الموديلات والباترونات المنجزة:</span>
+                                </span>
+                                <span className="text-[10px] text-slate-400">انقر للتكبير والتفاصيل</span>
+                              </div>
+
+                              <div className="grid grid-cols-3 gap-2">
+                                {m.portfolio.slice(0, 3).map((item: any, pIdx: number) => (
+                                  <div
+                                    key={pIdx}
+                                    onClick={() => setSelectedPortfolioItem({ item, author: m.name, proId: m.id })}
+                                    className="group/thumb relative rounded-xl overflow-hidden border border-white/10 hover:border-amber-400 cursor-pointer bg-black/40 aspect-4/3 transition duration-200"
+                                  >
+                                    <img
+                                      src={item.image}
+                                      alt={item.title}
+                                      className="w-full h-full object-cover group-hover/thumb:scale-110 transition duration-300"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-1.5">
+                                      <span className="text-[9px] font-black text-white truncate">{item.title}</span>
+                                      <span className="text-[8px] text-amber-300 font-bold">{item.tag}</span>
+                                    </div>
+                                    <div className="absolute top-1 left-1 opacity-0 group-hover/thumb:opacity-100 transition p-1 bg-black/60 rounded-md text-white">
+                                      <ZoomIn className="w-3 h-3 text-amber-400" />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Transparent Rates Grid */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-2xl bg-[#1e1f22] border border-white/5 text-center">
+                            <div>
+                              <span className="text-[10px] text-slate-400 block">باترون أساسي</span>
+                              <span className="text-xs font-black text-amber-400 font-mono">
+                                {m.pricing?.basePattern || 250} MAD
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block">تدريج مقاس</span>
+                              <span className="text-xs font-black text-white font-mono">
+                                +{m.pricing?.gradation || 40} MAD
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block">محاكاة 3D</span>
+                              <span className="text-xs font-black text-cyan-300 font-mono">
+                                {m.pricing?.simulation3d || 120} MAD
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block">استشارة 45د</span>
+                              <span className="text-xs font-black text-emerald-400 font-mono">
+                                {m.consultationPriceMAD || 250} MAD
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Card Footer: Action CTAs */}
+                        <div className="p-4 bg-[#232428] border-t border-[#383a40] space-y-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {/* Hire with Escrow Button */}
+                            <button
+                              onClick={() => {
+                                setEscrowTarget(m);
+                                setEscrowAmount(m.pricing?.basePattern ? m.pricing.basePattern + 100 : 350);
+                                setEscrowServiceTitle(`باترون رقمي متكامل (${m.categoryLabel || m.specialty}) + تدريج المقاسات XS-XXL + ملفات Fiche Tech`);
+                                setEscrowSuccessSlip(null);
+                                setShowEscrowModal(true);
+                              }}
+                              className="w-full py-2.5 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer"
+                            >
+                              <ShieldCheck className="w-4 h-4 text-slate-950" />
+                              <span>طلب باترون (BEYA Escrow)</span>
+                            </button>
+
+                            {/* Book Consultation Button */}
+                            <button
+                              onClick={() => {
+                                setConsultationTarget(m);
+                                setConsultationConfirmedSlip(null);
+                                setShowConsultationModal(true);
+                              }}
+                              className="w-full py-2.5 px-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer"
+                            >
+                              <Calendar className="w-4 h-4 text-cyan-300" />
+                              <span>حجز استشارة (Visio / مكتب)</span>
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-2 pt-1 text-xs">
+                            <a
+                              href={`https://wa.me/${m.whatsapp}?text=${encodeURIComponent(
+                                `السلام عليكم أستاذ(ة) ${m.name}، تواصلت معك عبر منصة BEYA Freelance بخصوص طلب فصالة وباترون لموديل جديد.`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 transition"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>واتساب مباشر</span>
+                            </a>
+
+                            <button
+                              onClick={() => setSelectedMemberProfile(m)}
+                              className="text-slate-400 hover:text-white font-bold flex items-center gap-1 transition cursor-pointer"
+                            >
+                              <span>الملف والمراجعات</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* VIEW: CONSULTING & EXPERT ADVICE SPACE */}
+          {activeView === 'consulting' && (
+            <div className="flex-1 flex flex-col h-full overflow-y-auto">
+              {/* Header Banner */}
+              <div className="bg-gradient-to-b from-[#141b2b] via-[#1e2336] to-[#313338] border-b border-[#202225] p-5 sm:p-6 shrink-0">
+                <div className="max-w-6xl mx-auto space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-black border border-cyan-500/30 flex items-center gap-1.5 shadow-xs">
+                      <Video className="w-4 h-4 text-cyan-400" />
+                      <span>جلسات 1-à-1 خاصة مع كبار مهندسي النسيج والموديليست</span>
+                    </span>
+
+                    <span className="text-xs text-slate-300 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                      ⏱️ مدة الجلسة: 45 دقيقة مركزة
+                    </span>
+                  </div>
+
+                  <div>
+                    <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
+                      <span>فضاء الاستشارات التقنية وتوجيه العلامات التجارية</span>
+                      <span className="text-xs px-2.5 py-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black rounded-full">BEYA Consulting</span>
+                    </h1>
+                    <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-4xl leading-relaxed">
+                      قبل ما تقص الثوب وتضيع ميزانيتك، احجز استشارة مع خبير متخصص. راجع ملفات الباترون، اضبط جدول المقاسات (Gradation)، واعرف نوعية الثوب والتطريز الأنسب لموديلك لحماية كلفة الإنتاج وتفادي مشاكل الفيتينغ (Fitting).
+                    </p>
+                  </div>
+
+                  {/* Two Modes Comparison Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    {/* Mode 1: Visio Live */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/60 to-black/40 border border-indigo-500/30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-indigo-300 text-sm font-black">
+                          <Video className="w-5 h-5 text-indigo-400" />
+                          <span>1. استشارة Live Visio (عن بعد - 45 دقيقة)</span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">
+                          Google Meet / Zoom
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        مثالية للمراجعة السريعة وحل المشاكل الرقمية. يمكنك مشاركة الشاشة لمراجعة ملفات CAD والباترون (DXF / CLO 3D)، والتدقيق في استهلاك الثوب وتكلفة البياسة من أي مدينة بالمغرب أو من الخارج.
+                      </p>
+                      <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
+                        <span className="text-slate-400">التعريفة: <strong className="text-indigo-300">200 - 300 MAD</strong></span>
+                        <span className="text-emerald-400 font-bold">⚡ رابط فوري للاتصال</span>
+                      </div>
+                    </div>
+
+                    {/* Mode 2: In-Person Office */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-950/60 to-black/40 border border-amber-500/30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-amber-300 text-sm font-black">
+                          <Briefcase className="w-5 h-5 text-amber-400" />
+                          <span>2. استشارة حضورية بالاستوديو / Atelier</span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">
+                          لقاء مباشر في المكتب
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        جلسة عمل مباشرة في مكتب الموديليست (الدار البيضاء، الرباط، أو طنجة). لمس عينات الأقمشة الحقيقية (Swatches)، تجربة التلبيس على المانيكان الحي، واستلام نسخة ورقية مطبوعة على ورق البلوتر الصناعي (Plotter 1:1).
+                      </p>
+                      <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
+                        <span className="text-slate-400">التعريفة: <strong className="text-amber-300">250 - 350 MAD</strong></span>
+                        <span className="text-amber-400 font-bold">🏢 تجربة عملية يداً بيد</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Consultants Grid */}
+              <div className="flex-1 p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-6">
+                <div>
+                  <h2 className="text-base font-black text-white flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-cyan-400" />
+                    <span>قائمة المستشارين المعتمدين والمتاحين للحجز الفوري</span>
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    اختر الخبير المناسب لنوع قطعتك واحجز موعدك مباشرة عبر المنصة.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {allProMembers
+                    .filter(m => m.pillar === 'modelistes')
+                    .map(m => (
+                      <div
+                        key={m.id}
+                        className="bg-[#2b2d31] rounded-2xl border border-[#383a40] hover:border-cyan-500/40 p-5 space-y-4 shadow-xl flex flex-col justify-between transition"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-3">
+                            <img
+                              src={m.avatar}
+                              alt={m.name}
+                              className="w-14 h-14 rounded-2xl object-cover border-2 border-cyan-500/30"
+                            />
+                            <div>
+                              <h3 className="text-sm font-black text-white">{m.name}</h3>
+                              <p className="text-xs text-cyan-300 font-bold">{m.categoryLabel || m.specialty}</p>
+                              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-1">
+                                <MapPin className="w-3 h-3 text-indigo-400" />
+                                <span>{m.city}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {m.officeAddress && (
+                            <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 text-[11px] text-slate-300 flex items-start gap-2">
+                              <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                              <span><strong>عنوان المكتب/Atelier:</strong> {m.officeAddress}</span>
+                            </div>
+                          )}
+
+                          {m.brandsWorkedWith && m.brandsWorkedWith.length > 0 && (
+                            <div className="text-[11px] text-slate-400">
+                              <span className="text-slate-400 font-bold block mb-1">استشارات سابقة لبراندات:</span>
+                              <div className="flex flex-wrap gap-1">
+                                {m.brandsWorkedWith.slice(0, 3).map((b: string, bIdx: number) => (
+                                  <span key={bIdx} className="px-2 py-0.5 rounded bg-white/5 text-slate-200 text-[10px] font-bold">
+                                    {b}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-xs">
+                            <span className="text-slate-400">سعر الجلسة (45 دقيقة):</span>
+                            <span className="font-black text-amber-400 text-sm font-mono">
+                              {m.consultationPriceMAD || 250} MAD
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-[#383a40] space-y-2">
+                          <button
+                            onClick={() => {
+                              setConsultationTarget(m);
+                              setConsultationConfirmedSlip(null);
+                              setShowConsultationModal(true);
+                            }}
+                            className="w-full py-2.5 px-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-cyan-600/20 cursor-pointer"
+                          >
+                            <Calendar className="w-4 h-4" />
+                            <span>حجز موعد استشارة (Visio / مكتب)</span>
+                          </button>
+
+                          <a
+                            href={`https://wa.me/${m.whatsapp}?text=${encodeURIComponent(
+                              `السلام عليكم أستاذ(ة) ${m.name}، أرغب في الاستفسار عن موعد متاح لاستشارة تقنية حول مشروع ملابس جديد.`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-2 text-center text-xs text-slate-400 hover:text-white font-bold flex items-center justify-center gap-1 transition"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>استفسار مسبق عبر الواتساب</span>
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+
+                {/* Educational Banner for Brands */}
+                <div className="p-5 rounded-3xl bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-black/50 border border-indigo-500/20 space-y-3">
+                  <h3 className="text-sm font-black text-white flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 text-amber-400" />
+                    <span>كيف تحمي استشارة BEYA ميزانية كوليكسيونك؟</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-300">
+                    <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
+                      <strong className="text-amber-300 block">1. توفير 15% إلى 30% من استهلاك الثوب</strong>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        يقوم الموديليست بتحسين تعشيق الباترون (Placement & Nesting) لتفادي الهدر على الطاولة قبل القص.
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
+                      <strong className="text-cyan-300 block">2. مطابقة القياسات لجمهورك المستهدف</strong>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        تفادي المقاسات العشوائية التي تؤدي إلى إرجاع الزبائن للمنتجات وتراجع مبيعات البراند.
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
+                      <strong className="text-emerald-300 block">3. بطاقة تقنية (Fiche Tech) تحميك مع المعمل</strong>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        وثيقة قانونية وتقنية تفرض على ورشة الخياطة احترام خيوط الحياكة، والدرزات، وتفاصيل الفينيسيون.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* VIEW A: DISCORD CHAT STREAM */}
           {activeView === 'chat' && (
@@ -2834,6 +3467,79 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 )}
               </div>
 
+              {/* Previous Brands Worked With */}
+              {selectedMemberProfile.brandsWorkedWith && selectedMemberProfile.brandsWorkedWith.length > 0 && (
+                <div className="p-3 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 rounded-2xl border border-amber-500/20 space-y-1.5 text-xs">
+                  <span className="text-[11px] font-black text-amber-300 flex items-center gap-1.5">
+                    <Crown className="w-3.5 h-3.5 text-amber-400" />
+                    <span>علامات تجارية ودور أزياء تعاون معها:</span>
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {selectedMemberProfile.brandsWorkedWith.map((b: string, bIdx: number) => (
+                      <span key={bIdx} className="px-2.5 py-1 rounded-lg bg-[#1e1f22] text-white font-bold text-xs border border-white/10 shadow-xs flex items-center gap-1">
+                        <span className="text-amber-400">✓</span>
+                        <span>{b}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Portfolio Showcase Grid */}
+              {selectedMemberProfile.portfolio && selectedMemberProfile.portfolio.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-slate-300 block">معرض نماذج الباترون والتصاميم المنجزة:</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {selectedMemberProfile.portfolio.map((p: any, pIdx: number) => (
+                      <div
+                        key={pIdx}
+                        onClick={() => setSelectedPortfolioItem({ item: p, author: selectedMemberProfile.name, proId: selectedMemberProfile.id })}
+                        className="group relative rounded-xl overflow-hidden border border-white/10 hover:border-amber-400 cursor-pointer bg-black/40 aspect-4/3 transition"
+                      >
+                        <img src={p.image} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-200" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-2">
+                          <span className="text-[10px] font-black text-white truncate">{p.title}</span>
+                          <span className="text-[9px] text-amber-300">{p.tag}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Modéliste Action CTAs inside Profile Popout */}
+              {selectedMemberProfile.pillar === 'modelistes' && (
+                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setEscrowTarget(selectedMemberProfile);
+                      setEscrowAmount(selectedMemberProfile.pricing?.basePattern ? selectedMemberProfile.pricing.basePattern + 100 : 350);
+                      setEscrowServiceTitle(`باترون رقمي متكامل (${selectedMemberProfile.categoryLabel || selectedMemberProfile.specialty}) + تدريج المقاسات XS-XXL`);
+                      setEscrowSuccessSlip(null);
+                      setShowEscrowModal(true);
+                      setSelectedMemberProfile(null);
+                    }}
+                    className="py-2.5 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-slate-950" />
+                    <span>طلب باترون (BEYA Escrow)</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setConsultationTarget(selectedMemberProfile);
+                      setConsultationConfirmedSlip(null);
+                      setShowConsultationModal(true);
+                      setSelectedMemberProfile(null);
+                    }}
+                    className="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer"
+                  >
+                    <Calendar className="w-4 h-4 text-cyan-300" />
+                    <span>حجز استشارة (Visio / مكتب)</span>
+                  </button>
+                </div>
+              )}
+
               {/* Sample Catalog / Products if Available */}
               {selectedMemberProfile.catalog && selectedMemberProfile.catalog.length > 0 && (
                 <div className="space-y-1.5">
@@ -2858,6 +3564,727 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
               <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 shrink-0" />
                 <span>عضو معتمد رسمي من طرف ورشة BEYA Creative مع تطبيق أسعار الشراكة التفضيلية.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          BEYA ESCROW PAYMENT & TRANSACTION PROTECTION MODAL
+      ───────────────────────────────────────────────────────────── */}
+      {showEscrowModal && escrowTarget && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-xl bg-[#232428] rounded-3xl overflow-hidden border border-[#383a40] shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white space-y-0"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            {/* Header */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-950 via-slate-900 to-amber-950 border-b border-[#383a40] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <span>نظام حماية الأموال BEYA Escrow</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">حماية 100%</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">أموالك محفوظة في حساب الضمان حتى تستلم وتوافق على الباترون</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => { setShowEscrowModal(false); setEscrowSuccessSlip(null); }}
+                className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* If Payment Confirmed -> Render Official Escrow Slip */}
+            {escrowSuccessSlip ? (
+              <div className="p-6 space-y-5">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/60 to-black/60 border border-emerald-500/40 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border-2 border-emerald-500/40">
+                    <CheckCircle className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black border border-emerald-500/30 inline-block mb-1">
+                      تم تسجيل وتأمين العملية في BEYA ESCROW بنجاح
+                    </span>
+                    <h4 className="text-lg font-black text-white">وصل حماية المستحقات الرسمي</h4>
+                    <p className="text-xs text-slate-300 mt-1">كود المعاملة المشفرة: <strong className="font-mono text-amber-400">{escrowSuccessSlip.code}</strong></p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#1e1f22] border border-white/5 space-y-2.5 text-xs">
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">الموديليست المكلف:</span>
+                    <strong className="text-white">{escrowSuccessSlip.modelisteName}</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">الخدمة المطلوبة:</span>
+                    <span className="text-slate-200 font-bold text-left">{escrowSuccessSlip.serviceTitle}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">المبلغ المحمي في الضمان:</span>
+                    <strong className="text-amber-400 font-mono text-sm">{escrowSuccessSlip.amountMAD} MAD</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">طريقة الأداء:</span>
+                    <span className="text-cyan-300 font-bold">{escrowSuccessSlip.methodLabel}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">صاحب الطلب / البراند:</span>
+                    <strong className="text-white">{escrowSuccessSlip.payerName || userProfile.brandName}</strong>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-slate-400">حالة الأموال:</span>
+                    <span className="text-emerald-400 font-black">🔒 محفوظة في الضمان (SÉQUESTRE SÉCURISÉ)</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 leading-relaxed">
+                  🛡️ <strong>شرط الإفراج عن المبلغ:</strong> سيبدأ الموديليست العمل فوراً. لن يتم تحويل المستحقات إلى حسابه إلا بعد تسليمك ملفات الباترون كاملة وتأكيدك لمطابقتها للطلب.
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <a
+                    href={`https://wa.me/${escrowTarget.whatsapp}?text=${encodeURIComponent(
+                      `السلام عليكم أستاذ(ة) ${escrowTarget.name}، لقد قمت بإيداع طلب باترون رسمي وتأمين مستحقاتكم عبر BEYA Escrow!\n• كود العملية: ${escrowSuccessSlip.code}\n• المبلغ في الضمان: ${escrowSuccessSlip.amountMAD} MAD\n• الخدمة: ${escrowSuccessSlip.serviceTitle}\n• البراند: ${escrowSuccessSlip.payerName || userProfile.brandName}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>إشعار الموديليست فـ الواتساب لبدء العمل فوراً</span>
+                  </a>
+
+                  <button
+                    onClick={() => window.print()}
+                    className="w-full sm:w-auto py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 border border-white/10 cursor-pointer"
+                  >
+                    <Download className="w-4 h-4 text-amber-400" />
+                    <span>طباعة الوصل</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Payment & Escrow Form */
+              <div className="p-5 sm:p-6 space-y-5">
+                {/* Modéliste Mini Summary */}
+                <div className="p-3.5 rounded-2xl bg-[#1e1f22] border border-white/5 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <img src={escrowTarget.avatar} alt={escrowTarget.name} className="w-12 h-12 rounded-xl object-cover border border-amber-500/30" />
+                    <div>
+                      <h4 className="text-sm font-black text-white">{escrowTarget.name}</h4>
+                      <p className="text-xs text-amber-300">{escrowTarget.categoryLabel || escrowTarget.specialty}</p>
+                      <span className="text-[11px] text-slate-400">📍 {escrowTarget.city} • ⭐ {escrowTarget.rating}</span>
+                    </div>
+                  </div>
+                  <div className="text-left shrink-0">
+                    <span className="text-[10px] text-slate-400 block">ضمان المنصة</span>
+                    <span className="text-xs font-black text-emerald-400">BEYA Escrow</span>
+                  </div>
+                </div>
+
+                {/* Service Selection / Custom Amount */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-300 block">اختر نوع الخدمة أو حدد المبلغ المتفق عليه:</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {[
+                      { title: 'باترون أساسي + تدريج المقاسات XS-XXL', price: escrowTarget.pricing?.basePattern ? escrowTarget.pricing.basePattern + 100 : 350 },
+                      { title: 'كوليكسيون مصغرة (3 موديلات مع Fiches Tech)', price: 950 },
+                      { title: 'كوليكسيون كاملة (5 موديلات مع محاكاة 3D)', price: 1600 }
+                    ].map((srv, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => { setEscrowAmount(srv.price); setEscrowServiceTitle(srv.title); }}
+                        className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${
+                          escrowAmount === srv.price && escrowServiceTitle === srv.title
+                            ? 'bg-amber-500/20 border-amber-400 text-white'
+                            : 'bg-[#1e1f22] border-white/5 text-slate-300 hover:border-white/20'
+                        }`}
+                      >
+                        <span className="font-bold text-[11px] truncate">{srv.title}</span>
+                        <span className="font-black text-amber-400 font-mono shrink-0">{srv.price} MAD</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Custom Amount Input */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-xs text-slate-400 shrink-0">أو حدد مبلغاً مخصصاً:</span>
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        value={escrowAmount}
+                        onChange={e => setEscrowAmount(Number(e.target.value) || 0)}
+                        className="w-full bg-[#1e1f22] text-xs font-bold text-white px-3 py-2 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none"
+                      />
+                      <span className="absolute left-3 top-2 text-xs text-amber-400 font-bold">MAD</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Method Switcher Tabs */}
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-slate-300 block">اختر طريقة الدفع لتأمين المبلغ:</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEscrowPaymentMethod('local')}
+                      className={`p-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                        escrowPaymentMethod === 'local'
+                          ? 'bg-gradient-to-r from-amber-500/20 to-amber-600/20 border-amber-400 text-white'
+                          : 'bg-[#1e1f22] border-white/5 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <CreditCard className="w-4 h-4 text-amber-400" />
+                      <span>🇲🇦 تحويل بنكي مغربي / كاش</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setEscrowPaymentMethod('paypal')}
+                      className={`p-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                        escrowPaymentMethod === 'paypal'
+                          ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 border-cyan-400 text-white'
+                          : 'bg-[#1e1f22] border-white/5 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <DollarSign className="w-4 h-4 text-cyan-400" />
+                      <span>🌍 PayPal & بطاقات دولية</span>
+                    </button>
+                  </div>
+
+                  {/* Tab 1: Local Moroccan Payment Details */}
+                  {escrowPaymentMethod === 'local' && (
+                    <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3 text-xs">
+                      <div className="p-3 rounded-xl bg-[#1e1f22] border border-amber-500/20 space-y-1.5">
+                        <span className="text-[11px] font-black text-amber-300 block">حساب الضمان البنكي الرسمي (BEYA Escrow):</span>
+                        <div className="flex items-center justify-between font-mono text-xs text-white bg-black/50 p-2 rounded-lg border border-white/5">
+                          <span>RIB: 230 780 0001234567890123 45</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText('230780000123456789012345');
+                              alert('تم نسخ رقم الـ RIB بنجاح!');
+                            }}
+                            className="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span>نسخ</span>
+                          </button>
+                        </div>
+                        <div className="text-[11px] text-slate-400 space-y-0.5">
+                          <p>• <strong>البنك:</strong> التجاري وفا بنك (Attijariwafa Bank) أو CIH Bank</p>
+                          <p>• <strong>اسم المستفيد:</strong> BEYA CREATIVE SARL AU (Compte Séquestre)</p>
+                          <p>• <strong>أو كود إيداع نقدي Cash Plus / Wafacash:</strong> <strong className="text-white font-mono">BEYA-PAY-880</strong></p>
+                        </div>
+                      </div>
+
+                      {/* Client Info Inputs */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="text-[11px] text-slate-300 block mb-1">اسم صاحب الطلب / البراند: *</label>
+                          <input
+                            type="text"
+                            placeholder="مثال: يوسف العلمي (براند Casablanca)"
+                            value={escrowPayerName}
+                            onChange={e => setEscrowPayerName(e.target.value)}
+                            className="w-full bg-[#1e1f22] text-xs text-white px-3 py-2 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] text-slate-300 block mb-1">رقم الهاتف / الواتساب: *</label>
+                          <input
+                            type="tel"
+                            placeholder="مثال: 0661234567"
+                            value={escrowPayerPhone}
+                            onChange={e => setEscrowPayerPhone(e.target.value)}
+                            className="w-full bg-[#1e1f22] text-xs text-white px-3 py-2 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Upload Receipt */}
+                      <div>
+                        <label className="text-[11px] text-slate-300 block mb-1">رفع صورة وصل التحويل البنكي (Reçu de virement):</label>
+                        <div className="relative border-2 border-dashed border-white/15 hover:border-amber-500/50 rounded-2xl p-4 text-center cursor-pointer transition">
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setEscrowReceiptFile(file.name);
+                              }
+                            }}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                          <UploadCloud className="w-6 h-6 text-amber-400 mx-auto mb-1" />
+                          <p className="text-xs font-bold text-white">
+                            {escrowReceiptFile ? `✓ تم اختيار الوصل: ${escrowReceiptFile}` : 'انقر هنا لرفع صورة الوصل أو لقطة شاشة التحويل'}
+                          </p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, PDF (بحد أقصى 10 ميغابايت)</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 2: PayPal International Details */}
+                  {escrowPaymentMethod === 'paypal' && (
+                    <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3 text-xs">
+                      <div className="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/40 to-blue-950/40 border border-cyan-500/20 space-y-2">
+                        <span className="text-[11px] font-black text-cyan-300 block">للعملاء الدوليين (فرنسا، إسبانيا، بلجيكا، الخليج، كندا):</span>
+                        <p className="text-slate-300 leading-relaxed">
+                          يمكنك تأمين مستحقات الموديليست المغربي مباشرة بعملتك الدولية عبر حساب PayPal الرسمي لـ BEYA CREATIVE مع حماية المشتري المعتمدة.
+                        </p>
+                        <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/50 border border-white/5">
+                          <span className="text-slate-400">المبلغ باليورو التقديري:</span>
+                          <span className="text-base font-black text-cyan-300 font-mono">
+                            ~{(escrowAmount / 10.8).toFixed(2)} EUR / ${(escrowAmount / 10.0).toFixed(2)} USD
+                          </span>
+                        </div>
+                        <a
+                          href="https://paypal.me/beyacreative"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          <span>فتح صفحة الدفع عبر PayPal.me/beyacreative</span>
+                        </a>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="text-[11px] text-slate-300 block mb-1">اسمك / اسم علامتك التجارية: *</label>
+                          <input
+                            type="text"
+                            placeholder="Your Brand / Full Name"
+                            value={escrowPayerName}
+                            onChange={e => setEscrowPayerName(e.target.value)}
+                            className="w-full bg-[#1e1f22] text-xs text-white px-3 py-2 rounded-xl border border-white/10 focus:border-cyan-500 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] text-slate-300 block mb-1">رقم عملية بايبال (Transaction ID): *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 9XB1234567890"
+                            value={escrowPaypalTxId}
+                            onChange={e => setEscrowPaypalTxId(e.target.value)}
+                            className="w-full bg-[#1e1f22] text-xs text-white px-3 py-2 rounded-xl border border-white/10 focus:border-cyan-500 focus:outline-none font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Escrow Guarantee Text */}
+                <div className="p-3 rounded-xl bg-black/40 border border-white/5 text-[11px] text-slate-400 flex items-start gap-2">
+                  <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>ضمان استرجاع الأموال:</strong> في حال عدم تسليم الباترون في الوقت المتفق عليه أو وجود خطأ جسيم في القياسات غير مطابق للمواصفات، يتم إرجاع المبلغ بالكامل للعميل عبر نفس وسيلة الدفع.
+                  </span>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const slip = {
+                      code: `BYA-ESCROW-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+                      modelisteName: escrowTarget.name,
+                      serviceTitle: escrowServiceTitle,
+                      amountMAD: escrowAmount,
+                      method: escrowPaymentMethod,
+                      methodLabel: escrowPaymentMethod === 'local' ? 'تحويل بنكي محلي مغربي (Reçu Uploaded)' : `PayPal International (${escrowPaypalTxId || 'Vérifié'})`,
+                      payerName: escrowPayerName || userProfile.brandName || 'عميل BEYA',
+                      date: new Date().toLocaleString('ar-MA')
+                    };
+                    setEscrowSuccessSlip(slip);
+                  }}
+                  className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-2xl text-sm transition flex items-center justify-center gap-2 shadow-xl shadow-amber-500/20 cursor-pointer"
+                >
+                  <ShieldCheck className="w-5 h-5 text-slate-950" />
+                  <span>تأكيد الإيداع في BEYA Escrow ({escrowAmount} MAD)</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          CONSULTATION BOOKING MODAL (LIVE VISIO / ATELIER MEETING)
+      ───────────────────────────────────────────────────────────── */}
+      {showConsultationModal && consultationTarget && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-xl bg-[#232428] rounded-3xl overflow-hidden border border-[#383a40] shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white space-y-0"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            {/* Header */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 border-b border-[#383a40] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30">
+                  <Calendar className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <span>حجز جلسة استشارة تقنية وتوجيه فني</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">1-à-1 مخصص</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">جلسة 45 دقيقة مع خبير النسيج والموديليست لضبط مشروعك</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => { setShowConsultationModal(false); setConsultationConfirmedSlip(null); }}
+                className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* If Confirmed -> Render Confirmation Slip */}
+            {consultationConfirmedSlip ? (
+              <div className="p-6 space-y-5">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-cyan-950/60 to-black/60 border border-cyan-500/40 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto border-2 border-cyan-500/40">
+                    <CheckCircle className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-black border border-cyan-500/30 inline-block mb-1">
+                      تم تأكيد حجز موعد الاستشارة بنجاح
+                    </span>
+                    <h4 className="text-lg font-black text-white">بطاقة الموعد التقني الرسمي</h4>
+                    <p className="text-xs text-slate-300 mt-1">كود الموعد: <strong className="font-mono text-cyan-400">{consultationConfirmedSlip.code}</strong></p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#1e1f22] border border-white/5 space-y-2.5 text-xs">
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">المستشار التقني:</span>
+                    <strong className="text-white">{consultationConfirmedSlip.consultantName}</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">نمط الاستشارة:</span>
+                    <strong className="text-amber-300">{consultationConfirmedSlip.modeLabel}</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">التاريخ والوقت:</span>
+                    <span className="text-white font-bold font-mono">{consultationConfirmedSlip.date} في تمام الساعة {consultationConfirmedSlip.time}</span>
+                  </div>
+                  {consultationConfirmedSlip.mode === 'office' && (
+                    <div className="flex justify-between py-1 border-b border-white/5">
+                      <span className="text-slate-400">عنوان المقر/Atelier:</span>
+                      <span className="text-cyan-300 font-bold text-left">{consultationTarget.officeAddress}</span>
+                    </div>
+                  )}
+                  {consultationConfirmedSlip.mode === 'visio' && (
+                    <div className="flex justify-between py-1 border-b border-white/5">
+                      <span className="text-slate-400">رابط القاعة الافتراضية:</span>
+                      <span className="text-cyan-300 font-bold font-mono">meet.google.com/bya-rdv-pro</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400">موضوع الاستشارة:</span>
+                    <span className="text-slate-200">{consultationConfirmedSlip.topic}</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-slate-400">رسوم الجلسة:</span>
+                    <strong className="text-amber-400 font-mono text-sm">{consultationTarget.consultationPriceMAD || 250} MAD</strong>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <a
+                    href={`https://wa.me/${consultationTarget.whatsapp}?text=${encodeURIComponent(
+                      `السلام عليكم أستاذ(ة) ${consultationTarget.name}، لقد حجزت موعد استشارة رسمية عبر منصة BEYA Consulting:\n• كود الموعد: ${consultationConfirmedSlip.code}\n• النمط: ${consultationConfirmedSlip.modeLabel}\n• الموعد: ${consultationConfirmedSlip.date} في الساعة ${consultationConfirmedSlip.time}\n• الموضوع: ${consultationConfirmedSlip.topic}\n• البراند/العميل: ${consultationConfirmedSlip.clientName || userProfile.brandName}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>تأكيد الموعد فـ الواتساب مع المستشار</span>
+                  </a>
+
+                  <button
+                    onClick={() => { setShowConsultationModal(false); setConsultationConfirmedSlip(null); }}
+                    className="w-full sm:w-auto py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 border border-white/10 cursor-pointer"
+                  >
+                    <span>تم / إنهاء</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Consultation Booking Form */
+              <div className="p-5 sm:p-6 space-y-5">
+                {/* Consultant Summary */}
+                <div className="p-3.5 rounded-2xl bg-[#1e1f22] border border-white/5 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <img src={consultationTarget.avatar} alt={consultationTarget.name} className="w-12 h-12 rounded-xl object-cover border border-cyan-500/30" />
+                    <div>
+                      <h4 className="text-sm font-black text-white">{consultationTarget.name}</h4>
+                      <p className="text-xs text-cyan-300">{consultationTarget.categoryLabel || consultationTarget.specialty}</p>
+                      <span className="text-[11px] text-slate-400">📍 {consultationTarget.city}</span>
+                    </div>
+                  </div>
+                  <div className="text-left shrink-0">
+                    <span className="text-[10px] text-slate-400 block">سعر الجلسة (45د)</span>
+                    <span className="text-sm font-black text-amber-400 font-mono">{consultationTarget.consultationPriceMAD || 250} MAD</span>
+                  </div>
+                </div>
+
+                {/* Step 1: Mode Switcher */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-300 block">1. اختر نمط الجلسة المفضل لديك:</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div
+                      onClick={() => setConsultationMode('visio')}
+                      className={`p-3.5 rounded-2xl border cursor-pointer transition space-y-1.5 ${
+                        consultationMode === 'visio'
+                          ? 'bg-gradient-to-br from-indigo-950/60 to-black/60 border-indigo-400 text-white'
+                          : 'bg-[#1e1f22] border-white/5 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-xs text-white flex items-center gap-1.5">
+                          <Video className="w-4 h-4 text-indigo-400" />
+                          <span>جلسة Live Visio (عن بعد)</span>
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold">Google Meet</span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-tight">مشاركة الشاشة لمراجعة ملفات التصميم والباترون وحساب كلفة البياسة من أي مكان.</p>
+                    </div>
+
+                    <div
+                      onClick={() => setConsultationMode('office')}
+                      className={`p-3.5 rounded-2xl border cursor-pointer transition space-y-1.5 ${
+                        consultationMode === 'office'
+                          ? 'bg-gradient-to-br from-amber-950/60 to-black/60 border-amber-400 text-white'
+                          : 'bg-[#1e1f22] border-white/5 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-xs text-white flex items-center gap-1.5">
+                          <Briefcase className="w-4 h-4 text-amber-400" />
+                          <span>حضوري بالمكتب / Atelier</span>
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">لقاء وجهاً لوجه</span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-tight">لمس عينات الأقمشة وتجربة المانيكان في استوديو الموديليست ({consultationTarget.city}).</p>
+                    </div>
+                  </div>
+
+                  {consultationMode === 'office' && consultationTarget.officeAddress && (
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span><strong>العنوان المعتمد للزيارة:</strong> {consultationTarget.officeAddress}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Step 2: Date & Time Picker */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="text-slate-300 font-bold block mb-1">2. حدد تاريخ الموعد:</label>
+                    <input
+                      type="date"
+                      value={consultationDate}
+                      onChange={e => setConsultationDate(e.target.value)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2 rounded-xl border border-white/10 focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300 font-bold block mb-1">3. اختر التوقيت المفضل:</label>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {['10:00', '11:30', '15:00', '17:00'].map(t => (
+                        <button
+                          type="button"
+                          key={t}
+                          onClick={() => setConsultationTime(t)}
+                          className={`py-2 rounded-xl text-xs font-bold transition border cursor-pointer font-mono ${
+                            consultationTime === t
+                              ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-black'
+                              : 'bg-[#1e1f22] text-slate-300 border-white/5 hover:border-white/20'
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3: Topic Selection */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-300 block">4. ما هو الموضوع الرئيسي للاستشارة؟</label>
+                  <select
+                    value={consultationTopic}
+                    onChange={e => setConsultationTopic(e.target.value)}
+                    className="w-full bg-[#1e1f22] text-xs text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-cyan-500 focus:outline-none"
+                  >
+                    <option value="اختيار وتدقيق الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج">
+                      اختيار وتدقيق الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج
+                    </option>
+                    <option value="مراجعة وتدقيق باترون موجود وحل مشاكل الفيتينغ والقصة (Fitting)">
+                      مراجعة وتدقيق باترون موجود وحل مشاكل الفيتينغ والقصة (Fitting)
+                    </option>
+                    <option value="دراسة فنية لكوليكسيون جديدة كاملة وضبط جدول تدرج المقاسات (Gradation)">
+                      دراسة فنية لكوليكسيون جديدة كاملة وضبط جدول تدرج المقاسات (Gradation)
+                    </option>
+                    <option value="إعداد البطاقة التقنية (Fiche Technique) وشروط التعامل مع معامل الخياطة">
+                      إعداد البطاقة التقنية (Fiche Technique) وشروط التعامل مع معامل الخياطة
+                    </option>
+                  </select>
+                </div>
+
+                {/* Step 4: Client Contact */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div>
+                    <label className="text-slate-300 block mb-1">اسمك / اسم علامتك التجارية: *</label>
+                    <input
+                      type="text"
+                      placeholder="اسمك أو اسم البراند"
+                      value={consultationClientName}
+                      onChange={e => setConsultationClientName(e.target.value)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2 rounded-xl border border-white/10 focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300 block mb-1">رقم الهاتف / الواتساب: *</label>
+                    <input
+                      type="tel"
+                      placeholder="0661234567"
+                      value={consultationClientPhone}
+                      onChange={e => setConsultationClientPhone(e.target.value)}
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2 rounded-xl border border-white/10 focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Submit Confirmation */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const slip = {
+                      code: `BYA-RDV-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+                      consultantName: consultationTarget.name,
+                      mode: consultationMode,
+                      modeLabel: consultationMode === 'visio' ? '💻 استشارة Live Visio (Google Meet)' : '🏢 استشارة حضورية بالمكتب / Atelier',
+                      date: consultationDate,
+                      time: consultationTime,
+                      topic: consultationTopic,
+                      clientName: consultationClientName || userProfile.brandName || 'عميل BEYA'
+                    };
+                    setConsultationConfirmedSlip(slip);
+                  }}
+                  className="w-full py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black rounded-2xl text-sm transition flex items-center justify-center gap-2 shadow-xl shadow-cyan-600/20 cursor-pointer"
+                >
+                  <Calendar className="w-5 h-5" />
+                  <span>تأكيد حجز موعد الاستشارة ({consultationTarget.consultationPriceMAD || 250} MAD)</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          PORTFOLIO ITEM HD LIGHTBOX MODAL
+      ───────────────────────────────────────────────────────────── */}
+      {selectedPortfolioItem && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div
+            className="w-full max-w-4xl bg-[#232428] rounded-3xl overflow-hidden border border-[#383a40] shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white flex flex-col md:flex-row"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            {/* Image Preview Container */}
+            <div className="md:w-3/5 bg-black/60 relative min-h-[300px] md:min-h-[480px] flex items-center justify-center">
+              <img
+                src={selectedPortfolioItem.item.image}
+                alt={selectedPortfolioItem.item.title}
+                className="max-h-[70vh] w-full object-contain p-2"
+              />
+              <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/70 backdrop-blur-sm text-amber-300 text-xs font-black border border-white/10">
+                {selectedPortfolioItem.item.tag}
+              </span>
+            </div>
+
+            {/* Side Information Panel */}
+            <div className="md:w-2/5 p-6 flex flex-col justify-between space-y-4 border-t md:border-t-0 md:border-r border-[#383a40]">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">معاينة الباترون والتصميم</span>
+                  <button
+                    onClick={() => setSelectedPortfolioItem(null)}
+                    className="p-1 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-black text-white">{selectedPortfolioItem.item.title}</h3>
+                  <p className="text-xs text-amber-300 font-bold mt-0.5">تصميم وإنجاز: {selectedPortfolioItem.author}</p>
+                </div>
+
+                {/* Specs Box */}
+                <div className="p-3.5 rounded-2xl bg-[#1e1f22] border border-white/5 space-y-2 text-xs">
+                  <span className="text-[11px] font-bold text-slate-400 block">المواصفات التقنية للفصالة:</span>
+                  <p className="text-slate-200 font-medium leading-relaxed">
+                    {selectedPortfolioItem.item.specs || 'باترون هندسي مضبوط مع تدريج المقاسات XS-XXL وجدول استهلاك الأقمشة بدقة عالية.'}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-bold flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400" />
+                  <span>ملفات CAD جاهزة للقص الفوري: DXF AAMA, RUL, PDF 1:1, ومحاكاة 3D.</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-3 border-t border-[#383a40]">
+                <button
+                  onClick={() => {
+                    const match = allProMembers.find(m => m.name === selectedPortfolioItem.author || m.id === selectedPortfolioItem.proId);
+                    if (match) {
+                      setEscrowTarget(match);
+                      setEscrowAmount(match.pricing?.basePattern ? match.pricing.basePattern + 100 : 350);
+                      setEscrowServiceTitle(`طلب باترون: ${selectedPortfolioItem.item.title} + تدريج المقاسات XS-XXL`);
+                      setEscrowSuccessSlip(null);
+                      setShowEscrowModal(true);
+                      setSelectedPortfolioItem(null);
+                    }
+                  }}
+                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer"
+                >
+                  <ShieldCheck className="w-4 h-4 text-slate-950" />
+                  <span>طلب نفس الموديل عبر BEYA Escrow</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedPortfolioItem(null)}
+                  className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  إغلاق المعاينة
+                </button>
               </div>
             </div>
           </div>

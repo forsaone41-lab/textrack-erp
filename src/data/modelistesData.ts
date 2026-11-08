@@ -31,6 +31,10 @@ export interface ModelisteProfile {
   portfolio: { title: string; image: string; tag: string; specs: string }[];
   pricing: { basePattern: number; gradation: number; simulation3d: number; ficheTech: number };
   reviews: { author: string; brand: string; comment: string; rating: number; date: string }[];
+  brandsWorkedWith?: string[];
+  consultationPriceMAD?: number;
+  consultationModes?: ('visio' | 'office')[];
+  officeAddress?: string;
 }
 
 export const MODELISTES_DATA: ModelisteProfile[] = [
@@ -76,7 +80,11 @@ export const MODELISTES_DATA: ModelisteProfile[] = [
     reviews: [
       { author: 'أمين البوشيخي', brand: 'North Wear Casablanca', comment: 'فاطمة الزهراء خدمت معنا كوليكسيون كاملة د الشتا (800 هودي وسويت بانتس). الباترون جا مضبوط فالفصالة 100% وما ضيعنا حتى سنتيم فالثوب.', rating: 5, date: 'منذ أسبوعين' },
       { author: 'سارة لمرابط', brand: 'Urban Modest', comment: 'سرعة واحترافية كبيرة. بعثات ليا ملفات DXF مع محاكاة 3D بينات ليا الموديل قبل ما نقطعو الثوب. نوصي بها بقوة.', rating: 5, date: 'منذ شهر' }
-    ]
+    ],
+    brandsWorkedWith: ['Zara', 'Bershka', 'Pull&Bear', 'North Wear Casablanca', 'Marwa'],
+    consultationPriceMAD: 250,
+    consultationModes: ['visio', 'office'],
+    officeAddress: 'شارع أنفا، إقامة النخيل، الطابق 4، الدار البيضاء'
   },
   {
     id: 'mod-2',
@@ -119,7 +127,11 @@ export const MODELISTES_DATA: ModelisteProfile[] = [
     pricing: { basePattern: 280, gradation: 50, simulation3d: 130, ficheTech: 80 },
     reviews: [
       { author: 'عادل السعيدي', brand: 'Tactical Gear MA', comment: 'ياسين فنان فالسراويل د الكارجو. الجيوب جاو مضبوطين بالسنتيم وما كاينش فرق بين البياسات. تعامل احترافي ورائع.', rating: 5, date: 'منذ 3 أسابيع' }
-    ]
+    ],
+    brandsWorkedWith: ['Adidas', 'Nike', 'Morocco Jeans Export', 'Tactical Gear MA'],
+    consultationPriceMAD: 280,
+    consultationModes: ['visio', 'office'],
+    officeAddress: 'المنطقة الصناعية سيدي معروف، مجمع النسيج B2B، الدار البيضاء'
   },
   {
     id: 'mod-3',
@@ -160,7 +172,11 @@ export const MODELISTES_DATA: ModelisteProfile[] = [
     pricing: { basePattern: 250, gradation: 45, simulation3d: 110, ficheTech: 50 },
     reviews: [
       { author: 'مريم التازي', brand: 'Noor Modest Wear', comment: 'سلمى مبدعة كتعرف طيحة الثوب مزيان وكتخرج الباترون مضبوط ما كيحتاجش حتى إعادة روتوش.', rating: 5, date: 'منذ شهر' }
-    ]
+    ],
+    brandsWorkedWith: ['Mango', 'Massimo Dutti', 'Diamantine', 'Noor Modest Wear'],
+    consultationPriceMAD: 240,
+    consultationModes: ['visio', 'office'],
+    officeAddress: 'حي الرياض، شارع النخيل، مجمع الأناقة، الرباط'
   },
   {
     id: 'mod-4',
@@ -201,7 +217,11 @@ export const MODELISTES_DATA: ModelisteProfile[] = [
     pricing: { basePattern: 200, gradation: 40, simulation3d: 90, ficheTech: 50 },
     reviews: [
       { author: 'عثمان الفهري', brand: 'Morocco Athletics', comment: 'كريم سريع جداً وجودة خدمتو لا نقاش فيها. الباترون وجد فـ 24 ساعة مضبوط فالفصالة.', rating: 5, date: 'منذ شهرين' }
-    ]
+    ],
+    brandsWorkedWith: ['Adidas', 'Puma', 'Decathlon Export Tanger', 'Morocco Athletics'],
+    consultationPriceMAD: 200,
+    consultationModes: ['visio', 'office'],
+    officeAddress: 'طنجة المنطقة الحرة للتصدير (TFZ)، مبنى الابتكار الرياضي، طنجة'
   },
   {
     id: 'mod-5',
@@ -242,7 +262,11 @@ export const MODELISTES_DATA: ModelisteProfile[] = [
     pricing: { basePattern: 320, gradation: 60, simulation3d: 140, ficheTech: 80 },
     reviews: [
       { author: 'حسناء العلمي', brand: 'Chic & Formal Casablanca', comment: 'هدى أستاذة فالتايلور. البليزر جا قمة فالرقي والوقفة بلا أي عيب فالفينيسيون.', rating: 5, date: 'منذ أسبوعين' }
-    ]
+    ],
+    brandsWorkedWith: ['Zara Woman', 'Massimo Dutti', 'Maje Paris (Sous-traitance)', 'Chic & Formal'],
+    consultationPriceMAD: 350,
+    consultationModes: ['visio', 'office'],
+    officeAddress: 'شارع الزرقطوني، عمارة الأطلس، الطابق 2، الدار البيضاء'
   }
 ];
 
