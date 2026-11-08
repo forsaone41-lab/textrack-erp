@@ -149,7 +149,88 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [newJobCategory, setNewJobCategory] = useState<'streetwear' | 'denim' | 'femme' | 'sport'>('streetwear');
   const [newJobDescription, setNewJobDescription] = useState('');
   const [newJobWhatsapp, setNewJobWhatsapp] = useState('');
-  const [newJobWorkMode, setNewJobWorkMode] = useState<'remote' | 'office'>('remote');
+  const [newJobWorkMode, setNewJobWorkMode] = useState<'digital' | 'paper' | 'both'>('digital');
+  const [importedModelSuccess, setImportedModelSuccess] = useState<string | null>(null);
+
+  // AUTO-FILL / IMPORT FROM BEYA TECH PACK STUDIO
+  const handleImportFromBeya = (modelKey: string) => {
+    try {
+      const activeFtRaw = localStorage.getItem('beya_ai_to_ft');
+      if (activeFtRaw && modelKey === 'active-ft') {
+        const ft = JSON.parse(activeFtRaw);
+        setNewJobTitle(`طلب باترون صناعي وتدريج مقاسات لموديل ${ft.title || ft.nom || 'BEYA Studio'}`);
+        setNewJobDescription(`• موديل مستورد مباشرة من استوديو BEYA Tech Pack:\n• اسم الموديل: ${ft.title || ft.nom}\n• القماش المقترح: ${ft.fabric || ft.tissu || 'قطن ممشط'}\n• الغراماج: ${ft.gsm || '250g'}\n• المطلوب: تدريج المقاسات XS-XXL، إعداد ملفات DXF AAMA، وبطاقة مواصفات فنية للورشة.`);
+        setNewJobBudget(350);
+        setImportedModelSuccess(ft.title || 'موديلك في BEYA Tech Pack');
+        return;
+      }
+    } catch {}
+
+    const presets: Record<string, any> = {
+      'crop-top': {
+        name: 'Top Manches Longues (Crop Top)',
+        title: 'مطلوب موديليست لإنجاز باترون Top Manches Longues Près du Corps (Crop Top) مع تدريج المقاسات XS-XXL',
+        category: 'femme',
+        budget: 350,
+        workMode: 'digital',
+        desc: '• موديل مستورد مباشرة من BEYA Tech Pack Studio:\n• نوع القطعة: Top Manches Longues Près du Corps (Crop Top)\n• القماش المعتمد: كوت ريب 1×1 ليكرا 95% قطن ممشط و 5% إيلاسطان (غراماج 250g)\n• استهلاك الثوب التقديري: 0.85 متر للبياسة\n• نطاق التكلفة التقديرية: 22 - 32 درهم بالمتر\n• المطلوب من الموديليست:\n1. إنجاز الباترون الأساسي بمطابقة تامة لطول الأكمام وقصة العنق\n2. تدريج المقاسات (Gradation XS إلى XXL)\n3. تسليم ملفات DXF AAMA صالحة لماكينات الفصالة الأوتوماتيكية مع Fiche Technique للورشة.'
+      },
+      'hoodie': {
+        name: 'هودي أوفرسايز 380g',
+        title: 'إنجاز باترون هودي أوفرسايز Heavyweight 380g مع كابوش دبل وجيب كانغورو وتدريج كامل',
+        category: 'streetwear',
+        budget: 380,
+        workMode: 'digital',
+        desc: '• موديل مستورد مباشرة من BEYA Tech Pack Studio:\n• نوع القطعة: Oversized Heavyweight Hoodie (Drop Shoulder)\n• القماش: ميلتون خيط ممشط 100% Coton 380g (French Terry)\n• استهلاك الثوب: 1.45 متر للبياسة\n• المطلوب:\n1. باترون Drop Shoulder متوازن مع كابوش واسع بدون خياطة مزعجة\n2. تدريج المقاسات من S إلى 3XL\n3. جدول باريم القياسات وبطاقة Fiche Tech لورشة التجميع.'
+      },
+      'cargo': {
+        name: 'سروال كارجو تكتيكي 6 جيوب',
+        title: 'باترون وفصالة سروال كارجو بـ 6 جيوب تكتيكية ثلاثية الأبعاد وسحابات YKK مخفية',
+        category: 'denim',
+        budget: 450,
+        workMode: 'both',
+        desc: '• موديل مستورد مباشرة من BEYA Tech Pack Studio:\n• نوع القطعة: Tactical Cargo Pants\n• القماش: كانفاس ريبستوب مقاوم للتمزق 280g\n• المطلوب:\n1. باترون هندسي للجيوب المنفوخة (Poches à soufflet) مع غطاء وسحاب مخفي\n2. تدريج مقاسات الخصر 28 إلى 38\n3. محاكاة 3D وفحص توازن الساقين قبل القص.'
+      },
+      'boxy-tee': {
+        name: 'تيشيرت Boxy Fit 240g (Winner)',
+        title: 'باترون تيشيرت Boxy Fit قطن 240g مع ياقة كول ريب معزز وتدريج مقاسات S-XXL',
+        category: 'streetwear',
+        budget: 280,
+        workMode: 'digital',
+        desc: '• موديل مستورد مباشرة من BEYA Tech Pack Studio:\n• نوع القطعة: T-Shirt Boxy Fit (Winner Product)\n• القماش: Coton Peigné 240g\n• المطلوب:\n1. قصة مربعة واسعة (Boxy Fit) مع أكتاف منسدلة وطول خصر عصري\n2. ياقة كول ريب سميكة ومشدودة لا ترتخي بعد الغسيل\n3. ملفات DXF صالحة للقص وبطاقة مواصفات الخياطة.'
+      },
+      'abaya': {
+        name: 'عباية كيمونو كريب دو سوا',
+        title: 'كوليكسيون عبايات كيمونو عصرية مع فساتين كتان وبوبلين لمصانع طنجة وكازا',
+        category: 'femme',
+        budget: 650,
+        workMode: 'both',
+        desc: '• موديل مستورد مباشرة من BEYA Tech Pack Studio:\n• نوع القطعة: Abaya Kimono & Robe Lin\n• القماش: Crêpe de Soie & Lin Lavé\n• المطلوب:\n1. فصالة انسيابية مع احترام طيحة الثوب\n2. تدريج 3 مقاسات رئيسية\n3. بطاقة تقنية لاستهلاك الأقمشة ومقادير الأكمام.'
+      },
+      'activewear': {
+        name: 'طقم رياضي نسائي Seamless',
+        title: 'باترون طقم رياضي نسائي (Legging Seamless + Sport Bra) بتقنية التمدد 4-Way Stretch',
+        category: 'sport',
+        budget: 400,
+        workMode: 'digital',
+        desc: '• موديل مستورد مباشرة من BEYA Tech Pack Studio:\n• نوع القطعة: Sport Set Seamless\n• القماش: 82% Polyester / 18% Élasthanne\n• المطلوب:\n1. باترون ضاغط مع مراعاة نسبة التمدد العالية\n2. غرز الحياكة المسطحة Flatlock\n3. باريم القياسات XS إلى L.'
+      }
+    };
+
+    const target = presets[modelKey];
+    if (target) {
+      setNewJobTitle(target.title);
+      setNewJobCategory(target.category);
+      setNewJobBudget(target.budget);
+      setNewJobWorkMode(target.workMode);
+      setNewJobDescription(target.desc);
+      if (!newJobBrand && userProfile.brandName) {
+        setNewJobBrand(userProfile.brandName);
+      }
+      setImportedModelSuccess(target.name);
+    }
+  };
+
   const [jobPostedSuccessSlip, setJobPostedSuccessSlip] = useState<any | null>(null);
 
   // SUBMIT PROPOSAL MODAL STATE (للموديليست للتقديم على عروض العملاء)
@@ -2077,7 +2158,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                                     <span>{job.city}</span>
                                   </span>
                                   <span className="px-2.5 py-0.5 rounded-full bg-[#f2f7f2] text-[#108a00] text-xs font-semibold border border-[#d4e5d4]">
-                                    {job.workMode === 'office' ? 'عمل حضوري' : 'عمل عن بعد'}
+                                    {job.workMode === 'paper' ? 'تسليم ورقي (Plotter 1:1)' :
+                                     job.workMode === 'both' ? 'ديجيتال + ورقي مطبوع' :
+                                     'صيغة ديجيتال (DXF / 3D)'}
                                   </span>
                                   {job.urgent && (
                                     <span className="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 text-xs font-semibold border border-rose-200">
@@ -5339,6 +5422,55 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 }}
                 className="p-5 sm:p-6 space-y-4 text-xs"
               >
+                {/* ── BEYA TECH PACK DIRECT IMPORT BAR (استيراد مباشر من BEYA) ── */}
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-indigo-500/15 border border-amber-500/30 space-y-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-xs text-white flex items-center gap-1.5">
+                          <span>استيراد الموديل مباشرة من BEYA Tech Pack</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                            Auto-Fill
+                          </span>
+                        </span>
+                        <p className="text-[11px] text-slate-300">
+                          اختر أحد الموديلات ليتم ملء العنوان، القماش، والمواصفات الفنية تلقائياً
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <select
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (!val) return;
+                          handleImportFromBeya(val);
+                        }}
+                        defaultValue=""
+                        className="bg-[#1e1f22] text-amber-300 font-bold text-xs px-3 py-2 rounded-xl border border-amber-500/40 focus:border-amber-400 focus:outline-none cursor-pointer"
+                      >
+                        <option value="" disabled>-- استيراد من BEYA Tech Pack --</option>
+                        <option value="crop-top">Top Manches Longues (Crop Top) - كوت ريب 250g</option>
+                        <option value="hoodie">هودي أوفرسايز Drop Shoulder - ميلتون 380g</option>
+                        <option value="cargo">سروال كارجو 6 جيوب تكتيكية - كانفاس ريبستوب</option>
+                        <option value="boxy-tee">تيشيرت Boxy Fit 240g (Winner Product)</option>
+                        <option value="abaya">عباية كيمونو عصرية - كريب دو سوا 100%</option>
+                        <option value="activewear">طقم رياضي نسائي Seamless - 4-Way Stretch</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {importedModelSuccess && (
+                    <div className="px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold flex items-center gap-1.5 animate-in fade-in duration-200">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>تم استيراد مواصفات ({importedModelSuccess}) بنجاح من BEYA Tech Pack Studio وتعبئة الحقول!</span>
+                    </div>
+                  )}
+                </div>
+
                 {/* Job Title */}
                 <div className="space-y-1.5">
                   <label className="text-slate-300 font-bold block">عنوان المشروع أو الطلب:</label>
@@ -5416,17 +5548,20 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                   </div>
                 </div>
 
-                {/* Work Mode & WhatsApp */}
+                {/* Delivery Format & WhatsApp */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-slate-300 font-bold block">نمط العمل:</label>
+                    <label className="text-slate-300 font-bold block">
+                      صيغة تسليم الباترون المطلوبة:
+                    </label>
                     <select
                       value={newJobWorkMode}
                       onChange={e => setNewJobWorkMode(e.target.value as any)}
-                      className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none"
+                      className="w-full bg-[#1e1f22] text-white px-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none font-bold"
                     >
-                      <option value="remote">عن بعد (تسليم ملفات DXF / CLO 3D)</option>
-                      <option value="office">حضوري (جلسة عمل في الأتولييه / Atelier)</option>
+                      <option value="digital">صيغة رقمية ديجيتال (ملفات DXF AAMA / CLO 3D / PDF)</option>
+                      <option value="paper">نسخة ورقية مطبوعة على ورق البلوتر الصناعي (Papier Plotter 1:1)</option>
+                      <option value="both">كلاهما معاً (ملفات ديجيتال + نسخة ورقية مطبوعة للورشة)</option>
                     </select>
                   </div>
 
