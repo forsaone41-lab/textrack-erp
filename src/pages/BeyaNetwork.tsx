@@ -133,7 +133,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [threadReplyDraft, setThreadReplyDraft] = useState('');
 
   // ─────────────────────────────────────────────────────────────
-  // FREELANCE DUAL MODE: 'talents' (أنا باغي موديليست) VS 'jobs' (أنا موديليست باغي خدمة - خمسات)
+  // FREELANCE DUAL MODE: 'talents' (نخبة الموديليست) VS 'jobs' (مشاريع وطلبات الإنتاج)
   // ─────────────────────────────────────────────────────────────
   const [freelanceTab, setFreelanceTab] = useState<'talents' | 'jobs'>('talents');
   const [jobSearchQuery, setJobSearchQuery] = useState('');
@@ -162,7 +162,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [proposalAuthorPhone, setProposalAuthorPhone] = useState<string>('');
   const [proposalSubmittedSlip, setProposalSubmittedSlip] = useState<any | null>(null);
 
-  // INITIAL JOB FEED LIST (RICH MOROCCAN B2B FASHION JOBS LIKE KHAMSAT)
+  // INITIAL JOB FEED LIST (RICH MOROCCAN B2B FASHION PRODUCTION PROJECTS)
   const [jobsList, setJobsList] = useState<any[]>(() => {
     try {
       const stored = localStorage.getItem('beya_freelance_jobs');
@@ -1149,7 +1149,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
         {/* Center: Compact View Switcher Tabs */}
         <div className="flex items-center gap-1 bg-[#1b202e] p-1 rounded-xl border border-slate-700/60 overflow-x-auto scrollbar-hide max-w-full shrink min-w-0">
-          {/* Tab 1: طلبات ومشاريع العملاء (خمسات) */}
+          {/* Tab 1: مشاريع وطلبات الإنتاج */}
           <button
             onClick={() => { setActiveView('freelance'); setFreelanceTab('jobs'); setMobileDrawer('none'); }}
             className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
@@ -1159,11 +1159,11 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             }`}
           >
             <Briefcase className="w-3.5 h-3.5" />
-            <span>طلبات المشاريع</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[9px] font-mono">خمسات</span>
+            <span>مشاريع الإنتاج</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-mono font-bold">نشط</span>
           </button>
 
-          {/* Tab 2: كفاءات الموديليست (Upwork) */}
+          {/* Tab 2: كفاءات الموديليست */}
           <button
             onClick={() => { setActiveView('freelance'); setFreelanceTab('talents'); setMobileDrawer('none'); }}
             className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
@@ -1173,8 +1173,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             }`}
           >
             <Scissors className="w-3.5 h-3.5" />
-            <span>الموديليست</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[9px] font-mono">5 خبراء</span>
+            <span>نخبة الموديليست</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-mono font-bold">5 معتمدين</span>
           </button>
 
           {/* Tab 3: الاستشارات */}
@@ -1481,7 +1481,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
                   {/* Dual Mode Switcher */}
                   <div className="p-1 bg-[#181e2e] rounded-2xl border border-white/10 flex items-center gap-1.5 w-full md:w-auto shadow-inner">
-                    {/* Mode 1: أنا موديليست باغي خدمة (طلبات ومشاريع العملاء - خمسات) */}
+                    {/* Mode 1: مشاريع وطلبات الإنتاج المعروضة */}
                     <button
                       onClick={() => setFreelanceTab('jobs')}
                       className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer ${
@@ -1491,13 +1491,13 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                       }`}
                     >
                       <Briefcase className="w-4 h-4" />
-                      <span>💼 أنا موديليست باغي خدمة (طلبات ومشاريع العملاء • خمسات)</span>
+                      <span>💼 مشاريع وطلبات الإنتاج المعروضة</span>
                       <span className="px-2 py-0.5 rounded-full bg-black/30 text-[10px] font-mono font-bold">
                         {jobsList.length} طلبات
                       </span>
                     </button>
 
-                    {/* Mode 2: أنا باغي نوظف موديليست (تصفح الكفاءات - Upwork) */}
+                    {/* Mode 2: كفاءات الموديليست المعتمدين */}
                     <button
                       onClick={() => setFreelanceTab('talents')}
                       className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer ${
@@ -1507,9 +1507,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                       }`}
                     >
                       <Users className="w-4 h-4" />
-                      <span>👔 أنا باغي نوظف موديليست (تصفح الكفاءات • Upwork)</span>
+                      <span>👔 نخبة مهندسي الباترون والموديليست</span>
                       <span className="px-2 py-0.5 rounded-full bg-black/30 text-[10px] font-mono font-bold">
-                        5 خبراء
+                        5 معتمدين
                       </span>
                     </button>
                   </div>
@@ -1523,84 +1523,66 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     className="w-full md:w-auto px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 cursor-pointer shrink-0"
                   >
                     <PlusCircle className="w-4 h-4 text-slate-950" />
-                    <span>+ انشر طلبك / مشروعك مجاناً</span>
+                    <span>+ نشر مشروع إنتاج جديد</span>
                   </button>
                 </div>
               </div>
 
               {/* ─────────────────────────────────────────────────────────────
-                  TAB 1: KHAMSAT JOBS FEED (للموديليست اللي كيقلبو على خدمة من أصحاب البراندات)
+                  TAB 1: PRODUCTION PROJECTS FEED (مشاريع وطلبات الإنتاج المعلنة)
               ───────────────────────────────────────────────────────────── */}
               {freelanceTab === 'jobs' && (
                 <>
-                  {/* Hero Banner for Jobs / Khamsat */}
-                  <div className="bg-gradient-to-b from-[#111625] via-[#151c2d] to-[#0b0f19] border-b border-slate-800/80 p-6 sm:p-8 shrink-0">
-                    <div className="max-w-7xl mx-auto space-y-5">
+                  {/* Sleek Enterprise Header for Production Orders */}
+                  <div className="bg-gradient-to-b from-[#111625] via-[#151c2d] to-[#0b0f19] border-b border-slate-800/80 px-4 sm:px-8 py-4 shrink-0">
+                    <div className="max-w-7xl mx-auto space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                          <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-black border border-emerald-500/30 flex items-center gap-2 shadow-xs">
+                          <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-black border border-emerald-500/30 flex items-center gap-2">
                             <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                            <span>BEYA Escrow Protection • ميزانية المشاريع مجمدة ومحمية 100%</span>
-                          </span>
-                          <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-300 text-xs font-bold border border-cyan-500/25">
-                            ⚡ قدّم عرضك المالي وتواصل مباشرة مع أصحاب العلامات والمصانع
+                            <span>BEYA Escrow Protection • نظام حماية وتجميد المستحقات 100%</span>
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2 text-xs text-slate-300">
-                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
-                            🇲🇦 <strong>دفع بنكي مغربي (CIH / التجاري)</strong>
+                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-xl border border-white/10 font-bold">
+                            🇲🇦 تحويل بنكي مغربي (CIH / التجاري)
                           </span>
-                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
-                            🌍 <strong>PayPal للمشاريع الدولية</strong>
+                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-xl border border-white/10 font-bold">
+                            🌍 PayPal للمعاملات الدولية
                           </span>
                         </div>
                       </div>
 
                       <div>
-                        <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
-                          <span>طلبات ومشاريع العمل الحر للموديليست بالمغرب</span>
-                          <span className="text-xs px-3 py-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-950 font-black rounded-full uppercase tracking-wider">
-                            Khamsat Feed
+                        <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-3">
+                          <span>مشاريع وطلبات الفصالة والباترون الصناعي</span>
+                          <span className="text-[11px] px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-black rounded-full uppercase tracking-wider">
+                            طلبات نشطة
                           </span>
                         </h1>
-                        <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-4xl leading-relaxed font-medium">
-                          تصفح أحدث طلبات الفصالة والباترونات المطلوبة من أصحاب الماركات ومصانع الملابس الجاهزة. اختر المشروع المناسب لاختصاصك، قدّم سعرك ومدة التسليم، واستلم أتعابك بضمان رسمي من BEYA Escrow بعد إتمام العمل وموافقة العميل.
+                        <p className="text-xs text-slate-300 mt-1 max-w-4xl leading-relaxed">
+                          منصة تعاقدية مخصصة لعلامات الأزياء ومصانع الألبسة الجاهزة لعرض طلبات الباترونات والتدرج القياسي. اختر المشروع المناسب لاختصاصك، قدّم عرضك المالي والتقني، وباشر العمل بضمان مالي رسمي.
                         </p>
                       </div>
 
-                      {/* 4 Guarantees */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                          <div className="flex items-center gap-2 text-emerald-400 text-xs font-black">
-                            <Shield className="w-4 h-4 shrink-0" />
-                            <span>حماية المستحقات</span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 leading-tight">أموال المشروع محجوزة لدى BEYA Escrow قبل أن تبدأ العمل.</p>
+                      {/* Sleek 4 Points Bar */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+                        <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2 text-slate-300">
+                          <Shield className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span>ضمان صرف المستحقات</span>
                         </div>
-
-                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                          <div className="flex items-center gap-2 text-amber-400 text-xs font-black">
-                            <Briefcase className="w-4 h-4 shrink-0" />
-                            <span>مشاريع جادة ومطلوبة</span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 leading-tight">طلبات حقيقية لهوديز، جينز، عبايات، وملابس تقنية من براندات مغربية.</p>
+                        <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2 text-slate-300">
+                          <Briefcase className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span>مشاريع موثقة من علامات ومصانع</span>
                         </div>
-
-                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                          <div className="flex items-center gap-2 text-cyan-400 text-xs font-black">
-                            <FileCode2 className="w-4 h-4 shrink-0" />
-                            <span>ملفات التسليم الرقمية</span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 leading-tight">تسليم ملفات DXF AAMA، ومحاكاة CLO 3D، وبطاقات Fiche Technique.</p>
+                        <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2 text-slate-300">
+                          <FileCode2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span>ملفات DXF AAMA & CLO 3D</span>
                         </div>
-
-                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                          <div className="flex items-center gap-2 text-indigo-400 text-xs font-black">
-                            <MessageCircle className="w-4 h-4 shrink-0" />
-                            <span>تواصل واتساب مباشر</span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 leading-tight">تواصل سريع مع صاحب الطلب لمناقشة التفاصيل قبل توقيع الاتفاق.</p>
+                        <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2 text-slate-300">
+                          <MessageCircle className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                          <span>تواصل مباشر مع العميل</span>
                         </div>
                       </div>
                     </div>
@@ -1851,90 +1833,72 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
               )}
 
               {/* ─────────────────────────────────────────────────────────────
-                  TAB 2: UPWORK TALENTS DIRECTORY (للعملاء اللي باغيين يوظفوا موديليست)
+                  TAB 2: VERIFIED TALENTS DIRECTORY (دليل الكفاءات والموديليست المعتمدين)
               ───────────────────────────────────────────────────────────── */}
               {freelanceTab === 'talents' && (
                 <>
-                  {/* Upwork Marketplace Top Hero */}
-                  <div className="bg-gradient-to-b from-[#111625] via-[#151c2d] to-[#0b0f19] border-b border-slate-800/80 p-6 sm:p-8 shrink-0">
-                    <div className="max-w-7xl mx-auto space-y-5">
+                  {/* Sleek Enterprise Header for Modélistes Talents */}
+                  <div className="bg-gradient-to-b from-[#111625] via-[#151c2d] to-[#0b0f19] border-b border-slate-800/80 px-4 sm:px-8 py-4 shrink-0">
+                    <div className="max-w-7xl mx-auto space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                          <span className="px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-black border border-amber-500/30 flex items-center gap-2 shadow-xs">
+                          <span className="px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-black border border-amber-500/30 flex items-center gap-2">
                             <ShieldCheck className="w-4 h-4 text-amber-400" />
-                            <span>BEYA Escrow Protection • نظام حماية المستحقات 100%</span>
-                          </span>
-                          <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-bold border border-emerald-500/25">
-                            ⚡ لا يتم تحويل الأموال إلا بعد استلام الباترون ومطابقة القياسات
+                            <span>BEYA Escrow Protection • نظام حماية وتجميد المستحقات 100%</span>
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2 text-xs text-slate-300">
-                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
-                            🇲🇦 <strong>تحويل بنكي مغربي (CIH / التجاري)</strong>
+                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-xl border border-white/10 font-bold">
+                            🇲🇦 تحويل بنكي مغربي (CIH / التجاري)
                           </span>
-                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-bold">
-                            🌍 <strong>PayPal للبراندات والمغتربين بالخارج</strong>
+                          <span className="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-xl border border-white/10 font-bold">
+                            🌍 PayPal للمعاملات الدولية
                           </span>
                         </div>
                       </div>
 
                       <div>
-                        <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
-                          <span>سوق العمل الحر للموديليست ومصممي الباترون</span>
-                          <span className="text-xs px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-full uppercase tracking-wider">
-                            Upwork Style
+                        <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-3">
+                          <span>نخبة مهندسي ومصممي الباترون الصناعي</span>
+                          <span className="text-[11px] px-2.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 font-black rounded-full uppercase tracking-wider">
+                            كفاءات معتمدة B2B
                           </span>
                         </h1>
-                        <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-4xl leading-relaxed font-medium">
-                          وظّف أفضل موديليست فالمغرب بالقطعة (Freelance). تصفح بورتفوليو حقيقي، وتعرف على البراندات العالمية اللي خدمو معاها (Zara, Adidas, Mango, Bershka...)، واطلب باترونك بضمان BEYA Escrow أو احجز استشارة خاصة 1-on-1 (عن بعد أو بالمكتب).
+                        <p className="text-xs text-slate-300 mt-1 max-w-4xl leading-relaxed">
+                          منصة احترافية موجهة لعلامات الموضة والمصانع لتوظيف نخبة خبراء الفصالة والباترون الصناعي الرقمي (Lectra Modaris, CLO 3D, Gerber Accumark) مع حماية المعاملات عبر BEYA Escrow أو حجز استشارة تقنية مباشرة.
                         </p>
                       </div>
 
-                      {/* 4 Trust & Guarantees Strips */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                          <div className="flex items-center gap-2 text-amber-400 text-xs font-black">
-                            <Shield className="w-4 h-4 shrink-0" />
-                            <span>ضمان BEYA Escrow</span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 leading-tight">أموالك محفوظة في الضمان حتى تفحص الباترون وتجرب الفيتينغ.</p>
+                      {/* Sleek 4 Points Bar */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+                        <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2 text-slate-300">
+                          <Shield className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span>ضمان BEYA Escrow المالي</span>
                         </div>
-
-                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                          <div className="flex items-center gap-2 text-emerald-400 text-xs font-black">
-                            <Crown className="w-4 h-4 shrink-0" />
-                            <span>خبرات مع كبرى العلامات</span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 leading-tight">موديليست شاركوا في سلاسل إنتاج Zara, Adidas, Mango, Nike.</p>
+                        <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2 text-slate-300">
+                          <Crown className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span>خبرات مثبتة في الإنتاج الصناعي</span>
                         </div>
-
-                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                          <div className="flex items-center gap-2 text-cyan-400 text-xs font-black">
-                            <FileCode2 className="w-4 h-4 shrink-0" />
-                            <span>ملفات صناعية معتمدة</span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 leading-tight">Lectra Modaris, CLO 3D, Gerber، تدريج XS-XXL، وبطاقة Fiche Tech.</p>
+                        <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2 text-slate-300">
+                          <FileCode2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span>ملفات معتمدة وتدريج قياسات دقيق</span>
                         </div>
-
-                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
-                          <div className="flex items-center gap-2 text-indigo-400 text-xs font-black">
-                            <Video className="w-4 h-4 shrink-0" />
-                            <span>استشارة Visio أو حضورية</span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 leading-tight">جلسات فحص رقمية 45د أو لقاء بمكتب الموديليست لتجربة الأقمشة.</p>
+                        <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2 text-slate-300">
+                          <Video className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                          <span>جلسات استشارة تقنية حضورية ورقمية</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-              {/* Upwork-style Search & Category Filter Header */}
+              {/* Verified Talents Search & Category Filter Header */}
               <div className="bg-[#111625] border-b border-slate-800/80 px-4 sm:px-8 py-4 sticky top-0 z-10 shadow-md">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                   {/* Category Pills */}
                   <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto scrollbar-hide py-0.5">
                     {[
-                      { id: 'all', label: 'الكل (5 خبراء)', icon: '✨' },
+                      { id: 'all', label: 'كافة التخصصات (5 معتمدين)', icon: '✨' },
                       { id: 'streetwear', label: 'ستريت وير وهوديز', icon: '🧥' },
                       { id: 'denim', label: 'جينز وكارجو ودينيم', icon: '👖' },
                       { id: 'femme', label: 'أزياء نسائية ومودست', icon: '👗' },
@@ -1955,12 +1919,12 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     ))}
                   </div>
 
-                  {/* Upwork Search Bar */}
+                  {/* Search Bar */}
                   <div className="relative w-full md:w-80">
                     <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3" />
                     <input
                       type="text"
-                      placeholder="ابحث بالاسم، البراند (Zara)، أو البرنامج (CLO)..."
+                      placeholder="ابحث بالاسم، التخصص، أو البرنامج (Lectra / CLO 3D)..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       className="w-full bg-[#1a2030] text-xs text-white placeholder-slate-400 pr-10 pl-3 py-2.5 rounded-xl border border-white/10 focus:border-amber-500 focus:outline-none shadow-inner"
@@ -4142,7 +4106,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                   <h3 className="text-base font-black text-white flex items-center gap-2">
                     <span>تقديم عرض على طلب مشروع</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-                      خمسات B2B
+                      عرض تعاقدي موثق
                     </span>
                   </h3>
                   <p className="text-xs text-slate-400">قدّم عرضك المالي وموعد التسليم ليدرس العميل ملفك ويقبله</p>
@@ -4445,7 +4409,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     }}
                     className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black rounded-xl text-xs transition cursor-pointer"
                   >
-                    تصفح المشروع في قائمة الطلبات (خمسات)
+                    تصفح المشروع في قائمة طلبات الإنتاج النشطة
                   </button>
                 </div>
               </div>
