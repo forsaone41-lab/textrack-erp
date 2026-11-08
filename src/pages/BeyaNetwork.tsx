@@ -310,7 +310,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
     return d.toISOString().split('T')[0];
   });
   const [consultationTime, setConsultationTime] = useState<string>('15:00');
-  const [consultationTopic, setConsultationTopic] = useState<string>('اختيار الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج');
+  const [consultationTopic, setConsultationTopic] = useState<string>('تحديد وتحليل المنتج الرابح (Winner Product): دراسة ترندات السوق والقطع الأكثر مبيعاً وهوامش الربح');
   const [consultationClientName, setConsultationClientName] = useState<string>('');
   const [consultationClientPhone, setConsultationClientPhone] = useState<string>('');
   const [consultationConfirmedSlip, setConsultationConfirmedSlip] = useState<any | null>(null);
@@ -333,6 +333,18 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       if (stored) return JSON.parse(stored);
     } catch {}
     return [
+      {
+        id: 'rev-0',
+        authorName: 'طارق الناصري',
+        brandName: 'Veloce Streetwear & E-Com',
+        city: 'الدار البيضاء',
+        consultantName: 'ياسين الصنهاجي',
+        rating: 5,
+        date: 'منذ يوم',
+        sessionType: 'visio',
+        comment: 'استشارة تحديد الـ Winner Product كانت نقطة تحول فـ البراند ديالي! ياسين نصحني نخدم على قصة Boxy Heavyweight 380g بدل الـ Oversized العادي وعطاني كلفة الإنتاج المضبوطة (78 درهم للقطعة). بعنا أكثر من 850 حبة فـ تيك توك بأرباح خيالية وبدون أي روطور!',
+        verified: true
+      },
       {
         id: 'rev-1',
         authorName: 'كريم بناني',
@@ -2528,7 +2540,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
                   {/* Subtitle */}
                   <p className="text-sm sm:text-base text-white/85 mt-4 max-w-2xl leading-relaxed font-normal">
-                    جلسات 1-à-1 خاصة (45 دقيقة مركزة) مباشرة مع كبار مهندسي النسيج ومصممي الباترون الصناعي بالمغرب لمراجعة تصاميمك، ضبط تدرج المقاسات، وحماية ميزانية الإنتاج من الهدر قبل قص الأقمشة.
+                    جلسات 1-à-1 خاصة (45 دقيقة مركزة) مباشرة مع كبار مهندسي النسيج واستشاريي الأزياء بالمغرب: اكتشف القطع الأكثر مبيعاً (Winner Products) في التجارة الإلكترونية، راجع ملفات CAD، واضبط تدرج المقاسات وهامش الربح قبل قص الأقمشة.
                   </p>
 
                   {/* Action CTAs */}
@@ -2678,6 +2690,85 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                           <CheckCircle2 className="w-3.5 h-3.5 text-slate-600" />
                           <span>فحص العينات يداً بيد</span>
                         </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Exclusive Winner Product Consulting Card (استشارة تحديد المنتج الرابح وهندسة الأرباح) */}
+                  <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-white via-[#fcfdfc] to-[#f2f7f2] border-2 border-[#108a00]/30 shadow-xs space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="px-3 py-0.5 rounded-full bg-[#108a00] text-white text-[10px] font-bold tracking-wider uppercase">
+                            WINNER PRODUCT ADVICE
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-200 flex items-center gap-1">
+                            <Flame className="w-3.5 h-3.5 text-amber-600" />
+                            <span>تحليل ترندات ومبيعات E-Commerce</span>
+                          </span>
+                          <span className="text-xs text-slate-500 font-medium">جلسة 45 دقيقة مع مهندس نسيج وخبير تجارة إلكترونية</span>
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-bold text-slate-900">
+                          استشارة تحديد المنتج الرابح (Winner Product) وهندسة أعلى هامش ربح
+                        </h3>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setConsultationTopic('تحديد وتحليل المنتج الرابح (Winner Product): دراسة ترندات السوق والقطع الأكثر مبيعاً وهوامش الربح');
+                          setConsultingTab('live_booking');
+                        }}
+                        className="px-5 py-2.5 bg-[#108a00] hover:bg-[#14a800] text-white font-semibold rounded-full text-xs transition flex items-center justify-center gap-2 shadow-xs cursor-pointer shrink-0"
+                      >
+                        <Flame className="w-4 h-4 text-amber-300" />
+                        <span>حجز استشارة المنتج الرابح</span>
+                      </button>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">
+                      قبل ما تستثمر أموالك فـ إنتاج موديلات بطيئة الحركة وتطيح فـ مشكل الستوك الميت (Dead Stock)، كيحلل معاك المستشار التقني أسرار القطع الأكثر طلباً وفيرال في التيك توك وإنستغرام، نوعية الثوب والقصة الرابحة، مع احتساب أدق كلفة إنتاج (Coût de Revient) تضمن ليك هامش ربح يفوق 65% فـ التجارة الإلكترونية.
+                    </p>
+
+                    {/* 4 Winner Product Strategic Pillars */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 text-xs">
+                      <div className="p-3.5 rounded-2xl bg-white border border-[#e4ebe4] space-y-1 shadow-2xs">
+                        <strong className="text-slate-900 font-bold block flex items-center gap-1.5 text-xs">
+                          <Flame className="w-3.5 h-3.5 text-amber-500" />
+                          <span>1. قصات فيرال سريعة البيع</span>
+                        </strong>
+                        <p className="text-[11px] text-slate-600 leading-tight">
+                          Boxy Heavyweight Tees، Oversized Hoodies 380g، Parachute Pants الأكثر تحقيقاً لمبيعات الإعلانات.
+                        </p>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-white border border-[#e4ebe4] space-y-1 shadow-2xs">
+                        <strong className="text-slate-900 font-bold block flex items-center gap-1.5 text-xs">
+                          <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>2. كلفة إنتاج 65 - 95 MAD</span>
+                        </strong>
+                        <p className="text-[11px] text-slate-600 leading-tight">
+                          ضبط كلفة الثوب والفصالة والخياطة واللوبالاج باش تبيع بـ 250-380 MAD بهامش ربح صافي مرتفع.
+                        </p>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-white border border-[#e4ebe4] space-y-1 shadow-2xs">
+                        <strong className="text-slate-900 font-bold block flex items-center gap-1.5 text-xs">
+                          <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>3. الأقمشة الأكثر طلباً</span>
+                        </strong>
+                        <p className="text-[11px] text-slate-600 leading-tight">
+                          Coton Peigné 240g، French Terry 350g، Crêpe de Soie أقمشة كتعطي إحساس الفخامة وما كترجعش فـ الروطور.
+                        </p>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-white border border-[#e4ebe4] space-y-1 shadow-2xs">
+                        <strong className="text-slate-900 font-bold block flex items-center gap-1.5 text-xs">
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#108a00]" />
+                          <span>4. تفادي الستوك الميت</span>
+                        </strong>
+                        <p className="text-[11px] text-slate-600 leading-tight">
+                          خطة إنتاج عينات مصغرة (Micro-Batch 50-100 pcs) لاختبار السوق قبل المغامرة بإنتاج كميات ضخمة.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -2919,6 +3010,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                         onChange={e => setConsultationTopic(e.target.value)}
                         className="w-full bg-[#f9fafb] text-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
                       >
+                        <option value="تحديد وتحليل المنتج الرابح (Winner Product): دراسة ترندات السوق والقطع الأكثر مبيعاً وهوامش الربح">
+                          تحديد وتحليل المنتج الرابح (Winner Product): دراسة ترندات السوق والقطع الأكثر مبيعاً وهوامش الربح
+                        </option>
                         <option value="اختيار وتدقيق الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج">
                           اختيار وتدقيق الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج
                         </option>
@@ -3122,23 +3216,42 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     <ShieldCheck className="w-5 h-5 text-[#108a00]" />
                     <span>كيف تحمي استشارة BEYA التقنية ميزانية كوليكسيونك؟</span>
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-700">
-                    <div className="p-4 rounded-xl bg-[#f9fafb] border border-slate-200/70 space-y-1.5">
-                      <strong className="text-slate-900 font-bold block text-sm">1. توفير 15% إلى 30% من استهلاك القماش</strong>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs text-slate-700">
+                    <div className="p-4 rounded-2xl bg-[#f9fafb] border border-slate-200/70 space-y-1.5 hover:border-[#108a00] transition">
+                      <strong className="text-slate-900 font-bold block text-sm flex items-center gap-1.5">
+                        <Flame className="w-4 h-4 text-amber-500" />
+                        <span>1. كشف المنتج الرابح (Winner Product)</span>
+                      </strong>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        تحديد القطع الأكثر طلباً في ترندات التيك توك والإعلانات، وهندسة تكلفة إنتاج تضمن هامش ربح +65% بدون مخاطرة الستوك الميت.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-[#f9fafb] border border-slate-200/70 space-y-1.5 hover:border-[#108a00] transition">
+                      <strong className="text-slate-900 font-bold block text-sm flex items-center gap-1.5">
+                        <Scissors className="w-4 h-4 text-[#108a00]" />
+                        <span>2. توفير 15% إلى 30% من استهلاك القماش</span>
+                      </strong>
                       <p className="text-xs text-slate-600 leading-relaxed">
                         يقوم الموديليست بتحسين تعشيق الباترون (Placement & Nesting) لتفادي الهدر على الطاولة قبل القص الصناعي.
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-[#f9fafb] border border-slate-200/70 space-y-1.5">
-                      <strong className="text-slate-900 font-bold block text-sm">2. مطابقة القياسات لجمهورك المستهدف</strong>
+                    <div className="p-4 rounded-2xl bg-[#f9fafb] border border-slate-200/70 space-y-1.5 hover:border-[#108a00] transition">
+                      <strong className="text-slate-900 font-bold block text-sm flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-slate-800" />
+                        <span>3. مطابقة القياسات لجمهورك المستهدف</span>
+                      </strong>
                       <p className="text-xs text-slate-600 leading-relaxed">
-                        تفادي المقاسات العشوائية التي تؤدي إلى إرجاع الزبائن للمنتجات وتراجع مبيعات البراند في السوق.
+                        تفادي المقاسات العشوائية التي تؤدي إلى إرجاع الزبائن للمنتجات (Retour) وتراجع مبيعات البراند في السوق.
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-[#f9fafb] border border-slate-200/70 space-y-1.5">
-                      <strong className="text-slate-900 font-bold block text-sm">3. بطاقة تقنية (Fiche Tech) تلزم المصنع</strong>
+                    <div className="p-4 rounded-2xl bg-[#f9fafb] border border-slate-200/70 space-y-1.5 hover:border-[#108a00] transition">
+                      <strong className="text-slate-900 font-bold block text-sm flex items-center gap-1.5">
+                        <FileText className="w-4 h-4 text-slate-800" />
+                        <span>4. بطاقة تقنية (Fiche Tech) تلزم المصنع</span>
+                      </strong>
                       <p className="text-xs text-slate-600 leading-relaxed">
                         وثيقة مرجعية وقانونية تفرض على ورشة الخياطة احترام خيوط الحياكة والدرزات وتفاصيل الفينيسيون بدقة.
                       </p>
@@ -5957,6 +6070,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     onChange={e => setConsultationTopic(e.target.value)}
                     className="w-full bg-[#f9fafb] text-slate-900 px-3 py-2.5 rounded-xl border border-slate-200 focus:border-[#108a00] focus:bg-white focus:outline-none"
                   >
+                    <option value="تحديد وتحليل المنتج الرابح (Winner Product): دراسة ترندات السوق والقطع الأكثر مبيعاً وهوامش الربح">
+                      تحديد وتحليل المنتج الرابح (Winner Product): دراسة ترندات السوق والقطع الأكثر مبيعاً وهوامش الربح
+                    </option>
                     <option value="اختيار وتدقيق الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج">
                       اختيار وتدقيق الأقمشة والمواد المناسبة للموديل مع احتساب تكلفة الإنتاج
                     </option>
