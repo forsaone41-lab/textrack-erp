@@ -891,9 +891,9 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
   }, 0);
 
   // If multi-piece ensemble, make sure cost covers all pieces
-  let globalCost = analysis.costEstimate || (pieces.length > 1 ? `${computedEnsembleMin} - ${computedEnsembleMax} MAD` : '35 - 55 MAD');
+  let globalCost = analysis.costEstimate?.trim() || (pieces.length > 1 ? `${computedEnsembleMin} - ${computedEnsembleMax} MAD` : '35 - 55 MAD');
   const parsedFirstNum = parseInt(String(globalCost).match(/\d+/)?.[0] || '0');
-  if (pieces.length > 1 && parsedFirstNum < 40 && computedEnsembleMin >= 50) {
+  if (!analysis.costEstimate && pieces.length > 1 && parsedFirstNum < 40 && computedEnsembleMin >= 50) {
     globalCost = `${computedEnsembleMin} - ${computedEnsembleMax} MAD`;
   }
 
@@ -1199,7 +1199,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
             </tr>
             <tr>
               <th>${isAr ? (pieces.length > 1 ? 'تقدير تكلفة الصنع (طقم كامل)' : 'تقدير تكلفة الصنع (الخدمة)') : (pieces.length > 1 ? 'Coût Façon Estimé (Ensemble)' : 'Coût Façon Estimé')}</th>
-              <td class="font-bold font-mono">${globalCost} ${pieces.length > 1 ? `<span style="font-size: 7.5px; font-weight: 700; color: #333;">${isAr ? `(مجموع ${pieces.length} قطع)` : `(${pieces.length} Pièces Réunies)`}</span>` : ''}</td>
+              <td class="font-bold font-mono">${isAr ? String(globalCost).replace(/MAD/gi, 'درهم') : globalCost} ${pieces.length > 1 ? `<span style="font-size: 7.5px; font-weight: 700; color: #333;">${isAr ? `(مجموع ${pieces.length} قطع)` : `(${pieces.length} Pièces Réunies)`}</span>` : ''}</td>
               <th>${isAr ? 'التصنيف الصناعي' : 'Segment Marché'}</th>
               <td>${isAr ? 'ملابس جاهزة / ستريتوير B2B' : 'Prêt-à-porter / Streetwear B2B'}</td>
             </tr>
@@ -1423,38 +1423,48 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
     <!-- 7. CHIFFRAGE DE REVIENT ESTIMATIF (SÉLECTION CONTRÔLÉE : 1, 2 OU 3 NIVEAUX) -->
     ${(() => {
       const isMulti = pieces.length > 1;
-      const parsedMin = parseInt(String(globalCost || '').match(/\d+/)?.[0] || '0');
+      const costMatches = String(globalCost || '').match(/\d+/g);
+      const minFacon = costMatches && costMatches[0] ? parseInt(costMatches[0]) : (isMulti ? 65 : 30);
+      const maxFacon = costMatches && costMatches[1]
+        ? parseInt(costMatches[1])
+        : (costMatches && costMatches[0] ? Math.round(minFacon * 1.35) : (isMulti ? 95 : 45));
 
-      // Premium Façon atelier (Confection & Coupe):
-      // For standard single piece: 28 - 38 DH.
-      // For multi-piece ensemble or heavy complex item: covers full labor.
-      const premiumFacon = isMulti
-        ? (globalCost || '75 - 110 درهم')
-        : (parsedMin >= 50 ? (globalCost || '55 - 75 درهم') : (isAr ? '28 - 38 درهم' : '28 - 38 MAD'));
-      const premiumFaconFr = isMulti
-        ? (globalCost || '75 - 110 MAD')
-        : (parsedMin >= 50 ? (globalCost || '55 - 75 MAD') : '28 - 38 MAD');
+      // Premium Façon atelier (Confection & Coupe): strictly respects globalCost / user custom cost
+      const premiumFaconAr = `${minFacon} - ${maxFacon} درهم`;
+      const premiumFaconFr = `${minFacon} - ${maxFacon} MAD`;
+      const premiumFacon = isAr ? premiumFaconAr : premiumFaconFr;
 
-      const revientMinMziana = isMulti ? 125 : (parsedMin >= 50 ? parsedMin + 45 : 65);
-      const revientMaxMziana = isMulti ? 165 : (parsedMin >= 50 ? parsedMin + 75 : 85);
-      const grosMinMziana = isMulti ? 195 : (parsedMin >= 50 ? Math.round(revientMaxMziana * 1.5) : 120);
-      const grosMaxMziana = isMulti ? 240 : (parsedMin >= 50 ? Math.round(revientMaxMziana * 1.8) : 150);
-      const detailMinMziana = isMulti ? 350 : (parsedMin >= 50 ? Math.round(grosMaxMziana * 1.6) : 190);
-      const detailMaxMziana = isMulti ? 480 : (parsedMin >= 50 ? Math.round(grosMaxMziana * 2.1) : 280);
+      // Realistic estimation of fabric + trims based on consumption
+      const parsedConso = parseFloat(String(totalConsumption || '1.4').match(/[\d.]+/)?.[0] || '1.4');
+      const estimatedMatiereMin = Math.round(parsedConso * 22 + 8);
+      const estimatedMatiereMax = Math.round(parsedConso * 32 + 15);
 
-      const standardFacon = isMulti ? '50 - 68 درهم' : (parsedMin >= 50 ? '35 - 48 درهم' : '20 - 28 درهم');
-      const standardFaconFr = isMulti ? '50 - 68 MAD' : (parsedMin >= 50 ? '35 - 48 MAD' : '20 - 28 MAD');
-      const revientMinNormal = isMulti ? 90 : (parsedMin >= 50 ? Math.round(revientMinMziana * 0.72) : 45);
-      const revientMaxNormal = isMulti ? 120 : (parsedMin >= 50 ? Math.round(revientMaxMziana * 0.72) : 60);
-      const grosMinNormal = isMulti ? 140 : (parsedMin >= 50 ? Math.round(grosMinMziana * 0.72) : 85);
-      const grosMaxNormal = isMulti ? 175 : (parsedMin >= 50 ? Math.round(grosMaxMziana * 0.72) : 110);
+      const revientMinMziana = minFacon + estimatedMatiereMin;
+      const revientMaxMziana = maxFacon + estimatedMatiereMax;
+      const grosMinMziana = Math.round(revientMinMziana * 1.45);
+      const grosMaxMziana = Math.round(revientMaxMziana * 1.55);
+      const detailMinMziana = Math.round(grosMinMziana * 1.6);
+      const detailMaxMziana = Math.round(grosMaxMziana * 1.85);
 
-      const ecoFacon = isMulti ? '35 - 50 درهم' : (parsedMin >= 50 ? '25 - 35 درهم' : '15 - 20 درهم');
-      const ecoFaconFr = isMulti ? '35 - 50 MAD' : (parsedMin >= 50 ? '25 - 35 MAD' : '15 - 20 MAD');
-      const revientMinFaible = isMulti ? 65 : (parsedMin >= 50 ? Math.round(revientMinMziana * 0.5) : 32);
-      const revientMaxFaible = isMulti ? 85 : (parsedMin >= 50 ? Math.round(revientMaxMziana * 0.5) : 42);
-      const grosMinFaible = isMulti ? 100 : (parsedMin >= 50 ? Math.round(grosMinMziana * 0.5) : 60);
-      const grosMaxFaible = isMulti ? 130 : (parsedMin >= 50 ? Math.round(grosMaxFaible * 0.5) : 75);
+      // Niveau 2: Standard Commercial (~72% de la façon premium)
+      const minStd = Math.round(minFacon * 0.72);
+      const maxStd = Math.round(maxFacon * 0.72);
+      const standardFacon = isAr ? `${minStd} - ${maxStd} درهم` : `${minStd} - ${maxStd} MAD`;
+      const standardFaconFr = `${minStd} - ${maxStd} MAD`;
+      const revientMinNormal = Math.round(revientMinMziana * 0.75);
+      const revientMaxNormal = Math.round(revientMaxMziana * 0.75);
+      const grosMinNormal = Math.round(grosMinMziana * 0.75);
+      const grosMaxNormal = Math.round(grosMaxMziana * 0.75);
+
+      // Niveau 3: Économique (~52% de la façon premium)
+      const minEco = Math.round(minFacon * 0.52);
+      const maxEco = Math.round(maxFacon * 0.52);
+      const ecoFacon = isAr ? `${minEco} - ${maxEco} درهم` : `${minEco} - ${maxEco} MAD`;
+      const ecoFaconFr = `${minEco} - ${maxEco} MAD`;
+      const revientMinFaible = Math.round(revientMinMziana * 0.55);
+      const revientMaxFaible = Math.round(revientMaxMziana * 0.55);
+      const grosMinFaible = Math.round(grosMinMziana * 0.55);
+      const grosMaxFaible = Math.round(grosMaxFaible * 0.55);
 
       if (tierMode === '1_tier') {
         return `

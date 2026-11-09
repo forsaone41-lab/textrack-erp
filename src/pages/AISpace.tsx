@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, RotateCcw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown, ArrowUpDown, Plus, GripVertical, ClipboardPaste, ClipboardCopy, SlidersHorizontal } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, RotateCcw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search, ChevronUp, ChevronDown, ArrowUpDown, Plus, GripVertical, ClipboardPaste, ClipboardCopy, SlidersHorizontal, Pencil } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -1651,6 +1651,35 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [customCostOverride, setCustomCostOverride] = useState<string>('');
   const [isEditingCustomCost, setIsEditingCustomCost] = useState(false);
   const [tempCustomCost, setTempCustomCost] = useState('');
+
+  const handleSaveCustomCost = (newCost: string) => {
+    const trimmed = newCost.trim();
+    if (!trimmed) {
+      setCustomCostOverride('');
+      setIsEditingCustomCost(false);
+      return;
+    }
+    setCustomCostOverride(trimmed);
+    setIsEditingCustomCost(false);
+    if (analysisResult) {
+      const updatedPieces = (analysisResult.pieces || []).map((p: any, idx: number) => {
+        if (analysisResult.pieces?.length === 1 || idx === 0) {
+          return { ...p, costEstimate: trimmed };
+        }
+        return p;
+      });
+      setAnalysisResult({
+        ...analysisResult,
+        costEstimate: trimmed,
+        pieces: updatedPieces.length > 0 ? updatedPieces : analysisResult.pieces
+      });
+    }
+  };
+
+  const handleResetCustomCost = () => {
+    setCustomCostOverride('');
+    setIsEditingCustomCost(false);
+  };
   const [unsplashPhotos, setUnsplashPhotos] = useState<string[]>([]);
   const [isSearchingFabric, setIsSearchingFabric] = useState(false);
   const fabricPhotoRef = useRef<HTMLInputElement>(null);
@@ -2508,7 +2537,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         photo: image || undefined,
         fit: (mode === 'current' ? curAnalysis.pieces?.[activePieceIdx]?.fit : null) || fitStr || curAnalysis.pieces?.[0]?.fit || 'Regular',
         complexity: (mode === 'current' ? curAnalysis.pieces?.[activePieceIdx]?.complexity : null) || compStr || curAnalysis.pieces?.[0]?.complexity || 'Moyenne',
-        costEstimate: (mode === 'current' ? curAnalysis.pieces?.[activePieceIdx]?.costEstimate : null) || curAnalysis.costEstimate || curAnalysis.pieces?.[0]?.costEstimate || '—',
+        costEstimate: (mode === 'current' ? curAnalysis.pieces?.[activePieceIdx]?.costEstimate : null) || customCostOverride.trim() || curAnalysis.costEstimate || curAnalysis.pieces?.[0]?.costEstimate || '—',
         aiNotes: chat.filter(c => c.role === 'ai').map(c => c.text).join('\n\n---\n\n'),
         tissuPhoto: curAnalysis.tissuPhoto || undefined
       };
@@ -4730,12 +4759,14 @@ ${userMessage}
       });
       return;
     }
+    const effectiveCost = customCostOverride.trim() || analysisResult.costEstimate;
     const effectivePieces = (analysisResult.pieces || []).map((p: any, idx: number) => {
       const pm = (piecesMesures && piecesMesures[idx] && piecesMesures[idx].length > 0)
         ? piecesMesures[idx]
         : (p.mesures && p.mesures.length > 0 ? p.mesures : (idx === 0 && customMesures && customMesures.length > 0 ? customMesures : []));
       return {
         ...p,
+        costEstimate: (analysisResult.pieces?.length === 1 && customCostOverride.trim()) ? customCostOverride.trim() : (p.costEstimate || effectiveCost),
         mesures: pm
       };
     });
@@ -4743,7 +4774,7 @@ ${userMessage}
     const effectiveAnalysis = {
       ...analysisResult,
       costingTierMode: costingTierMode,
-      costEstimate: customCostOverride.trim() || analysisResult.costEstimate,
+      costEstimate: effectiveCost,
       pieces: effectivePieces.length > 0 ? effectivePieces : analysisResult.pieces
     };
     printRapportIA(effectiveAnalysis, image, isAr);
@@ -5327,12 +5358,11 @@ ${userMessage}
                                 autoFocus
                                 value={tempCustomCost}
                                 onChange={(e) => setTempCustomCost(e.target.value)}
-                                placeholder="ex: 68 - 90 MAD"
-                                className="px-2 py-0.5 bg-slate-950 border border-indigo-500 text-white font-mono font-black text-xs rounded-lg w-28 focus:outline-none"
+                                placeholder="ex: 38 - 55 MAD"
+                                className="px-2.5 py-1 bg-slate-950 border border-indigo-500 text-white font-mono font-black text-xs rounded-lg w-32 focus:outline-none ring-2 ring-indigo-500/30"
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
-                                    setCustomCostOverride(tempCustomCost);
-                                    setIsEditingCustomCost(false);
+                                    handleSaveCustomCost(tempCustomCost);
                                   } else if (e.key === 'Escape') {
                                     setIsEditingCustomCost(false);
                                   }
@@ -5340,45 +5370,42 @@ ${userMessage}
                               />
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setCustomCostOverride(tempCustomCost);
-                                  setIsEditingCustomCost(false);
-                                }}
-                                className="p-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-bold"
-                                title={isAr ? 'تأكيد' : 'Valider'}
+                                onClick={() => handleSaveCustomCost(tempCustomCost)}
+                                className="p-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-bold transition-all shadow-xs"
+                                title={isAr ? 'تأكيد وحفظ السعر' : 'Valider'}
                               >
                                 <Check className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setIsEditingCustomCost(false)}
-                                className="p-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md text-xs"
+                                className="p-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md text-xs transition-all"
                                 title={isAr ? 'إلغاء' : 'Annuler'}
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-black text-emerald-400 font-mono">
-                                {customCostOverride || analysisResult.costEstimate || '—'}
-                              </span>
+                            <div className="flex items-center gap-2 mt-0.5">
                               <button
                                 type="button"
                                 onClick={() => {
                                   setTempCustomCost(customCostOverride || analysisResult.costEstimate || '');
                                   setIsEditingCustomCost(true);
                                 }}
-                                className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition-colors"
-                                title={isAr ? 'تعديل ثمن الفصالة والخياطة' : 'Modifier le coût façon'}
+                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-slate-700/80 border border-slate-600 hover:border-emerald-400 text-emerald-400 transition-all cursor-pointer group shadow-inner"
+                                title={isAr ? 'انقر لتعديل ثمن الفصالة والخياطة حسب رغبتك' : 'Cliquer pour modifier le coût façon'}
                               >
-                                <SlidersHorizontal className="w-3 h-3 text-indigo-400" />
+                                <span className="text-sm font-black font-mono tracking-tight group-hover:text-emerald-300">
+                                  {customCostOverride || analysisResult.costEstimate || '—'}
+                                </span>
+                                <Pencil className="w-3 h-3 text-indigo-400 group-hover:text-emerald-300 transition-colors" />
                               </button>
                               {customCostOverride && (
                                 <button
                                   type="button"
-                                  onClick={() => setCustomCostOverride('')}
-                                  className="text-[10px] text-amber-400 hover:underline font-bold"
+                                  onClick={handleResetCustomCost}
+                                  className="text-[10px] text-amber-400 hover:text-amber-300 hover:underline font-bold transition-colors"
                                   title={isAr ? 'استرجاع التقدير التلقائي' : 'Rétablir prix auto'}
                                 >
                                   {isAr ? 'استرجاع' : 'Rétablir'}
@@ -5597,9 +5624,18 @@ ${userMessage}
                               <span className="px-2.5 py-1 bg-white text-indigo-700 text-xs font-black rounded-xl border border-indigo-200/80 shadow-xs">
                                 ✂️ {p.consumption || '1.50m'}
                               </span>
-                              <span className="px-2.5 py-1 bg-emerald-600 text-white text-xs font-black rounded-xl shadow-xs">
-                                💰 {p.costEstimate || '—'}
-                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTempCustomCost(p.costEstimate || customCostOverride || analysisResult.costEstimate || '');
+                                  setIsEditingCustomCost(true);
+                                }}
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-xs flex items-center gap-1 cursor-pointer transition-all active:scale-95"
+                                title={isAr ? 'تعديل ثمن الفصالة والخياطة' : 'Modifier le coût façon'}
+                              >
+                                <span>💰 {p.costEstimate || (analysisResult.pieces?.length === 1 && customCostOverride) || '—'}</span>
+                                <Pencil className="w-3 h-3 opacity-75" />
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -7640,7 +7676,14 @@ ${userMessage}
       <ClientQuoteModal
         isOpen={showClientQuoteModal}
         onClose={() => setShowClientQuoteModal(false)}
-        analysisResult={analysisResult}
+        analysisResult={analysisResult ? {
+          ...analysisResult,
+          costEstimate: customCostOverride.trim() || analysisResult.costEstimate,
+          pieces: (analysisResult.pieces || []).map((p: any, idx: number) => ({
+            ...p,
+            costEstimate: (analysisResult.pieces.length === 1 && customCostOverride.trim()) ? customCostOverride.trim() : (p.costEstimate || customCostOverride.trim() || analysisResult.costEstimate)
+          }))
+        } : null}
         modelImage={image}
         isAr={isAr}
         initialDocMode={quoteInitialMode}
