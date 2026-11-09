@@ -112,6 +112,176 @@ export interface GroupageDeal {
   whatsappText: string;
 }
 
+export interface GroupageOrder {
+  id: string;
+  dealId: string;
+  dealTitle: string;
+  brandName: string;
+  contactName: string;
+  phone: string;
+  city: string;
+  quantity: number;
+  unit: string;
+  color: string;
+  totalPrice: number;
+  savingsMad: number;
+  status: 'confirmed' | 'pending';
+  date: string;
+}
+
+export interface GroupageSupplierReply {
+  id: string;
+  supplierName: string;
+  supplierCity: string;
+  supplierAvatar?: string;
+  priceMAD: number;
+  unit: string;
+  minQty: number;
+  deliveryTime: string;
+  message: string;
+  whatsapp: string;
+  date: string;
+}
+
+export interface GroupageCustomRequest {
+  id: string;
+  title: string;
+  materialNeeded: string;
+  category: 'tissu' | 'fournitures';
+  targetQty: number;
+  unit: string;
+  targetPriceMAD?: number;
+  brandName: string;
+  city: string;
+  phone: string;
+  description: string;
+  colors?: string[];
+  date: string;
+  status: 'open' | 'fulfilled';
+  replies: GroupageSupplierReply[];
+}
+
+const INITIAL_GROUPAGE_ORDERS: GroupageOrder[] = [
+  // grp-1: Molleton 340g
+  { id: 'ord-101', dealId: 'grp-1', dealTitle: 'دفعة أقمشة الملتون الشتوي 340g', brandName: 'Casablanca Streetwear', contactName: 'أمين', phone: '0661234567', city: 'الدار البيضاء', quantity: 75, unit: 'كلغ', color: 'أسود فاحم (Noir Profond)', totalPrice: 3300, savingsMad: 600, status: 'confirmed', date: 'منذ يومين' },
+  { id: 'ord-102', dealId: 'grp-1', dealTitle: 'دفعة أقمشة الملتون الشتوي 340g', brandName: 'Atlas Originals', contactName: 'سفيان', phone: '0662345678', city: 'مراكش', quantity: 50, unit: 'كلغ', color: 'رمادي ميلونج (Gris Chiné)', totalPrice: 2200, savingsMad: 400, status: 'confirmed', date: 'منذ 3 أيام' },
+  { id: 'ord-103', dealId: 'grp-1', dealTitle: 'دفعة أقمشة الملتون الشتوي 340g', brandName: 'Urban Way Apparel', contactName: 'طارق', phone: '0663456789', city: 'طنجة', quantity: 100, unit: 'كلغ', color: 'أوف وايت حليبي (Off-White)', totalPrice: 4400, savingsMad: 800, status: 'confirmed', date: 'منذ 3 أيام' },
+  { id: 'ord-104', dealId: 'grp-1', dealTitle: 'دفعة أقمشة الملتون الشتوي 340g', brandName: 'Mode Casa Studio', contactName: 'مهدي', phone: '0664567890', city: 'الدار البيضاء', quantity: 50, unit: 'كلغ', color: 'أخضر زيتي ملكي', totalPrice: 2200, savingsMad: 400, status: 'confirmed', date: 'منذ 4 أيام' },
+  { id: 'ord-105', dealId: 'grp-1', dealTitle: 'دفعة أقمشة الملتون الشتوي 340g', brandName: 'Nomad Wear', contactName: 'ياسين', phone: '0665678901', city: 'أكادير', quantity: 45, unit: 'كلغ', color: 'بني شوكولا موكا', totalPrice: 1980, savingsMad: 360, status: 'confirmed', date: 'منذ 5 أيام' },
+  { id: 'ord-106', dealId: 'grp-1', dealTitle: 'دفعة أقمشة الملتون الشتوي 340g', brandName: 'Atelier North', contactName: 'كريم', phone: '0666789012', city: 'تطوان', quantity: 60, unit: 'كلغ', color: 'أسود فاحم (Noir Profond)', totalPrice: 2640, savingsMad: 480, status: 'confirmed', date: 'منذ 6 أيام' },
+
+  // grp-2: Canvas 320g
+  { id: 'ord-201', dealId: 'grp-2', dealTitle: 'صفقة قماش كانفاس قطني سميك 320g', brandName: 'Nordic Cargo Brand', contactName: 'كريم', phone: '0667890123', city: 'طنجة', quantity: 60, unit: 'متر', color: 'كاكي عسكري (Kaki Militaire)', totalPrice: 1920, savingsMad: 480, status: 'confirmed', date: 'منذ يوم' },
+  { id: 'ord-202', dealId: 'grp-2', dealTitle: 'صفقة قماش كانفاس قطني سميك 320g', brandName: 'Tactical Style Morocco', contactName: 'أنس', phone: '0668901234', city: 'الدار البيضاء', quantity: 100, unit: 'متر', color: 'أسود كربوني (Noir Charbon)', totalPrice: 3200, savingsMad: 800, status: 'confirmed', date: 'منذ يومين' },
+  { id: 'ord-203', dealId: 'grp-2', dealTitle: 'صفقة قماش كانفاس قطني سميك 320g', brandName: 'Heritage Worker', contactName: 'حمزة', phone: '0669012345', city: 'فاس', quantity: 90, unit: 'متر', color: 'بيج جملي صحراوي (Camel Desert)', totalPrice: 2880, savingsMad: 720, status: 'confirmed', date: 'منذ 4 أيام' },
+  { id: 'ord-204', dealId: 'grp-2', dealTitle: 'صفقة قماش كانفاس قطني سميك 320g', brandName: 'Saharan Wear', contactName: 'عمر', phone: '0660123456', city: 'مراكش', quantity: 60, unit: 'متر', color: 'كاكي عسكري (Kaki Militaire)', totalPrice: 1920, savingsMad: 480, status: 'confirmed', date: 'منذ 5 أيام' },
+
+  // grp-5: Crêpe Barbie
+  { id: 'ord-501', dealId: 'grp-5', dealTitle: 'دفعة أقمشة كريب باربي رويال الفاخر 220g', brandName: 'Abaya Chic Casablanca', contactName: 'كنزة', phone: '0661122334', city: 'الدار البيضاء', quantity: 80, unit: 'متر', color: 'أسود ملكي فاحم (Noir Royal)', totalPrice: 2880, savingsMad: 640, status: 'confirmed', date: 'منذ يوم' },
+  { id: 'ord-502', dealId: 'grp-5', dealTitle: 'دفعة أقمشة كريب باربي رويال الفاخر 220g', brandName: 'Kaftan Modern Fes', contactName: 'فاطمة', phone: '0662233445', city: 'فاس', quantity: 60, unit: 'متر', color: 'بيج نيود بودرة (Nude Poudré)', totalPrice: 2160, savingsMad: 480, status: 'confirmed', date: 'منذ يومين' },
+  { id: 'ord-503', dealId: 'grp-5', dealTitle: 'دفعة أقمشة كريب باربي رويال الفاخر 220g', brandName: 'Elegance Femme Rabat', contactName: 'مريم', phone: '0663344556', city: 'الرباط', quantity: 50, unit: 'متر', color: 'أزرق بترولي ملكي (Bleu Pétrole)', totalPrice: 1800, savingsMad: 400, status: 'confirmed', date: 'منذ 3 أيام' },
+  { id: 'ord-504', dealId: 'grp-5', dealTitle: 'دفعة أقمشة كريب باربي رويال الفاخر 220g', brandName: 'Couture Luxe', contactName: 'زينب', phone: '0664455667', city: 'مراكش', quantity: 50, unit: 'متر', color: 'وردي باودر ناعم (Rose Poudré)', totalPrice: 1800, savingsMad: 400, status: 'confirmed', date: 'منذ 4 أيام' },
+  { id: 'ord-505', dealId: 'grp-5', dealTitle: 'دفعة أقمشة كريب باربي رويال الفاخر 220g', brandName: 'Hijab Trend Tanger', contactName: 'سناء', phone: '0665566778', city: 'طنجة', quantity: 40, unit: 'متر', color: 'أسود ملكي فاحم (Noir Royal)', totalPrice: 1440, savingsMad: 320, status: 'confirmed', date: 'منذ 5 أيام' }
+];
+
+const INITIAL_CUSTOM_REQUESTS: GroupageCustomRequest[] = [
+  {
+    id: 'req-1',
+    title: 'طلب 150 متر كريب باربي رويال كوري أسود ملكي للعبايات والبدلات',
+    materialNeeded: 'كريب باربي رويال 220g كوري',
+    category: 'tissu',
+    targetQty: 150,
+    unit: 'متر',
+    targetPriceMAD: 38,
+    brandName: 'علامة Rym Abaya',
+    city: 'الدار البيضاء (المعاريف)',
+    phone: '0661234567',
+    description: 'محتاجين 150 متر كريب باربي ثقيل وطايح ومكايتكمشش، اللون أسود ملكي فاحم ما كيشهابش فالتصبين لإنتاج كوليكسيون عبايات وبدلات نسائية راقية.',
+    colors: ['أسود ملكي فاحم'],
+    date: 'منذ يومين',
+    status: 'open',
+    replies: [
+      {
+        id: 'rep-sup-1',
+        supplierName: 'دار الكريب والأقمشة النسائية (Derb Omar)',
+        supplierCity: 'الدار البيضاء • درب عمر',
+        supplierAvatar: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=150&auto=format&fit=crop&q=80',
+        priceMAD: 36,
+        unit: 'متر',
+        minQty: 30,
+        deliveryTime: '24 ساعة داخل كازا • 48 ساعة لجميع المدن',
+        message: 'السلام عليكم أختي ريم، طلبكم متوفر بالكامل فـ مستودعنا بدرب عمر. كريب باربي رويال 220g أصلي كوري بسواد ملكي ممتاز، عرض 1.50م. نعطيوكم سعر 36 درهم للمتر (تخفيض 2 درهم على الميزانية ديالكم). إمكانية أخذ كوبون اختبار 5 أمتار قبل الرول الكامل مع بطاقة العينات مجاناً.',
+        whatsapp: '212661902834',
+        date: 'أمس، 11:30'
+      }
+    ]
+  },
+  {
+    id: 'req-2',
+    title: 'طلب 400 سحاب ووتربروف أسود 70 سم لسترات المطر والرياح',
+    materialNeeded: 'سحابات ضد الماء Zips Étanche مع أكياس بولي باغ',
+    category: 'fournitures',
+    targetQty: 400,
+    unit: 'قطعة',
+    targetPriceMAD: 5.50,
+    brandName: 'North Shelter Apparel',
+    city: 'طنجة',
+    phone: '0665891234',
+    description: 'مطلوب سحابات عازلة للماء والرياح طول 70 سم مع شريط لاصق حراري لسترات الشتاء الووتربروف، ومطلوب 400 كيس بولي باغ مات بسحاب.',
+    colors: ['أسود مات'],
+    date: 'منذ 3 أيام',
+    status: 'open',
+    replies: [
+      {
+        id: 'rep-sup-2',
+        supplierName: 'مؤسسة الأناقة للوازم الخياطة والتغليف',
+        supplierCity: 'الدار البيضاء • كراج علال / طنجة',
+        supplierAvatar: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=150&auto=format&fit=crop&q=80',
+        priceMAD: 5.20,
+        unit: 'قطعة',
+        minQty: 100,
+        deliveryTime: 'تسليم فوري من مستودع طنجة كزناية',
+        message: 'أهلاً بكم، العرض جاهز بالكامل: سحاب ووتربروف احترافي مع شريط مطاطي عازل بسعر 5.20 MAD للطقم شاملاً كيس البولي باغ الزيبلوك المات. العينات متوفرة للمعاينة الفورية بطنجة كزناية.',
+        whatsapp: '212668901234',
+        date: 'منذ يومين'
+      }
+    ]
+  },
+  {
+    id: 'req-3',
+    title: 'طلب تجميع أقمشة كتان طبيعي بيور 100% مغسول (Pure Washed Linen)',
+    materialNeeded: 'كتان طبيعي 100% غسول بارد',
+    category: 'tissu',
+    targetQty: 200,
+    unit: 'متر',
+    targetPriceMAD: 42,
+    brandName: 'Nomad Coastline',
+    city: 'أكادير',
+    phone: '0663456789',
+    description: 'كنقلبو على كتان فرنسي طبيعي 100% معالج ضد الانكماش لصنع قمصان وشورتات صيفية بألوان بيج، إيكرو، وأزرق سماوي.',
+    colors: ['بيج رملي', 'أبيض ناصع', 'أزرق سماوي'],
+    date: 'منذ 4 أيام',
+    status: 'open',
+    replies: [
+      {
+        id: 'rep-sup-3',
+        supplierName: 'مستودع أقمشة الكتان والصيف الطبيعي (Comptoir du Lin)',
+        supplierCity: 'طنجة / الدار البيضاء',
+        supplierAvatar: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=150&auto=format&fit=crop&q=80',
+        priceMAD: 42,
+        unit: 'متر',
+        minQty: 30,
+        deliveryTime: '48 ساعة لأكادير عبر شركة الإرساليات',
+        message: 'مرحباً خويا، متوفر عندنا كتان بيور 100% مغسول Pure Linen 210g حاصل على شهادة OEKO-TEX العالمية، الألوان الثلاثة متوفرة برولوهات كاملة مع ثبات تام للأبعاد وملمس طبيعي فاخر.',
+        whatsapp: '212662894105',
+        date: 'منذ 3 أيام'
+      }
+    ]
+  }
+];
+
+
+
 export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps) {
   const navigate = useNavigate();
   const emailKey = (currentUser?.email || '').toLowerCase().trim();
@@ -494,6 +664,221 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
   const [activeDealImageIdx, setActiveDealImageIdx] = useState<Record<string, number>>({});
   const [dealQuantities, setDealQuantities] = useState<Record<string, number>>({});
   const [dealUnitView, setDealUnitView] = useState<'both' | 'kg' | 'meter'>('both');
+
+  // ─────────────────────────────────────────────────────────────
+  // INTERACTIVE REAL GROUPAGE STATE (BOOKINGS, CUSTOM REQUESTS & REPLIES)
+  // ─────────────────────────────────────────────────────────────
+  const [groupageSubTab, setGroupageSubTab] = useState<'deals' | 'requests'>('deals');
+  const [groupageOrders, setGroupageOrders] = useState<GroupageOrder[]>(() => {
+    try {
+      const saved = localStorage.getItem('beya_groupage_orders');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return INITIAL_GROUPAGE_ORDERS;
+  });
+
+  const [customRequests, setCustomRequests] = useState<GroupageCustomRequest[]>(() => {
+    try {
+      const saved = localStorage.getItem('beya_groupage_custom_requests');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return INITIAL_CUSTOM_REQUESTS;
+  });
+
+  // Modal States
+  const [bookingModalDeal, setBookingModalDeal] = useState<GroupageDeal | null>(null);
+  const [bookingForm, setBookingForm] = useState({
+    brandName: '',
+    contactName: '',
+    phone: '',
+    city: 'الدار البيضاء',
+    quantity: 25,
+    color: '',
+    notes: ''
+  });
+  const [bookingSuccessSlip, setBookingSuccessSlip] = useState<GroupageOrder | null>(null);
+
+  const [showCreateCustomRequestModal, setShowCreateCustomRequestModal] = useState<boolean>(false);
+  const [newRequestForm, setNewRequestForm] = useState({
+    title: '',
+    materialNeeded: '',
+    category: 'tissu' as 'tissu' | 'fournitures',
+    targetQty: 100,
+    unit: 'متر',
+    targetPriceMAD: 38,
+    brandName: '',
+    city: 'الدار البيضاء',
+    phone: '',
+    description: ''
+  });
+
+  const [replyModalRequest, setReplyModalRequest] = useState<GroupageCustomRequest | null>(null);
+  const [supplierReplyForm, setSupplierReplyForm] = useState({
+    supplierName: 'دار الكريب والأقمشة النسائية (Derb Omar)',
+    supplierCity: 'الدار البيضاء',
+    priceMAD: 36,
+    unit: 'متر',
+    minQty: 25,
+    deliveryTime: '24 ساعة داخل كازا • 48 ساعة لباقي المدن',
+    message: '',
+    whatsapp: '212661902834'
+  });
+
+  const [expandedDealOrders, setExpandedDealOrders] = useState<Record<string, boolean>>({
+    'grp-1': true,
+    'grp-5': true
+  });
+
+  // Auto initialize bookingForm with user profile when modal opens
+  const openBookingModal = (deal: GroupageDeal) => {
+    setBookingModalDeal(deal);
+    setBookingForm({
+      brandName: userProfile.brandName || '',
+      contactName: (currentUser as any)?.nom || 'صاحب البراند',
+      phone: userProfile.phone || '',
+      city: userProfile.city || 'الدار البيضاء',
+      quantity: dealQuantities[deal.id] || deal.minCommitment,
+      color: selectedDealColor[deal.id] || deal.colors[0]?.name || '',
+      notes: ''
+    });
+  };
+
+  const handleConfirmBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bookingModalDeal) return;
+
+    const unitPrice = bookingModalDeal.discountPrice;
+    const regularPrice = bookingModalDeal.regularPrice;
+    const qty = Number(bookingForm.quantity) || bookingModalDeal.minCommitment;
+    const totalPrice = qty * unitPrice;
+    const savingsMad = (qty * regularPrice) - totalPrice;
+
+    const newOrder: GroupageOrder = {
+      id: 'usr-' + Date.now().toString().slice(-5),
+      dealId: bookingModalDeal.id,
+      dealTitle: bookingModalDeal.title,
+      brandName: bookingForm.brandName.trim() || 'علامتي التجارية',
+      contactName: bookingForm.contactName.trim() || 'المسؤول',
+      phone: bookingForm.phone.trim() || '0600000000',
+      city: bookingForm.city,
+      quantity: qty,
+      unit: bookingModalDeal.primaryUnitLabelAr,
+      color: bookingForm.color || bookingModalDeal.colors[0]?.name || '',
+      totalPrice,
+      savingsMad,
+      status: 'confirmed',
+      date: 'الآن (مباشر)'
+    };
+
+    const nextOrders = [newOrder, ...groupageOrders];
+    setGroupageOrders(nextOrders);
+    try {
+      localStorage.setItem('beya_groupage_orders', JSON.stringify(nextOrders));
+    } catch {}
+
+    // Persist as a Lead for Admin / Suppliers CRM
+    try {
+      await saveRecord('leads', {
+        id: newOrder.id,
+        client: newOrder.brandName,
+        name: newOrder.contactName,
+        phone: newOrder.phone,
+        ville: newOrder.city,
+        type: '__GROUPAGE_ORDER__',
+        details: `حجز شراء مشترك: ${newOrder.dealTitle} | الكمية: ${newOrder.quantity} ${newOrder.unit} | اللون: ${newOrder.color} | الإجمالي: ${newOrder.totalPrice} MAD`,
+        date: new Date().toISOString(),
+        status: 'completed',
+        crmStage: 'confirme',
+        createdAt: new Date().toISOString()
+      }, true);
+    } catch (err) {
+      console.warn('Lead save fallback:', err);
+    }
+
+    setBookingModalDeal(null);
+    setBookingSuccessSlip(newOrder);
+  };
+
+  const handleCreateCustomRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRequestForm.title.trim()) return;
+
+    const newReq: GroupageCustomRequest = {
+      id: 'req-' + Date.now().toString().slice(-5),
+      title: newRequestForm.title.trim(),
+      materialNeeded: newRequestForm.materialNeeded.trim() || newRequestForm.title.trim(),
+      category: newRequestForm.category,
+      targetQty: Number(newRequestForm.targetQty) || 100,
+      unit: newRequestForm.unit,
+      targetPriceMAD: Number(newRequestForm.targetPriceMAD) || 35,
+      brandName: newRequestForm.brandName.trim() || userProfile.brandName || 'براند جديد',
+      city: newRequestForm.city,
+      phone: newRequestForm.phone.trim() || userProfile.phone || '0600000000',
+      description: newRequestForm.description.trim() || 'طلب تجميع قماش وتوريد بالجملة من مستودعات شبكة BEYA.',
+      date: 'الآن (مباشر)',
+      status: 'open',
+      replies: []
+    };
+
+    const nextRequests = [newReq, ...customRequests];
+    setCustomRequests(nextRequests);
+    try {
+      localStorage.setItem('beya_groupage_custom_requests', JSON.stringify(nextRequests));
+    } catch {}
+
+    try {
+      await saveRecord('leads', {
+        id: newReq.id,
+        client: newReq.brandName,
+        name: newReq.brandName,
+        phone: newReq.phone,
+        ville: newReq.city,
+        type: '__GROUPAGE_REQUEST__',
+        details: `طلب تجميع مخصص: ${newReq.title} | الكمية: ${newReq.targetQty} ${newReq.unit} | السعر المقترح: ${newReq.targetPriceMAD} MAD | ${newReq.description}`,
+        date: new Date().toISOString(),
+        status: 'open',
+        crmStage: 'nouveau',
+        createdAt: new Date().toISOString()
+      }, true);
+    } catch (err) {}
+
+    setShowCreateCustomRequestModal(false);
+    setGroupageSubTab('requests');
+  };
+
+  const handleSendSupplierReply = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!replyModalRequest) return;
+
+    const newReply: GroupageSupplierReply = {
+      id: 'rep-' + Date.now().toString().slice(-5),
+      supplierName: supplierReplyForm.supplierName.trim() || 'مورد معتمد BEYA',
+      supplierCity: supplierReplyForm.supplierCity,
+      priceMAD: Number(supplierReplyForm.priceMAD) || 35,
+      unit: supplierReplyForm.unit,
+      minQty: Number(supplierReplyForm.minQty) || 25,
+      deliveryTime: supplierReplyForm.deliveryTime.trim() || '24 إلى 48 ساعة',
+      message: supplierReplyForm.message.trim() || 'مرحباً، طلبكم متوفر بالكامل فـ مستودعنا مع إمكانية إرسال العينات مجاناً.',
+      whatsapp: supplierReplyForm.whatsapp.trim() || '212675239885',
+      date: 'الآن (مباشر)'
+    };
+
+    const updated = customRequests.map(r => {
+      if (r.id !== replyModalRequest.id) return r;
+      return {
+        ...r,
+        replies: [...r.replies, newReply]
+      };
+    });
+
+    setCustomRequests(updated);
+    try {
+      localStorage.setItem('beya_groupage_custom_requests', JSON.stringify(updated));
+    } catch {}
+
+    setReplyModalRequest(null);
+  };
+
 
   // Custom registered pros & suppliers from localStorage
   const [registeredPros] = useState<any[]>(() => {
@@ -4244,496 +4629,694 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             </div>
           )}
 
-          {/* VIEW C: GROUPAGE DEALS (الشراء المشترك) */}
+                    {/* VIEW C: GROUPAGE DEALS & CUSTOM REQUESTS (الشراء المشترك والطلبات الحية) */}
           {activeView === 'groupage' && (
             <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 bg-[#0b0f19]">
               <div className="max-w-7xl mx-auto w-full space-y-6">
 
-              {/* Groupage Header */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-950/70 via-slate-900 to-amber-950/80 border border-amber-500/30 text-white relative overflow-hidden shadow-2xl">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-                <div className="relative z-10 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-500/30 inline-flex items-center gap-1.5 shadow-sm">
-                      <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
-                      <span>عروض الشراء المشترك الجماعي (BEYA GROUPAGE) 🛒</span>
-                    </span>
-                    <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>ضمان الجودة والفحص قبل الشحن</span>
-                    </span>
-                  </div>
-
-                  <h2 className="text-xl sm:text-2xl font-black text-white">
-                    أقمشة ومستلزمات المصانع الكبرى بسعر الجملة المخفض (بالكيلو والمتر)
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium max-w-3xl">
-                    تنسق ورشة BEYA طلبات الشراء الجماعي مع أكبر مستودعات الأقمشة بالمغرب (درب عمر وطنجة) للاستفادة من تخفيضات تصل حتى 25% مع تفاصيل دقيقة، صور حقيقية للنسيج، وتحويل واضح بين ثمن الكيلو وثمن المتر لمساعدتك فـ حساب تكلفة كل بياسة.
-                  </p>
-
-                  {/* Unit View Selector Pill */}
-                  <div className="pt-2 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="text-slate-400 font-bold">طريقة عرض السعر:</span>
-                    <button
-                      onClick={() => setDealUnitView('both')}
-                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
-                        dealUnitView === 'both'
-                          ? 'bg-amber-500 text-slate-950 shadow-md font-black'
-                          : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
-                      }`}
-                    >
-                      عرض السعرين معاً (بالكيلو والمتر ⚖️📏)
-                    </button>
-                    <button
-                      onClick={() => setDealUnitView('kg')}
-                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
-                        dealUnitView === 'kg'
-                          ? 'bg-amber-500 text-slate-950 shadow-md font-black'
-                          : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
-                      }`}
-                    >
-                      سعر الكيلو فقط (MAD/kg)
-                    </button>
-                    <button
-                      onClick={() => setDealUnitView('meter')}
-                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
-                        dealUnitView === 'meter'
-                          ? 'bg-amber-500 text-slate-950 shadow-md font-black'
-                          : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
-                      }`}
-                    >
-                      سعر المتر فقط (MAD/m)
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Deals List */}
-              <div className="space-y-6">
-                {groupageDeals.map(deal => {
-                  const progressPct = Math.min(100, Math.round((deal.currentKg / deal.targetKg) * 100));
-                  const activeImgIdx = activeDealImageIdx[deal.id] || 0;
-                  const currentImage = deal.images[activeImgIdx] || deal.images[0];
-                  const chosenColor = selectedDealColor[deal.id] || deal.colors[0]?.name || '';
-                  const committedQty = dealQuantities[deal.id] || deal.minCommitment;
-                  const calculatedTotal = committedQty * deal.discountPrice;
-                  const regularTotal = committedQty * deal.regularPrice;
-                  const savingsMad = regularTotal - calculatedTotal;
-
-                  // Estimated yields
-                  const estMeters = deal.metersPerKg
-                    ? Math.round(committedQty * deal.metersPerKg)
-                    : (deal.primaryUnit === 'm' ? committedQty : null);
-
-                  const estGarments = deal.category === 'tissu'
-                    ? (deal.primaryUnit === 'kg'
-                        ? Math.floor(committedQty / (deal.id === 'grp-3' ? 0.38 : 0.8))
-                        : Math.floor(committedQty / (deal.id === 'grp-2' ? 1.6 : 1.8)))
-                    : committedQty;
-
-                  const whatsappBookingUrl = `https://wa.me/212675239885?text=${encodeURIComponent(
-                    `السلام عليكم ورشة BEYA NETWORK، أرغب في حجز كمية من عرض الشراء المشترك:\n\n• العرض: ${deal.title}\n• الكمية المطلوبة: ${committedQty} ${deal.primaryUnitLabelAr}\n• اللون المختار: ${chosenColor}\n• المجموع التقديري: ${calculatedTotal.toLocaleString()} درهم (وفرت ${savingsMad.toLocaleString()} درهم)\n• براند: ${userProfile.brandName || 'علامتي التجارية'}\n• المدينة: ${userProfile.city || 'الدار البيضاء'}`
-                  )}`;
-
-                  return (
-                    <div
-                      key={deal.id}
-                      className="bg-[#2b2d31] rounded-3xl border border-[#383a40] p-5 sm:p-6 text-white space-y-6 hover:border-amber-500/30 transition shadow-xl"
-                    >
-                      {/* Top Supplier & Status Meta */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#383a40] pb-4">
-                        <div className="flex items-center gap-2">
-                          <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black border border-emerald-500/30 flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
-                            <span>متبقي {deal.daysLeft} أيام</span>
-                          </span>
-                          <span className="text-xs text-slate-300 font-bold flex items-center gap-1">
-                            <Building2 className="w-3.5 h-3.5 text-indigo-400" />
-                            <span>{deal.supplier} • {deal.supplierCity}</span>
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 text-xs font-black border border-amber-500/20">
-                            {deal.category === 'tissu' ? '🧵 قماش معتمد' : '📦 لوازم وتغليف'}
-                          </span>
-                          <span className="text-xs text-slate-400 font-medium">
-                            {deal.participantsCount} براندات انضمت حتى الآن
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Main Fabric Presentation: Photo Gallery (Left) + Details & Pricing (Right) */}
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-                        {/* COLUMN 1: FABRIC PHOTO & TEXTURE GALLERY (4 cols) */}
-                        <div className="lg:col-span-4 space-y-3">
-                          {/* Main Big Photo Preview */}
-                          <div
-                            onClick={() => setSelectedDealForDetail(deal)}
-                            className="relative aspect-4/3 rounded-2xl overflow-hidden bg-[#1e1f22] border border-[#383a40] group cursor-pointer shadow-lg"
-                          >
-                            <img
-                              src={currentImage}
-                              alt={deal.title}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                            {/* Badges on image */}
-                            <div className="absolute top-2.5 right-2.5 flex flex-col gap-1">
-                              <span className="px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-xs text-amber-300 text-[11px] font-black border border-amber-400/30">
-                                ⚖️ {deal.gsm}
-                              </span>
-                              <span className="px-2.5 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-slate-200 text-[10px] font-bold">
-                                📐 عرض {deal.width}
-                              </span>
-                            </div>
-
-                            {/* Inspection Button on Hover */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-3">
-                              <span className="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-xl">
-                                <ZoomIn className="w-4 h-4" />
-                                <span>تكبير وفحص نسيج الثوب</span>
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Thumbnails strip for fabric texture views */}
-                          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                            {deal.images.map((img, idx) => (
-                              <button
-                                key={idx}
-                                onClick={() => setActiveDealImageIdx(prev => ({ ...prev, [deal.id]: idx }))}
-                                className={`w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition cursor-pointer relative ${
-                                  activeImgIdx === idx
-                                    ? 'border-amber-400 shadow-md ring-2 ring-amber-500/30'
-                                    : 'border-transparent opacity-60 hover:opacity-100'
-                                }`}
-                              >
-                                <img src={img} alt="texture" className="w-full h-full object-cover" />
-                              </button>
-                            ))}
-                            <button
-                              onClick={() => setSelectedDealForDetail(deal)}
-                              className="h-14 px-3 rounded-xl bg-[#1e1f22] hover:bg-[#35373c] text-slate-300 text-[11px] font-bold flex flex-col items-center justify-center border border-white/5 shrink-0 transition cursor-pointer"
-                              title="عرض كل الصور والتفاصيل"
-                            >
-                              <Eye className="w-4 h-4 text-amber-400 mb-0.5" />
-                              <span>الكل ({deal.images.length})</span>
-                            </button>
-                          </div>
-                          <span className="text-[11px] text-slate-400 block text-center font-medium">
-                            انقر على أي صورة لمعاينة النسيج، الوبر والوقفة عن قرب
-                          </span>
-                        </div>
-
-                        {/* COLUMN 2: TITLE, SPECS & DUAL PRICING (8 cols) */}
-                        <div className="lg:col-span-8 space-y-4">
-                          {/* Title & Material Tagline */}
-                          <div>
-                            <h3 className="text-lg sm:text-xl font-black text-white leading-snug">
-                              {deal.title}
-                            </h3>
-                            <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1 leading-relaxed">
-                              {deal.material}
-                            </p>
-                          </div>
-
-                          {/* THE DUAL PRICING BOX (MAD/kg & MAD/m) */}
-                          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1e1f22] to-[#25272b] border border-amber-500/25 space-y-3">
-                            <div className="flex items-center justify-between text-xs font-bold text-amber-400 border-b border-white/5 pb-2">
-                              <span className="flex items-center gap-1.5">
-                                <Tag className="w-4 h-4 text-amber-400" />
-                                <span>سعر الشراء المشترك بالجملة الكبرى:</span>
-                              </span>
-                              <span className="text-[11px] text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                                توفير 15% إلى 25% مقارنة بسعر السوق
-                              </span>
-                            </div>
-
-                            {/* Dual Price Cards */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {/* Price per Kilo */}
-                              {(dealUnitView === 'both' || dealUnitView === 'kg') && (
-                                <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
-                                  <span className="text-[11px] text-slate-400 font-bold block">
-                                    ⚖️ سعر الكيلو (Prix au Kilo):
-                                  </span>
-                                  <div className="flex items-baseline gap-2">
-                                    <span className="text-2xl font-black text-amber-400 font-mono">
-                                      {deal.primaryUnit === 'kg' ? deal.discountPrice : (deal.discountPrice * 2).toFixed(1)} MAD
-                                    </span>
-                                    <span className="text-xs text-slate-400 font-bold">/ كلغ</span>
-                                    <span className="text-xs text-slate-500 line-through font-mono">
-                                      {deal.primaryUnit === 'kg' ? deal.regularPrice : (deal.regularPrice * 2).toFixed(1)} MAD
-                                    </span>
-                                  </div>
-                                  <span className="text-[10px] text-emerald-400 font-semibold block">
-                                    {deal.primaryUnit === 'kg'
-                                      ? `توفير ${deal.regularPrice - deal.discountPrice} درهم فـ كل كيلو`
-                                      : 'سعر تقديري بحساب الوزن'}
-                                  </span>
-                                </div>
-                              )}
-
-                              {/* Price per Meter */}
-                              {(dealUnitView === 'both' || dealUnitView === 'meter') && deal.pricePerMeterEstimated && (
-                                <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
-                                  <span className="text-[11px] text-slate-400 font-bold block">
-                                    📏 السعر التقديري بالمتر (Prix au Mètre):
-                                  </span>
-                                  <div className="flex items-baseline gap-2">
-                                    <span className="text-2xl font-black text-amber-400 font-mono">
-                                      ~{deal.pricePerMeterEstimated.toFixed(2)} MAD
-                                    </span>
-                                    <span className="text-xs text-slate-400 font-bold">/ متر</span>
-                                    {deal.regularPricePerMeterEstimated && (
-                                      <span className="text-xs text-slate-500 line-through font-mono">
-                                        ~{deal.regularPricePerMeterEstimated.toFixed(2)} MAD
-                                      </span>
-                                    )}
-                                  </div>
-                                  <span className="text-[10px] text-indigo-300 font-semibold block">
-                                    بحساب عرض الثوب ({deal.width})
-                                  </span>
-                                </div>
-                              )}
-
-                              {/* For Fournitures / Accessories if no meter price */}
-                              {!deal.pricePerMeterEstimated && (
-                                <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
-                                  <span className="text-[11px] text-slate-400 font-bold block">
-                                    📦 سعر الطقم / القطعة:
-                                  </span>
-                                  <div className="flex items-baseline gap-2">
-                                    <span className="text-2xl font-black text-amber-400 font-mono">
-                                      {deal.discountPrice} MAD
-                                    </span>
-                                    <span className="text-xs text-slate-400 font-bold">/ طقم</span>
-                                    <span className="text-xs text-slate-500 line-through font-mono">
-                                      {deal.regularPrice} MAD
-                                    </span>
-                                  </div>
-                                  <span className="text-[10px] text-emerald-400 font-semibold block">
-                                    سحاب YKK نمرة 5 + كيس Polybag بسحاب مات
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Conversion Formula & Garment Yield Guidance */}
-                            <div className="p-3 rounded-xl bg-[#18191c] border border-white/5 space-y-1.5 text-xs">
-                              <div className="flex items-start gap-2 text-slate-300">
-                                <Ruler className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                                <div>
-                                  <strong className="text-amber-300">معادلة التحويل: </strong>
-                                  <span>{deal.conversionNote}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-start gap-2 text-slate-300">
-                                <Scissors className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                                <div>
-                                  <strong className="text-emerald-300">استهلاك الفصالة: </strong>
-                                  <span>{deal.garmentYield}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* COLOR SWATCHES ("الألوان المتوفرة في المخزن") */}
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-xs font-bold">
-                              <span className="text-slate-300 flex items-center gap-1.5">
-                                <Palette className="w-4 h-4 text-amber-400" />
-                                <span>الألوان المتوفرة في هذه الدفعة (انقر لاختيار لونك):</span>
-                              </span>
-                              <span className="text-[11px] text-emerald-400 font-semibold">
-                                ✓ تم اختيار: <strong className="text-white underline">{chosenColor}</strong>
-                              </span>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-2.5">
-                              {deal.colors.map((c, cIdx) => {
-                                const isSelected = chosenColor === c.name;
-                                return (
-                                  <button
-                                    key={cIdx}
-                                    onClick={() => setSelectedDealColor(prev => ({ ...prev, [deal.id]: c.name }))}
-                                    title={`${c.name} - ${c.tagAr}`}
-                                    className={`group relative flex items-center gap-1.5 p-1.5 pr-2.5 rounded-full border transition cursor-pointer ${
-                                      isSelected
-                                        ? 'bg-amber-500/20 border-amber-400 ring-2 ring-amber-500/30'
-                                        : 'bg-[#1e1f22] border-white/10 hover:border-white/30'
-                                    }`}
-                                  >
-                                    <span
-                                      className="w-5 h-5 rounded-full border border-white/20 shadow-inner shrink-0"
-                                      style={{ backgroundColor: c.hex }}
-                                    />
-                                    <span className="text-xs text-slate-200 font-bold">{String(c.name || '').split('(')[0]}</span>
-                                    {isSelected && <Check className="w-3.5 h-3.5 text-amber-400" />}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* TECHNICAL SPECIFICATIONS GRID (TAFASIL DIAL TOUB) */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                            <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
-                              <span className="text-[10px] text-slate-400 font-bold block">الغراماج والسمك</span>
-                              <span className="text-xs font-black text-amber-300 block font-mono">{String(deal.gsm || '').split('(')[0]}</span>
-                            </div>
-                            <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
-                              <span className="text-[10px] text-slate-400 font-bold block">التركيبة</span>
-                              <span className="text-xs font-black text-slate-200 block truncate" title={deal.composition}>{String(deal.composition || '').split('(')[0]}</span>
-                            </div>
-                            <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
-                              <span className="text-[10px] text-slate-400 font-bold block">عرض الثوب (Laize)</span>
-                              <span className="text-xs font-black text-slate-200 block font-mono">{String(deal.width || '').split('(')[0]}</span>
-                            </div>
-                            <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
-                              <span className="text-[10px] text-slate-400 font-bold block">المعالجة والانكماش</span>
-                              <span className="text-xs font-black text-emerald-400 block truncate" title={deal.treatment}>{deal.shrinkage}</span>
-                            </div>
-                          </div>
-
-                          {/* Recommended garments tags */}
-                          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                            <span className="text-[11px] text-slate-400 font-bold">الاستخدام الموصى به:</span>
-                            {deal.recommendedUsage.map((usage, uIdx) => (
-                              <span key={uIdx} className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-bold border border-white/5">
-                                {usage}
-                              </span>
-                            ))}
-                          </div>
-
-                        </div>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="pt-2 border-t border-[#383a40]">
-                        <div className="flex items-center justify-between text-xs font-bold mb-1.5">
-                          <span className="text-slate-300">
-                            تم جمع: <strong className="text-white font-mono">{deal.currentKg} {deal.primaryUnitLabelAr}</strong> من الهدف المحدد ({deal.targetKg} {deal.primaryUnitLabelAr})
-                          </span>
-                          <span className="text-amber-400 font-mono font-black">{progressPct}%</span>
-                        </div>
-                        <div className="w-full h-3 bg-[#1e1f22] rounded-full overflow-hidden border border-white/5">
-                          <div
-                            className="h-full bg-gradient-to-r from-amber-500 via-emerald-500 to-indigo-500 rounded-full transition-all duration-500"
-                            style={{ width: `${progressPct}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* QUANTITY CALCULATOR & INSTANT YIELD SIMULATOR */}
-                      <div className="p-4 rounded-2xl bg-[#1e1f22] border border-[#383a40] space-y-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                          <span className="font-bold text-slate-300 flex items-center gap-1.5">
-                            <Calculator className="w-4 h-4 text-amber-400" />
-                            <span>حاسبة الطلب والإنتاج: اختر كميتك وشوف شحال غاتعطيك:</span>
-                          </span>
-                          <span className="text-[11px] text-slate-400">
-                            الحد الأدنى: <strong>{deal.minCommitmentLabel}</strong>
-                          </span>
-                        </div>
-
-                        {/* Preset Buttons + Quantity Input */}
-                        <div className="flex flex-wrap items-center gap-2">
-                          {[
-                            deal.minCommitment,
-                            deal.minCommitment * 2,
-                            deal.minCommitment * 4,
-                            deal.minCommitment * 8
-                          ].map((qty, qIdx) => (
-                            <button
-                              key={qIdx}
-                              onClick={() => setDealQuantities(prev => ({ ...prev, [deal.id]: qty }))}
-                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                                committedQty === qty
-                                  ? 'bg-amber-500 text-slate-950 font-black shadow-md'
-                                  : 'bg-[#2b2d31] text-slate-300 hover:text-white border border-white/5'
-                              }`}
-                            >
-                              {qty} {deal.primaryUnitLabelAr} {qIdx === 0 ? '(رولو واحد)' : ''}
-                            </button>
-                          ))}
-
-                          <div className="flex items-center gap-1.5 mr-auto">
-                            <label className="text-[11px] text-slate-400 font-bold">كمية مخصصة:</label>
-                            <input
-                              type="number"
-                              min={deal.minCommitment}
-                              step={deal.primaryUnit === 'piece' ? 50 : 5}
-                              value={committedQty}
-                              onChange={e => {
-                                const val = Math.max(deal.minCommitment, parseInt(e.target.value) || deal.minCommitment);
-                                setDealQuantities(prev => ({ ...prev, [deal.id]: val }));
-                              }}
-                              className="w-24 px-2.5 py-1 bg-[#2b2d31] border border-white/10 rounded-lg text-xs font-black text-amber-400 font-mono text-center focus:outline-hidden focus:border-amber-400"
-                            />
-                            <span className="text-xs text-slate-400">{deal.primaryUnitLabelAr}</span>
-                          </div>
-                        </div>
-
-                        {/* Dynamic Summary Cards */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/5 text-center">
-                          <div className="p-2 rounded-xl bg-black/30 border border-white/5">
-                            <span className="text-[10px] text-slate-400 font-bold block">المجموع الصافي</span>
-                            <span className="text-sm font-black text-amber-400 font-mono">
-                              {calculatedTotal.toLocaleString()} MAD
-                            </span>
-                          </div>
-
-                          {estMeters && (
-                            <div className="p-2 rounded-xl bg-black/30 border border-white/5">
-                              <span className="text-[10px] text-slate-400 font-bold block">الأمتار المقدرة</span>
-                              <span className="text-sm font-black text-indigo-300 font-mono">
-                                ~{estMeters} متر
-                              </span>
-                            </div>
-                          )}
-
-                          <div className="p-2 rounded-xl bg-black/30 border border-white/5">
-                            <span className="text-[10px] text-slate-400 font-bold block">الإنتاج المتوقع</span>
-                            <span className="text-sm font-black text-emerald-400 font-mono">
-                              ~{estGarments} {deal.category === 'tissu' ? 'بياسة' : 'طقم'}
-                            </span>
-                          </div>
-
-                          <div className="p-2 rounded-xl bg-black/30 border border-white/5">
-                            <span className="text-[10px] text-slate-400 font-bold block">التوفير الصافي</span>
-                            <span className="text-sm font-black text-emerald-400 font-mono">
-                              +{savingsMad.toLocaleString()} MAD
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* CTA ACTIONS BAR */}
-                      <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#383a40]">
-                        <button
-                          onClick={() => setSelectedDealForDetail(deal)}
-                          className="w-full sm:w-auto px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 border border-white/10 cursor-pointer"
-                        >
-                          <Eye className="w-4 h-4 text-amber-400" />
-                          <span>عرض الفيش تكنيك والصور الكبيرة</span>
-                        </button>
-
-                        <a
-                          href={whatsappBookingUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full sm:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          <span>احجز كميتك بالواتساب ({committedQty} {deal.primaryUnitLabelAr} • {String(chosenColor || '').split('(')[0]})</span>
-                        </a>
+                {/* 1. Groupage Hero Header */}
+                <div className="p-5 sm:p-7 rounded-3xl bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/90 border border-amber-500/30 text-white relative overflow-hidden shadow-2xl">
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+                  <div className="relative z-10 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-500/30 inline-flex items-center gap-1.5 shadow-sm">
+                        <ShoppingBag className="w-4 h-4 text-amber-400" />
+                        <span>منظومة الشراء المشترك الحقيقي (BEYA GROUPAGE LIVE) 🛒</span>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                          <CheckCheck className="w-3.5 h-3.5" />
+                          <span>حجوزات حقيقية مؤكدة مع المستودعات</span>
+                        </span>
+                        <span className="text-[11px] text-indigo-300 font-bold bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20 flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>ضمان الفحص قبل الشحن</span>
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    <div className="space-y-1.5">
+                      <h2 className="text-xl sm:text-3xl font-black text-white">
+                        أقمشة ومستلزمات المصانع الكبرى بسعر الجملة المخفض (بالكيلو والمتر)
+                      </h2>
+                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium max-w-3xl">
+                        تنسق ورشة BEYA طلبات الشراء الجماعي مع أكبر مستودعات الأقمشة بالمغرب (درب عمر وطنجة) للاستفادة من تخفيضات تصل حتى 25% مع تفاصيل دقيقة، صور حقيقية للنسيج، وتحويل واضح بين ثمن الكيلو وثمن المتر لمساعدتك فـ حساب تكلفة كل بياسة.
+                      </p>
+                    </div>
+
+                    {/* Sub-Tabs: Deals vs Custom Requests */}
+                    <div className="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-white/10">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setGroupageSubTab('deals')}
+                          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+                            groupageSubTab === 'deals'
+                              ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
+                              : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
+                          }`}
+                        >
+                          <ShoppingBag className="w-4 h-4" />
+                          <span>صفقات الدفعات المفتوحة</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                            groupageSubTab === 'deals' ? 'bg-black/30 text-slate-950 font-black' : 'bg-white/10 text-slate-400'
+                          }`}>
+                            {groupageDeals.length}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setGroupageSubTab('requests')}
+                          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+                            groupageSubTab === 'requests'
+                              ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
+                              : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
+                          }`}
+                        >
+                          <Layers className="w-4 h-4" />
+                          <span>طلبات البراندات وعروض الموردين</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                            groupageSubTab === 'requests' ? 'bg-black/30 text-slate-950 font-black' : 'bg-white/10 text-slate-400'
+                          }`}>
+                            {customRequests.length}
+                          </span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowCreateCustomRequestModal(true)}
+                          className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/30 cursor-pointer active:scale-95"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>+ أضف طلب شراء أو تجميع قماش مخصص</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Unit View Selector Pill (Only in deals tab) */}
+                    {groupageSubTab === 'deals' && (
+                      <div className="pt-1 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="text-slate-400 font-bold">طريقة عرض السعر:</span>
+                        <button
+                          type="button"
+                          onClick={() => setDealUnitView('both')}
+                          className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                            dealUnitView === 'both'
+                              ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                              : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
+                          }`}
+                        >
+                          عرض السعرين معاً (بالكيلو والمتر ⚖️📏)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDealUnitView('kg')}
+                          className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                            dealUnitView === 'kg'
+                              ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                              : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
+                          }`}
+                        >
+                          سعر الكيلو فقط (MAD/kg)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDealUnitView('meter')}
+                          className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                            dealUnitView === 'meter'
+                              ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                              : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
+                          }`}
+                        >
+                          سعر المتر فقط (MAD/m)
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ─────────────────────────────────────────────────────────────
+                    TAB 1: DEALS LIST (صفقات الدفعات المفتوحة)
+                    ───────────────────────────────────────────────────────────── */}
+                {groupageSubTab === 'deals' && (
+                  <div className="space-y-6">
+                    {groupageDeals.map(deal => {
+                      const dealOrders = groupageOrders.filter(o => o.dealId === deal.id);
+                      const userAddedQty = dealOrders.filter(o => o.id.startsWith('usr-')).reduce((sum, o) => sum + o.quantity, 0);
+                      const liveCurrentQty = deal.currentKg + userAddedQty;
+                      const progressPct = Math.min(100, Math.round((liveCurrentQty / deal.targetKg) * 100));
+                      const activeImgIdx = activeDealImageIdx[deal.id] || 0;
+                      const currentImage = deal.images[activeImgIdx] || deal.images[0];
+                      const chosenColor = selectedDealColor[deal.id] || deal.colors[0]?.name || '';
+                      const committedQty = dealQuantities[deal.id] || deal.minCommitment;
+                      const calculatedTotal = committedQty * deal.discountPrice;
+                      const regularTotal = committedQty * deal.regularPrice;
+                      const savingsMad = regularTotal - calculatedTotal;
+
+                      const estMeters = deal.metersPerKg
+                        ? Math.round(committedQty * deal.metersPerKg)
+                        : (deal.primaryUnit === 'm' ? committedQty : null);
+
+                      const estGarments = deal.category === 'tissu'
+                        ? (deal.primaryUnit === 'kg'
+                            ? Math.floor(committedQty / (deal.id === 'grp-3' ? 0.38 : 0.8))
+                            : Math.floor(committedQty / (deal.id === 'grp-2' ? 1.6 : deal.id === 'grp-5' ? 3.0 : 1.8)))
+                        : committedQty;
+
+                      const isOrdersExpanded = expandedDealOrders[deal.id] !== false;
+
+                      return (
+                        <div
+                          key={deal.id}
+                          className="bg-[#2b2d31] rounded-3xl border border-[#383a40] p-5 sm:p-6 text-white space-y-6 hover:border-amber-500/30 transition shadow-xl"
+                        >
+                          {/* Top Supplier & Status Meta */}
+                          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#383a40] pb-4">
+                            <div className="flex items-center gap-2">
+                              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black border border-emerald-500/30 flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>متبقي {deal.daysLeft} أيام</span>
+                              </span>
+                              <span className="text-xs text-slate-300 font-bold flex items-center gap-1">
+                                <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+                                <span>{deal.supplier} • {deal.supplierCity}</span>
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 text-xs font-black border border-amber-500/20">
+                                {deal.id === 'grp-5' ? '👗 كريب وفساتين' : deal.category === 'tissu' ? '🧵 قماش معتمد' : '📦 لوازم وتغليف'}
+                              </span>
+                              <span className="text-xs text-slate-300 font-bold bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
+                                🔥 <strong>{dealOrders.length}</strong> براندات انضمت حتى الآن
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Main Fabric Presentation: Photo Gallery (Left) + Details & Pricing (Right) */}
+                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+                            {/* COLUMN 1: FABRIC PHOTO & TEXTURE GALLERY (4 cols) */}
+                            <div className="lg:col-span-4 space-y-3">
+                              <div
+                                onClick={() => setSelectedDealForDetail(deal)}
+                                className="relative aspect-4/3 rounded-2xl overflow-hidden bg-[#1e1f22] border border-[#383a40] group cursor-pointer shadow-lg"
+                              >
+                                <img
+                                  src={currentImage}
+                                  alt={deal.title}
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
+                                <div className="absolute top-2.5 right-2.5 flex flex-col gap-1">
+                                  <span className="px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-xs text-amber-300 text-[11px] font-black border border-amber-400/30">
+                                    ⚖️ {deal.gsm}
+                                  </span>
+                                  <span className="px-2.5 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-slate-200 text-[10px] font-bold">
+                                    📐 عرض {deal.width}
+                                  </span>
+                                </div>
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-3">
+                                  <span className="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-xl">
+                                    <ZoomIn className="w-4 h-4" />
+                                    <span>تكبير وفحص نسيج الثوب</span>
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                                {deal.images.map((img, idx) => (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setActiveDealImageIdx(prev => ({ ...prev, [deal.id]: idx }))}
+                                    className={`w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition cursor-pointer relative ${
+                                      activeImgIdx === idx
+                                        ? 'border-amber-400 shadow-md ring-2 ring-amber-500/30'
+                                        : 'border-transparent opacity-60 hover:opacity-100'
+                                    }`}
+                                  >
+                                    <img src={img} alt="texture" className="w-full h-full object-cover" />
+                                  </button>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedDealForDetail(deal)}
+                                  className="h-14 px-3 rounded-xl bg-[#1e1f22] hover:bg-[#35373c] text-slate-300 text-[11px] font-bold flex flex-col items-center justify-center border border-white/5 shrink-0 transition cursor-pointer"
+                                  title="عرض كل الصور والتفاصيل"
+                                >
+                                  <Eye className="w-4 h-4 text-amber-400 mb-0.5" />
+                                  <span>الكل ({deal.images.length})</span>
+                                </button>
+                              </div>
+                              <span className="text-[11px] text-slate-400 block text-center font-medium">
+                                انقر على أي صورة لمعاينة النسيج، الوبر والوقفة عن قرب
+                              </span>
+                            </div>
+
+                            {/* COLUMN 2: TITLE, SPECS & DUAL PRICING (8 cols) */}
+                            <div className="lg:col-span-8 space-y-4">
+                              <div>
+                                <h3 className="text-lg sm:text-xl font-black text-white leading-snug">
+                                  {deal.title}
+                                </h3>
+                                <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1 leading-relaxed">
+                                  {deal.material}
+                                </p>
+                              </div>
+
+                              {/* THE DUAL PRICING BOX */}
+                              <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1e1f22] to-[#25272b] border border-amber-500/25 space-y-3">
+                                <div className="flex items-center justify-between text-xs font-bold text-amber-400 border-b border-white/5 pb-2">
+                                  <span className="flex items-center gap-1.5">
+                                    <Tag className="w-4 h-4 text-amber-400" />
+                                    <span>سعر الشراء المشترك بالجملة الكبرى:</span>
+                                  </span>
+                                  <span className="text-[11px] text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                                    توفير 15% إلى 25% مقارنة بسعر السوق
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {(dealUnitView === 'both' || dealUnitView === 'kg') && (
+                                    <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
+                                      <span className="text-[11px] text-slate-400 font-bold block">
+                                        ⚖️ سعر الكيلو (Prix au Kilo):
+                                      </span>
+                                      <div className="flex items-baseline gap-2">
+                                        <span className="text-2xl font-black text-amber-400 font-mono">
+                                          {deal.primaryUnit === 'kg' ? deal.discountPrice : (deal.discountPrice * 2).toFixed(1)} MAD
+                                        </span>
+                                        <span className="text-xs text-slate-400 font-bold">/ كلغ</span>
+                                        <span className="text-xs text-slate-500 line-through font-mono">
+                                          {deal.primaryUnit === 'kg' ? deal.regularPrice : (deal.regularPrice * 2).toFixed(1)} MAD
+                                        </span>
+                                      </div>
+                                      <span className="text-[10px] text-emerald-400 font-semibold block">
+                                        {deal.primaryUnit === 'kg'
+                                          ? `توفير ${deal.regularPrice - deal.discountPrice} درهم فـ كل كيلو`
+                                          : 'سعر تقديري بحساب الوزن'}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {(dealUnitView === 'both' || dealUnitView === 'meter') && deal.pricePerMeterEstimated && (
+                                    <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
+                                      <span className="text-[11px] text-slate-400 font-bold block">
+                                        📏 السعر التقديري بالمتر (Prix au Mètre):
+                                      </span>
+                                      <div className="flex items-baseline gap-2">
+                                        <span className="text-2xl font-black text-amber-400 font-mono">
+                                          ~{deal.pricePerMeterEstimated.toFixed(2)} MAD
+                                        </span>
+                                        <span className="text-xs text-slate-400 font-bold">/ متر</span>
+                                        {deal.regularPricePerMeterEstimated && (
+                                          <span className="text-xs text-slate-500 line-through font-mono">
+                                            ~{deal.regularPricePerMeterEstimated.toFixed(2)} MAD
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="text-[10px] text-indigo-300 font-semibold block">
+                                        بحساب عرض الثوب ({deal.width})
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {!deal.pricePerMeterEstimated && (
+                                    <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-1">
+                                      <span className="text-[11px] text-slate-400 font-bold block">
+                                        📦 سعر الطقم / القطعة:
+                                      </span>
+                                      <div className="flex items-baseline gap-2">
+                                        <span className="text-2xl font-black text-amber-400 font-mono">
+                                          {deal.discountPrice} MAD
+                                        </span>
+                                        <span className="text-xs text-slate-400 font-bold">/ طقم</span>
+                                        <span className="text-xs text-slate-500 line-through font-mono">
+                                          {deal.regularPrice} MAD
+                                        </span>
+                                      </div>
+                                      <span className="text-[10px] text-emerald-400 font-semibold block">
+                                        سحاب YKK نمرة 5 + كيس Polybag بسحاب مات
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="p-3 rounded-xl bg-[#18191c] border border-white/5 space-y-1.5 text-xs">
+                                  <div className="flex items-start gap-2 text-slate-300">
+                                    <Ruler className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                                    <div>
+                                      <strong className="text-amber-300">معادلة التحويل: </strong>
+                                      <span>{deal.conversionNote}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-start gap-2 text-slate-300">
+                                    <Scissors className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                                    <div>
+                                      <strong className="text-emerald-300">استهلاك الفصالة: </strong>
+                                      <span>{deal.garmentYield}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* COLOR SWATCHES */}
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-xs font-bold">
+                                  <span className="text-slate-300 flex items-center gap-1.5">
+                                    <Palette className="w-4 h-4 text-amber-400" />
+                                    <span>الألوان المتوفرة في هذه الدفعة (انقر لاختيار لونك):</span>
+                                  </span>
+                                  <span className="text-[11px] text-emerald-400 font-semibold">
+                                    ✓ تم اختيار: <strong className="text-white underline">{chosenColor}</strong>
+                                  </span>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                  {deal.colors.map((c, cIdx) => {
+                                    const isSelected = chosenColor === c.name;
+                                    return (
+                                      <button
+                                        key={cIdx}
+                                        type="button"
+                                        onClick={() => setSelectedDealColor(prev => ({ ...prev, [deal.id]: c.name }))}
+                                        title={`${c.name} - ${c.tagAr}`}
+                                        className={`group relative flex items-center gap-1.5 p-1.5 pr-2.5 rounded-full border transition cursor-pointer ${
+                                          isSelected
+                                            ? 'bg-amber-500/20 border-amber-400 ring-2 ring-amber-500/30'
+                                            : 'bg-[#1e1f22] border-white/10 hover:border-white/30'
+                                        }`}
+                                      >
+                                        <span
+                                          className="w-5 h-5 rounded-full border border-white/20 shadow-inner shrink-0"
+                                          style={{ backgroundColor: c.hex }}
+                                        />
+                                        <span className="text-xs text-slate-200 font-bold">{String(c.name || '').split('(')[0]}</span>
+                                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* TECHNICAL SPECIFICATIONS GRID */}
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                                <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
+                                  <span className="text-[10px] text-slate-400 font-bold block">الغراماج والسمك</span>
+                                  <span className="text-xs font-black text-amber-300 block font-mono">{String(deal.gsm || '').split('(')[0]}</span>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
+                                  <span className="text-[10px] text-slate-400 font-bold block">التركيبة</span>
+                                  <span className="text-xs font-black text-slate-200 block truncate" title={deal.composition}>{String(deal.composition || '').split('(')[0]}</span>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
+                                  <span className="text-[10px] text-slate-400 font-bold block">عرض الثوب (Laize)</span>
+                                  <span className="text-xs font-black text-slate-200 block font-mono">{String(deal.width || '').split('(')[0]}</span>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-[#1e1f22] border border-white/5 text-center space-y-0.5">
+                                  <span className="text-[10px] text-slate-400 font-bold block">المعالجة والانكماش</span>
+                                  <span className="text-xs font-black text-emerald-400 block truncate" title={deal.treatment}>{deal.shrinkage}</span>
+                                </div>
+                              </div>
+
+                            </div>
+                          </div>
+
+                          {/* Progress Bar with Live Quantities */}
+                          <div className="pt-2 border-t border-[#383a40]">
+                            <div className="flex items-center justify-between text-xs font-bold mb-1.5">
+                              <span className="text-slate-300">
+                                تم جمع: <strong className="text-emerald-400 font-mono text-sm">{liveCurrentQty} {deal.primaryUnitLabelAr}</strong> من الهدف المحدد ({deal.targetKg} {deal.primaryUnitLabelAr})
+                              </span>
+                              <span className="text-amber-400 font-mono font-black text-sm">{progressPct}%</span>
+                            </div>
+                            <div className="w-full h-3 bg-[#1e1f22] rounded-full overflow-hidden border border-white/5">
+                              <div
+                                className="h-full bg-gradient-to-r from-amber-500 via-emerald-500 to-indigo-500 rounded-full transition-all duration-500"
+                                style={{ width: `${progressPct}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* 👥 REAL PARTICIPATING BRANDS SECTION (قائمة البراندات المنضمة للدفعة) */}
+                          <div className="p-4 rounded-2xl bg-[#1e1f22] border border-emerald-500/20 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Users className="w-4 h-4 text-emerald-400" />
+                                <span className="text-xs font-black text-white">
+                                  البراندات المشاركة في هذه الدفعة ({dealOrders.length} طلبات مؤكدة)
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedDealOrders(prev => ({ ...prev, [deal.id]: !isOrdersExpanded }))}
+                                className="text-xs text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>{isOrdersExpanded ? 'إخفاء القائمة' : 'عرض كافة المنضمين'}</span>
+                                {isOrdersExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+
+                            {isOrdersExpanded && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1 animate-in fade-in duration-200">
+                                {dealOrders.map(order => (
+                                  <div
+                                    key={order.id}
+                                    className={`p-2.5 rounded-xl border flex items-center justify-between text-xs transition ${
+                                      order.id.startsWith('usr-')
+                                        ? 'bg-emerald-950/40 border-emerald-500/50 ring-1 ring-emerald-500/40'
+                                        : 'bg-black/30 border-white/5'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2 truncate">
+                                      <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center font-black text-[11px] text-white shrink-0">
+                                        {order.brandName.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div className="truncate">
+                                        <p className="font-black text-white text-[11px] truncate">{order.brandName}</p>
+                                        <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                                          <span>{order.city}</span>
+                                          <span>•</span>
+                                          <span className="text-amber-300 font-bold">{order.quantity} {order.unit}</span>
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="text-left shrink-0">
+                                      <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[9px] font-black border border-emerald-500/30 flex items-center gap-0.5">
+                                        <Check className="w-2.5 h-2.5" />
+                                        <span>مؤكد</span>
+                                      </span>
+                                      <span className="text-[9px] text-slate-500 block mt-0.5 font-mono">{order.date}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* CTA ACTIONS BAR: INTERACTIVE BOOKING MODAL + DETAILS + WHATSAPP */}
+                          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#383a40]">
+                            <button
+                              type="button"
+                              onClick={() => openBookingModal(deal)}
+                              className="w-full sm:flex-1 py-3 px-6 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:brightness-110 text-white font-black rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/30 active:scale-98 cursor-pointer ring-2 ring-emerald-400/40"
+                            >
+                              <ShoppingBag className="w-4 h-4 text-white" />
+                              <span>انضم للشراء المشترك واحجز كميتك الآن ({deal.minCommitmentLabel})</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDealForDetail(deal)}
+                              className="w-full sm:w-auto px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 border border-white/10 cursor-pointer"
+                            >
+                              <Eye className="w-4 h-4 text-amber-400" />
+                              <span>فحص النسيج والفيش تكنيك</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* ─────────────────────────────────────────────────────────────
+                    TAB 2: CUSTOM REQUESTS & SUPPLIER REPLIES (طلبات البراندات وعروض الموردين)
+                    ───────────────────────────────────────────────────────────── */}
+                {groupageSubTab === 'requests' && (
+                  <div className="space-y-6">
+                    {/* Header Banner for Requests */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-[#1e1f22] border border-amber-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-black text-white flex items-center gap-2">
+                          <Layers className="w-4 h-4 text-amber-400" />
+                          <span>طلبات الأقمشة واستفسارات البراندات (Appels d'offres)</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          اطرح طلبك لأي قماش أو فورنيتور خاص وغادي يجاوبوك الموردين المعتمدين بعروض أسعار حقيقية وتخفيضات الجملة.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateCustomRequestModal(true)}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shrink-0 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>نشر طلب قماش جديد</span>
+                      </button>
+                    </div>
+
+                    {/* Requests List */}
+                    <div className="space-y-4">
+                      {customRequests.map(req => (
+                        <div
+                          key={req.id}
+                          className="p-5 sm:p-6 bg-[#2b2d31] rounded-3xl border border-[#383a40] space-y-4 hover:border-amber-500/30 transition shadow-lg text-white"
+                        >
+                          {/* Request Meta Header */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-black text-xs text-white">
+                                {req.brandName.charAt(0).toUpperCase()}
+                              </span>
+                              <div>
+                                <h4 className="font-black text-white text-xs sm:text-sm">{req.brandName}</h4>
+                                <p className="text-[10px] text-slate-400">{req.city} • نشر {req.date}</p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-black border border-emerald-500/30">
+                                مفتوح لعروض الموردين 🟢
+                              </span>
+                              <span className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-black border border-amber-500/30 font-mono">
+                                مطلوب: {req.targetQty} {req.unit}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Request Title & Details */}
+                          <div className="space-y-2">
+                            <h3 className="text-sm sm:text-base font-black text-white leading-snug">
+                              {req.title}
+                            </h3>
+                            <p className="text-xs text-slate-300 leading-relaxed font-medium bg-[#1e1f22] p-3 rounded-xl border border-white/5">
+                              {req.description}
+                            </p>
+
+                            <div className="flex flex-wrap items-center gap-3 text-xs pt-1">
+                              {req.targetPriceMAD && (
+                                <span className="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                                  الميزانية المقترحة: <strong>~{req.targetPriceMAD} MAD / {req.unit}</strong>
+                                </span>
+                              )}
+                              {req.materialNeeded && (
+                                <span className="text-slate-300 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5">
+                                  الخامة: <strong>{req.materialNeeded}</strong>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* SUPPLIER RESPONSES SECTION (عروض الموردين الحقيقية) */}
+                          <div className="space-y-3 pt-2 border-t border-white/5">
+                            <div className="flex items-center justify-between text-xs font-bold">
+                              <span className="text-amber-400 flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                                <span>عروض وأسعار الموردين المعتمدين ({req.replies.length} عروض):</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setReplyModalRequest(req);
+                                  setSupplierReplyForm({
+                                    supplierName: 'دار الكريب والأقمشة النسائية (Derb Omar)',
+                                    supplierCity: 'الدار البيضاء',
+                                    priceMAD: req.targetPriceMAD || 35,
+                                    unit: req.unit,
+                                    minQty: 25,
+                                    deliveryTime: '24 ساعة داخل كازا • 48 ساعة لباقي المدن',
+                                    message: `السلام عليكم، طلبكم بخصوص ${req.materialNeeded} متوفر لدينا بالكامل مع إمكانية إرسال العينات مجاناً.`,
+                                    whatsapp: '212661902834'
+                                  });
+                                }}
+                                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>تقديم عرض سعر كمورد</span>
+                              </button>
+                            </div>
+
+                            {/* Replies Cards */}
+                            {req.replies.length > 0 ? (
+                              <div className="space-y-2">
+                                {req.replies.map(reply => (
+                                  <div
+                                    key={reply.id}
+                                    className="p-3.5 rounded-2xl bg-gradient-to-r from-[#1e1f22] to-[#252830] border border-emerald-500/30 space-y-2.5"
+                                  >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-emerald-500/20 border border-emerald-500/40 shrink-0">
+                                          {reply.supplierAvatar ? (
+                                            <img src={reply.supplierAvatar} alt="" className="w-full h-full object-cover" />
+                                          ) : (
+                                            <span className="text-xs font-black text-emerald-400 flex items-center justify-center h-full">🧵</span>
+                                          )}
+                                        </div>
+                                        <div>
+                                          <div className="flex items-center gap-1.5">
+                                            <h5 className="font-black text-white text-xs">{reply.supplierName}</h5>
+                                            <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-black">مورد معتمد ✓</span>
+                                          </div>
+                                          <p className="text-[10px] text-slate-400">{reply.supplierCity} • رد {reply.date}</p>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center gap-2">
+                                        <div className="bg-black/40 px-3 py-1 rounded-xl border border-white/5 text-right">
+                                          <span className="text-[10px] text-slate-400 block">السعر المعروض:</span>
+                                          <span className="text-xs font-black text-amber-400 font-mono">{reply.priceMAD} MAD / {reply.unit}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <p className="text-xs text-slate-200 leading-relaxed font-medium bg-black/20 p-2.5 rounded-xl border border-white/5">
+                                      {reply.message}
+                                    </p>
+
+                                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] text-slate-400">
+                                      <span>⚡ سرعة التسليم: <strong className="text-slate-200">{reply.deliveryTime}</strong></span>
+                                      <a
+                                        href={`https://wa.me/${reply.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                          `السلام عليكم ${reply.supplierName}، اطلعت على عرضكم بخصوص طلب "${req.title}" بسعر ${reply.priceMAD} MAD/${reply.unit} وأرغب في تأكيد الطلب واستلام العينات.`
+                                        )}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer"
+                                      >
+                                        <MessageCircle className="w-3.5 h-3.5 text-slate-950" />
+                                        <span>قبول العرض والتواصل فـ الواتساب</span>
+                                      </a>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="p-4 rounded-xl bg-black/20 border border-dashed border-white/10 text-center text-xs text-slate-400">
+                                لا توجد عروض أسعار مسجلة بعد. سيصلك إشعار فور تقديم الموردين لعروضهم على هذا الطلب.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
               </div>
             </div>
@@ -7192,6 +7775,579 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
           </div>
         </div>
       )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          GROUPAGE MODAL 1: JOIN GROUPAGE BOOKING MODAL (حجز فوري للشراء المشترك)
+          ───────────────────────────────────────────────────────────── */}
+      {bookingModalDeal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-lg bg-[#232428] rounded-3xl overflow-hidden border border-emerald-500/30 shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            <div className="p-5 border-b border-[#383a40] flex items-center justify-between bg-gradient-to-r from-emerald-950/60 to-slate-900">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-white">حجز كمية فـ الشراء المشترك بسعر الجملة</h3>
+                  <p className="text-[10px] text-slate-400">{bookingModalDeal.supplier} • {bookingModalDeal.supplierCity}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBookingModalDeal(null)}
+                className="p-2 rounded-full bg-black/40 hover:bg-black/70 text-white transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmBooking} className="p-5 sm:p-6 space-y-4 text-xs">
+              {/* Deal Selected Summary */}
+              <div className="p-3 bg-[#1e1f22] rounded-2xl border border-white/5 space-y-1">
+                <span className="text-[10px] text-slate-400 font-bold block">القماش / المادة المختارة:</span>
+                <p className="font-black text-white text-xs">{bookingModalDeal.title}</p>
+                <p className="text-[11px] text-emerald-400 font-bold">
+                  سعر الشراء المشترك: {bookingModalDeal.discountPrice} MAD / {bookingModalDeal.primaryUnitLabelAr}
+                  <span className="text-slate-500 line-through mr-2 font-normal">عوض {bookingModalDeal.regularPrice} MAD</span>
+                </p>
+              </div>
+
+              {/* Color Selection */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-300 block">اختر اللون المطلوب في طلبيتك:</label>
+                <select
+                  value={bookingForm.color}
+                  onChange={e => setBookingForm(prev => ({ ...prev, color: e.target.value }))}
+                  className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-hidden focus:border-emerald-500"
+                >
+                  {bookingModalDeal.colors.map((c, idx) => (
+                    <option key={idx} value={c.name} className="bg-slate-900 text-white">
+                      {c.name} ({c.tagAr})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Quantity Selector with Presets */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-300">الكمية المطلوبة ({bookingModalDeal.primaryUnitLabelAr}):</label>
+                  <span className="text-[10px] text-amber-400">الحد الأدنى: {bookingModalDeal.minCommitment} {bookingModalDeal.primaryUnitLabelAr}</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {[
+                    bookingModalDeal.minCommitment,
+                    bookingModalDeal.minCommitment * 2,
+                    bookingModalDeal.minCommitment * 4
+                  ].map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setBookingForm(prev => ({ ...prev, quantity: preset }))}
+                      className={`flex-1 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        Number(bookingForm.quantity) === preset
+                          ? 'bg-amber-500 text-slate-950 font-black shadow-md'
+                          : 'bg-[#1e1f22] text-slate-300 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      {preset} {bookingModalDeal.primaryUnitLabelAr}
+                    </button>
+                  ))}
+                  <input
+                    type="number"
+                    min={bookingModalDeal.minCommitment}
+                    value={bookingForm.quantity}
+                    onChange={e => setBookingForm(prev => ({ ...prev, quantity: Number(e.target.value) }))}
+                    className="w-20 px-2.5 py-2 bg-[#1e1f22] border border-white/10 rounded-xl text-xs font-black text-amber-400 font-mono text-center focus:outline-hidden focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              {/* Live Price Calculator */}
+              <div className="grid grid-cols-2 gap-2 p-3 bg-black/40 rounded-xl border border-white/5 text-center">
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-bold">المجموع الإجمالي</span>
+                  <span className="text-base font-black text-amber-400 font-mono">
+                    {(Number(bookingForm.quantity || 0) * bookingModalDeal.discountPrice).toLocaleString()} MAD
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-bold">توفير الشراء المشترك</span>
+                  <span className="text-base font-black text-emerald-400 font-mono">
+                    +{(Number(bookingForm.quantity || 0) * (bookingModalDeal.regularPrice - bookingModalDeal.discountPrice)).toLocaleString()} MAD
+                  </span>
+                </div>
+              </div>
+
+              {/* Brand and Contact Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">اسم البراند / المشروع *</label>
+                  <input
+                    type="text"
+                    required
+                    value={bookingForm.brandName}
+                    onChange={e => setBookingForm(prev => ({ ...prev, brandName: e.target.value }))}
+                    placeholder="مثال: Casablanca Wear"
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">اسم المسؤول *</label>
+                  <input
+                    type="text"
+                    required
+                    value={bookingForm.contactName}
+                    onChange={e => setBookingForm(prev => ({ ...prev, contactName: e.target.value }))}
+                    placeholder="الاسم الكامل"
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">رقم الهاتف (واتساب) للتأكيد *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={bookingForm.phone}
+                    onChange={e => setBookingForm(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="06XXXXXXXX"
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">المدينة للتوصيل *</label>
+                  <select
+                    value={bookingForm.city}
+                    onChange={e => setBookingForm(prev => ({ ...prev, city: e.target.value }))}
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-emerald-500"
+                  >
+                    {['الدار البيضاء', 'طنجة', 'فاس', 'مراكش', 'الرباط', 'أكادير', 'تطوان', 'وجدة', 'مكناس', 'القنيطرة'].map(c => (
+                      <option key={c} value={c} className="bg-slate-900 text-white">{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setBookingModalDeal(null)}
+                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 text-white font-black transition shadow-lg shadow-emerald-500/20 cursor-pointer"
+                >
+                  تأكيد الحجز والانضمام للشراء المشترك
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          GROUPAGE MODAL 2: BOOKING SUCCESS RECEIPT (وصل الحجز والتأكيد)
+          ───────────────────────────────────────────────────────────── */}
+      {bookingSuccessSlip && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-md bg-[#232428] rounded-3xl overflow-hidden border border-emerald-500 shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white p-6 space-y-5 text-center"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto text-3xl">
+              ✓
+            </div>
+
+            <div className="space-y-1">
+              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black">
+                تم تسجيل حجزك بنجاح في الشراء المشترك
+              </span>
+              <h3 className="text-xl font-black text-white pt-2">وصل تأكيد الطلب #{bookingSuccessSlip.id}</h3>
+              <p className="text-xs text-slate-300">
+                مرحباً ببراند <strong>{bookingSuccessSlip.brandName}</strong>، تم تثبيت حصتكم وتحديث عداد الدفعة مباشرة!
+              </p>
+            </div>
+
+            {/* Receipt Summary Box */}
+            <div className="p-4 bg-[#1e1f22] rounded-2xl border border-white/5 space-y-2 text-xs text-right">
+              <div className="flex justify-between border-b border-white/5 pb-2">
+                <span className="text-slate-400">الدفعة المحجوزة:</span>
+                <span className="font-bold text-white text-[11px] truncate max-w-[200px]">{bookingSuccessSlip.dealTitle}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/5 pb-2">
+                <span className="text-slate-400">الكمية المحجوزة:</span>
+                <span className="font-mono font-black text-amber-400">{bookingSuccessSlip.quantity} {bookingSuccessSlip.unit}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/5 pb-2">
+                <span className="text-slate-400">اللون المختار:</span>
+                <span className="font-bold text-white">{bookingSuccessSlip.color}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/5 pb-2">
+                <span className="text-slate-400">المجموع الصافي بسعر الجملة:</span>
+                <span className="font-mono font-black text-white">{bookingSuccessSlip.totalPrice.toLocaleString()} MAD</span>
+              </div>
+              <div className="flex justify-between pt-1">
+                <span className="text-emerald-400 font-bold">التوفير المحقق:</span>
+                <span className="font-mono font-black text-emerald-400">+{bookingSuccessSlip.savingsMad.toLocaleString()} MAD</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-2 pt-1">
+              <a
+                href={`https://wa.me/212675239885?text=${encodeURIComponent(
+                  `السلام عليكم ورشة BEYA والموردين، قمت للتو بتأكيد حجز كمية في الشراء المشترك:
+
+• رقم الوصل: ${bookingSuccessSlip.id}
+• البراند: ${bookingSuccessSlip.brandName}
+• الدفعة: ${bookingSuccessSlip.dealTitle}
+• الكمية: ${bookingSuccessSlip.quantity} ${bookingSuccessSlip.unit}
+• اللون: ${bookingSuccessSlip.color}
+• المجموع: ${bookingSuccessSlip.totalPrice} MAD
+• المدينة: ${bookingSuccessSlip.city}
+
+أرغب في متابعة التأكيد واستلام العينة.`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 text-slate-950" />
+                <span>مراسلة المورد والورشة فـ الواتساب لتأكيد الاستلام</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setBookingSuccessSlip(null)}
+                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition cursor-pointer"
+              >
+                إغلاق والرجوع للمنصة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          GROUPAGE MODAL 3: POST CUSTOM REQUEST (إضافة طلب تجميع أو استفسار قماش خاص)
+          ───────────────────────────────────────────────────────────── */}
+      {showCreateCustomRequestModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-lg bg-[#232428] rounded-3xl overflow-hidden border border-amber-500/30 shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            <div className="p-5 border-b border-[#383a40] flex items-center justify-between bg-gradient-to-r from-amber-950/60 to-slate-900">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-white">إضافة طلب شراء أو تجميع قماش مخصص</h3>
+                  <p className="text-[10px] text-slate-400">سيظهر طلبك مباشرة لكافة مستودعات الأقمشة والموردين لتقديم عروضهم</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateCustomRequestModal(false)}
+                className="p-2 rounded-full bg-black/40 hover:bg-black/70 text-white transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCustomRequest} className="p-5 sm:p-6 space-y-3.5 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold text-slate-300">عنوان الطلب *</label>
+                <input
+                  type="text"
+                  required
+                  value={newRequestForm.title}
+                  onChange={e => setNewRequestForm(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="مثال: مطلوب 150 متر كريب باربي رويال أسود للعبايات"
+                  className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-hidden focus:border-amber-400"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">نوع القماش أو المادة *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newRequestForm.materialNeeded}
+                    onChange={e => setNewRequestForm(prev => ({ ...prev, materialNeeded: e.target.value }))}
+                    placeholder="مثال: كريب باربي 220g / جاباردين كارجو"
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">القسم</label>
+                  <select
+                    value={newRequestForm.category}
+                    onChange={e => setNewRequestForm(prev => ({ ...prev, category: e.target.value as any }))}
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-amber-400"
+                  >
+                    <option value="tissu" className="bg-slate-900">أقمشة وثوب (Tissus)</option>
+                    <option value="fournitures" className="bg-slate-900">فورنيتور ولوازم (Fournitures)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">الكمية المستهدفة *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={newRequestForm.targetQty}
+                    onChange={e => setNewRequestForm(prev => ({ ...prev, targetQty: Number(e.target.value) }))}
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-hidden focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">الوحدة</label>
+                  <select
+                    value={newRequestForm.unit}
+                    onChange={e => setNewRequestForm(prev => ({ ...prev, unit: e.target.value }))}
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-amber-400"
+                  >
+                    <option value="متر" className="bg-slate-900">متر (m)</option>
+                    <option value="كلغ" className="bg-slate-900">كيلوغرام (kg)</option>
+                    <option value="قطعة" className="bg-slate-900">قطعة / طقم</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">السعر المستهدف (MAD)</label>
+                  <input
+                    type="number"
+                    value={newRequestForm.targetPriceMAD}
+                    onChange={e => setNewRequestForm(prev => ({ ...prev, targetPriceMAD: Number(e.target.value) }))}
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-hidden focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">اسم البراند *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newRequestForm.brandName}
+                    onChange={e => setNewRequestForm(prev => ({ ...prev, brandName: e.target.value }))}
+                    placeholder="اسم علامتك"
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">المدينة *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newRequestForm.city}
+                    onChange={e => setNewRequestForm(prev => ({ ...prev, city: e.target.value }))}
+                    placeholder="الدار البيضاء"
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">رقم الواتساب *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={newRequestForm.phone}
+                    onChange={e => setNewRequestForm(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="06XXXXXXXX"
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-hidden focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-300">تفاصيل ومواصفات إضافية</label>
+                <textarea
+                  rows={3}
+                  value={newRequestForm.description}
+                  onChange={e => setNewRequestForm(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="حدد الألوان المطلوبة، نوع الاستخدام (عبايات، هوديات، سترات...)، وتاريخ الإطلاق التقريبي..."
+                  className="w-full bg-[#1e1f22] border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-hidden focus:border-amber-400 leading-relaxed"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateCustomRequestModal(false)}
+                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black transition shadow-lg shadow-amber-500/20 cursor-pointer"
+                >
+                  نشر الطلب لجميع الموردين
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          GROUPAGE MODAL 4: SUPPLIER REPLY MODAL (تقديم عرض سعر كـ مورد)
+          ───────────────────────────────────────────────────────────── */}
+      {replyModalRequest && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-lg bg-[#232428] rounded-3xl overflow-hidden border border-indigo-500/30 shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto text-white"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            <div className="p-5 border-b border-[#383a40] flex items-center justify-between bg-gradient-to-r from-indigo-950/60 to-slate-900">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                  <Tag className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-white">تقديم عرض سعر وتوريد للزبون</h3>
+                  <p className="text-[10px] text-slate-400">الطلب: {replyModalRequest.title}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReplyModalRequest(null)}
+                className="p-2 rounded-full bg-black/40 hover:bg-black/70 text-white transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendSupplierReply} className="p-5 sm:p-6 space-y-3.5 text-xs">
+              <div className="p-3 bg-[#1e1f22] rounded-xl border border-white/5 space-y-1">
+                <span className="text-[10px] text-slate-400 block font-bold">الزبون الطالب:</span>
+                <p className="font-bold text-white text-xs">{replyModalRequest.brandName} ({replyModalRequest.city})</p>
+                <p className="text-[11px] text-slate-300">الكمية المطلوبة: {replyModalRequest.targetQty} {replyModalRequest.unit}</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">اسم المورد / المستودع *</label>
+                  <select
+                    value={supplierReplyForm.supplierName}
+                    onChange={e => {
+                      const name = e.target.value;
+                      const city = name.includes('Tanger') || name.includes('طنجة') ? 'طنجة' : 'الدار البيضاء';
+                      setSupplierReplyForm(prev => ({ ...prev, supplierName: name, supplierCity: city }));
+                    }}
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-indigo-400"
+                  >
+                    <option value="دار الكريب والأقمشة النسائية (Derb Omar)">دار الكريب والأقمشة النسائية (Derb Omar)</option>
+                    <option value="مجمع أقمشة الشرق (Derb Omar)">مجمع أقمشة الشرق (Derb Omar)</option>
+                    <option value="أقمشة المسيرة الشمالية (Tissus Nord Tanger)">أقمشة المسيرة الشمالية (Tissus Nord Tanger)</option>
+                    <option value="مؤسسة الأناقة للوازم الخياطة (كراج علال)">مؤسسة الأناقة للوازم الخياطة (كراج علال)</option>
+                    <option value="مستودع أقمشة الكتان والصيف الطبيعي">مستودع أقمشة الكتان والصيف الطبيعي</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">المدينة</label>
+                  <input
+                    type="text"
+                    value={supplierReplyForm.supplierCity}
+                    onChange={e => setSupplierReplyForm(prev => ({ ...prev, supplierCity: e.target.value }))}
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">السعر المقترح (MAD) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={supplierReplyForm.priceMAD}
+                    onChange={e => setSupplierReplyForm(prev => ({ ...prev, priceMAD: Number(e.target.value) }))}
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-amber-400 font-mono font-black focus:outline-hidden focus:border-indigo-400"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">أدنى كمية (MOQ)</label>
+                  <input
+                    type="number"
+                    value={supplierReplyForm.minQty}
+                    onChange={e => setSupplierReplyForm(prev => ({ ...prev, minQty: Number(e.target.value) }))}
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">مدة التسليم</label>
+                  <input
+                    type="text"
+                    value={supplierReplyForm.deliveryTime}
+                    onChange={e => setSupplierReplyForm(prev => ({ ...prev, deliveryTime: e.target.value }))}
+                    className="w-full bg-[#1e1f22] border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-300">تفاصيل العرض والعينة للزبون *</label>
+                <textarea
+                  rows={3}
+                  required
+                  value={supplierReplyForm.message}
+                  onChange={e => setSupplierReplyForm(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="اشرح توفر القماش والمواصفات وإمكانية إرسال عينة تجريبية..."
+                  className="w-full bg-[#1e1f22] border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-hidden focus:border-indigo-400"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setReplyModalRequest(null)}
+                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black transition shadow-lg shadow-indigo-600/30 cursor-pointer"
+                >
+                  إرسال العرض للزبون
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
