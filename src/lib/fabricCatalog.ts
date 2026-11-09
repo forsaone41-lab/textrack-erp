@@ -86,18 +86,18 @@ export const FABRIC_CATALOG: Record<string, FabricInfo> = {
     techSpec: '100% Coton Peigné · 260 GSM · Double Fonture'
   },
   'molleton': {
-    arName: 'مولتون شتوي مبطن / قطن فليس (Molleton / Cotton Fleece)',
-    frName: 'Molleton Coton / Fleece Gratté',
+    arName: 'مولتون 3 خيوط مقطن ثقيل 380g (Molton 3 Fils Gratté Lourd)',
+    frName: 'Molleton 3 Fils Gratté Lourd 380 GSM',
     pricePerMeterMAD: '38 - 60 درهم/متر (أو 80 - 110 درهم/كيلو)',
     pricePerMeterMADFr: '38 - 60 MAD/mètre (ou 80 - 110 MAD/kg)',
-    markets: 'موردو الأقمشة الشتوية والمحيكة الصناعية (الدار البيضاء / طنجة)',
+    markets: 'موردو ومستوردو الأقمشة الشتوية والمحيكة الصناعية (الدار البيضاء / طنجة)',
     marketsFr: 'Distributeurs & Fournisseurs Textiles Industriels Agréés (Casablanca / Tanger)',
-    pros: 'دافي بزاف، ملمس قطني مريح، قوام واقف للهودي والسويت شيرت وسراويل الجوغينغ',
-    prosFr: 'Très chaud, toucher doux molletonné, excellente tenue pour hoodies, sweats et joggings',
-    cons: 'كيحتاج شفرات مقص حادة في الفصالة وماكينة سورجي 4 خيوط قوية',
-    consFr: 'Nécessite des lames affûtées pour la coupe et une surjeteuse 4 fils robuste',
+    pros: 'دافئ جداً وسميك، قوام ستريتوير واقف وفخم للهوديات والسويت شيرتات الشتوية، بطانة وبرية ناعمة',
+    prosFr: 'Très chaud et dense, excellente tenue streetwear pour hoodies et sweats d\'hiver, envers gratté ultra doux',
+    cons: 'يحتاج شفرات مقص حادة في الفصالة بالمطلوة وماكينة سورجي 4 خيوط قوية',
+    consFr: 'Nécessite des lames affûtées pour la coupe au matelas et une surjeteuse 4 fils robuste',
     avgPricePerMeter: 48,
-    techSpec: '100% Coton (ou 80/20 Coton/Poly) · 340 GSM'
+    techSpec: '100% Coton (ou 80/20 Coton/Poly) · 380 GSM · 3 Fils Gratté'
   },
   'french_terry': {
     arName: 'مولطون بوكليت غير مقطن (فرنش تيري 100% قطن)',
@@ -261,6 +261,9 @@ export function getFabricInfo(fabricName: string = ''): FabricInfo {
   }
   if (lower.includes('french terry') || lower.includes('bouclette') || lower.includes('فرنش تيري') || lower.includes('بوكليت') || lower.includes('غير مقطن')) {
     return FABRIC_CATALOG['french_terry'];
+  }
+  if (lower.includes('molleton') || lower.includes('molton') || lower.includes('مولتون') || lower.includes('مولطون') || lower.includes('ميلتون') || lower.includes('fleece') || lower.includes('hoodie') || lower.includes('هودي')) {
+    return FABRIC_CATALOG['molleton'];
   }
   if (lower.includes('officier') || lower.includes('mao') || lower.includes('matelass') || lower.includes('ecru') || lower.includes('écru') || (lower.includes('toile') && lower.includes('coton')) || (lower.includes('twill') && (lower.includes('lourd') || lower.includes('coton')))) {
     return FABRIC_CATALOG['toile_coton'];

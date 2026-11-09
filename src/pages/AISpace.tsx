@@ -58,6 +58,14 @@ export const CATEGORY_MESURES: Record<
       { nom: 'الطول (Longueur)', valeurs: { S: 68, M: 70, L: 72, XL: 74, XXL: 76 } },
       { nom: 'طول الكم (Manche)', valeurs: { S: 63, M: 64, L: 65, XL: 66, XXL: 67 } }
     ],
+    Hoodie: [
+      { nom: 'الصدر نصف دورة (1/2 Poitrine Oversize)', valeurs: { S: 58, M: 61, L: 64, XL: 67, XXL: 70 } },
+      { nom: 'الكتف الساقط (Épaules Tombantes)', valeurs: { S: 56, M: 58, L: 60, XL: 62, XXL: 64 } },
+      { nom: 'الطول الإجمالي (Longueur Totale)', valeurs: { S: 68, M: 70, L: 72, XL: 74, XXL: 76 } },
+      { nom: 'طول الكم مع البواني (Manche + Bord-Côte)', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } },
+      { nom: 'ارتفاع الكابوش (Hauteur Capuche)', valeurs: { S: 36, M: 37, L: 38, XL: 39, XXL: 40 } },
+      { nom: 'عرض الحاشية السفلية (1/2 Bas Bord-Côte)', valeurs: { S: 46, M: 49, L: 52, XL: 55, XXL: 58 } }
+    ],
     Chemise: [
       { nom: 'الصدر (Poitrine)', valeurs: { S: 96, M: 102, L: 108, XL: 114, XXL: 120 } },
       { nom: 'الكتف (Épaules)', valeurs: { S: 43, M: 45, L: 47, XL: 49, XXL: 51 } },
@@ -105,6 +113,14 @@ export const CATEGORY_MESURES: Record<
       { nom: 'الكتف (Épaules)', valeurs: { S: 40, M: 42, L: 44, XL: 46, XXL: 48 } },
       { nom: 'الطول (Longueur)', valeurs: { S: 62, M: 64, L: 66, XL: 68, XXL: 70 } },
       { nom: 'طول الكم (Manche)', valeurs: { S: 59, M: 60, L: 61, XL: 62, XXL: 63 } }
+    ],
+    Hoodie: [
+      { nom: 'الصدر نصف دورة (1/2 Poitrine Oversize)', valeurs: { S: 54, M: 57, L: 60, XL: 63, XXL: 66 } },
+      { nom: 'الكتف الساقط (Épaules Tombantes)', valeurs: { S: 52, M: 54, L: 56, XL: 58, XXL: 60 } },
+      { nom: 'الطول الإجمالي (Longueur Totale)', valeurs: { S: 64, M: 66, L: 68, XL: 70, XXL: 72 } },
+      { nom: 'طول الكم مع البواني (Manche + Bord-Côte)', valeurs: { S: 55, M: 56, L: 57, XL: 58, XXL: 59 } },
+      { nom: 'ارتفاع الكابوش (Hauteur Capuche)', valeurs: { S: 35, M: 36, L: 37, XL: 38, XXL: 39 } },
+      { nom: 'عرض الحاشية السفلية (1/2 Bas Bord-Côte)', valeurs: { S: 42, M: 45, L: 48, XL: 51, XXL: 54 } }
     ],
     Chemise: [
       { nom: 'الصدر (Poitrine)', valeurs: { S: 90, M: 94, L: 98, XL: 102, XXL: 106 } },
@@ -256,12 +272,23 @@ export function getStandardMesuresForCategory(
     return JSON.parse(JSON.stringify(pDict.Veste));
   }
 
-  // 3. Sweat / Hoodie / Pull
+  // 3. Hoodie / Sweat à Capuche
+  if (
+    low.includes('hoodie') ||
+    low.includes('هودي') ||
+    low.includes('capuche') ||
+    low.includes('كابوش')
+  ) {
+    if ((pDict as any).Hoodie) {
+      return JSON.parse(JSON.stringify((pDict as any).Hoodie));
+    }
+    return JSON.parse(JSON.stringify(STANDARD_MESURES['Hoodie'] || pDict.Sweat));
+  }
+
+  // 3b. Sweat Col Rond / Pull
   if (
     low.includes('sweat') ||
-    low.includes('hoodie') ||
     low.includes('pull') ||
-    low.includes('هودي') ||
     low.includes('سويت') ||
     low.includes('بول')
   ) {
@@ -351,6 +378,14 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
     { nom: 'الورك (Hanches)', valeurs: { S: 110, M: 116, L: 122, XL: 128, XXL: 134 } },
     { nom: 'الطول الكامل (Longueur)', valeurs: { S: 115, M: 118, L: 120, XL: 122, XXL: 125 } },
     { nom: 'طول الكم (Manche)', valeurs: { S: 61, M: 62, L: 63, XL: 64, XXL: 65 } }
+  ],
+  Hoodie: [
+    { nom: 'الصدر نصف دورة (1/2 Poitrine Oversize)', valeurs: { S: 58, M: 61, L: 64, XL: 67, XXL: 70 } },
+    { nom: 'الكتف الساقط (Épaules Tombantes)', valeurs: { S: 56, M: 58, L: 60, XL: 62, XXL: 64 } },
+    { nom: 'الطول الإجمالي (Longueur Totale)', valeurs: { S: 68, M: 70, L: 72, XL: 74, XXL: 76 } },
+    { nom: 'طول الكم مع البواني (Manche + Bord-Côte)', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } },
+    { nom: 'ارتفاع الكابوش (Hauteur Capuche)', valeurs: { S: 36, M: 37, L: 38, XL: 39, XXL: 40 } },
+    { nom: 'عرض الحاشية السفلية (1/2 Bas Bord-Côte)', valeurs: { S: 46, M: 49, L: 52, XL: 55, XXL: 58 } }
   ]
 };
 
@@ -653,7 +688,10 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
       ) {
         return resolve('ensemble 2 pièces survêtement sport sweatshirt col rond pantalon jogging طقم رياضي قطعتين');
       }
-      if (fn.includes('sweat') || fn.includes('hoodie') || fn.includes('pull') || fn.includes('سويت') || fn.includes('هودي')) {
+      if (fn.includes('hoodie') || fn.includes('هودي') || fn.includes('capuche') || fn.includes('كابوش') || fn.includes('كابوتش')) {
+        return resolve('hoodie oversize à capuche avec poche kangourou هودي أوفرسايز بغطاء رأس وجيب كنغر');
+      }
+      if (fn.includes('sweat') || fn.includes('pull') || fn.includes('سويت')) {
         return resolve('sweatshirt col rond سويت شيرت كول رون');
       }
       if (fn.includes('tshirt') || fn.includes('t-shirt') || fn.includes('tee') || fn.includes('تيشرت')) {
@@ -706,7 +744,10 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           const natRatio = (img.naturalHeight || img.height || 1) / Math.max(1, img.naturalWidth || img.width || 1);
           const isExplicitDenim = (fn.includes('denim') || fn.includes('jean') || fn.includes('جينز') || fn.includes('دنيم'));
 
-          if (fn.includes('sweat') || fn.includes('hoodie') || fn.includes('سويت') || fn.includes('هودي')) {
+          if (fn.includes('hoodie') || fn.includes('هودي') || fn.includes('capuche') || fn.includes('كابوش') || fn.includes('كابوتش')) {
+            return resolve('hoodie oversize à capuche مع جيب كنغر هودي أوفرسايز');
+          }
+          if (fn.includes('sweat') || fn.includes('سويت')) {
             return resolve('sweatshirt col rond سويت شيرت كول رون');
           }
           if (fn.includes('tshirt') || fn.includes('t-shirt') || fn.includes('تيشرت')) {
@@ -876,7 +917,7 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
             return resolve('veste col officier boutonnage brandebourg drap de laine ecru جاكيت كول أوفيسييه بأزرار براندبورغ');
           }
           if (hasStripes || upperDark > upperCount * 0.35) {
-            return resolve('sweatshirt col rond سويت شيرت كول رون');
+            return resolve('hoodie oversize à capuche هودي أوفرسايز بكابوش وجيب كنغر molleton gratté');
           }
           return resolve('veste col officier boutonnage brandebourg drap de laine ecru جاكيت كول أوفيسييه بأزرار براندبورغ');
         } catch {
@@ -937,7 +978,22 @@ function buildFallbackAnalysis(
     )
   );
 
+  // Dedicated Hoodie / Sweat à Capuche (Single Piece)
+  const isHoodie = (
+    !isSurvet2Pieces && !isThreePieces && (
+      text.includes('hoodie') ||
+      text.includes('هودي') ||
+      text.includes('capuche') ||
+      text.includes('كابوش') ||
+      text.includes('كابوتش') ||
+      text.includes('sweat à capuche') ||
+      text.includes('sweat a capuche') ||
+      (text.includes('sweat') && (text.includes('capuche') || text.includes('kangourou') || text.includes('كابوش') || text.includes('كنغر')))
+    )
+  );
+
   const isVesteCasual = (
+    !isHoodie &&
     (
       text.includes('veste') || text.includes('jacket') || text.includes('jakit') || 
       text.includes('فيست') || text.includes('جاكيت') || text.includes('manteau') || 
@@ -1275,6 +1331,53 @@ function buildFallbackAnalysis(
       ],
       mesures: defaultMesures
     }];
+  } else if (isHoodie) {
+    pieceName = isAr ? 'هودي أوفرسايز بغطاء رأس وجيب كنغر (Hoodie Oversize)' : 'Hoodie / Sweat à Capuche Oversize';
+    defaultMesures = getStandardMesuresForCategory('Hoodie', audience, gender);
+    const hoodieConso = audience === 'enfants' ? '1.15m' : '1.70m';
+    piecesList = [{
+      name: pieceName,
+      consumption: hoodieConso,
+      fit: isAr ? 'أوفرسايز مريح بأكتاف ساقطة وقصة ستريتوير عصرية (Coupe Oversize Drop-Shoulder)' : 'Coupe Oversize Drop-Shoulder Confort & Streetwear',
+      complexity: isAr ? 'متوسطة' : 'Moyenne',
+      costEstimate: '38 - 55 MAD',
+      components: isAr ? [
+        'صدر أمامي واسع مع جيب كنغر كبير مقوى بدرزات بارزة (Poche Kangourou)',
+        'ظهر مريح مسطح مع قصة أكتاف ساقطة (Drop-Shoulder)',
+        'غطاء رأس مزدوج بطبقتين (Capuche Doublée 2 Panneaux) مع عيون معدنية غير قابلة للصدأ (Œillets Inox)',
+        'رباط قطني سميك مجدول مع أطراف معدنية مزمومة (Cordon Coton Tubulaire + Aglets Métal)',
+        'أكمام طويلة واسعة مع أساور بورد كوت مرن 1×1 محبوك عالي الجودة (Poignets Bord-Côte)',
+        'حاشية سفلية ببورد كوت مطاطي متين 1×1 يمنع الترهل (Ceinture Bas Bord-Côte)',
+        'شريط نظافة داخل الياقة ودرزات مزدوجة (Surpiqûres 2 Aiguilles) بخيط بوليستر مقوى 40/2'
+      ] : [
+        'Buste devant ample avec grande poche kangourou plaquée et surpiqûres renforcées',
+        'Dos uni confortable coupe drop-shoulder (épaules tombantes)',
+        'Capuche doublée 2 panneaux enveloppante avec œillets métalliques inoxydables',
+        'Cordon de serrage épais tubulaire 100% coton avec embouts métalliques (aglets)',
+        'Manches longues amples avec finitions poignets bord-côte 1x1 stretch renforcé',
+        'Bande de ceinture bas en bord-côte extensible résistant',
+        'Bande de propreté d\'encolure intérieure et surpiqûres 2 aiguilles de propreté'
+      ],
+      fabricSuggested: isAr ? 'مولتون 3 خيوط مقطن ثقيل 380g (Molton 3 Fils Gratté Lourd 380 GSM)' : 'Molleton 3 Fils Gratté Lourd 380 GSM',
+      fabricAlternatives: [
+        {
+          name: isAr ? 'فرينش تيري قطن ثقيل غير مقطن 400g' : 'French Terry 100% Coton Lourd 400 GSM',
+          pros: isAr ? 'انسيابية ستريتوير راقية، حلقات بوكليت قطنية ناعمة ومثالي لجميع الفصول' : 'Tombé lourd streetwear premium, respirant 4 saisons, bouclettes ultra douces',
+          cons: isAr ? 'أقل دفئاً في البرد القارس مقارنة بالمولتون المقطن' : 'Moins chaud en plein hiver que le molleton gratté'
+        },
+        {
+          name: isAr ? 'مولتون قطن/بوليستر 80/20 بوزن 340g' : 'Molleton Coton/Polyester 80/20 (340 GSM)',
+          pros: isAr ? 'مقاومة فائقة للانكماش والغسيل المتكرر وثبات لون عالي' : 'Excellente tenue au lavage, ne rétrécit pas, haute durabilité',
+          cons: isAr ? 'يحتوي على نسبة 20% بوليستر' : 'Contient 20% de fibres synthétiques'
+        },
+        {
+          name: isAr ? 'إنترلوك دبل كنيت قطن ممشط 320g' : 'Interlock Double Knit Peigné 320 GSM',
+          pros: isAr ? 'ملمس ناعم جداً من الوجهين ومثالي لطباعة DTF والتطريز الكثيف' : 'Surface lisse idéale pour broderie HD et sérigraphie fine',
+          cons: isAr ? 'سعر الكيلو أعلى في سوق الجملة' : 'Prix au kilo plus élevé'
+        }
+      ],
+      mesures: defaultMesures
+    }];
   } else if (text.includes('boxer') || text.includes('كالسون') || text.includes('بوكسر') || text.includes('slip') || text.includes('داخلي')) {
     pieceName = isAr ? 'بوكسر قطن جيرسي (Boxer Coton)' : 'Boxer Coton Lycra';
     defaultMesures = JSON.parse(JSON.stringify(STANDARD_MESURES['Boxer'] || STANDARD_MESURES['Pantalon']));
@@ -1315,7 +1418,7 @@ function buildFallbackAnalysis(
       ],
       mesures: defaultMesures
     }];
-  } else if (text.includes('sweat') || text.includes('hoodie') || text.includes('سويت') || text.includes('هودي') || text.includes('توني') || text.includes('pull')) {
+  } else if (text.includes('sweat') || text.includes('سويت') || text.includes('توني') || text.includes('pull')) {
     pieceName = isAr ? 'سويت شيرت كول رون (Sweatshirt Col Rond)' : 'Sweatshirt Col Rond Sportswear';
     defaultMesures = getStandardMesuresForCategory('Sweat', audience, gender);
     piecesList = [{
@@ -2159,7 +2262,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     } else if (preset === 'pantalon') {
       ctx = 'pantalon cargo كاجوال سروال';
     } else if (preset === 'hoodie') {
-      ctx = 'hoodie هودي أوفرسايز بكابوش';
+      ctx = 'hoodie oversize هودي أوفرسايز بكابوش وجيب كنغر molleton gratté 380g';
+      count = 1;
     } else if (preset === 1) {
       if (
         analysisResult?.category?.toLowerCase().includes('pantalon') ||
@@ -2738,8 +2842,14 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
      * تكلفة الصنع: 75 - 110 MAD
      * حذارِ تماماً من إضافة أي سروال خيالي! الصورة تحتوي على قطعة علوية فقط!
    - إذا كان الموديل طقماً كاملاً من قطعتين حقيقيتين في الصورة (توب + سروال): اجعل pieces قطعتين (Haut + Bas).
-   - إذا كان تيشيرت، حدده كقطعة واحدة (T-shirt) من قماش جيرسي قطن (استهلاك 1.05m - 1.25m، صنع 22-35 MAD).
-   - إذا كان هودي، حدده كقطعة واحدة (Hoodie) من قماش مولطون (استهلاك 1.65m - 1.85m، صنع 45-65 MAD).
+   - إذا كان هودي أو سويت شيرت بكابوش (Hoodie / Sweat à capuche):
+     * اجعل category: "Hoodie / Sweat à Capuche Oversize"
+     * قطعة واحدة: "هودي أوفرسايز بغطاء رأس وجيب كنغر"
+     * القماش: مولتون 3 خيوط مقطن ثقيل 380 GSM (Molton 3 Fils Gratté Lourd) أو فرينش تيري 400 GSM
+     * المكونات: كابوش مزدوج بطبقتين، جيب كنغر أمامي كبير، عيون معدنية وكوردون قطني، أساور وحاشية بورد-كوت 1×1
+     * الاستهلاك: 1.70m (عرض 1.50م) + 0.30m كوت ريب
+     * كلفة الصنع بالورشة: 38 - 55 MAD
+   - إذا كان تيشيرت، حدده كقطعة واحدة (T-shirt) من قماش جيرسي قطن (استهلاك 0.90m - 1.10m، صنع 22-35 MAD).
    - إذا كان سروالاً فقط، حدده كقطعة واحدة (Pantalon).
    - إذا كان فستاناً أو عباية، حدده كقطعة واحدة (Robe / Abaya).
 2. حدد الجنس (gender): "femmes" أو "hommes" حسب الموديل.
@@ -2801,7 +2911,10 @@ Analyse l'image réelle fournie avec une précision visuelle absolue sans aucun 
      * Consommation : 1.70m tissu + 1.35m doublure, Façon : 75 - 110 MAD
      * Ne rajoute AUCUN pantalon imaginaire si l'image ne montre qu'une veste !
    - S'il s'agit d'un ensemble 2 pièces (haut + pantalon visibles dans l'image), inclus alors STRICTEMENT les 2 pièces avec leurs mesures S à XXL respectives.
-   - S'il s'agit d'un seul article (t-shirt, sweatshirt, hoodie, pantalon, robe), analyse fidèlement cette pièce unique.
+   - S'il s'agit d'un hoodie ou sweat à capuche (Hoodie / Sweatshirt à capuche) :
+     * Catégorie "Hoodie / Sweat à Capuche Oversize", 1 pièce avec capuche doublée, poche kangourou, cordon & bord-côte
+     * Matière : Molleton 3 Fils Gratté Lourd 380 GSM (ou French Terry Lourd), Conso : 1.70m + 0.30m côte rib, Façon : 38 - 55 MAD
+   - S'il s'agit d'un seul article (t-shirt, sweatshirt, pantalon, robe), analyse fidèlement cette pièce unique.
 2. Détecte le genre ("femmes" ou "hommes") selon le modèle ou le vêtement.
 3. Coût façon en dirhams (MAD) et métrage réels adaptés au marché marocain (Casablanca / Tanger).
 
@@ -3082,6 +3195,36 @@ Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender
     if (/(parle.*francais|parle.*français|dwi.*fransya|dwi.*fransia|dwi.*lfransya|french|francais|français|الفرنسية)/i.test(m)) {
       setAiLangOverride('fr');
       return "D'accord ! 😊 À partir de maintenant, je vais vous répondre en français. Comment puis-je vous aider aujourd'hui ?";
+    }
+
+    // HOODIE / SWEAT A CAPUCHE INTENTS & "HADCHI MACHI MANTIQI"
+    if (
+      /(hoodie|هودي|capuche|كابوش|كابوتش|sweat à capuche|sweat a capuche)/i.test(m) ||
+      /(machi.*mantiqi|machi.*mntiqi|machi.*ma3qol|achi.*mntiqi|achi.*mantiqi|ماشي.*منطقي|ماشي.*معقول|غلط|خطأ)/i.test(m) ||
+      ((/(t-shirt|تيشيرت|تيشرت)/i.test(m)) && /(hoodie|هودي|capuche|كابوش|كنغر|kangourou)/i.test(m))
+    ) {
+      setTimeout(() => applyPiecePreset('hoodie'), 100);
+      return speakAr
+        ? `🧥 عندك الحق 100%! فعلاً الموديل المعروض في الصورة هو **هودي أوفرسايز بغطاء رأس (Hoodie Oversize)** وليس تيشرت! تم تصحيح التحليل والبطاقة التقنية فوراً:
+
+• **نوع الموديل**: هودي أوفرسايز بغطاء رأس مزدوج وجيب كنغر أمامي (Hoodie Oversize à Capuche).
+• **القماش المقترح**: **مولتون 3 خيوط مقطن ثقيل 380g (Molton 3 Fils Gratté Lourd 380 GSM)** أو فرينش تيري 400g.
+• **ثمن القماش بالجملة** (درب عمر / طنجة): **38 - 60 درهم/متر** (أو 80 - 110 درهم/كيلو).
+• **استهلاك الثوب الحقيقي**: **1.70 متر** (لتغطية الصدر، الظهر، الكابوش المزدوج، والأكمام) + **0.30 متر** بورد-كوت ريب 1×1 للأساور والخصر (عوض 0.90م الخاصة بالتيشرت).
+• **كلفة الصنع والخياطة بالورشة (Façon Atelier)**: **38 - 55 درهم** (فصالة مطلوة + تجميع كابوش + جيب كنغر + عيون حديد وكوردون).
+• **كلفة الإنتاج الإجمالية التقديرية**: **125 - 150 درهم** | ثمن البيع بالجملة المقترح: **180 - 240 درهم**.
+
+✅ تم تحديث جدول المقاسات S-XXL، تفاصيل الثوب في الكتالوج المغربي، وسلسلة المراحل في البطاقة التقنية بنجاح!`
+        : `🧥 Vous avez totalement raison ! Le modèle sur l'image est bien un **Hoodie Oversize à Capuche** et non un T-shirt basique. Fiche technique et analyse corrigées immédiatement :
+
+• **Pièce** : Hoodie / Sweat à Capuche Oversize avec grande poche kangourou et finitions bord-côte.
+• **Tissu principal** : **Molleton 3 Fils Gratté Lourd 380 GSM** (ou French Terry Lourd 400 GSM).
+• **Prix gros au mètre** (Marché de Casablanca / Tanger) : **38 - 60 MAD/mètre** (80 - 110 MAD/kg).
+• **Consommation réelle** : **1.70m** (corps + capuche doublée + manches) + **0.30m** bord-côte 1x1 (au lieu de 0.90m pour t-shirt !).
+• **Coût façon atelier** : **38 - 55 MAD** (montage capuche doublée, poche kangourou, œillets et cordon).
+• **Coût de revient estimé** : **125 - 150 MAD** | Prix vente gros suggéré : **180 - 240 MAD**.
+
+✅ Tableau de mesures S-XXL, composants et catalogue tissus marocain mis à jour !`;
     }
 
     // JACKET / VESTE / BRANDEBOURG / MANTEAU SWITCHING INTENTS
@@ -5028,69 +5171,119 @@ ${userMessage}
           </div>
 
           {/* Quick Garment Preset Switcher Strip */}
-          <div className={`px-3 sm:px-4 py-2 bg-indigo-50/70 border-b border-indigo-100/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <span className="text-[11px] font-bold text-indigo-900 shrink-0 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-              <span>{isAr ? 'نوع الموديل بنقرة واحدة:' : 'Type de pièce :'}</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => applyPiecePreset('veste_brandebourg')}
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-indigo-950 border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
-              title={isAr ? 'فيست كول أوفيسييه بأزرار براندبورغ من قماش الصوف الإيكرو' : 'Veste col officier et nœuds brandebourgs'}
-            >
-              <span>🧥</span>
-              <span>{isAr ? 'فيست براندبورغ كول أوفيسييه' : 'Veste Brandebourgs'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyPiecePreset('veste_casual')}
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
-            >
-              <span>🧥</span>
-              <span>{isAr ? 'فيست كاجوال' : 'Veste Casual'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyPiecePreset('tshirt')}
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
-            >
-              <span>👕</span>
-              <span>{isAr ? 'تيشيرت' : 'T-Shirt'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyPiecePreset('hoodie')}
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
-            >
-              <span>🧥</span>
-              <span>{isAr ? 'هودي' : 'Hoodie'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyPiecePreset('pantalon')}
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
-            >
-              <span>👖</span>
-              <span>{isAr ? 'سروال' : 'Pantalon'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyPiecePreset('survet_2_pieces')}
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
-            >
-              <span>🏃</span>
-              <span>{isAr ? 'طقم قطعتين (Survêt)' : 'Ensemble 2P'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyPiecePreset('robe_chemise')}
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all shrink-0 shadow-xs flex items-center gap-1"
-            >
-              <span>👗</span>
-              <span>{isAr ? 'فستان / عباية' : 'Robe / Abaya'}</span>
-            </button>
-          </div>
+          {(() => {
+            const currentTitle = (
+              analysisResult?.pieces?.[activePieceIdx]?.name ||
+              analysisResult?.pieces?.[0]?.name ||
+              analysisResult?.category ||
+              ''
+            ).toLowerCase();
+            const piecesCount = analysisResult?.pieces?.length || 1;
+
+            const isHoodieAct = currentTitle.includes('hoodie') || currentTitle.includes('هودي') || currentTitle.includes('capuche') || currentTitle.includes('كابوش');
+            const isBrandebourgAct = currentTitle.includes('brandebourg') || currentTitle.includes('officier') || currentTitle.includes('براندبورغ');
+            const isVesteAct = !isBrandebourgAct && !isHoodieAct && (currentTitle.includes('veste') || currentTitle.includes('jacket') || currentTitle.includes('فيست') || currentTitle.includes('جاكيت'));
+            const isTshirtAct = !isHoodieAct && (currentTitle.includes('t-shirt') || currentTitle.includes('tshirt') || currentTitle.includes('تيشرت') || currentTitle.includes('تيشيرت'));
+            const isPantalonAct = (piecesCount === 1) && (currentTitle.includes('pantalon') || currentTitle.includes('سروال') || currentTitle.includes('jogging') || currentTitle.includes('جوغينغ'));
+            const isSurvetAct = piecesCount >= 2 || currentTitle.includes('ensemble') || currentTitle.includes('طقم') || currentTitle.includes('survêt');
+            const isRobeAct = currentTitle.includes('robe') || currentTitle.includes('فستان') || currentTitle.includes('abaya') || currentTitle.includes('عباية');
+
+            return (
+              <div className={`px-3 sm:px-4 py-2 bg-indigo-50/70 border-b border-indigo-100/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <span className="text-[11px] font-bold text-indigo-900 shrink-0 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>{isAr ? 'نوع الموديل بنقرة واحدة:' : 'Type de pièce :'}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => applyPiecePreset('hoodie')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 shadow-xs flex items-center gap-1 cursor-pointer ${
+                    isHoodieAct
+                      ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 shadow-sm border border-indigo-600'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white'
+                  }`}
+                  title={isAr ? 'هودي أوفرسايز بغطاء رأس وجيب كنغر' : 'Hoodie oversize à capuche et poche kangourou'}
+                >
+                  <span>🧥</span>
+                  <span>{isAr ? 'هودي' : 'Hoodie'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPiecePreset('tshirt')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 shadow-xs flex items-center gap-1 cursor-pointer ${
+                    isTshirtAct
+                      ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 shadow-sm border border-indigo-600'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white'
+                  }`}
+                  title={isAr ? 'تيشرت قطن كول رون كلاسيكي' : 'T-shirt col rond en jersey coton'}
+                >
+                  <span>👕</span>
+                  <span>{isAr ? 'تيشيرت' : 'T-Shirt'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPiecePreset('veste_brandebourg')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 shadow-xs flex items-center gap-1 cursor-pointer ${
+                    isBrandebourgAct
+                      ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 shadow-sm border border-indigo-600'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white'
+                  }`}
+                  title={isAr ? 'فيست كول أوفيسييه بأزرار براندبورغ من قماش الصوف الإيكرو' : 'Veste col officier et nœuds brandebourgs'}
+                >
+                  <span>🧥</span>
+                  <span>{isAr ? 'فيست براندبورغ كول أوفيسييه' : 'Veste Brandebourgs'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPiecePreset('veste_casual')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 shadow-xs flex items-center gap-1 cursor-pointer ${
+                    isVesteAct
+                      ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 shadow-sm border border-indigo-600'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white'
+                  }`}
+                >
+                  <span>🧥</span>
+                  <span>{isAr ? 'فيست كاجوال' : 'Veste Casual'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPiecePreset('pantalon')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 shadow-xs flex items-center gap-1 cursor-pointer ${
+                    isPantalonAct
+                      ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 shadow-sm border border-indigo-600'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white'
+                  }`}
+                >
+                  <span>👖</span>
+                  <span>{isAr ? 'سروال' : 'Pantalon'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPiecePreset('survet_2_pieces')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 shadow-xs flex items-center gap-1 cursor-pointer ${
+                    isSurvetAct
+                      ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 shadow-sm border border-indigo-600'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white'
+                  }`}
+                >
+                  <span>🏃</span>
+                  <span>{isAr ? 'طقم قطعتين (Survêt)' : 'Ensemble 2P'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPiecePreset('robe_chemise')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 shadow-xs flex items-center gap-1 cursor-pointer ${
+                    isRobeAct
+                      ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 shadow-sm border border-indigo-600'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white'
+                  }`}
+                >
+                  <span>👗</span>
+                  <span>{isAr ? 'فستان / عباية' : 'Robe / Abaya'}</span>
+                </button>
+              </div>
+            );
+          })()}
 
           {/* TAB 1: FICHE TECHNIQUE & PRIX (activeTab === 'fiche') */}
           {activeTab === 'fiche' && (
