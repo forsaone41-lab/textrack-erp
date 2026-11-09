@@ -3160,6 +3160,38 @@ Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender
         : `✅ Modèle mis à jour en 1 Pièce simple avec 1.50m de consommation.`;
     }
 
+    // INTENT: SOURCING TISSU, AVANCE & ÉCHANTILLON VALIDATION RULES (توضيح مسألة تسبيق القماش والعينة)
+    if (
+      /(avance|acompte|تسبيق|عربون|avanc)/i.test(m) ||
+      ((/(echantillon|échantillon|echation|prototype|عينة|بروطوتيب|بروتوتيب)/i.test(m) || /(tklfo.*(btub|toub|tob)|سورسينغ|توفير.*الثوب|شراء.*الثوب)/i.test(m)) && /(toub|tob|ثوب|قماش|avance|acompte|تسبيق|عربون|meter|mter|متر|rouleau|رولو|valid|فاليدي)/i.test(m)) ||
+      (/(sl3a.*blmter|maklqach.*sl3a|السلعة.*بالمتر|ماكنلقاش.*السلعة)/i.test(m))
+    ) {
+      return speakAr
+        ? `📌 **القاعدة المهنية الصارمة بخصوص توفير الثوب والعينة (Sourcing & Échantillon):**
+
+1️⃣ **علاش التسبيق (Avance) إلزامي قبل شراء الثوب؟**
+• في أسواق الجملة (درب عمر، سوق القريعة، طنجة)، التجار والشركات المستوردة **كيبيعو بالرولو (Rouleau / 25-50 متر)** وما كاينش اللي كيقطع الثوب بالمتر المفرّق بثمن الجملة.
+• باش الورشة تخرج تجيب ثوب الموديل خاصها تخلص وتضمن السلعة، لذلك **التسبيق إلزامي مسبقاً** باش الورشة ما تحطش فلوسها فالثوب ويبقى حاصل عندها إيلا الزبون بدل رأيه.
+
+2️⃣ **مسألة العينة (Échantillon / Prototype):**
+• ولو كان الزبون باغي غير "بياسة للتجربة" (Échantillon)، كيتخلص ثمن العينة وثمن تأمين الثوب مسبقاً.
+• هاد العينة كيتفصل ويتخيط وكيجلس عند الزبون **حتى كيفاليديه (Validation)** ويقيسو ويتأكد من القصة والفينيسيون عاد كتنطلق خدمة الكمية الكبيرة (La Production de Série).
+• كلفة العينة كتحسب مخصومة من الحساب الإجمالي فاش كتثبت لاكوموند.
+
+💬 **ميساج جاهز تقدر تصيفطو للزبون فالواتساب:**
+> *"السلام عليكم أخي، بخصوص الموديل: إيلا كنا حنا اللي غنتكلفو بالثوب، راه ضروري من تسبيق (Avance) مسبقاً حتى بالنسبة للـ Échantillon. حيت فأسواق الجملة السلعة كتباع بالرولو وما كنلقاوش الثوب مقطع بالمتر. كنصاوبو ليك العينة الأولى كتقيسها وتفاليديها على خاطرك، ومن بعد المصادقة ديالك عاد كنطلقو خياطة الكوليكسيون كاملة. شكراً لتفهمك!"*`
+        : `📌 **Règle Professionnelle : Sourcing Tissu, Acompte & Validation Échantillon :**
+
+1️⃣ **Pourquoi l'acompte (avance) est obligatoire avant achat tissu ?**
+• Sur les marchés de gros textiles (Derb Omar, Tanger...), les importateurs et grossistes vendent exclusivement **au rouleau (pièce de 30 à 50m)** et ne coupent jamais au mètre au tarif industriel.
+• Pour que l'atelier sécurise la matière première, un **acompte ferme** est impératif pour éviter à l'atelier d'avancer la trésorerie.
+
+2️⃣ **Procédure Échantillon / Prototype :**
+• Même pour une seule pièce témoin (échantillon), le coût du prototype et la sécurisation tissu doivent être réglés à l'avance.
+• La confection de série reste suspendue jusqu'à la **validation définitive (essayage & finitions)** par le client.
+• Le montant du prototype est déduit de la facture finale dès confirmation de la série.`;
+    }
+
     // 0. CLIENT QUOTE & PDF PROPOSAL INTENTS (Devis & Fiche Client B2B / Chiffrage Sourcing)
     if (/(client|clian|clien|زبون|كليان|devis.*(client|clian|clien|زبون|كليان)|(pdf|fiche|warqa|ملف|ورقة|عرض.*سعر).*(client|clian|clien|زبون|كليان)|devis.*pro|عرض.*سعر|estimasion|chiffrage|sourcing|سلعة|شراء|ثمن.*متر|كلفة.*بياسة|oco)/i.test(m) && /(pdf|devis|fiche|warqa|ملف|ورقة|عرض|prix|taman|toub|ثوب|ثمن|سلعة|شراء|كلفة|oco|chiffrage|sourcing)/i.test(m)) {
       const isSourcing = /(sourcing|سلعة|شراء|فين نشري|شحال نشري|كلفة.*بياسة|oco|chiffrage|تكلفة|تفاصيل السلعة)/i.test(m);

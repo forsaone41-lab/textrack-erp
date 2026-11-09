@@ -93,8 +93,8 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
     setDelaiConfection(isAr ? '7 إلى 10 أيام عمل' : '7 à 10 jours ouvrés');
     setConditions(
       isAr
-        ? 'تسبيق 50% عند المصادقة على النموذج الأولي (Prototype)، و50% عند التسليم النهائي. مراقبة الجودة مضمونة قبل التسليم.'
-        : 'Acompte de 50% à la validation du prototype, solde à la livraison finale. Contrôle qualité unitaire garanti avant expédition.'
+        ? 'تسبيق 50% إلزامي مسبقاً لتأمين القماش قبل الشراء (الأقمشة تباع باللفافات في سوق الجملة ولا تباع بالمتر المفرّق). يتم إنجاز النموذج الأولي (Échantillon) أولاً، ويبقى إطلاق الإنتاج الإجمالي معلقاً حتى معاينة ومصادقة الزبون التامة عليه.'
+        : 'Acompte de 50% obligatoire pour approvisionnement tissu (matières vendues au rouleau en gros, non détaillées au mètre). Échantillon confectionné en premier, production série lancée uniquement après validation ferme du client.'
     );
 
     // Build articles from analysis
@@ -896,15 +896,71 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">
-                  {isAr ? 'شروط الدفع والمصادقة على النموذج' : 'Conditions de règlement & Prototype'}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase">
+                    {isAr ? 'شروط الدفع والمصادقة على النموذج' : 'Conditions de règlement & Prototype'}
+                  </label>
+                  <span className="text-[9px] text-amber-400 font-black">
+                    {isAr ? '⚠️ تسبيق القماش إلزامي' : '⚠️ Acompte tissu obligatoire'}
+                  </span>
+                </div>
+
+                {/* Quick Presets for Conditions */}
+                <div className="flex flex-wrap gap-1 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setConditions(
+                      isAr
+                        ? 'تسبيق 50% إلزامي مسبقاً قبل شراء القماش (السلعة لا تباع بالمتر المفرّق في أسواق الجملة). يتم إنجاز النموذج الأولي (Échantillon) أولاً، ويبقى الإنتاج الإجمالي معلقاً حتى المصادقة النهائية (Validation) من طرف العميل.'
+                        : 'Acompte de 50% obligatoire avant approvisionnement tissu (matières vendues au rouleau en gros, non détaillées au mètre). Échantillon réalisé en premier, production série lancée uniquement après validation ferme du client.'
+                    )}
+                    className="px-2 py-0.5 rounded-lg bg-indigo-950/90 hover:bg-indigo-900 border border-indigo-700/60 text-[10px] text-indigo-300 font-bold transition-all cursor-pointer"
+                  >
+                    {isAr ? '📦 القماش علينا (تسبيق إلزامي)' : '📦 Sourcing Atelier'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConditions(
+                      isAr
+                        ? 'القماش يوفره الزبون. تسبيق 30% عند بدء تفصيل العينة (Prototype)، والباقي عند التسليم النهائي بعد مراقبة الجودة.'
+                        : 'Tissu fourni par le client. Acompte de 30% au lancement du prototype, solde à la livraison finale après contrôle qualité.'
+                    )}
+                    className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] text-slate-300 font-bold transition-all cursor-pointer"
+                  >
+                    {isAr ? '✂️ القماش من عند الزبون' : '✂️ Tissu Client'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConditions(
+                      isAr
+                        ? 'أداء مصاريف العينة (Échantillon) وتأمين القماش 100% مسبقاً قبل الخروج للسوق. تحتسب قيمة العينة مخصومة من الفاتورة الإجمالية عند تأكيد طلبية الإنتاج بالجملة.'
+                        : 'Paiement 100% de l\'échantillon et approvisionnement tissu à l\'avance. Montant déduit de la facture finale lors de la confirmation de la série.'
+                    )}
+                    className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] text-slate-300 font-bold transition-all cursor-pointer"
+                  >
+                    {isAr ? '🧪 عينة فقط (Échantillon)' : '🧪 Proto Seul'}
+                  </button>
+                </div>
+
                 <textarea
-                  rows={2}
+                  rows={3}
                   value={conditions}
                   onChange={e => setConditions(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-medium resize-none"
                 />
+
+                {/* Sourcing Clarification Notice */}
+                <div className="mt-2 p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[10px] text-amber-300/90 leading-relaxed">
+                  <div className="font-black flex items-center gap-1 mb-0.5">
+                    <span>⚠️</span>
+                    <span>{isAr ? 'تنبيه مهني للزبناء بخصوص اقتناء الثوب:' : 'Règle marché de gros :'}</span>
+                  </div>
+                  <div>
+                    {isAr
+                      ? 'في أسواق الجملة (درب عمر / طنجة) الأقمشة تباع باللفافة (Rouleau) ولا تباع بالمتر المفرق، لذا يشترط تسبيق مالي مسبقاً لتأمين القماش. إنجاز العينة (Échantillon) مرحلة تأكيدية مستقلة ويبقى إطلاق الإنتاج الإجمالي حتى تتم المصادقة التامة عليها.'
+                      : 'Les grossistes vendent exclusivement au rouleau et ne détaillent pas au mètre. L\'approvisionnement même pour un prototype nécessite un acompte ferme.'}
+                  </div>
+                </div>
               </div>
 
               {/* TVA Toggle */}
