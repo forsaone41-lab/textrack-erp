@@ -802,6 +802,49 @@ export function getTechnicalFabricSpecs(fabricName: string, isAr: boolean) {
   };
 }
 
+const CODE39_MAP: Record<string, string> = {
+  '0': 'nnnwwnwnn', '1': 'wnnnwnnnw', '2': 'nnwnwnnnw', '3': 'wnwnwnnnn',
+  '4': 'nnnwwnnnw', '5': 'wnnwwnnnn', '6': 'nnwwwnnnn', '7': 'nnnwnnwnw',
+  '8': 'wnnwnnwnn', '9': 'nnwnnnwnn', 'A': 'wnnnnnwnw', 'B': 'nnwnnnwnw',
+  'C': 'wnwnnnwnn', 'D': 'nnnnwnwnw', 'E': 'wnnnwnwnn', 'F': 'nnwnwnwnn',
+  'G': 'nnnnnnwwn', 'H': 'wnnnnnwwn', 'I': 'nnwnnnwwn', 'J': 'nnnnwnwwn',
+  'K': 'wnnnnnnnw', 'L': 'nnwnnnnnw', 'M': 'wnwnnnnnn', 'N': 'nnnnwnnnw',
+  'O': 'wnnnwnnnn', 'P': 'nnwnwnnnn', 'Q': 'nnnnnnwnw', 'R': 'wnnnnnwnn',
+  'S': 'nnwnnnwnn', 'T': 'nnnnwnwnn', 'U': 'wwnnnnnnw', 'V': 'nwwnnnnnw',
+  'W': 'wwwnnnnnn', 'X': 'nwnnwnnnw', 'Y': 'wwnnwnnnn', 'Z': 'nwwnwnnnn',
+  '-': 'nwnnnnwnw', '.': 'wwnnnnwnn', ' ': 'nwwnnnwnn', '$': 'nwnwnwnnn',
+  '/': 'nwnwnnnwn', '+': 'nwnnnwnwn', '%': 'nnnwnwnwn', '*': 'nwnnwnwnn'
+};
+
+export function generateCode39Svg(text: string, height = 22): string {
+  const clean = String(text || '').toUpperCase().replace(/[^0-9A-Z\-. $/+%]/g, '-');
+  const full = '*' + clean + '*';
+  const narrowW = 1.0;
+  const wideW = 2.3;
+  const gapW = 1.0;
+
+  let x = 0;
+  const rects: string[] = [];
+  for (let i = 0; i < full.length; i++) {
+    const char = full[i];
+    const pattern = CODE39_MAP[char] || CODE39_MAP['-'];
+    for (let p = 0; p < 9; p++) {
+      const isBar = (p % 2 === 0);
+      const isWide = (pattern[p] === 'w');
+      const w = isWide ? wideW : narrowW;
+      if (isBar) {
+        rects.push(`<rect x="${x.toFixed(1)}" y="0" width="${w.toFixed(1)}" height="${height}" fill="#000000"/>`);
+      }
+      x += w;
+    }
+    if (i < full.length - 1) {
+      x += gapW;
+    }
+  }
+  const totalW = Math.ceil(x);
+  return `<svg viewBox="0 0 ${totalW} ${height}" width="${totalW}" height="${height}" preserveAspectRatio="xMidYMid meet" style="max-width:100%;height:${height}px;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">${rects.join('')}</svg>`;
+}
+
 // ─── Rapport IA / Tech Pack Corporate Noir & Blanc ──────────────────────────────
 export function printRapportIA(analysis: any, image: string | null, isAr: boolean) {
   const company = loadCompanyProfile();
@@ -989,13 +1032,27 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
     }
     
     .barcode-block {
-      letter-spacing: 3px;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 9px;
-      font-weight: 900;
-      display: inline-block;
-      padding: 2px 6px;
-      border: 1px dashed #000;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      padding: 3px 6px;
+      border: 1px solid #000;
+      border-radius: 2px;
+      margin-top: 4px;
+      max-width: 96%;
+      box-sizing: border-box;
+    }
+    .barcode-text {
+      font-family: 'IBM Plex Mono', monospace, courier;
+      font-size: 7px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #000;
+      margin-top: 2px;
+      line-height: 1;
+      text-align: center;
     }
     
     /* Sign-off Boxes */
@@ -1079,15 +1136,18 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
             ${isAr ? 'ورشة معتمدة للماركات · مكتب دراسات، باترون وبطاقات تقنية صناعية' : "Atelier certifié B2B · Bureau d'études, Patronage & Fiches Techniques"}
           </div>
         </td>
-        <td style="width: 25%; text-align: center; vertical-align: middle;">
-          <div style="font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">
+        <td style="width: 25%; text-align: center; vertical-align: middle; padding: 4px;">
+          <div style="font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; line-height: 1.2;">
             ${isAr ? 'الملف التقني المعتمد' : 'DOSSIER TECHNIQUE'}
           </div>
-          <div style="font-size: 8px; font-weight: 800; margin-top: 2px;">
+          <div style="font-size: 8px; font-weight: 800; margin-top: 2px; line-height: 1.2;">
             ${isAr ? 'TECH PACK رسمي للإنتاج' : 'TECH PACK OFFICIEL'}
           </div>
-          <div class="barcode-block" style="margin-top: 3px;">
-            ||| | |||| | ||| | ||
+          <div class="barcode-block">
+            ${generateCode39Svg(refCode, 20)}
+            <div class="barcode-text">
+              *${refCode}*
+            </div>
           </div>
         </td>
         <td style="width: 30%; font-size: 7.5px; padding: 4px;">
