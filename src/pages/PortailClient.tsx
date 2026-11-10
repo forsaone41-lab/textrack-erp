@@ -1015,8 +1015,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     });
   })();
 
-  const getCommandePaymentAndProofInfo = (c: Commande, matchingLead?: Lead) => {
-    const isEchantillon = Boolean(
+  const isSampleCommande = (c: Commande): boolean =>
+    Boolean(
       c.statut === 'echantillon_en_cours' ||
       c.statut === 'echantillon_valide' ||
       Number(c.quantite) === 1 ||
@@ -1024,6 +1024,26 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       (c.modele || '').toLowerCase().includes('echantillon') ||
       (c.modele || '').includes('عينة')
     );
+
+  const findLinkedProductionForCommande = (
+    c: Commande,
+    pool: Commande[] = found.length > 0 ? found : clientCommandesAll
+  ): Commande | undefined => {
+    if (!c || !isSampleCommande(c)) return undefined;
+    const normSampleModel = normalizePortalKey(c.modele);
+    const prodPool = pool.filter(
+      p => p.id !== c.id && !isSampleCommande(p) && p.statut !== 'annulé' && p.statut !== 'annulation_demandee'
+    );
+    if (prodPool.length === 0) return undefined;
+    return (
+      prodPool.find(p => normSampleModel && normalizePortalKey(p.modele) === normSampleModel) ||
+      (prodPool.length === 1 ? prodPool[0] : undefined)
+    );
+  };
+
+  const getCommandePaymentAndProofInfo = (c: Commande, matchingLead?: Lead) => {
+    const isEchantillon = isSampleCommande(c);
+    const linkedProd = isEchantillon ? findLinkedProductionForCommande(c) : undefined;
 
     const totalAmount = (c.prix && Number(c.quantite) > 0)
       ? Math.round(Number(c.prix) * Number(c.quantite))
@@ -1052,6 +1072,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
     const receipts = matchedDocs.filter(f => f.typeDoc === 'recu');
     const facturesDocs = matchedDocs.filter(f => !f.typeDoc || f.typeDoc === 'facture');
+    const devisDocs = matchedDocs.filter(f => f.typeDoc === 'devis');
 
     const getDocPaid = (f: Facture) => {
       if (f.statut === 'payée') {
@@ -1065,8 +1086,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
     const paidRecusSum = receipts.reduce((sum, f) => sum + getDocPaid(f), 0);
     const paidFacturesSum = facturesDocs.reduce((sum, f) => sum + getDocPaid(f), 0);
+    const paidDevisSum = devisDocs.reduce((sum, f) => sum + (f.statut === 'payée' ? Number(f.montant || f.avance || 0) : 0), 0);
     const cmdAvance = Number(c.avance || 0);
-    const paidAmount = Math.max(cmdAvance, paidRecusSum, paidFacturesSum);
+    const paidAmountRaw = Math.max(cmdAvance, paidRecusSum, paidFacturesSum, paidDevisSum);
 
     const verifyingDocs = matchedDocs.filter(f => f.statut === 'en_verification');
     const verifyingSum = verifyingDocs.reduce((sum, f) => sum + Number(f.avance && f.avance > 0 ? f.avance : (f.montant || 0)), 0);
@@ -1094,17 +1116,33 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       addProofUrl(leadExt.virementReceipt, 'توصيل التحويل الأولي', 'Reçu Virement Initial', leadExt.clientValideDate);
     }
 
-    const isPaid = Boolean(
-      (totalAmount > 0 && paidAmount >= totalAmount) ||
+    const hasPaidFullDoc = Boolean(
       receipts.some(f => f.statut === 'payée' && (totalAmount === 0 || Number(f.montant || f.avance || 0) >= totalAmount || isEchantillon)) ||
-      facturesDocs.some(f => f.statut === 'payée' && (totalAmount === 0 || Number(f.montant || 0) >= totalAmount || isEchantillon)) ||
-      (isEchantillon && c.statut === 'echantillon_valide' && (paidAmount > 0 || extraProofImages.length > 0))
+      [...facturesDocs, ...devisDocs].some(f => f.statut === 'payée' && (totalAmount === 0 || Number(f.montant || 0) >= totalAmount || isEchantillon))
     );
+
+    const sampleAlreadySettled = Boolean(
+      isEchantillon && (
+        c.statut === 'echantillon_valide' ||
+        c.phase === 'livré' ||
+        c.statut === 'livré' ||
+        Boolean(linkedProd)
+      )
+    );
+
+    const isPaid = Boolean(
+      (totalAmount > 0 && paidAmountRaw >= totalAmount) ||
+      hasPaidFullDoc ||
+      sampleAlreadySettled
+    );
+
+    const paidAmount = isPaid && totalAmount > 0 ? Math.max(paidAmountRaw, totalAmount) : paidAmountRaw;
 
     const isVerifying = !isPaid && Boolean(
       verifyingSum > 0 ||
-      receipts.some(f => f.statut === 'en_verification' || Boolean(f.preuveClient || f.preuvePaiement)) ||
-      Boolean((c as any).preuveClient || (c as any).preuvePaiement)
+      receipts.some(f => f.statut === 'en_verification') ||
+      [...facturesDocs, ...devisDocs].some(f => f.statut === 'en_verification') ||
+      Boolean(((c as any).preuveClient || (c as any).preuvePaiement) && !receipts.some(f => f.statut === 'payée'))
     );
 
     const remainingAmount = isPaid ? 0 : Math.max(0, totalAmount - paidAmount);
@@ -1112,6 +1150,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
     return {
       isEchantillon,
+      linkedProd,
       totalAmount,
       paidAmount,
       remainingAmount,
@@ -5684,6 +5723,39 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                   <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
                                </div>
                                <h3 className="text-xl md:text-3xl font-black uppercase tracking-tight leading-none">{cmd.modele}</h3>
+                               {(() => {
+                                 const linkedProdCmd = findLinkedProductionForCommande(cmd, found);
+                                 if (!linkedProdCmd) return null;
+                                 const prodInfo = getCommandePaymentAndProofInfo(linkedProdCmd);
+                                 return (
+                                   <div className="mt-2.5 flex flex-wrap items-center justify-center md:justify-start gap-2">
+                                     <button
+                                       type="button"
+                                       onClick={() => {
+                                         const el = document.getElementById(`order-card-${linkedProdCmd.id}`);
+                                         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                       }}
+                                       className="px-3.5 py-1.5 bg-indigo-500/35 hover:bg-indigo-500 text-white border border-indigo-300/40 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all"
+                                     >
+                                       <span>{isAr ? `🏭 الانتقال للإنتاج (${linkedProdCmd.reference}) ←` : `🏭 Aller à sa Production (${linkedProdCmd.reference}) →`}</span>
+                                     </button>
+                                     {!prodInfo.isPaid && (
+                                       <button
+                                         type="button"
+                                         onClick={() => {
+                                           setVirementCommandeId(linkedProdCmd.id);
+                                           const sugg = Math.round((prodInfo.remainingAmount || prodInfo.totalAmount) * 0.5);
+                                           if (sugg > 0) setVirementMontant(String(sugg));
+                                           setActiveTab('payments');
+                                         }}
+                                         className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all shadow-md"
+                                       >
+                                         <span>{isAr ? '💳 أداء الإنتاج' : '💳 Payer Production'}</span>
+                                       </button>
+                                     )}
+                                   </div>
+                                 );
+                               })()}
                                
                                {/* Status centered below for mobile */}
                                <div className="mt-3 md:hidden">
@@ -6668,8 +6740,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
             const trueDemandes = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
             const payableDemandes = trueDemandes.filter(d => !isLeadHiddenFromPayments(d, found));
 
-            // Build enriched items distinguishing Échantillon vs Production, Paid vs Unpaid, and linking all Proofs!
-            const allPayableItems = [
+            // Build enriched items distinguishing Échantillon vs Production, Paid vs Unpaid, and linking Sample -> Production!
+            const rawPayableItems = [
               ...found.map(c => {
                 const matchingLead = trueDemandes.find(l => l.type === c.modele || getLinkedCommandeForLead(l, [c])?.id === c.id);
                 const leadImgUrl = matchingLead ? (matchingLead.photo || (matchingLead.photos && matchingLead.photos[0]) || leadPhotos[matchingLead.id]) : null;
@@ -6679,6 +6751,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   id: c.id,
                   itemType: 'commande' as const,
                   isEchantillon: pInfo.isEchantillon,
+                  linkedProdId: pInfo.linkedProd?.id || null,
+                  linkedProdRef: pInfo.linkedProd?.reference || null,
                   badgeText: pInfo.isEchantillon
                     ? (isAr ? '🧪 عينة' : '🧪 ÉCHANTILLON')
                     : (isAr ? '🏭 إنتاج' : '🏭 PRODUCTION'),
@@ -6716,13 +6790,15 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   if (f.preuvePaiement) extraProofImages.push({ url: f.preuvePaiement, labelAr: `وصل — ${f.numero}`, labelFr: `Reçu — ${f.numero}`, date: f.date });
                   if (f.preuveClient) extraProofImages.push({ url: f.preuveClient, labelAr: `توصيل — ${f.numero}`, labelFr: `Capture — ${f.numero}`, date: f.date });
                 });
-                const isPaid = matchedDocs.some(f => f.typeDoc !== 'devis' && f.statut === 'payée' && Number(f.montant || f.avance || 0) >= totalAmt && totalAmt > 0);
-                const isVerifying = !isPaid && (extraProofImages.length > 0 || matchedDocs.some(f => f.statut === 'en_verification'));
+                const isPaid = matchedDocs.some(f => f.statut === 'payée' && Number(f.montant || f.avance || 0) >= totalAmt && totalAmt > 0);
+                const isVerifying = !isPaid && (matchedDocs.some(f => f.statut === 'en_verification') || Boolean(((d as any).preuveClient || leadExt.virementReceipt) && !matchedDocs.some(f => f.statut === 'payée')));
                 const isSampleDemande = leadExt.adminMode === 'echantillon' || Number(analysis.qty) === 1;
                 return {
                   id: d.id,
                   itemType: 'demande' as const,
                   isEchantillon: isSampleDemande,
+                  linkedProdId: null as string | null,
+                  linkedProdRef: null as string | null,
                   badgeText: isSampleDemande ? (isAr ? '🧪 عينة' : '🧪 ÉCHANTILLON') : (isAr ? '📋 طلب' : '📋 DEVIS'),
                   badgeColor: isSampleDemande ? 'bg-amber-400 text-slate-950' : 'bg-purple-600 text-white',
                   reference: `#${d.id.slice(0, 8).toUpperCase()}`,
@@ -6742,7 +6818,15 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
               })
             ];
 
+            const allPayableItems = rawPayableItems.map(item => {
+              const linkedProd = item.linkedProdId ? rawPayableItems.find(x => x.id === item.linkedProdId) : undefined;
+              return { ...item, linkedProd };
+            });
+
             const selectedPayableItem = allPayableItems.find(i => i.id === virementCommandeId && !i.isPaid) || null;
+            const linkedFromPaidSample = selectedPayableItem
+              ? allPayableItems.find(i => i.isPaid && i.isEchantillon && i.linkedProdId === selectedPayableItem.id)
+              : null;
             const isFormValid = Boolean(
               selectedPayableItem &&
               virementMontant && 
@@ -6872,139 +6956,202 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                  </div>
                                  
                                  {allPayableItems.length > 0 ? (
-                                   <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 ${isAr ? 'direction-rtl' : ''}`}>
-                                     {allPayableItems.map(item => {
-                                       const isSelected = !item.isPaid && virementCommandeId === item.id;
-                                       return (
-                                         <div 
-                                           key={item.id}
-                                           onClick={() => {
-                                             if (item.isPaid) {
-                                               openOrderProofs({
-                                                 id: item.id,
-                                                 reference: item.reference,
-                                                 modele: item.modele,
-                                                 isEchantillon: item.isEchantillon,
-                                                 totalAmount: Number(item.prixTotal || 0),
-                                                 paidAmount: item.paidAmount,
-                                                 remainingAmount: item.remainingAmount,
-                                                 isPaid: item.isPaid,
-                                                 isVerifying: item.isVerifying,
-                                                 matchedDocs: item.matchedDocs,
-                                                 extraProofImages: item.extraProofImages
-                                               });
-                                               return;
-                                             }
-                                             setVirementCommandeId(item.id);
-                                             const sugg = item.isEchantillon
-                                               ? item.remainingAmount
-                                               : Math.round((item.remainingAmount || Number(item.prixTotal || 0)) * 0.5);
-                                             if (!virementMontant && sugg > 0) {
-                                               setVirementMontant(String(sugg));
-                                             }
-                                           }}
-                                           className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col ${
-                                             item.isPaid
-                                               ? 'border-emerald-400 bg-emerald-50/40 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/15'
-                                               : item.isVerifying
-                                                 ? (isSelected ? 'border-indigo-600 shadow-xl shadow-indigo-500/25 bg-indigo-50/40 ring-2 ring-indigo-500/30' : 'border-cyan-300 bg-cyan-50/20 hover:border-cyan-500')
-                                                 : isSelected 
-                                                   ? 'border-indigo-600 shadow-xl shadow-indigo-500/25 bg-indigo-50/40 ring-2 ring-indigo-500/30 transform scale-[1.02] z-10' 
-                                                   : 'border-slate-100 hover:border-indigo-300 bg-white hover:bg-slate-50'
-                                           }`}
-                                         >
-                                           <div className="h-28 w-full bg-slate-900 relative overflow-hidden flex items-center justify-center shrink-0 group">
-                                             {item.photo ? (
-                                               <img src={item.photo} alt={item.modele} className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? 'scale-110' : 'group-hover:scale-105'} ${item.isPaid ? 'opacity-85' : ''}`} />
-                                             ) : (
-                                               <Package className="w-8 h-8 text-slate-500" />
-                                             )}
-                                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-transparent" />
-                                             
-                                             {/* Clean Non-overlapping Top Badges Row */}
-                                             <div className="absolute top-2 inset-x-2 flex items-center justify-between gap-1 z-20">
-                                               <span className={`${item.badgeColor} text-[9px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide whitespace-nowrap`}>
-                                                 {item.badgeText}
-                                               </span>
+                                   <div className="space-y-3">
+                                     <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch ${isAr ? 'direction-rtl' : ''}`}>
+                                       {allPayableItems.map(item => {
+                                         const isSelected = !item.isPaid && virementCommandeId === item.id;
+                                         const targetProd = item.linkedProd;
+                                         const canJumpToUnpaidProd = Boolean(item.isPaid && item.isEchantillon && targetProd && !targetProd.isPaid);
+                                         return (
+                                           <div 
+                                             key={item.id}
+                                             onClick={() => {
+                                               if (item.isPaid) {
+                                                 if (canJumpToUnpaidProd && targetProd) {
+                                                   setVirementCommandeId(targetProd.id);
+                                                   const prodSugg = Math.round((targetProd.remainingAmount || Number(targetProd.prixTotal || 0)) * 0.5) || targetProd.remainingAmount;
+                                                   if (prodSugg > 0) setVirementMontant(String(prodSugg));
+                                                   return;
+                                                 }
+                                                 openOrderProofs({
+                                                   id: item.id,
+                                                   reference: item.reference,
+                                                   modele: item.modele,
+                                                   isEchantillon: item.isEchantillon,
+                                                   totalAmount: Number(item.prixTotal || 0),
+                                                   paidAmount: item.paidAmount,
+                                                   remainingAmount: item.remainingAmount,
+                                                   isPaid: item.isPaid,
+                                                   isVerifying: item.isVerifying,
+                                                   matchedDocs: item.matchedDocs,
+                                                   extraProofImages: item.extraProofImages
+                                                 });
+                                                 return;
+                                               }
+                                               const switchingItem = virementCommandeId !== item.id;
+                                               setVirementCommandeId(item.id);
+                                               const sugg = item.isEchantillon
+                                                 ? item.remainingAmount
+                                                 : Math.round((item.remainingAmount || Number(item.prixTotal || 0)) * 0.5);
+                                               if ((switchingItem || !virementMontant) && sugg > 0) {
+                                                 setVirementMontant(String(sugg));
+                                               }
+                                             }}
+                                             className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col h-full ${
+                                               item.isPaid
+                                                 ? 'border-emerald-400 bg-emerald-50/40 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/15'
+                                                 : item.isVerifying
+                                                   ? (isSelected ? 'border-indigo-600 shadow-lg shadow-indigo-500/20 bg-indigo-50/35 ring-2 ring-indigo-500/25' : 'border-cyan-300 bg-cyan-50/20 hover:border-cyan-500')
+                                                   : isSelected 
+                                                     ? 'border-indigo-600 shadow-lg shadow-indigo-500/20 bg-indigo-50/35 ring-2 ring-indigo-500/25 z-10' 
+                                                     : 'border-slate-200/80 hover:border-indigo-300 bg-white hover:bg-slate-50'
+                                             }`}
+                                           >
+                                             <div className="h-28 w-full bg-slate-900 relative overflow-hidden flex items-center justify-center shrink-0 group">
+                                               {item.photo ? (
+                                                 <img src={item.photo} alt={item.modele} className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? 'scale-105' : 'group-hover:scale-105'} ${item.isPaid ? 'opacity-85' : ''}`} />
+                                               ) : (
+                                                 <Package className="w-8 h-8 text-slate-500" />
+                                               )}
+                                               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
+                                               
+                                               {/* Crisp Non-overlapping Top Badges */}
+                                               <div className="absolute top-2 inset-x-2 flex flex-wrap items-center justify-between gap-1.5 z-20">
+                                                 <span className={`${item.badgeColor} text-[9px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide whitespace-nowrap shrink-0`}>
+                                                   {item.badgeText}
+                                                 </span>
 
-                                               {item.isPaid ? (
-                                                 <span className="px-2 py-0.5 bg-emerald-500 text-white rounded-md flex items-center gap-1 shadow-md text-[9px] font-black uppercase tracking-wide whitespace-nowrap">
-                                                   <Check className="w-3 h-3 stroke-[3]" />
-                                                   <span>{isAr ? 'خالص' : 'PAYÉ'}</span>
-                                                 </span>
-                                               ) : item.isVerifying ? (
-                                                 <span className="px-2 py-0.5 bg-cyan-500 text-white rounded-md flex items-center gap-1 shadow-md text-[9px] font-black uppercase tracking-wide whitespace-nowrap">
-                                                   <Clock className="w-2.5 h-2.5" />
-                                                   <span>{isAr ? 'بروف مرفق' : 'PREUVE'}</span>
-                                                 </span>
-                                               ) : isSelected ? (
-                                                 <span className="px-2 py-0.5 bg-indigo-600 text-white rounded-md flex items-center gap-1 shadow-md text-[9px] font-black uppercase tracking-wide whitespace-nowrap">
-                                                   <Check className="w-3 h-3 stroke-[3]" />
-                                                   <span>{isAr ? 'محدد' : 'CHOISI'}</span>
-                                                 </span>
-                                               ) : null}
-                                             </div>
-
-                                             <span className="absolute bottom-2 left-3 right-3 text-white text-[10px] font-black uppercase tracking-widest truncate drop-shadow-md">
-                                               {item.reference}
-                                             </span>
-                                           </div>
-                                           
-                                           <div className={`p-3 flex-1 flex flex-col justify-between gap-2 ${isAr ? 'text-right' : 'text-left'}`}>
-                                             <p className="text-xs font-black text-slate-900 line-clamp-2 leading-tight" title={item.modele}>
-                                               {item.modele}
-                                             </p>
-
-                                             <div className="space-y-1.5 mt-auto">
-                                               <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px]">
-                                                 <span className="font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                                   {item.quantite} PCS
-                                                 </span>
-                                                 {item.prixTotal ? (
-                                                   <span className={`font-black ${item.isPaid ? 'text-emerald-700' : 'text-emerald-600'}`}>
-                                                     {item.prixTotal.toLocaleString()} MAD
+                                                 {item.isPaid ? (
+                                                   <span className="px-2 py-0.5 bg-emerald-500 text-white rounded-md flex items-center gap-1 shadow-md text-[9px] font-black uppercase tracking-wide whitespace-nowrap shrink-0">
+                                                     <Check className="w-3 h-3 stroke-[3]" />
+                                                     <span>{isAr ? 'خالص' : 'PAYÉ'}</span>
+                                                   </span>
+                                                 ) : item.isVerifying ? (
+                                                   <span className="px-2 py-0.5 bg-cyan-500 text-white rounded-md flex items-center gap-1 shadow-md text-[9px] font-black uppercase tracking-wide whitespace-nowrap shrink-0">
+                                                     <Clock className="w-2.5 h-2.5" />
+                                                     <span>{isAr ? 'قيد التحقق' : 'EN VÉRIF'}</span>
+                                                   </span>
+                                                 ) : isSelected ? (
+                                                   <span className="px-2 py-0.5 bg-indigo-600 text-white rounded-md flex items-center gap-1 shadow-md text-[9px] font-black uppercase tracking-wide whitespace-nowrap shrink-0">
+                                                     <Check className="w-3 h-3 stroke-[3]" />
+                                                     <span>{isAr ? 'محدد' : 'CHOISI'}</span>
                                                    </span>
                                                  ) : null}
                                                </div>
 
-                                               {item.isPaid ? (
-                                                 <div className="w-full py-1.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[9px] font-black flex items-center justify-between gap-1.5 shadow-xs transition-colors">
-                                                   <span className="flex items-center gap-1 truncate">
-                                                     <Receipt className="w-3 h-3 shrink-0" />
-                                                     <span>{isAr ? 'خالص • عرض البروف' : 'Payé • Voir Preuves'}</span>
+                                               <span className="absolute bottom-2 left-3 right-3 text-white text-[10px] font-black uppercase tracking-widest truncate drop-shadow-md">
+                                                 {item.reference}
+                                               </span>
+                                             </div>
+                                             
+                                             <div className={`p-3.5 flex-1 flex flex-col justify-between gap-2.5 ${isAr ? 'text-right' : 'text-left'}`}>
+                                               <p className="text-xs font-black text-slate-900 line-clamp-2 min-h-[2.1rem] leading-snug" title={item.modele}>
+                                                 {item.modele}
+                                               </p>
+
+                                               <div className="space-y-2 mt-auto">
+                                                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px]">
+                                                   <span className="font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                     {item.quantite} PCS
                                                    </span>
-                                                   <ArrowRight className={`w-3 h-3 shrink-0 ${isAr ? 'rotate-180' : ''}`} />
+                                                   {item.prixTotal ? (
+                                                     <span className={`font-black ${item.isPaid ? 'text-emerald-700' : 'text-emerald-600'}`}>
+                                                       {item.prixTotal.toLocaleString()} MAD
+                                                     </span>
+                                                   ) : null}
                                                  </div>
-                                               ) : item.hasProof ? (
-                                                 <button
-                                                   type="button"
-                                                   onClick={(e) => {
-                                                     e.stopPropagation();
-                                                     openOrderProofs({
-                                                       id: item.id,
-                                                       reference: item.reference,
-                                                       modele: item.modele,
-                                                       isEchantillon: item.isEchantillon,
-                                                       totalAmount: Number(item.prixTotal || 0),
-                                                       paidAmount: item.paidAmount,
-                                                       remainingAmount: item.remainingAmount,
-                                                       isPaid: item.isPaid,
-                                                       isVerifying: item.isVerifying,
-                                                       matchedDocs: item.matchedDocs,
-                                                       extraProofImages: item.extraProofImages
-                                                     });
-                                                   }}
-                                                   className="w-full py-1 px-2 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 rounded-lg text-[9px] font-black flex items-center justify-between gap-1 cursor-pointer transition-colors"
-                                                 >
-                                                   <span>{isAr ? `📎 عرض البروف (${item.extraProofImages.length || item.matchedDocs.length})` : `📎 Voir Preuves (${item.extraProofImages.length || item.matchedDocs.length})`}</span>
-                                                   <Eye className="w-3 h-3 shrink-0" />
-                                                 </button>
-                                               ) : null}
+
+                                                 {canJumpToUnpaidProd && targetProd ? (
+                                                   <div className="flex items-center gap-1.5">
+                                                     <div className="flex-1 py-2 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[9px] font-black flex items-center justify-between gap-1 shadow-xs transition-colors min-w-0">
+                                                       <span className="truncate">
+                                                         {isAr ? `خالص • للبرود (${targetProd.reference})` : `Payé • Aller à sa Prod`}
+                                                       </span>
+                                                       <ArrowRight className={`w-3 h-3 shrink-0 ${isAr ? 'rotate-180' : ''}`} />
+                                                     </div>
+                                                     {item.hasProof && (
+                                                       <button
+                                                         type="button"
+                                                         onClick={(e) => {
+                                                           e.stopPropagation();
+                                                           openOrderProofs({
+                                                             id: item.id,
+                                                             reference: item.reference,
+                                                             modele: item.modele,
+                                                             isEchantillon: item.isEchantillon,
+                                                             totalAmount: Number(item.prixTotal || 0),
+                                                             paidAmount: item.paidAmount,
+                                                             remainingAmount: item.remainingAmount,
+                                                             isPaid: item.isPaid,
+                                                             isVerifying: item.isVerifying,
+                                                             matchedDocs: item.matchedDocs,
+                                                             extraProofImages: item.extraProofImages
+                                                           });
+                                                         }}
+                                                         title={isAr ? 'عرض البروف' : 'Voir Preuves'}
+                                                         className="p-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-xl shrink-0 cursor-pointer transition-colors"
+                                                       >
+                                                         <Eye className="w-3.5 h-3.5" />
+                                                       </button>
+                                                     )}
+                                                   </div>
+                                                 ) : item.isPaid ? (
+                                                   <div className="w-full py-2 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[9px] font-black flex items-center justify-between gap-1.5 shadow-xs transition-colors">
+                                                     <span className="flex items-center gap-1 truncate">
+                                                       <Receipt className="w-3 h-3 shrink-0" />
+                                                       <span>{isAr ? 'خالص • عرض البروف' : 'Payé • Voir Preuves'}</span>
+                                                     </span>
+                                                     <ArrowRight className={`w-3 h-3 shrink-0 ${isAr ? 'rotate-180' : ''}`} />
+                                                   </div>
+                                                 ) : item.hasProof ? (
+                                                   <button
+                                                     type="button"
+                                                     onClick={(e) => {
+                                                       e.stopPropagation();
+                                                       openOrderProofs({
+                                                         id: item.id,
+                                                         reference: item.reference,
+                                                         modele: item.modele,
+                                                         isEchantillon: item.isEchantillon,
+                                                         totalAmount: Number(item.prixTotal || 0),
+                                                         paidAmount: item.paidAmount,
+                                                         remainingAmount: item.remainingAmount,
+                                                         isPaid: item.isPaid,
+                                                         isVerifying: item.isVerifying,
+                                                         matchedDocs: item.matchedDocs,
+                                                         extraProofImages: item.extraProofImages
+                                                       });
+                                                     }}
+                                                     className="w-full py-2 px-2.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 rounded-xl text-[9px] font-black flex items-center justify-between gap-1 cursor-pointer transition-colors"
+                                                   >
+                                                     <span className="truncate">{isAr ? `📎 عرض البروف (${item.extraProofImages.length || item.matchedDocs.length})` : `📎 Voir Preuves (${item.extraProofImages.length || item.matchedDocs.length})`}</span>
+                                                     <Eye className="w-3 h-3 shrink-0" />
+                                                   </button>
+                                                 ) : isSelected ? (
+                                                   <div className="w-full py-2 px-2.5 bg-indigo-600 text-white rounded-xl text-[9px] font-black flex items-center justify-center gap-1.5">
+                                                     <Check className="w-3 h-3 shrink-0" />
+                                                     <span>{isAr ? 'محدد للأداء الآن' : 'Sélectionné pour payer'}</span>
+                                                   </div>
+                                                 ) : (
+                                                   <div className="w-full py-2 px-2.5 bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-xl text-[9px] font-bold flex items-center justify-center gap-1.5 transition-colors">
+                                                     <span>{isAr ? 'اضغط للأداء' : 'Sélectionner pour payer'}</span>
+                                                   </div>
+                                                 )}
+                                               </div>
                                              </div>
                                            </div>
-                                         </div>
-                                       );
-                                     })}
+                                         );
+                                       })}
+                                     </div>
+                                     {linkedFromPaidSample && selectedPayableItem && (
+                                       <div className="px-3.5 py-2.5 bg-emerald-50/90 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-[11px] font-bold text-emerald-900">
+                                         <span>
+                                           {isAr
+                                             ? `✅ العينة ${linkedFromPaidSample.reference} خالصة — أنت الآن بصدد أداء الإنتاج المرتبط بها (${selectedPayableItem.reference})`
+                                             : `✅ Échantillon ${linkedFromPaidSample.reference} déjà payé → Paiement de sa Production (${selectedPayableItem.reference})`}
+                                         </span>
+                                       </div>
+                                     )}
                                    </div>
                                  ) : (
                                    <div className="p-6 bg-slate-50 rounded-2xl text-center border-2 border-dashed border-slate-200">
