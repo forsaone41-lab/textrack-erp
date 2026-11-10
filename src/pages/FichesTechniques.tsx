@@ -752,7 +752,7 @@ export default function FichesTechniques() {
       const allUsers = await loadData<User>('users') || [];
       const baseEmail = `${clientName.replace(/\s+/g, '').toLowerCase() || 'client'}@beya.ma`;
       
-      const existingByEmail = allUsers.find(u => u.email.toLowerCase() === baseEmail.toLowerCase());
+      const existingByEmail = allUsers.find(u => (u.email || '').trim().toLowerCase() === baseEmail.toLowerCase() || (u.nom || '').trim().toLowerCase() === clientName.toLowerCase());
       if (existingByEmail) {
         // If they exist by email but not by name in our local state, just use them
         // (but we don't have a way to show their password easily here without a specific modal)

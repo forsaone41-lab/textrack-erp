@@ -30,7 +30,7 @@ export default function Recus() {
     Promise.all([
       loadData<Facture>('factures'),
       loadData<Commande>('commandes'),
-      loadData<User>('utilisateurs')
+      loadData<User>('users')
     ]).then(([facs, cmds, users]) => {
       setFactures(facs);
       setCommandes(cmds);

@@ -1107,43 +1107,7 @@ export async function loadLeads(): Promise<Lead[]> {
         l.name !== '__DELETED__' &&
         l.type !== '__EN_TEST__' &&
         !deletedIds.includes(l.id)
-      ).map((l: any) => {
-        if (l.details && typeof l.details === 'string') {
-          if (l.details.includes('| COM_UNLOCK:true')) {
-            l.commercialUnlocked = true;
-            l.details = l.details.replace('| COM_UNLOCK:true', '');
-          }
-          if (l.details.includes('| AI_NOTES:')) {
-            const parts = l.details.split('| AI_NOTES:');
-            l.details = parts[0];
-            l.aiNotes = parts[1];
-          }
-          if (l.details.includes('| ATELIER_DEVIS:')) {
-            try {
-              const parts = l.details.split('| ATELIER_DEVIS:');
-              l.details = parts[0];
-              const parsed = JSON.parse(parts[1]);
-              if (parsed && typeof parsed === 'object') {
-                if (parsed.modeleReel) l.modeleReel = parsed.modeleReel;
-                if (parsed.unitPrice) l.unitPrice = Number(parsed.unitPrice);
-                if (parsed.totalPrice) l.totalPrice = Number(parsed.totalPrice);
-                if (parsed.tissuSuggere) l.tissuSuggere = parsed.tissuSuggere;
-                if (parsed.techDetails) l.techDetails = parsed.techDetails;
-                if (parsed.delaiEstime) l.delaiEstime = parsed.delaiEstime;
-                if (parsed.statusProgression) l.statusProgression = parsed.statusProgression;
-                if (parsed.reponseAtelier) l.reponseAtelier = parsed.reponseAtelier;
-                if (parsed.reponseAtelierDate) l.reponseAtelierDate = parsed.reponseAtelierDate;
-              }
-            } catch (e) {
-              console.error('Error parsing ATELIER_DEVIS:', e);
-            }
-          }
-        }
-        if (!l.unitPrice && l.crmPrice && Number(l.crmPrice) > 0) {
-          l.unitPrice = Number(l.crmPrice);
-        }
-        return l;
-      });
+      ).map((l: any) => parseLeadMeta(l));
 
       // If Supabase returns 0 but localStorage has data → fallback
       if (cleanSupaData.length === 0 && localLeads.length > 0) {
@@ -1198,6 +1162,22 @@ export async function loadLeads(): Promise<Lead[]> {
   }
 }
 
+export function parseLeadDetailsJson(rawDetails?: string | null): Record<string, any> {
+  if (!rawDetails || typeof rawDetails !== 'string') return {};
+  const clean = rawDetails
+    .replace('| COM_UNLOCK:true', '')
+    .split('| AI_NOTES:')[0]
+    .split('| ATELIER_DEVIS:')[0]
+    .trim();
+  if (!clean || !clean.startsWith('{')) return {};
+  try {
+    const parsed = JSON.parse(clean);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 export function parseLeadMeta(l: any): Lead {
   const item = { ...l };
   if (item.details && typeof item.details === 'string') {
@@ -1205,16 +1185,12 @@ export function parseLeadMeta(l: any): Lead {
       item.commercialUnlocked = true;
       item.details = item.details.replace('| COM_UNLOCK:true', '');
     }
-    if (item.details.includes('| AI_NOTES:')) {
-      const parts = item.details.split('| AI_NOTES:');
-      item.details = parts[0];
-      item.aiNotes = parts[1];
-    }
     if (item.details.includes('| ATELIER_DEVIS:')) {
       try {
         const parts = item.details.split('| ATELIER_DEVIS:');
         item.details = parts[0];
-        const parsed = JSON.parse(parts[1]);
+        const devisJsonStr = parts.slice(1).join('| ATELIER_DEVIS:').split('| AI_NOTES:')[0];
+        const parsed = JSON.parse(devisJsonStr);
         if (parsed && typeof parsed === 'object') {
           if (parsed.modeleReel) item.modeleReel = parsed.modeleReel;
           if (parsed.unitPrice) item.unitPrice = Number(parsed.unitPrice);
@@ -1225,10 +1201,17 @@ export function parseLeadMeta(l: any): Lead {
           if (parsed.statusProgression) item.statusProgression = parsed.statusProgression;
           if (parsed.reponseAtelier) item.reponseAtelier = parsed.reponseAtelier;
           if (parsed.reponseAtelierDate) item.reponseAtelierDate = parsed.reponseAtelierDate;
+          if (parsed.patronagePrice) item.patronagePrice = Number(parsed.patronagePrice);
+          if (parsed.prixEchantillon) item.prixEchantillon = Number(parsed.prixEchantillon);
         }
       } catch (e) {
         console.error('Error parsing ATELIER_DEVIS:', e);
       }
+    }
+    if (item.details.includes('| AI_NOTES:')) {
+      const parts = item.details.split('| AI_NOTES:');
+      item.details = parts[0];
+      item.aiNotes = parts.slice(1).join('| AI_NOTES:');
     }
   }
   if (!item.unitPrice && item.crmPrice && Number(item.crmPrice) > 0) {
@@ -1237,23 +1220,33 @@ export function parseLeadMeta(l: any): Lead {
   return item;
 }
 
-export async function loadClientLeads(user: { nom: string; email?: string; telephone?: string }): Promise<Lead[]> {
-  if (!user || (!user.nom && !user.email && !user.telephone)) return [];
+export async function loadClientLeads(user: { nom: string; email?: string; telephone?: string; brandName?: string }, extraNames: string[] = []): Promise<Lead[]> {
+  if (!user || (!user.nom && !user.email && !user.telephone && extraNames.length === 0)) return [];
 
   const LEADS_COLS = 'id, name, phone, phone2, ville, type, quantity, details, tailles, date, status, email, contactedAt, contactedType, contactedBy, crmStage, crmContactMethod, crmRdvDate, crmNotes, crmPrice, crmPriceConfirmed, photoCount, crmDevisMode, crmPriority, rejectedAt';
 
+  const nameCandidates = Array.from(new Set([
+    user.nom,
+    user.brandName,
+    ...extraNames
+  ].map(n => (n || '').trim()).filter(Boolean)));
+
   const filterParts: string[] = [];
-  if (user.nom && user.nom.trim()) {
-    filterParts.push(`name.ilike.${user.nom.trim()}`);
-  }
+  nameCandidates.forEach(n => {
+    filterParts.push(`name.ilike.${n}`);
+  });
   if (user.email && user.email.trim()) {
     filterParts.push(`email.ilike.${user.email.trim()}`);
   }
+  const cleanDigits = (user.telephone || '').replace(/\D/g, '');
   if (user.telephone && user.telephone.trim()) {
     filterParts.push(`phone.eq.${user.telephone.trim()}`);
   }
+  if (cleanDigits.length >= 9) {
+    filterParts.push(`phone.ilike.*${cleanDigits.slice(-9)}`);
+  }
 
-  const orFilter = filterParts.join(',');
+  const orFilter = Array.from(new Set(filterParts)).join(',');
 
   let remoteLeads: any[] = [];
 
@@ -1683,10 +1676,10 @@ export async function saveCompanyProfile(profile: CompanyProfile): Promise<void>
 const _cache: Record<string, { data: any[]; ts: number }> = {};
 const CACHE_TTL = 60_000; // 60s in-memory cache
 
-export async function loadData<T>(table: string): Promise<T[]> {
-  // 1. Check in-memory cache first (instant)
+export async function loadData<T>(table: string, forceRefresh: boolean = false): Promise<T[]> {
+  // 1. Check in-memory cache first (instant) unless fresh sync is requested
   const cached = _cache[table];
-  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+  if (!forceRefresh && cached && Date.now() - cached.ts < CACHE_TTL) {
     return cached.data as T[];
   }
 
@@ -1726,18 +1719,21 @@ export async function loadData<T>(table: string): Promise<T[]> {
           const fitMatch = desc.match(/\|FIT:([^|]*)\|/);
           const compMatch = desc.match(/\|COMPLEXITY:([^|]*)\|/);
           const tissuPhotoMatch = desc.match(/\|TISSUPHOTO:([^|]*)\|/);
+          const clientIdMatch = desc.match(/\|CLIENTID:([^|]*)\|/);
           
           if (coutMatch) r.costEstimate = coutMatch[1];
           if (aiNotesMatch) r.aiNotes = aiNotesMatch[1];
           if (fitMatch) r.fit = fitMatch[1];
           if (compMatch) r.complexity = compMatch[1];
           if (tissuPhotoMatch) r.tissuPhoto = tissuPhotoMatch[1];
+          if (clientIdMatch && !r.clientId) r.clientId = clientIdMatch[1];
           
           r.description = desc.replace(/\|COUT:[^|]*\|/g, '')
                               .replace(/\|AINOTES:[^|]*\|/g, '')
                               .replace(/\|FIT:[^|]*\|/g, '')
                               .replace(/\|COMPLEXITY:[^|]*\|/g, '')
-                              .replace(/\|TISSUPHOTO:[^|]*\|/g, '').trim();
+                              .replace(/\|TISSUPHOTO:[^|]*\|/g, '')
+                              .replace(/\|CLIENTID:[^|]*\|/g, '').trim();
         }
         return r;
       });
@@ -1858,6 +1854,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           if (fallbackRecord.fit) extras += `\n|FIT:${fallbackRecord.fit}|`;
           if (fallbackRecord.complexity) extras += `\n|COMPLEXITY:${fallbackRecord.complexity}|`;
           if (fallbackRecord.tissuPhoto) extras += `\n|TISSUPHOTO:${fallbackRecord.tissuPhoto}|`;
+          if (fallbackRecord.clientId) extras += `\n|CLIENTID:${fallbackRecord.clientId}|`;
           
           if (extras) {
              fallbackRecord.description += extras;

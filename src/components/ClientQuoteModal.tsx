@@ -5,7 +5,7 @@ import {
   Percent, Copy, CheckCircle2, ChevronRight, Layers, Tag, Eye, ShoppingBag, 
   TrendingUp, Compass, AlertCircle, Edit3, Store, Scissors, Package
 } from 'lucide-react';
-import { loadCompanyProfile, saveRecord, genId, Facture } from '../types';
+import { loadCompanyProfile, saveRecord, genId, Facture, loadData, User } from '../types';
 import { printElement } from '../utils/pdf';
 import { getFabricInfo, estimateSourcingBreakdown } from '../lib/fabricCatalog';
 
@@ -39,6 +39,7 @@ export interface ClientQuoteModalProps {
   modelImage: string | null;
   isAr: boolean;
   initialDocMode?: 'devis' | 'fiche' | 'chiffrage' | 'both';
+  initialClient?: { name?: string; phone?: string; city?: string } | null;
   onSaved?: () => void;
   onNotify?: (title: string, message: string) => void;
 }
@@ -50,6 +51,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
   modelImage,
   isAr,
   initialDocMode = 'devis',
+  initialClient = null,
   onSaved,
   onNotify
 }) => {
@@ -73,6 +75,7 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const [expandedArticleId, setExpandedArticleId] = useState<string | null>(null);
+  const [knownClients, setKnownClients] = useState<User[]>([]);
 
   // ─── INITIALIZATION ON OPEN ─────────────────────────────────────────
   useEffect(() => {
@@ -87,9 +90,14 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
 
     setDevisRef(refCode);
     setDevisDate(dateToday);
-    setClientName(isAr ? 'الزبون / العلامة التجارية' : 'Client / Marque Partenaire');
-    setClientCity(isAr ? 'الدار البيضاء، المغرب' : 'Casablanca, Maroc');
-    setClientPhone('');
+    setClientName(initialClient?.name?.trim() || (isAr ? 'الزبون / العلامة التجارية' : 'Client / Marque Partenaire'));
+    setClientCity(initialClient?.city?.trim() || (isAr ? 'الدار البيضاء، المغرب' : 'Casablanca, Maroc'));
+    setClientPhone(initialClient?.phone?.trim() || '');
+    loadData<User>('users').then(users => {
+      if (Array.isArray(users)) {
+        setKnownClients(users.filter(u => u.role === 'client' || u.role === 'merchant'));
+      }
+    }).catch(() => {});
     setDelaiConfection(isAr ? '7 إلى 10 أيام عمل' : '7 à 10 jours ouvrés');
     setConditions(
       isAr
@@ -563,11 +571,27 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
                   </label>
                   <input
                     type="text"
+                    list="beya-quote-clients"
                     value={clientName}
-                    onChange={e => setClientName(e.target.value)}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setClientName(val);
+                      const matched = knownClients.find(u => (u.nom || '').trim().toLowerCase() === val.trim().toLowerCase());
+                      if (matched?.telephone && !clientPhone) {
+                        setClientPhone(matched.telephone);
+                      }
+                      if (matched?.ville) {
+                        setClientCity(matched.ville);
+                      }
+                    }}
                     placeholder="Ex: Boutique Elegance / Marque X"
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-medium"
                   />
+                  <datalist id="beya-quote-clients">
+                    {Array.from(new Set(knownClients.map(c => (c.nom || '').trim()).filter(Boolean))).map(nom => (
+                      <option key={nom} value={nom} />
+                    ))}
+                  </datalist>
                 </div>
 
                 <div>

@@ -2553,7 +2553,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         id: genId(),
         modele: ftModele,
         description: ftDescription,
-        client: isAr ? 'اقتراح خبير BEYA' : 'Suggestion Expert',
+        client: selectedLead?.name?.trim() || (isAr ? 'اقتراح خبير BEYA' : 'Suggestion Expert'),
         tailles: selectedTailles,
         mesures: ftMesures,
         tissuConsommation: ftConso,
@@ -7626,12 +7626,13 @@ ${userMessage}
           costEstimate: customCostOverride.trim() || analysisResult.costEstimate,
           pieces: (analysisResult.pieces || []).map((p: any, idx: number) => ({
             ...p,
-            costEstimate: (analysisResult.pieces.length === 1 && customCostOverride.trim()) ? customCostOverride.trim() : (p.costEstimate || customCostOverride.trim() || analysisResult.costEstimate)
+            costEstimate: (analysisResult.pieces?.length === 1 && customCostOverride.trim()) ? customCostOverride.trim() : (p.costEstimate || customCostOverride.trim() || analysisResult.costEstimate)
           }))
         } : null}
         modelImage={image}
         isAr={isAr}
         initialDocMode={quoteInitialMode}
+        initialClient={selectedLead ? { name: selectedLead.name, phone: selectedLead.phone, city: selectedLead.ville } : null}
         onNotify={(title, message) => {
           setCustomAlert({
             title,

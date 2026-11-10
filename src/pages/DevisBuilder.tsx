@@ -182,8 +182,8 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
 
   useEffect(() => {
     Promise.all([
-      loadData<User>('utilisateurs'),
-      loadData<FicheTechnique>('fiches_techniques'),
+      loadData<User>('users'),
+      loadData<FicheTechnique>('fiches'),
       loadData<Facture>('factures'),
       loadLeads()
     ]).then(([users, fchs, facs, dmds]) => {

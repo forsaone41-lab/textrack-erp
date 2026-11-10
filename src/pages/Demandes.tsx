@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, Fragment, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight, UserCheck, ChevronDown, ChevronUp, Layers } from 'lucide-react';
-import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, StockTissu } from '../types';
+import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, StockTissu, parseLeadDetailsJson } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
 import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
@@ -529,7 +529,7 @@ export default function Demandes() {
     try {
       // 1. Check if user already exists
       const allUsers = await loadData<User>('users');
-      let existingUser = allUsers?.find(u => u.email === lead.email);
+      let existingUser = allUsers?.find(u => (lead.email && (u.email || '').trim().toLowerCase() === lead.email.trim().toLowerCase()) || (lead.phone && lead.phone.replace(/\D/g, '').length >= 9 && (u.telephone || '').replace(/\D/g, '').slice(-9) === lead.phone.replace(/\D/g, '').slice(-9)));
 
       if (!existingUser) {
         // 2. Create new user if not exists
@@ -695,7 +695,7 @@ export default function Demandes() {
       const allUsers = await loadData<User>('users') || [];
       const emailToUse = (lead.email || `${lead.name.replace(/\s+/g, '').toLowerCase()}@beya.ma`).toLowerCase();
 
-      const existing = allUsers.find(u => u.email.toLowerCase() === emailToUse);
+      const existing = allUsers.find(u => (u.email || '').trim().toLowerCase() === emailToUse.trim() || (lead.phone && lead.phone.replace(/\D/g, '').length >= 9 && (u.telephone || '').replace(/\D/g, '').slice(-9) === lead.phone.replace(/\D/g, '').slice(-9)));
       if (existing) {
         alert(isAr ? 'هذا الزبون مسجل مسبقاً في النظام بنفس البريد الإلكتروني.' : 'Ce client est déjà enregistré avec cet email.');
         return;
@@ -769,7 +769,7 @@ export default function Demandes() {
 
     // Save price to lead automatically and confirm official devis
     let extDetails: any = {};
-    try { extDetails = JSON.parse(devisLead.details || '{}'); } catch(e) {}
+    try { extDetails = parseLeadDetailsJson(devisLead.details); } catch(e) {}
     extDetails.devisOfficielConfirmed = devisOfficielConfirmed;
     extDetails.devisStatus = devisOfficielConfirmed ? 'devis_confirme_atelier' : 'estimation';
     extDetails.devisOfficielDate = new Date().toISOString();
@@ -868,7 +868,7 @@ export default function Demandes() {
     setDevisProgression(lead.statusProgression || 'etude');
     setFabricType(lead.tissuSuggere || '');
     let ext: any = {};
-    try { ext = JSON.parse(lead.details || '{}'); } catch(e) {}
+    try { ext = parseLeadDetailsJson(lead.details); } catch(e) {}
     setDevisPatronagePrice(lead.patronagePrice ? String(lead.patronagePrice) : ext.patronagePrice ? String(ext.patronagePrice) : '');
     setDevisPrixEchantillon(lead.prixEchantillon ? String(lead.prixEchantillon) : ext.prixEchantillon ? String(ext.prixEchantillon) : '');
     setDevisSupplierNom(ext.supplierName || (lead as any).fournisseurNom || '');
@@ -917,7 +917,7 @@ export default function Demandes() {
 
     // Save full technical & commercial response directly on the Lead so Portail Client gets updated instantly
     let extDetails: any = {};
-    try { extDetails = JSON.parse(devisLead.details || '{}'); } catch(e) {}
+    try { extDetails = parseLeadDetailsJson(devisLead.details); } catch(e) {}
     if (devisPatronagePrice) {
       extDetails.patronagePrice = Number(devisPatronagePrice);
       extDetails.patronageStatus = 'priced';
