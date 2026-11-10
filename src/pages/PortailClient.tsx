@@ -7762,13 +7762,13 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                       </div>
                     </div>
 
-                    {/* CIH Bank Transfer Coordinates */}
+                    {/* Official Company Bank Transfer Coordinates */}
                     <div className="p-4 bg-indigo-50/60 border border-indigo-100 rounded-2xl space-y-2.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Building className="w-4 h-4 text-indigo-600" />
                           <span className="text-xs font-black text-indigo-950 uppercase tracking-wider">
-                            {isAr ? 'بيانات التحويل البنكي (CIH BANK)' : 'Coordonnées Bancaires CIH'}
+                            {isAr ? `بيانات التحويل البنكي (${company.bankName || 'البنك'})` : `Coordonnées Bancaires (${company.bankName || 'Virement'})`}
                           </span>
                         </div>
                         <span className="text-[10px] font-black text-indigo-600 bg-white px-2 py-0.5 rounded-md border border-indigo-200">
@@ -7779,20 +7779,20 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                       <div className="p-3 bg-white rounded-xl border border-indigo-200/70 space-y-1.5">
                         <div className="flex justify-between items-center text-xs">
                           <span className="text-slate-500 font-bold">{isAr ? 'المستفيد:' : 'Bénéficiaire :'}</span>
-                          <span className="font-black text-slate-900">STE BEYA CREATIVE SARL</span>
+                          <span className="font-black text-slate-900">{company.bankBeneficiary || company.name || '—'}</span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-500 font-bold">{isAr ? 'الوكالة:' : 'Agence :'}</span>
-                          <span className="font-bold text-slate-700">CIH Bank — Hassan II Casablanca</span>
+                          <span className="text-slate-500 font-bold">{isAr ? 'البنك / الوكالة:' : 'Banque :'}</span>
+                          <span className="font-bold text-slate-700">{company.bankName || '—'}</span>
                         </div>
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                           <div className="font-mono text-xs sm:text-sm font-black text-indigo-700 tracking-wider">
-                            230 780 0001234567890123 45
+                            {company.rib || '—'}
                           </div>
                           <button
                             type="button"
                             onClick={() => {
-                              navigator.clipboard.writeText('230780000123456789012345');
+                              navigator.clipboard.writeText((company.rib || '').replace(/\s+/g, ''));
                               setRibCopied(true);
                               setTimeout(() => setRibCopied(false), 2500);
                             }}
@@ -7915,8 +7915,16 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       {printingDevisLead && (() => {
         const lead = printingDevisLead;
         const analysis = getDemandeAnalysis(lead, isAr);
-        const acompte = Math.round(analysis.totalPrice * 0.5);
-        const dateStr = new Date().toLocaleDateString('fr-MA', { day: '2-digit', month: 'long', year: 'numeric' });
+        const officialLeadDevis = getOfficialDevisForLead(lead);
+        const docTotal = officialLeadDevis && officialLeadDevis.montant > 0 ? officialLeadDevis.montant : analysis.totalPrice;
+        const acompte = Math.round(docTotal * 0.5);
+        const dateStr = new Date(officialLeadDevis?.date || Date.now()).toLocaleDateString('fr-MA', { day: '2-digit', month: 'long', year: 'numeric' });
+        const taxLine = [
+          company.ice && !/^0+$/.test(company.ice) ? `ICE: ${company.ice}` : '',
+          company.rc && !/^0+$/.test(company.rc) ? `R.C: ${company.rc}` : '',
+          company.if_tax && !/^0+$/.test(company.if_tax) ? `I.F: ${company.if_tax}` : '',
+          company.patente && !/^0+$/.test(company.patente) ? `Patente: ${company.patente}` : '',
+        ].filter(Boolean).join(' | ');
 
         return (
           <div className="fixed -left-[9999px] top-0 pointer-events-none opacity-0" aria-hidden="true">
@@ -7928,15 +7936,23 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #0f172a', paddingBottom: '16px', marginBottom: '24px' }}>
               <div>
-                <h1 style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-0.5px' }}>
-                  BEYA CREATIVE
+                <h1 style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-0.5px', textTransform: 'uppercase' }}>
+                  {company.name || 'BEYA CREATIVE'}
                 </h1>
                 <p style={{ fontSize: '11px', fontWeight: 700, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }}>
-                  Ateliers de Confection Textile & Bureau d'Études
+                  {company.subtitle || "Ateliers de Confection Textile & Bureau d'Études"}
                 </p>
-                <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>Zone Industrielle Sidi Bouzekri, Meknès — Agence Casablanca</p>
-                <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>Tél : +212 660 000 000 • Email : contact@beyacreative.com</p>
-                <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>R.C: 45210 | I.F: 32014589 | Patente: 12054890</p>
+                {company.address && (
+                  <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>{company.address}</p>
+                )}
+                {(company.phone || company.email) && (
+                  <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>
+                    {[company.phone ? `Tél : ${company.phone}` : '', company.email ? `Email : ${company.email}` : ''].filter(Boolean).join(' • ')}
+                  </p>
+                )}
+                {taxLine && (
+                  <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>{taxLine}</p>
+                )}
               </div>
 
               <div style={{ textAlign: 'right' }}>
@@ -7944,7 +7960,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   DEVIS OFFICIEL
                 </div>
                 <p style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>
-                  N° DEV-{lead.id.substring(0, 8).toUpperCase()}
+                  N° {officialLeadDevis?.numero || `DEV-${lead.id.substring(0, 8).toUpperCase()}`}
                 </p>
                 <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>Date : {dateStr}</p>
                 <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Validité : 30 jours</p>
@@ -8019,11 +8035,13 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 <p style={{ fontWeight: 800, textTransform: 'uppercase', color: '#0f172a', margin: '0 0 6px', letterSpacing: '0.5px' }}>
                   Modalités de Règlement & Virement Bancaire
                 </p>
-                <p style={{ margin: '0 0 3px', color: '#334155' }}><strong>Banque :</strong> CIH BANK (Agence Hassan II Casablanca)</p>
-                <p style={{ margin: '0 0 3px', color: '#334155' }}><strong>Titulaire :</strong> STE BEYA CREATIVE SARL</p>
-                <p style={{ margin: '0 0 6px', color: '#1e293b', fontWeight: 800, fontFamily: 'monospace', fontSize: '12px', backgroundColor: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', display: 'inline-block' }}>
-                  RIB : 230 780 0001234567890123 45
-                </p>
+                <p style={{ margin: '0 0 3px', color: '#334155' }}><strong>Banque :</strong> {company.bankName || '—'}</p>
+                <p style={{ margin: '0 0 3px', color: '#334155' }}><strong>Titulaire :</strong> {company.bankBeneficiary || company.name || '—'}</p>
+                {company.rib && (
+                  <p style={{ margin: '0 0 6px', color: '#1e293b', fontWeight: 800, fontFamily: 'monospace', fontSize: '12px', backgroundColor: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', display: 'inline-block' }}>
+                    RIB : {company.rib}
+                  </p>
+                )}
                 <p style={{ margin: 0, color: '#64748b', fontSize: '10px' }}>
                   Délai estimé : {analysis.delaiEstime} dès réception de l'acompte.
                 </p>
@@ -8033,7 +8051,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
               <div style={{ width: '260px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 18px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '12px' }}>
                   <span style={{ color: '#64748b', fontWeight: 600 }}>Total Général HT :</span>
-                  <span style={{ fontWeight: 800, color: '#0f172a' }}>{analysis.totalPrice.toLocaleString('fr-FR')} MAD</span>
+                  <span style={{ fontWeight: 800, color: '#0f172a' }}>{docTotal.toLocaleString('fr-FR')} MAD</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '12px' }}>
                   <span style={{ color: '#64748b', fontWeight: 600 }}>TVA (Confection) :</span>
@@ -8042,7 +8060,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 <div style={{ borderTop: '2px solid #0f172a', paddingTop: '8px', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 900, color: '#0f172a' }}>
                     <span>Total Devis :</span>
-                    <span>{analysis.totalPrice.toLocaleString('fr-FR')} MAD</span>
+                    <span>{docTotal.toLocaleString('fr-FR')} MAD</span>
                   </div>
                 </div>
                 <div style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', borderRadius: '8px', padding: '8px 10px', marginTop: '6px' }}>
@@ -8074,8 +8092,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   Cachet & Signature de l'Atelier
                 </p>
                 <div style={{ fontSize: '10px', color: '#94a3b8', fontStyle: 'italic' }}>
-                  BEYA CREATIVE SARL — Bureau Technique
+                  {company.name || 'BEYA'} — Bureau Technique
                 </div>
+                {company.cachetUrl && (
+                  <img src={company.cachetUrl} alt="Cachet" style={{ maxHeight: '64px', marginTop: '6px', objectFit: 'contain' }} />
+                )}
               </div>
 
               <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '12px', padding: '16px', minHeight: '110px' }}>

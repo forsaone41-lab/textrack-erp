@@ -13,7 +13,7 @@ import {
   Calendar, Video, CreditCard, DollarSign, UploadCloud, FileCheck,
   CheckCircle, Copy, Download, UserCheck, ShieldAlert, PlusCircle, FileText, Lock
 } from 'lucide-react';
-import { User, saveRecord } from '../types';
+import { User, saveRecord, CompanyProfile, loadCompanyProfile, syncCompanyProfile } from '../types';
 import { MODELISTES_DATA, ModelisteProfile } from '../data/modelistesData';
 import { SUPPLIERS_DATA, SupplierProfile } from '../data/suppliersData';
 
@@ -284,6 +284,10 @@ const INITIAL_CUSTOM_REQUESTS: GroupageCustomRequest[] = [
 
 export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps) {
   const navigate = useNavigate();
+  const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
+  useEffect(() => {
+    syncCompanyProfile().then(setCompany).catch(() => {});
+  }, []);
   const emailKey = (currentUser?.email || '').toLowerCase().trim();
   const isPilotAuthorized = emailKey === 'forsaone41@gmail.com';
 
@@ -6535,11 +6539,11 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                       <div className="p-3 rounded-xl bg-[#1e1f22] border border-amber-500/20 space-y-1.5">
                         <span className="text-[11px] font-black text-amber-300 block">حساب الضمان البنكي الرسمي (BEYA Escrow):</span>
                         <div className="flex items-center justify-between font-mono text-xs text-white bg-black/50 p-2 rounded-lg border border-white/5">
-                          <span>RIB: 230 780 0001234567890123 45</span>
+                          <span>RIB: {company.rib || '—'}</span>
                           <button
                             type="button"
                             onClick={() => {
-                              navigator.clipboard.writeText('230780000123456789012345');
+                              navigator.clipboard.writeText((company.rib || '').replace(/\s+/g, ''));
                               alert('تم نسخ رقم الـ RIB بنجاح!');
                             }}
                             className="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
@@ -6549,9 +6553,9 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                           </button>
                         </div>
                         <div className="text-[11px] text-slate-400 space-y-0.5">
-                          <p>• <strong>البنك:</strong> التجاري وفا بنك (Attijariwafa Bank) أو CIH Bank</p>
-                          <p>• <strong>اسم المستفيد:</strong> BEYA CREATIVE SARL AU (Compte Séquestre)</p>
-                          <p>• <strong>أو كود إيداع نقدي Cash Plus / Wafacash:</strong> <strong className="text-white font-mono">BEYA-PAY-880</strong></p>
+                          <p>• <strong>البنك:</strong> {company.bankName || '—'}</p>
+                          <p>• <strong>اسم المستفيد:</strong> {company.bankBeneficiary || company.name || '—'}</p>
+                          {company.phone && <p>• <strong>للاستفسار أو إيداع نقدي:</strong> <strong className="text-white font-mono">{company.phone}</strong></p>}
                         </div>
                       </div>
 
