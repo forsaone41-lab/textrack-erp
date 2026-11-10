@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Upload, User, Shirt, Download, X, KeyRound, AlertTriangle, RefreshCw, Plus, Trash2 } from 'lucide-react';
+import { GEMINI_IMAGE_GEN_MODELS } from '../lib/geminiClient';
 
 const SAVED_MODELS_KEY = 'beya_tryon_saved_models';
 const MAX_SAVED_MODELS = 12;
@@ -94,12 +95,11 @@ export default function BeyaVirtualTryOn() {
       })
     });
 
-    let response = await callModel('gemini-3.5-flash');
-    let data = await response.json();
-
-    if (data.error && (data.error.code === 404 || (data.error.message || '').toLowerCase().includes('not found'))) {
-      response = await callModel('gemini-3.5-flash-8b');
+    let data: any = null;
+    for (const modelId of GEMINI_IMAGE_GEN_MODELS) {
+      const response = await callModel(modelId);
       data = await response.json();
+      if (response.ok && data?.candidates?.length && !data.error) break;
     }
 
     if (data.error) {

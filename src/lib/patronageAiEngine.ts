@@ -4,6 +4,8 @@
  * Compatible with Adobe Illustrator (.SVG), CAD Plotters (.DXF), and PDF
  */
 
+import { GEMINI_FAST_VISION_MODELS } from './geminiClient';
+
 export type GarmentType = 
   | 'boxer'      // بوكسر / كلسون رجالي
   | 'short'      // شورت / برمودا
@@ -1681,13 +1683,7 @@ Réponds UNIQUEMENT en JSON valide suivant ce format strict :
   }
 }`;
 
-  const candidateModels = [
-    'gemini-2.5-flash',
-    'gemini-flash-latest',
-    'gemini-3.8-flash'
-  ];
-
-  for (const model of candidateModels) {
+  for (const model of GEMINI_FAST_VISION_MODELS) {
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: 'POST',

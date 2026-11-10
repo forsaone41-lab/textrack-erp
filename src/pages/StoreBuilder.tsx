@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { callGeminiGenerateContent } from '../lib/geminiClient';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler, Crown, RotateCcw, BarChart3, LogOut, Clock, PhoneCall, Layers } from 'lucide-react';
 
@@ -1256,24 +1257,19 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
   "colors": ["Hex codes for 1-3 dominant colors found in the garment, e.g. '#000000'"]
 }`;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({
-              contents: [{
-                 role: "user",
-                 parts: [
-                    { text: prompt },
-                    { inlineData: { data: base64Data, mimeType } }
-                 ]
-              }]
-           })
+        const { data, lastError } = await callGeminiGenerateContent({
+           apiKeys: [apiKey],
+           contents: [{
+              role: "user",
+              parts: [
+                 { text: prompt },
+                 { inlineData: { data: base64Data, mimeType } }
+              ]
+           }]
         });
 
-        const data = await response.json();
-        
-        if (data.error) {
-           throw new Error(data.error.message);
+        if (!data || data.error) {
+           throw new Error(lastError || data?.error?.message || 'Gemini API error');
         }
 
         let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';

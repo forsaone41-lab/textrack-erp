@@ -14,6 +14,7 @@ import { printFicheTechnique as printFT } from '../utils/print';
 import { InvoicePRO } from '../components/InvoicePRO';
 import ClientInfo from './ClientInfo';
 import { PageLoader } from '../components/PageLoader';
+import { GEMINI_FAST_VISION_MODELS } from '../lib/geminiClient';
 
 interface PortailClientProps {
   currentUser?: User | null;
@@ -1330,7 +1331,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setTestingApiKey(true);
     setApiKeyTestResult(null);
     try {
-      const candidateModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-1.5-flash'];
+      const candidateModels = GEMINI_FAST_VISION_MODELS;
       let succeeded = false;
       let lastErr = '';
       for (const m of candidateModels) {
@@ -1454,7 +1455,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   "reponseAtelier": "تعليق تقني بالعربية / Commentaire technique atelier en français"
 }`;
 
-    const candidateModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-3.8-flash'];
+    const candidateModels = GEMINI_FAST_VISION_MODELS;
 
     for (const model of candidateModels) {
       try {
@@ -1631,7 +1632,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 اقتصر على: نوع القماش، سعره بسوق درب عمر / كراج علال / القريعة، استهلاك القماش بالامتار، وسعر الخياطة والعينة والتسبيق.
 سؤال الزبون: ${query}`;
 
-        const candidateChatModels = ['gemini-2.5-flash', 'gemini-flash-latest'];
+        const candidateChatModels = GEMINI_FAST_VISION_MODELS;
         for (const chatMod of candidateChatModels) {
           try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${chatMod}:generateContent?key=${apiKey}`, {

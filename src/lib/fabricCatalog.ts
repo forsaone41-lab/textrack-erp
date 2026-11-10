@@ -246,65 +246,195 @@ export const FABRIC_CATALOG: Record<string, FabricInfo> = {
     prosFr: 'Excellente tenue des plis creux, look chic automne/hiver, grande fluidité et infroissable',
     cons: 'يتطلب ضبط تطابق الكاروهات (Raccord des Carreaux) في خطوط الفصالة بالمطلوة',
     consFr: 'Nécessite le raccord minutieux des carreaux lors de la coupe au matelas',
-    avgPricePerMeter: 36
+    avgPricePerMeter: 36,
+    techSpec: '65% Polyester · 32% Viscose · 3% Élasthanne · 240 GSM'
+  },
+  'sherpa': {
+    arName: 'قماش شيربا / موطونيه بوكلية شتوي (Sherpa / Moumoute Bouclée)',
+    frName: 'Tissu Sherpa / Moumoute Bouclée Fleece',
+    pricePerMeterMAD: '45 - 80 درهم/متر',
+    pricePerMeterMADFr: '45 - 80 MAD/mètre',
+    markets: 'موردو الأقمشة الشتوية والفرو الصناعي (درب عمر الدار البيضاء / طنجة)',
+    marketsFr: 'Importateurs & Distributeurs Textiles Hiver Agréés (Casablanca / Tanger)',
+    pros: 'عزل حراري ممتاز ودفء عالي، ملمس ناعم مجعد على شكل صوف الخروف، مظهر عصري للجيلي والجاكيتات الشتوية',
+    prosFr: 'Excellente isolation thermique, volume teddy doux tendance, parfait pour gilets sans manches et vestes d\'hiver',
+    cons: 'سميك عند الحواف والدرزات؛ يحتاج بطانة داخلية (Doublure) وتنظيفاً مستمراً لماكينات الخياطة من الزغب',
+    consFr: 'Épaisseur importante aux emmanchures et coutures ; recommande une doublure et un entretien régulier des griffes machines',
+    avgPricePerMeter: 58,
+    techSpec: '100% Polyester Bouclé (Teddy Sherpa) · 320 - 380 GSM'
+  },
+  'polaire': {
+    arName: 'قماش بولير ناعم مضاد للوبَر (Polaire / Polar Fleece)',
+    frName: 'Tissu Polaire Anti-Boulochage',
+    pricePerMeterMAD: '32 - 55 درهم/متر',
+    pricePerMeterMADFr: '32 - 55 MAD/mètre',
+    markets: 'موردو الأقمشة الشتوية والرياضية (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs Textiles Sport & Hiver (Casablanca / Tanger)',
+    pros: 'خفيف الوزن مع تدفئة عالية، سهل التفصيل ولا يتنسل في الحواف، مثالي للجيلي والسويت والملابس الشتوية',
+    prosFr: 'Léger et très chaud, coupe nette sans effilochage, idéal pour gilets, sweats zippés et vestes outdoor',
+    cons: 'حساس للحرارة العالية عند الكيّ بالبخار المباشر',
+    consFr: 'Sensible aux températures élevées au repassage direct (utiliser pattemouille ou vapeur douce)',
+    avgPricePerMeter: 42,
+    techSpec: '100% Polyester Micro-Polaire Anti-Pilling · 260 - 320 GSM'
+  },
+  'doudoune': {
+    arName: 'نايلون مبطن مع واط شتوي (Nylon Déperlant Matelassé / Ouatine)',
+    frName: 'Nylon Déperlant Matelassé & Ouate Thermique',
+    pricePerMeterMAD: '35 - 65 درهم/متر (+ واط 15 - 25 درهم/متر)',
+    pricePerMeterMADFr: '35 - 65 MAD/mètre (+ ouate 15 - 25 MAD/mètre)',
+    markets: 'موردو أقمشة المعاطف والجاكيتات المقاومة للبرد (الدار البيضاء / طنجة)',
+    marketsFr: 'Fournisseurs Textiles Technique & Outerwear (Casablanca / Tanger)',
+    pros: 'مقاوم للماء والرياح، خفيف الوزن، احترافي لجاكيتات الدودون والجيلي المبطن',
+    prosFr: 'Déperlant et coupe-vent, ultraléger, aspect technique pro pour doudounes et gilets matelassés',
+    cons: 'يتطلب دواس تفلون (Pied Téflon) وتثبيت طبقات الواط والبطانة بدقة قبل الخياطة',
+    consFr: 'Nécessite un pied téflon anti-glissement et un matelassage régulier avant assemblage',
+    avgPricePerMeter: 50,
+    techSpec: '100% Polyamide / Nylon Déperlant · Ouate 180 - 250 GSM'
+  },
+  'velours': {
+    arName: 'مخمل مضلع / قطيفة فاخرة (Velours Côtelé / Velvet)',
+    frName: 'Velours Côtelé / Velvet Structuré',
+    pricePerMeterMAD: '38 - 70 درهم/متر',
+    pricePerMeterMADFr: '38 - 70 MAD/mètre',
+    markets: 'موردو الأقمشة الشتوية والراقية (درب عمر / القريعة الدار البيضاء)',
+    marketsFr: 'Distributeurs Textiles Hiver & Prêt-à-Porter (Casablanca / Tanger)',
+    pros: 'مظهر راقي وكلاسيكي، متانة عالية وبنية ممتازة للفيستات والسراويل والقمصان الشتوية',
+    prosFr: 'Rendu texturé haut de gamme, très robuste, bonne tenue pour vestes, surchemises et pantalons',
+    cons: 'ضرورة مراعاة اتجاه الوبرة (Sens du poil) عند ترتيب باترونات الفصالة',
+    consFr: 'Obligation de couper toutes les pièces dans le même sens du poil (reflet de teinte)',
+    avgPricePerMeter: 52,
+    techSpec: '98% Coton · 2% Élasthanne · 300 - 360 GSM'
+  },
+  'maille': {
+    arName: 'صوف تريكو / ماي محيكة (Maille Tricot / Knitwear)',
+    frName: 'Maille Tricotée / Pull-Over Knitwear',
+    pricePerMeterMAD: '35 - 65 درهم/متر',
+    pricePerMeterMADFr: '35 - 65 MAD/mètre',
+    markets: 'مصانع الحياكة وموردو التريكو الصناعي (الدار البيضاء / فاس / طنجة)',
+    marketsFr: 'Bonneteries & Fournisseurs Maille Industrielle (Casablanca / Tanger / Fès)',
+    pros: 'نعومة عالية ومرونة مريحة في اللبس مع طابع شتوي دافئ',
+    prosFr: 'Souplesse naturelle, toucher doux et confort thermique hivernal',
+    cons: 'يحتاج ماكينة ريموز (Remmailleuse) أو سورجي مضبوط لعدم انفتاح الغرزات',
+    consFr: 'Nécessite surfilage serré ou remmaillage pour éviter le démaillage des bords',
+    avgPricePerMeter: 48,
+    techSpec: 'Acrylique / Coton / Laine · 260 - 340 GSM'
+  },
+  'cuir': {
+    arName: 'جلد صناعي فاخر مبطن (Simili Cuir / Eco-Cuir Souple)',
+    frName: 'Simili Cuir Doublé / PU Haute Souplesse',
+    pricePerMeterMAD: '45 - 95 درهم/متر',
+    pricePerMeterMADFr: '45 - 95 MAD/mètre',
+    markets: 'مستوردو الجلد الصناعي ولوازم الجاكيتات (الدار البيضاء / طنجة)',
+    marketsFr: 'Distributeurs Spécialisés Simili & Maroquinerie Habillement (Casablanca / Tanger)',
+    pros: 'قوام هيكلي قوي وأنيق، مقاوم للرياح، قيمة تجارية عالية للموديل',
+    prosFr: 'Forte valeur perçue, tenue structurée et coupe-vent pour vestes, blousons et jupes',
+    cons: 'لا يتحمل ثقوب الإبرة المتكررة (ممنوع الفتق)، ويتطلب إبرة جلد ودواس رولّو أو تفلون',
+    consFr: 'Perforation définitive (découture interdite) ; nécessite aiguille cuir et pied rouleau/téflon',
+    avgPricePerMeter: 65,
+    techSpec: 'Polyuréthane (PU) sur envers Viscose/Poly · 380 - 450 GSM'
   }
 };
 
-export function getFabricInfo(fabricName: string = ''): FabricInfo {
-  const lower = fabricName.toLowerCase();
-  
-  if (lower.includes('drap de laine') || lower.includes('drap_de_laine') || lower.includes('lainage') || lower.includes('laine') || lower.includes('صوف') || lower.includes('feutr') || lower.includes('brandebourg') || lower.includes('chinois') || (lower.includes('veste') && lower.includes('ecru')) || (lower.includes('veste') && lower.includes('officier'))) {
-    return FABRIC_CATALOG['drap_de_laine'];
-  }
-  if (lower.includes('rib') || lower.includes('côte') || lower.includes('cote') || lower.includes('كوت')) {
-    return FABRIC_CATALOG['rib'];
-  }
-  if (lower.includes('french terry') || lower.includes('bouclette') || lower.includes('فرنش تيري') || lower.includes('بوكليت') || lower.includes('غير مقطن')) {
-    return FABRIC_CATALOG['french_terry'];
-  }
-  if (lower.includes('molleton') || lower.includes('molton') || lower.includes('مولتون') || lower.includes('مولطون') || lower.includes('ميلتون') || lower.includes('fleece') || lower.includes('hoodie') || lower.includes('هودي')) {
-    return FABRIC_CATALOG['molleton'];
-  }
-  if (lower.includes('officier') || lower.includes('mao') || lower.includes('matelass') || lower.includes('ecru') || lower.includes('écru') || (lower.includes('toile') && lower.includes('coton')) || (lower.includes('twill') && (lower.includes('lourd') || lower.includes('coton')))) {
-    return FABRIC_CATALOG['toile_coton'];
-  }
-  if (lower.includes('denim') || lower.includes('jean') || lower.includes('جينز') || lower.includes('دنيم')) {
-    return FABRIC_CATALOG['denim'];
-  }
+export interface FabricAiOverrides {
+  pricePerMeterMAD?: string;
+  techSpec?: string;
+  pros?: string;
+  cons?: string;
+}
 
-  for (const key of Object.keys(FABRIC_CATALOG)) {
-    if (
-      lower.includes(key) ||
-      (key === 'tartan' && (lower.includes('tartan') || lower.includes('carreaux') || lower.includes('كاروهات') || lower.includes('كارو') || lower.includes('ترتان'))) ||
-      (key === 'crêpe' && (lower.includes('crepe') || lower.includes('كريب'))) ||
-      (key === 'satin' && (lower.includes('satin') || lower.includes('ساتان'))) ||
-      (key === 'dentelle' && (lower.includes('dentelle') || lower.includes('lace') || lower.includes('دانتيلا'))) ||
-      (key === 'interlock' && (lower.includes('interlock') || lower.includes('انترلوك') || lower.includes('إنترلوك'))) ||
-      (key === 'molleton' && (lower.includes('molleton') || lower.includes('مولتون') || lower.includes('ميلتون') || lower.includes('fleece'))) ||
-      (key === 'jersey' && (lower.includes('jersey') || lower.includes('جيرسي') || lower.includes('جيرزي'))) ||
-      (key === 'gabardine' && (lower.includes('gabardine') || lower.includes('جاباردين') || lower.includes('كاباردين'))) ||
-      (key === 'popeline' && (lower.includes('popeline') || lower.includes('بوبلين')))
-    ) {
-      return FABRIC_CATALOG[key];
+export function getFabricInfo(fabricName: string = '', aiMeta?: FabricAiOverrides): FabricInfo {
+  const lower = (fabricName || '').toLowerCase();
+
+  let matched: FabricInfo | null = null;
+
+  // Check specialized pile/winter outerwear weaves BEFORE generic wool/fleece rules
+  if (lower.includes('sherpa') || lower.includes('moumoute') || lower.includes('teddy') || lower.includes('fourrure') || lower.includes('moutonn') || lower.includes('شيربا') || lower.includes('موطونيه') || lower.includes('فرو')) {
+    matched = FABRIC_CATALOG['sherpa'];
+  } else if (lower.includes('polaire') || lower.includes('polar fleece') || lower.includes('microfleece') || lower.includes('بولير')) {
+    matched = FABRIC_CATALOG['polaire'];
+  } else if (lower.includes('doudoune') || lower.includes('nylon') || lower.includes('ouate') || lower.includes('déperlant') || lower.includes('deperlant') || lower.includes('matelassé') || lower.includes('نايلون') || lower.includes('واط')) {
+    matched = FABRIC_CATALOG['doudoune'];
+  } else if (lower.includes('velours') || lower.includes('velvet') || lower.includes('côtelé') || lower.includes('cotele') || lower.includes('مخمل') || lower.includes('قطيفة') || lower.includes('موبرا')) {
+    matched = FABRIC_CATALOG['velours'];
+  } else if (lower.includes('simili') || lower.includes('cuir') || lower.includes('leather') || lower.includes('جلد')) {
+    matched = FABRIC_CATALOG['cuir'];
+  } else if (lower.includes('maille') || lower.includes('tricot') || lower.includes('knit') || lower.includes('تريكو')) {
+    matched = FABRIC_CATALOG['maille'];
+  } else if (lower.includes('drap de laine') || lower.includes('drap_de_laine') || lower.includes('lainage') || (lower.includes('laine') && !lower.includes('imitation')) || lower.includes('صوف') || lower.includes('feutr') || lower.includes('brandebourg') || (lower.includes('veste') && lower.includes('ecru')) || (lower.includes('veste') && lower.includes('officier'))) {
+    matched = FABRIC_CATALOG['drap_de_laine'];
+  } else if (lower.includes('rib') || lower.includes('côte') || lower.includes('cote') || lower.includes('كوت')) {
+    matched = FABRIC_CATALOG['rib'];
+  } else if (lower.includes('french terry') || lower.includes('bouclette') || lower.includes('فرنش تيري') || lower.includes('بوكليت') || lower.includes('غير مقطن')) {
+    matched = FABRIC_CATALOG['french_terry'];
+  } else if (lower.includes('molleton') || lower.includes('molton') || lower.includes('مولتون') || lower.includes('مولطون') || lower.includes('ميلتون') || lower.includes('cotton fleece') || lower.includes('hoodie') || lower.includes('هودي')) {
+    matched = FABRIC_CATALOG['molleton'];
+  } else if (lower.includes('officier') || lower.includes('mao') || lower.includes('matelass') || lower.includes('ecru') || lower.includes('écru') || (lower.includes('toile') && lower.includes('coton')) || (lower.includes('twill') && (lower.includes('lourd') || lower.includes('coton')))) {
+    matched = FABRIC_CATALOG['toile_coton'];
+  } else if (lower.includes('denim') || lower.includes('jean') || lower.includes('جينز') || lower.includes('دنيم')) {
+    matched = FABRIC_CATALOG['denim'];
+  } else {
+    for (const key of Object.keys(FABRIC_CATALOG)) {
+      if (
+        lower.includes(key) ||
+        (key === 'tartan' && (lower.includes('tartan') || lower.includes('carreaux') || lower.includes('كاروهات') || lower.includes('كارو') || lower.includes('ترتان'))) ||
+        (key === 'crêpe' && (lower.includes('crepe') || lower.includes('كريب'))) ||
+        (key === 'satin' && (lower.includes('satin') || lower.includes('ساتان'))) ||
+        (key === 'dentelle' && (lower.includes('dentelle') || lower.includes('lace') || lower.includes('دانتيلا'))) ||
+        (key === 'interlock' && (lower.includes('interlock') || lower.includes('انترلوك') || lower.includes('إنترلوك'))) ||
+        (key === 'jersey' && (lower.includes('jersey') || lower.includes('جيرسي') || lower.includes('جيرزي'))) ||
+        (key === 'gabardine' && (lower.includes('gabardine') || lower.includes('جاباردين') || lower.includes('كاباردين'))) ||
+        (key === 'popeline' && (lower.includes('popeline') || lower.includes('بوبلين')))
+      ) {
+        matched = FABRIC_CATALOG[key];
+        break;
+      }
     }
   }
 
-  const isFrenchOrLatin = /[a-zA-Z]{3,}/.test(fabricName);
-  const cleanDisplayName = isFrenchOrLatin
-    ? fabricName.replace(/[\u0600-\u06FF]/g, '').trim()
-    : fabricName.replace(/[a-zA-Z]/g, '').trim();
+  const trimmedRaw = (fabricName || '').trim();
+  const hasArabic = /[\u0600-\u06FF]/.test(trimmedRaw);
+  const hasLatin = /[a-zA-Z]{3,}/.test(trimmedRaw);
+  const cleanFrRaw = trimmedRaw.replace(/[\u0600-\u06FF]/g, '').replace(/\(\s*\)/g, '').trim();
+  const cleanArRaw = trimmedRaw.replace(/[a-zA-Z]/g, '').replace(/\(\s*\)/g, '').trim();
+
+  // Extract average numeric price from AI price string if provided (e.g. "45 - 65 MAD/mètre" -> 55)
+  let aiAvgPrice: number | undefined;
+  if (aiMeta?.pricePerMeterMAD) {
+    const nums = aiMeta.pricePerMeterMAD.match(/\d+/g)?.map(Number).filter((n) => n > 5 && n < 1000) || [];
+    if (nums.length >= 2) aiAvgPrice = Math.round((nums[0] + nums[1]) / 2);
+    else if (nums.length === 1) aiAvgPrice = nums[0];
+  }
+
+  if (matched) {
+    return {
+      ...matched,
+      // Always preserve AI's specific fabric designation when informative
+      arName: hasArabic && cleanArRaw.length > 3 ? trimmedRaw : matched.arName,
+      frName: hasLatin && cleanFrRaw.length > 3 ? cleanFrRaw : matched.frName,
+      pricePerMeterMAD: aiMeta?.pricePerMeterMAD || matched.pricePerMeterMAD,
+      pricePerMeterMADFr: aiMeta?.pricePerMeterMAD || matched.pricePerMeterMADFr,
+      techSpec: aiMeta?.techSpec || matched.techSpec,
+      pros: aiMeta?.pros || matched.pros,
+      prosFr: aiMeta?.pros || matched.prosFr,
+      cons: aiMeta?.cons || matched.cons,
+      consFr: aiMeta?.cons || matched.consFr,
+      avgPricePerMeter: aiAvgPrice || matched.avgPricePerMeter,
+    };
+  }
 
   return {
-    arName: fabricName || 'ثوب ممشط فاخر مطابق للموديل',
-    frName: cleanDisplayName || 'Tissu Technique Haute Qualité Conforme au Modèle',
-    pricePerMeterMAD: '30 - 55 درهم/متر',
-    pricePerMeterMADFr: '30 - 55 MAD/mètre',
+    arName: trimmedRaw || 'ثوب تقني مطابق للموديل',
+    frName: cleanFrRaw || trimmedRaw || 'Tissu Technique Conforme au Modèle',
+    pricePerMeterMAD: aiMeta?.pricePerMeterMAD || '35 - 65 درهم/متر',
+    pricePerMeterMADFr: aiMeta?.pricePerMeterMAD || '35 - 65 MAD/mètre',
     markets: 'موردو النسيج الصناعي المعتمدون (الدار البيضاء / طنجة)',
     marketsFr: 'Distributeurs & Fournisseurs Textiles Industriels Agréés (Casablanca / Tanger)',
-    pros: 'جودة ممتازة وسهل في التفصيل والخياطة بالورشة ومناسب لعلامات الأزياء',
-    prosFr: 'Excellente qualité, tombé soigné et confection industrielle aisée pour marques de mode',
-    cons: 'يتطلب معايرة مقاسات الإبر والضغط في الماكينات الصناعية',
-    consFr: 'Nécessite un réglage adapté du calibre des aiguilles et de la presse industrielle'
+    pros: aiMeta?.pros || 'جودة ممتازة وسهل في التفصيل والخياطة بالورشة ومناسب لعلامات الأزياء',
+    prosFr: aiMeta?.pros || 'Excellente qualité, tombé soigné et confection industrielle aisée pour marques de mode',
+    cons: aiMeta?.cons || 'يتطلب معايرة مقاسات الإبر والضغط في الماكينات الصناعية',
+    consFr: aiMeta?.cons || 'Nécessite un réglage adapté du calibre des aiguilles et de la presse industrielle',
+    techSpec: aiMeta?.techSpec,
+    avgPricePerMeter: aiAvgPrice || 45,
   };
 }
 
@@ -333,7 +463,10 @@ export function estimateSourcingBreakdown(params: {
   let fournitures = 10;
   let detailsFournitures = isAr ? 'خيط بوليستر + إتيكيت ماركة' : 'Fil polyester + étiquette tissée';
 
-  if (pLower.includes('manteau') || pLower.includes('مانطو') || pLower.includes('معطف') || pLower.includes('veste') || pLower.includes('جاكيت')) {
+  if (pLower.includes('gilet') || pLower.includes('sans manches') || pLower.includes('sleeveless') || pLower.includes('جيلي')) {
+    fournitures = 14;
+    detailsFournitures = isAr ? 'أزرار أو سحاب أمامي + شريط تشطيب فتحات الأكمام (Biais Emmanchures) + إتيكيت' : 'Boutons ou zip devant + biais finition emmanchures + étiquette tissée';
+  } else if (pLower.includes('manteau') || pLower.includes('مانطو') || pLower.includes('معطف') || pLower.includes('veste') || pLower.includes('جاكيت')) {
     fournitures = 18;
     detailsFournitures = isAr ? 'سحاب معدني/بلاستيكي 70cm + أزرار كبس + فيزلين وتقوية + خيط متين' : 'Zip métal/injecté 70cm + boutons pression + thermocollant + fil 40/2';
   } else if (pLower.includes('hoodie') || pLower.includes('هودي') || pLower.includes('sweat') || pLower.includes('سويت')) {
@@ -359,7 +492,12 @@ export function estimateSourcingBreakdown(params: {
   let facon = 25;
   let detailsFacon = isAr ? 'فصالة المطلوة الصناعية + تجميع الأجزاء بالماكينة + فينيسيون وكيّ بالبخار' : 'Coupe matelas + piquage assemblage + finitions & repassage';
 
-  if (pLower.includes('robe_chemise') || (pLower.includes('robe') && pLower.includes('chemise')) || pLower.includes('pliss') || pLower.includes('بليات') || pLower.includes('tartan') || pLower.includes('كاروهات')) {
+  if (pLower.includes('gilet') || pLower.includes('sans manches') || pLower.includes('sleeveless') || pLower.includes('جيلي')) {
+    facon = 28;
+    detailsFacon = isAr
+      ? 'فصالة جيلي بدون أكمام + تركيب الياقة العالية والجيوب الجانبية + تشطيب فتحات الإبطين بالبيي والبطانة + عرى وأزرار'
+      : 'Coupe gilet sans manches + montage col montant & poches passepoilées + gansage emmanchures / doublure + boutonnières';
+  } else if (pLower.includes('robe_chemise') || (pLower.includes('robe') && pLower.includes('chemise')) || pLower.includes('pliss') || pLower.includes('بليات') || pLower.includes('tartan') || pLower.includes('كاروهات')) {
     facon = 35;
     detailsFacon = isAr
       ? 'فصالة مطلوة + تركيب كول شوميز وبوانيات الأكمام + تكسير وتثبيت بليات التنورة بالمكواة البخارية (Plissage) + عرى الحزام والفينيسيون'

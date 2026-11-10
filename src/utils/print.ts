@@ -468,47 +468,29 @@ export function cleanLabel(raw: string, isAr: boolean): string {
   if (isAr) {
     const hasArabic = /[\u0600-\u06FF]/.test(s);
     if (hasArabic) {
-      s = s.replace(/\([a-zA-Z\s\/\-0-9%&]+\)/g, '');
-      s = s.replace(/[a-zA-Z]{3,}/g, '');
-    } else {
-      const low = s.toLowerCase();
-      if (low.includes('crop') || low.includes('top')) return 'توب بأكمام طويلة ملاصق للجسم (كروب توب)';
-      if (low.includes('pantalon') || low.includes('sweatpant') || low.includes('wide-leg')) return 'سروال رياضي بقصة عريضة منسدلة (وايد ليغ)';
-      if (low.includes('jersey')) return 'جيرسي قطن ممشط ممتاز';
-      if (low.includes('terry') || low.includes('bouclette')) return 'مولطون بوكليت غير مقطن (فرنش تيري قطن)';
-      if (low.includes('gratté') || low.includes('fleece')) return 'مولطون شتوي مقطن 100% قطن';
-      if (low.includes('rib') || low.includes('côte')) return 'كوت ريب 1×1 ليكرا قطن ممشط';
-      if (low.includes('denim') || low.includes('jean')) return 'قماش دنيم جينز أصيل 12.5 أونصة';
-      if (low.includes('t-shirt')) return 'تيشرت قطني كلاسيكي كول غوند';
-      if (low.includes('hoodie')) return 'هودي سويت شيرت كابوشون';
+      // Conserver le texte arabe et nettoyer les doublons latins entre parenthèses tout en gardant les sigles techniques (GSM, DTF, 100%)
+      s = s.replace(/\([a-zA-Z\s\/\-&.,']+\)/g, '');
+      s = s.replace(/\b(?!(?:GSM|MAD|CM|XXL|XL|PU|DTF)\b)[a-zA-Z]{4,}(?:\s+[a-zA-Z]{3,})*/g, '').trim();
     }
+    // Si aucun caractère arabe n'est présent (ex: terme technique AI en FR/EN), conserver le terme exact sans l'écraser par un autre modèle
   } else {
-    // Mode Français : aucune lettre arabe
+    // Mode Français : retirer les caractères arabes tout en préservant l'intégralité du libellé technique français
     const hasLatin = /[a-zA-Z]{2,}/.test(s);
     if (hasLatin) {
-      s = s.replace(/[\u0600-\u06FF]/g, '');
+      s = s.replace(/[\u0600-\u06FF]+/g, '');
     } else {
       const low = s.toLowerCase();
-      if (low.includes('جيرسي')) return 'Single Jersey Coton Peigné Stretch';
-      if (low.includes('بوكليت') || low.includes('غير مقطن')) return 'French Terry Coton Non-Gratté Bouclette';
-      if (low.includes('مقطن') || low.includes('شتوي')) return 'Molleton Lourd Gratté 100% Coton';
-      if (low.includes('كوت') || low.includes('ريب')) return 'Côte Rib 1x1 Lycra Coton Peigné';
-      if (low.includes('دنيم') || low.includes('جينز')) return 'Toile Denim Coton 12.5oz';
-      if (low.includes('كانفاس')) return 'Heavy Cotton Canvas (Toile Coton Renforcée)';
-      if (low.includes('بوبلين')) return 'Popeline de Coton Peigné';
-      if (low.includes('توب') || low.includes('كروب')) return 'Top Manches Longues Près du Corps (Crop Top)';
-      if (low.includes('سروال') || low.includes('بنطلون')) return 'Pantalon Sweatpants Coupe Wide-Leg / Évasé';
-      if (low.includes('طقم')) return 'Ensemble 2 Pièces Confection B2B';
-      if (low.includes('تيشرت')) return 'T-Shirt Coton Col Rond';
-      if (low.includes('هودي')) return 'Hoodie Sweatshirt à Capuche';
-      s = s.replace(/[\u0600-\u06FF]/g, '');
+      if (low === 'جيرسي') return 'Jersey Coton Peigné';
+      if (low === 'مولتون' || low === 'مولطون') return 'Molleton Coton Gratté';
+      if (low === 'شيربا') return 'Sherpa Fleece Bouclé';
+      s = s.replace(/[\u0600-\u06FF]+/g, '');
     }
   }
 
   // Nettoyer les parenthèses orphelines et les délimiteurs vides
   s = s.replace(/\(\s*\)/g, '').replace(/\[\s*\]/g, '').replace(/\s*[\/\-·]\s*$/g, '').replace(/^\s*[\/\-·]\s*/g, '').replace(/\s{2,}/g, ' ').trim();
   if (s.startsWith('(') && s.endsWith(')')) s = s.slice(1, -1).trim();
-  return s;
+  return s || String(raw).trim();
 }
 
 export function cleanMeasurementName(raw: string, isAr: boolean): string {
@@ -536,6 +518,15 @@ export function cleanMeasurementName(raw: string, isAr: boolean): string {
   if (low.includes('bas') || low.includes('cheville') || low.includes('ساق') || low.includes('كاحل') || low.includes('opening')) {
     return isAr ? 'عرض أسفل الساق' : 'Largeur Bas de Jambe';
   }
+  if (low.includes('capuche') || low.includes('كابوش') || low.includes('hood')) {
+    return isAr ? 'ارتفاع الكابوش' : 'Hauteur Capuche';
+  }
+  if (low.includes('col') || low.includes('ياقة') || low.includes('collar')) {
+    return isAr ? 'محيط / ارتفاع الياقة' : 'Tour / Hauteur Col';
+  }
+  if (low.includes('emmanchure') || low.includes('حفرة') || low.includes('armhole')) {
+    return isAr ? 'محيط حفرة الإبط (Emmanchure)' : 'Hauteur / Tour Emmanchure';
+  }
   if (low.includes('longueur') || low.includes('طول') || low.includes('length')) {
     return isAr ? 'الطول الإجمالي' : 'Longueur Totale';
   }
@@ -551,68 +542,13 @@ export function cleanMeasurementName(raw: string, isAr: boolean): string {
 
 export function cleanPieceName(rawName: string, isAr: boolean): string {
   if (!rawName) return isAr ? 'قطعة الموديل الرئيسية' : 'Pièce Principale';
-  const low = rawName.toLowerCase();
-
-  if (low.includes('crop') || (low.includes('top') && !low.includes('pantalon') && !low.includes('bas'))) {
-    return isAr ? 'توب بأكمام طويلة ملاصق للجسم (كروب توب)' : 'Top Manches Longues Près du Corps (Crop Top)';
-  }
-  if (low.includes('pantalon') || low.includes('sweatpant') || low.includes('wide-leg') || low.includes('wide leg') || low.includes('سروال') || low.includes('بنطلون') || low.includes('palazzo')) {
-    return isAr ? 'سروال رياضي بقصة عريضة منسدلة (وايد ليغ)' : 'Pantalon Sweatpants Coupe Wide-Leg / Évasé';
-  }
-  if (low.includes('brandebourg') || low.includes('officier') || low.includes('mao') || low.includes('matelass') || low.includes('ecru') || low.includes('écru') || low.includes('chinois')) {
-    return isAr ? 'جاكيت عصرية كول أوفيسييه وأزرار براندبورغ' : 'Veste Col Officier & Boutonnage Brandebourg';
-  }
-  if (low.includes('denim') || low.includes('jean') || low.includes('جينز')) {
-    return isAr ? 'فيست جاكيت دنيم عصرية' : 'Veste en Jean Denim Casual';
-  }
-  if (low.includes('veste') || low.includes('jacket') || low.includes('فيست') || low.includes('جاكيت') || low.includes('سترة') || low.includes('blouson')) {
-    return isAr ? 'جاكيت سترة عصرية مهيكلة' : 'Veste Structurée Casual';
-  }
-  if (low.includes('t-shirt') || low.includes('tshirt') || low.includes('تيشرت') || low.includes('تي شيرت')) {
-    return isAr ? 'تيشرت قطني كلاسيكي كول غوند' : 'T-Shirt Coton Col Rond';
-  }
-  if (low.includes('hoodie') || low.includes('sweat') || low.includes('هودي') || low.includes('سويت')) {
-    return isAr ? 'هودي كابوشون قطني ثقيل' : 'Hoodie Sweatshirt à Capuche';
-  }
-  if (low.includes('short') || low.includes('شورت')) {
-    return isAr ? 'شورت برمودا قطني مريح' : 'Short Bermuda Molleton';
-  }
-  if (low.includes('robe') || low.includes('فستان')) {
-    return isAr ? 'فستان نسائي كاجوال طويل' : 'Robe Longue Fluide Casual';
-  }
-
+  // Préserver fidèlement le nom exact du vêtement analysé par l'IA sans l'écraser par des modèles génériques
   return cleanLabel(rawName, isAr);
 }
 
 export function cleanCategoryTitle(rawCat: string, isAr: boolean): string {
   if (!rawCat) return isAr ? 'موديل من الذكاء الاصطناعي' : 'Modèle de Confection';
-  const low = rawCat.toLowerCase();
-
-  if (low.includes('ensemble') || low.includes('طقم') || low.includes('2 pièces') || low.includes('2 pieces') || low.includes('قطعتين')) {
-    if (low.includes('denim') || low.includes('jean') || low.includes('جينز')) {
-      return isAr ? 'طقم دنيم جينز قطعتين (فيست جاكيت + سروال جينز)' : 'Ensemble Denim 2 Pièces (Veste Denim Ceinturée + Pantalon Jean)';
-    }
-    return isAr ? 'طقم لاونج وير قطعتين (توب كروب + سروال واسع)' : 'Ensemble 2 Pièces Loungewear (Top Crop + Pantalon Wide-Leg)';
-  }
-  if (low.includes('brandebourg') || low.includes('officier') || low.includes('mao') || low.includes('matelass') || low.includes('ecru') || low.includes('écru')) {
-    return isAr ? 'جاكيت عصرية كول أوفيسييه وأزرار براندبورغ' : 'Veste Col Officier & Boutonnage Brandebourg';
-  }
-  if (low.includes('veste') || low.includes('jacket') || low.includes('فيست') || low.includes('جاكيت') || low.includes('blouson')) {
-    if (low.includes('denim') || low.includes('jean') || low.includes('جينز')) {
-      return isAr ? 'جاكيت فيست جينز دنيم عصرية' : 'Veste en Jean Denim Casual';
-    }
-    return isAr ? 'جاكيت سترة عصرية مهيكلة' : 'Veste Structurée Casual';
-  }
-  if (low.includes('t-shirt') || low.includes('تيشرت')) {
-    return isAr ? 'تيشرت قطني كلاسيكي كول غوند' : 'T-Shirt Coton Col Rond';
-  }
-  if (low.includes('hoodie') || low.includes('هودي')) {
-    return isAr ? 'هودي سويت شيرت كابوشون' : 'Hoodie Sweatshirt à Capuche';
-  }
-  if (low.includes('pantalon') || low.includes('سروال') || low.includes('بنطلون')) {
-    return isAr ? 'سروال رياضي بقصة عريضة منسدلة' : 'Pantalon Sweatpants Coupe Wide-Leg';
-  }
-
+  // Préserver fidèlement la catégorie réelle détectée sur l'image
   return cleanLabel(rawCat, isAr);
 }
 
@@ -1464,7 +1400,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
       const revientMinFaible = Math.round(revientMinMziana * 0.55);
       const revientMaxFaible = Math.round(revientMaxMziana * 0.55);
       const grosMinFaible = Math.round(grosMinMziana * 0.55);
-      const grosMaxFaible = Math.round(grosMaxFaible * 0.55);
+      const grosMaxFaible = Math.round(grosMaxMziana * 0.55);
 
       if (tierMode === '1_tier') {
         return `

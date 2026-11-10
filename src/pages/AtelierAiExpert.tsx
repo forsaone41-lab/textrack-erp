@@ -11,6 +11,7 @@ import {
   getGarmentTechnicalBreakdown,
   estimateFromFiche
 } from '../lib/atelierAi';
+import { callGeminiGenerateContent } from '../lib/geminiClient';
 
 interface NavState {
   itemName?: string;
@@ -168,31 +169,20 @@ Sur cette base, donne une analyse technique réelle au format JSON uniquement, e
   6) Repassage & Contrôle Qualité (toujours en dernier).
 Réponds uniquement en JSON valide, sans texte avant ni après.`;
 
-      const callGemini = () => fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            role: 'user',
-            parts: [
-              { text: prompt },
-              { inlineData: { data: base64Data, mimeType } }
-            ]
-          }],
-          generationConfig: { temperature: 0.3 }
-        })
+      const { data, lastError } = await callGeminiGenerateContent({
+        apiKeys: [apiKey],
+        contents: [{
+          role: 'user',
+          parts: [
+            { text: prompt },
+            { inlineData: { data: base64Data, mimeType } }
+          ]
+        }],
+        generationConfig: { temperature: 0.3 }
       });
 
-      let response = await callGemini();
-      let data = await response.json();
-
-      if (data.error && (data.error.code === 503 || data.error.code === 404 || (data.error.message || '').includes('not found'))) {
-        response = await callGemini();
-        data = await response.json();
-      }
-
-      if (data.error) {
-        throw new Error(data.error.message || 'Gemini API error');
+      if (!data || data.error) {
+        throw new Error(lastError || data?.error?.message || 'Gemini API error');
       }
 
       const rawText: string = data.candidates?.[0]?.content?.parts?.[0]?.text || '';

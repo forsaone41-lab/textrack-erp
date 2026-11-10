@@ -5,9 +5,10 @@ import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch } from '../types';
 import { printElement } from '../utils/pdf';
-import { printRapportIA, cleanMeasurementName, cleanPieceName, cleanCategoryTitle, cleanLabel } from '../utils/print';
+import { printRapportIA, cleanMeasurementName, cleanPieceName, cleanCategoryTitle, cleanLabel, cleanOperation } from '../utils/print';
 import { PosteTravail, getGarmentTechnicalBreakdown, parseGammeText } from '../lib/atelierAi';
 import { ClientQuoteModal } from '../components/ClientQuoteModal';
+import { GEMINI_FAST_VISION_MODELS, callGeminiGenerateContent, prepareImageForGemini } from '../lib/geminiClient';
 
 export const ATELIER_MACHINES_PRESETS = [
   { id: 'piqueuse', machine: 'Piqueuse Plate', labelAr: 'بيكوز سامبل', defaultNomAr: 'خياطة وتجميع الأجزاء (بيكوز)', defaultNomFr: 'Assemblage Piqueuse Plate', defaultMin: 3.5, role: 'خياط رئيسي' },
@@ -223,7 +224,9 @@ export function getStandardMesuresForCategory(
   audience: 'adultes' | 'enfants' = 'adultes',
   gender: 'hommes' | 'femmes' = 'hommes'
 ): { nom: string; valeurs: Record<string, number> }[] {
-  const profileKey = `${audience === 'enfants' ? 'enfant' : 'adulte'}_${gender === 'femmes' ? (audience === 'enfants' ? 'fille' : 'femme') : (audience === 'enfants' ? 'garcon' : 'homme')}` as const;
+  const profileKey: keyof typeof CATEGORY_MESURES = audience === 'enfants'
+    ? (gender === 'femmes' ? 'enfant_fille' : 'enfant_garcon')
+    : (gender === 'femmes' ? 'adulte_femme' : 'adulte_homme');
   const pDict = CATEGORY_MESURES[profileKey] || CATEGORY_MESURES.adulte_homme;
   const low = (pieceName || '').toLowerCase();
 
@@ -410,7 +413,7 @@ function computeThreeTierCosting(result: any) {
   const isThreePieces = pieces.length >= 3;
 
   // Extract total meters
-  let totalM = 1.8;
+  let totalM = 1.5;
   if (result?.consumption) {
     const parsed = parseFloat(String(result.consumption).replace(/[^0-9.]/g, ''));
     if (!isNaN(parsed) && parsed > 0) totalM = parsed;
@@ -422,13 +425,25 @@ function computeThreeTierCosting(result: any) {
     if (sum > 0) totalM = sum;
   }
 
-  // Real wholesale fabric prices in Moroccan textile hubs (Derb Omar, Garage Allal, El Korea, Tangier Free Zone):
-  // 1. Qualité Mziana (Haut de gamme): Coton Peigné 100% 320g / Interlock Compact / Crêpe Coréen ~58 MAD/m
-  // 2. Qualité Normal (Standard): Molleton Coton/Polyester 70/30 280g / French Terry 260g ~42 MAD/m
-  // 3. Qualité Faible (Fibk / Éco): Poly-Coton 50/50 220g / Polyester brossé ~26 MAD/m
-  const prixTissuMzianaM = 58;
-  const prixTissuNormalM = 42;
-  const prixTissuFaibleM = 26;
+  // Derive realistic per-meter price from analyzed model's real fabric (no hardcoded Coton/Molleton override)
+  const rawFabName = result?.fabricSuggested || pieces?.[0]?.fabricSuggested || '';
+  const fabInfo = getFabricInfo(rawFabName, {
+    pricePerMeterMAD: result?.fabricPricePerMeterMAD || pieces?.[0]?.fabricPricePerMeterMAD,
+    techSpec: result?.fabricTechSpec || pieces?.[0]?.fabricTechSpec,
+    pros: result?.fabricPros || pieces?.[0]?.fabricPros,
+    cons: result?.fabricCons || pieces?.[0]?.fabricCons,
+  });
+
+  const basePrixM = Math.max(20, Math.round(fabInfo.avgPricePerMeter || 42));
+  const prixTissuNormalM = basePrixM;
+  const prixTissuMzianaM = Math.max(basePrixM + 12, Math.round(basePrixM * 1.32));
+  const prixTissuFaibleM = Math.max(18, Math.round(basePrixM * 0.68));
+
+  // Derive realistic base atelier labor if AI supplied costEstimate
+  const costNums = String(result?.costEstimate || pieces?.[0]?.costEstimate || '').match(/\d+/g)?.map(Number).filter(n => n > 5 && n < 2000) || [];
+  const aiMidFacon = costNums.length >= 2
+    ? Math.round((costNums[0] + costNums[1]) / 2)
+    : (costNums.length === 1 ? costNums[0] : (isThreePieces ? 48 : isMultiPiece ? 34 : 24));
 
   // Trims & Accessories (Zips, Rib/Bord-côte, Cordons, Œillets, Boutons, Fil, Sachets):
   const trimsMziana = isThreePieces ? 28.0 : isMultiPiece ? 18.0 : 12.0;
@@ -436,9 +451,9 @@ function computeThreeTierCosting(result: any) {
   const trimsFaible = isThreePieces ? 12.0 : isMultiPiece ? 8.0 : 5.0;
 
   // Labor (Coupe au matelas + Façon atelier + Repassage professionnel):
-  const faconMziana = isThreePieces ? 65.0 : isMultiPiece ? 45.0 : 28.0;
-  const faconNormal = isThreePieces ? 48.0 : isMultiPiece ? 32.0 : 20.0;
-  const faconFaible = isThreePieces ? 35.0 : isMultiPiece ? 22.0 : 14.0;
+  const faconNormal = Math.min(180, Math.max(12, Math.round(aiMidFacon * 0.65)));
+  const faconMziana = Math.max(faconNormal + 8, Math.round(faconNormal * 1.35));
+  const faconFaible = Math.max(10, Math.round(faconNormal * 0.72));
 
   const coutTissuMziana = Math.round(totalM * prixTissuMzianaM * 10) / 10;
   const coutTissuNormal = Math.round(totalM * prixTissuNormalM * 10) / 10;
@@ -448,13 +463,16 @@ function computeThreeTierCosting(result: any) {
   const totalNormal = Math.round((coutTissuNormal + trimsNormal + faconNormal) * 10) / 10;
   const totalFaible = Math.round((coutTissuFaible + trimsFaible + faconFaible) * 10) / 10;
 
+  const fabArLabel = cleanLabel(fabInfo.arName || rawFabName, true) || 'ثوب فاخر مطابق للموديل';
+  const fabFrLabel = cleanLabel(fabInfo.frName || rawFabName, false) || 'Tissu Technique Conforme au Modèle';
+
   return {
     totalM: Number(totalM.toFixed(2)),
     isThreePieces,
     isMultiPiece,
     mziana: {
-      tissuNomAr: isThreePieces ? 'مولتون قطن ممشوط 100% مبطن فاخر (320-350g) أو إنترلوك دبل كنيت' : 'قطن ممشوط 100% / كريب كوري فاخر / تويل ممتاز',
-      tissuNomFr: isThreePieces ? 'Molleton Gratté 100% Coton Peigné (320-350g) ou Interlock Double Knit' : '100% Coton Peigné Premium ou Crêpe Coréen de Luxe',
+      tissuNomAr: `${fabArLabel} (جودة بريميوم عالية)`,
+      tissuNomFr: `${fabFrLabel} (Qualité Premium Supérieure)`,
       prixM: prixTissuMzianaM,
       coutTissu: coutTissuMziana,
       trims: trimsMziana,
@@ -465,8 +483,8 @@ function computeThreeTierCosting(result: any) {
       detailMax: Math.round(totalMziana * 2.4)
     },
     normal: {
-      tissuNomAr: isThreePieces ? 'مولتون قطن/بوليستر 70/30 بوزن (280g) أو فرينش تيري قطن عملي' : 'مولتون قطن/بوليستر 70/30 (280g) أو فرينش تيري متوازن',
-      tissuNomFr: isThreePieces ? 'Molleton Coton/Polyester 70/30 (280g) ou French Terry Coton' : 'Coton/Polyester 70/30 ou French Terry Standard',
+      tissuNomAr: `${fabArLabel} (جودة تجارية قياسية)`,
+      tissuNomFr: `${fabFrLabel} (Qualité Standard Commercial)`,
       prixM: prixTissuNormalM,
       coutTissu: coutTissuNormal,
       trims: trimsNormal,
@@ -477,8 +495,8 @@ function computeThreeTierCosting(result: any) {
       detailMax: Math.round(totalNormal * 2.2)
     },
     faible: {
-      tissuNomAr: isThreePieces ? 'مولتون بولي-قطن اقتصادي 50/50 (220-240g) أو بوليستر بوسط تجاري' : 'بولي-قطن 50/50 أو بوليستر تجاري خفيف',
-      tissuNomFr: isThreePieces ? 'Molleton Poly-Coton Éco 50/50 (220-240g) ou Polyester brossé' : 'Poly-Coton 50/50 ou Polyester Commercial',
+      tissuNomAr: `${fabArLabel} (نسخة اقتصادية تجارية)`,
+      tissuNomFr: `${fabFrLabel} (Version Économique Série)`,
       prixM: prixTissuFaibleM,
       coutTissu: coutTissuFaible,
       trims: trimsFaible,
@@ -640,7 +658,7 @@ export function getPieceIcon(name: string): string {
   if (n.includes('pantalon') || n.includes('jogging') || n.includes('cargo') || n.includes('jean') || n.includes('سروال') || n.includes('بنطلون') || n.includes('palazzo')) return '👖';
   if (n.includes('short') || n.includes('شورت') || n.includes('boxer') || n.includes('بوكسر') || n.includes('كالسون')) return '🩳';
   if (n.includes('robe') || n.includes('abaya') || n.includes('caftan') || n.includes('فستان') || n.includes('عباية') || n.includes('قفطان') || n.includes('جلابة')) return '👗';
-  if (n.includes('manteau') || n.includes('trench') || n.includes('veste') || n.includes('blazer') || n.includes('معطف') || n.includes('سترة') || n.includes('جاكيت')) return '🧥';
+  if (n.includes('manteau') || n.includes('trench') || n.includes('veste') || n.includes('blazer') || n.includes('gilet') || n.includes('doudoune') || n.includes('blouson') || n.includes('sherpa') || n.includes('معطف') || n.includes('سترة') || n.includes('جاكيت') || n.includes('جيلي')) return '🧥';
   if (n.includes('sweat') || n.includes('hoodie') || n.includes('t-shirt') || n.includes('top') || n.includes('chemise') || n.includes('قميص') || n.includes('سويت') || n.includes('تيشرت') || n.includes('pull')) return '👕';
   return '✂️';
 }
@@ -731,7 +749,7 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
     }
 
     if (!imageSrc) {
-      return resolve('veste col officier boutonnage brandebourg drap de laine ecru جاكيت كول أوفيسييه بأزرار براندبورغ');
+      return resolve('veste jacket casual جاكيت كاجوال عصرية');
     }
 
     try {
@@ -912,14 +930,14 @@ function detectGarmentFromImageAsync(imageSrc: string, fileName?: string): Promi
           if (isExplicitDenim) {
             return resolve('veste en jean denim جاكيت فيست جينز دنيم');
           }
-          // If light/ecru color or structured jacket silhouette without pants legs:
+          // Structured jacket/outerwear silhouette without pants legs:
           if (!hasPantsLegs && (aspectRatio <= 1.35 || upperLight > 20)) {
-            return resolve('veste col officier boutonnage brandebourg drap de laine ecru جاكيت كول أوفيسييه بأزرار براندبورغ');
+            return resolve('veste jacket casual جاكيت كاجوال عصرية');
           }
           if (hasStripes || upperDark > upperCount * 0.35) {
             return resolve('hoodie oversize à capuche هودي أوفرسايز بكابوش وجيب كنغر molleton gratté');
           }
-          return resolve('veste col officier boutonnage brandebourg drap de laine ecru جاكيت كول أوفيسييه بأزرار براندبورغ');
+          return resolve('veste jacket casual جاكيت كاجوال عصرية');
         } catch {
           resolve('t-shirt premium coton col rond تيشرت قطني كول رون');
         }
@@ -1640,10 +1658,18 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       components: string[];
       mesures: { nom: string; valeurs: Record<string, number> }[];
       fabricSuggested?: string;
+      fabricPricePerMeterMAD?: string;
+      fabricTechSpec?: string;
+      fabricPros?: string;
+      fabricCons?: string;
       fabricAlternatives?: { name: string; pros: string; cons: string }[];
     }[];
     rawAnalysis?: string;
     fabricSuggested?: string;
+    fabricPricePerMeterMAD?: string;
+    fabricTechSpec?: string;
+    fabricPros?: string;
+    fabricCons?: string;
     fabricAlternatives?: { name: string; pros: string; cons: string }[];
     tissuPhoto?: string;
   }>(null);
@@ -2753,42 +2779,12 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     setActivePieceIdx(0);
     setActiveTab('fiche');
 
-    const visualHint = await detectGarmentFromImageAsync(targetImage, targetFileName);
-
-    const vhLow = (visualHint || '').toLowerCase();
-    const fnLow = (targetFileName || '').toLowerCase();
-    const isFemale = (
-      vhLow.includes('femme') ||
-      vhLow.includes('نسائي') ||
-      vhLow.includes('بنات') ||
-      vhLow.includes('بنت') ||
-      vhLow.includes('crop') ||
-      vhLow.includes('robe') ||
-      vhLow.includes('abaya') ||
-      vhLow.includes('jupe') ||
-      vhLow.includes('loungewear') ||
-      vhLow.includes('wide-leg') ||
-      vhLow.includes('wide leg') ||
-      vhLow.includes('côte rib') ||
-      vhLow.includes('cote rib') ||
-      fnLow.includes('femme') ||
-      fnLow.includes('woman') ||
-      fnLow.includes('women') ||
-      fnLow.includes('girl') ||
-      fnLow.includes('fille')
-    );
-    const effectiveGender: 'hommes' | 'femmes' = isFemale ? 'femmes' : targetGender;
-    if (isFemale && targetGender !== 'femmes') {
-      setTargetGender('femmes');
-    }
-
     const apiKey = getActiveApiKey();
-    // Isolate new analysis: never contaminate new model analysis with old user chats
-    const combinedContext = visualHint || (selectedLead?.type ? selectedLead.type : 't-shirt premium coton col rond');
 
-    const executeFallbackAnalysis = (noticeMsg?: string, contextOverride?: string) => {
-      const ctxToUse = contextOverride || combinedContext;
-      const fallbackResult = buildFallbackAnalysis(ctxToUse, isAr, undefined, targetAudience, effectiveGender);
+    const executeFallbackAnalysis = async (noticeMsg?: string, contextOverride?: string) => {
+      const detectedFallback = contextOverride || (await detectGarmentFromImageAsync(targetImage, targetFileName)) || selectedLead?.type || 'veste jacket casual';
+      const fbGender: 'hommes' | 'femmes' = /femme|woman|women|girl|fille|نسائي|بنات|robe|abaya|crop|jupe/i.test(`${detectedFallback} ${targetFileName || ''}`) ? 'femmes' : targetGender;
+      const fallbackResult = buildFallbackAnalysis(detectedFallback, isAr, undefined, targetAudience, fbGender);
       setSelectedTailles(targetAudience === 'enfants' ? KIDS_TAILLES : ADULT_TAILLES);
       setCustomMesures(fallbackResult.pieces[0].mesures);
       setPiecesMesures(fallbackResult.pieces.map((p: any) => JSON.parse(JSON.stringify(p.mesures))));
@@ -2800,306 +2796,257 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       setChat([{ role: 'ai', text: finalMsg }]);
     };
 
-    if (!apiKey) {
+    if (!apiKey && !DEFAULT_GEMINI_KEY) {
       setTimeout(() => {
         executeFallbackAnalysis(
           isAr
-            ? '⚡ تم تحليل الموديل بنجاح عبر محرك الخياطة الذكي BEYA Expert:'
-            : '⚡ Analyse réussie via le moteur BEYA Expert :'
+            ? '⚡ تم التحليل التقني عبر محرك BEYA Expert الداخلي:'
+            : '⚡ Analyse technique générée via le moteur interne BEYA Expert :'
         );
-      }, 600);
+      }, 400);
       return;
     }
 
     try {
-      let base64Data = '';
-      let mimeType = 'image/jpeg';
-
-      if (targetImage.startsWith('data:')) {
-        const match = targetImage.match(/^data:([^;]+);base64,(.+)$/);
-        if (match) {
-          mimeType = match[1];
-          base64Data = match[2];
-        }
-      } else if (targetImage.startsWith('http') || targetImage.startsWith('blob:')) {
-        try {
-          const resp = await fetch(targetImage);
-          const blob = await resp.blob();
-          mimeType = blob.type || 'image/jpeg';
-          const reader = new FileReader();
-          const b64Promise = new Promise<string>((resolve) => {
-            reader.onloadend = () => {
-              const res = reader.result as string;
-              const m = res.match(/^data:([^;]+);base64,(.+)$/);
-              resolve(m ? m[2] : '');
-            };
-            reader.onerror = () => resolve('');
-          });
-          reader.readAsDataURL(blob);
-          base64Data = await b64Promise;
-        } catch (e) {
-          console.warn('Error fetching image for base64:', e);
-        }
-      }
+      const { base64Data, mimeType } = await prepareImageForGemini(targetImage, 1280);
 
       if (!base64Data) {
-        executeFallbackAnalysis();
+        await executeFallbackAnalysis();
         return;
       }
 
       const targetSizesList = targetAudience === 'enfants' ? '4A, 6A, 8A, 10A, 12A, 14A' : 'S, M, L, XL, XXL';
       const targetProfileDescAr = targetAudience === 'enfants'
-        ? `الفئة المستهدفة المحددة: أطفال صغار (${effectiveGender === 'femmes' ? 'بنات' : 'أولاد'} من 4 إلى 14 سنة). المقاسات المطلوبة في مصفوفة mesures هي: [${targetSizesList}]. استهلاك القماش مناسب لملابس الأطفال الصغيرة (بين 0.60m و 0.95m للقطعة).`
-        : `الفئة المستهدفة المحددة: كبار (${effectiveGender === 'femmes' ? 'نساء' : 'رجال'}). المقاسات المطلوبة في مصفوفة mesures هي: [${targetSizesList}]. استهلاك القماش مناسب لملابس الكبار.`;
+        ? `الفئة المستهدفة: أطفال (${targetGender === 'femmes' ? 'بنات' : 'أولاد'} من 4 إلى 14 سنة). المقاسات المطلوبة في mesures: [${targetSizesList}] واستهلاك القماش مناسب للأطفال.`
+        : `الفئة المستهدفة: كبار (المقاسات المطلوبة في mesures: [${targetSizesList}]).`;
 
       const targetProfileDescFr = targetAudience === 'enfants'
-        ? `Profil cible : Enfants (${effectiveGender === 'femmes' ? 'Filles' : 'Garçons'} 4 à 14 ans). Tailles requises : [${targetSizesList}], métrage adapté aux enfants (0.60m - 0.95m par pièce).`
-        : `Profil cible : Adultes (${effectiveGender === 'femmes' ? 'Femmes' : 'Hommes'}). Tailles requises : [${targetSizesList}], métrage adapté aux adultes.`;
+        ? `Profil cible : Enfants (${targetGender === 'femmes' ? 'Filles' : 'Garçons'} 4 à 14 ans). Tailles requises dans mesures : [${targetSizesList}] et métrage adapté aux enfants.`
+        : `Profil cible : Adultes (tailles requises dans mesures : [${targetSizesList}]).`;
 
       const analysisPrompt = isAr
         ? `أنت كبير مهندسي النسيج وتصنيع الملابس الجاهزة في ورشة BEYA Creative بالمغرب (BEYA Expert).
-حلل هذه الصورة المرفقة بدقة بصرية وهندسية فائقة للموديل الحقيقي المعروض فيها فقط بدون أي افتراضات مسبقة.
+حلل بدقة بصرية وهندسية تامة الموديل الحقيقي الظاهر في هذه الصورة فقط (ملاحظة: إذا كانت الصورة لقطة شاشة تحتوي على صورة منتج في جهة وواجهة برنامج في جهة أخرى، تجاهل واجهة البرنامج تماماً وحلل قطعة الملابس المصوّرة فقط!).
 
-⚠️ تنبيهات حاسمة ومشددة:
-1. تعرف بدقة على نوع الموديل الحقيقي الظاهر في الصورة:
-   - إذا كانت جاكيت أو فيست أو معطف (مثلاً: جاكيت صوف كول أوفيسييه / ماو، أزرار براندبورغ أو عقد صينية brandebourgs/nœuds chinois، جاكيت تويل قطن إيكرو مبطن، فيست كاجوال، بليزر):
-     * اجعل category: "Veste Col Officier & Brandebourgs" أو نوع الفيست الحقيقي
-     * اجعل pieces تحتوي على قطعة واحدة فقط (جاكيت)
-     * القماش fabricSuggested: "دريب دو لين إيكرو 420g مبطن (Drap de Laine Écru 420 GSM) مع دوبلور ساتان" أو القماش الحقيقي المناسب
-     * الأزرار والمكونات components: ["صدر أمامي بأزرار براندبورغ حبلية مغلقة", "ظهر مسطح", "أكمام طويلة مهيكلة", "ياقة كول أوفيسييه / ماو واقفة", "دوبلور داخلي كامل", "جيوب مائلة passepoilées"]
-     * الاستهلاك: حوالي 1.70m قماش + 1.35m دوبلور
-     * تكلفة الصنع: 75 - 110 MAD
-     * حذارِ تماماً من إضافة أي سروال خيالي! الصورة تحتوي على قطعة علوية فقط!
-   - إذا كان الموديل طقماً كاملاً من قطعتين حقيقيتين في الصورة (توب + سروال): اجعل pieces قطعتين (Haut + Bas).
-   - إذا كان هودي أو سويت شيرت بكابوش (Hoodie / Sweat à capuche):
-     * اجعل category: "Hoodie / Sweat à Capuche Oversize"
-     * قطعة واحدة: "هودي أوفرسايز بغطاء رأس وجيب كنغر"
-     * القماش: مولتون 3 خيوط مقطن ثقيل 380 GSM (Molton 3 Fils Gratté Lourd) أو فرينش تيري 400 GSM
-     * المكونات: كابوش مزدوج بطبقتين، جيب كنغر أمامي كبير، عيون معدنية وكوردون قطني، أساور وحاشية بورد-كوت 1×1
-     * الاستهلاك: 1.70m (عرض 1.50م) + 0.30m كوت ريب
-     * كلفة الصنع بالورشة: 38 - 55 MAD
-   - إذا كان تيشيرت، حدده كقطعة واحدة (T-shirt) من قماش جيرسي قطن (استهلاك 0.90m - 1.10m، صنع 22-35 MAD).
-   - إذا كان سروالاً فقط، حدده كقطعة واحدة (Pantalon).
-   - إذا كان فستاناً أو عباية، حدده كقطعة واحدة (Robe / Abaya).
-2. حدد الجنس (gender): "femmes" أو "hommes" حسب الموديل.
-3. ${targetProfileDescAr}
-4. اكتب استهلاك القماش وتكلفة الصنع بالدرهم المغربي (MAD) الواقعية في السوق المغربي (درب عمر / طنجة / فاس).
+⚠️ قواعد الموضوعية الصارمة:
+1. بدون أي افتراضات مسبقة أو قوالب جاهزة: تعرف على النوع الحقيقي الدقيق للملابس المعروضة (مثلاً: جيلي بدون أكمام شيربا/فرو بوكلية، دودون مبطن، هودي أوفرسايز بكابوش، تيشيرت، قميص، بليزر، فيست كول أوفيسييه، سروال كارجو، جينز، جوغينغ، فستان بليات، عباية، قفطان، جلابة، بيجاما، طقم قطعتين، إلخ).
+2. إذا أظهرت الصورة وجهين (أمامي + خلفي) أو لقطات مكبرة للدرزات أو لونين مختلفين لنفس الموديل جنباً إلى جنب، فهي قطعة ملابس واحدة فقط (اجعل مصفوفة pieces تحتوي على عنصر واحد 1 فقط). لا تضع قطعتين أو ثلاث في pieces إلا إذا كان طقماً حقيقياً (مثلاً: فوقاني + سروال).
+3. كل عنصر داخل مصفوفة pieces يمثل قطعة ملابس نهائية تُلبس (ممنوع وضع أجزاء الباترون مثل الصدر والظهر والياقة كعناصر منفصلة في pieces — ضع أجزاء الباترون داخل components).
+4. حدد القماش الحقيقي الظاهر بالضبط (مثل: شيربا بوكلية Sherpa/Moumoute، بولير Polaire، مولتون 3 خيوط مقطن، فرينش تيري، جيرسي قطن، دنيم جينز، دريب دو لين، جاباردين، كريب، ساتان، كتان، مخمل مضلع، نايلون مبطن، جلد صناعي...) مع الغراماج (GSM) وثمنه الواقعي بالمتر في سوق الجملة بالمغرب (درب عمر / القريعة / طنجة)، ومزاياه وعيوبه الصناعية.
+5. ${targetProfileDescAr}
+6. في مصفوفة mesures: ضع القياسات الخاصة بهذا الموديل فقط (لا تضع قياس طول الأكمام إذا كانت القطعة بدون أكمام! ولا تضع ارتفاع الكابوش إلا إذا كان بها كابوش!).
+7. اكتب القيم النصية (category, pieces[].name, components, fabricSuggested, fabricPros, fabricCons, fit) بالعربية المهنية الواضحة.
 
-أجب بصيغة JSON فقط بهذا الهيكل:
+أجب بصيغة JSON فقط بهذا الهيكل الدقيق:
 {
-  "category": "اسم فئة الموديل الحقيقي المعروض",
+  "category": "الاسم الدقيق للموديل الظاهر في الصورة",
   "gender": "femmes",
-  "totalConsumption": "1.70m",
-  "totalCost": "75 - 110 MAD",
+  "totalConsumption": "1.20m",
+  "totalCost": "55 - 85 MAD",
   "complexity": "متوسطة",
-  "fabricSuggested": "اسم ونوع القماش الدقيق مع الغراماج (GSM)",
-  "fabricAlternatives": [
-    {
-      "name": "اسم القماش البديل",
-      "pros": "ميزة",
-      "cons": "عيب"
-    }
-  ],
-  "gammeMontage": [
-    {
-      "nomAr": "اسم المرحلة بالعربية",
-      "nomFr": "Phase en Français",
-      "machine": "Table de Coupe / Piqueuse Plate / Surjeteuse",
-      "tempsMin": 1.2
-    }
-  ],
-  "pieces": [
-    {
-      "name": "اسم القطعة الواقعية",
-      "consumption": "1.70m",
-      "fit": "Coupe Structurée Droite",
-      "complexity": "متوسطة",
-      "costEstimate": "75 - 110 MAD",
-      "components": ["صدر أمامي", "ظهر كامل", "أكمام طويلة"],
-      "fabricSuggested": "نوع القماش الموصى به",
-      "fabricAlternatives": [],
-      "mesures": [
-        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 92, "M": 98, "L": 104, "XL": 110, "XXL": 116}},
-        {"nom": "الكتف (Épaules)", "valeurs": {"S": 40, "M": 42, "L": 44, "XL": 46, "XXL": 48}},
-        {"nom": "الطول (Longueur)", "valeurs": {"S": 58, "M": 60, "L": 62, "XL": 64, "XXL": 66}},
-        {"nom": "طول الكم (Manche)", "valeurs": {"S": 58, "M": 59, "L": 60, "XL": 61, "XXL": 62}}
-      ]
-    }
-  ]
+  "fabricSuggested": "اسم القماش الحقيقي + الغراماج GSM",
+  "fabricPricePerMeterMAD": "45 - 65 MAD/متر",
+  "fabricTechSpec": "التركيبة · الغراماج GSM · نوع النسج",
+  "fabricPros": "أبرز مزايا هذا القماش",
+  "fabricCons": "تحديات الخياطة والفصالة في الورشة",
+  "fabricAlternatives": [{ "name": "بديل ثوب مناسب", "pros": "ميزة", "cons": "عيب" }],
+  "gammeMontage": [{ "nomAr": "العملية بالعربية", "nomFr": "Opération en Français", "machine": "Piqueuse Plate / Surjeteuse 4 Fils / Fer Vapeur / etc.", "tempsMin": 1.5 }],
+  "pieces": [{
+    "name": "اسم القطعة النهائية الكاملة",
+    "consumption": "1.20m",
+    "fit": "القصة الحقيقية للموديل",
+    "complexity": "متوسطة",
+    "costEstimate": "55 - 85 MAD",
+    "components": ["الجزء الأمامي...", "الظهر...", "الياقة..."],
+    "fabricSuggested": "اسم القماش الحقيقي",
+    "mesures": [{ "nom": "محيط الصدر (Poitrine)", "valeurs": { "S": 96, "M": 102, "L": 108, "XL": 114, "XXL": 120 } }]
+  }]
 }`
-        : `Tu es un expert textile et chef d'atelier de confection industrielle au Maroc (BEYA Expert).
-Analyse l'image réelle fournie avec une précision visuelle absolue sans aucun préjugé.
+        : `Tu es un ingénieur textile et chef d'atelier de confection industrielle au Maroc (BEYA Expert).
+Analyse STRICTEMENT et UNIQUEMENT le vêtement réel visible dans l'image (si c'est une capture d'écran avec une photo produit d'un côté et une interface UI de l'autre, ignore totalement l'interface UI et analyse uniquement le vêtement photographié).
 
-⚠️ Consignes impératives :
-1. Identifie le vêtement réel visible dans l'image :
-   - S'il s'agit d'une veste ou blouson (ex: veste col officier/mao, veste écru avec boutons brandebourgs ou nœuds chinois, veste tailleur, veste zippée) :
-     * Catégorie "Veste Col Officier & Brandebourgs" ou type réel
-     * STRICTEMENT 1 seule pièce ("pieces": [ { "name": "Veste Col Officier Brandebourgs", ... } ])
-     * Matière réelle : Drap de Laine Écru 420 GSM doublé ou Twill lourd écru
-     * Composants : col officier montant, boutons brandebourgs tressés, manches structurées, doublure intégrale
-     * Consommation : 1.70m tissu + 1.35m doublure, Façon : 75 - 110 MAD
-     * Ne rajoute AUCUN pantalon imaginaire si l'image ne montre qu'une veste !
-   - S'il s'agit d'un ensemble 2 pièces (haut + pantalon visibles dans l'image), inclus alors STRICTEMENT les 2 pièces avec leurs mesures S à XXL respectives.
-   - S'il s'agit d'un hoodie ou sweat à capuche (Hoodie / Sweatshirt à capuche) :
-     * Catégorie "Hoodie / Sweat à Capuche Oversize", 1 pièce avec capuche doublée, poche kangourou, cordon & bord-côte
-     * Matière : Molleton 3 Fils Gratté Lourd 380 GSM (ou French Terry Lourd), Conso : 1.70m + 0.30m côte rib, Façon : 38 - 55 MAD
-   - S'il s'agit d'un seul article (t-shirt, sweatshirt, pantalon, robe), analyse fidèlement cette pièce unique.
-2. Détecte le genre ("femmes" ou "hommes") selon le modèle ou le vêtement.
-3. Coût façon en dirhams (MAD) et métrage réels adaptés au marché marocain (Casablanca / Tanger).
+⚠️ RÈGLES IMPÉRATIVES D'OBJECTIVITÉ :
+1. Aucune supposition ni modèle pré-établi : identifie EXACTEMENT le vêtement réel visible (ex: gilet sans manches en sherpa/moumoute, doudoune matelassée, hoodie oversize à capuche, t-shirt, polo, chemise, veste col officier, blazer, pantalon cargo, jean denim, jogging, robe plissée, abaya, caftan, djellaba, ensemble 2 pièces haut+bas, etc.).
+2. Si l'image montre des vues multiples (face/dos), des détails zoomés ou 2 coloris côte à côte du MÊME article, il s'agit d'UNE SEULE pièce ("pieces" doit contenir strictement 1 seul élément). N'inclus 2 ou 3 éléments dans "pieces" QUE s'il y a plusieurs vêtements distincts (ex: haut + pantalon).
+3. Chaque objet dans "pieces" représente un vêtement fini complet (JAMAIS des morceaux de patron comme Devant / Dos / Col — liste ces panneaux dans "components").
+4. Identifie précisément la VRAIE matière visible (ex: Sherpa bouclé / Moumoute, Polaire, Molleton gratté 3 fils, French Terry, Jersey coton, Denim, Drap de laine, Gabardine, Crêpe, Satin, Lin, Velours côtelé, Nylon matelassé, Simili cuir...), son grammage GSM, son prix réaliste en gros au Maroc (MAD/mètre), ses caractéristiques, avantages et inconvénients atelier.
+5. ${targetProfileDescFr}
+6. Adapte strictement mesures (omets la mesure des manches s'il est sans manches !) et gammeMontage aux vraies opérations machine de CE vêtement.
 
-Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender, totalConsumption, totalCost, complexity, fabricSuggested, fabricAlternatives, gammeMontage et pieces.`;
+Réponds STRICTEMENT en JSON valide (en français professionnel, avec nomAr et nomFr dans gammeMontage) :
+{
+  "category": "Nom exact du modèle visible",
+  "gender": "femmes",
+  "totalConsumption": "1.20m",
+  "totalCost": "55 - 85 MAD",
+  "complexity": "Moyenne",
+  "fabricSuggested": "Nom exact du tissu + grammage GSM",
+  "fabricPricePerMeterMAD": "45 - 65 MAD/mètre",
+  "fabricTechSpec": "Composition · GSM · Texture",
+  "fabricPros": "Avantages clés",
+  "fabricCons": "Contraintes atelier",
+  "fabricAlternatives": [{ "name": "...", "pros": "...", "cons": "..." }],
+  "gammeMontage": [{ "nomAr": "...", "nomFr": "...", "machine": "Piqueuse Plate / Surjeteuse 4 Fils / Boutonnière / Fer Vapeur / etc.", "tempsMin": 1.5 }],
+  "pieces": [{
+    "name": "Nom exact du vêtement fini",
+    "consumption": "1.20m",
+    "fit": "Coupe réelle",
+    "complexity": "Moyenne",
+    "costEstimate": "55 - 85 MAD",
+    "components": ["Devants...", "Dos..."],
+    "fabricSuggested": "Nom exact du tissu",
+    "mesures": [{ "nom": "Tour de Poitrine (الصدر)", "valeurs": { "S": 96, "M": 102, "L": 108, "XL": 114, "XXL": 120 } }]
+  }]
+}`;
 
-      const candidateModels = [
-        'gemini-2.5-flash',
-        'gemini-flash-latest',
-        'gemini-2.5-flash-lite'
-      ];
+      const { data } = await callGeminiGenerateContent({
+        apiKeys: [apiKey, DEFAULT_GEMINI_KEY],
+        contents: [{
+          role: 'user',
+          parts: [
+            { text: analysisPrompt },
+            { inlineData: { data: base64Data, mimeType } }
+          ]
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: 'application/json'
+        },
+        models: GEMINI_FAST_VISION_MODELS
+      });
 
-      const keysToTry = [
-        apiKey,
-        DEFAULT_GEMINI_KEY
-      ].filter(Boolean);
-      const uniqueKeys = Array.from(new Set(keysToTry));
-
-      let data: any = null;
-
-      for (const keyCandidate of uniqueKeys) {
-        if (data) break;
-        for (const mod of candidateModels) {
-          try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${keyCandidate}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{
-                  role: "user",
-                  parts: [
-                    { text: analysisPrompt },
-                    { inlineData: { data: base64Data, mimeType } }
-                  ]
-                }],
-                generationConfig: {
-                  temperature: 0.2,
-                  responseMimeType: "application/json"
-                }
-              })
-            });
-
-            if (res.ok) {
-              const j = await res.json();
-              if (j.candidates && j.candidates.length > 0 && !j.error) {
-                data = j;
-                break;
-              }
-            }
-          } catch (apiTryErr) {
-            console.warn('Model try failed:', mod, apiTryErr);
-          }
-        }
-      }
-
-      // If Gemini API failed or was throttled/quota limit 0, use resilient BEYA Expert Engine
+      // Fallback to local engine only if ALL Gemini models genuinely failed (offline / blocked)
       if (!data || data.error) {
-        console.info('Using BEYA Expert fallback analysis engine');
-        executeFallbackAnalysis(
+        console.warn('All live Gemini Vision models unavailable, falling back to local BEYA Expert');
+        await executeFallbackAnalysis(
           isAr
-            ? '⚡ تم إنجاز التحليل التقني وتوليد البطاقة عبر محرك BEYA Expert بنجاح:'
-            : '⚡ Analyse technique générée avec succès via le moteur BEYA Expert :'
+            ? '⚡ تعذر الاتصال المباشر بـ Gemini Vision حالياً — تم توليد تحليل تقديري عبر محرك BEYA الداخلي (يمكنك تعديل نوع الموديل يدوياً من الشريط أعلاه):'
+            : '⚡ Connexion Gemini Vision indisponible — analyse locale générée (utilisez la barre de correction rapide ci-dessus si besoin) :'
         );
         return;
       }
 
-      let rawText = '';
-      if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        rawText = data.candidates[0].content.parts[0].text;
-      }
-
-      // Extract JSON from response (handle markdown code blocks)
-      let jsonStr = rawText;
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonStr = jsonMatch[1].trim();
+      const jsonStr = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
 
       try {
         const parsed = JSON.parse(jsonStr);
-        if (parsed.gender === 'femmes' || parsed.gender === 'femme' || parsed.gender === 'women' || parsed.gender === 'woman' || parsed.gender === 'نساء' || parsed.gender === 'بنات') {
-          if (targetGender !== 'femmes') setTargetGender('femmes');
-        } else if (parsed.gender === 'hommes' || parsed.gender === 'homme' || parsed.gender === 'men' || parsed.gender === 'رجال') {
-          if (targetGender !== 'hommes') setTargetGender('hommes');
+        const parsedGenderLow = String(parsed.gender || '').toLowerCase();
+        const resolvedGender: 'hommes' | 'femmes' =
+          (parsedGenderLow.includes('fem') || parsedGenderLow.includes('woman') || parsedGenderLow.includes('نسا') || parsedGenderLow.includes('بنا'))
+            ? 'femmes'
+            : (parsedGenderLow.includes('hom') || parsedGenderLow.includes('man') || parsedGenderLow.includes('رجا'))
+              ? 'hommes'
+              : targetGender;
+        if (resolvedGender !== targetGender) {
+          setTargetGender(resolvedGender);
         }
 
+        const normalizeAlternatives = (alts: any): any[] => {
+          if (!Array.isArray(alts)) return [];
+          return alts.map((a: any) =>
+            typeof a === 'string'
+              ? { name: a, pros: isAr ? 'بديل مناسب في السوق المغربي' : 'Alternative adaptée au marché marocain', cons: isAr ? 'يختلف حسب الجودة والوزن' : 'Variable selon le grammage' }
+              : { name: a?.name || String(a || ''), pros: a?.pros || '', cons: a?.cons || '' }
+          ).filter((a: any) => a.name);
+        };
+
+        const parsedAlts = normalizeAlternatives(parsed.fabricAlternatives);
+
         const result: any = {
-          category: parsed.category || (isAr ? 'موديل' : 'Modèle'),
-          consumption: simplifyConsumption(parsed.totalConsumption || parsed.consumption) || '1.50m',
+          category: parsed.category || (isAr ? 'موديل من الصورة' : 'Modèle Analysé'),
+          consumption: simplifyConsumption(parsed.totalConsumption || parsed.consumption) || '1.30m',
           fit: parsed.fit || (parsed.pieces?.[0]?.fit) || (isAr ? 'عادي' : 'Regular'),
           complexity: parsed.complexity || (isAr ? 'متوسطة' : 'Moyenne'),
-          costEstimate: parsed.totalCost || parsed.costEstimate || '35 - 55 MAD',
+          costEstimate: parsed.totalCost || parsed.costEstimate || '45 - 75 MAD',
           components: [],
           pieces: [],
           gammeMontage: [],
           fabricSuggested: parsed.fabricSuggested || '',
-          fabricAlternatives: parsed.fabricAlternatives || [],
+          fabricPricePerMeterMAD: parsed.fabricPricePerMeterMAD || '',
+          fabricTechSpec: parsed.fabricTechSpec || '',
+          fabricPros: parsed.fabricPros || '',
+          fabricCons: parsed.fabricCons || '',
+          fabricAlternatives: parsedAlts,
           rawAnalysis: rawText
         };
 
-        // Normalize parsed.pieces: handle both Array and Object formats from Gemini
+        // Normalize parsed.pieces: handle Array or Object formats cleanly
         let rawPiecesList: any[] = [];
         if (Array.isArray(parsed.pieces) && parsed.pieces.length > 0) {
           rawPiecesList = parsed.pieces;
         } else if (parsed.pieces && typeof parsed.pieces === 'object' && Object.keys(parsed.pieces).length > 0) {
           rawPiecesList = Object.entries(parsed.pieces).map(([k, v]: [string, any]) => {
-            const isBottom = k.toLowerCase().includes('bas') || k.toLowerCase().includes('pantalon') || k.toLowerCase().includes('jogging');
-            const defaultName = isBottom
-              ? (isAr ? 'التحتاني (سروال وايد ليغ / رياضي)' : 'Bas (Pantalon Wide-Leg / Sweatpants)')
-              : (isAr ? 'الفوقاني (توب ضيق / كوت ريب)' : 'Haut (Top Fitté / Côte Rib)');
             if (Array.isArray(v)) {
-              return {
-                name: defaultName,
-                components: v.map(String),
-                consumption: isBottom ? '1.45m' : '0.85m',
-                fit: parsed.fit || (isBottom ? 'Wide-Leg / Évasé' : 'Près du corps / Fitté'),
-                complexity: parsed.complexity || (isAr ? 'متوسطة' : 'Moyenne'),
-                costEstimate: isBottom ? '42 - 58 MAD' : '22 - 32 MAD',
-                fabricSuggested: parsed.fabricSuggested || '',
-                fabricAlternatives: parsed.fabricAlternatives || [],
-                mesures: []
-              };
+              return { name: k, components: v.map(String), mesures: [] };
             }
             if (v && typeof v === 'object') {
               return {
-                name: v.name || v.titre || defaultName,
+                name: v.name || v.titre || k,
                 components: Array.isArray(v.components) ? v.components : (Array.isArray(v.parts) ? v.parts : []),
-                consumption: v.consumption || (isBottom ? '1.45m' : '0.85m'),
-                fit: v.fit || parsed.fit || (isBottom ? 'Wide-Leg' : 'Fitted'),
-                complexity: v.complexity || parsed.complexity || 'Moyenne',
-                costEstimate: v.costEstimate || (isBottom ? '42 - 58 MAD' : '22 - 32 MAD'),
-                fabricSuggested: v.fabricSuggested || parsed.fabricSuggested || '',
-                fabricAlternatives: v.fabricAlternatives || parsed.fabricAlternatives || [],
+                consumption: v.consumption,
+                fit: v.fit,
+                complexity: v.complexity,
+                costEstimate: v.costEstimate,
+                fabricSuggested: v.fabricSuggested,
+                fabricAlternatives: normalizeAlternatives(v.fabricAlternatives),
                 mesures: v.mesures || []
               };
             }
-            return { name: defaultName, components: [String(v)] };
+            return { name: k, components: [String(v)] };
           });
+        }
+
+        // Guard: if an LLM mistakenly split cut pattern panels (Front/Back/Collar) as separate "pieces" on a mono-garment category, collapse them into 1 real garment piece
+        const isMonoCategory = !/(ensemble|set|2\s*pi[eè]ces|3\s*pi[eè]ces|surv[eê]t|طقم|قطعتين|3\s*قطع)/i.test(result.category);
+        const looksLikePatternPanels = rawPiecesList.length > 1 && rawPiecesList.some((p: any) =>
+          /^(front|back|devant|dos|col\b|collar|sleeve|manche|pocket|poche|cuff|poignet|hem|ourlet|lining|doublure|placket|patte|الأمام|الظهر|الكم|الياقة)/i.test(String(p.name || p.type || '').trim())
+        );
+        if (isMonoCategory && looksLikePatternPanels) {
+          const mergedComponents = rawPiecesList.flatMap((p: any) => [
+            String(p.name || ''),
+            ...(Array.isArray(p.components) ? p.components : [])
+          ]).filter(Boolean);
+          const panelMesures = rawPiecesList.find((p: any) => Array.isArray(p.mesures) && p.mesures.length > 0)?.mesures || [];
+          rawPiecesList = [{
+            name: result.category,
+            consumption: result.consumption,
+            fit: result.fit,
+            complexity: result.complexity,
+            costEstimate: result.costEstimate,
+            components: Array.from(new Set(mergedComponents)),
+            fabricSuggested: result.fabricSuggested,
+            fabricAlternatives: parsedAlts,
+            mesures: panelMesures
+          }];
         }
 
         if (rawPiecesList.length > 0) {
           result.pieces = rawPiecesList.map((p: any) => {
-            const pieceTitle = p.name || p.type || p.piece || p.titre || p.nom || (parsed.category ? parsed.category : (isAr ? 'قطعة ملابس' : 'Pièce Confection'));
+            const pieceTitle = p.name || p.type || p.piece || p.titre || p.nom || result.category;
             return {
               name: pieceTitle,
-              consumption: simplifyConsumption(p.consumption || p.totalConsumption || parsed.totalConsumption) || (String(pieceTitle + ' ' + (parsed.category || '')).toLowerCase().includes('t-shirt') ? '1.20m' : '1.50m'),
+              consumption: simplifyConsumption(p.consumption || p.totalConsumption || parsed.totalConsumption) || result.consumption,
               fit: p.fit || parsed.fit || (isAr ? 'عادي' : 'Regular'),
-              complexity: p.complexity || parsed.complexity || (isAr ? 'متوسط' : 'Moyen'),
+              complexity: p.complexity || parsed.complexity || (isAr ? 'متوسطة' : 'Moyenne'),
               costEstimate: p.costEstimate || parsed.totalCost || '—',
-              components: p.components || [],
-              fabricSuggested: p.fabricSuggested || parsed.fabricSuggested || '',
-              fabricAlternatives: p.fabricAlternatives || parsed.fabricAlternatives || [],
-              mesures: (p.mesures || []).map((m: any) => ({
-                nom: m.nom || '',
-                valeurs: m.valeurs || {}
-              }))
+              components: Array.isArray(p.components) ? p.components : [],
+              fabricSuggested: p.fabricSuggested || result.fabricSuggested || '',
+              fabricPricePerMeterMAD: p.fabricPricePerMeterMAD || result.fabricPricePerMeterMAD || '',
+              fabricTechSpec: p.fabricTechSpec || result.fabricTechSpec || '',
+              fabricPros: p.fabricPros || result.fabricPros || '',
+              fabricCons: p.fabricCons || result.fabricCons || '',
+              fabricAlternatives: p.fabricAlternatives ? normalizeAlternatives(p.fabricAlternatives) : parsedAlts,
+              mesures: Array.isArray(p.mesures)
+                ? p.mesures.map((m: any) => ({ nom: m.nom || '', valeurs: m.valeurs || {} }))
+                : []
             };
           });
           result.components = result.pieces.flatMap((p: any) => p.components);
+          if (!result.fabricSuggested && result.pieces[0]?.fabricSuggested) {
+            result.fabricSuggested = result.pieces[0].fabricSuggested;
+          }
 
           if (result.pieces.length > 1) {
             const sumMin = result.pieces.reduce((acc: number, p: any) => {
@@ -3113,38 +3060,41 @@ Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender
             result.costEstimate = `${sumMin} - ${sumMax} MAD`;
           }
         } else {
-          // If no pieces parsed, enrich from fallback
-          const fb = buildFallbackAnalysis(combinedContext, isAr, undefined, targetAudience, effectiveGender);
-          result.pieces = fb.pieces;
-          result.components = fb.components;
-          if (!result.fabricSuggested) result.fabricSuggested = fb.fabricSuggested;
+          result.pieces = [{
+            name: result.category,
+            consumption: result.consumption,
+            fit: result.fit,
+            complexity: result.complexity,
+            costEstimate: result.costEstimate,
+            components: Array.isArray(parsed.components) ? parsed.components : [result.category],
+            fabricSuggested: result.fabricSuggested,
+            fabricPricePerMeterMAD: result.fabricPricePerMeterMAD,
+            fabricTechSpec: result.fabricTechSpec,
+            fabricPros: result.fabricPros,
+            fabricCons: result.fabricCons,
+            fabricAlternatives: parsedAlts,
+            mesures: []
+          }];
         }
 
-        const detectedFemaleFromPieces = (result.pieces || []).some((p: any) => {
-          const pName = String(p.name || '').toLowerCase();
-          return pName.includes('crop') || pName.includes('robe') || pName.includes('jupe') || pName.includes('abaya') || pName.includes('femme') || pName.includes('fitté') || pName.includes('rib');
-        });
-        const finalGender: 'hommes' | 'femmes' = (parsed.gender === 'femmes' || detectedFemaleFromPieces || effectiveGender === 'femmes') ? 'femmes' : 'hommes';
-        if (finalGender === 'femmes' && targetGender !== 'femmes') {
-          setTargetGender('femmes');
-        }
-
-        // Guarantee standard measurements for detected garment if Gemini omitted them
+        // Fill measurements only if Gemini completely omitted them
         result.pieces.forEach((p: any) => {
           if (!p.mesures || !Array.isArray(p.mesures) || p.mesures.length === 0) {
-            p.mesures = getStandardMesuresForCategory(p.name || result.category || '', targetAudience, finalGender);
+            p.mesures = getStandardMesuresForCategory(p.name || result.category || '', targetAudience, resolvedGender);
           }
         });
         setSelectedTailles(targetAudience === 'enfants' ? KIDS_TAILLES : ADULT_TAILLES);
 
-        // Populate tailored Gamme de Montage (handles both Array and Object from Gemini)
+        // Normalize Gamme de Montage cleanly across string, object, or wrapped shapes
         let rawGammeList: any[] = [];
         if (parsed.gammeMontage && Array.isArray(parsed.gammeMontage) && parsed.gammeMontage.length > 0) {
           rawGammeList = parsed.gammeMontage;
         } else if (parsed.gammeMontage && typeof parsed.gammeMontage === 'object') {
           rawGammeList = Object.entries(parsed.gammeMontage).flatMap(([k, steps]: [string, any]) => {
             if (Array.isArray(steps)) {
-              return steps.map((s: any) => typeof s === 'string' ? { nomFr: `${k}: ${s}`, nomAr: `${k}: ${s}`, machine: s.toLowerCase().includes('surjet') ? 'Surjeteuse 4 Fils' : s.toLowerCase().includes('recouv') ? 'Recouvreuse' : 'Piqueuse Plate', tempsMin: 1.2 } : s);
+              return steps.map((s: any) => typeof s === 'string'
+                ? { nomFr: `${k}: ${s}`, nomAr: `${k}: ${s}`, machine: s.toLowerCase().includes('surjet') ? 'Surjeteuse 4 Fils' : s.toLowerCase().includes('recouv') ? 'Recouvreuse' : 'Piqueuse Plate', tempsMin: 1.2 }
+                : s);
             }
             return [];
           });
@@ -3152,13 +3102,27 @@ Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender
 
         if (rawGammeList.length > 0) {
           result.gammeMontage = rawGammeList.map((g: any) => {
-            const rawPro = g.tempsPro || g.tempsMin || 1;
-            const tPro = Math.max(0.1, Number(parseFloat(String(rawPro)).toFixed(2)));
+            if (typeof g === 'string') {
+              const lowG = g.toLowerCase();
+              return {
+                nomAr: g,
+                nomFr: g,
+                machine: lowG.includes('surjet') ? 'Surjeteuse 4 Fils' : lowG.includes('coupe') ? 'Table de Coupe' : lowG.includes('fer') || lowG.includes('repass') ? 'Fer Vapeur' : 'Piqueuse Plate',
+                tempsMin: 1.5,
+                tempsPro: 1.5,
+                tempsStandard: 2.0,
+                tempsDebutant: 3.0,
+                roleOuvrier: isAr ? 'خياط متخصص' : 'Couturier qualifié'
+              };
+            }
+            const label = g.nomAr || g.nomFr || g.operation || g.nom || '';
+            const rawPro = g.tempsPro || g.tempsMin || (g.tempsEstime ? parseFloat(String(g.tempsEstime)) : 1.2) || 1.2;
+            const tPro = Math.max(0.1, Number(parseFloat(String(rawPro)).toFixed(2)) || 1.2);
             const tStd = g.tempsStandard ? Math.max(0.1, Number(parseFloat(String(g.tempsStandard)).toFixed(2))) : Number((tPro * 1.35).toFixed(2));
             const tDeb = g.tempsDebutant ? Math.max(0.1, Number(parseFloat(String(g.tempsDebutant)).toFixed(2))) : Number((tPro * 2.0).toFixed(2));
             return {
-              nomAr: g.nomAr || g.nomFr || 'مرحلة خياطة',
-              nomFr: g.nomFr || g.nomAr || 'Opération couture',
+              nomAr: g.nomAr || label || 'عملية خياطة',
+              nomFr: g.nomFr || label || 'Opération couture',
               machine: g.machine || 'Piqueuse Plate',
               tempsMin: tPro,
               tempsPro: tPro,
@@ -3172,12 +3136,10 @@ Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender
           result.gammeMontage = getGarmentTechnicalBreakdown(fallbackCtx).postesTravail;
         }
 
-        // Update custom measurements from first piece
         if (result.pieces.length > 0 && result.pieces[0].mesures.length > 0) {
           setCustomMesures(result.pieces[0].mesures);
         }
 
-        // Build one editable measurements table per piece (so every piece gets its own S-XXL table)
         if (result.pieces.length > 0) {
           setPiecesMesures(result.pieces.map((p: any) =>
             p.mesures && p.mesures.length > 0
@@ -3191,30 +3153,29 @@ Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender
         setAnalysisResult(result);
         setActiveTab('fiche');
         setAnalyzing(false);
-
-        // Build rich chat message
         setChat([{ role: 'ai', text: buildRapportText(result, isAr) }]);
 
       } catch (parseErr) {
         console.warn('JSON parsing failed, falling back:', parseErr);
-        executeFallbackAnalysis(
+        await executeFallbackAnalysis(
           isAr
-            ? '⚡ تم إنجاز التحليل التقني وتوليد البطاقة عبر محرك BEYA Expert بنجاح:'
-            : '⚡ Analyse technique générée avec succès via le moteur BEYA Expert :'
+            ? '⚡ تعذر قراءة رد التحليل بالكامل — تم توليد بطاقة تقديرية عبر محرك BEYA الداخلي:'
+            : '⚡ Réponse partielle — fiche générée via le moteur interne BEYA :'
         );
       }
     } catch (err: any) {
       console.warn('startAnalysis encountered error, executing fallback:', err);
-      executeFallbackAnalysis(
+      await executeFallbackAnalysis(
         isAr
-          ? '⚡ تم إنجاز التحليل التقني وتوليد البطاقة عبر محرك BEYA Expert بنجاح:'
-          : '⚡ Analyse technique générée avec succès via le moteur BEYA Expert :'
+          ? '⚡ تم إنجاز التحليل التقني عبر محرك BEYA Expert الداخلي:'
+          : '⚡ Analyse technique générée via le moteur interne BEYA Expert :'
       );
     }
   };
 
   const getSmartReply = (userMsg: string): string => {
     const m = userMsg.toLowerCase().trim();
+    const speakAr = aiLangOverride ? aiLangOverride === 'ar' : (isAr || /[\u0600-\u06FF]/.test(userMsg));
 
     // Language switch overrides
     if (/(dwi.*arbya|dwi.*arbia|hder.*blarbya|hder.*arbya|hder.*arbia|parle.*arabe|arabe|arbya|arabic|العربية|تكلم.*عربي|تحدث.*عربي)/i.test(m)) {
@@ -3226,11 +3187,9 @@ Réponds STRICTEMENT au format JSON sans texte additionnel avec category, gender
       return "D'accord ! 😊 À partir de maintenant, je vais vous répondre en français. Comment puis-je vous aider aujourd'hui ?";
     }
 
-    // HOODIE / SWEAT A CAPUCHE INTENTS & "HADCHI MACHI MANTIQI"
+    // HOODIE / SWEAT A CAPUCHE INTENTS (Only when explicitly mentioning hoodie / capuche)
     if (
-      /(hoodie|هودي|capuche|كابوش|كابوتش|sweat à capuche|sweat a capuche)/i.test(m) ||
-      /(machi.*mantiqi|machi.*mntiqi|machi.*ma3qol|achi.*mntiqi|achi.*mantiqi|ماشي.*منطقي|ماشي.*معقول|غلط|خطأ)/i.test(m) ||
-      ((/(t-shirt|تيشيرت|تيشرت)/i.test(m)) && /(hoodie|هودي|capuche|كابوش|كنغر|kangourou)/i.test(m))
+      /(hoodie|هودي|capuche|كابوش|كابوتش|sweat à capuche|sweat a capuche)/i.test(m)
     ) {
       setTimeout(() => applyPiecePreset('hoodie'), 100);
       return speakAr
@@ -4384,12 +4343,16 @@ Posez-moi toute question sur le coût unitaire, le timing atelier, le sourcing t
       
       const targetLang = isAr ? 'Arabic (Moroccan Darija)' : 'French';
       const prompt = `Translate the following JSON object containing fabric suggestions and alternatives into ${targetLang}. Keep the exact same JSON structure and keys (suggested, alternatives, name, pros, cons). Return ONLY valid JSON:\n${JSON.stringify(dataToTranslate)}`;
-      
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
+
+      const { data } = await callGeminiGenerateContent({
+        apiKeys: [apiKey, DEFAULT_GEMINI_KEY],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: 'application/json' },
+        models: GEMINI_FAST_VISION_MODELS
       });
-      const data = await response.json();
+      if (!data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        throw new Error('No translation candidates returned');
+      }
       let translatedText = data.candidates[0].content.parts[0].text;
       translatedText = translatedText.replace(/```json/g, '').replace(/```/g, '').trim();
       const translatedJson = JSON.parse(translatedText);
@@ -4640,81 +4603,51 @@ ${modelContextPrompt}
 ${userMessage}
 
 تنبيه تقني إلزامي:
-1. حلل فقط الموديل الحقيقي الظاهر في الصورة المرفقة بدقة بدون أي تخمين أو عشوائية (Modèle réel de l'image).
-2. إذا سألك عن "شحال كتقام البياسة" أو عن التكلفة، الثمن، الأرباح، نوع الثوب، أو الجودة، قدم له تفصيلاً دقيقاً ومضبوطاً مبنياً على 3 مستويات جودة واقعية بأسعار أسواق الجملة المغربية (درب عمر، سوق القريعة، كراج علال، طنجة):
-   - 💎 جودة ممتازة (Qualité Mziana / Haut de gamme): نوع الثوب بالتفصيل (مثل ميلتون 100% قطن ممشوط فاخر 320-350g بـ ~58 درهم/متر)، اللوازم الممتازة، كلفة اليد العاملة والورشة، كلفة البياسة الإجمالية (Prix de Revient)، وسعر الجملة والتقسيط.
-   - ⚖️ جودة عادية (Qualité Normal / Standard): نوع الثوب (مثل قطن/بوليستر 70/30 بـ ~42 درهم/متر)، اللوازم، الصنعة، والكلفة الإجمالية، وسعر الجملة والتقسيط.
-   - 🪙 جودة اقتصادية (Qualité Faible / Fibk / Éco): نوع الثوب (بولي-قطن 50/50 بـ ~26 درهم/متر)، اللوازم، الصنعة، والكلفة الإجمالية، وسعر الجملة والتقسيط.
-3. إذا سألك عن الثوب، الميتراج، الفصالة، أو مراحل الخياطة، أجب فوراً بأرقام ومعلومات تقنية عملية ومباشرة بالدارجة المغربية المفهومة للحرفيين.`;
+1. حلل فقط الموديل الحقيقي الظاهر في الصورة المرفقة والمعطيات أعلاه بدقة بدون أي افتراضات لنوع آخر من الملابس (Modèle réel de l'image).
+2. إذا سألك عن "شحال كتقام البياسة" أو عن التكلفة، الثمن، الأرباح، نوع الثوب، أو الجودة، قدم له تفصيلاً دقيقاً ومضبوطاً لنفس القماش الحقيقي الخاص بهذا الموديل مبنياً على 3 مستويات جودة واقعية بأسعار أسواق الجملة المغربية (درب عمر، القريعة، كراج علال، طنجة):
+   - 💎 جودة ممتازة (Haut de gamme): نفس نوعية الثوب الحقيقي للموديل بأعلى درجة جودة وغراماج، اللوازم الممتازة، الصنعة، وسعر البيع بالجملة والتقسيط.
+   - ⚖️ جودة قياسية (Standard): نسخة تجارية متوازنة من نفس الثوب الحقيقي للموديل، اللوازم، الصنعة، وسعر الجملة والتقسيط.
+   - 🪙 جودة اقتصادية (Économique): بديل اقتصادي عملي مناسب لنفس الموديل، اللوازم، الصنعة، وسعر الجملة والتقسيط.
+3. إذا سألك عن الثوب، الميتراج، الفصالة، أو مراحل الخياطة، أجب فوراً بأرقام ومعلومات تقنية عملية ومباشرة باللغة التي سأل بها (الدارجة المغربية أو الفرنسية).`;
 
       const contents: any[] = [
         {
-          role: "user",
+          role: 'user',
           parts: [{ text: fullPromptText }]
         }
       ];
 
       if (image) {
-        let base64Data = '';
-        let mimeType = 'image/jpeg';
-        if (image.startsWith('data:')) {
-          const match = image.match(/^data:([^;]+);base64,(.+)$/);
-          if (match) {
-            mimeType = match[1];
-            base64Data = match[2];
-          }
-        }
+        const { base64Data, mimeType } = await prepareImageForGemini(image, 1024);
         if (base64Data) {
           contents[0].parts.push({
             inlineData: {
               data: base64Data,
-              mimeType: mimeType
+              mimeType
             }
           });
         }
       }
 
-      const systemInstructionText = "أنت خبير نسيج وهندسة إنتاج وتسعير في مصنع مغربي (BEYA Expert). تكلم بالدارجة المغربية بأسلوب احترافي مباشر ومفيد جداً. أجب المستخدم فوراً وبشكل مباشر وبدون أي لف أو دوران أو إحالة إلى أزرار أخرى! إذا سأل عن التكلفة أو الثمن أو 'شحال كتقام البياسة'، احسب له التكلفة فوراً بالأرقام المحددة والمفصلة: ثمن الثوب، اللوازم، اليد العاملة، التكلفة الإجمالية للقطعة (Prix de revient)، وسعر الجملة وسعر التقسيط وتكلفة 500 أو 1000 بياسة. إذا سأل عن الثوب، الوقت، الفصالة، أو مراحل الخياطة، أجب فوراً بأرقام ومعلومات تقنية عملية.";
+      const systemInstructionText = "أنت خبير نسيج وهندسة إنتاج وتسعير في مصنع مغربي (BEYA Expert). أجب عن الموديل الحقيقي الظاهر في الصورة فقط بالدارجة المغربية أو الفرنسية حسب سؤال المستخدم، وبأرقام ومعلومات تقنية عملية ومفصلة مباشرة.";
 
-      const candidateModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro'];
-      let data: any = null;
+      const { data, lastError } = await callGeminiGenerateContent({
+        apiKeys: [apiKey, DEFAULT_GEMINI_KEY],
+        contents,
+        systemInstruction: { parts: [{ text: systemInstructionText }] },
+        models: GEMINI_FAST_VISION_MODELS
+      });
 
-      for (const model of candidateModels) {
-        try {
-          const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents,
-              systemInstruction: {
-                parts: [{ text: systemInstructionText }]
-              }
-            })
-          });
-          const json = await resp.json();
-          if (json.candidates && json.candidates[0]?.content?.parts?.[0]?.text) {
-            data = json;
-            break;
-          } else if (json.error) {
-            console.warn(`Model ${model} returned error:`, json.error.message);
-            data = json;
-          }
-        } catch (fetchErr) {
-          console.warn(`Fetch error for ${model}:`, fetchErr);
-        }
-      }
-
-      if (data?.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+      if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
         return parseAiChatAndExtractGamme(data.candidates[0].content.parts[0].text, userMessage);
       } else {
         const smartReply = getSmartReply(userMessage);
-        const errMsg = data?.error?.message || '';
-        const isLimit0 = errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded') || errMsg.includes('RESOURCE_EXHAUSTED');
+        const isLimit0 = lastError.includes('limit: 0') || lastError.includes('Quota exceeded') || lastError.includes('RESOURCE_EXHAUSTED');
         let note = '';
         if (isLimit0) {
-          note = isAr 
-            ? "\n\n────────────────────────────\n⚠️ ملاحظة: مفتاح Gemini API بدون رصيد في Google Cloud (Limit: 0)، تمت إجابتك مباشرة عبر خبير BEYA الداخلي."
-            : "\n\n────────────────────────────\n⚠️ Note: Clé Gemini API sans quota (Limit: 0), réponse fournie par l'Expert BEYA interne.";
+          note = isAr
+            ? "\n\n────────────────────────────\n⚠️ ملاحظة: مفتاح Gemini API بدون رصيد، تمت إجابتك مباشرة عبر خبير BEYA الداخلي."
+            : "\n\n────────────────────────────\n⚠️ Note: Clé Gemini API sans quota, réponse fournie par l'Expert BEYA interne.";
         }
         return smartReply + note;
       }
@@ -5210,21 +5143,28 @@ ${userMessage}
               ''
             ).toLowerCase();
             const piecesCount = analysisResult?.pieces?.length || 1;
+            const isCustomNonPreset = /gilet|sherpa|moumoute|doudoune|sans manches|sleeveless|polo|blouson|pull|tricot|جيلي|شيربا|بولو|معطف/i.test(currentTitle);
 
-            const isHoodieAct = currentTitle.includes('hoodie') || currentTitle.includes('هودي') || currentTitle.includes('capuche') || currentTitle.includes('كابوش');
-            const isBrandebourgAct = currentTitle.includes('brandebourg') || currentTitle.includes('officier') || currentTitle.includes('براندبورغ');
-            const isVesteAct = !isBrandebourgAct && !isHoodieAct && (currentTitle.includes('veste') || currentTitle.includes('jacket') || currentTitle.includes('فيست') || currentTitle.includes('جاكيت'));
-            const isTshirtAct = !isHoodieAct && (currentTitle.includes('t-shirt') || currentTitle.includes('tshirt') || currentTitle.includes('تيشرت') || currentTitle.includes('تيشيرت'));
-            const isPantalonAct = (piecesCount === 1) && (currentTitle.includes('pantalon') || currentTitle.includes('سروال') || currentTitle.includes('jogging') || currentTitle.includes('جوغينغ'));
-            const isSurvetAct = piecesCount >= 2 || currentTitle.includes('ensemble') || currentTitle.includes('طقم') || currentTitle.includes('survêt');
-            const isRobeAct = currentTitle.includes('robe') || currentTitle.includes('فستان') || currentTitle.includes('abaya') || currentTitle.includes('عباية');
+            const isHoodieAct = !isCustomNonPreset && (currentTitle.includes('hoodie') || currentTitle.includes('هودي') || currentTitle.includes('sweat à capuche'));
+            const isBrandebourgAct = !isCustomNonPreset && (currentTitle.includes('brandebourg') || currentTitle.includes('officier') || currentTitle.includes('براندبورغ'));
+            const isVesteAct = !isCustomNonPreset && !isBrandebourgAct && !isHoodieAct && (currentTitle.includes('veste') || currentTitle.includes('jacket') || currentTitle.includes('فيست') || currentTitle.includes('جاكيت'));
+            const isTshirtAct = !isCustomNonPreset && !isHoodieAct && (currentTitle.includes('t-shirt') || currentTitle.includes('tshirt') || currentTitle.includes('تيشرت') || currentTitle.includes('تيشيرت'));
+            const isPantalonAct = !isCustomNonPreset && (piecesCount === 1) && (currentTitle.includes('pantalon') || currentTitle.includes('سروال') || currentTitle.includes('jogging') || currentTitle.includes('جوغينغ'));
+            const isSurvetAct = !isCustomNonPreset && (piecesCount >= 2 || currentTitle.includes('ensemble') || currentTitle.includes('طقم') || currentTitle.includes('survêt'));
+            const isRobeAct = !isCustomNonPreset && (currentTitle.includes('robe') || currentTitle.includes('فستان') || currentTitle.includes('abaya') || currentTitle.includes('عباية'));
 
             return (
               <div className={`px-3 sm:px-4 py-2 bg-indigo-50/70 border-b border-indigo-100/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
                 <span className="text-[11px] font-bold text-indigo-900 shrink-0 flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>{isAr ? 'نوع الموديل بنقرة واحدة:' : 'Type de pièce :'}</span>
+                  <span>{isAr ? 'تعديل يدوي سريع:' : 'Correction rapide :'}</span>
                 </span>
+                {analysisResult && isCustomNonPreset && (
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-600 text-white border border-emerald-600 ring-2 ring-emerald-200 shrink-0 shadow-xs flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span>{cleanCategoryTitle(analysisResult.category || currentTitle, isAr)}</span>
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => applyPiecePreset('hoodie')}
@@ -5547,7 +5487,12 @@ ${userMessage}
                       : [{ ...analysisResult, name: analysisResult.category }];
                     const safeIdx = Math.min(activePieceIdx, pieces.length - 1);
                     const p = pieces[safeIdx] || pieces[0];
-                    const pFabInfo = getFabricInfo(p.fabricSuggested || analysisResult.fabricSuggested || '');
+                    const pFabInfo = getFabricInfo(p.fabricSuggested || analysisResult.fabricSuggested || '', {
+                      pricePerMeterMAD: p.fabricPricePerMeterMAD || analysisResult.fabricPricePerMeterMAD,
+                      techSpec: p.fabricTechSpec || analysisResult.fabricTechSpec,
+                      pros: p.fabricPros || analysisResult.fabricPros,
+                      cons: p.fabricCons || analysisResult.fabricCons,
+                    });
 
                     return (
                       <div className="space-y-4">
@@ -5727,7 +5672,7 @@ ${userMessage}
                               {isAr ? (
                                 <>
                                   <p className="text-base font-black text-slate-900 select-text cursor-text selection:bg-indigo-100 selection:text-indigo-950">{cleanLabel(pFabInfo.arName, true)}</p>
-                                  <p className="text-xs font-bold text-indigo-600 mb-2 select-text cursor-text selection:bg-indigo-100 selection:text-indigo-950">{cleanLabel(pFabInfo.frName, true)}</p>
+                                  <p className="text-xs font-bold text-indigo-600 mb-2 select-text cursor-text selection:bg-indigo-100 selection:text-indigo-950">{pFabInfo.techSpec || pFabInfo.frName}</p>
                                 </>
                               ) : (
                                 <>
