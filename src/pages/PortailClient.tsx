@@ -1015,7 +1015,146 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     });
   })();
 
-  const getOfficialDevisForCommande = (cmd: Commande): Facture | undefined => {
+  const getCommandePaymentAndProofInfo = (c: Commande, matchingLead?: Lead) => {
+    const isEchantillon = Boolean(
+      c.statut === 'echantillon_en_cours' ||
+      c.statut === 'echantillon_valide' ||
+      Number(c.quantite) === 1 ||
+      (c.modele || '').toLowerCase().includes('échantillon') ||
+      (c.modele || '').toLowerCase().includes('echantillon') ||
+      (c.modele || '').includes('عينة')
+    );
+
+    const totalAmount = (c.prix && Number(c.quantite) > 0)
+      ? Math.round(Number(c.prix) * Number(c.quantite))
+      : Number(c.prixEchantillon || 0);
+
+    const normRef = normalizePortalKey(c.reference);
+    const normModel = normalizePortalKey(c.modele);
+    const matchedDocs = clientDocsAll.filter(f => {
+      if (f.commandeId === c.id) return true;
+      if (normRef && normalizePortalKey((f as any).commandeReference) === normRef) return true;
+      if (normRef && (f.articles || []).some(a => normalizePortalKey(a.designation || (a as any).description).includes(normRef))) return true;
+      if (matchingLead) {
+        if (f.commandeId === matchingLead.id || (f as any).leadId === matchingLead.id) return true;
+        const leadShort = '#' + matchingLead.id.slice(0, 8).toLowerCase();
+        if ((f.articles || []).some(a => normalizePortalKey(a.designation || (a as any).description).includes(leadShort))) return true;
+      }
+      // Fallback for unlinked receipts/factures belonging solely by amount/model match
+      if (!f.commandeId && (f.typeDoc === 'recu' || !f.typeDoc || f.typeDoc === 'facture')) {
+        const docAmt = Number(f.montant || 0);
+        const docAvance = Number(f.avance || 0);
+        if (totalAmount > 0 && (docAmt === totalAmount || docAvance === totalAmount)) return true;
+        if (clientCommandesAll.length === 1 && normModel && (f.articles || []).some(a => normalizePortalKey(a.designation || (a as any).description).includes(normModel))) return true;
+      }
+      return false;
+    });
+
+    const receipts = matchedDocs.filter(f => f.typeDoc === 'recu');
+    const facturesDocs = matchedDocs.filter(f => !f.typeDoc || f.typeDoc === 'facture');
+
+    const getDocPaid = (f: Facture) => {
+      if (f.statut === 'payée') {
+        if (f.typeDoc === 'recu' && f.avance && f.avance > 0 && f.avance < f.montant && totalAmount > f.avance) {
+          return Number(f.avance);
+        }
+        return Number(f.montant || f.avance || 0);
+      }
+      return Number(f.avance || 0);
+    };
+
+    const paidRecusSum = receipts.reduce((sum, f) => sum + getDocPaid(f), 0);
+    const paidFacturesSum = facturesDocs.reduce((sum, f) => sum + getDocPaid(f), 0);
+    const cmdAvance = Number(c.avance || 0);
+    const paidAmount = Math.max(cmdAvance, paidRecusSum, paidFacturesSum);
+
+    const verifyingDocs = matchedDocs.filter(f => f.statut === 'en_verification');
+    const verifyingSum = verifyingDocs.reduce((sum, f) => sum + Number(f.avance && f.avance > 0 ? f.avance : (f.montant || 0)), 0);
+
+    const extraProofImages: Array<{ url: string; labelAr: string; labelFr: string; date?: string }> = [];
+    const seenUrls = new Set<string>();
+    const addProofUrl = (url: any, labelAr: string, labelFr: string, date?: string) => {
+      if (typeof url === 'string' && url.trim() && !seenUrls.has(url.trim())) {
+        seenUrls.add(url.trim());
+        extraProofImages.push({ url: url.trim(), labelAr, labelFr, date });
+      }
+    };
+
+    matchedDocs.forEach(f => {
+      addProofUrl(f.preuvePaiement, `إثبات الدفع الرسمي — ${f.numero}`, `Preuve Officielle — ${f.numero}`, f.date);
+      addProofUrl(f.preuveClient, `وصل التحويل المرفق — ${f.numero}`, `Reçu Client — ${f.numero}`, f.date);
+    });
+    addProofUrl((c as any).preuvePaiement, `وصل دفع — ${c.reference}`, `Preuve Paiement — ${c.reference}`, c.dateCommande);
+    addProofUrl((c as any).preuveClient, `توصيل التحويل — ${c.reference}`, `Reçu Virement — ${c.reference}`, c.dateCommande);
+    addProofUrl(c.preuveValidation, `إثبات العينة والأداء — ${c.reference}`, `Preuve Validation / Paiement — ${c.reference}`, c.dateCommande);
+    if (matchingLead) {
+      let leadExt: any = {};
+      try { leadExt = parseLeadDetailsJson(matchingLead.details); } catch {}
+      addProofUrl((matchingLead as any).preuveClient, 'توصيل التسبيق المرفق بالطلب', 'Reçu Acompte Demande', matchingLead.reponseAtelierDate);
+      addProofUrl(leadExt.virementReceipt, 'توصيل التحويل الأولي', 'Reçu Virement Initial', leadExt.clientValideDate);
+    }
+
+    const isPaid = Boolean(
+      (totalAmount > 0 && paidAmount >= totalAmount) ||
+      receipts.some(f => f.statut === 'payée' && (totalAmount === 0 || Number(f.montant || f.avance || 0) >= totalAmount || isEchantillon)) ||
+      facturesDocs.some(f => f.statut === 'payée' && (totalAmount === 0 || Number(f.montant || 0) >= totalAmount || isEchantillon)) ||
+      (isEchantillon && c.statut === 'echantillon_valide' && (paidAmount > 0 || extraProofImages.length > 0))
+    );
+
+    const isVerifying = !isPaid && Boolean(
+      verifyingSum > 0 ||
+      receipts.some(f => f.statut === 'en_verification' || Boolean(f.preuveClient || f.preuvePaiement)) ||
+      Boolean((c as any).preuveClient || (c as any).preuvePaiement)
+    );
+
+    const remainingAmount = isPaid ? 0 : Math.max(0, totalAmount - paidAmount);
+    const hasProof = extraProofImages.length > 0 || matchedDocs.some(f => f.typeDoc === 'recu' || f.typeDoc === 'facture');
+
+    return {
+      isEchantillon,
+      totalAmount,
+      paidAmount,
+      remainingAmount,
+      verifyingSum,
+      isPaid,
+      isVerifying,
+      hasProof,
+      matchedDocs,
+      extraProofImages
+    };
+  };
+
+  const openOrderProofs = (info: {
+    id: string;
+    reference: string;
+    modele: string;
+    isEchantillon: boolean;
+    totalAmount: number;
+    paidAmount: number;
+    remainingAmount: number;
+    isPaid: boolean;
+    isVerifying: boolean;
+    matchedDocs: Facture[];
+    extraProofImages: Array<{ url: string; labelAr: string; labelFr: string; date?: string }>;
+  }) => {
+    setFocusedProofTarget({
+      id: info.id,
+      reference: info.reference,
+      modele: info.modele,
+      isEchantillon: info.isEchantillon,
+      totalAmount: info.totalAmount,
+      paidAmount: info.paidAmount,
+      remainingAmount: info.remainingAmount,
+      isPaid: info.isPaid,
+      isVerifying: info.isVerifying,
+      docIds: info.matchedDocs.map(d => d.id),
+      extraProofImages: info.extraProofImages
+    });
+    setActiveTab('docs');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+    const getOfficialDevisForCommande = (cmd: Commande): Facture | undefined => {
     const byId = clientDevisDocs.find(f => f.commandeId === cmd.id);
     if (byId) return byId;
     const cmdRef = normalizePortalKey(cmd.reference);
@@ -1496,6 +1635,19 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [sendingVirement, setSendingVirement] = useState(false);
   const [virementSent, setVirementSent] = useState(false);
   const [ribCopied, setRibCopied] = useState(false);
+  const [focusedProofTarget, setFocusedProofTarget] = useState<{
+    id: string;
+    reference: string;
+    modele: string;
+    isEchantillon: boolean;
+    totalAmount: number;
+    paidAmount: number;
+    remainingAmount: number;
+    isPaid: boolean;
+    isVerifying: boolean;
+    docIds: string[];
+    extraProofImages: Array<{ url: string; labelAr: string; labelFr: string; date?: string }>;
+  } | null>(null);
 
   // Helper for translating phase names
   const phaseAr: Record<string, string> = { 
@@ -1657,19 +1809,34 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       setVirementCommandeId(linked ? linked.id : (found[0]?.id || ''));
       return;
     }
+    const trueDems = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
+    const isCmdPaid = (c: Commande) => {
+      const mLead = trueDems.find(l => l.type === c.modele || getLinkedCommandeForLead(l, [c])?.id === c.id);
+      return getCommandePaymentAndProofInfo(c, mLead).isPaid;
+    };
+
+    // If the currently selected item is already fully paid, deselect it so it's never presented for double payment
+    if (virementCommandeId) {
+      const selectedCmd = found.find(c => c.id === virementCommandeId);
+      if (selectedCmd && isCmdPaid(selectedCmd)) {
+        const nextUnpaid = found.find(c => !isCmdPaid(c));
+        setVirementCommandeId(nextUnpaid ? nextUnpaid.id : '');
+        return;
+      }
+    }
+
     if (!virementCommandeId) {
-      if (found.length === 1) {
-        setVirementCommandeId(found[0].id);
-      } else if (found.length === 0) {
-        const payableDem = mesDemandes.filter(
-          d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__' && !isLeadHiddenFromPayments(d, found)
-        );
+      const unpaidCmd = found.find(c => !isCmdPaid(c));
+      if (unpaidCmd) {
+        setVirementCommandeId(unpaidCmd.id);
+      } else {
+        const payableDem = trueDems.filter(d => !isLeadHiddenFromPayments(d, found));
         if (payableDem.length >= 1) {
           setVirementCommandeId(payableDem[0].id);
         }
       }
     }
-  }, [found, mesDemandes, virementCommandeId]);
+  }, [found, mesDemandes, virementCommandeId, factures]);
 
   // Auto-refresh messages & demands every 8 seconds if chat or payments is active
   useEffect(() => {
@@ -5534,6 +5701,36 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                 <span className="px-6 py-3 bg-white/10 backdrop-blur-xl text-white rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/20 shadow-xl inline-block group-hover:bg-indigo-500 transition-colors">
                                    {isAr ? phaseAr[cmd.phase] : PHASE_LABELS[cmd.phase]}
                                 </span>
+                                {(() => {
+                                  const trueDems = mesDemandes.filter(l => l.type !== '__MESSAGE__' && l.type !== '__MESSAGE_REPLY__');
+                                  const mLead = trueDems.find(l => l.type === cmd.modele || getLinkedCommandeForLead(l, [cmd])?.id === cmd.id);
+                                  const pInfo = getCommandePaymentAndProofInfo(cmd, mLead);
+                                  if (pInfo.isPaid || pInfo.hasProof) {
+                                    return (
+                                      <button
+                                        type="button"
+                                        onClick={() => openOrderProofs({
+                                          id: cmd.id,
+                                          reference: cmd.reference || cmd.id,
+                                          modele: cmd.modele,
+                                          isEchantillon: pInfo.isEchantillon,
+                                          totalAmount: pInfo.totalAmount,
+                                          paidAmount: pInfo.paidAmount,
+                                          remainingAmount: pInfo.remainingAmount,
+                                          isPaid: pInfo.isPaid,
+                                          isVerifying: pInfo.isVerifying,
+                                          matchedDocs: pInfo.matchedDocs,
+                                          extraProofImages: pInfo.extraProofImages
+                                        })}
+                                        className="mt-2 ml-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 cursor-pointer transition-all"
+                                      >
+                                        <Receipt className="w-3.5 h-3.5" />
+                                        <span>{pInfo.isPaid ? (isAr ? '✅ خالص • عرض البروف والوصولات' : '✅ Payé • Voir les Preuves') : (isAr ? '📎 عرض البروف والوصل' : '📎 Voir les Preuves')}</span>
+                                      </button>
+                                    );
+                                  }
+                                  return null;
+                                })()}
                              </div>
                          </div>
                       </div>
@@ -5990,6 +6187,169 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   <p className="text-slate-500 font-medium">{isAr ? 'إدارة كاملة لجميع وثائقك المحاسبية والتقنية' : 'Gérez l\'ensemble de vos documents comptables et techniques'}</p>
                </div>
 
+               {/* Focused Proofs & Payment Evidence Spotlight (opened directly when clicking a paid Échantillon / Commande) */}
+               {focusedProofTarget && (() => {
+                 const matchedFinancialDocs = clientDocsAll.filter(f => focusedProofTarget.docIds.includes(f.id));
+                 return (
+                   <div className="bg-gradient-to-br from-emerald-50/90 via-white to-indigo-50/60 border-2 border-emerald-400/80 rounded-[2rem] p-6 md:p-8 shadow-xl shadow-emerald-900/5 space-y-6 animate-in fade-in slide-in-from-top-3 duration-300">
+                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-emerald-200/70">
+                       <div className="space-y-1">
+                         <div className="flex items-center gap-2 flex-wrap">
+                           <span className="px-3 py-1 bg-slate-900 text-white text-[10px] font-mono font-black rounded-lg tracking-wider">
+                             {focusedProofTarget.reference}
+                           </span>
+                           {focusedProofTarget.isEchantillon && (
+                             <span className="px-3 py-1 bg-amber-400 text-slate-950 text-[10px] font-black rounded-lg uppercase tracking-wider">
+                               {isAr ? '🧪 عينة / Échantillon' : '🧪 Échantillon'}
+                             </span>
+                           )}
+                           {focusedProofTarget.isPaid ? (
+                             <span className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider flex items-center gap-1">
+                               <CheckCircle className="w-3.5 h-3.5" />
+                               <span>{isAr ? 'خالص بالكامل (100%)' : 'Entièrement Payé ✓'}</span>
+                             </span>
+                           ) : focusedProofTarget.isVerifying ? (
+                             <span className="px-3 py-1 bg-cyan-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider flex items-center gap-1">
+                               <Clock className="w-3.5 h-3.5" />
+                               <span>{isAr ? 'وصل مرفق قيد التحقق' : 'Preuve en vérification'}</span>
+                             </span>
+                           ) : null}
+                         </div>
+                         <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug pt-1">
+                           {isAr ? `إثباتات ووصولات الدفع: ${focusedProofTarget.modele}` : `Preuves & Reçus : ${focusedProofTarget.modele}`}
+                         </h2>
+                       </div>
+
+                       <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                         <button
+                           type="button"
+                           onClick={() => setActiveTab('payments')}
+                           className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                         >
+                           <ArrowRight className={`w-3.5 h-3.5 ${isAr ? '' : 'rotate-180'}`} />
+                           <span>{isAr ? 'رجوع للأداءات' : 'Retour Paiements'}</span>
+                         </button>
+                         <button
+                           type="button"
+                           onClick={() => setFocusedProofTarget(null)}
+                           className="p-2.5 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 rounded-xl transition-all cursor-pointer"
+                           title={isAr ? 'إغلاق' : 'Fermer'}
+                         >
+                           <X className="w-4 h-4" />
+                         </button>
+                       </div>
+                     </div>
+
+                     {/* Financial Summary Strip */}
+                     <div className="grid grid-cols-3 gap-3 text-center">
+                       <div className="p-3.5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+                         <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'الإجمالي' : 'Montant Total'}</span>
+                         <span className="text-base sm:text-lg font-black text-slate-900 font-mono">{focusedProofTarget.totalAmount.toLocaleString()} MAD</span>
+                       </div>
+                       <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 shadow-2xs">
+                         <span className="text-[10px] font-black text-emerald-700 uppercase block">{isAr ? 'المبلغ المؤدى' : 'Montant Payé'}</span>
+                         <span className="text-base sm:text-lg font-black text-emerald-700 font-mono">{(focusedProofTarget.isPaid && focusedProofTarget.paidAmount === 0 ? focusedProofTarget.totalAmount : focusedProofTarget.paidAmount).toLocaleString()} MAD</span>
+                       </div>
+                       <div className="p-3.5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+                         <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'المتبقي' : 'Reste à payer'}</span>
+                         <span className={`text-base sm:text-lg font-black font-mono ${focusedProofTarget.remainingAmount === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                           {focusedProofTarget.remainingAmount.toLocaleString()} MAD
+                         </span>
+                       </div>
+                     </div>
+
+                     {/* Proof Images & Official Documents */}
+                     {focusedProofTarget.extraProofImages.length > 0 && (
+                       <div className="space-y-3">
+                         <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                           <Camera className="w-4 h-4 text-emerald-600" />
+                           <span>{isAr ? `صور الوصولات وإثباتات التحويل (${focusedProofTarget.extraProofImages.length})` : `Justificatifs & Captures de Virement (${focusedProofTarget.extraProofImages.length})`}</span>
+                         </h4>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                           {focusedProofTarget.extraProofImages.map((img, idx) => (
+                             <div key={idx} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm group">
+                               <div className="h-44 bg-slate-100 relative overflow-hidden cursor-zoom-in flex items-center justify-center" onClick={() => { if (!img.url.startsWith('data:audio')) { const w = window.open(); w?.document.write(`<img src="${img.url}" style="max-width:100%;margin:auto;display:block;" />`); } }}>
+                                 {img.url.startsWith('data:audio') ? (
+                                   <div className="p-4 w-full">
+                                     <audio controls src={img.url} className="w-full" />
+                                   </div>
+                                 ) : (
+                                   <>
+                                     <img src={img.url} alt={img.labelFr} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                     <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/20 transition-colors flex items-center justify-center">
+                                       <Eye className="w-7 h-7 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
+                                     </div>
+                                   </>
+                                 )}
+                               </div>
+                               <div className="p-3 flex items-center justify-between gap-2 bg-white">
+                                 <div className="min-w-0">
+                                   <p className="text-xs font-black text-slate-900 truncate">{isAr ? img.labelAr : img.labelFr}</p>
+                                   {img.date && <p className="text-[10px] text-slate-400 font-mono">{new Date(img.date).toLocaleDateString(isAr ? 'ar-MA' : 'fr-MA')}</p>}
+                                 </div>
+                                 <a
+                                   href={img.url}
+                                   download={`Preuve_${focusedProofTarget.reference}_${idx + 1}.jpg`}
+                                   className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg transition-colors shrink-0"
+                                   title={isAr ? 'تحميل الصورة' : 'Télécharger'}
+                                 >
+                                   <Download className="w-4 h-4" />
+                                 </a>
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     )}
+
+                     {matchedFinancialDocs.length > 0 && (
+                       <div className="space-y-2.5">
+                         <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                           <Receipt className="w-4 h-4 text-indigo-600" />
+                           <span>{isAr ? 'الوصولات والفواتير الرسمية المرتبطة' : 'Documents & Reçus Officiels Associés'}</span>
+                         </h4>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                           {matchedFinancialDocs.map(doc => (
+                             <div key={doc.id} className="p-4 bg-white rounded-2xl border border-slate-200 flex items-center justify-between gap-3 shadow-2xs">
+                               <div className="min-w-0">
+                                 <div className="flex items-center gap-2">
+                                   <span className="text-xs font-black text-slate-900 font-mono">{doc.numero}</span>
+                                   <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${doc.statut === 'payée' ? 'bg-emerald-100 text-emerald-700' : doc.statut === 'en_verification' ? 'bg-cyan-100 text-cyan-800' : 'bg-amber-100 text-amber-800'}`}>
+                                     {doc.statut === 'payée' ? (isAr ? 'مؤدى ✓' : 'Payée ✓') : doc.statut === 'en_verification' ? (isAr ? 'قيد التحقق' : 'Vérification') : doc.statut}
+                                   </span>
+                                 </div>
+                                 <p className="text-xs font-bold text-slate-500 mt-0.5">
+                                   {doc.typeDoc === 'recu' ? (isAr ? 'وصل أداء / أفونس' : 'Reçu de paiement') : doc.typeDoc === 'devis' ? 'Devis' : (isAr ? 'فاتورة' : 'Facture')} • {doc.montant.toLocaleString()} MAD
+                                 </p>
+                               </div>
+                               <button
+                                 type="button"
+                                 onClick={() => { setSelectedFacture(doc); setShowInvoiceView(true); }}
+                                 className="px-3.5 py-2 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                               >
+                                 <Download className="w-3.5 h-3.5" />
+                                 <span>PDF</span>
+                               </button>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     )}
+
+                     {focusedProofTarget.extraProofImages.length === 0 && matchedFinancialDocs.length === 0 && (
+                       <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-bold text-emerald-900 flex items-center gap-2.5">
+                         <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                         <span>
+                           {isAr
+                             ? `تم تأكيد استلام الأداء (${focusedProofTarget.paidAmount || focusedProofTarget.totalAmount} MAD) في حساب الورشة بنجاح.`
+                             : `Paiement de ${focusedProofTarget.paidAmount || focusedProofTarget.totalAmount} MAD confirmé et enregistré par l'atelier.`}
+                         </span>
+                       </div>
+                     )}
+                   </div>
+                 );
+               })()}
+
                {/* Technical Sheets Section */}
                <div className="mb-8">
                   <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-6 flex items-center gap-3">
@@ -6307,22 +6667,33 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           {activeTab === 'payments' && (() => {
             const trueDemandes = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
             const payableDemandes = trueDemandes.filter(d => !isLeadHiddenFromPayments(d, found));
-            
-            // Build all payable items (Commandes + unconverted Demandes only, never doubling a converted Lead with its Commande)
+
+            // Build enriched items distinguishing Échantillon vs Production, Paid vs Unpaid, and linking all Proofs!
             const allPayableItems = [
               ...found.map(c => {
                 const matchingLead = trueDemandes.find(l => l.type === c.modele || getLinkedCommandeForLead(l, [c])?.id === c.id);
                 const leadImgUrl = matchingLead ? (matchingLead.photo || (matchingLead.photos && matchingLead.photos[0]) || leadPhotos[matchingLead.id]) : null;
                 const imgUrl = (c as any).modelePhoto || c.photo || (c as any).tissuPhoto || leadImgUrl || null;
+                const pInfo = getCommandePaymentAndProofInfo(c, matchingLead);
                 return {
                   id: c.id,
                   itemType: 'commande' as const,
-                  badgeText: isAr ? 'طلبية إنتاج' : 'Commande Production',
-                  badgeColor: 'bg-indigo-600',
+                  isEchantillon: pInfo.isEchantillon,
+                  badgeText: pInfo.isEchantillon
+                    ? (isAr ? '🧪 عينة' : '🧪 ÉCHANTILLON')
+                    : (isAr ? '🏭 إنتاج' : '🏭 PRODUCTION'),
+                  badgeColor: pInfo.isEchantillon ? 'bg-amber-400 text-slate-950' : 'bg-indigo-600 text-white',
                   reference: c.reference || c.id,
                   modele: c.modele || (isAr ? 'موديل إنتاج' : 'Modèle Production'),
                   quantite: c.quantite || 0,
-                  prixTotal: c.prix ? c.quantite * c.prix : null,
+                  prixTotal: pInfo.totalAmount || null,
+                  paidAmount: pInfo.paidAmount,
+                  remainingAmount: pInfo.remainingAmount,
+                  isPaid: pInfo.isPaid,
+                  isVerifying: pInfo.isVerifying,
+                  hasProof: pInfo.hasProof,
+                  matchedDocs: pInfo.matchedDocs,
+                  extraProofImages: pInfo.extraProofImages,
                   photo: imgUrl,
                   rawCommande: c
                 };
@@ -6330,23 +6701,50 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
               ...payableDemandes.map(d => {
                 const analysis = getDemandeAnalysis(d, isAr);
                 const photo = d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null;
+                let leadExt: any = {};
+                try { leadExt = parseLeadDetailsJson(d.details); } catch {}
+                const totalAmt = analysis.totalPrice || (analysis.unitPrice ? analysis.unitPrice * analysis.qty : 0);
+                const matchedDocs = clientDocsAll.filter(f =>
+                  f.commandeId === d.id ||
+                  (f as any).leadId === d.id ||
+                  (f.articles || []).some(a => normalizePortalKey(a.designation || (a as any).description).includes('#' + d.id.slice(0, 8).toLowerCase()))
+                );
+                const extraProofImages: Array<{ url: string; labelAr: string; labelFr: string; date?: string }> = [];
+                if ((d as any).preuveClient) extraProofImages.push({ url: (d as any).preuveClient, labelAr: 'توصيل التحويل', labelFr: 'Reçu Virement' });
+                if (leadExt.virementReceipt && leadExt.virementReceipt !== (d as any).preuveClient) extraProofImages.push({ url: leadExt.virementReceipt, labelAr: 'توصيل التحويل', labelFr: 'Reçu Virement' });
+                matchedDocs.forEach(f => {
+                  if (f.preuvePaiement) extraProofImages.push({ url: f.preuvePaiement, labelAr: `وصل — ${f.numero}`, labelFr: `Reçu — ${f.numero}`, date: f.date });
+                  if (f.preuveClient) extraProofImages.push({ url: f.preuveClient, labelAr: `توصيل — ${f.numero}`, labelFr: `Capture — ${f.numero}`, date: f.date });
+                });
+                const isPaid = matchedDocs.some(f => f.typeDoc !== 'devis' && f.statut === 'payée' && Number(f.montant || f.avance || 0) >= totalAmt && totalAmt > 0);
+                const isVerifying = !isPaid && (extraProofImages.length > 0 || matchedDocs.some(f => f.statut === 'en_verification'));
+                const isSampleDemande = leadExt.adminMode === 'echantillon' || Number(analysis.qty) === 1;
                 return {
                   id: d.id,
                   itemType: 'demande' as const,
-                  badgeText: isAr ? 'طلب موديل / دراسة' : 'Demande & Devis',
-                  badgeColor: 'bg-purple-600',
+                  isEchantillon: isSampleDemande,
+                  badgeText: isSampleDemande ? (isAr ? '🧪 عينة' : '🧪 ÉCHANTILLON') : (isAr ? '📋 طلب' : '📋 DEVIS'),
+                  badgeColor: isSampleDemande ? 'bg-amber-400 text-slate-950' : 'bg-purple-600 text-white',
                   reference: `#${d.id.slice(0, 8).toUpperCase()}`,
                   modele: analysis.modeleReel || cleanLangText(d.type, isAr) || (isAr ? 'طلب موديل' : 'Demande Modèle'),
                   quantite: analysis.qty || 1,
-                  prixTotal: analysis.totalPrice || (analysis.unitPrice ? analysis.unitPrice * analysis.qty : null),
-                  photo: photo,
+                  prixTotal: totalAmt || null,
+                  paidAmount: isPaid ? totalAmt : 0,
+                  remainingAmount: isPaid ? 0 : totalAmt,
+                  isPaid,
+                  isVerifying,
+                  hasProof: extraProofImages.length > 0 || matchedDocs.some(f => f.typeDoc === 'recu' || f.typeDoc === 'facture'),
+                  matchedDocs,
+                  extraProofImages,
+                  photo,
                   rawDemande: d
                 };
               })
             ];
 
+            const selectedPayableItem = allPayableItems.find(i => i.id === virementCommandeId && !i.isPaid) || null;
             const isFormValid = Boolean(
-              virementCommandeId && 
+              selectedPayableItem &&
               virementMontant && 
               parseFloat(virementMontant) > 0 && 
               virementPhoto && 
@@ -6355,8 +6753,14 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
             return (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-               <div className="flex items-center justify-between">
+               <div className="flex items-center justify-between flex-wrap gap-3">
                  <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-800">{isAr ? 'الدفع والأداء' : 'Paiements & Virements'}</h2>
+                 {allPayableItems.some(i => i.isPaid) && (
+                   <span className="px-3.5 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-black flex items-center gap-1.5">
+                     <CheckCircle className="w-4 h-4 text-emerald-600" />
+                     <span>{isAr ? 'اضغط على أي عينة أو طلبية خالصة لعرض إثباتاتها' : 'Cliquez sur un élément payé pour voir ses preuves'}</span>
+                   </span>
+                 )}
                </div>
                
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -6456,10 +6860,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             <div className="grid grid-cols-1 gap-6">
                               <div>
                                  <div className="flex items-center justify-between mb-3">
-                                   <label className={`block text-[10px] font-black uppercase tracking-widest ${virementCommandeId ? 'text-indigo-600' : 'text-slate-500'} ${isAr ? 'text-right' : ''}`}>
+                                   <label className={`block text-[10px] font-black uppercase tracking-widest ${selectedPayableItem ? 'text-indigo-600' : 'text-slate-500'} ${isAr ? 'text-right' : ''}`}>
                                      {isAr ? 'الطلبية أو الموديل المعني (إجباري)' : 'Commande ou Modèle concerné (Obligatoire)'}
                                    </label>
-                                   {virementCommandeId && (
+                                   {selectedPayableItem && (
                                      <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-200">
                                        <Check className="w-3 h-3" />
                                        <span>{isAr ? 'تم اختيار الطلبية' : 'Sélectionné'}</span>
@@ -6470,53 +6874,131 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                  {allPayableItems.length > 0 ? (
                                    <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 ${isAr ? 'direction-rtl' : ''}`}>
                                      {allPayableItems.map(item => {
-                                       const isSelected = virementCommandeId === item.id;
+                                       const isSelected = !item.isPaid && virementCommandeId === item.id;
                                        return (
                                          <div 
                                            key={item.id}
-                                           onClick={() => setVirementCommandeId(item.id)}
+                                           onClick={() => {
+                                             if (item.isPaid) {
+                                               openOrderProofs({
+                                                 id: item.id,
+                                                 reference: item.reference,
+                                                 modele: item.modele,
+                                                 isEchantillon: item.isEchantillon,
+                                                 totalAmount: Number(item.prixTotal || 0),
+                                                 paidAmount: item.paidAmount,
+                                                 remainingAmount: item.remainingAmount,
+                                                 isPaid: item.isPaid,
+                                                 isVerifying: item.isVerifying,
+                                                 matchedDocs: item.matchedDocs,
+                                                 extraProofImages: item.extraProofImages
+                                               });
+                                               return;
+                                             }
+                                             setVirementCommandeId(item.id);
+                                             const sugg = item.isEchantillon
+                                               ? item.remainingAmount
+                                               : Math.round((item.remainingAmount || Number(item.prixTotal || 0)) * 0.5);
+                                             if (!virementMontant && sugg > 0) {
+                                               setVirementMontant(String(sugg));
+                                             }
+                                           }}
                                            className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col ${
-                                             isSelected 
-                                               ? 'border-indigo-600 shadow-xl shadow-indigo-500/25 bg-indigo-50/40 ring-2 ring-indigo-500/30 transform scale-[1.02] z-10' 
-                                               : 'border-slate-100 hover:border-indigo-300 bg-white hover:bg-slate-50'
+                                             item.isPaid
+                                               ? 'border-emerald-400 bg-emerald-50/40 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/15'
+                                               : item.isVerifying
+                                                 ? (isSelected ? 'border-indigo-600 shadow-xl shadow-indigo-500/25 bg-indigo-50/40 ring-2 ring-indigo-500/30' : 'border-cyan-300 bg-cyan-50/20 hover:border-cyan-500')
+                                                 : isSelected 
+                                                   ? 'border-indigo-600 shadow-xl shadow-indigo-500/25 bg-indigo-50/40 ring-2 ring-indigo-500/30 transform scale-[1.02] z-10' 
+                                                   : 'border-slate-100 hover:border-indigo-300 bg-white hover:bg-slate-50'
                                            }`}
                                          >
-                                           {isSelected && (
-                                             <div className="absolute top-2 right-2 px-2.5 py-1 bg-indigo-600 text-white rounded-lg flex items-center gap-1 z-20 shadow-md text-[10px] font-black uppercase tracking-wider animate-in zoom-in duration-200">
-                                               <Check className="w-3.5 h-3.5" />
-                                               <span>{isAr ? 'محدد' : 'Sélectionné'}</span>
-                                             </div>
-                                           )}
-                                           
                                            <div className="h-28 w-full bg-slate-900 relative overflow-hidden flex items-center justify-center shrink-0 group">
                                              {item.photo ? (
-                                               <img src={item.photo} alt={item.modele} className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? 'scale-110' : 'group-hover:scale-105'}`} />
+                                               <img src={item.photo} alt={item.modele} className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? 'scale-110' : 'group-hover:scale-105'} ${item.isPaid ? 'opacity-85' : ''}`} />
                                              ) : (
                                                <Package className="w-8 h-8 text-slate-500" />
                                              )}
-                                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent" />
+                                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-transparent" />
                                              
-                                             <span className={`absolute top-2 left-2 ${item.badgeColor} text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider`}>
-                                               {item.badgeText}
-                                             </span>
+                                             {/* Clean Non-overlapping Top Badges Row */}
+                                             <div className="absolute top-2 inset-x-2 flex items-center justify-between gap-1 z-20">
+                                               <span className={`${item.badgeColor} text-[9px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide whitespace-nowrap`}>
+                                                 {item.badgeText}
+                                               </span>
+
+                                               {item.isPaid ? (
+                                                 <span className="px-2 py-0.5 bg-emerald-500 text-white rounded-md flex items-center gap-1 shadow-md text-[9px] font-black uppercase tracking-wide whitespace-nowrap">
+                                                   <Check className="w-3 h-3 stroke-[3]" />
+                                                   <span>{isAr ? 'خالص' : 'PAYÉ'}</span>
+                                                 </span>
+                                               ) : item.isVerifying ? (
+                                                 <span className="px-2 py-0.5 bg-cyan-500 text-white rounded-md flex items-center gap-1 shadow-md text-[9px] font-black uppercase tracking-wide whitespace-nowrap">
+                                                   <Clock className="w-2.5 h-2.5" />
+                                                   <span>{isAr ? 'بروف مرفق' : 'PREUVE'}</span>
+                                                 </span>
+                                               ) : isSelected ? (
+                                                 <span className="px-2 py-0.5 bg-indigo-600 text-white rounded-md flex items-center gap-1 shadow-md text-[9px] font-black uppercase tracking-wide whitespace-nowrap">
+                                                   <Check className="w-3 h-3 stroke-[3]" />
+                                                   <span>{isAr ? 'محدد' : 'CHOISI'}</span>
+                                                 </span>
+                                               ) : null}
+                                             </div>
 
                                              <span className="absolute bottom-2 left-3 right-3 text-white text-[10px] font-black uppercase tracking-widest truncate drop-shadow-md">
                                                {item.reference}
                                              </span>
                                            </div>
                                            
-                                           <div className={`p-3.5 flex-1 flex flex-col justify-between ${isAr ? 'text-right' : 'text-left'}`}>
-                                             <p className="text-xs font-black text-slate-900 line-clamp-2 leading-tight mb-2" title={item.modele}>
+                                           <div className={`p-3 flex-1 flex flex-col justify-between gap-2 ${isAr ? 'text-right' : 'text-left'}`}>
+                                             <p className="text-xs font-black text-slate-900 line-clamp-2 leading-tight" title={item.modele}>
                                                {item.modele}
                                              </p>
-                                             <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100 text-[10px]">
-                                               <span className="font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
-                                                 {item.quantite} PCS
-                                               </span>
-                                               {item.prixTotal ? (
-                                                 <span className="font-black text-emerald-600">
-                                                   {item.prixTotal.toLocaleString()} MAD
+
+                                             <div className="space-y-1.5 mt-auto">
+                                               <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px]">
+                                                 <span className="font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                   {item.quantite} PCS
                                                  </span>
+                                                 {item.prixTotal ? (
+                                                   <span className={`font-black ${item.isPaid ? 'text-emerald-700' : 'text-emerald-600'}`}>
+                                                     {item.prixTotal.toLocaleString()} MAD
+                                                   </span>
+                                                 ) : null}
+                                               </div>
+
+                                               {item.isPaid ? (
+                                                 <div className="w-full py-1.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[9px] font-black flex items-center justify-between gap-1.5 shadow-xs transition-colors">
+                                                   <span className="flex items-center gap-1 truncate">
+                                                     <Receipt className="w-3 h-3 shrink-0" />
+                                                     <span>{isAr ? 'خالص • عرض البروف' : 'Payé • Voir Preuves'}</span>
+                                                   </span>
+                                                   <ArrowRight className={`w-3 h-3 shrink-0 ${isAr ? 'rotate-180' : ''}`} />
+                                                 </div>
+                                               ) : item.hasProof ? (
+                                                 <button
+                                                   type="button"
+                                                   onClick={(e) => {
+                                                     e.stopPropagation();
+                                                     openOrderProofs({
+                                                       id: item.id,
+                                                       reference: item.reference,
+                                                       modele: item.modele,
+                                                       isEchantillon: item.isEchantillon,
+                                                       totalAmount: Number(item.prixTotal || 0),
+                                                       paidAmount: item.paidAmount,
+                                                       remainingAmount: item.remainingAmount,
+                                                       isPaid: item.isPaid,
+                                                       isVerifying: item.isVerifying,
+                                                       matchedDocs: item.matchedDocs,
+                                                       extraProofImages: item.extraProofImages
+                                                     });
+                                                   }}
+                                                   className="w-full py-1 px-2 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 rounded-lg text-[9px] font-black flex items-center justify-between gap-1 cursor-pointer transition-colors"
+                                                 >
+                                                   <span>{isAr ? `📎 عرض البروف (${item.extraProofImages.length || item.matchedDocs.length})` : `📎 Voir Preuves (${item.extraProofImages.length || item.matchedDocs.length})`}</span>
+                                                   <Eye className="w-3 h-3 shrink-0" />
+                                                 </button>
                                                ) : null}
                                              </div>
                                            </div>
@@ -6538,7 +7020,29 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               </div>
 
                               <div>
-                                 <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'المبلغ المحول (درهم)' : 'Montant viré (MAD)'}</label>
+                                 <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                                   <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>{isAr ? 'المبلغ المحول (درهم)' : 'Montant viré (MAD)'}</label>
+                                   {selectedPayableItem && selectedPayableItem.remainingAmount > 0 && (
+                                     <div className="flex items-center gap-1.5">
+                                       {!selectedPayableItem.isEchantillon && (
+                                         <button
+                                           type="button"
+                                           onClick={() => setVirementMontant(String(Math.round(selectedPayableItem.remainingAmount * 0.5)))}
+                                           className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-[10px] font-black cursor-pointer transition-colors"
+                                         >
+                                           {isAr ? `50%: ${Math.round(selectedPayableItem.remainingAmount * 0.5).toLocaleString()} DH` : `Acompte 50%: ${Math.round(selectedPayableItem.remainingAmount * 0.5).toLocaleString()} DH`}
+                                         </button>
+                                       )}
+                                       <button
+                                         type="button"
+                                         onClick={() => setVirementMontant(String(selectedPayableItem.remainingAmount))}
+                                         className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-black cursor-pointer transition-colors"
+                                       >
+                                         {isAr ? `كامل: ${selectedPayableItem.remainingAmount.toLocaleString()} DH` : `Total: ${selectedPayableItem.remainingAmount.toLocaleString()} DH`}
+                                       </button>
+                                     </div>
+                                   )}
+                                 </div>
                                  <div className="relative">
                                    <input 
                                      type="number" 
@@ -6581,10 +7085,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             </div>
 
                             {/* Strict Validation Info Alerts */}
-                            {!virementCommandeId && allPayableItems.length > 0 && (
+                            {!selectedPayableItem && allPayableItems.some(i => !i.isPaid) && (
                               <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs font-bold text-center flex items-center justify-center gap-2 animate-in fade-in">
                                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                                <span>{isAr ? '⚠️ اختيار الطلبية أو الموديل المعني بالأعلى إجباري قبل إرسال التوصيل.' : '⚠️ Veuillez sélectionner la commande ou le modèle concerné ci-dessus pour activer l\'envoi.'}</span>
+                                <span>{isAr ? '⚠️ اختر الطلبية غير المؤداة بالأعلى قبل إرسال التوصيل.' : '⚠️ Veuillez sélectionner la commande à payer ci-dessus pour activer l\'envoi.'}</span>
                               </div>
                             )}
 
@@ -6598,25 +7102,19 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                             <button 
                               disabled={!isFormValid}
                               onClick={async () => {
-                                if (!isFormValid || !currentUser || !virementCommandeId || !virementMontant || !virementPhoto) {
+                                if (!isFormValid || !currentUser || !selectedPayableItem || !virementMontant || !virementPhoto) {
                                   alert(isAr ? 'يرجى اختيار الطلبية، إدخال المبلغ، وإرفاق صورة التوصيل.' : 'Veuillez sélectionner la commande, saisir le montant et joindre le reçu.');
                                   return;
                                 }
 
-                                const selectedItem = allPayableItems.find(i => i.id === virementCommandeId);
-                                if (!selectedItem) {
-                                  alert(isAr ? 'يرجى اختيار الطلبية المعنية أولاً' : 'Veuillez sélectionner la commande concernée');
-                                  return;
-                                }
-
-                                const isDemande = selectedItem.itemType === 'demande';
+                                const isDemande = selectedPayableItem.itemType === 'demande';
                                 setSendingVirement(true);
                                 try {
-                                  const newFacture: Partial<Facture> = {
-                                    id: Math.random().toString(36).substr(2, 9),
+                                  const newFacture: Facture = {
+                                    id: genId(),
                                     numero: `REC-${Date.now().toString().slice(-6)}`,
                                     client: currentUser.nom,
-                                    commandeId: isDemande ? undefined : selectedItem.id,
+                                    commandeId: isDemande ? undefined : selectedPayableItem.id,
                                     date: new Date().toISOString(),
                                     echeance: new Date().toISOString().split('T')[0],
                                     montant: parseFloat(virementMontant),
@@ -6624,19 +7122,21 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                     statut: 'en_verification',
                                     banque: 'virement',
                                     articles: [{
-                                      description: `[${selectedItem.reference}] ${selectedItem.modele} (${selectedItem.badgeText})`,
-                                      quantite: selectedItem.quantite || 1,
+                                      id: genId(),
+                                      designation: `[${selectedPayableItem.reference}] ${selectedPayableItem.modele} (${selectedPayableItem.badgeText})`,
+                                      quantite: selectedPayableItem.quantite || 1,
                                       prixUnitaire: parseFloat(virementMontant),
                                       total: parseFloat(virementMontant)
                                     }],
                                     preuvePaiement: virementPhoto
                                   };
                                   await saveRecord('factures', newFacture);
+                                  setFactures(prev => [newFacture, ...prev]);
 
                                   // If this receipt is for a Demande, link the proof to the lead directly!
-                                  if (isDemande && (selectedItem as any).rawDemande) {
+                                  if (isDemande && (selectedPayableItem as any).rawDemande) {
                                     try {
-                                      const raw = (selectedItem as any).rawDemande;
+                                      const raw = (selectedPayableItem as any).rawDemande;
                                       const updatedLead: Lead = {
                                         ...raw,
                                         preuveClient: virementPhoto,
@@ -6644,7 +7144,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                         notes: `${raw.notes || ''}\n[توصيل تحويل بنكي بقيمة ${virementMontant} MAD - قيد التحقق]`.trim()
                                       };
                                       await saveRecord('leads', updatedLead);
-                                      setMesDemandes(prev => prev.map(m => m.id === selectedItem.id ? updatedLead : m));
+                                      setMesDemandes(prev => prev.map(m => m.id === selectedPayableItem.id ? updatedLead : m));
                                     } catch (leadErr) {
                                       console.warn("Failed to update lead with payment proof:", leadErr);
                                     }
@@ -6654,7 +7154,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                     const { sendPushToAll } = await import('../utils/pushNotifications');
                                     sendPushToAll(
                                       isAr ? '💰 توصيل دفع جديد' : '💰 Nouveau Reçu', 
-                                      `${currentUser.nom} - ${virementMontant} MAD (${selectedItem.reference} - ${selectedItem.modele})`, 
+                                      `${currentUser.nom} - ${virementMontant} MAD (${selectedPayableItem.reference} - ${selectedPayableItem.modele})`, 
                                       '/recus'
                                     );
                                   } catch (_) {}
