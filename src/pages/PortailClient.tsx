@@ -3,7 +3,7 @@ import { ChevronDown, Copy, Search, LogOut, Package, CircleCheck, Clock, Truck, 
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadClientLeads, loadLeadPhoto, deleteRecord, genId, isJwtExpiredError, recoverExpiredJwt
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadClientLeads, loadLeadPhoto, deleteRecord, genId, isJwtExpiredError, recoverExpiredJwt, parseLeadDetailsJson
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { trackPixelEvent } from '../utils/pixel';
@@ -210,6 +210,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [fiches, setFiches] = useState<any[]>(() => {
     try {
       const raw = localStorage.getItem('textrack_data_fiches');
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
+  const [portalUsers, setPortalUsers] = useState<User[]>(() => {
+    try {
+      const raw = localStorage.getItem('textrack_data_users');
       return raw ? JSON.parse(raw) : [];
     } catch { return []; }
   });
@@ -840,21 +846,130 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const normalizePortalKey = (val?: string | null) =>
     (val || '').trim().toLowerCase().replace(/\s+/g, ' ');
 
+  const normalizePhoneTail = (val?: string | null) => {
+    const digits = (val || '').replace(/\D/g, '');
+    return digits.length >= 9 ? digits.slice(-9) : digits;
+  };
+
+  const buildClientIdentity = (
+    user: User | null | undefined,
+    usersList: User[],
+    leadsList: Lead[],
+    overridePhone?: string
+  ) => {
+    const idSet = new Set<string>();
+    const nameKeys = new Set<string>();
+    const phoneTails = new Set<string>();
+    const emailNorm = normalizePortalKey(user?.email);
+    const primaryPhoneTail = normalizePhoneTail(overridePhone || user?.telephone);
+    if (primaryPhoneTail.length >= 9) phoneTails.add(primaryPhoneTail);
+
+    const addUserKeys = (u?: Partial<User> | null) => {
+      if (!u) return;
+      if (u.id) idSet.add(u.id);
+      [u.nom, u.brandName, u.email, (u as any).username]
+        .map(normalizePortalKey)
+        .filter(Boolean)
+        .forEach(k => nameKeys.add(k));
+      const pTail = normalizePhoneTail(u.telephone);
+      if (pTail.length >= 9) phoneTails.add(pTail);
+    };
+
+    addUserKeys(user);
+
+    // Unify duplicate accounts & sibling records belonging to the same client (same email or phone)
+    (usersList || []).forEach(u => {
+      const sameId = Boolean(user?.id && u.id === user.id);
+      const sameEmail = Boolean(emailNorm && normalizePortalKey(u.email) === emailNorm);
+      const uPhoneTail = normalizePhoneTail(u.telephone);
+      const samePhone = Boolean(uPhoneTail.length >= 9 && phoneTails.has(uPhoneTail));
+      if (sameId || sameEmail || samePhone) {
+        addUserKeys(u);
+      }
+    });
+
+    (leadsList || []).forEach(l => {
+      const lEmail = normalizePortalKey(l.email);
+      const lPhoneTail = normalizePhoneTail(l.phone);
+      const lName = normalizePortalKey(l.name);
+      const matchesLead =
+        (lName && nameKeys.has(lName)) ||
+        (emailNorm && lEmail === emailNorm) ||
+        (lPhoneTail.length >= 9 && phoneTails.has(lPhoneTail));
+      if (matchesLead) {
+        if (l.id) idSet.add(l.id);
+        if (lName) nameKeys.add(lName);
+        if (lPhoneTail.length >= 9) phoneTails.add(lPhoneTail);
+      }
+    });
+
+    return { idSet, nameKeys, phoneTails, emailNorm };
+  };
+
+  const clientIdentity = React.useMemo(
+    () => buildClientIdentity(currentUser, portalUsers, mesDemandes, clientPhone),
+    [currentUser, portalUsers, mesDemandes, clientPhone]
+  );
+
+  const matchesIdentity = (
+    identity: { idSet: Set<string>; nameKeys: Set<string>; phoneTails: Set<string>; emailNorm: string },
+    rawClient?: string | null,
+    rawClientId?: string | null,
+    rawEmail?: string | null,
+    rawPhone?: string | null
+  ): boolean => {
+    if (rawClientId && identity.idSet.has(rawClientId)) return true;
+    const recEmail = normalizePortalKey(rawEmail);
+    if (identity.emailNorm && recEmail && recEmail === identity.emailNorm) return true;
+    const recPhone = normalizePhoneTail(rawPhone);
+    if (recPhone.length >= 9 && identity.phoneTails.has(recPhone)) return true;
+    const normClient = normalizePortalKey(rawClient);
+    if (normClient && identity.nameKeys.has(normClient)) return true;
+    if (rawClient && identity.phoneTails.size > 0) {
+      const digitsInClient = rawClient.replace(/\D/g, '');
+      if (digitsInClient.length >= 9) {
+        for (const tail of identity.phoneTails) {
+          if (digitsInClient.includes(tail)) return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  const isClientCommandeMatch = (c: Commande, identity = clientIdentity): boolean =>
+    matchesIdentity(identity, c.client, (c as any).clientId, (c as any).email, (c as any).telephone || (c as any).phone);
+
+  const isClientFicheMatch = (f: any, identity = clientIdentity): boolean =>
+    Boolean(f) && matchesIdentity(identity, f.client, f.clientId, f.clientEmail, f.clientPhone);
+
+  const sortClientCommandes = (list: Commande[]): Commande[] =>
+    [...list].sort((a, b) => {
+      const aAwaiting = a.statut === 'echantillon_en_cours' && a.phase === 'livré' ? 1 : 0;
+      const bAwaiting = b.statut === 'echantillon_en_cours' && b.phase === 'livré' ? 1 : 0;
+      if (aAwaiting !== bAwaiting) return bAwaiting - aAwaiting;
+      const aSample = a.statut === 'echantillon_en_cours' ? 1 : 0;
+      const bSample = b.statut === 'echantillon_en_cours' ? 1 : 0;
+      if (aSample !== bSample) return bSample - aSample;
+      return new Date(b.dateCommande || 0).getTime() - new Date(a.dateCommande || 0).getTime();
+    });
+
+  const clientCommandesAll = React.useMemo(
+    () => (currentUser ? sortClientCommandes(commandes.filter(c => isClientCommandeMatch(c))) : []),
+    [commandes, currentUser, clientIdentity]
+  );
+
+  const clientFiches = React.useMemo(
+    () =>
+      (currentUser ? fiches.filter(f => isClientFicheMatch(f)) : []).sort(
+        (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      ),
+    [fiches, currentUser, clientIdentity]
+  );
+
   const isClientFacturaMatch = (f: Facture): boolean => {
-    if (f.commandeId && found.some(c => c.id === f.commandeId)) return true;
+    if (f.commandeId && (found.some(c => c.id === f.commandeId) || clientCommandesAll.some(c => c.id === f.commandeId))) return true;
     if (f.commandeId && mesDemandes.some(d => d.id === f.commandeId)) return true;
-    if ((f as any).clientId && currentUser?.id && (f as any).clientId === currentUser.id) return true;
-    const fClient = normalizePortalKey(f.client);
-    if (!fClient) return false;
-    const userKeys = [
-      currentUser?.nom,
-      currentUser?.brandName,
-      currentUser?.email,
-      (currentUser as any)?.username,
-    ]
-      .map(normalizePortalKey)
-      .filter(Boolean);
-    return userKeys.includes(fClient);
+    return matchesIdentity(clientIdentity, f.client, (f as any).clientId, (f as any).email, (f as any).telephone);
   };
 
   const clientDocsAll = factures.filter(isClientFacturaMatch);
@@ -875,7 +990,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
   const getOfficialDevisForLead = (d: Lead): Facture | undefined => {
     let ext: any = {};
-    try { ext = JSON.parse(d.details || '{}'); } catch {}
+    ext = parseLeadDetailsJson(d.details);
     const directDevisId = ext.devisId || (d as any).devisId;
     if (directDevisId) {
       const match = clientDevisDocs.find(f => f.id === directDevisId);
@@ -915,11 +1030,11 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     if (byArticle) return byArticle;
 
     const activeLeadsCount = mesDemandes.filter(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__').length;
-    if (clientDevisDocs.length === 1 && activeLeadsCount === 1) {
+    if (clientDevisDocs.length >= 1 && activeLeadsCount === 1) {
       return clientDevisDocs[0];
     }
     const confirmedLeads = mesDemandes.filter(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__' && m.crmStage === 'confirme');
-    if (clientDevisDocs.length === 1 && confirmedLeads.length === 1 && confirmedLeads[0].id === d.id) {
+    if (clientDevisDocs.length >= 1 && confirmedLeads.length === 1 && confirmedLeads[0].id === d.id) {
       return clientDevisDocs[0];
     }
     return undefined;
@@ -929,7 +1044,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setValidatingDevisSending(true);
     try {
       const extDetails: any = {};
-      try { Object.assign(extDetails, JSON.parse(lead.details || '{}')); } catch(e) {}
+      Object.assign(extDetails, parseLeadDetailsJson(lead.details));
       extDetails.devisStatus = virementReceiptFile ? 'acompte_paye' : 'valide';
       extDetails.clientValideDate = new Date().toISOString();
       if (virementReceiptFile) extDetails.virementReceipt = virementReceiptFile;
@@ -960,7 +1075,13 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     }
   };
 
-  const handlePrintDevis = (lead: Lead) => {
+  const handlePrintDevis = async (lead: Lead) => {
+    if (!(lead.photo || (lead.photos && lead.photos[0]) || leadPhotosRef.current[lead.id])) {
+      try {
+        const fetchedPhoto = await loadLeadPhoto(lead.id);
+        if (fetchedPhoto) handlePhotoLoaded(lead.id, fetchedPhoto);
+      } catch {}
+    }
     const officialDevis = getOfficialDevisForLead(lead);
     if (officialDevis) {
       setSelectedFacture(officialDevis);
@@ -975,7 +1096,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setPrintingDevisLead(lead);
     setTimeout(() => {
       printElement(`devis-doc-${lead.id}`);
-    }, 250);
+    }, 300);
   };
 
   const handleSaveClientPhone = async (e?: React.FormEvent) => {
@@ -1179,6 +1300,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
   // Helper for translating phase names
   const phaseAr: Record<string, string> = { 
+    patronage: 'الباترون والعينة',
     coupe: 'الفصالة', 
     montage: 'الخياطة', 
     finition: 'الفينيسيون', 
@@ -1189,6 +1311,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   };
 
   const phaseIcons: Record<string, any> = {
+    patronage: <Scissors className="w-5 h-5" />,
     coupe: <Scissors className="w-5 h-5" />,
     montage: <Layers className="w-5 h-5" />,
     finition: <Sparkles className="w-5 h-5" />,
@@ -1204,36 +1327,48 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       setLoading(false);
     }, 1200);
 
-    const leadsLoader = (currentUser && (currentUser.nom || currentUser.email))
-      ? loadClientLeads(currentUser)
+    const cachedAliases = Array.from(buildClientIdentity(currentUser, portalUsers, mesDemandes, clientPhone).nameKeys);
+    const leadsLoader = (currentUser && (currentUser.nom || currentUser.email || currentUser.telephone))
+      ? loadClientLeads(currentUser, cachedAliases)
       : loadLeads();
 
     Promise.all([
-      loadData<Commande>('commandes').catch(() => []),
-      loadData<Facture>('factures').catch(() => []),
-      loadData<any>('fiches').catch(() => []),
+      loadData<User>('users', true).catch(() => []),
+      loadData<Commande>('commandes', true).catch(() => []),
+      loadData<Facture>('factures', true).catch(() => []),
+      loadData<any>('fiches', true).catch(() => []),
       leadsLoader.catch(() => [])
-    ]).then(([allCommandes, allFactures, allFiches, clientOrAllLeads]) => {
+    ]).then(async ([allUsers, allCommandes, allFactures, allFiches, initialLeads]) => {
+      const validUsers = Array.isArray(allUsers) && allUsers.length > 0 ? allUsers : portalUsers;
+      if (Array.isArray(allUsers) && allUsers.length > 0) setPortalUsers(allUsers);
       if (Array.isArray(allCommandes) && allCommandes.length > 0) setCommandes(allCommandes);
       if (Array.isArray(allFactures) && allFactures.length > 0) setFactures(allFactures);
       if (Array.isArray(allFiches) && allFiches.length > 0) setFiches(allFiches);
 
-      // If a user is logged in, show their orders & demands automatically
       if (currentUser) {
-        const myCommandes = (allCommandes || []).filter(c =>
-          normalizePortalKey(c.client) === normalizePortalKey(currentUser.nom) ||
-          (currentUser.brandName && normalizePortalKey(c.client) === normalizePortalKey(currentUser.brandName)) ||
-          (currentUser.email && (c as any).email?.trim().toLowerCase() === currentUser.email.trim().toLowerCase())
+        let clientOrAllLeads = Array.isArray(initialLeads) ? initialLeads : [];
+        const preIdentity = buildClientIdentity(currentUser, validUsers, clientOrAllLeads, clientPhone);
+        const extraAliases = Array.from(preIdentity.nameKeys);
+        if (extraAliases.length > cachedAliases.length && (currentUser.nom || currentUser.email || currentUser.telephone)) {
+          const widerLeads = await loadClientLeads(currentUser, extraAliases).catch(() => clientOrAllLeads);
+          if (Array.isArray(widerLeads) && widerLeads.length >= clientOrAllLeads.length) {
+            clientOrAllLeads = widerLeads;
+          }
+        }
+
+        const freshIdentity = buildClientIdentity(currentUser, validUsers, clientOrAllLeads, clientPhone);
+        const myLeads = clientOrAllLeads.filter(l =>
+          matchesIdentity(freshIdentity, l.name, l.id, l.email, l.phone)
         );
-        const myLeads = (clientOrAllLeads || []).filter(l =>
-          normalizePortalKey(l.name) === normalizePortalKey(currentUser.nom) ||
-          ((l.email || '').trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase() && currentUser.email) ||
-          ((l.phone || '').trim() === (currentUser.telephone || '').trim() && currentUser.telephone)
+        const finalIdentity = buildClientIdentity(currentUser, validUsers, myLeads, clientPhone);
+        const myCommandes = sortClientCommandes(
+          (allCommandes || []).filter(c => isClientCommandeMatch(c, finalIdentity))
         );
+
         setFound(myCommandes);
         setMesDemandes(myLeads);
         lastClientMessageCountRef.current = myLeads.length;
-        
+
         // Load photos for these leads asynchronously
         myLeads.forEach(async (lead) => {
           if (!leadPhotosRef.current[lead.id] && !lead.photo) {
@@ -1243,9 +1378,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
             }
           }
         });
-        
+
         // Auto-subscribe to push notifications silently
-        subscribeToPush(currentUser.username || currentUser.nom).catch(() => {});
+        subscribeToPush((currentUser as any).username || currentUser.nom).catch(() => {});
       }
     }).catch(err => {
       console.warn("Portal load warning:", err);
@@ -1257,27 +1392,58 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     return () => clearTimeout(failsafeTimer);
   }, [currentUser]);
 
-  // Keep client quotes, invoices and orders synced when navigating tabs
+  // Keep found synced cleanly with unified client identity unless filtered by an active search reference
+  useEffect(() => {
+    if (!currentUser || reference.trim()) return;
+    setFound(clientCommandesAll);
+  }, [clientCommandesAll, currentUser, reference]);
+
+  // Keep client quotes, fiches, invoices, users and orders synced when navigating tabs
   useEffect(() => {
     if (!currentUser) return;
     if (!['overview', 'demandes', 'orders', 'docs', 'payments'].includes(activeTab)) return;
     let cancelled = false;
+    const aliasList = Array.from(clientIdentity.nameKeys);
     Promise.all([
-      loadData<Facture>('factures').catch(() => []),
-      loadData<Commande>('commandes').catch(() => []),
-    ]).then(([freshFactures, freshCommandes]) => {
+      loadData<Facture>('factures', true).catch(() => []),
+      loadData<Commande>('commandes', true).catch(() => []),
+      loadData<any>('fiches', true).catch(() => []),
+      loadData<User>('users', true).catch(() => []),
+      loadClientLeads(currentUser, aliasList).catch(() => [])
+    ]).then(([freshFactures, freshCommandes, freshFiches, freshUsers, freshLeads]) => {
       if (cancelled) return;
-      if (Array.isArray(freshFactures) && freshFactures.length > 0) {
-        setFactures(freshFactures);
+      const validUsers = Array.isArray(freshUsers) && freshUsers.length > 0 ? freshUsers : portalUsers;
+      if (Array.isArray(freshUsers) && freshUsers.length > 0) setPortalUsers(freshUsers);
+      if (Array.isArray(freshFactures) && freshFactures.length > 0) setFactures(freshFactures);
+      if (Array.isArray(freshFiches) && freshFiches.length > 0) setFiches(freshFiches);
+
+      let latestLeads = mesDemandes;
+      if (Array.isArray(freshLeads) && freshLeads.length > 0) {
+        const tmpId = buildClientIdentity(currentUser, validUsers, freshLeads, clientPhone);
+        const matchedLeads = freshLeads.filter(l => matchesIdentity(tmpId, l.name, l.id, l.email, l.phone));
+        if (matchedLeads.length > 0) {
+          latestLeads = matchedLeads;
+          setMesDemandes(prev => {
+            const existingMap: Record<string, Lead> = {};
+            prev.forEach(p => { existingMap[p.id] = p; });
+            return matchedLeads.map(l => ({
+              ...l,
+              ...(l.photo || existingMap[l.id]?.photo || leadPhotosRef.current[l.id] ? { photo: l.photo || existingMap[l.id]?.photo || leadPhotosRef.current[l.id] } : {}),
+              ...(existingMap[l.id]?.photos ? { photos: existingMap[l.id].photos } : {})
+            }));
+          });
+        }
       }
+
       if (Array.isArray(freshCommandes) && freshCommandes.length > 0) {
         setCommandes(freshCommandes);
-        const myCmds = freshCommandes.filter(c =>
-          normalizePortalKey(c.client) === normalizePortalKey(currentUser.nom) ||
-          (currentUser.brandName && normalizePortalKey(c.client) === normalizePortalKey(currentUser.brandName)) ||
-          (currentUser.email && (c as any).email?.trim().toLowerCase() === currentUser.email.trim().toLowerCase())
-        );
-        setFound(myCmds);
+        if (!reference.trim()) {
+          const freshId = buildClientIdentity(currentUser, validUsers, latestLeads, clientPhone);
+          const myCmds = sortClientCommandes(
+            freshCommandes.filter(c => isClientCommandeMatch(c, freshId))
+          );
+          setFound(myCmds);
+        }
       }
     });
     return () => { cancelled = true; };
@@ -1305,8 +1471,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     }
 
     const interval = setInterval(async () => {
-      const myLeads = (currentUser && (currentUser.nom || currentUser.email))
-        ? await loadClientLeads(currentUser)
+      const myLeads = (currentUser && (currentUser.nom || currentUser.email || currentUser.telephone))
+        ? await loadClientLeads(currentUser, Array.from(clientIdentity.nameKeys))
         : await loadLeads();
 
       if (lastClientMessageCountRef.current > 0 && myLeads.length > lastClientMessageCountRef.current) {
@@ -1354,13 +1520,22 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     return () => clearInterval(interval);
   }, [activeTab, currentUser]);
 
-  function handleSearch() {
-    const results = commandes.filter(c =>
-      c.reference.toLowerCase() === reference.toLowerCase() ||
-      (c.referenceClient && c.referenceClient.toLowerCase() === reference.toLowerCase()) ||
-      (c.client || '').toLowerCase().includes(reference.toLowerCase())
+  function handleSearch(queryOverride?: string) {
+    const q = normalizePortalKey(queryOverride !== undefined ? queryOverride : reference);
+    const pool = currentUser && (currentUser.role === 'client' || currentUser.role === 'merchant')
+      ? clientCommandesAll
+      : commandes;
+    if (!q) {
+      setFound(currentUser ? clientCommandesAll : []);
+      return;
+    }
+    const results = pool.filter(c =>
+      normalizePortalKey(c.reference).includes(q) ||
+      normalizePortalKey(c.referenceClient).includes(q) ||
+      normalizePortalKey(c.modele).includes(q) ||
+      normalizePortalKey(c.client).includes(q)
     );
-    setFound(results);
+    setFound(sortClientCommandes(results));
   }
 
   const handleDeleteClientMsg = async (msgId: string) => {
@@ -1960,12 +2135,27 @@ function translateArabicAtelierPhrases(text: string): string {
   t = t.replace(/سوق درب عمر/g, 'Marché Derb Omar');
   t = t.replace(/قماش مخصص ومطابق للمواصفات المطلوبة/g, 'Tissu adapté selon cahier des charges');
   t = t.replace(/قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل/g, 'Patronage et confection sur-mesure de haute précision');
-  
-  if (hasLatin(t)) {
-    t = t.replace(/\([^)]*[\u0600-\u06FF][^)]*\)/g, ' ');
-    t = t.replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+/g, '');
-    t = t.replace(/\s*[\/|:-]+\s*$/g, '').replace(/^\s*[\/|:-]+\s*/g, '').replace(/\s{2,}/g, ' ').trim();
-  }
+  t = t.replace(/طبعة سيريغرافي (?:ف|على )الصدر/g, 'Sérigraphie poitrine');
+  t = t.replace(/طبعة سيريغرافي|سيريغرافي عالي الجودة(?: على الصدر)?|سيريغرافي/g, 'Sérigraphie');
+  t = t.replace(/كابوش مبطن بحبال|قبعة مبطنة بحبال/g, 'Capuche doublée avec cordons');
+  t = t.replace(/كابوش مبطن|قبعة مبطنة/g, 'Capuche doublée');
+  t = t.replace(/جيب كانغورو|جيوب جانبية/g, (m) => m.includes('كانغورو') ? 'Poche kangourou' : 'Poches latérales');
+  t = t.replace(/حواف مرنة متينة|أطراف ريزيستنت/g, 'Finitions bord-côte');
+  t = t.replace(/طرز|تطريز|طريزة/g, 'Broderie');
+  t = t.replace(/سحاب(?: أمامي)?(?: كامل)?/g, 'Fermeture zippée');
+  t = t.replace(/خياطة تقنية|خياطة متينة|خياطة مزدوجة/g, 'Coutures techniques renforcées');
+  t = t.replace(/مولطون قطن مبطن|مولطون قطن|مولتون/g, 'Molleton coton');
+  t = t.replace(/صوف/g, 'Laine');
+  t = t.replace(/قطن/g, 'Coton');
+
+  // Always strip any remaining Arabic characters when rendering French output
+  t = t.replace(/\([^)]*[\u0600-\u06FF][^)]*\)/g, ' ');
+  t = t.replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+/g, '');
+  t = t.replace(/(?:\s*[•\/|:-]+\s*){2,}/g, ' • ')
+    .replace(/^\s*[•\/|:-]+\s*/g, '')
+    .replace(/\s*[•\/|:-]+\s*$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
   return t;
 }
 
@@ -1975,7 +2165,14 @@ function translateFrenchAtelierPhrases(text: string): string {
   t = t.replace(/Échantillon sous (\d+)h/gi, (_m, p1) => `العينة تحت ${p1} ساعة`);
   t = t.replace(/Tissu adapté selon cahier des charges/gi, 'قماش مخصص ومطابق للمواصفات المطلوبة');
   t = t.replace(/Patronage et confection sur-mesure de haute précision/gi, 'قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل');
-  
+  t = t.replace(/Sérigraphie Poitrine/gi, 'طبعة سيريغرافي على الصدر');
+  t = t.replace(/Capuche doublée avec cordons/gi, 'قبعة مبطنة بحبال');
+  t = t.replace(/Capuche doublée/gi, 'كابوش مبطن');
+  t = t.replace(/Poche kangourou/gi, 'جيب كانغورو');
+  t = t.replace(/Fermeture zippée/gi, 'سحاب');
+  t = t.replace(/Broderie/gi, 'تطريز');
+  t = t.replace(/Finitions? bord-côte/gi, 'أطراف بورد-كوط');
+
   if (hasArabic(t)) {
     t = t.replace(/\([a-zA-Z0-9\s.,'%-]{4,}\)/g, '');
     t = t.replace(/\s*[\/|:-]+\s*$/g, '').replace(/^\s*[\/|:-]+\s*/g, '').replace(/\s{2,}/g, ' ').trim();
@@ -1985,7 +2182,7 @@ function translateFrenchAtelierPhrases(text: string): string {
 
 const getLeadDevisState = (d: Lead) => {
   let ext: any = {};
-  try { ext = JSON.parse(d.details || '{}'); } catch(e) {}
+  ext = parseLeadDetailsJson(d.details);
   const officialDevis = getOfficialDevisForLead(d);
   
   // 1. Is it validated by the client / deposit paid?
@@ -2037,11 +2234,16 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const text = `${d.type || ''} ${d.details || ''} ${d.id || ''}`.toLowerCase();
     
     let extDetails: any = {};
-    try { extDetails = JSON.parse(d.details || '{}'); } catch(e) {}
+    extDetails = parseLeadDetailsJson(d.details);
 
     // Check custom saved values from database/atelier edit first
     const savedUnitPrice = (d.unitPrice && Number(d.unitPrice) > 0) ? Number(d.unitPrice) : (d.crmPrice && Number(d.crmPrice) > 0) ? Number(d.crmPrice) : null;
-    const savedModele = (d.modeleReel && d.modeleReel.trim() && d.modeleReel.toUpperCase() !== 'MODEL' && d.modeleReel !== 'JAKIT' && d.modeleReel !== 'modz') ? d.modeleReel.trim() : null;
+    const isGenericFormLabel = (s?: string | null) => {
+      if (!s) return true;
+      const low = s.trim().toLowerCase();
+      return !low || low === 'model' || low === 'jakit' || low === 'modz' || low.includes('formulaire avanc');
+    };
+    const savedModele = !isGenericFormLabel(d.modeleReel) ? d.modeleReel!.trim() : null;
     const savedTissu = (d.tissuSuggere && d.tissuSuggere.trim() && !d.tissuSuggere.includes('قماش مخصص ومطابق للمواصفات') && !d.tissuSuggere.includes('Tissu adapté selon cahier')) ? d.tissuSuggere.trim() : null;
     const savedTech = (d.techDetails && d.techDetails.trim() && !d.techDetails.includes('قصة وخياطة مخصصة بدقة عالية مع معالجة')) ? d.techDetails.trim() : null;
     const savedDelai = (d.delaiEstime && d.delaiEstime.trim()) ? d.delaiEstime.trim() : null;
@@ -2116,7 +2318,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       d.id?.toLowerCase().includes('d1fbca4c')
     );
 
-    let defaultModele = d.type && d.type.toUpperCase() !== 'MODEL' ? d.type : (isAr ? 'موديل تفصيل وخياطة مخصص' : 'Modèle Confection Sur-Mesure');
+    let defaultModele = (d.type && !isGenericFormLabel(d.type)) ? d.type : (isAr ? 'موديل تفصيل وخياطة مخصص' : 'Modèle Confection Sur-Mesure');
     let defaultTissu = isAr ? 'قماش مخصص ومطابق للمواصفات المطلوبة' : 'Tissu adapté selon cahier des charges';
     let defaultTech = isAr ? 'قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل' : 'Patronage et confection sur-mesure de haute précision';
     let defaultUnitPrice = 65;
@@ -2330,11 +2532,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const rawDelai = savedDelai || defaultDelai;
     const rawReponse = savedReponse || defaultReponse;
 
-    const modeleReel = cleanLangText(rawModele, isAr);
-    const tissuSuggere = cleanLangText(rawTissu, isAr);
-    const techDetails = cleanLangText(rawTech, isAr);
-    const delaiEstime = cleanLangText(rawDelai, isAr);
-    const reponseAtelier = cleanLangText(rawReponse, isAr);
+    const modeleReel = cleanLangText(rawModele, isAr) || defaultModele;
+    const tissuSuggere = cleanLangText(rawTissu, isAr) || defaultTissu;
+    const techDetails = cleanLangText(rawTech, isAr) || defaultTech;
+    const delaiEstime = cleanLangText(rawDelai, isAr) || defaultDelai;
+    const reponseAtelier = cleanLangText(rawReponse, isAr) || defaultReponse;
     const tissuMarcheNom = cleanLangText(defaultTissuMarche, isAr);
 
     const qty = Number(d.quantity) > 0 ? Number(d.quantity) : 100;
@@ -3153,7 +3355,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                           {isAr ? 'طلبيات في الإنتاج بالورشة' : 'En production active'}
                         </span>
                         <p className="text-2xl sm:text-3xl font-black text-amber-300">
-                          {found.filter(c => c.statut === 'en_cours').length}
+                          {found.filter(c => c.statut === 'en_cours' || c.statut === 'echantillon_en_cours').length}
                         </p>
                         <span className="text-[10px] text-slate-400 block font-medium">
                           {isAr ? 'مراحل الفصالة والخياطة ←' : 'Suivre la confection →'}
@@ -3319,6 +3521,131 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                      >
                        {isAr ? 'أنشئ متجري الآن' : 'Créer ma boutique'}
                      </button>
+                   </div>
+                 </div>
+               )}
+
+               {/* Urgent Sample Validation Banner when Delivered Échantillon awaits Client Confirmation */}
+               {(() => {
+                 const pendingSamples = found.filter(c => c.statut === 'echantillon_en_cours' && c.phase === 'livré');
+                 if (pendingSamples.length === 0) return null;
+                 return (
+                   <div className="bg-gradient-to-r from-amber-50 via-white to-emerald-50 border-2 border-amber-300 rounded-3xl p-5 md:p-6 shadow-lg shadow-amber-100/60 space-y-4">
+                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                       <div className="flex items-center gap-3.5">
+                         <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-md shadow-amber-500/30 shrink-0">
+                           <Star className="w-6 h-6 fill-white" />
+                         </div>
+                         <div>
+                           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider mb-1">
+                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                             {isAr ? 'عينة جاهزة للتأكيد والموافقة' : 'Échantillon livré — Validation attendue'}
+                           </span>
+                           <h3 className="text-base md:text-lg font-black text-slate-900 tracking-tight">
+                             {isAr ? 'العينة الأولية جاهزة! المرجو تقييمها وإعطاء موافقتك' : 'Votre échantillon est prêt : donnez votre confirmation !'}
+                           </h3>
+                           <p className="text-xs text-slate-600 font-medium">
+                             {isAr ? 'اضغط لتقييم العينة وتأكيد القياسات لإطلاق الإنتاج الكامل.' : 'Évaluez l\'échantillon et confirmez les mesures pour lancer la production.'}
+                           </p>
+                         </div>
+                       </div>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                       {pendingSamples.map(cmd => (
+                         <div key={cmd.id} className="bg-white border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
+                           <div className="flex items-center gap-3 min-w-0">
+                             <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center">
+                               {(cmd as any).modelePhoto || (cmd as any).photo ? (
+                                 <img src={(cmd as any).modelePhoto || (cmd as any).photo} alt={cmd.modele} className="w-full h-full object-cover" />
+                               ) : (
+                                 <Package className="w-5 h-5 text-slate-400" />
+                               )}
+                             </div>
+                             <div className="min-w-0">
+                               <span className="text-[10px] font-black text-indigo-600 font-mono block">{cmd.reference}</span>
+                               <p className="text-sm font-black text-slate-900 truncate">{cmd.modele}</p>
+                             </div>
+                           </div>
+                           <button
+                             type="button"
+                             onClick={() => {
+                               setActiveTab('orders');
+                               setFeedbackCmdId(cmd.id);
+                               const matchingFiches = clientFiches.filter(f => normalizePortalKey(f.modele) === normalizePortalKey(cmd.modele));
+                               const fiche = matchingFiches.find(f => f.mesures && f.mesures.some((m: any) => m.valeurs && Object.keys(m.valeurs).length > 0)) || matchingFiches[0] || clientFiches[0];
+                               const initialMesures = (fiche && Array.isArray(fiche.mesures) && fiche.mesures.length > 0)
+                                 ? fiche.mesures.map((m: any) => ({ nom: m.nom, valeurs: m.valeurs ? { ...m.valeurs } : {} }))
+                                 : [{ nom: 'Épaules', valeurs: {} }, { nom: 'Poitrine', valeurs: {} }, { nom: 'Longueur', valeurs: {} }];
+                               setFeedbackData({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '', useSizeTable: false, sizeTableNotes: {}, mesuresFeedback: initialMesures });
+                               setTimeout(() => {
+                                 document.getElementById(`order-card-${cmd.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                               }, 180);
+                             }}
+                             className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all shrink-0 cursor-pointer"
+                           >
+                             <Star className="w-4 h-4 fill-white" />
+                             <span>{isAr ? 'تقييم وتأكيد العينة' : 'Confirmer Échantillon'}</span>
+                           </button>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 );
+               })()}
+
+               {/* Official Dossiers Techniques Overview Strip */}
+               {clientFiches.length > 0 && (
+                 <div className="bg-gradient-to-r from-indigo-50 via-white to-slate-50 border border-indigo-200/80 rounded-3xl p-5 md:p-6 shadow-sm">
+                   <div className="flex items-center justify-between gap-4 mb-4">
+                     <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-md shadow-indigo-500/20">
+                         <Scissors className="w-5 h-5" />
+                       </div>
+                       <div>
+                         <h3 className="text-sm md:text-base font-black text-slate-900 uppercase tracking-tight">
+                           {isAr ? 'ملفاتك التقنية والمقاسات (Fiches Techniques)' : 'Vos Dossiers Techniques Atelier'}
+                         </h3>
+                         <p className="text-xs text-slate-500 font-medium">
+                           {isAr ? 'جدول المقاسات، الباترون ومواصفات الموديل جاهزة للمعاينة' : 'Tableau des mesures, patronage et spécifications prêts'}
+                         </p>
+                       </div>
+                     </div>
+                     <button
+                       type="button"
+                       onClick={() => setActiveTab('docs')}
+                       className="text-xs font-black text-indigo-600 hover:underline uppercase tracking-wider cursor-pointer"
+                     >
+                       {isAr ? 'كل الوثائق' : 'Tout voir'}
+                     </button>
+                   </div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                     {clientFiches.slice(0, 4).map(f => (
+                       <div key={f.id} className="bg-white border border-indigo-200/70 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
+                         <div className="min-w-0">
+                           <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider block">{f.type || (isAr ? 'بطاقة تقنية' : 'Fiche Technique')}</span>
+                           <p className="text-sm font-black text-slate-900 truncate">{f.modele}</p>
+                           <p className="text-[11px] text-slate-500 font-bold">{Array.isArray(f.tailles) ? f.tailles.length : 0} {isAr ? 'مقاسات' : 'tailles'}</p>
+                         </div>
+                         <div className="flex items-center gap-2 shrink-0">
+                           <button
+                             type="button"
+                             onClick={() => setViewMesuresFiche(f)}
+                             className="px-3 py-2 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer"
+                           >
+                             <Eye className="w-3.5 h-3.5" />
+                             <span>{isAr ? 'عرض' : 'Voir'}</span>
+                           </button>
+                           <button
+                             type="button"
+                             onClick={() => printFT(f)}
+                             className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer"
+                           >
+                             <Download className="w-3.5 h-3.5" />
+                             <span>PDF</span>
+                           </button>
+                         </div>
+                       </div>
+                     ))}
                    </div>
                  </div>
                )}
@@ -5599,7 +5926,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                        placeholder="Référence..."
                        className="pl-11 pr-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold shadow-xl shadow-slate-200/50 outline-none focus:border-indigo-600 transition-all w-full md:w-64"
                        value={reference}
-                       onChange={(e) => setReference(e.target.value)}
+                       onChange={(e) => {
+                         const val = e.target.value;
+                         setReference(val);
+                         handleSearch(val);
+                       }}
                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                      />
                   </div>
@@ -5866,6 +6197,12 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                           />
                                         </div>
 
+                                        {feedbackData.rating === 0 && (
+                                          <p className="text-xs font-black text-amber-600 text-center bg-amber-50 border border-amber-200 rounded-xl py-2 px-3">
+                                            ⭐ {isAr ? 'المرجو اختيار التقييم بالنجوم (من 1 إلى 5) أعلاه أولاً لتفعيل زر الموافقة' : 'Veuillez sélectionner une note en étoiles (1 à 5) ci-dessus pour activer la validation'}
+                                          </p>
+                                        )}
+
                                         <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                                            <button 
                                              onClick={() => setFeedbackCmdId(null)}
@@ -5928,8 +6265,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                      <button 
                                        onClick={() => {
                                           setFeedbackCmdId(cmd.id);
-                                          const matchingFiches = fiches.filter(f => f.modele.toLowerCase() === cmd.modele.toLowerCase() && (f.client || '').toLowerCase() === (cmd.client || '').toLowerCase()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                                          const fiche = matchingFiches.find(f => f.mesures && f.mesures.some((m: any) => m.valeurs && Object.keys(m.valeurs).length > 0)) || matchingFiches[0] || fiches.find(f => f.modele.toLowerCase() === cmd.modele.toLowerCase());
+                                          const matchingFiches = clientFiches.filter(f => normalizePortalKey(f.modele) === normalizePortalKey(cmd.modele));
+                                          const fiche = matchingFiches.find(f => f.mesures && f.mesures.some((m: any) => m.valeurs && Object.keys(m.valeurs).length > 0)) || matchingFiches[0] || clientFiches[0] || fiches.find(f => normalizePortalKey(f.modele) === normalizePortalKey(cmd.modele));
                                           let initialMesures = [];
                                           if (fiche && fiche.mesures && fiche.mesures.length > 0) {
                                             initialMesures = fiche.mesures.map((m: any) => ({ nom: m.nom, valeurs: m.valeurs ? { ...m.valeurs } : {} }));
@@ -6107,7 +6444,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                      {isAr ? 'الملفات التقنية' : 'Dossiers Techniques'}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                     {fiches.filter(f => f.clientId ? f.clientId === currentUser?.id : (f.client || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase()).map(f => (
+                     {clientFiches.map(f => (
                         <div key={f.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 group hover:border-indigo-200 transition-all">
                            <div className="relative aspect-[4/5] bg-slate-50 rounded-2xl mb-6 overflow-hidden border border-slate-100">
                               {f.photo ? (
@@ -6125,7 +6462,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               </div>
                            </div>
                            <h4 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-1">{f.modele}</h4>
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">{f.tailles.length} {isAr ? 'مقاسات متاحة' : 'Tailles disponibles'}</p>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">{Array.isArray(f.tailles) ? f.tailles.length : 0} {isAr ? 'مقاسات متاحة' : 'Tailles disponibles'}</p>
                            
                            <div className="grid grid-cols-2 gap-3">
                               <button 
@@ -6143,7 +6480,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                            </div>
                         </div>
                      ))}
-                     {fiches.filter(f => f.clientId ? f.clientId === currentUser?.id : (f.client || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase()).length === 0 && (
+                     {clientFiches.length === 0 && (
                         <div className="col-span-full py-12 text-center bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200">
                            <FileText className="w-12 h-12 text-slate-200 mx-auto mb-4" />
                            <p className="text-slate-400 font-bold uppercase text-xs tracking-widest italic">{isAr ? 'لا يوجد ملف تقني حاليا' : 'Aucun dossier technique disponible'}</p>
@@ -7657,12 +7994,21 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-12 bg-slate-50/50">
-               <InvoicePRO 
-                  id={`invoice-${selectedFacture.id}`}
-                  facture={selectedFacture}
-                  commande={commandes.find(c => c.id === selectedFacture.commandeId) || found.find(c => c.id === selectedFacture.commandeId)}
-                  company={company}
-               />
+               {(() => {
+                 const linkedCmd = commandes.find(c => c.id === selectedFacture.commandeId) || found.find(c => c.id === selectedFacture.commandeId);
+                 const linkedLead = mesDemandes.find(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__' && getOfficialDevisForLead(m)?.id === selectedFacture.id);
+                 const resolvedPhoto = (linkedCmd as any)?.modelePhoto || (linkedCmd as any)?.photo || linkedLead?.photo || (linkedLead?.photos && linkedLead.photos[0]) || (linkedLead ? leadPhotos[linkedLead.id] : undefined);
+                 return (
+                   <InvoicePRO
+                     id={`invoice-${selectedFacture.id}`}
+                     facture={selectedFacture}
+                     commande={linkedCmd}
+                     company={company}
+                     modelPhoto={resolvedPhoto}
+                     lang={isAr ? 'ar' : 'fr'}
+                   />
+                 );
+               })()}
             </div>
           </div>
         </div>
@@ -7916,198 +8262,307 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         const lead = printingDevisLead;
         const analysis = getDemandeAnalysis(lead, isAr);
         const officialLeadDevis = getOfficialDevisForLead(lead);
-        const docTotal = officialLeadDevis && officialLeadDevis.montant > 0 ? officialLeadDevis.montant : analysis.totalPrice;
+        const docQty = Math.max(1, Number(analysis.qty) || 1);
+        const docTotal = Number(officialLeadDevis && officialLeadDevis.montant > 0 ? officialLeadDevis.montant : (lead.totalPrice && lead.totalPrice > 0 ? lead.totalPrice : analysis.totalPrice)) || 0;
+        const docUnitPrice = docTotal / docQty;
         const acompte = Math.round(docTotal * 0.5);
-        const dateStr = new Date(officialLeadDevis?.date || Date.now()).toLocaleDateString('fr-MA', { day: '2-digit', month: 'long', year: 'numeric' });
+        const devisNum = officialLeadDevis?.numero || `DEV-${lead.id.substring(0, 8).toUpperCase()}`;
+        const dateStr = new Date(officialLeadDevis?.date || Date.now()).toLocaleDateString(isAr ? 'ar-MA' : 'fr-MA', { day: '2-digit', month: 'long', year: 'numeric' });
+        const modelPhoto = lead.photo || (lead.photos && lead.photos[0]) || leadPhotos[lead.id] || '';
+        const logoSrc = company.logoInvoice || company.logoUrl || '/logo.png';
         const taxLine = [
           company.ice && !/^0+$/.test(company.ice) ? `ICE: ${company.ice}` : '',
           company.rc && !/^0+$/.test(company.rc) ? `R.C: ${company.rc}` : '',
           company.if_tax && !/^0+$/.test(company.if_tax) ? `I.F: ${company.if_tax}` : '',
           company.patente && !/^0+$/.test(company.patente) ? `Patente: ${company.patente}` : '',
-        ].filter(Boolean).join(' | ');
+        ].filter(Boolean).join(' • ');
+        const fontFamily = isAr
+          ? "'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif"
+          : "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif";
+        const alignEnd = isAr ? 'left' : 'right';
+        const alignStart = isAr ? 'right' : 'left';
 
         return (
           <div className="fixed -left-[9999px] top-0 pointer-events-none opacity-0" aria-hidden="true">
             <div
               id={`devis-doc-${lead.id}`}
+              dir={isAr ? 'rtl' : 'ltr'}
               className="bg-white"
-              style={{ width: '210mm', minHeight: '297mm', padding: '15mm 18mm', color: '#0f172a', fontFamily: 'sans-serif' }}
+              style={{
+                width: '210mm',
+                minHeight: '297mm',
+                padding: '14mm 16mm',
+                color: '#0f172a',
+                fontFamily,
+                display: 'flex',
+                flexDirection: 'column',
+              }}
             >
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #0f172a', paddingBottom: '16px', marginBottom: '24px' }}>
-              <div>
-                <h1 style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-0.5px', textTransform: 'uppercase' }}>
-                  {company.name || 'BEYA CREATIVE'}
-                </h1>
-                <p style={{ fontSize: '11px', fontWeight: 700, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }}>
-                  {company.subtitle || "Ateliers de Confection Textile & Bureau d'Études"}
-                </p>
-                {company.address && (
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>{company.address}</p>
-                )}
-                {(company.phone || company.email) && (
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>
-                    {[company.phone ? `Tél : ${company.phone}` : '', company.email ? `Email : ${company.email}` : ''].filter(Boolean).join(' • ')}
-                  </p>
-                )}
-                {taxLine && (
-                  <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>{taxLine}</p>
-                )}
-              </div>
-
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ display: 'inline-block', backgroundColor: '#0f172a', color: 'white', padding: '6px 16px', borderRadius: '8px', fontSize: '16px', fontWeight: 900, letterSpacing: '1px', marginBottom: '8px' }}>
-                  DEVIS OFFICIEL
-                </div>
-                <p style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>
-                  N° {officialLeadDevis?.numero || `DEV-${lead.id.substring(0, 8).toUpperCase()}`}
-                </p>
-                <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 2px' }}>Date : {dateStr}</p>
-                <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Validité : 30 jours</p>
-              </div>
-            </div>
-
-            {/* Client Coordinates Box */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 18px', marginBottom: '24px' }}>
-              <div>
-                <span style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Client / Donneur d'Ordre</span>
-                <p style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', margin: '4px 0 2px' }}>
-                  {(lead as any).client || lead.name || currentUser?.nom || currentUser?.email || 'Client Partenaire BEYA'}
-                </p>
-                <p style={{ fontSize: '11px', color: '#475569', margin: '0 0 2px' }}>Tél : {clientPhone || lead.phone || currentUser?.telephone || '—'}</p>
-                <p style={{ fontSize: '11px', color: '#475569', margin: 0 }}>Email : {currentUser?.email || lead.email || '—'}</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Projet de Confection</span>
-                <p style={{ fontSize: '14px', fontWeight: 800, color: '#4f46e5', margin: '4px 0 2px' }}>
-                  {analysis.modeleReel}
-                </p>
-                <p style={{ fontSize: '11px', color: '#475569', margin: 0 }}>Quantité Totale : {analysis.qty} pièces</p>
-              </div>
-            </div>
-
-            {/* Items Table */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '12px' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#0f172a', color: 'white' }}>
-                  <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px', borderRadius: '8px 0 0 0' }}>Désignation des Prestations</th>
-                  <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>Matière & Détails</th>
-                  <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>Quantité</th>
-                  <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>P.U HT (MAD)</th>
-                  <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px', borderRadius: '0 8px 0 0' }}>Total HT (MAD)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                  <td style={{ padding: '12px 14px', fontWeight: 700, color: '#0f172a' }}>
-                    Coupe, Confection & Finitions industrielles
-                    <br />
-                    <span style={{ fontSize: '11px', fontWeight: 400, color: '#64748b' }}>{analysis.modeleReel}</span>
-                  </td>
-                  <td style={{ padding: '12px 14px', color: '#475569' }}>
-                    <strong>Tissu :</strong> {analysis.tissuSuggere}
-                    <br />
-                    <span style={{ fontSize: '10px', color: '#64748b' }}>{analysis.techDetails}</span>
-                  </td>
-                  <td style={{ padding: '12px 14px', textAlign: 'center', fontWeight: 800 }}>{analysis.qty} pcs</td>
-                  <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>{Number(analysis.unitPrice || 0).toFixed(2)}</td>
-                  <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, color: '#0f172a' }}>{Number(analysis.totalPrice || 0).toFixed(2)}</td>
-                </tr>
-
-                {analysis.hasCustomPatronage && (
-                  <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#fafafa' }}>
-                    <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>
-                      Étude de patronage & Gradation numérique
-                    </td>
-                    <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '11px' }}>Fichier DXF / Barème de mesures validé</td>
-                    <td style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700 }}>1 forfait</td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>{Number(analysis.patronagePrice || 0).toFixed(2)}</td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>{Number(analysis.patronagePrice || 0).toFixed(2)}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-
-            {/* Totals and Bank Section */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px', marginBottom: '28px' }}>
-              {/* Bank Details */}
-              <div style={{ flex: 1, backgroundColor: '#f1f5f9', borderRadius: '12px', padding: '14px 18px', fontSize: '11px', border: '1px solid #cbd5e1' }}>
-                <p style={{ fontWeight: 800, textTransform: 'uppercase', color: '#0f172a', margin: '0 0 6px', letterSpacing: '0.5px' }}>
-                  Modalités de Règlement & Virement Bancaire
-                </p>
-                <p style={{ margin: '0 0 3px', color: '#334155' }}><strong>Banque :</strong> {company.bankName || '—'}</p>
-                <p style={{ margin: '0 0 3px', color: '#334155' }}><strong>Titulaire :</strong> {company.bankBeneficiary || company.name || '—'}</p>
-                {company.rib && (
-                  <p style={{ margin: '0 0 6px', color: '#1e293b', fontWeight: 800, fontFamily: 'monospace', fontSize: '12px', backgroundColor: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', display: 'inline-block' }}>
-                    RIB : {company.rib}
-                  </p>
-                )}
-                <p style={{ margin: 0, color: '#64748b', fontSize: '10px' }}>
-                  Délai estimé : {analysis.delaiEstime} dès réception de l'acompte.
-                </p>
-              </div>
-
-              {/* Total Calculation */}
-              <div style={{ width: '260px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 18px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '12px' }}>
-                  <span style={{ color: '#64748b', fontWeight: 600 }}>Total Général HT :</span>
-                  <span style={{ fontWeight: 800, color: '#0f172a' }}>{docTotal.toLocaleString('fr-FR')} MAD</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '12px' }}>
-                  <span style={{ color: '#64748b', fontWeight: 600 }}>TVA (Confection) :</span>
-                  <span style={{ fontWeight: 700, color: '#64748b' }}>Exonérée / HT</span>
-                </div>
-                <div style={{ borderTop: '2px solid #0f172a', paddingTop: '8px', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 900, color: '#0f172a' }}>
-                    <span>Total Devis :</span>
-                    <span>{docTotal.toLocaleString('fr-FR')} MAD</span>
+              {/* Clean Modern Header with Logo */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '16px', marginBottom: '20px', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <img
+                    src={logoSrc}
+                    alt={company.name || 'BEYA CREATIVE'}
+                    style={{ height: '48px', maxWidth: '130px', objectFit: 'contain', display: 'block' }}
+                  />
+                  <div>
+                    <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: '0 0 2px', letterSpacing: isAr ? '0' : '-0.4px', textTransform: 'uppercase' }}>
+                      {company.name || 'BEYA CREATIVE'}
+                    </h1>
+                    <p style={{ fontSize: '10px', fontWeight: 700, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: isAr ? '0' : '1px', margin: '0 0 4px' }}>
+                      {company.subtitle || (isAr ? 'ورشة التفصيل والخياطة وتصنيع الملابس' : 'Confection Textile & Bureau Technique')}
+                    </p>
+                    <p style={{ fontSize: '10.5px', color: '#64748b', margin: 0 }}>
+                      {[company.address, company.phone, company.email].filter(Boolean).join(' • ')}
+                    </p>
+                    {taxLine && (
+                      <p style={{ fontSize: '9.5px', color: '#94a3b8', margin: '2px 0 0' }}>{taxLine}</p>
+                    )}
                   </div>
                 </div>
-                <div style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', borderRadius: '8px', padding: '8px 10px', marginTop: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 900, color: '#92400e' }}>
-                    <span>Acompte 50% :</span>
-                    <span>{acompte.toLocaleString('fr-FR')} MAD</span>
+
+                <div style={{ textAlign: alignEnd, flexShrink: 0 }}>
+                  <div style={{ display: 'inline-block', backgroundColor: '#0f172a', color: '#ffffff', padding: '5px 14px', borderRadius: '999px', fontSize: '11px', fontWeight: 800, letterSpacing: isAr ? '0' : '1.2px', marginBottom: '6px', textTransform: 'uppercase' }}>
+                    {isAr ? 'عرض سعر رسمي' : 'DEVIS OFFICIEL'}
                   </div>
-                  <span style={{ fontSize: '9px', color: '#b45309', display: 'block', marginTop: '2px' }}>
-                    Exigible pour achat tissu & lancement
+                  <p style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', margin: '0 0 2px', fontFamily: 'monospace' }} dir="ltr">
+                    {devisNum}
+                  </p>
+                  <p style={{ fontSize: '10.5px', color: '#64748b', margin: '0 0 2px' }}>
+                    {isAr ? `التاريخ: ${dateStr}` : `Date : ${dateStr}`}
+                  </p>
+                  <p style={{ fontSize: '10.5px', color: '#64748b', margin: 0 }}>
+                    {isAr ? 'الصلاحية: 30 يوماً' : 'Validité : 30 jours'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Client & Model Card (with Model Photo) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '14px 18px', marginBottom: '20px' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: '9.5px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: isAr ? '0' : '0.8px' }}>
+                    {isAr ? 'الزبون / صاحب الطلب' : "Client / Donneur d'Ordre"}
                   </span>
+                  <p style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', margin: '3px 0 2px' }}>
+                    {(lead as any).client || lead.name || currentUser?.nom || currentUser?.email || (isAr ? 'زبون شريك' : 'Client Partenaire BEYA')}
+                  </p>
+                  <p style={{ fontSize: '11px', color: '#475569', margin: '0 0 2px' }}>
+                    {isAr ? 'الهاتف:' : 'Tél :'} <span dir="ltr">{clientPhone || lead.phone || currentUser?.telephone || '—'}</span>
+                  </p>
+                  <p style={{ fontSize: '11px', color: '#475569', margin: 0 }}>
+                    {isAr ? 'البريد:' : 'Email :'} {currentUser?.email || lead.email || '—'}
+                  </p>
+                </div>
+
+                <div style={{ flex: 1.15, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', textAlign: alignEnd }}>
+                  <div style={{ minWidth: 0 }}>
+                    <span style={{ fontSize: '9.5px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: isAr ? '0' : '0.8px' }}>
+                      {isAr ? 'الموديل المطلوب' : 'Modèle & Production'}
+                    </span>
+                    <p style={{ fontSize: '13.5px', fontWeight: 800, color: '#4f46e5', margin: '3px 0 2px' }}>
+                      {analysis.modeleReel}
+                    </p>
+                    <p style={{ fontSize: '11px', color: '#475569', margin: 0, fontWeight: 600 }}>
+                      {isAr ? `الكمية الإجمالية: ${docQty} قطعة` : `Quantité : ${docQty} pièces`}
+                    </p>
+                  </div>
+                  {modelPhoto && (
+                    <img
+                      src={modelPhoto}
+                      alt={analysis.modeleReel}
+                      style={{
+                        width: '74px',
+                        height: '74px',
+                        borderRadius: '12px',
+                        objectFit: 'cover',
+                        border: '1px solid #cbd5e1',
+                        backgroundColor: '#ffffff',
+                        flexShrink: 0,
+                        display: 'block',
+                      }}
+                    />
+                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Legal Statement */}
-            <div style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.5, borderTop: '1px solid #e2e8f0', paddingTop: '12px', marginBottom: '32px' }}>
-              <p style={{ margin: '0 0 4px' }}>
-                <strong>Conditions Générales :</strong> Le présent devis est établi sur la base des spécifications techniques convenues. Le versement de l'acompte de 50% vaut validation ferme et déclenche immédiatement la réservation matière et l'ordre de fabrication en atelier.
-              </p>
-              <p style={{ margin: 0 }}>
-                يعد هذا الدوفيز ملزماً لكلا الطرفين فور أداء تسبيق 50%. يتم تسليم الطلبية بعد إجراء مراقبة الجودة الشاملة وأداء الرصيد المتبقي.
-              </p>
-            </div>
+              {/* Minimalist Items Table */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '11.5px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f1f5f9', color: '#334155', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
+                    <th style={{ padding: '10px 12px', textAlign: alignStart, fontWeight: 800, textTransform: 'uppercase', fontSize: '9.5px', letterSpacing: isAr ? '0' : '0.6px' }}>
+                      {isAr ? 'البيان والخدمة' : 'Désignation'}
+                    </th>
+                    <th style={{ padding: '10px 12px', textAlign: alignStart, fontWeight: 800, textTransform: 'uppercase', fontSize: '9.5px', letterSpacing: isAr ? '0' : '0.6px' }}>
+                      {isAr ? 'القماش والمواصفات' : 'Matière & Détails'}
+                    </th>
+                    <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 800, textTransform: 'uppercase', fontSize: '9.5px', letterSpacing: isAr ? '0' : '0.6px' }}>
+                      {isAr ? 'الكمية' : 'Qté'}
+                    </th>
+                    <th style={{ padding: '10px 12px', textAlign: alignEnd, fontWeight: 800, textTransform: 'uppercase', fontSize: '9.5px', letterSpacing: isAr ? '0' : '0.6px' }}>
+                      {isAr ? 'سعر القطعة' : 'P.U HT'}
+                    </th>
+                    <th style={{ padding: '10px 12px', textAlign: alignEnd, fontWeight: 800, textTransform: 'uppercase', fontSize: '9.5px', letterSpacing: isAr ? '0' : '0.6px' }}>
+                      {isAr ? 'المجموع (د.م)' : 'Total (MAD)'}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {officialLeadDevis?.articles && officialLeadDevis.articles.length > 0 ? (
+                    officialLeadDevis.articles.map((art, idx) => (
+                      <tr key={art.id || idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '12px', fontWeight: 700, color: '#0f172a' }}>
+                          {art.designation || analysis.modeleReel}
+                        </td>
+                        <td style={{ padding: '12px', color: '#475569' }}>
+                          {analysis.tissuSuggere}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 700 }}>
+                          {art.quantite} {isAr ? 'قطعة' : 'pcs'}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: alignEnd, fontWeight: 600 }} dir="ltr">
+                          {Number(art.prixUnitaire || 0).toFixed(2)}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: alignEnd, fontWeight: 800, color: '#0f172a' }} dir="ltr">
+                          {Number(art.total || 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <>
+                      <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '12px', fontWeight: 700, color: '#0f172a' }}>
+                          {isAr ? 'الفصالة والخياطة والفينيسيون الصناعي' : 'Coupe, Confection & Finitions'}
+                          <br />
+                          <span style={{ fontSize: '10.5px', fontWeight: 500, color: '#64748b' }}>{analysis.modeleReel}</span>
+                        </td>
+                        <td style={{ padding: '12px', color: '#475569' }}>
+                          <strong>{isAr ? 'الثوب:' : 'Tissu :'}</strong> {analysis.tissuSuggere}
+                          {analysis.techDetails && (
+                            <>
+                              <br />
+                              <span style={{ fontSize: '10px', color: '#64748b' }}>{analysis.techDetails}</span>
+                            </>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 800 }}>
+                          {docQty} {isAr ? 'قطعة' : 'pcs'}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: alignEnd, fontWeight: 600 }} dir="ltr">
+                          {docUnitPrice.toFixed(2)}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: alignEnd, fontWeight: 800, color: '#0f172a' }} dir="ltr">
+                          {docTotal.toFixed(2)}
+                        </td>
+                      </tr>
 
-            {/* Signatures */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '30px', marginTop: 'auto' }}>
-              <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '12px', padding: '16px', minHeight: '110px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#0f172a', margin: '0 0 8px' }}>
-                  Cachet & Signature de l'Atelier
-                </p>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontStyle: 'italic' }}>
-                  {company.name || 'BEYA'} — Bureau Technique
+                      {analysis.hasCustomPatronage && (
+                        <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#fafafa' }}>
+                          <td style={{ padding: '9px 12px', fontWeight: 600, color: '#334155' }}>
+                            {isAr ? 'دراسة الباترون والتدريج الرقمي' : 'Patronage & Gradation Numérique'}
+                          </td>
+                          <td style={{ padding: '9px 12px', color: '#64748b', fontSize: '10.5px' }}>
+                            {isAr ? 'ملف DXF وجدول القياسات المعتمد' : 'Fichier DXF / Barème de mesures validé'}
+                          </td>
+                          <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 600 }}>
+                            {isAr ? 'حزمة 1' : '1 forfait'}
+                          </td>
+                          <td style={{ padding: '9px 12px', textAlign: alignEnd, color: '#64748b' }}>—</td>
+                          <td style={{ padding: '9px 12px', textAlign: alignEnd, fontWeight: 700, color: '#059669' }}>
+                            {isAr ? 'مدمج' : 'Inclus'}
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  )}
+                </tbody>
+              </table>
+
+              {/* Totals & Bank Section */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px', marginBottom: '22px' }}>
+                <div style={{ flex: 1, backgroundColor: '#f8fafc', borderRadius: '12px', padding: '14px 16px', fontSize: '11px', border: '1px solid #e2e8f0' }}>
+                  <p style={{ fontWeight: 800, textTransform: 'uppercase', color: '#0f172a', margin: '0 0 6px', fontSize: '10px', letterSpacing: isAr ? '0' : '0.6px' }}>
+                    {isAr ? 'بيانات التحويل البنكي' : 'Règlement par Virement Bancaire'}
+                  </p>
+                  <p style={{ margin: '0 0 3px', color: '#334155' }}>
+                    <strong>{isAr ? 'البنك:' : 'Banque :'}</strong> {company.bankName || '—'}
+                  </p>
+                  <p style={{ margin: '0 0 6px', color: '#334155' }}>
+                    <strong>{isAr ? 'المستفيد:' : 'Titulaire :'}</strong> {company.bankBeneficiary || company.name || '—'}
+                  </p>
+                  {company.rib && (
+                    <p dir="ltr" style={{ margin: '0 0 6px', color: '#0f172a', fontWeight: 800, fontFamily: 'monospace', fontSize: '11.5px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '8px', display: 'inline-block' }}>
+                      RIB : {company.rib}
+                    </p>
+                  )}
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '10px' }}>
+                    {isAr ? `مدة الإنجاز التقديرية: ${analysis.delaiEstime}` : `Délai estimé : ${analysis.delaiEstime} dès réception de l'acompte.`}
+                  </p>
                 </div>
-                {company.cachetUrl && (
-                  <img src={company.cachetUrl} alt="Cachet" style={{ maxHeight: '64px', marginTop: '6px', objectFit: 'contain' }} />
+
+                <div style={{ width: '250px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '11.5px' }}>
+                    <span style={{ color: '#64748b', fontWeight: 600 }}>{isAr ? 'المجموع الصافي:' : 'Total HT :'}</span>
+                    <span style={{ fontWeight: 700, color: '#0f172a' }} dir="ltr">{docTotal.toLocaleString('fr-FR')} MAD</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '11.5px' }}>
+                    <span style={{ color: '#64748b', fontWeight: 600 }}>{isAr ? 'الضريبة:' : 'TVA :'}</span>
+                    <span style={{ fontWeight: 600, color: '#64748b' }}>{isAr ? 'معفاة / HT' : 'Exonérée / HT'}</span>
+                  </div>
+                  <div style={{ borderTop: '1.5px solid #0f172a', paddingTop: '8px', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>
+                      <span>{isAr ? 'المجموع الإجمالي:' : 'Total Devis :'}</span>
+                      <span dir="ltr">{docTotal.toLocaleString('fr-FR')} MAD</span>
+                    </div>
+                  </div>
+                  <div style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', borderRadius: '8px', padding: '8px 10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: 800, color: '#92400e' }}>
+                      <span>{isAr ? 'التسبيق (50%):' : 'Acompte 50% :'}</span>
+                      <span dir="ltr">{acompte.toLocaleString('fr-FR')} MAD</span>
+                    </div>
+                    <span style={{ fontSize: '9px', color: '#b45309', display: 'block', marginTop: '2px' }}>
+                      {isAr ? 'يؤدى لتأكيد الطلب وحجز القماش' : 'Exigible pour réservation matière & lancement'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Strictly Single-Language Conditions */}
+              <div style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.6, borderTop: '1px solid #e2e8f0', paddingTop: '12px', marginBottom: '24px' }}>
+                {isAr ? (
+                  <p style={{ margin: 0 }}>
+                    <strong style={{ color: '#334155' }}>الشروط العامة:</strong> يعد هذا العرض ملزماً لكلا الطرفين فور أداء تسبيق 50% لإطلاق حجز القماش والتصنيع بالورشة. يتم تسليم الطلبية بعد إجراء مراقبة الجودة الشاملة وأداء المبلغ المتبقي.
+                  </p>
+                ) : (
+                  <p style={{ margin: 0 }}>
+                    <strong style={{ color: '#334155' }}>Conditions Générales :</strong> Le présent devis est établi sur la base des spécifications techniques convenues. Le versement de l'acompte de 50% vaut validation ferme et déclenche immédiatement la réservation matière et la mise en fabrication en atelier.
+                  </p>
                 )}
               </div>
 
-              <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '12px', padding: '16px', minHeight: '110px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#0f172a', margin: '0 0 8px' }}>
-                  Bon pour Accord & Signature du Client
-                </p>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontStyle: 'italic' }}>
-                  "Lu et approuvé, bon pour commande"
+              {/* Signatures */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px', marginTop: 'auto' }}>
+                <div style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 16px', minHeight: '98px' }}>
+                  <p style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', color: '#0f172a', margin: '0 0 6px' }}>
+                    {isAr ? 'ختم وتوقيع الورشة' : "Cachet & Signature de l'Atelier"}
+                  </p>
+                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                    {company.name || 'BEYA'} — {isAr ? 'المكتب التقني' : 'Bureau Technique'}
+                  </div>
+                  {company.cachetUrl && (
+                    <img src={company.cachetUrl} alt="Cachet" style={{ maxHeight: '58px', marginTop: '6px', objectFit: 'contain' }} />
+                  )}
+                </div>
+
+                <div style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 16px', minHeight: '98px' }}>
+                  <p style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', color: '#0f172a', margin: '0 0 6px' }}>
+                    {isAr ? 'موافقة وتوقيع الزبون' : 'Bon pour Accord & Signature du Client'}
+                  </p>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', fontStyle: 'italic' }}>
+                    {isAr ? '"قرأت ووافقت على العرض"' : '"Lu et approuvé, bon pour commande"'}
+                  </div>
                 </div>
               </div>
-            </div>
             </div>
           </div>
         );
@@ -8136,7 +8591,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                         <th className={`px-6 py-5 font-black uppercase tracking-widest text-[10px] ${isAr ? 'text-right' : 'text-left'}`}>
                           {isAr ? 'نقطة القياس' : 'Point de Mesure'}
                         </th>
-                        {viewMesuresFiche.tailles.map(t => (
+                        {(Array.isArray(viewMesuresFiche.tailles) ? viewMesuresFiche.tailles : []).map(t => (
                           <th key={t} className="px-6 py-5 text-center font-black uppercase tracking-widest text-[10px]">
                             {t}
                           </th>
@@ -8144,12 +8599,12 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {viewMesuresFiche.mesures.map((m, idx) => (
+                      {(Array.isArray(viewMesuresFiche.mesures) ? viewMesuresFiche.mesures : []).map((m, idx) => (
                         <tr key={idx} className="hover:bg-indigo-50/30 transition-colors">
                           <td className={`px-6 py-4 font-bold text-slate-700 ${isAr ? 'text-right' : 'text-left'}`}>
                             {m.nom}
                           </td>
-                          {viewMesuresFiche.tailles.map(taille => (
+                          {(Array.isArray(viewMesuresFiche.tailles) ? viewMesuresFiche.tailles : []).map(taille => (
                             <td key={taille} className="px-6 py-4 text-center font-black text-indigo-600">
                               {m.valeurs?.[taille] || 0}<span className="text-[10px] font-normal text-slate-400 ml-1">{isAr ? 'سم' : 'cm'}</span>
                             </td>

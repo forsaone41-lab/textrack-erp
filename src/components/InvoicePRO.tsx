@@ -7,17 +7,24 @@ interface InvoicePROProps {
   commande?: Commande;
   company: CompanyProfile;
   id?: string;
+  modelPhoto?: string;
+  lang?: 'fr' | 'ar';
 }
 
-export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, company, id }) => {
+export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, company, id, modelPhoto, lang = 'fr' }) => {
+  const isAr = lang === 'ar';
   const fmtDate = (d?: string) => {
     if (!d) return '—';
-    return new Date(d).toLocaleDateString('fr-MA', { day: '2-digit', month: 'long', year: 'numeric' });
+    return new Date(d).toLocaleDateString(isAr ? 'ar-MA' : 'fr-MA', { day: '2-digit', month: 'long', year: 'numeric' });
   };
 
   const isDevis = facture.typeDoc === 'devis';
   const isRecu = facture.typeDoc === 'recu';
-  const docTitle = isDevis ? 'DEVIS' : isRecu ? 'REÇU' : 'FACTURE';
+  const docTitle = isAr
+    ? (isDevis ? 'عرض سعر' : isRecu ? 'وصل أداء' : 'فاتورة')
+    : (isDevis ? 'DEVIS' : isRecu ? 'REÇU' : 'FACTURE');
+  const displayLogo = company.logoInvoice || company.logoUrl || '/logo.png';
+  const resolvedModelPhoto = modelPhoto || (commande as any)?.modelePhoto || (commande as any)?.photo;
   
   const total = facture.montant;
   const qte = commande?.quantite || 1;
@@ -142,116 +149,134 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
   }
 
   return (
-    <div id={id} className="bg-white p-10 mx-auto text-slate-800" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Inter, sans-serif' }}>
+    <div id={id} dir={isAr ? 'rtl' : 'ltr'} className="bg-white p-10 mx-auto text-slate-800" style={{ width: '210mm', minHeight: '297mm', fontFamily: isAr ? "'Cairo', system-ui, sans-serif" : "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
       {/* Header */}
-      <div className="flex justify-between items-end mb-4">
+      <div className="flex justify-between items-center mb-5">
         <div className="flex items-center gap-4">
-          {company.logoInvoice || company.logoUrl ? (
-            <img src={company.logoInvoice || company.logoUrl} className="h-14 object-contain" alt={company.name} />
-          ) : (
-            <div className="w-12 h-12 bg-[#4F46E5] rounded-xl flex items-center justify-center text-white text-2xl font-black">
-              {company.name.charAt(0)}
-            </div>
-          )}
+          <img src={displayLogo} className="h-14 max-w-[140px] object-contain" alt={company.name} />
           <div>
-            <h1 className="text-[22px] font-black text-[#1E1B4B] uppercase leading-none tracking-tight">{company.name}</h1>
-            <p className="text-[10px] font-bold text-[#4F46E5] uppercase tracking-[0.2em] mt-1">{company.subtitle || 'Confection de vêtement'}</p>
+            <h1 className="text-[20px] font-black text-slate-900 uppercase leading-none tracking-tight">{company.name}</h1>
+            <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.18em] mt-1">{company.subtitle || (isAr ? 'ورشة الخياطة وتصنيع الملابس' : 'Confection de vêtement')}</p>
           </div>
         </div>
-        <div className="text-right">
-          <h2 className="text-4xl font-black text-[#1E1B4B] uppercase tracking-tighter leading-none mb-2">{docTitle}</h2>
-          <p className="text-[10px] font-bold text-slate-500">N° {facture.numero} — {fmtDate(facture.date)}</p>
+        <div className={isAr ? 'text-left' : 'text-right'}>
+          <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight leading-none mb-2">{docTitle}</h2>
+          <p className="text-[11px] font-bold text-slate-500">{isAr ? `رقم ${facture.numero}` : `N° ${facture.numero}`} — {fmtDate(facture.date)}</p>
         </div>
       </div>
 
-      <div className="h-1 w-full bg-[#4F46E5] mb-8" />
+      <div className="h-0.5 w-full bg-slate-200 mb-7" />
 
       {/* Addresses */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-5">
-          <p className="text-[9px] font-black text-[#4F46E5] uppercase tracking-[0.2em] mb-3">Émetteur</p>
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+          <p className="text-[9px] font-black text-indigo-600 uppercase tracking-[0.18em] mb-2">{isAr ? 'المرسل / الورشة' : 'Émetteur'}</p>
           <p className="text-sm font-black text-slate-900 uppercase mb-1">{company.name}</p>
           <div className="text-[11px] font-medium text-slate-600 leading-relaxed">
-            <p>{company.address || 'Zone Industrielle, Meknès'}</p>
-            <p>Tél: {company.phone}</p>
-            <p>{company.email || 'contact@beyacreative.com'}</p>
+            {company.address && <p>{company.address}</p>}
+            {company.phone && <p>{isAr ? 'الهاتف:' : 'Tél:'} {company.phone}</p>}
+            {company.email && <p>{company.email}</p>}
           </div>
         </div>
-        <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-5">
-          <p className="text-[9px] font-black text-[#4F46E5] uppercase tracking-[0.2em] mb-3">Client / Destinataire</p>
-          <p className="text-sm font-black text-slate-900 uppercase mb-1">{facture.client}</p>
-          <div className="text-[11px] font-medium text-slate-600 leading-relaxed">
-            <p>Client Partenaire</p>
-            <p>Maroc</p>
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black text-indigo-600 uppercase tracking-[0.18em] mb-2">{isAr ? 'الزبون / المستفيد' : 'Client / Destinataire'}</p>
+            <p className="text-sm font-black text-slate-900 uppercase mb-1">{facture.client}</p>
+            <div className="text-[11px] font-medium text-slate-600 leading-relaxed">
+              <p>{isAr ? 'زبون شريك' : 'Client Partenaire'}</p>
+              {commande?.reference && <p className="font-mono text-indigo-600 font-bold">{commande.reference}</p>}
+            </div>
           </div>
+          {resolvedModelPhoto && (
+            <img
+              src={resolvedModelPhoto}
+              alt={commande?.modele || 'Modèle'}
+              className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0"
+            />
+          )}
         </div>
       </div>
 
       {/* Objet */}
-      <div className="bg-[#EEF2FF] border border-[#C7D2FE] rounded-lg p-3 mb-8">
-        <p className="text-[11px] font-black text-[#4F46E5]">
-          Objet : {docTitle} de confection — {commande?.modele || 'Production Textile'} {commande?.quantite ? `× ${commande.quantite} pièces` : ''}
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-7 flex items-center justify-between gap-4">
+        <p className="text-[11px] font-bold text-slate-700">
+          {isAr
+            ? `الموضوع: ${docTitle} للتفصيل والخياطة — ${commande?.modele || 'إنتاج نسيجي'} ${commande?.quantite ? `× ${commande.quantite} قطعة` : ''}`
+            : `Objet : ${docTitle} de confection — ${commande?.modele || 'Production Textile'} ${commande?.quantite ? `× ${commande.quantite} pièces` : ''}`}
         </p>
       </div>
 
-      {/* FACTURE / DEVIS: invoice table layout */}
+      {/* FACTURE / DEVIS: clean minimalist table layout */}
       <div className="mb-8">
         <table className="w-full">
           <thead>
-            <tr className="bg-[#0B0F19] text-white">
-              <th className="text-left py-3 px-4 text-[10px] font-black uppercase tracking-widest rounded-tl-xl">Description</th>
-              <th className="text-center py-3 px-4 text-[10px] font-black uppercase tracking-widest">Qté</th>
-              <th className="text-right py-3 px-4 text-[10px] font-black uppercase tracking-widest">PU (MAD)</th>
-              <th className="text-right py-3 px-4 text-[10px] font-black uppercase tracking-widest rounded-tr-xl">Total (MAD)</th>
+            <tr className="bg-slate-100 text-slate-700 border-y border-slate-200">
+              <th className={`${isAr ? 'text-right' : 'text-left'} py-3 px-4 text-[10px] font-black uppercase tracking-widest`}>{isAr ? 'البيان' : 'Description'}</th>
+              <th className="text-center py-3 px-4 text-[10px] font-black uppercase tracking-widest">{isAr ? 'الكمية' : 'Qté'}</th>
+              <th className={`${isAr ? 'text-left' : 'text-right'} py-3 px-4 text-[10px] font-black uppercase tracking-widest`}>{isAr ? 'سعر القطعة (د.م)' : 'PU (MAD)'}</th>
+              <th className={`${isAr ? 'text-left' : 'text-right'} py-3 px-4 text-[10px] font-black uppercase tracking-widest`}>{isAr ? 'المجموع (د.م)' : 'Total (MAD)'}</th>
             </tr>
           </thead>
           <tbody className="border-b border-slate-200">
             {facture.articles && facture.articles.length > 0 ? (
               facture.articles.map((art, idx) => (
-                <tr key={art.id || idx}>
-                  <td className="py-5 px-4 text-left">
-                    <p className="font-black text-slate-900 text-xs">{art.designation || 'Article / Service'}</p>
+                <tr key={art.id || idx} className="border-b border-slate-100">
+                  <td className={`py-4 px-4 ${isAr ? 'text-right' : 'text-left'}`}>
+                    <p className="font-bold text-slate-900 text-xs">{art.designation || (isAr ? 'منتج / خدمة' : 'Article / Service')}</p>
                   </td>
-                  <td className="py-5 px-4 text-center font-black text-slate-800 text-xs">{art.quantite}</td>
-                  <td className="py-5 px-4 text-right font-black text-[#4F46E5] text-xs">{art.prixUnitaire.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
-                  <td className="py-5 px-4 text-right font-black text-slate-900 text-xs">{art.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+                  <td className="py-4 px-4 text-center font-bold text-slate-800 text-xs">{art.quantite}</td>
+                  <td className={`py-4 px-4 ${isAr ? 'text-left' : 'text-right'} font-bold text-indigo-600 text-xs`}>{art.prixUnitaire.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+                  <td className={`py-4 px-4 ${isAr ? 'text-left' : 'text-right'} font-black text-slate-900 text-xs`}>{art.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td className="py-5 px-4 text-left">
-                  <p className="font-black text-slate-900 text-xs">Production Textile & Confection</p>
-                  {commande?.modele && <p className="text-[10px] font-bold text-slate-500 mt-0.5">{commande.modele}</p>}
+                <td className={`py-4 px-4 ${isAr ? 'text-right' : 'text-left'}`}>
+                  <p className="font-bold text-slate-900 text-xs">{isAr ? 'الإنتاج النسيجي والخياطة' : 'Production Textile & Confection'}</p>
+                  {commande?.modele && <p className="text-[10px] font-semibold text-slate-500 mt-0.5">{commande.modele}</p>}
                 </td>
-                <td className="py-5 px-4 text-center font-black text-slate-800 text-xs">{qte}</td>
-                <td className="py-5 px-4 text-right font-black text-[#4F46E5] text-xs">{pu.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
-                <td className="py-5 px-4 text-right font-black text-slate-900 text-xs">{total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+                <td className="py-4 px-4 text-center font-bold text-slate-800 text-xs">{qte}</td>
+                <td className={`py-4 px-4 ${isAr ? 'text-left' : 'text-right'} font-bold text-indigo-600 text-xs`}>{pu.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+                <td className={`py-4 px-4 ${isAr ? 'text-left' : 'text-right'} font-black text-slate-900 text-xs`}>{total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
               </tr>
             )}
           </tbody>
         </table>
 
-        {/* Totals Box */}
-        <div className="flex justify-end mt-4">
-          <div className="w-1/2">
+        {/* Totals & Bank Info Row */}
+        <div className="flex justify-between items-start gap-6 mt-6">
+          <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-5 text-[11px] text-slate-600 space-y-1.5">
+            <p className="text-[10px] font-black text-slate-800 uppercase tracking-wider mb-2">
+              {isAr ? 'بيانات التحويل البنكي' : 'Coordonnées Bancaires'}
+            </p>
+            <p><strong className="text-slate-800">{isAr ? 'البنك:' : 'Banque :'}</strong> {company.bankName || '—'}</p>
+            <p><strong className="text-slate-800">{isAr ? 'المستفيد:' : 'Titulaire :'}</strong> {company.bankBeneficiary || company.name || '—'}</p>
+            {company.rib && (
+              <p className="font-mono font-bold text-slate-900 bg-white border border-slate-200 rounded-lg px-3 py-1.5 inline-block mt-1" dir="ltr">
+                RIB : {company.rib}
+              </p>
+            )}
+          </div>
+
+          <div className="w-64">
             {(!facture.articles || facture.articles.length === 0) && (
               <div className="flex justify-between py-2 px-4">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prix Unitaire</span>
-                <span className="text-[11px] font-black text-slate-700">{pu.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{isAr ? 'سعر القطعة' : 'Prix Unitaire'}</span>
+                <span className="text-[11px] font-bold text-slate-700">{pu.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
               </div>
             )}
             <div className="flex justify-between py-2 px-4 border-b border-slate-100 mb-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Brut</span>
-              <span className="text-[11px] font-black text-slate-700">{total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{isAr ? 'المجموع الخام' : 'Total Brut'}</span>
+              <span className="text-[11px] font-bold text-slate-700">{total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
             </div>
-            <div className="bg-[#4F46E5] rounded-xl p-6 text-white flex items-center justify-between shadow-lg shadow-indigo-500/30">
+            <div className="bg-slate-900 rounded-xl p-5 text-white flex items-center justify-between">
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-80">Total Général</p>
-                <p className="text-[11px] font-black mt-0.5">{isDevis ? 'Net à payer' : 'TTC'}</p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.18em] opacity-75">{isAr ? 'المجموع العام' : 'Total Général'}</p>
+                <p className="text-[11px] font-black mt-0.5">{isDevis ? (isAr ? 'صافي للأداء' : 'Net à payer') : 'TTC'}</p>
               </div>
-              <div className="text-right">
-                <span className="text-3xl font-black tracking-tight">{total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</span>
-                <span className="text-xs font-black ml-2 opacity-90">MAD</span>
+              <div className={isAr ? 'text-left' : 'text-right'}>
+                <span className="text-2xl font-black tracking-tight">{total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</span>
+                <span className="text-xs font-black ml-1.5 opacity-90">MAD</span>
               </div>
             </div>
           </div>
@@ -259,36 +284,45 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
       </div>
 
       {/* Footer Area: Conditions + Signature */}
-      <div className="flex gap-6 mb-12">
+      <div className="flex gap-6 mb-10">
         {/* Conditions */}
-        <div className="flex-1 border-2 border-[#4F46E5] rounded-xl p-6">
-          <h3 className="flex items-center gap-2 text-sm font-black text-[#1E1B4B] uppercase tracking-wider mb-4 border-b border-[#E2E8F0] pb-3">
-            <ClipboardList className="w-5 h-5 text-[#4F46E5]" /> Conditions Générales
+        <div className="flex-1 border border-slate-200 rounded-xl p-5">
+          <h3 className="flex items-center gap-2 text-xs font-black text-slate-900 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2.5">
+            <ClipboardList className="w-4 h-4 text-indigo-600" /> {isAr ? 'الشروط العامة' : 'Conditions Générales'}
           </h3>
-          <ul className="space-y-3 text-[11px] font-semibold text-slate-600">
-            <li><span className="text-[#4F46E5] font-black">1.</span> Ce {docTitle.toLowerCase()} est <strong className="text-slate-900">valable 15 jours</strong> à compter de la date d'émission.</li>
-            <li><span className="text-[#4F46E5] font-black">2.</span> Un <strong className="text-slate-900">acompte de 50%</strong> est requis à la confirmation de la commande.</li>
-            <li><span className="text-[#4F46E5] font-black">3.</span> Le <strong className="text-slate-900">délai de production</strong> sera confirmé après validation de l'échantillon.</li>
-            <li><span className="text-[#4F46E5] font-black">4.</span> Toute <strong className="text-slate-900">modification du modèle</strong> après lancement peut entraîner une révision tarifaire.</li>
-          </ul>
+          {isAr ? (
+            <ul className="space-y-2 text-[11px] font-medium text-slate-600">
+              <li><span className="text-indigo-600 font-black">1.</span> هذا العرض صالح لمدة <strong className="text-slate-900">15 يوماً</strong> من تاريخ الإصدار.</li>
+              <li><span className="text-indigo-600 font-black">2.</span> يتم تأكيد الطلبية بأداء <strong className="text-slate-900">تسبيق 50%</strong> من المبلغ الإجمالي.</li>
+              <li><span className="text-indigo-600 font-black">3.</span> يتم تثبيت <strong className="text-slate-900">مدة الإنتاج</strong> بعد المصادقة على العينة الأولية.</li>
+              <li><span className="text-indigo-600 font-black">4.</span> أي <strong className="text-slate-900">تعديل على الموديل</strong> بعد الإطلاق قد يستلزم مراجعة التسعيرة.</li>
+            </ul>
+          ) : (
+            <ul className="space-y-2 text-[11px] font-medium text-slate-600">
+              <li><span className="text-indigo-600 font-black">1.</span> Ce {docTitle.toLowerCase()} est <strong className="text-slate-900">valable 15 jours</strong> à compter de la date d'émission.</li>
+              <li><span className="text-indigo-600 font-black">2.</span> Un <strong className="text-slate-900">acompte de 50%</strong> est requis à la confirmation de la commande.</li>
+              <li><span className="text-indigo-600 font-black">3.</span> Le <strong className="text-slate-900">délai de production</strong> sera confirmé après validation de l'échantillon.</li>
+              <li><span className="text-indigo-600 font-black">4.</span> Toute <strong className="text-slate-900">modification du modèle</strong> après lancement peut entraîner une révision tarifaire.</li>
+            </ul>
+          )}
         </div>
         
         {/* Signature / Cachet */}
         {company.cachetUrl && (
           <div className="w-1/3 flex flex-col items-center justify-center border border-slate-200 bg-slate-50/50 rounded-xl p-4 relative overflow-visible">
-             <span className="absolute top-3 left-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Cachet / Signature</span>
+             <span className={`absolute top-3 ${isAr ? 'right-4' : 'left-4'} text-[9px] font-black text-slate-400 uppercase tracking-widest`}>{isAr ? 'الختم والتوقيع' : 'Cachet / Signature'}</span>
              <img src={company.cachetUrl} className="max-h-24 w-auto object-contain opacity-95 mix-blend-multiply mt-4" alt="Cachet" />
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="text-center pt-6 border-t border-slate-200">
+      <div className="text-center pt-5 border-t border-slate-200">
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
-          Merci de votre confiance — {company.name}
+          {isAr ? `شكراً لثقتكم — ${company.name}` : `Merci de votre confiance — ${company.name}`}
         </p>
         <p className="text-[9px] font-bold text-slate-400">
-          {company.address || 'Zone Industrielle, Meknès'} | {company.phone} | {company.email || 'contact@beyacreative.com'}
+          {[company.address, company.phone, company.email].filter(Boolean).join(' | ')}
         </p>
       </div>
     </div>

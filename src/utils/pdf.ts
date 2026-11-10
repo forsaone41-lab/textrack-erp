@@ -53,13 +53,16 @@ export function printElement(elementId: string) {
   });
 
   doc.open();
-  doc.write(`<!DOCTYPE html><html dir="auto"><head><title>Document</title>
+  doc.write(`<!DOCTYPE html><html dir="${original.getAttribute('dir') || 'auto'}"><head><meta charset="UTF-8" /><base href="${window.location.origin}/" /><title>Document</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     ${stylesHtml}
     <style>
-      html, body { margin: 0; padding: 0; background: white !important; font-family: sans-serif; color: #0f172a !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      html, body { margin: 0; padding: 0; background: white !important; font-family: 'Plus Jakarta Sans', 'Cairo', system-ui, -apple-system, sans-serif; color: #0f172a !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       body > div { position: static !important; left: auto !important; top: auto !important; transform: none !important; max-width: 100% !important; margin: 0 auto !important; opacity: 1 !important; visibility: visible !important; display: block !important; }
-      img { max-width: 100% !important; height: auto !important; }
-      @page { margin: 1.5cm; size: auto; }
+      img { max-width: 100% !important; }
+      @page { margin: 1.2cm; size: auto; }
       @media print {
         html, body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         body > div { position: static !important; left: auto !important; top: auto !important; transform: none !important; opacity: 1 !important; visibility: visible !important; }
@@ -75,7 +78,11 @@ export function printElement(elementId: string) {
     if (printed) return;
     printed = true;
     const images = Array.from(doc.querySelectorAll('img'));
-    Promise.all(images.map(img => img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; }))).then(() => {
+    const imgPromise = Promise.all(images.map(img => img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; })));
+    const fontsReady = (doc as any).fonts?.ready
+      ? Promise.race([(doc as any).fonts.ready.catch(() => {}), new Promise(r => setTimeout(r, 900))])
+      : Promise.resolve();
+    Promise.all([imgPromise, fontsReady]).then(() => {
       setTimeout(() => { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); }, 450);
     });
   };
