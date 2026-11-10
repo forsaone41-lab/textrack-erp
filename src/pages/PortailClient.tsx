@@ -381,6 +381,26 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [sourcingSelectedColor, setSourcingSelectedColor] = useState<Record<string, string>>({});
   const [fabricOrderSent, setFabricOrderSent] = useState<Record<string, boolean>>({});
 
+  // Exact tiered simulator pricing relative to the Admin/Workshop baseline quantity & price:
+  // At original order quantity -> returns exact basePrice (0% mutation!).
+  // Increasing quantity decreases unit price smoothly.
+  const computeSimulatedUnitPrice = (qty: number, basePrice: number, baselineQty: number) => {
+    const safeBase = Math.max(1, Number(basePrice) || 0);
+    const safeBaseQty = Math.max(1, Number(baselineQty) || 1);
+    const safeQty = Math.max(1, Number(qty) || safeBaseQty);
+    if (safeQty === safeBaseQty) return Math.round(safeBase);
+    if (safeQty > safeBaseQty) {
+      const ratio = safeQty / safeBaseQty;
+      if (safeQty >= 500 || ratio >= 4) return Math.max(1, Math.round(safeBase * 0.85));
+      if (safeQty >= 300 || ratio >= 2.5) return Math.max(1, Math.round(safeBase * 0.89));
+      if (ratio >= 1.75) return Math.max(1, Math.round(safeBase * 0.93));
+      if (ratio >= 1.25) return Math.max(1, Math.round(safeBase * 0.96));
+      return Math.max(1, Math.round(safeBase * 0.98));
+    }
+    if (safeQty < safeBaseQty * 0.5) return Math.round(safeBase * 1.12);
+    return Math.round(safeBase * 1.06);
+  };
+
   // ─── Apple-style City / Location Selector ───
   const [showCityModal, setShowCityModal] = useState(false);
   const [selectedCityDraft, setSelectedCityDraft] = useState('');
@@ -1043,22 +1063,93 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const handleValidateDevisAndVirement = async (lead: Lead) => {
     setValidatingDevisSending(true);
     try {
+      const analysis = getDemandeAnalysis(lead, isAr);
+      const baseQty = Math.max(1, Number(analysis.qty) || Number(lead.quantity) || 1);
+      const activeQty = selectedTierQty[lead.id] !== undefined ? selectedTierQty[lead.id] : baseQty;
+      const isClientFab = analysis.canSwitchFabricSource && fabricOption[lead.id] === 'client';
+      const basePrice = isClientFab ? analysis.confectionPrice : analysis.fullPackagePrice;
+      const activeUnitPrice = computeSimulatedUnitPrice(activeQty, basePrice, baseQty);
+      const activeTotalPrice = activeUnitPrice * activeQty;
+      const acompteAmount = (isClientFab && analysis.isOfficialAtelierDecision && analysis.adminMatierePrice > 0)
+        ? 0
+        : Math.round(activeTotalPrice * 0.5);
+
       const extDetails: any = {};
       Object.assign(extDetails, parseLeadDetailsJson(lead.details));
       extDetails.devisStatus = virementReceiptFile ? 'acompte_paye' : 'valide';
       extDetails.clientValideDate = new Date().toISOString();
+      if (activeQty !== baseQty) {
+        extDetails.clientAdjustedQty = activeQty;
+        extDetails.adminQty = activeQty;
+      }
       if (virementReceiptFile) extDetails.virementReceipt = virementReceiptFile;
 
       const updatedLead: Lead = {
         ...lead,
+        quantity: activeQty !== baseQty ? activeQty : lead.quantity,
+        unitPrice: activeQty !== baseQty ? activeUnitPrice : lead.unitPrice,
+        totalPrice: activeQty !== baseQty ? activeTotalPrice : (lead.totalPrice || activeTotalPrice),
+        crmPrice: activeQty !== baseQty ? activeUnitPrice : lead.crmPrice,
         details: JSON.stringify(extDetails),
         crmStage: 'confirme',
-        statusProgression: virementReceiptFile ? 'production' : 'etude',
-        reponseAtelierDate: new Date().toISOString()
+        statusProgression: virementReceiptFile ? 'echantillon' : (lead.statusProgression || 'etude'),
+        reponseAtelierDate: new Date().toISOString(),
+        ...(virementReceiptFile ? { preuveClient: virementReceiptFile } : {})
       };
       (updatedLead as any).devisStatus = virementReceiptFile ? 'acompte_paye' : 'valide';
 
       await saveRecord('leads', updatedLead);
+
+      // Update official devis document total if the client raised quantity in simulator
+      const officialDevis = getOfficialDevisForLead(lead);
+      if (officialDevis && activeQty !== baseQty) {
+        try {
+          await saveRecord('factures', {
+            ...officialDevis,
+            montant: activeTotalPrice,
+            articles: [{
+              id: officialDevis.articles?.[0]?.id || genId(),
+              designation: analysis.modeleReel,
+              quantite: activeQty,
+              prixUnitaire: activeUnitPrice,
+              total: activeTotalPrice
+            }]
+          });
+        } catch {}
+      }
+
+      // If client attached a Virement receipt inside the Validation modal, also save an official Recu in factures
+      if (virementReceiptFile) {
+        try {
+          const recuDoc: Partial<Facture> = {
+            id: genId(),
+            numero: `REC-${Date.now().toString().slice(-6)}`,
+            client: currentUser?.nom || lead.name,
+            date: new Date().toISOString(),
+            echeance: new Date().toISOString().split('T')[0],
+            montant: acompteAmount,
+            typeDoc: 'recu',
+            statut: 'en_verification',
+            banque: 'virement',
+            articles: [{
+              id: genId(),
+              designation: `[#${lead.id.substring(0, 8).toUpperCase()}] ${analysis.modeleReel} (${activeQty} pcs)`,
+              quantite: activeQty,
+              prixUnitaire: activeUnitPrice,
+              total: acompteAmount
+            }],
+            preuvePaiement: virementReceiptFile
+          };
+          await saveRecord('factures', recuDoc);
+          const { sendPushToAll } = await import('../utils/pushNotifications');
+          sendPushToAll(
+            isAr ? '💰 تأكيد دوفيز + وصل تسبيق جديد' : '💰 Devis Validé + Reçu Virement',
+            `${currentUser?.nom || lead.name} — ${acompteAmount.toLocaleString()} MAD (${activeQty} pcs)`,
+            '/recus'
+          ).catch(() => {});
+        } catch {}
+      }
+
       setMesDemandes(prev => prev.map(m => m.id === lead.id ? updatedLead : m));
       setSelectedDemandePage(prev => prev?.id === lead.id ? updatedLead : prev);
       
@@ -2235,20 +2326,43 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     
     let extDetails: any = {};
     extDetails = parseLeadDetailsJson(d.details);
+    const devStateForAnalysis = getLeadDevisState(d);
+    const officialDoc = getOfficialDevisForLead(d);
+    const isOfficialAtelierDecision = Boolean(
+      devStateForAnalysis.isConfirmedByAtelier ||
+      devStateForAnalysis.isVal ||
+      extDetails.adminHasOfficialDecision === true
+    );
 
     // Check custom saved values from database/atelier edit first
-    const savedUnitPrice = (d.unitPrice && Number(d.unitPrice) > 0) ? Number(d.unitPrice) : (d.crmPrice && Number(d.crmPrice) > 0) ? Number(d.crmPrice) : null;
+    const savedUnitPrice = (d.unitPrice && Number(d.unitPrice) > 0)
+      ? Number(d.unitPrice)
+      : (d.crmPrice && Number(d.crmPrice) > 0)
+        ? Number(d.crmPrice)
+        : null;
     const isGenericFormLabel = (s?: string | null) => {
       if (!s) return true;
       const low = s.trim().toLowerCase();
       return !low || low === 'model' || low === 'jakit' || low === 'modz' || low.includes('formulaire avanc');
     };
     const savedModele = !isGenericFormLabel(d.modeleReel) ? d.modeleReel!.trim() : null;
-    const savedTissu = (d.tissuSuggere && d.tissuSuggere.trim() && !d.tissuSuggere.includes('قماش مخصص ومطابق للمواصفات') && !d.tissuSuggere.includes('Tissu adapté selon cahier')) ? d.tissuSuggere.trim() : null;
-    const savedTech = (d.techDetails && d.techDetails.trim() && !d.techDetails.includes('قصة وخياطة مخصصة بدقة عالية مع معالجة')) ? d.techDetails.trim() : null;
+    const isLegacyFakeFabric = d.tissuSuggere === 'مولتون قطن مبطن 320g / French Terry' && extDetails.adminFabric === undefined;
+    const isLegacyFakeTech = d.techDetails === 'طبعة سيريغرافي فالصدر • كابوش مبطن بكوردون' && extDetails.adminTechDetails === undefined;
+
+    const savedTissu = (d.tissuSuggere && d.tissuSuggere.trim() && !isLegacyFakeFabric && !d.tissuSuggere.includes('قماش مخصص ومطابق للمواصفات') && !d.tissuSuggere.includes('Tissu adapté selon cahier'))
+      ? d.tissuSuggere.trim()
+      : null;
+    const savedTech = (d.techDetails && d.techDetails.trim() && !isLegacyFakeTech && !d.techDetails.includes('قصة وخياطة مخصصة بدقة عالية مع معالجة'))
+      ? d.techDetails.trim()
+      : null;
     const savedDelai = (d.delaiEstime && d.delaiEstime.trim()) ? d.delaiEstime.trim() : null;
     const savedProgression = d.statusProgression || 'etude';
     const savedReponse = (d.reponseAtelier && d.reponseAtelier.trim()) ? d.reponseAtelier.trim() : null;
+
+    const hasAdminSplitFields = extDetails.matierePrice !== undefined || extDetails.laborPrice !== undefined;
+    const adminMatierePrice = Number(extDetails.matierePrice || 0);
+    const adminLaborPrice = Number(extDetails.laborPrice || 0);
+
     const savedPatronage = (d.patronagePrice && Number(d.patronagePrice) > 0) 
       ? Number(d.patronagePrice) 
       : (extDetails.patronagePrice && Number(extDetails.patronagePrice) > 0)
@@ -2263,7 +2377,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const isModelisteValide = extDetails.modelisteValide !== undefined
       ? Boolean(extDetails.modelisteValide)
       : Boolean(extDetails.patronageStatus === 'priced' || (savedPatronage && savedModelisteName));
-    const hasCustomPatronage = Boolean(savedPatronage && savedPatronage > 0 && isModelisteValide);
+    const hasCustomPatronage = Boolean(savedPatronage && savedPatronage > 0 && (isModelisteValide || isOfficialAtelierDecision));
     const hasCustomEchantillon = Boolean(savedEchantillon && savedEchantillon > 0);
     const savedTissuConso = (extDetails.tissuConso && Number(extDetails.tissuConso) > 0)
       ? Number(extDetails.tissuConso)
@@ -2274,7 +2388,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       ? Number(extDetails.prixMetreEstime)
       : null;
 
-    // Detect Clothing Categories
+    // Detect Clothing Categories (only used as fallback when NO Official Atelier Decision exists yet)
     const isBodyOrTop = (
       text.includes('boudi') ||
       text.includes('body') ||
@@ -2323,7 +2437,6 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     let defaultTech = isAr ? 'قصة وخياطة مخصصة بدقة عالية مع معالجة احترافية لكافة التفاصيل' : 'Patronage et confection sur-mesure de haute précision';
     let defaultUnitPrice = 65;
     let defaultDelai = isAr ? '7 إلى 10 أيام عمل (العينة تحت 48 ساعة)' : '7 - 10 jours ouvrables (Échantillon sous 48h)';
-    let defaultProgression: 'reception' | 'etude' | 'echantillon' | 'production' | 'pret' = 'etude';
     let defaultReponse = isAr
       ? 'تمت دراسة مواصفات طلبكم بعناية من طرف الورشة: الباترون جاهز للإعداد ونحن رهن إشارتكم لتأكيد العينة الأولية.'
       : 'Modèle examiné avec soin par notre atelier : prêt pour prototypage dès validation de votre part.';
@@ -2339,10 +2452,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
     if (isBodyOrTop) {
       defaultModele = isAr ? 'بودي / توب نسائي كم طويل قصة ممتازة' : 'Body / Top Manches Longues Moulant';
-      defaultTissu = isAr ? 'قماش جيرسي ليكرا أو ريب مطاطي ناعم (Jersey Coton / Viscose Élasthanne)' : 'Jersey Coton Élasthanne / Viscose Lycra';
-      defaultTech = isAr ? 'قصة بودي مطاطية ملائمة للجسم • خياطة مرنة بأربع خيوط (Surjet 4 fils) • درزات مسطحة وأساور دقيقة' : 'Coupe près du corps stretch • Assemblage surjet 4 fils • Ourlets souples';
+      defaultTissu = isAr ? 'قماش جيرسي ليكرا أو ريب مطاطي ناعم' : 'Jersey Coton Élasthanne / Viscose Lycra';
+      defaultTech = isAr ? 'قصة بودي مطاطية ملائمة للجسم • خياطة مرنة بأربع خيوط' : 'Coupe près du corps stretch • Assemblage surjet 4 fils';
       defaultUnitPrice = 20;
-      defaultDelai = isAr ? '5 - 7 أيام عمل (العينة تحت 48 ساعة)' : '5 - 7 jours ouvrables (Échantillon sous 48h)';
+      defaultDelai = isAr ? '5 - 7 أيام عمل' : '5 - 7 jours ouvrables';
       defaultPatronage = 160;
       defaultEchantillon = 220;
       defaultTissuConso = 1.05;
@@ -2350,16 +2463,13 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultPrixMetre = 26;
       defaultAccessoriesCost = 5;
       defaultPrixConfection = 20;
-      defaultTissuMarche = isAr ? 'سوق درب عمر / ليساسفة (توب ليكرا / فيسكوز)' : 'Marché Derb Omar (Jersey Lycra / Viscose)';
-      defaultReponse = isAr
-        ? 'تمت دراسة موديل البودي بدقة لسوق الجملة وإعادة البيع: استهلاك الثوب 1.05 متر فقط، وسعر المصنعية تم ضبطه ليكون تنافسياً ومربحاً لإعادة البيع للعلامات والمتاجر.'
-        : 'Modèle Body / Top analysé pour revendeurs B2B : métrage 1.05m et coût de confection optimisé pour rentabilité revendeur.';
+      defaultTissuMarche = isAr ? 'سوق درب عمر / ليساسفة' : 'Marché Derb Omar';
     } else if (isTracksuit) {
       defaultModele = isAr ? 'طقم بدلة رياضية (فيست بسحاب وسروال)' : 'Ensemble Survêtement Veste Zippée + Pantalon (2 Pièces)';
-      defaultTissu = isAr ? 'مولطون قطن بوليستر 300 غرام مع شريط جانبي أبيض' : 'Molleton Coton/Polyester 300g avec bandes contrastées blanches';
-      defaultTech = isAr ? 'فيست بسحاب معدني وجيوب جانبية • ياقة مرتفعة • سروال بخصر مطاطي وباندات في الأسفل • شريط رياضي جانبي' : 'Veste zippée col montant avec poches • Bandes contrastées • Pantalon taille élastique et chevilles resserrées';
+      defaultTissu = isAr ? 'مولطون قطن بوليستر 300 غرام' : 'Molleton Coton/Polyester 300g';
+      defaultTech = isAr ? 'فيست بسحاب معدني وجيوب جانبية • سروال بخصر مطاطي' : 'Veste zippée col montant • Pantalon taille élastique';
       defaultUnitPrice = 135;
-      defaultDelai = isAr ? '8 - 12 يوم عمل (العينة تحت 48 ساعة)' : '8 - 12 jours ouvrables (Échantillon sous 48h)';
+      defaultDelai = isAr ? '8 - 12 يوم عمل' : '8 - 12 jours ouvrables';
       defaultPatronage = 380;
       defaultEchantillon = 450;
       defaultTissuConso = 2.85;
@@ -2367,16 +2477,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultPrixMetre = 40;
       defaultAccessoriesCost = 18;
       defaultPrixConfection = 95;
-      defaultTissuMarche = isAr ? 'سوق درب عمر (مولطون 300g قطن بوليستر)' : 'Marché Derb Omar (Molleton 300g)';
-      defaultReponse = isAr
-        ? 'تمت دراسة موديل البدلة الرياضية (2 قطع): ثوب المولطون 300g مع السحاب والشرائط الجانبية تم حسابهما بدقة. السعر (135 درهم) يشمل الطقم كاملاً (الفوق والسروال). جاهزون لإطلاق العينة الأولية فور تأكيدكم.'
-        : "Modèle Ensemble Survêtement (2 pièces) étudié par l'atelier : Molleton 300g avec zip et bandes latérales calculés avec précision. Le tarif (135 MAD) comprend l'ensemble complet veste + pantalon. Prototype prêt à lancer.";
     } else if (isHoodieOrSweat) {
-      defaultModele = isAr ? 'هودي بقبعة أوفرسايز مع سيريغرافي في الصدر' : 'Hoodie à Capuche Oversize avec Sérigraphie Poitrine';
-      defaultTissu = isAr ? 'مولطون قطن 320 غرام مبطن عالي الجودة' : 'Molleton Coton Gratté 320g / French Terry (~1.85m)';
-      defaultTech = isAr ? 'قبعة مبطنة بحبال • جيب كانغورو • حواف مرنة متينة • سيريغرافي عالي الجودة على الصدر' : 'Capuche doublée avec cordons • Sérigraphie Poitrine • Bord-côte poignets et bas';
+      defaultModele = isAr ? 'هودي بقبعة أوفرسايز' : 'Hoodie à Capuche Oversize';
+      defaultTissu = isAr ? 'مولطون قطن 320 غرام مبطن' : 'Molleton Coton Gratté 320g / French Terry';
+      defaultTech = isAr ? 'قبعة مبطنة بحبال • جيب كانغورو • حواف مرنة متينة' : 'Capuche doublée avec cordons • Bord-côte poignets et bas';
       defaultUnitPrice = 75;
-      defaultDelai = isAr ? '7 - 10 أيام عمل (العينة تحت 48 ساعة)' : '7 - 10 jours ouvrables (Échantillon sous 48h)';
       defaultPatronage = 260;
       defaultEchantillon = 350;
       defaultTissuConso = 1.85;
@@ -2384,14 +2489,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultPrixMetre = 38;
       defaultAccessoriesCost = 15;
       defaultPrixConfection = 55;
-      defaultTissuMarche = isAr ? 'سوق درب عمر / ليساسفة (مولطون 320g)' : 'Marché Derb Omar (Molleton 320g)';
-      defaultReponse = isAr
-        ? 'موديل الهودي تم تحليله بالكامل: ثوب المولطون 320g ممتاز لهذا التصميم مع طباعة الصدر. العينة التقنية جاهزة للإطلاق فور التأكيد.'
-        : 'Modèle Hoodie analysé par notre atelier : tissu Molleton 320g validé avec marquage poitrine. Prototype prêt à lancer.';
     } else if (isTshirt) {
-      defaultModele = isAr ? 'تيشيرت قطن ممشط 100%' : 'T-Shirt Coton Peigné Col Rond 100% Coton';
+      defaultModele = isAr ? 'تيشيرت قطن ممشط 100%' : 'T-Shirt Coton Peigné 100%';
       defaultTissu = isAr ? 'جيرسي قطن ممشط 200g - 220g' : 'Jersey 100% Coton Peigné 200g - 220g';
-      defaultTech = isAr ? 'ياقة دائرية بورد-كوط • خياطة مزدوجة • شريط نظافة داخلي' : 'Col rond bord-côte • Double surpiqûre • Bande de propreté';
+      defaultTech = isAr ? 'ياقة دائرية بورد-كوط • خياطة مزدوجة' : 'Col rond bord-côte • Double surpiqûre';
       defaultUnitPrice = 45;
       defaultDelai = isAr ? '5 - 7 أيام عمل' : '5 - 7 jours ouvrables';
       defaultPatronage = 180;
@@ -2401,16 +2502,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultPrixMetre = 28;
       defaultAccessoriesCost = 8;
       defaultPrixConfection = 28;
-      defaultTissuMarche = isAr ? 'سوق درب عمر (جيرسي 100% قطن ممشط)' : 'Marché Derb Omar (Jersey 100% Coton)';
-      defaultReponse = isAr
-        ? 'تمت دراسة موديل التيشيرت: ثوب الجيرسي 100% قطن ممشط عالي الجودة، جاهز للخياطة والطباعة.'
-        : 'Modèle T-shirt analysé : jersey 100% coton peigné de qualité supérieure, prêt pour confection.';
     } else if (isPolo) {
       defaultModele = isAr ? 'قميص بولو كلاسيك قطن' : 'Polo Piqué Coton Peigné';
       defaultTissu = isAr ? 'بيكي قطن 220 غرام' : 'Maille Piquée 100% Coton 220g';
-      defaultTech = isAr ? 'ياقة وأساور بورد-كوط منسوجة • فتحة بزرين • شق جانبي سفلي' : 'Col et bas de manches en côte • Patte de boutonnage 2 boutons • Fentes latérales';
+      defaultTech = isAr ? 'ياقة وأساور بورد-كوط منسوجة • فتحة بزرين' : 'Col et bas de manches en côte • Patte 2 boutons';
       defaultUnitPrice = 65;
-      defaultDelai = isAr ? '7 - 10 أيام عمل' : '7 - 10 jours ouvrables';
       defaultPatronage = 220;
       defaultEchantillon = 280;
       defaultTissuConso = 1.30;
@@ -2418,11 +2514,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultPrixMetre = 34;
       defaultAccessoriesCost = 12;
       defaultPrixConfection = 38;
-      defaultTissuMarche = isAr ? 'سوق درب عمر (بيكي 100% قطن)' : 'Marché Derb Omar (Piqué)';
     } else if (isPants) {
-      defaultModele = isAr ? 'سروال جوغينغ كاجوال' : 'Pantalon Jogging / Survêtement Confort';
+      defaultModele = isAr ? 'سروال جوغينغ كاجوال' : 'Pantalon Jogging / Survêtement';
       defaultTissu = isAr ? 'مولطون قطن 300 غرام' : 'Molleton Coton 300g';
-      defaultTech = isAr ? 'حزام مطاطي • جيوب جانبية • أطراف ريزيستنت' : 'Ceinture élastiquée avec cordon • Poches passepoilées • Bas resserré';
+      defaultTech = isAr ? 'حزام مطاطي • جيوب جانبية' : 'Ceinture élastiquée • Poches passepoilées';
       defaultUnitPrice = 68;
       defaultDelai = isAr ? '6 - 9 أيام عمل' : '6 - 9 jours ouvrables';
       defaultPatronage = 240;
@@ -2432,13 +2527,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultPrixMetre = 38;
       defaultAccessoriesCost = 14;
       defaultPrixConfection = 48;
-      defaultTissuMarche = isAr ? 'سوق درب عمر (مولطون قطن)' : 'Marché Derb Omar';
     } else if (isVeste) {
-      defaultModele = isAr ? 'جاكيت رياضية تقنية بسحاب ومقاومة للرياح' : 'Veste Sport Coupe-Vent Zippée';
-      defaultTissu = isAr ? 'مايكروفايبر تقني مقاوم للرياح والماء' : 'Microfibre Coupe-Vent Imperméable / Nylon Twill Lourd';
-      defaultTech = isAr ? 'سحاب أمامي كامل مقاوم للماء • جيبين جانبيين بسحاب مخفي • ياقة مرتفعة مع أكمام مطاطية مرنة • خياطة تقنية مع شريط نظافة داخلي' : 'Fermeture zippée métallique intégrale étanche • Poches zippées invisibles • Col montant et poignets élastiqués';
+      defaultModele = isAr ? 'جاكيت رياضية تقنية بسحاب' : 'Veste Sport Coupe-Vent Zippée';
+      defaultTissu = isAr ? 'مايكروفايبر تقني مقاوم للرياح' : 'Microfibre Coupe-Vent / Nylon Twill';
+      defaultTech = isAr ? 'سحاب أمامي كامل • جيبين جانبيين • ياقة مرتفعة' : 'Fermeture zippée intégrale • Poches zippées • Col montant';
       defaultUnitPrice = 95;
-      defaultDelai = isAr ? '7 - 10 أيام عمل (العينة تحت 48 ساعة)' : '7 - 10 jours ouvrables (Échantillon sous 48h)';
       defaultPatronage = 300;
       defaultEchantillon = 380;
       defaultTissuConso = 2.10;
@@ -2446,16 +2539,12 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultPrixMetre = 42;
       defaultAccessoriesCost = 22;
       defaultPrixConfection = 75;
-      defaultTissuMarche = isAr ? 'سوق كراج علال / درب عمر (مايكروفايبر تقني مقاوم للماء)' : 'Marché Derb Omar (Microfibre étanche)';
-      defaultReponse = isAr
-        ? 'موديل الجاكيت التقنية تم تحليله بالكامل من الورشة: ثوب المايكروفايبر المقاوم للماء مع السحاب والبطانة تم تسعيرهم بدقة. العينة جاهزة للإطلاق فور التأكيد.'
-        : 'Veste coupe-vent analysée par l\'atelier : microfibre imperméable et zips validés. Prototype prêt à lancer.';
     } else if (isDenimOrTailleur) {
-      defaultModele = isAr ? 'طقم فيست دنيم عصري بحزام وبنطلون' : 'Ensemble Veste Tailleur Denim Ceinturée';
-      defaultTissu = isAr ? 'ثوب دنيم جينز 100% قطن متين 11-12 أونصة معالجة ناعمة' : 'Toile Denim 100% Coton 11-12oz / Twill Jeans Lourd';
-      defaultTech = isAr ? 'قصة جاكيت مفصلة مع حزام خصر مدمج وحلقة معدنية • درزات مضاعفة بخيط الجينز المتين • ياقة كلاسيكية مفتوحة وأكتاف مضبوطة' : 'Veste tailleur avec ceinture intégrée boucle métal • Double surpiqûre fil jean • Col tailleur et emmanchures renforcées';
+      defaultModele = isAr ? 'طقم فيست دنيم عصري بحزام' : 'Ensemble Veste Tailleur Denim Ceinturée';
+      defaultTissu = isAr ? 'ثوب دنيم جينز 100% قطن 11-12 أونصة' : 'Toile Denim 100% Coton 11-12oz';
+      defaultTech = isAr ? 'قصة جاكيت مفصلة مع حزام خصر • درزات مضاعفة' : 'Veste tailleur avec ceinture • Double surpiqûre';
       defaultUnitPrice = 115;
-      defaultDelai = isAr ? '8 - 12 يوم عمل (العينة تحت 48 ساعة)' : '8 - 12 jours ouvrables (Échantillon sous 48h)';
+      defaultDelai = isAr ? '8 - 12 يوم عمل' : '8 - 12 jours ouvrables';
       defaultPatronage = 350;
       defaultEchantillon = 420;
       defaultTissuConso = 2.40;
@@ -2463,17 +2552,13 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       defaultPrixMetre = 48;
       defaultAccessoriesCost = 35;
       defaultPrixConfection = 115;
-      defaultTissuMarche = isAr ? 'سوق درب عمر / القريعة (توب الدنيم الخام والجاف)' : 'Marché Derb Omar / Al Ghorfa (Denim brut)';
-      defaultReponse = isAr
-        ? 'تمت دراسة موديل فيست الجينز/الدنيم بعناية من طرف الورشة: ثوب الدنيم 100% قطن متين مع تفاصيل الحزام والدرزات المضاعفة محسوبة بدقة. جاهزون لإطلاق العينة الأولية فور تأكيدكم.'
-        : 'Modèle Veste Denim étudié avec soin : toile 100% coton et finitions ceinture calculées. Prêt pour prototypage.';
     }
 
     if (savedTissuConso) defaultTissuConso = savedTissuConso;
     if (savedPrixMetre) defaultPrixMetre = savedPrixMetre;
 
     const hasBroderie = text.includes('broderie') || text.includes('طرز') || text.includes('طريزة') || text.includes('brodé') || text.includes('brode');
-    const hasPrint = text.includes('sérigraphie') || text.includes('serigraphie') || text.includes('dtf') || text.includes('print') || text.includes('طباعة') || text.includes('طبعة') || text.includes('marquage') || isHoodieOrSweat || isTshirt;
+    const hasPrint = text.includes('sérigraphie') || text.includes('serigraphie') || text.includes('dtf') || text.includes('print') || text.includes('طباعة') || text.includes('طبعة') || text.includes('marquage');
 
     const savedFournisseurNom = extDetails.supplierName || (d as any).fournisseurNom || null;
     const savedFournisseurTel = extDetails.supplierPhone || (d as any).fournisseurTel || null;
@@ -2483,67 +2568,86 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const savedFournisseurNotes = extDetails.supplierNotes || (d as any).fournisseurNote || null;
 
     const officialBeyaPhone = (company.phone && !company.phone.includes('00 00') && !company.phone.includes('000000')) ? company.phone : '0675239885';
-
-    // Discard dummy placeholder phone numbers like 0661849201
     const cleanFournisseurTel = (savedFournisseurTel && savedFournisseurTel !== '0661849201' && savedFournisseurTel !== '212661849201' && savedFournisseurTel.length >= 8)
       ? savedFournisseurTel
-      : null;
+      : officialBeyaPhone;
 
     const hasCustomFournisseur = Boolean(savedFournisseurNom && savedFournisseurNom.trim());
+    const fournisseurNom = hasCustomFournisseur ? savedFournisseurNom.trim() : '';
+    const fournisseurTel = hasCustomFournisseur ? cleanFournisseurTel : officialBeyaPhone;
+    const fournisseurVille = (savedFournisseurVille && savedFournisseurVille.trim()) ? savedFournisseurVille.trim() : '';
+    const fournisseurCode = (savedFournisseurCode && savedFournisseurCode.trim()) ? savedFournisseurCode.trim() : '';
+    const fournisseurCouleurs = savedFournisseurColors ? String(savedFournisseurColors) : '';
+    const fournisseurNote = savedFournisseurNotes ? String(savedFournisseurNotes) : '';
 
-    const defaultFournisseurNom = isAr ? 'مكتب ومصلحة توريد الأقمشة (ورشة BEYA)' : 'Bureau Sourcing Tissus Atelier BEYA';
-    const defaultFournisseurTel = officialBeyaPhone;
-    const defaultFournisseurVille = isAr ? 'الورشة المركزية • مكناس / خدمة التوريد الوطنية' : 'Atelier BEYA • Sourcing National';
-    const defaultFournisseurCode = `BEYA-${(d.id || 'ORDER').slice(0, 8).toUpperCase()}`;
-    const defaultFournisseurColors = isAr 
-      ? 'أسود كربوني (Noir)، أبيض ناصع (Blanc)، رمادي ملونج (Gris Chiné)، أخضر غابوي (Vert Bouteille)، أزرق داكن (Bleu Marine)' 
-      : 'Noir, Blanc, Gris Chiné, Vert Bouteille, Bleu Marine';
-    const defaultFournisseurNote = isAr
-      ? 'نوفر لكم خدمة التوريد المباشر لأفضل خامات الأقمشة مع مقارنة عروض المستودعات بالدار البيضاء، طنجة وفاس بأفضل الأسعار التفضيلية المخصصة لزبناء ورشة BEYA Creative.'
-      : 'Service de sourcing direct auprès des meilleurs dépôts partenaires avec tarifs préférentiels exclusifs pour les clients de l\'Atelier BEYA Creative.';
+    const rawQty = (extDetails.adminQty && Number(extDetails.adminQty) > 0)
+      ? Number(extDetails.adminQty)
+      : (Number(d.quantity) > 0 ? Number(d.quantity) : 100);
+    const qty = rawQty;
 
-    const fournisseurNom = (savedFournisseurNom && savedFournisseurNom.trim()) ? savedFournisseurNom.trim() : defaultFournisseurNom;
-    const fournisseurTel = cleanFournisseurTel || defaultFournisseurTel;
-    const fournisseurVille = (savedFournisseurVille && savedFournisseurVille.trim()) ? savedFournisseurVille.trim() : defaultFournisseurVille;
-    const fournisseurCode = (savedFournisseurCode && savedFournisseurCode.trim()) ? savedFournisseurCode.trim() : defaultFournisseurCode;
-    const fournisseurCouleurs = savedFournisseurColors !== null && savedFournisseurColors !== undefined ? savedFournisseurColors : defaultFournisseurColors;
-    const fournisseurNote = savedFournisseurNotes !== null && savedFournisseurNotes !== undefined ? savedFournisseurNotes : defaultFournisseurNote;
-
-    const isGenericPrice = (savedUnitPrice === 65 && !d.crmPriceConfirmed && (isVeste || isDenimOrTailleur || isTracksuit)) ||
-      (isBodyOrTop && savedUnitPrice && savedUnitPrice >= 65 && !d.crmPriceConfirmed);
     const tissuCostPerPiece = Math.round(defaultTissuConso * defaultPrixMetre);
     let confectionPrice = defaultPrixConfection;
     let fullPackagePrice = defaultPrixConfection + tissuCostPerPiece + defaultAccessoriesCost;
 
-    if (savedUnitPrice && !isGenericPrice) {
-      if (savedUnitPrice > 130) {
-        fullPackagePrice = savedUnitPrice;
-        confectionPrice = Math.max(35, savedUnitPrice - tissuCostPerPiece - defaultAccessoriesCost);
-      } else {
-        confectionPrice = savedUnitPrice;
-        fullPackagePrice = savedUnitPrice + tissuCostPerPiece + defaultAccessoriesCost;
+    if (isOfficialAtelierDecision) {
+      // Strictly honor the Admin's exact official unit price without arbitrary markups or splits
+      const splitSum = adminMatierePrice + adminLaborPrice;
+      const officialUnitFromDoc = (officialDoc && officialDoc.montant > 0 && qty > 0)
+        ? Math.round(officialDoc.montant / qty)
+        : 0;
+      const resolvedOfficialUnit = (hasAdminSplitFields && splitSum > 0)
+        ? splitSum
+        : (savedUnitPrice && savedUnitPrice > 0)
+          ? savedUnitPrice
+          : (officialUnitFromDoc > 0 ? officialUnitFromDoc : defaultUnitPrice);
+
+      fullPackagePrice = resolvedOfficialUnit;
+      confectionPrice = (adminMatierePrice > 0 && adminLaborPrice > 0) ? adminLaborPrice : resolvedOfficialUnit;
+    } else {
+      const isGenericPrice = (savedUnitPrice === 65 && !d.crmPriceConfirmed && (isVeste || isDenimOrTailleur || isTracksuit)) ||
+        (isBodyOrTop && savedUnitPrice && savedUnitPrice >= 65 && !d.crmPriceConfirmed);
+      if (savedUnitPrice && !isGenericPrice) {
+        if (savedUnitPrice > 130) {
+          fullPackagePrice = savedUnitPrice;
+          confectionPrice = Math.max(35, savedUnitPrice - tissuCostPerPiece - defaultAccessoriesCost);
+        } else {
+          confectionPrice = savedUnitPrice;
+          fullPackagePrice = savedUnitPrice + tissuCostPerPiece + defaultAccessoriesCost;
+        }
       }
     }
 
-    const unitPrice = confectionPrice;
+    const unitPrice = fullPackagePrice;
     const rawModele = savedModele || defaultModele;
-    const rawTissu = savedTissu || defaultTissu;
-    const rawTech = savedTech || defaultTech;
-    const rawDelai = savedDelai || defaultDelai;
-    const rawReponse = savedReponse || defaultReponse;
-
     const modeleReel = cleanLangText(rawModele, isAr) || defaultModele;
-    const tissuSuggere = cleanLangText(rawTissu, isAr) || defaultTissu;
-    const techDetails = cleanLangText(rawTech, isAr) || defaultTech;
-    const delaiEstime = cleanLangText(rawDelai, isAr) || defaultDelai;
-    const reponseAtelier = cleanLangText(rawReponse, isAr) || defaultReponse;
-    const tissuMarcheNom = cleanLangText(defaultTissuMarche, isAr);
 
-    const qty = Number(d.quantity) > 0 ? Number(d.quantity) : 100;
-    const totalPrice = d.totalPrice && d.totalPrice > 0 ? d.totalPrice : (fullPackagePrice * qty);
+    // When Official Atelier Decision is sent, ONLY expose fabric / tech / delay / note that Admin actually entered!
+    const tissuSuggere = isOfficialAtelierDecision
+      ? (extDetails.adminFabric !== undefined ? cleanLangText(extDetails.adminFabric, isAr) : (savedTissu ? cleanLangText(savedTissu, isAr) : ''))
+      : (cleanLangText(savedTissu || defaultTissu, isAr) || defaultTissu);
+    const techDetails = isOfficialAtelierDecision
+      ? (extDetails.adminTechDetails !== undefined ? cleanLangText(extDetails.adminTechDetails, isAr) : (savedTech ? cleanLangText(savedTech, isAr) : ''))
+      : (cleanLangText(savedTech || defaultTech, isAr) || defaultTech);
+    const delaiEstime = isOfficialAtelierDecision
+      ? (extDetails.adminDelai !== undefined ? cleanLangText(extDetails.adminDelai, isAr) : (savedDelai ? cleanLangText(savedDelai, isAr) : ''))
+      : (cleanLangText(savedDelai || defaultDelai, isAr) || defaultDelai);
+    const reponseAtelier = isOfficialAtelierDecision
+      ? (extDetails.adminReponse !== undefined ? cleanLangText(extDetails.adminReponse, isAr) : (savedReponse ? cleanLangText(savedReponse, isAr) : ''))
+      : (cleanLangText(savedReponse || defaultReponse, isAr) || defaultReponse);
+
+    const tissuMarcheNom = cleanLangText(defaultTissuMarche, isAr);
+    const totalPrice = isOfficialAtelierDecision
+      ? (d.totalPrice && Number(d.totalPrice) > 0 && Math.abs(Number(d.totalPrice) - fullPackagePrice * qty) < 2
+          ? Number(d.totalPrice)
+          : fullPackagePrice * qty)
+      : (d.totalPrice && d.totalPrice > 0 ? d.totalPrice : (fullPackagePrice * qty));
+
     const statusProgression = savedProgression;
     const patronagePrice = savedPatronage || defaultPatronage;
     const echantillonPrice = savedEchantillon || defaultEchantillon;
+    const canSwitchFabricSource = isOfficialAtelierDecision
+      ? Boolean(adminMatierePrice > 0 && adminLaborPrice > 0)
+      : true;
 
     return {
       modeleReel,
@@ -2578,6 +2682,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       fournisseurCouleurs,
       fournisseurNote,
       hasCustomFournisseur,
+      isOfficialAtelierDecision,
+      hasAdminSplit: Boolean(adminMatierePrice > 0 && adminLaborPrice > 0),
+      adminMatierePrice,
+      adminLaborPrice,
+      canSwitchFabricSource,
       isAnalyzedByAI: Boolean(d.details?.includes('ATELIER_DEVIS') || d.aiNotes || (d as any).aiAnalyzed)
     };
   };
@@ -4143,7 +4252,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                );
              }
 
-             // Dedicated Full Page for Demande Details & Technical Study
+             // Dedicated Full Page for Demande Details & Official Workshop Devis
              if (selectedDemandePage) {
                const d = selectedDemandePage;
                const analysis = getDemandeAnalysis(d, isAr);
@@ -4152,44 +4261,51 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                const isAccepted = d.crmStage === 'confirme';
                const isRejected = d.crmStage === 'annule';
                const isPending = !isAccepted && !isRejected;
-
-               const stepOrder: Array<'reception' | 'etude' | 'echantillon' | 'production' | 'pret'> = ['reception', 'etude', 'echantillon', 'production', 'pret'];
-               const currentStepIdx = stepOrder.indexOf(analysis.statusProgression) >= 0 ? stepOrder.indexOf(analysis.statusProgression) : 1;
-
-               const stepLabels = [
-                 { key: 'reception', fr: '1. Reçu', ar: '١. تم الاستلام', icon: '⏳' },
-                 { key: 'etude', fr: '2. Étude & Devis', ar: '٢. دراسة وتحديد السعر', icon: '📋' },
-                 { key: 'echantillon', fr: '3. Échantillon', ar: '٣. إعداد العينة', icon: '✂️' },
-                 { key: 'production', fr: '4. Production', ar: '٤. قيد الإنتاج', icon: '🏭' },
-               ];
-
-               const currentQty = selectedTierQty[d.id] !== undefined ? selectedTierQty[d.id] : (Number(d.quantity) > 0 ? Number(d.quantity) : analysis.qty);
-               const calculateTierUnitPrice = (qty: number, basePrice: number) => {
-                 if (qty <= 35) return Math.round(basePrice * 1.18);
-                 if (qty <= 60) return Math.round(basePrice * 1.08);
-                 if (qty <= 150) return basePrice;
-                 if (qty <= 350) return Math.max(25, Math.round(basePrice * 0.90));
-                 return Math.max(20, Math.round(basePrice * 0.84));
-               };
-               const isClientFabric = fabricOption[d.id] === 'client';
-               const selectedBasePrice = isClientFabric ? analysis.confectionPrice : analysis.fullPackagePrice;
-               const activeUnitPrice = calculateTierUnitPrice(currentQty, selectedBasePrice);
-               const activeTotalPrice = activeUnitPrice * currentQty;
-                const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
-                const waText = isAr
-                  ? (isClientFabric
-                      ? `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي رقم REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${analysis.qty} قطعة\n- الخياطة والتصنيع: ${analysis.unitPrice} درهم/قطعة (المجموع: ${analysis.totalPrice.toLocaleString()} درهم)\nالثوب والمستلزمات غانصيفطهم من عندي للورشة (بدون تسبيق مسبق)، والخلاص عند استلام السلعة إن شاء الله.`
-                      : `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي رقم REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${analysis.qty} قطعة\n- السعر الإجمالي: ${analysis.totalPrice.toLocaleString()} درهم\n- الثوب من المعمل: ${analysis.tissuSuggere}\nبغيت نأكد الدوفيز وندوز تسبيق 50% لشراء الثوب وبدء الإنتاج. شكراً!`)
-                  : (isClientFabric
-                      ? `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, demande REF: #${d.id.substring(0, 8).toUpperCase()} :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Façon : ${analysis.unitPrice} MAD/pc\nJe fournis le tissu et fournitures (0 MAD acompte). Règlement à la livraison.`
-                      : `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, demande REF: #${d.id.substring(0, 8).toUpperCase()} :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${analysis.qty} pcs\n- Tissu Atelier : ${analysis.tissuSuggere}\nJe valide le devis et souhaite verser l'acompte de 50% pour lancer la production.`);
-                const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
                const devState = getLeadDevisState(d);
                const singleDevState = devState;
+               const officialLeadDevis = getOfficialDevisForLead(d);
+               const isDevisReady = singleDevState.isConfirmedByAtelier || singleDevState.isVal || Boolean(officialLeadDevis);
+
+               const baseOrderQty = Math.max(1, Number(analysis.qty) || Number(d.quantity) || 100);
+               const currentQty = selectedTierQty[d.id] !== undefined ? selectedTierQty[d.id] : baseOrderQty;
+               const isClientFabric = analysis.canSwitchFabricSource && fabricOption[d.id] === 'client';
+               const selectedBasePrice = isClientFabric ? analysis.confectionPrice : analysis.fullPackagePrice;
+               const activeUnitPrice = computeSimulatedUnitPrice(currentQty, selectedBasePrice, baseOrderQty);
+               const activeTotalPrice = activeUnitPrice * currentQty;
+               const savingsVsBase = selectedBasePrice > 0 && activeUnitPrice < selectedBasePrice
+                 ? Math.round(((selectedBasePrice - activeUnitPrice) / selectedBasePrice) * 100)
+                 : 0;
+               const acompteRequired = (isClientFabric && analysis.isOfficialAtelierDecision && analysis.adminMatierePrice > 0) || isClientFabric
+                 ? 0
+                 : Math.round(activeTotalPrice * 0.5);
+
+               // Build smart ascending quantity tiers for the compact simulator right above Confirmation Box
+               const simPresets = Array.from(
+                 new Set([
+                   baseOrderQty,
+                   Math.max(baseOrderQty + 10, Math.round((baseOrderQty * 1.5) / 10) * 10),
+                   Math.max(baseOrderQty + 20, Math.round((baseOrderQty * 2) / 10) * 10),
+                   100,
+                   300,
+                   500
+                 ].filter(q => q >= baseOrderQty))
+               ).sort((a, b) => a - b).slice(0, 5);
+
+               const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
+               const waText = isAr
+                 ? (isClientFabric
+                     ? `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي رقم REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${currentQty} قطعة\n- السعر المعتمد: ${activeUnitPrice} درهم/قطعة (المجموع: ${activeTotalPrice.toLocaleString()} درهم)\nالثوب والمستلزمات غانصيفطهم من عندي للورشة (بدون تسبيق مسبق)، والخلاص عند استلام السلعة إن شاء الله.`
+                     : `السلام عليكم ورشة ${company.name || 'BEYA'}، بخصوص طلبيتي رقم REF: #${d.id.substring(0, 8).toUpperCase()}:\n- الموديل: ${analysis.modeleReel}\n- الكمية: ${currentQty} قطعة\n- سعر القطعة: ${activeUnitPrice} درهم\n- المجموع: ${activeTotalPrice.toLocaleString()} درهم\nبغيت نأكد الدوفيز وندوز تسبيق 50% (${acompteRequired.toLocaleString()} درهم) لشراء السلعة وبدء العمل. شكراً!`)
+                 : (isClientFabric
+                     ? `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, demande REF: #${d.id.substring(0, 8).toUpperCase()} :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${currentQty} pcs\n- Tarif : ${activeUnitPrice} MAD/pc\nJe fournis le tissu (0 MAD acompte). Règlement à la livraison.`
+                     : `Bonjour l'Atelier ${company.name || 'BEYA Creative'}, demande REF: #${d.id.substring(0, 8).toUpperCase()} :\n- Modèle : ${analysis.modeleReel}\n- Quantité : ${currentQty} pcs\n- Prix unitaire : ${activeUnitPrice} MAD (Total : ${activeTotalPrice.toLocaleString()} MAD)\nJe valide le devis et souhaite régler l'acompte de 50% (${acompteRequired.toLocaleString()} MAD) pour lancer l'achat des matières et la confection.`);
+               const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(waText)}`;
+
+               const hasExtraDetailsSection = hasCustomSizes || analysis.hasCustomPatronage || analysis.hasCustomEchantillon || analysis.hasCustomFournisseur;
 
                return (
-                 <div className="space-y-3.5 animate-in fade-in slide-in-from-right-4 duration-500 pb-28 sm:pb-32">
-                   {/* Top Navigation & Clean Corner Action Icons */}
+                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 pb-24 sm:pb-28">
+                   {/* 1. Clean Top Navigation Bar */}
                    <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100">
                      <button
                        type="button"
@@ -4200,8 +4316,19 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                        <span>{isAr ? '← الرجوع إلى قائمة طلباتي' : '← Retour à mes demandes'}</span>
                      </button>
 
-                     {/* Discrete Corner Action Icons: Edit & Delete */}
-                     <div className="flex items-center gap-1.5">
+                     <div className="flex items-center gap-2">
+                       {!isDevisReady && (
+                         <button
+                           type="button"
+                           disabled={isAiAnalyzingLead === d.id}
+                           onClick={() => reanalyzeDemandeWithAI(d)}
+                           className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-[11px] font-black transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                           title={isAr ? 'تحديث التقدير الأولي' : 'Actualiser estimation'}
+                         >
+                           <RotateCw className={`w-3.5 h-3.5 ${isAiAnalyzingLead === d.id ? 'animate-spin' : ''}`} />
+                           <span className="hidden sm:inline">{isAr ? 'تحديث التقدير الأولي' : 'Actualiser estimation'}</span>
+                         </button>
+                       )}
                        {isPending && (
                          <button
                            type="button"
@@ -4212,7 +4339,6 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                            <Edit2 className="w-4 h-4" />
                          </button>
                        )}
-
                        <button
                          type="button"
                          onClick={(e) => handleOpenDeleteModal(d, e)}
@@ -4224,1350 +4350,659 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                      </div>
                    </div>
 
-                   {/* 0. Primary Model Title & Devis Chiffrage Atelier Header (Compact, Sleek, No AI mentioned) */}
-                    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-3.5 md:p-4 shadow-lg border border-indigo-500/20 mb-2.5 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-                      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
-                        <div className="space-y-1.5 min-w-0 flex-1">
-                          {/* Badges row */}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="px-2.5 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 text-[10px] font-black tracking-wider uppercase flex items-center gap-1.5">
-                              <span>🏭</span>
-                              <span>{isAr ? 'مكتب الدراسات والتسعير BEYA' : 'Bureau d\'Études Atelier BEYA'}</span>
-                            </span>
-                            <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
-                              {isAr ? '✓ دراسة معتمدة ومسعرة' : '✓ Chiffrage Atelier Validé'}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-mono">
-                              REF: #{d.id.substring(0, 8).toUpperCase()}
-                            </span>
-                          </div>
-
-                          {/* Model Title (Prominent, Sleek, Clear) */}
-                          <h3 className="text-base md:text-lg font-black text-white tracking-tight leading-snug break-words">
-                            {analysis.modeleReel || cleanLangText(d.modele || d.type, isAr) || (isAr ? 'دراسة تقنية وتحديد سعر الموديل' : 'Étude Technique & Chiffrage Modèle')}
-                          </h3>
-
-                          {/* Chiffrage Montant / Pricing Summary Pills */}
-                          <div className="flex items-center gap-2 flex-wrap pt-0.5">
-                            <div className="px-2.5 py-1 bg-white/10 backdrop-blur-xs rounded-lg border border-white/15 flex items-center gap-1.5">
-                              <span className="text-[10px] text-slate-300 font-medium">{isAr ? 'سعر البياسة :' : 'Prix unitaire :'}</span>
-                              <span className="text-xs font-black text-amber-300 font-mono">{activeUnitPrice} MAD</span>
-                            </div>
-                            <div className="px-2.5 py-1 bg-indigo-600/30 backdrop-blur-xs rounded-lg border border-indigo-400/30 flex items-center gap-1.5">
-                              <span className="text-[10px] text-indigo-200 font-medium">{isAr ? 'المجموع الإجمالي :' : 'Total Devis :'}</span>
-                              <span className="text-xs font-black text-white font-mono">{activeTotalPrice.toLocaleString()} MAD</span>
-                              <span className="text-[10px] text-slate-300">({currentQty} pcs)</span>
-                            </div>
-                            <div className="px-2.5 py-1 bg-slate-800/60 rounded-lg border border-slate-700/60 text-[10px] text-slate-300 font-medium">
-                              {isAr ? `⏱️ مدة الإنجاز: ${analysis.delaiEstime}` : `⏱️ Délai estimé : ${analysis.delaiEstime}`}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Actualiser le Chiffrage CTA Button */}
-                        <div className="shrink-0 flex items-center gap-2">
-                          <button
-                            type="button"
-                            disabled={isAiAnalyzingLead === d.id}
-                            onClick={() => reanalyzeDemandeWithAI(d)}
-                            className="w-full md:w-auto px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-black shadow-md shadow-indigo-950/40 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                          >
-                            {isAiAnalyzingLead === d.id ? (
-                              <>
-                                <RotateCw className="w-3.5 h-3.5 animate-spin text-white" />
-                                <span className="animate-pulse">{isAr ? 'جاري تحديث الحسابات والتسعير...' : 'Actualisation en cours...'}</span>
-                              </>
-                            ) : (
-                              <>
-                                <RotateCw className="w-3.5 h-3.5 text-indigo-200" />
-                                <span>{isAr ? 'تحديث التسعير والحسابات' : 'Actualiser le Chiffrage'}</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Active analysis progress bar when analyzing */}
-                      {isAiAnalyzingLead === d.id && (
-                        <div className="mt-3 pt-2.5 border-t border-white/10 space-y-1.5">
-                          <div className="flex items-center justify-between text-[10px] text-indigo-200">
-                            <span className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                              {isAr ? 'جاري فحص مواصفات الموديل وتحديث كلفة القماش والمصنعية في ورشة BEYA...' : 'Calcul du métrage et mise à jour du chiffrage atelier...'}
-                            </span>
-                            <span className="font-mono">85%</span>
-                          </div>
-                          <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-amber-400 via-pink-500 to-indigo-400 rounded-full animate-pulse w-4/5" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                   {/* 1. Professional Minimalist Stepper (No games / Corporate timeline) */}
-                    <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-xs mb-4">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-                        {[
-                          { step: '01', title: isAr ? 'دراسة وتحديد السعر' : 'Étude & Chiffrage', sub: isAr ? 'مكتمل ✓' : 'Effectué ✓', state: 'done' },
-                          { step: '02', title: isAr ? 'تأكيد الطلب والتسبيق' : 'Validation & Acompte', sub: isAccepted ? (isAr ? 'مؤكد ✓' : 'Validé ✓') : (isAr ? 'في انتظار التأكيد' : 'En attente'), state: isAccepted ? 'done' : 'current' },
-                          { step: '03', title: isAr ? 'إعداد الباترون والعينة' : 'Patronage & Échantillon', sub: isAr ? 'المرحلة القادمة' : 'Étape suivante', state: isAccepted ? 'current' : 'upcoming' },
-                          { step: '04', title: isAr ? 'الإنتاج الكامل والتسليم' : 'Production & Livraison', sub: isAr ? 'التسليم النهائي' : 'Final', state: 'upcoming' },
-                        ].map((st, i) => (
-                          <div key={i} className={`p-3 rounded-xl border transition-all ${
-                            st.state === 'current' ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-500/20 shadow-xs' :
-                            st.state === 'done' ? 'bg-slate-50/80 border-slate-200 text-slate-700' :
-                            'bg-white border-slate-100 opacity-60'
-                          }`}>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className={`text-[10px] font-mono font-black ${st.state === 'current' ? 'text-indigo-600' : st.state === 'done' ? 'text-emerald-600' : 'text-slate-400'}`}>
-                                {st.step}
-                              </span>
-                              {st.state === 'done' && <span className="text-[10px] font-black text-emerald-600">✓</span>}
-                              {st.state === 'current' && <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />}
-                            </div>
-                            <div className={`text-xs font-black leading-tight ${st.state === 'current' ? 'text-indigo-950' : 'text-slate-900'}`}>
-                              {st.title}
-                            </div>
-                            <div className="text-[10px] text-slate-400 font-medium mt-0.5 truncate">
-                              {st.sub}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 2. Full-Width Official Devis Page Hub */}
-                    <div className="w-full space-y-5">
-                      {/* Official Devis Card (Full Page Width) */}
-                      <div className="w-full bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/40 p-5 md:p-8 space-y-5">
-                        
-                        {/* Devis Header */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-                          <div className="flex items-center gap-4">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shrink-0 shadow-sm">
-                              <LeadCardImage
-                                lead={d}
-                                leadPhotos={leadPhotos}
-                                onPhotoLoaded={handlePhotoLoaded}
-                                alt={analysis.modeleReel}
-                                dark={true}
-                                iconSize={8}
-                                isAr={isAr}
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-mono font-black rounded-lg border border-indigo-100">
-                                  #{d.id.substring(0, 8).toUpperCase()}
-                                </span>
-                                <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-lg border border-emerald-100">
-                                  {isAr ? 'دوفيز رسمي معتمد' : 'Devis Officiel'}
-                                </span>
-                                <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-black rounded-lg border border-blue-100 flex items-center gap-1">
-                                  <ShieldCheck className="w-3 h-3 text-blue-600" />
-                                  <span>{isAr ? 'عرض سعر معتمد من الورشة' : 'Devis Atelier Certifié'}</span>
-                                </span>
-                              </div>
-                              <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug break-words">
-                                {analysis.modeleReel}
-                              </h2>
-                              <p className="text-xs text-slate-500 font-medium mt-0.5">
-                                {isAr ? 'الزبون :' : 'Client :'} <strong className="text-slate-800">{d.name || currentUser?.nom || 'Client'}</strong>
-                              </p>
-                            </div>
-                          </div>
-
-                        </div>
-
-                        {/* ⚠️ تنبيه قانوني ومهني بالسعر التقديري بناءً على طلب الزبون */}
-                        <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 border-2 border-amber-500/35 rounded-3xl flex flex-col sm:flex-row items-start gap-4 text-amber-950 shadow-xs">
-                          <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-2xl shrink-0 shadow-md shadow-amber-500/25">
-                            <AlertCircle className="w-6 h-6" />
-                          </div>
-                          <div className="space-y-1.5 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <strong className="text-sm sm:text-base font-black text-amber-950">
-                                {isAr ? '⚠️ تنبيه هام : هذا السعر والمدة تقديرية ومبدئية للدراسة الأولية فقط' : '⚠️ Avis Important : Tarif & Délais Estimatifs & Indicatifs'}
-                              </strong>
-                              <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-lg uppercase tracking-wider shadow-xs">
-                                {isAr ? 'في انتظار القرار النهائي من BEYA CREATIVE' : 'Validation Finale BEYA CREATIVE'}
-                              </span>
-                            </div>
-                            <p className="text-xs sm:text-sm text-amber-900/90 leading-relaxed font-medium">
-                              {isAr
-                                ? 'السعر الإجمالي وتكلفة القطعة والمدة الموضحة في هذا الدوفيز مبنية على دراسة تقنية أولية للصور والمواصفات المدخلة. لا يجب أخذ هذا السعر بعين الاعتبار بنسبة 100% كالتزام نهائي حتى تتم المعاينة التقنية للنموذج وإصدار القرار والاعتماد النهائي المؤكد من طرف إدارة ورشة BEYA CREATIVE.'
-                                : 'Ce chiffrage, le prix unitaire et les délais sont calculés sur la base de spécifications estimatives. Ils ne doivent pas être considérés comme contractuels à 100% avant examen approfondi de faisabilité physique et validation finale par la direction de BEYA CREATIVE.'}
-                            </p>
-                            <div className="pt-0.5 flex items-center gap-2 text-[11px] font-bold text-amber-800">
-                              <span>✓ المعاينة الميدانية والتأكيد النهائي كيكونو قبل بدء الإنتاج الفعلي للطلبية</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Spacious Pricing & Fabric Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          {/* 1. Fabric Info Card */}
-                          <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 flex flex-col justify-between space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                {isAr ? 'نوع الثوب المقترح ومكان الشراء' : 'Tissu conseillé & Marché'}
-                              </span>
-                              <span className="px-2 py-0.5 bg-white text-indigo-700 text-[10px] font-black rounded-lg border border-slate-200">
-                                {isAr ? 'جودة ممتازة' : 'Qualité Pro'}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-sm font-black text-slate-900 block">{analysis.tissuSuggere}</span>
-                              <span className="text-xs text-slate-500 font-medium block mt-0.5">
-                                {analysis.tissuMarcheNom} • ~{analysis.prixMetreEstime} MAD/m ({analysis.tissuConsoMeters}m / pc)
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* 2. Unit Price Card */}
-                          <div className="p-4 bg-indigo-50/70 rounded-2xl border border-indigo-100 flex flex-col justify-between space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider truncate">
-                                {isClientFabric 
-                                  ? (isAr ? 'سعر الخياطة فقط للقطعة' : 'Façon seule / Pièce')
-                                  : (isAr ? 'سعر القطعة كاملة (ثوب + خياطة)' : 'Prix Complet / Pièce')}
-                              </span>
-                              <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[9px] font-bold rounded-md">
-                                {isAr ? 'سعر تقديري' : 'Estimatif'}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="flex items-baseline gap-1.5">
-                                <span className="text-2xl sm:text-3xl font-black text-indigo-950 font-mono">{activeUnitPrice}</span>
-                                <span className="text-sm font-black text-indigo-600">MAD <span className="text-[10px] font-normal text-slate-500">/ pc</span></span>
-                              </div>
-                              <span className="text-[11px] text-slate-500 font-bold block mt-0.5">
-                                {isAr ? `الكمية المعتمدة: ${currentQty} قطعة` : `Quantité : ${currentQty} pcs`}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* 3. Total Price Card */}
-                          <div className="p-4 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                {isAr ? 'المجموع الإجمالي للدوفيز' : 'Total Devis Estimatif'}
-                              </span>
-                              <span className="px-2 py-0.5 bg-slate-800 text-amber-400 text-[9px] font-mono font-bold rounded-md border border-amber-400/20">
-                                {isAr ? `المدة: ${analysis.delaiEstime}` : `Délai : ${analysis.delaiEstime}`}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="flex items-baseline gap-1.5">
-                                <span className="text-2xl sm:text-3xl font-black text-white font-mono">{activeTotalPrice.toLocaleString()}</span>
-                                <span className="text-sm font-black text-indigo-300">MAD</span>
-                              </div>
-                              <span className="text-[11px] text-slate-300 font-medium block mt-0.5">
-                                {isAr ? 'شامل لمراحل الإنتاج المتفق عليها' : 'Comprend les phases convenues'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Fabric Source Mode Switcher: Atelier fabric (50% acompte) VS Client fabric (0 MAD acompte) */}
-                        <div className="bg-slate-100 p-1.5 rounded-2xl flex items-center gap-1.5 border border-slate-200/70">
-                          <button
-                            type="button"
-                            onClick={() => setFabricOption(prev => ({ ...prev, [d.id]: 'atelier' }))}
-                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                              !isClientFabric 
-                                ? 'bg-white text-indigo-950 shadow-xs' 
-                                : 'text-slate-500 hover:text-slate-800'
-                            }`}
-                          >
-                            <Layers className="w-4 h-4 text-indigo-600" />
-                            <span>{isAr ? 'الثوب من المعمل (شامل كل شيء)' : 'Tissu Atelier (Tout Compris)'}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setFabricOption(prev => ({ ...prev, [d.id]: 'client' }))}
-                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                              isClientFabric 
-                                ? 'bg-emerald-600 text-white shadow-xs' 
-                                : 'text-slate-500 hover:text-slate-800'
-                            }`}
-                          >
-                            <Package className="w-4 h-4" />
-                            <span>{isAr ? 'الثوب من عندك (الخياطة فقط)' : 'Tissu par vous (Façon)'}</span>
-                          </button>
-                        </div>
-
-                        {/* Dedicated Detailed Cost Breakdown Box ("باش يعرف التمن منين جا") */}
-                        <div className="p-4 sm:p-5 bg-slate-50/90 rounded-2xl border border-slate-200/90 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-lg bg-indigo-600/10 text-indigo-700 flex items-center justify-center">
-                                <Calculator className="w-4 h-4" />
-                              </div>
-                              <div>
-                                <h4 className="text-xs sm:text-sm font-black text-slate-900 leading-tight">
-                                  {isAr ? 'تفاصيل تركيبة وتفكيك السعر (Détail des Coûts)' : 'Décomposition & Détail des Coûts'}
-                                </h4>
-                                <span className="text-[10px] text-slate-500 font-medium block">
-                                  {isAr ? 'شفافية كاملة: منين جا كل درهم فالحساب' : 'Transparence totale sur chaque composante du prix'}
-                                </span>
-                              </div>
-                            </div>
-                            <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-md border border-emerald-200">
-                              {isAr ? 'شفافية 100%' : '100% Transparent'}
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                            {/* 1. Tissu au marché */}
-                            <div className={`p-3 rounded-xl border transition-all ${
-                              isClientFabric 
-                                ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60' 
-                                : 'bg-white border-slate-200/90 text-slate-800 shadow-2xs'
-                            }`}>
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold flex items-center gap-1.5 text-[11px]">
-                                  <span>🧵</span>
-                                  <span>{isAr ? 'كلفة الثوب فالسوق:' : 'Coût Tissu :'}</span>
-                                </span>
-                                <span className={`font-black font-mono ${isClientFabric ? 'line-through text-slate-400' : 'text-indigo-950'}`}>
-                                  {isClientFabric ? '0 MAD' : `${analysis.tissuCostPerPiece} MAD`}
-                                </span>
-                              </div>
-                              <p className="text-[10px] text-slate-500 leading-relaxed">
-                                {isClientFabric 
-                                  ? (isAr ? '✓ ملغاة: الثوب كتجيبو نتا من عندك' : '✓ Tissu fourni par vous (0 MAD)')
-                                  : `${analysis.tissuConsoMeters}m × ~${analysis.prixMetreEstime} MAD (${analysis.tissuMarcheNom})`}
-                              </p>
-                            </div>
-
-                            {/* 2. Coupe & Façon */}
-                            <div className="p-3 rounded-xl border bg-white border-slate-200/90 text-slate-800 shadow-2xs">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold flex items-center gap-1.5 text-[11px]">
-                                  <span>✂️</span>
-                                  <span>{isAr ? 'الفصالة والخياطة (Façon):' : 'Coupe & Façon :'}</span>
-                                </span>
-                                <span className="font-black text-indigo-950 font-mono">
-                                  {analysis.confectionPrice} MAD
-                                </span>
-                              </div>
-                              <p className="text-[10px] text-slate-500 leading-relaxed">
-                                {isAr ? 'اليد العاملة المؤهلة، ماكينات الورشة، درزات مضاعفة وتجميع' : 'Main d\'œuvre qualifiée, machines industrielles & finitions'}
-                              </p>
-                            </div>
-
-                            {/* 3. Accessoires & Finitions */}
-                            <div className={`p-3 rounded-xl border transition-all ${
-                              isClientFabric 
-                                ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60' 
-                                : 'bg-white border-slate-200/90 text-slate-800 shadow-2xs'
-                            }`}>
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold flex items-center gap-1.5 text-[11px]">
-                                  <span>🔘</span>
-                                  <span>{isAr ? 'المستلزمات والتشطيب:' : 'Fournitures :'}</span>
-                                </span>
-                                <span className={`font-black font-mono ${isClientFabric ? 'line-through text-slate-400' : 'text-indigo-950'}`}>
-                                  {isClientFabric ? '0 MAD' : `${analysis.accessoriesCost} MAD`}
-                                </span>
-                              </div>
-                              <p className="text-[10px] text-slate-500 leading-relaxed">
-                                {isClientFabric 
-                                  ? (isAr ? '✓ ملغاة: المستلزمات كتجيبها نتا' : '✓ Fourni par vos soins')
-                                  : (isAr ? 'سحابات، أزرار، خيوط متينة، بطانة، كي وتغليف' : 'Zips, boutons, fils, repassage & emballage')}
-                              </p>
-                            </div>
-
-                            {/* 4. Palier de Quantité */}
-                            <div className="p-3 rounded-xl border bg-indigo-50/60 border-indigo-100 text-indigo-950">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold flex items-center gap-1.5 text-[11px]">
-                                  <span>📦</span>
-                                  <span>{isAr ? `معامل الكمية (${currentQty} قطعة):` : `Palier (${currentQty} pcs) :`}</span>
-                                </span>
-                                <span className="font-black font-mono">
-                                  {currentQty <= 35 ? '+18%' : currentQty <= 60 ? '+8%' : currentQty <= 150 ? '0% (Standard)' : '-10% (Gros)'}
-                                </span>
-                              </div>
-                              <p className="text-[10px] text-indigo-700/80 leading-relaxed">
-                                {currentQty <= 35 
-                                  ? (isAr ? 'سلسلة صغرى (Petite série): مصاريف ضبط الماكينات والباترون' : 'Petite série : frais fixes de calage machines')
-                                  : (isAr ? 'تسعير قياسي مع تخفيض الإنتاج بالجملة' : 'Série standard : économie d\'échelle')}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Summary comparison bar */}
-                          <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                            <span className="text-[11px] text-slate-600 font-bold">
-                              {isClientFabric 
-                                ? (isAr ? '💡 الثوب من عندك: كتوفر كلفة الثوب وكتخلص غير الخياطة:' : '💡 Tissu par vous : vous réglez uniquement la façon :')
-                                : (isAr ? '💡 الثوب من المعمل: سعر متكامل شامل السلعة واجدة:' : '💡 Clé en main : formule complète sans prise de tête :')}
-                            </span>
-                            <span className="font-black text-indigo-950 text-sm">
-                              {activeUnitPrice} MAD <span className="text-[10px] font-medium text-slate-500">/ pc</span>
-                            </span>
-                          </div>
-
-                          {/* Explication Claire du Devis : علاش تقامت بهاد الثمن بالتحديد */}
-                          <div className="mt-3 p-4 bg-indigo-50/70 rounded-2xl border border-indigo-100/90 text-xs space-y-2.5">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-base">📋</span>
-                                <div>
-                                  <span className="font-black text-indigo-950 text-xs sm:text-sm block leading-tight">
-                                    {isAr ? 'علاش هاد الموديل تقام بهاد الثمن بالتحديد؟' : 'Pourquoi ce tarif précis ? (Étude Atelier)'}
-                                  </span>
-                                  <span className="text-[10px] text-indigo-700/80 font-medium">
-                                    {isAr ? 'تفاصيل فنية وحسابات الورشة المعتمدة' : 'Spécifications techniques & justification'}
-                                  </span>
-                                </div>
-                              </div>
-                              <span className="px-2 py-0.5 bg-white text-indigo-800 text-[10px] font-bold rounded-md border border-indigo-200">
-                                {isAr ? 'دراسة تقنية مضبوطة' : 'Devis Détaillé'}
-                              </span>
-                            </div>
-
-                            <div className="space-y-2 text-[11px] text-slate-700 leading-relaxed pt-1">
-                              {analysis.techDetails ? (
-                                <div className="flex items-start gap-2 bg-white/70 p-2.5 rounded-xl border border-indigo-50">
-                                  <span className="text-indigo-600 font-black shrink-0">•</span>
-                                  <div>
-                                    <strong className="text-indigo-950 block">{isAr ? 'المواصفات الفنية المعتمدة :' : 'Spécifications techniques :'}</strong>
-                                    <span className="text-slate-600">{analysis.techDetails}</span>
-                                  </div>
-                                </div>
-                              ) : null}
-
-                              <div className="flex items-start gap-2 bg-white/70 p-2.5 rounded-xl border border-indigo-50">
-                                <span className="text-indigo-600 font-black shrink-0">•</span>
-                                <div>
-                                  <strong className="text-indigo-950 block">{isAr ? 'استهلاك القماش وسعره فالسوق :' : 'Consommation tissu & Marché :'}</strong>
-                                  <span className="text-slate-600">
-                                    {isAr 
-                                      ? `تم احتساب ${analysis.tissuConsoMeters} متر لكل قطعة من قماش "${analysis.tissuSuggere}" بسعر سوق ${analysis.tissuMarcheNom} (~${analysis.prixMetreEstime} درهم/متر).`
-                                      : `Calculé sur ${analysis.tissuConsoMeters}m par pièce en ${analysis.tissuSuggere} (Marché ${analysis.tissuMarcheNom} ~${analysis.prixMetreEstime} MAD/m).`}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="flex items-start gap-2 bg-white/70 p-2.5 rounded-xl border border-indigo-50">
-                                <span className="text-indigo-600 font-black shrink-0">•</span>
-                                <div>
-                                  <strong className="text-indigo-950 block">{isAr ? 'اليد العاملة وتجهيزات الورشة :' : 'Confection & Finitions industrielles :'}</strong>
-                                  <span className="text-slate-600">
-                                    {isAr 
-                                      ? 'فصالة بمقصات كهربائية صناعية، تجميع بدرزات متينة ومزدوجة، سورجي 4 خيوط، وتركيب الإكسسوارات مع المراقبة الدقيقة للجودة.'
-                                      : 'Coupe industrielle, surjet 4 fils, piqûres de renfort, montage zips/accessoires & contrôle qualité strict.'}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {analysis.reponseAtelier ? (
-                                <div className="p-3 bg-white rounded-xl border border-indigo-100 text-slate-800">
-                                  <span className="text-[10px] font-black text-indigo-950 block mb-0.5">
-                                    {isAr ? '💬 توجيه ورأي المعلم بالورشة :' : '💬 Recommandation du chef d\'atelier :'}
-                                  </span>
-                                  <p className="text-[11px] text-slate-600 italic leading-relaxed">
-                                    "{analysis.reponseAtelier}"
-                                  </p>
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Dynamic Acompte / Payment Banner */}
-                        {(() => {
-                          const singleDevState = getLeadDevisState(d);
-
-                          if (singleDevState.isInitialEstimate) {
-                            return (
-                              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-800">
-                                <div>
-                                  <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm text-slate-900">
-                                    <Clock className="w-4 h-4 text-amber-500" />
-                                    {isAr ? 'تقدير أولي تقريبي (قيد دراسة ومراجعة الورشة):' : 'Estimation Indicative (En cours) :'}
-                                  </span>
-                                  <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
-                                    {isAr ? 'هذا السعر تقريبي فقط لأخذ فكرة — الدوفيز الرسمي والنهائي سيصدر من الورشة قريباً' : 'Tarif indicatif. Le devis officiel engageant sera publié par l\'atelier.'}
-                                  </span>
-                                </div>
-                                <span className="font-black text-base text-slate-900 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shrink-0 font-mono">
-                                  ~ {Math.round(activeTotalPrice).toLocaleString()} MAD
-                                </span>
-                              </div>
-                            );
-                          }
-
-                          if (!isClientFabric) {
-                            return (
-                              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
-                                <div>
-                                  <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm">
-                                    <CreditCard className="w-4 h-4 text-amber-600" />
-                                    {isAr ? 'تسبيق شراء القماش وبدء الإنتاج (50%):' : 'Acompte Tissu & Lancement (50%) :'}
-                                  </span>
-                                  <span className="text-[11px] text-amber-800/80 font-medium block mt-0.5">
-                                    {isAr ? 'ضروري لشراء رولوات الثوب وحجز خط الإنتاج' : 'Nécessaire à l\'achat des rouleaux de tissu'}
-                                  </span>
-                                </div>
-                                <span className="font-black text-lg text-amber-950 shrink-0 font-mono">
-                                  {Math.round(activeTotalPrice * 0.5).toLocaleString()} MAD
-                                </span>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                        {isClientFabric && (
-                          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-emerald-950">
-                            <div>
-                              <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm text-emerald-800">
-                                <Package className="w-4 h-4 text-emerald-600" />
-                                {isAr ? 'التسبيق المالي المطلوب:' : 'Acompte requis :'}
-                              </span>
-                              <span className="text-[11px] text-emerald-700/90 font-medium block mt-0.5">
-                                {isAr ? 'صيفط غير الثوب والمستلزمات، كنبداو الفصالة والخياطة مباشرة' : 'Envoyez le tissu, nous lançons la coupe & confection'}
-                              </span>
-                            </div>
-                            <span className="font-black text-sm text-emerald-800 bg-emerald-100/90 px-3.5 py-1.5 rounded-xl shrink-0">
-                              {isAr ? '0 درهم (بدون تسبيق مالي)' : '0 MAD (Sans acompte)'}
-                            </span>
-                          </div>
-                        )}
-
-                        <p className="text-[11px] text-slate-400 text-center font-medium">
-                          {!isClientFabric
-                            ? (isAr ? '✓ الباقي (50%) يؤدى عند استلام السلعة الجاهزة بعد مراقبة الجودة' : '✓ Le solde (50%) est réglé à la livraison après contrôle qualité')
-                            : (isAr ? '✓ الخلاص (100%) كيكون حتى تكمل الخدمة وتستلم السلعة الجاهزة' : '✓ Paiement (100%) uniquement à la livraison بعد confection complète')}
-                        </p>
-
-                        {/* Essential Action Buttons */}
-                        <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          {!isClientFabric ? (
-                            <>
-                              {(() => {
-                                const singleDevState = getLeadDevisState(d);
-                                if (singleDevState.isConfirmedByAtelier && !singleDevState.isVal) {
-                                  return (
-                                    <button
-                                      type="button"
-                                      onClick={() => setValidatingDevisLead(d)}
-                                      className="py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.99] cursor-pointer"
-                                    >
-                                      <CreditCard className="w-4 h-4" />
-                                      <span>{isAr ? 'تأكيد الدوفيز وأداء التسبيق (50%)' : 'Valider le Devis & Verser l\'Acompte'}</span>
-                                    </button>
-                                  );
-                                }
-                                if (singleDevState.isVal) {
-                                  return (
-                                    <div className="py-3.5 px-4 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2">
-                                      <CheckCircle className="w-4 h-4 text-emerald-600" />
-                                      <span>{isAr ? 'تم الاتفاق والموافقة بنجاح' : 'Devis Validé & Confirmé'}</span>
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              })()}
-
-                              {(() => {
-                                const officialLeadDevis = getOfficialDevisForLead(d);
-                                const isDevisReady = singleDevState.isConfirmedByAtelier || singleDevState.isVal || Boolean(officialLeadDevis);
-
-                                if (isDevisReady) {
-                                  return (
-                                    <button
-                                      type="button"
-                                      onClick={() => handlePrintDevis(d)}
-                                      className="py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer border border-slate-700"
-                                      title={isAr ? 'تحميل أو طباعة ملف الدوفيز الرسمي PDF' : 'Télécharger Devis PDF'}
-                                    >
-                                      <Download className="w-4 h-4 text-emerald-400" />
-                                      <span>
-                                        {officialLeadDevis
-                                          ? (isAr ? `الدوفيز الرسمي ${officialLeadDevis.numero} (${officialLeadDevis.montant.toLocaleString()} MAD)` : `Devis ${officialLeadDevis.numero} • ${officialLeadDevis.montant.toLocaleString()} MAD`)
-                                          : (isAr ? 'تحميل ملف الدوفيز (PDF)' : 'Fichier Devis (PDF)')}
-                                      </span>
-                                    </button>
-                                  );
-                                }
-
-                                return (
-                                  <div
-                                    className="py-3.5 px-4 bg-slate-100 text-slate-400 rounded-2xl text-xs md:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 border border-slate-200 cursor-not-allowed select-none"
-                                    title={isAr ? 'الدوفيز الرسمي قيد الإعداد من طرف الورشة' : 'Devis en cours de préparation'}
-                                  >
-                                    <Clock className="w-4 h-4 text-amber-500" />
-                                    <span>{isAr ? 'الدوفيز قيد الإعداد ⏳' : 'Devis en préparation ⏳'}</span>
-                                  </div>
-                                );
-                              })()}
-                            </>
-                          ) : (
-                            <a
-                              href={waUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-[0.99] cursor-pointer"
-                            >
-                              <Package className="w-4 h-4" />
-                              <span>{isAr ? 'تأكيد الطلب وإرسال الثوب (0 DH)' : 'Valider & Envoyer le Tissu'}</span>
-                            </a>
-                          )}
-
-                          <a
-                            href={waUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md cursor-pointer"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            <span>{isAr ? 'محادثة الورشة فالواتساب' : 'WhatsApp Atelier'}</span>
-                          </a>
-
-                          <button
-                            type="button"
-                            onClick={() => setConsultingDemande(d)}
-                            className="py-3.5 px-4 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 text-indigo-700 rounded-2xl text-xs md:text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-indigo-200/90 cursor-pointer shadow-xs active:scale-95"
-                          >
-                            <Sparkles className="w-4 h-4 text-indigo-600" />
-                            <span>{isAr ? 'اسأل مستشار الورشة الذكي' : 'Poser une question'}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Expandable Study Toggle */}
-                    <div className="text-center pt-1 pb-1">
-                      <button
-                        type="button"
-                        onClick={() => setShowFullStudy(!showFullStudy)}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all shadow-xs cursor-pointer"
-                      >
-                        <span>{showFullStudy ? '▲' : '▼'}</span>
-                        <span>{showFullStudy 
-                          ? (isAr ? 'إخفاء الدراسة الفنية الموسعة' : 'Masquer l\'étude détaillée') 
-                          : (isAr ? 'عرض الدراسة الفنية الموسعة، الموردين وتتبع المراحل' : 'Voir l\'étude technique complète & fournisseurs')}
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* Extended Technical Study Container (only when toggled) */}
-                    {showFullStudy && (
-                   <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-                     {/* The Main Information Body (what was circled by user) */}
-                     <div className="p-6 md:p-8 space-y-8">
-                       {/* 1. Official Human Atelier Review & Certification Stamp */}
-                       <div className="p-5 md:p-6 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
-                         <div className="flex items-center gap-4">
-                           <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-amber-500/20 shrink-0">
-                             ✓
-                           </div>
-                           <div>
-                             <div className="flex items-center gap-2">
-                               <span className="px-2.5 py-0.5 bg-amber-500 text-white text-[9px] font-black uppercase tracking-widest rounded-md">
-                                 {isAr ? 'معتمد رسمياً' : 'Certifié Conforme'}
-                               </span>
-                               <h4 className="text-sm font-black text-slate-900">
-                                 {isAr ? 'دراسة فنية معتمدة من رئيس ورشة BEYA CREATIVE' : 'Étude Technique Validée par le Chef d\'Atelier BEYA'}
-                               </h4>
-                             </div>
-                             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                               {isAr 
-                                 ? 'تمت مراجعة هذا الموديل وتدقيق دقائق الخياطة واستهلاك الأقمشة يدوياً من طرف فريق الباترون والخياطة لضمان أعلى جودة.' 
-                                 : 'Ce modèle et son devis ont été vérifiés manuellement par notre bureau des méthodes et patronage.'}
-                             </p>
-                           </div>
-                         </div>
-                         <div className="px-3.5 py-2 bg-white/80 backdrop-blur rounded-xl border border-amber-200/80 text-[11px] font-black text-amber-900 shrink-0 flex items-center gap-1.5 shadow-xs">
-                           <ShieldCheck className="w-4 h-4 text-amber-600" />
-                           <span>BEYA Atelier Stamp #{d.id.substring(0, 6).toUpperCase()}</span>
-                         </div>
+                   {/* AI Progress bar only while manually recalculating initial estimate */}
+                   {isAiAnalyzingLead === d.id && (
+                     <div className="p-3 bg-indigo-950 text-white rounded-2xl border border-indigo-500/30 space-y-1.5 shadow-md">
+                       <div className="flex items-center justify-between text-[11px] text-indigo-200 font-bold">
+                         <span className="flex items-center gap-2">
+                           <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                           {isAr ? 'جاري فحص مواصفات الموديل وتحديث التقدير الأولي...' : 'Actualisation de l\'estimation en cours...'}
+                         </span>
+                         <span className="font-mono">85%</span>
                        </div>
-
-                       {/* 2. Pre-Production Engineering Package (Patronage & Échantillonnage) */}
-                        <div>
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                              <Scissors className="w-4 h-4 text-indigo-600" />
-                              {isAr ? 'خدمات ما قبل الإنتاج (الباترون والعينة)' : 'Pack Pré-Production (Patronage & Échantillon)'}
-                            </h3>
-
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* 1. Patronage Card (من عند الموديلست) */}
-                            <div className={`p-5 rounded-3xl border transition-all ${
-                              analysis.hasCustomPatronage
-                                ? 'bg-white border-slate-200/90 shadow-sm hover:border-indigo-300'
-                                : 'bg-gradient-to-br from-amber-50/50 via-white to-amber-50/20 border-amber-200/80 shadow-xs'
-                            }`}>
-                              <div className="flex items-start justify-between mb-3 gap-2">
-                                {analysis.hasCustomPatronage ? (
-                                  <span className="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 shadow-xs">
-                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                                    <span>{isAr ? `✓ معتمد من الموديلست: ${analysis.modelisteName || 'Mohammed Aboulfateh'}` : `Validé Modéliste: ${analysis.modelisteName || 'Mohammed Aboulfateh'}`}</span>
-                                  </span>
-                                ) : (
-                                  <span className="px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 shadow-xs">
-                                    <Clock className="w-3.5 h-3.5 animate-spin text-amber-700" />
-                                    <span>{isAr ? '⏳ قيد التقييم والتسعير من طرف الموديلست' : 'En attente d\'évaluation Modéliste'}</span>
-                                  </span>
-                                )}
-                                
-                                {analysis.hasCustomPatronage ? (
-                                  <div className={isAr ? 'text-left' : 'text-right'}>
-                                    <span className="text-2xl font-black text-slate-900 block font-mono">
-                                      {analysis.patronagePrice} <span className="text-xs font-bold text-slate-500">MAD</span>
-                                    </span>
-                                    <span className="text-[10px] font-bold text-emerald-700 block">
-                                      {isAr ? 'ثمن الباطرون من الموديلست' : 'Tarif Modéliste'}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <span className="px-3 py-1 bg-amber-500/10 text-amber-900 text-xs font-black rounded-lg border border-amber-300/40 flex items-center gap-1.5 shrink-0">
-                                    <span>⏳</span> {isAr ? 'في انتظار تسعير الموديلست' : 'À chiffrer par le Modéliste'}
-                                  </span>
-                                )}
-                              </div>
-
-                              <h4 className="text-sm font-black text-slate-900 mb-1.5 flex items-center gap-1.5">
-                                <span>📐</span> {isAr ? 'باطرون الموديلست وتدريج المقاسات (Patronage CAD)' : 'Patronage Industriel & Gradation Modéliste'}
-                              </h4>
-
-                              <div className="space-y-2 mt-2">
-                                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-700 space-y-1.5">
-                                  <div className="flex items-start gap-1.5 font-bold">
-                                    <span className="text-indigo-600 font-mono font-black">1.</span>
-                                    <span>
-                                      <strong className="text-slate-900">{isAr ? 'الباترون الأساسي للعينة :' : 'Patron de Base Prototype :'}</strong>{' '}
-                                      {isAr ? 'تصميم الباطرون الأولي بنظام CAD الصناعي بمقاييس دقيقة من طرف الموديلست لبدء خياطة العينة.' : 'Création du patron CAD industriel aux normes pour lancer la confection de l\'échantillon.'}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-start gap-1.5 font-bold pt-1.5 border-t border-slate-200/60">
-                                    <span className="text-indigo-600 font-mono font-black">2.</span>
-                                    <span>
-                                      <strong className="text-indigo-900">{isAr ? 'تدريج باقي المقاسات (Gradation) :' : 'Gradation des Tailles :'}</strong>{' '}
-                                      {isAr ? 'من بعد ما كيكون الباترون واجد وكتوافق على العينة، كاتبقى غير الـ Gradation للمقاسات لي بغيتي تزيد (S, M, L, XL, XXL...). تدفع لمرة واحدة ويبقى ملكك لإعادة الإنتاج دائماً.' : 'Une fois le prototype validé, la gradation est déclinée sur toutes vos tailles (S-XXL). Réutilisable à vie pour tous vos réassorts.'}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 px-1 pt-0.5">
-                                  <span>👤 {isAr ? 'الموديلست المكلف بالدراسة :' : 'Modéliste assigné :'}</span>
-                                  <span className="text-indigo-950 font-black">{analysis.modelisteName || (isAr ? 'مكتب الموديلست BEYA' : 'Bureau Modéliste BEYA')}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* 2. Échantillon Card (من عندي أنا بالورشة) */}
-                            <div className={`p-5 rounded-3xl border transition-all ${
-                              analysis.hasCustomEchantillon
-                                ? 'bg-gradient-to-br from-indigo-50/70 to-purple-50/50 border-indigo-200/90 shadow-sm hover:border-indigo-400'
-                                : 'bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/20 border-indigo-200/50 shadow-xs'
-                            }`}>
-                              <div className="flex items-start justify-between mb-3 gap-2">
-                                {analysis.hasCustomEchantillon ? (
-                                  <span className="px-2.5 py-1 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1.5">
-                                    <span>⭐</span> {isAr ? 'خدمة ورشة BEYA • تُخصم 100% من الإنتاج' : 'Confection Atelier BEYA • 100% Déductible'}
-                                  </span>
-                                ) : (
-                                  <span className="px-2.5 py-1 bg-indigo-100 text-indigo-800 border border-indigo-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1 shadow-xs">
-                                    <Clock className="w-3 h-3 animate-spin text-indigo-700" />
-                                    <span>{isAr ? 'ورشة تفصيل وخياطة النماذج' : 'Atelier Confection Prototype'}</span>
-                                  </span>
-                                )}
-
-                                {analysis.hasCustomEchantillon ? (
-                                  <div className={isAr ? 'text-left' : 'text-right'}>
-                                    <span className="text-2xl font-black text-indigo-950 block font-mono">
-                                      {analysis.echantillonPrice} <span className="text-xs font-bold text-indigo-600">MAD</span>
-                                    </span>
-                                    <span className="text-[10px] font-bold text-indigo-600 block">
-                                      {isAr ? 'ثمن خدمة الورشة (مسترجع)' : 'Tarif Confection Atelier'}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <span className="px-3 py-1 bg-indigo-500/10 text-indigo-900 text-xs font-black rounded-lg border border-indigo-300/40 flex items-center gap-1.5 shrink-0">
-                                    <span>⏳</span> {isAr ? 'في انتظار تحديد تكلفة العينة بالورشة' : 'En attente de chiffrage atelier'}
-                                  </span>
-                                )}
-                              </div>
-
-                              <h4 className="text-sm font-black text-indigo-950 mb-1.5 flex items-center gap-1.5">
-                                <span>✂️</span> {isAr ? 'تفصيل وخياطة العينة بالورشة (Prototype Atelier)' : 'Confection Prototype Physique (Atelier BEYA)'}
-                              </h4>
-
-                              <div className="space-y-2 mt-2">
-                                <p className="text-xs text-indigo-950/80 leading-relaxed font-medium">
-                                  {isAr 
-                                    ? 'خدمة تفصيل وخياطة العينة الواقعية داخل ورشة BEYA مباشرة بعد تسلّم الباطرون من الموديلست، للتأكد الفعلي من القماش، القصة، والجودة على أرض الواقع.' 
-                                    : 'Confection complète du prototype physique dans notre atelier dès réception du patron pour valider coupe, tissu et finitions avant production.'}
-                                </p>
-                                <div className="p-3 bg-emerald-500/15 border border-emerald-500/30 rounded-2xl text-xs text-emerald-950 font-bold flex items-center gap-2">
-                                  <span className="text-sm">⭐</span>
-                                  <span>
-                                    {isAr 
-                                      ? '100% مسترجع : هذا المبلغ يُخصم بالكامل من مجموع فاتورة الإنتاج الكلي عند طلب الكمية!' 
-                                      : '100% Déductible : Ce montant est intégralement déduit du total de votre commande de production !'}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 3. Interactive Wholesale Quantity Simulator (Collapsible to save space) */}
-                        <div className="bg-white rounded-3xl border border-indigo-100 shadow-xs overflow-hidden transition-all">
-                          <button
-                            type="button"
-                            onClick={() => setShowQuantitySimulator(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
-                            className={`w-full p-4 sm:p-5 flex items-center justify-between gap-3 text-left transition-all cursor-pointer group ${
-                              showQuantitySimulator[d.id] ? 'bg-indigo-50/70 border-b border-indigo-100' : 'hover:bg-slate-50'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-10 h-10 rounded-2xl bg-indigo-100/70 text-indigo-700 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xs shrink-0">
-                                <Calculator className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="text-xs sm:text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
-                                    {isAr ? 'حاسبة أسعار الجملة التفاعلية (Simulateur Quantités)' : 'Simulateur de Devis & Paliers de Quantité'}
-                                  </h3>
-                                  <span className="text-[10px] font-black text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-full">
-                                    {isAr ? 'توفير حتى -16%' : 'Jusqu\'à -16%'}
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
-                                  {isAr 
-                                    ? 'اضغط لتجربة تغير السعر والمجموع حسب الكمية (من 20 إلى 1000 قطعة)' 
-                                    : 'Cliquez pour tester les tarifs dégressifs selon vos volumes'}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-xs font-black px-3 py-1.5 rounded-xl border transition-all text-indigo-700 bg-white border-indigo-200 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 shadow-2xs">
-                                {showQuantitySimulator[d.id] ? (isAr ? 'إخفاء الحاسبة ▲' : 'Masquer ▲') : (isAr ? 'فتح الحاسبة والأسعار ▼' : 'Ouvrir ▼')}
-                              </span>
-                              <div className={`w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 transition-transform ${showQuantitySimulator[d.id] ? 'rotate-180' : ''}`}>
-                                <ChevronDown className="w-4 h-4" />
-                              </div>
-                            </div>
-                          </button>
-
-                          {showQuantitySimulator[d.id] && (
-                            <div className="p-6 bg-gradient-to-br from-indigo-50/70 via-white to-slate-50/60 animate-in fade-in slide-in-from-top-2 duration-300 space-y-6">
-                            {/* Quantity Tier Selector Buttons */}
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">
-                                {isAr ? 'اختر بالي الكمية لتجربة السعر مباشرة:' : 'Sélectionnez un palier de production :'}
-                              </label>
-                              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                                {[
-                                  { qty: 30, labelAr: '30 حبة', labelFr: '30 pcs', tagAr: 'تجريبي (+18%)', tagFr: '+18%' },
-                                  { qty: 50, labelAr: '50 حبة', labelFr: '50 pcs', tagAr: 'إطلاق (+8%)', tagFr: '+8%' },
-                                  { qty: 100, labelAr: '100 حبة', labelFr: '100 pcs', tagAr: 'قياسي (الأساس)', tagFr: 'Standard' },
-                                  { qty: 300, labelAr: '300 حبة', labelFr: '300 pcs', tagAr: 'توفير 10%', tagFr: '-10%' },
-                                  { qty: 500, labelAr: '500 حبة', labelFr: '500 pcs', tagAr: 'توفير 16%', tagFr: '-16%' }
-                                ].map(tier => {
-                                  const isSelected = currentQty === tier.qty;
-                                  return (
-                                    <button
-                                      key={tier.qty}
-                                      type="button"
-                                      onClick={() => setSelectedTierQty(prev => ({ ...prev, [d.id]: tier.qty }))}
-                                      className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
-                                        isSelected 
-                                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-102 font-black' 
-                                          : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-slate-50 font-bold'
-                                      }`}
-                                    >
-                                      <div className="text-sm font-black">{isAr ? tier.labelAr : tier.labelFr}</div>
-                                      <div className={`text-[9px] uppercase tracking-wider font-extrabold mt-0.5 ${isSelected ? 'text-indigo-200' : 'text-indigo-600'}`}>
-                                        {isAr ? tier.tagAr : tier.tagFr}
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-
-                              {/* Manual Quantity Range Slider */}
-                              <div className="pt-4 flex flex-col sm:flex-row items-center gap-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-100">
-                                <span className="text-xs font-bold text-slate-600 shrink-0">
-                                  {isAr ? 'أو حدد كمية خاصة:' : 'Ou ajustez au curseur :'}
-                                </span>
-                                <input
-                                  type="range"
-                                  min="20"
-                                  max="1000"
-                                  step="10"
-                                  value={currentQty}
-                                  onChange={(e) => setSelectedTierQty(prev => ({ ...prev, [d.id]: Number(e.target.value) }))}
-                                  className="w-full accent-indigo-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
-                                />
-                                <span className="px-4 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-black shrink-0">
-                                  {currentQty} pcs
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Active Dynamic Summary */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-indigo-100/60 pt-2">
-                              <div>
-                                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">
-                                  {isAr ? `السعر للقطعة الواحدة (${currentQty} حبة)` : `Prix Unitaire (${currentQty} pcs)`}
-                                </span>
-                                <div className="flex items-baseline gap-2">
-                                  <span className="text-4xl md:text-5xl font-black text-indigo-950 tracking-tight">{activeUnitPrice}</span>
-                                  <span className="text-sm font-black text-indigo-600">MAD / pc</span>
-                                </div>
-                                <p className="text-xs text-slate-500 font-semibold mt-2 flex items-center gap-1.5">
-                                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                                  {isAr ? 'يشمل الثوب، الفصالة، الخياطة والتطريز/الطباعة' : 'Inclus tissu, coupe, confection et marquage'}
-                                </p>
-                              </div>
-
-                              <div className="md:text-right flex flex-col justify-between">
-                                <div>
-                                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
-                                    {isAr ? `إجمالي طلبيتك (${currentQty} قطعة)` : `Total Commande (${currentQty} pcs)`}
-                                  </span>
-                                  <div className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-                                    {activeTotalPrice.toLocaleString()} <span className="text-sm font-bold text-slate-500">MAD</span>
-                                  </div>
-                                </div>
-                                <div className="mt-3">
-                                  <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-black rounded-lg">
-                                    {isAr ? 'دوفيس معتمد من إدارة الورشة' : 'Devis Atelier Validé'}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Cost Breakdown Table */}
-                            <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-xs">
-                              <table className="w-full text-xs">
-                                <thead className="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
-                                  <tr>
-                                    <th className="p-3.5 text-left">{isAr ? 'البيان' : 'Poste de Coût'}</th>
-                                    <th className="p-3.5 text-right">{isAr ? 'التقدير / القطعة' : 'Estimation / pc'}</th>
-                                    <th className="p-3.5 text-right">{isAr ? 'المجموع' : 'Total'}</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 font-medium">
-                                  <tr>
-                                    <td className="p-3.5 font-bold text-slate-700">{isAr ? 'المواد الأولية (الأقمشة، مستلزمات الخياطة والإكسسوارات)' : 'Matières premières (Tissus, fournitures & accessoires)'}</td>
-                                    <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(activeUnitPrice * 0.48)} MAD</td>
-                                    <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(activeUnitPrice * 0.48 * currentQty).toLocaleString()} MAD</td>
-                                  </tr>
-                                  <tr className="bg-slate-50/40">
-                                    <td className="p-3.5 font-bold text-slate-700">{isAr ? 'الفصالة والخياطة والتركيب الصناعي' : 'Coupe, confection et assemblage industriel'}</td>
-                                    <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(activeUnitPrice * 0.32)} MAD</td>
-                                    <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(activeUnitPrice * 0.32 * currentQty).toLocaleString()} MAD</td>
-                                  </tr>
-                                  <tr>
-                                    <td className="p-3.5 font-bold text-slate-700">{isAr ? 'الماركينغ، الطباعة/التطريز والفينيسيون' : 'Marquage, finitions & packaging'}</td>
-                                    <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(activeUnitPrice * 0.20)} MAD</td>
-                                    <td className="p-3.5 text-right font-mono font-bold text-slate-700">{Math.round(activeUnitPrice * 0.20 * currentQty).toLocaleString()} MAD</td>
-                                  </tr>
-                                  <tr className="bg-indigo-50/80 font-black text-indigo-950 text-sm">
-                                    <td className="p-4">{isAr ? 'السعر الصافي للقطعة' : 'PRIX UNITAIRE HT'}</td>
-                                    <td className="p-4 text-right font-mono text-base text-indigo-700">{activeUnitPrice} MAD</td>
-                                    <td className="p-4 text-right font-mono text-base text-indigo-700">{activeTotalPrice.toLocaleString()} MAD</td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                          )}
-                        </div>
-
-                       {/* Technical Specifications */}
-                       <div>
-                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                           <Scissors className="w-4 h-4 text-indigo-600" />
-                           {isAr ? 'المواصفات التقنية والمواد' : 'Cahier des Charges & Matières'}
-                         </h3>
-                         <div className="border border-slate-100 rounded-3xl overflow-hidden shadow-xs divide-y divide-slate-100">
-                           <div className="p-4 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                             <span className="text-xs font-bold text-slate-500 w-1/3">{isAr ? 'القماش الرئيسي المقترح' : 'Matière Principale'}</span>
-                             <span className="text-xs font-black text-slate-900 flex-1">{analysis.tissuSuggere}</span>
-                           </div>
-                           <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                             <span className="text-xs font-bold text-slate-500 w-1/3">{isAr ? 'الفصالة والباترون' : 'Patronage & Coupe'}</span>
-                             <span className="text-xs font-bold text-slate-700 flex-1">{isAr ? 'باترون احترافي رقمي بمقاسات مظبوطة (Coupe Numérique Haute Précision)' : 'Patronage industriel numérique avec gradation normée'}</span>
-                           </div>
-                           <div className="p-4 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                             <span className="text-xs font-bold text-slate-500 w-1/3">{isAr ? 'الفصالة والتشطيبات والإكسسوارات' : 'Finitions & Fournitures'}</span>
-                             <span className="text-xs font-bold text-slate-800 flex-1">{analysis.techDetails}</span>
-                           </div>
-                           <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                             <span className="text-xs font-bold text-slate-500 w-1/3">{isAr ? 'الطباعة / التطريز' : 'Marquage / Sérigraphie'}</span>
-                             <span className="text-xs font-bold text-slate-700 flex-1">{isAr ? 'سيريغرافي عالي الجودة أو تطريز بارز على الصدر' : 'Sérigraphie textile haute tenue / Broderie relief poitrine'}</span>
-                           </div>
-                           <div className="p-4 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                             <span className="text-xs font-bold text-slate-500 w-1/3">{isAr ? 'مدة إعداد العينة والإنتاج' : 'Délai Réalisation'}</span>
-                             <span className="text-xs font-black text-indigo-700 flex-1">{analysis.delaiEstime}</span>
-                           </div>
-                         </div>
-                       </div>
-
-                       {/* Sizes Breakdown */}
-                       <div>
-                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                           <Layers className="w-4 h-4 text-indigo-600" />
-                           {isAr ? 'المقاسات والكميات المطلوبة' : 'Grille des Tailles'}
-                         </h3>
-                         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-center">
-                           {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
-                             <div key={sz} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                               <span className="block text-[10px] font-black text-slate-400 uppercase mb-1">{sz}</span>
-                               <span className="text-base font-black text-slate-900">{sizes[sz] ? `${sizes[sz]} pcs` : (hasCustomSizes ? '0' : '—')}</span>
-                             </div>
-                           ))}
-                         </div>
-                       </div>
-
-                       {/* 4. Fabric Sourcing & Partner Suppliers Pilot (موردي الأقمشة - التجربة الجديدة) */}
-                        <div>
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                              <Box className="w-4 h-4 text-indigo-600" />
-                              {isAr ? 'الأقمشة والموردون المعتمدون (Sourcing Matières)' : 'Sourcing Matières & Fournisseurs Partenaires'}
-                            </h3>
-                            <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 self-start sm:self-auto flex items-center gap-1.5">
-                              <CheckCircle className="w-3.5 h-3.5" />
-                              {isAr ? 'تجربة حصرية لزبناء BEYA' : 'Offre Partenariat BEYA'}
-                            </span>
-                          </div>
-
-                          <div className="p-6 bg-white rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
-                                  {isAr ? 'نوع القماش المنصوح به' : 'Tissu Conseillé'}
-                                </span>
-                                <div className="text-sm font-black text-slate-900">{analysis.tissuSuggere}</div>
-                              </div>
-                              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
-                                  {isAr ? 'استهلاك القماش التقديري' : 'Consommation Estimée'}
-                                </span>
-                                <div className="text-sm font-black text-slate-900">
-                                  {analysis.tissuConsoMeters} m / pc <span className="text-xs text-slate-500 font-bold">(~{Math.round(analysis.tissuConsoMeters * currentQty)} متر للطلبية)</span>
-                                </div>
-                              </div>
-                              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
-                                  {isAr ? 'سعر الثوب التقريبي بالسوق' : 'Prix Moyen au Kilo'}
-                                </span>
-                                <div className="text-sm font-black text-indigo-600">
-                                  {analysis.tissuPricePerKg} MAD <span className="text-xs text-slate-500 font-bold">/ kg</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Dedicated Dynamic Supplier Card (مطابق لما طلبه العميل مع معلومات المورد وكود BEYA) */}
-                            <div className="p-5 md:p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl border border-slate-800 shadow-xl space-y-4">
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
-                                <div>
-                                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                                    <span className="px-2.5 py-0.5 bg-emerald-500 text-white text-[10px] font-black rounded-lg uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                                      <Check className="w-3 h-3" />
-                                      <span>{isAr ? (analysis.hasCustomFournisseur ? 'مورد معتمد' : 'خدمة التوريد المعتمدة') : (analysis.hasCustomFournisseur ? 'Fournisseur Agréé' : 'Sourcing Agréé BEYA')}</span>
-                                    </span>
-                                    <span className="px-2.5 py-0.5 bg-white/10 text-emerald-300 text-[10px] font-black rounded-lg border border-emerald-500/30 flex items-center gap-1">
-                                      <span>{isAr ? 'متوفر بالمستودع ✅' : 'Disponible en stock ✅'}</span>
-                                    </span>
-                                    {analysis.fournisseurCode && analysis.fournisseurCode !== 'undefined' && (
-                                      <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-lg font-mono">
-                                        {isAr ? 'كود BEYA:' : 'Code BEYA:'} {analysis.fournisseurCode}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <h4 className="text-base sm:text-lg font-black text-white">
-                                    {analysis.fournisseurNom || (isAr ? 'مكتب ومصلحة توريد الأقمشة (ورشة BEYA)' : 'Bureau Sourcing Tissus Atelier BEYA')}
-                                  </h4>
-                                  <p className="text-xs text-slate-300 mt-0.5 flex items-center gap-1.5 font-medium">
-                                    <MapPin className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                                    <span>{analysis.fournisseurVille || (isAr ? 'الورشة المركزية • مكناس / خدمة التوريد الوطنية' : 'Atelier BEYA • Sourcing National')}</span>
-                                    <span className="text-slate-500">•</span>
-                                    <span className="text-emerald-400 text-[11px] font-bold">
-                                      {isAr ? 'بأسعار تفضيلية خاصة بزبناء ورشة BEYA Creative' : 'Tarifs préférentiels clients BEYA Creative'}
-                                    </span>
-                                  </p>
-                                </div>
-
-                                {analysis.fournisseurCode && analysis.fournisseurCode !== 'undefined' && (
-                                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(analysis.fournisseurCode);
-                                        showNotification(isAr ? `تم نسخ كود الشراكة: ${analysis.fournisseurCode}` : `Code BEYA copié: ${analysis.fournisseurCode}`, isAr ? '🏷️ كود المورد' : '🏷️ Code BEYA', 'success');
-                                      }}
-                                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                                      title="نسخ كود الشراكة"
-                                    >
-                                      <Copy className="w-3.5 h-3.5 text-amber-400" />
-                                      <span>{isAr ? 'نسخ كود BEYA' : 'Copier le Code'}</span>
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Available Stock Colors Pills */}
-                              {analysis.fournisseurCouleurs && (
-                                <div className="space-y-1.5">
-                                  <span className="text-[11px] font-bold text-slate-300 block">
-                                    {isAr ? 'الألوان المتوفرة فالحين بالستوك:' : 'Couleurs disponibles en stock :'}
-                                  </span>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {analysis.fournisseurCouleurs.split(/[،,]/).map((col, cIdx) => {
-                                      const colTrim = col.trim();
-                                      if (!colTrim) return null;
-                                      return (
-                                        <span
-                                          key={cIdx}
-                                          className="px-3 py-1 rounded-xl text-xs font-bold bg-white/10 border border-white/15 text-white backdrop-blur-xs flex items-center gap-1.5 shadow-2xs"
-                                        >
-                                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                                          <span>{colTrim}</span>
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Special Instructions Note */}
-                              {analysis.fournisseurNote && (
-                                <p className="text-xs text-amber-200/90 leading-relaxed font-medium bg-amber-500/10 p-3 rounded-2xl border border-amber-500/20">
-                                  💡 {analysis.fournisseurNote}
-                                </p>
-                              )}
-
-                              {/* Direct WhatsApp Contact Button + Direct Phone */}
-                              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
-                                <a
-                                  href={`https://wa.me/${cleanPhoneForWa(analysis.fournisseurTel)}?text=${encodeURIComponent(
-                                    analysis.hasCustomFournisseur
-                                      ? (isAr 
-                                          ? `السلام عليكم، أنا زبون من طرف ورشة BEYA Creative (كود الشراكة: ${analysis.fournisseurCode || 'BEYA-VIP'}). عندي طلبية لموديل ${analysis.modeleReel} (${currentQty} قطعة)، محتاج قماش ${analysis.tissuSuggere}. واش متوفر عندكم وبشحال الكيلو؟ شكراً.`
-                                          : `Bonjour, je suis client chez l'Atelier BEYA Creative (Code Partenaire : ${analysis.fournisseurCode || 'BEYA-VIP'}). Pour mon modèle ${analysis.modeleReel} (${currentQty} pcs), je souhaite commander le tissu ${analysis.tissuSuggere}. Pouvez-vous me confirmer le tarif ? Merci.`)
-                                      : (isAr
-                                          ? `السلام عليكم ورشة BEYA Creative، أنا زبون عندي طلبية لموديل ${analysis.modeleReel} (رقم الطلب: #${(d.id || '').slice(0, 8).toUpperCase()} - ${currentQty} قطعة). بغيت استفسار وتنسيق بخصوص توفير وتوريد قماش ${analysis.tissuSuggere}. شكراً.`
-                                          : `Bonjour l'Atelier BEYA Creative, je suis client pour le modèle ${analysis.modeleReel} (Réf : #${(d.id || '').slice(0, 8).toUpperCase()} - ${currentQty} pcs). Je souhaite coordonner la fourniture du tissu ${analysis.tissuSuggere}. Merci.`)
-                                  )}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex-1 py-3.5 px-6 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs sm:text-sm tracking-wider transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-500/20 active:scale-[0.99] text-center cursor-pointer"
-                                >
-                                  <MessageCircle className="w-5 h-5 text-slate-950" />
-                                  <span>
-                                    {analysis.hasCustomFournisseur
-                                      ? (isAr 
-                                          ? `تواصل مع مورد القماش (${analysis.fournisseurNom})` 
-                                          : `Contacter le Fournisseur (${analysis.fournisseurNom})`)
-                                      : (isAr 
-                                          ? 'تواصل مع خدمة توريد الأقمشة (ورشة BEYA)' 
-                                          : 'Contacter le Bureau Sourcing BEYA')}
-                                  </span>
-                                </a>
-
-                                {analysis.fournisseurTel && (
-                                  <a
-                                    href={`tel:${cleanPhoneForWa(analysis.fournisseurTel)}`}
-                                    className="py-3.5 px-5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 border border-white/15 cursor-pointer text-center"
-                                    title={isAr ? 'اتصال مباشر' : 'Appel direct'}
-                                  >
-                                    <Phone className="w-4 h-4 text-emerald-400" />
-                                    <span dir="ltr">
-                                      {analysis.fournisseurTel.startsWith('+') 
-                                        ? analysis.fournisseurTel 
-                                        : analysis.fournisseurTel.startsWith('212') 
-                                        ? '+' + analysis.fournisseurTel 
-                                        : analysis.fournisseurTel}
-                                    </span>
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 5. Conditional Artisans & Craftsmen Network (شبكة الحرفيين المعتمدين للموديل) */}
-                        {(analysis.hasBroderie || analysis.hasPrint) && (
-                          <div>
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                              <Sparkles className="w-4 h-4 text-amber-500" />
-                              {isAr ? 'الحرفيون والشركاء المعتمدون للموديل' : 'Artisans & Spécialistes Agréés pour ce Modèle'}
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Broderie Card */}
-                              {analysis.hasBroderie && (
-                                <div className="p-5 bg-gradient-to-br from-amber-50/60 via-white to-white rounded-3xl border border-amber-200 shadow-xs space-y-4">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black text-lg shadow-md shadow-amber-500/20">
-                                      🧵
-                                    </div>
-                                    <div>
-                                      <h4 className="text-sm font-black text-slate-900">
-                                        {isAr ? 'أتيليه الأمل للطرز الرقمي (Broderie Industrielle)' : 'Atelier Broderie Industrielle Al-Amal'}
-                                      </h4>
-                                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md">
-                                        {isAr ? 'شريك معتمد لدى BEYA • الدار البيضاء' : 'Partenaire Agréé BEYA • Casablanca'}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Call Etiquette Banner */}
-                                  <div className="p-3.5 bg-amber-100/60 rounded-2xl text-[11px] text-amber-950 space-y-1 font-medium border border-amber-200/60">
-                                    <div className="font-black text-amber-900 flex items-center gap-1.5">
-                                      <span>⏱️</span> {isAr ? 'إرشادات الاتصال بالصانع (احترام وقت الورشة):' : "Charte d'Appel (Respect du temps de l'atelier) :"}
-                                    </div>
-                                    <p className="leading-relaxed">
-                                      {isAr 
-                                        ? 'الصانع كيكون واقف فالماكينة وتحت ضغط الإنتاج. باش يجاوبك فالحين، خلي مكالمتك مركزة فـ دقيقة: حدد حجم الطرزة بالسنتمتر، الكمية المطلوبة، واذكر « كود BEYA-BROD » للاستفادة من ثمن الشراكة.' 
-                                        : "L'artisan est sur ses machines. Soyez concis lors de l'appel : précisez la taille en cm, la quantité et mentionnez le code BEYA-BROD."}
-                                    </p>
-                                  </div>
-
-                                  <a
-                                    href={`https://wa.me/212661000001?text=${encodeURIComponent(
-                                      isAr 
-                                        ? `السلام عليكم سي كمال (أتيليه التطريز)، أنا كليان من طرف BEYA Creative (كود BEYA-BROD). عندي موديل ${analysis.modeleReel} بكمية ${currentQty} قطعة وفيه تطريز. عافاك شحال التكلفة التقريبية للغرزة والوقت المتوقع؟ شكراً.`
-                                        : `Bonjour Atelier Broderie Al-Amal, je vous contacte de la part de BEYA Creative (Code : BEYA-BROD). J'ai une commande pour le modèle ${analysis.modeleReel} (${currentQty} pcs) avec broderie. Pouvez-vous m'indiquer le tarif indicatif et délai ? Merci.`
-                                    )}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full py-3 px-4 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md shadow-amber-600/20 cursor-pointer text-center"
-                                  >
-                                    <MessageCircle className="w-4 h-4" />
-                                    <span>{isAr ? 'مراسلة المطرز المعتمد (رسالة جاهزة)' : 'WhatsApp Brodeur (Message Prêt)'}</span>
-                                  </a>
-                                </div>
-                              )}
-
-                              {/* Print / Sérigraphie Card */}
-                              {analysis.hasPrint && (
-                                <div className="p-5 bg-gradient-to-br from-indigo-50/60 via-white to-white rounded-3xl border border-indigo-200 shadow-xs space-y-4">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-lg shadow-md shadow-indigo-600/20">
-                                      🎨
-                                    </div>
-                                    <div>
-                                      <h4 className="text-sm font-black text-slate-900">
-                                        {isAr ? 'مختبر برينت-لاب للطباعة (Sérigraphie & DTF)' : 'PrintLab Textile (Sérigraphie & DTF)'}
-                                      </h4>
-                                      <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-md">
-                                        {isAr ? 'شريك معتمد لدى BEYA • الدار البيضاء' : 'Partenaire Agréé BEYA • Casablanca'}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Call Etiquette Banner */}
-                                  <div className="p-3.5 bg-indigo-100/60 rounded-2xl text-[11px] text-indigo-950 space-y-1 font-medium border border-indigo-200/60">
-                                    <div className="font-black text-indigo-900 flex items-center gap-1.5">
-                                      <span>⏱️</span> {isAr ? 'إرشادات الاتصال بالمطبعة:' : "Charte d'Appel pour l'Imprimeur :"}
-                                    </div>
-                                    <p className="leading-relaxed">
-                                      {isAr 
-                                        ? 'المطبعة كتحتاج تعرف: عدد ألوان التصميم، مكان الطباعة (الصدر أو الظهر)، والكمية. اذكر « كود BEYA-PRINT » لتطبيق التسعيرة الخاصة.' 
-                                        : 'Indiquez immédiatement : nombre de couleurs, emplacement (poitrine/dos) et quantité. Donnez le code BEYA-PRINT.'}
-                                    </p>
-                                  </div>
-
-                                  <a
-                                    href={`https://wa.me/212661000002?text=${encodeURIComponent(
-                                      isAr 
-                                        ? `السلام عليكم مطبعة برينت-لاب، أنا كليان من طرف BEYA Creative (كود BEYA-PRINT). عندي طلبية موديل ${analysis.modeleReel} بـ ${currentQty} قطعة فيها طباعة سيريغرافي/DTF. عافاك شحال تكلفة الأفلام والتثبيت؟ شكراً.`
-                                        : `Bonjour PrintLab, je vous contacte via BEYA Creative (Code : BEYA-PRINT). J'ai une production de ${analysis.modeleReel} (${currentQty} pcs) avec sérigraphie. Quel est le tarif de calage et tirage ? Merci.`
-                                    )}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md shadow-indigo-600/20 cursor-pointer text-center"
-                                  >
-                                    <MessageCircle className="w-4 h-4" />
-                                    <span>{isAr ? 'مراسلة المطبعة المعتمدة (رسالة جاهزة)' : 'WhatsApp Imprimeur (Message Prêt)'}</span>
-                                  </a>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Atelier Direct Note */}
-                       <div className="p-5 bg-indigo-50/70 border border-indigo-100 rounded-3xl flex items-start gap-4">
-                         <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                           <MessageCircle className="w-5 h-5" />
-                         </div>
-                         <div className="flex-1 min-w-0">
-                           <p className="text-xs font-black text-indigo-700 uppercase tracking-wider mb-1">
-                             {isAr ? 'ملاحظة ودراسة ورشة BEYA CREATIVE' : "Note d'Étude de l'Atelier BEYA"}
-                           </p>
-                           <p className="text-sm font-semibold text-slate-700 italic leading-relaxed">
-                             "{analysis.reponseAtelier}"
-                           </p>
-                         </div>
-                       </div>
-
-                       {/* Quality Guarantee Box */}
-                       <div className="p-5 bg-emerald-50/70 border border-emerald-100 rounded-3xl text-xs text-emerald-900 space-y-2">
-                         <p className="font-black text-sm flex items-center gap-2">
-                           <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-                           {isAr ? 'ضمان ورشة BEYA CREATIVE للجودة والمطابقة' : 'Garantie Conformité & Qualité Atelier BEYA'}
-                         </p>
-                         <p className="text-xs text-emerald-800 leading-relaxed font-medium">
-                           {isAr 
-                             ? 'يتم إعداد عينة أولية (Prototype Échantillon) واعتمادها من طرفكم قبل إطلاق الإنتاج الشامل. يتم دفع تسبيق 50% عند انطلاق العينة والباقي عند التسليم النهائي بعد مراقبة الجودة.' 
-                             : "Un prototype d'échantillon physique est validé avant le lancement de la production en série. Acompte de 50% au lancement, solde à la livraison après contrôle qualité."}
-                         </p>
+                       <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                         <div className="h-full bg-gradient-to-r from-amber-400 via-pink-500 to-indigo-400 rounded-full animate-pulse w-4/5" />
                        </div>
                      </div>
+                   )}
 
-                     {/* Bottom Action Footer */}
-                     <div className="p-6 md:p-8 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedDemandePage(null)}
-                            className="w-full sm:w-auto px-6 py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-slate-100 transition-colors cursor-pointer"
-                          >
-                            {isAr ? '← الرجوع إلى قائمة الطلبات' : '← Retour aux demandes'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedDemandePage(null);
-                              setVirementCommandeId(d.id);
-                              setActiveTab('payments');
-                            }}
-                            className="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/20 cursor-pointer"
-                          >
-                            <CreditCard className="w-4 h-4" />
-                            <span>{isAr ? '💳 أداء التسبيق / إرسال التوصيل' : '💳 Payer un Acompte / Reçu'}</span>
-                          </button>
-                        </div>
-
-                        <a
-                          href={waUrl}
-                         target="_blank"
-                         rel="noopener noreferrer"
-                         className="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/20 hover:shadow-2xl cursor-pointer text-center"
-                       >
-                         <MessageCircle className="w-5 h-5" />
-                         <span>{isAr ? 'تأكيد العرض وبدء العينة عبر واتساب' : 'Valider le Devis & Lancer sur WhatsApp'}</span>
-                       </a>
+                   {/* 2. Organized 4-Step Progress Stepper */}
+                   <div className="bg-white rounded-2xl border border-slate-200/90 p-3 shadow-xs">
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                       {[
+                         { step: '01', title: isAr ? 'دراسة وتحديد السعر' : 'Étude & Devis', sub: isDevisReady ? (isAr ? 'مكتمل ✓' : 'Finalisé ✓') : (isAr ? 'جاري الدراسة' : 'En cours'), state: isDevisReady ? 'done' : 'current' },
+                         { step: '02', title: isAr ? 'تأكيد الطلب والتسبيق' : 'Validation & Acompte', sub: singleDevState.isVal ? (isAr ? 'مؤكد ✓' : 'Validé ✓') : (isAr ? 'في انتظار التأكيد' : 'En attente'), state: singleDevState.isVal ? 'done' : (isDevisReady ? 'current' : 'upcoming') },
+                         { step: '03', title: isAr ? 'إعداد الباترون والعينة' : 'Patronage & Échantillon', sub: isAr ? 'المرحلة القادمة' : 'Étape suivante', state: singleDevState.isVal ? 'current' : 'upcoming' },
+                         { step: '04', title: isAr ? 'الإنتاج الكامل والتسليم' : 'Production & Livraison', sub: isAr ? 'التسليم النهائي' : 'Final', state: 'upcoming' },
+                       ].map((st, i) => (
+                         <div key={i} className={`p-2.5 rounded-xl border transition-all ${
+                           st.state === 'current' ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-500/20 shadow-xs' :
+                           st.state === 'done' ? 'bg-slate-50/90 border-slate-200 text-slate-700' :
+                           'bg-white border-slate-100 opacity-60'
+                         }`}>
+                           <div className="flex items-center justify-between mb-0.5">
+                             <span className={`text-[10px] font-mono font-black ${st.state === 'current' ? 'text-indigo-600' : st.state === 'done' ? 'text-emerald-600' : 'text-slate-400'}`}>
+                               {st.step}
+                             </span>
+                             {st.state === 'done' && <span className="text-[10px] font-black text-emerald-600">✓</span>}
+                             {st.state === 'current' && <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />}
+                           </div>
+                           <div className={`text-xs font-black leading-tight ${st.state === 'current' ? 'text-indigo-950' : 'text-slate-900'}`}>
+                             {st.title}
+                           </div>
+                           <div className="text-[10px] text-slate-400 font-medium mt-0.5 truncate">
+                             {st.sub}
+                           </div>
+                         </div>
+                       ))}
                      </div>
                    </div>
-                    )}
 
-                    
+                   {/* 3. Main Organized Devis Card */}
+                   <div className="w-full bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/40 p-5 md:p-7 space-y-5">
+                     
+                     {/* A. Single Unified Model & Official Decision Header */}
+                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                       <div className="flex items-center gap-4 min-w-0">
+                         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shrink-0 shadow-sm">
+                           <LeadCardImage
+                             lead={d}
+                             leadPhotos={leadPhotos}
+                             onPhotoLoaded={handlePhotoLoaded}
+                             alt={analysis.modeleReel}
+                             dark={true}
+                             iconSize={8}
+                             isAr={isAr}
+                           />
+                         </div>
+                         <div className="flex-1 min-w-0">
+                           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                             <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-mono font-black rounded-lg border border-indigo-100">
+                               #${d.id.substring(0, 8).toUpperCase()}
+                             </span>
+                             {isDevisReady ? (
+                               <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-lg border border-emerald-200 flex items-center gap-1">
+                                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                 <span>{singleDevState.isVal ? (isAr ? 'دوفيز مؤكد ومعتمد ✓' : 'Devis Validé ✓') : (isAr ? 'قرار ودوفيز الورشة النهائي' : 'Décision Finale & Devis Officiel')}</span>
+                               </span>
+                             ) : (
+                               <span className="px-2.5 py-0.5 bg-amber-50 text-amber-800 text-[10px] font-black rounded-lg border border-amber-200 flex items-center gap-1">
+                                 <Clock className="w-3 h-3 text-amber-600" />
+                                 <span>{isAr ? 'تقدير أولي (قيد دراسة الورشة)' : 'Estimation Indicative (En cours)'}</span>
+                               </span>
+                             )}
+                           </div>
+                           <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug break-words">
+                             {analysis.modeleReel}
+                           </h2>
+                           <p className="text-xs text-slate-500 font-medium mt-0.5">
+                             {isAr ? 'الزبون :' : 'Client :'} <strong className="text-slate-800">{d.name || currentUser?.nom || 'Client'}</strong>
+                             {d.crmDevisMode === 'echantillon' && (
+                               <span className="mx-2 px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-black rounded-md border border-purple-200">
+                                 {isAr ? '🧪 وضع العينة الأولية' : '🧪 Mode Échantillon'}
+                               </span>
+                             )}
+                           </p>
+                         </div>
+                       </div>
+                     </div>
+
+                     {/* B. Official Workshop Decision Banner vs Pending Estimate Notice (Zero contradictions!) */}
+                     {isDevisReady ? (
+                       <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-500/10 via-indigo-50/60 to-emerald-50/40 border border-emerald-200/90 rounded-2xl flex items-start gap-3.5 shadow-2xs">
+                         <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                           <ShieldCheck className="w-5 h-5" />
+                         </div>
+                         <div className="flex-1 min-w-0 space-y-1">
+                           <div className="flex items-center justify-between gap-2 flex-wrap">
+                             <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wide">
+                               {isAr ? 'القرار النهائي المعتمد من ورشة BEYA CREATIVE' : 'Décision Finale & Tarif Officiel Atelier BEYA'}
+                             </h4>
+                             <span className="px-2 py-0.5 bg-white text-emerald-700 text-[10px] font-black rounded-md border border-emerald-200">
+                               {isAr ? 'تسعير رسمي معتمد' : 'Offre Officielle'}
+                             </span>
+                           </div>
+                           {analysis.reponseAtelier ? (
+                             <p className="text-xs sm:text-sm font-semibold text-slate-700 leading-relaxed bg-white/80 p-3 rounded-xl border border-emerald-100 mt-1.5">
+                               "{analysis.reponseAtelier}"
+                             </p>
+                           ) : (
+                             <p className="text-xs text-slate-600 font-medium">
+                               {isAr
+                                 ? 'تمت مراجعة طلبكم واعتماد السعر النهائي أدناه. يمكنكم تأكيد الطلب وإرسال التسبيق (Virement) لبدء شراء السلعة وانطلاق الإنتاج.'
+                                 : 'Votre demande a été chiffrée par l\'atelier. Vous pouvez valider et verser l\'acompte ci-dessous pour lancer les achats et la fabrication.'}
+                             </p>
+                           )}
+                         </div>
+                       </div>
+                     ) : (
+                       <div className="p-4 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 border border-amber-400/40 rounded-2xl flex items-start gap-3.5 text-amber-950">
+                         <div className="p-2.5 bg-amber-500 text-white rounded-xl shrink-0 shadow-xs">
+                           <AlertCircle className="w-5 h-5" />
+                         </div>
+                         <div className="space-y-1 flex-1">
+                           <div className="flex items-center gap-2 flex-wrap">
+                             <strong className="text-xs sm:text-sm font-black text-amber-950">
+                               {isAr ? 'تقدير أولي مبدئي — في انتظار القرار النهائي من الورشة' : 'Estimation indicative — En attente du devis final'}
+                             </strong>
+                           </div>
+                           <p className="text-xs text-amber-900/90 leading-relaxed font-medium">
+                             {isAr
+                               ? 'هذا السعر تقديري فقط لأخذ فكرة أولية. بمجرد ما يراجع رئيس الورشة الموديل ويحدد القرار الرسمي، غادي توصلك التسعيرة النهائية هنا وتقدر تأكدها.'
+                               : 'Ce tarif est purement indicatif. Dès validation par le chef d\'atelier, le devis officiel engageant apparaîtra ici.'}
+                           </p>
+                         </div>
+                       </div>
+                     )}
+
+                     {/* C. Core Organized Pricing & Specifications Grid (Strictly real admin inputs only!) */}
+                     {(() => {
+                       const hasRealMaterialOrTech = Boolean(
+                         (analysis.tissuSuggere && analysis.tissuSuggere.trim()) ||
+                         (analysis.techDetails && analysis.techDetails.trim())
+                       );
+                       return (
+                         <div className={`grid grid-cols-1 ${hasRealMaterialOrTech ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-3`}>
+                           {/* 1. Unit Price Card */}
+                           <div className="p-4 bg-indigo-50/75 rounded-2xl border border-indigo-100 flex flex-col justify-between space-y-2">
+                             <div className="flex items-center justify-between gap-2">
+                               <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider truncate">
+                                 {isClientFabric
+                                   ? (isAr ? 'سعر الخياطة فقط للقطعة' : 'Façon seule / Pièce')
+                                   : (isAr ? 'سعر القطعة المعتمد' : 'Prix Unitaire Officiel')}
+                               </span>
+                               <span className={`px-2 py-0.5 text-[9px] font-black rounded-md ${isDevisReady ? 'bg-emerald-600 text-white' : 'bg-indigo-100 text-indigo-800'}`}>
+                                 {isDevisReady ? (isAr ? 'نهائي ✓' : 'Officiel ✓') : (isAr ? 'تقديري' : 'Indicatif')}
+                               </span>
+                             </div>
+                             <div>
+                               <div className="flex items-baseline gap-1.5">
+                                 <span className="text-3xl font-black text-indigo-950 font-mono">{activeUnitPrice}</span>
+                                 <span className="text-sm font-black text-indigo-600">MAD <span className="text-[10px] font-normal text-slate-500">/ pc</span></span>
+                                 {savingsVsBase > 0 && (
+                                   <span className="px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-black rounded-lg font-mono">
+                                     -{savingsVsBase}%
+                                   </span>
+                                 )}
+                               </div>
+                               <div className="flex items-center justify-between gap-2 mt-1 flex-wrap">
+                                 <span className="text-[11px] text-slate-600 font-bold">
+                                   {isAr ? `الكمية: ${currentQty} قطعة` : `Quantité : ${currentQty} pcs`}
+                                 </span>
+                                 {analysis.hasAdminSplit && currentQty === baseOrderQty && (
+                                   <span className="text-[10px] text-indigo-700 font-bold bg-white/90 px-2 py-0.5 rounded-md border border-indigo-100">
+                                     {isAr
+                                       ? `ثوب: ${analysis.adminMatierePrice} DH + خياطة: ${analysis.adminLaborPrice} DH`
+                                       : `Matière: ${analysis.adminMatierePrice} + MO: ${analysis.adminLaborPrice} MAD`}
+                                   </span>
+                                 )}
+                               </div>
+                             </div>
+                           </div>
+
+                           {/* 2. Total Price Card */}
+                           <div className="p-4 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-2">
+                             <div className="flex items-center justify-between gap-2">
+                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                 {isDevisReady ? (isAr ? 'المجموع الإجمالي للدوفيز' : 'Total Devis Officiel') : (isAr ? 'المجموع التقديري' : 'Total Indicatif')}
+                               </span>
+                               {analysis.delaiEstime && (
+                                 <span className="px-2 py-0.5 bg-slate-800 text-amber-400 text-[9px] font-mono font-bold rounded-md border border-amber-400/20">
+                                   {isAr ? `المدة: ${analysis.delaiEstime}` : `Délai : ${analysis.delaiEstime}`}
+                                 </span>
+                               )}
+                             </div>
+                             <div>
+                               <div className="flex items-baseline gap-1.5">
+                                 <span className="text-3xl font-black text-white font-mono">{activeTotalPrice.toLocaleString()}</span>
+                                 <span className="text-sm font-black text-indigo-300">MAD</span>
+                               </div>
+                               <span className="text-[11px] text-slate-300 font-medium block mt-0.5">
+                                 {currentQty !== baseOrderQty
+                                   ? (isAr ? `تم تحديث المجموع حسب الكمية الجديدة (${currentQty} قطعة)` : `Recalculé pour ${currentQty} pièces`)
+                                   : (isAr ? 'بناءً على تسعيرة الورشة المعتمدة' : 'Selon chiffrage atelier')}
+                               </span>
+                             </div>
+                           </div>
+
+                           {/* 3. Real Fabric / Technical Info Card (ONLY rendered if Admin entered fabric or specs) */}
+                           {hasRealMaterialOrTech && (
+                             <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 flex flex-col justify-between space-y-2">
+                               <div className="flex items-center justify-between">
+                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                   {isAr ? 'الثوب والمواصفات المعتمدة' : 'Matière & Spécifications'}
+                                 </span>
+                                 <span className="px-2 py-0.5 bg-white text-indigo-700 text-[10px] font-black rounded-lg border border-slate-200">
+                                   {isAr ? 'معتمد' : 'Spécifié'}
+                                 </span>
+                               </div>
+                               <div className="space-y-1">
+                                 {analysis.tissuSuggere && (
+                                   <span className="text-xs sm:text-sm font-black text-slate-900 block leading-snug">
+                                     {analysis.tissuSuggere}
+                                   </span>
+                                 )}
+                                 {analysis.techDetails && (
+                                   <span className="text-[11px] text-slate-600 font-medium block leading-relaxed">
+                                     {analysis.techDetails}
+                                   </span>
+                                 )}
+                               </div>
+                             </div>
+                           )}
+                         </div>
+                       );
+                     })()}
+
+                     {/* Fabric Source Switcher (ONLY shown when Admin separated Matière vs Main d'oeuvre or during initial estimate) */}
+                     {analysis.canSwitchFabricSource && (
+                       <div className="bg-slate-100 p-1.5 rounded-2xl flex items-center gap-1.5 border border-slate-200/70">
+                         <button
+                           type="button"
+                           onClick={() => setFabricOption(prev => ({ ...prev, [d.id]: 'atelier' }))}
+                           className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                             !isClientFabric
+                               ? 'bg-white text-indigo-950 shadow-xs'
+                               : 'text-slate-500 hover:text-slate-800'
+                           }`}
+                         >
+                           <Layers className="w-4 h-4 text-indigo-600" />
+                           <span>{isAr ? 'الثوب من المعمل (شامل كل شيء)' : 'Tissu Atelier (Tout Compris)'}</span>
+                         </button>
+                         <button
+                           type="button"
+                           onClick={() => setFabricOption(prev => ({ ...prev, [d.id]: 'client' }))}
+                           className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                             isClientFabric
+                               ? 'bg-emerald-600 text-white shadow-xs'
+                               : 'text-slate-500 hover:text-slate-800'
+                           }`}
+                         >
+                           <Package className="w-4 h-4" />
+                           <span>{isAr ? 'الثوب من عندك (الخياطة فقط)' : 'Tissu par vous (Façon)'}</span>
+                         </button>
+                       </div>
+                     )}
+
+                     {/* Compact Patronage / Échantillon Badges ONLY if explicitly priced */}
+                     {(analysis.hasCustomPatronage || analysis.hasCustomEchantillon) && (
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                         {analysis.hasCustomPatronage && (
+                           <div className="px-4 py-2.5 rounded-xl bg-amber-50/70 border border-amber-200 flex items-center justify-between text-xs">
+                             <span className="font-bold text-amber-950 flex items-center gap-1.5">
+                               <span>📐</span>
+                               <span>{isAr ? 'الباتروناج والتدريج:' : 'Patronage :'}{analysis.modelisteName ? ` (${analysis.modelisteName})` : ''}</span>
+                             </span>
+                             <span className="font-black text-amber-900 font-mono">{analysis.patronagePrice} MAD</span>
+                           </div>
+                         )}
+                         {analysis.hasCustomEchantillon && (
+                           <div className="px-4 py-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200 flex items-center justify-between text-xs">
+                             <span className="font-bold text-indigo-950 flex items-center gap-1.5">
+                               <span>✂️</span>
+                               <span>{isAr ? 'ثمن العينة الأولية:' : 'Échantillon :'}</span>
+                             </span>
+                             <span className="font-black text-indigo-900 font-mono">{analysis.echantillonPrice} MAD</span>
+                           </div>
+                         )}
+                       </div>
+                     )}
+
+                     {/* D. 50% Acompte & Virement Button (MOVED UP! Clear & Prominent above Confirmation Box) */}
+                     {!isClientFabric ? (
+                       <div className="p-4 sm:p-5 bg-gradient-to-r from-indigo-50/90 via-purple-50/70 to-amber-50/60 rounded-2xl border-2 border-indigo-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+                         <div className="space-y-1 flex-1">
+                           <div className="flex items-center gap-2 flex-wrap">
+                             <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm text-indigo-950">
+                               <CreditCard className="w-4 h-4 text-indigo-600" />
+                               {isAr ? 'تسبيق شراء السلعة وبدء الخدمة (50%):' : 'Acompte Matières & Lancement (50%) :'}
+                             </span>
+                             <span className="font-black text-base sm:text-lg text-amber-950 bg-amber-100/90 px-3 py-0.5 rounded-xl border border-amber-300 font-mono">
+                               {acompteRequired.toLocaleString()} MAD
+                             </span>
+                           </div>
+                           <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
+                             {isAr
+                               ? 'برك على زر التحويل باش تأكد الطلب وتصيفط التسبيق (Virement)، باش نقدروا نشريو الثوب والسلعة ونبدأو الخياطة فوراً (والباقي 50% عند التسليم).'
+                               : 'Cliquez pour valider et envoyer votre acompte par Virement Bancaire afin d\'acheter les matières et démarrer la confection (solde 50% à la livraison).'}
+                           </p>
+                         </div>
+
+                         <button
+                           type="button"
+                           onClick={() => {
+                             if (isDevisReady && !singleDevState.isVal) {
+                               setValidatingDevisLead(d);
+                             } else {
+                               setSelectedDemandePage(null);
+                               setVirementCommandeId(d.id);
+                               setVirementMontant(String(acompteRequired));
+                               setActiveTab('payments');
+                             }
+                           }}
+                           className="px-5 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 hover:scale-[1.01] active:scale-95 cursor-pointer shrink-0"
+                         >
+                           <CreditCard className="w-4 h-4" />
+                           <span>
+                             {singleDevState.isVal
+                               ? (isAr ? '💳 إرسال وصل التسبيق (Virement)' : '💳 Envoyer Reçu Virement')
+                               : (isAr ? `💳 أداء التسبيق (Virement • ${acompteRequired.toLocaleString()} DH)` : `💳 Payer Acompte / Virement (${acompteRequired.toLocaleString()} DH)`)}
+                           </span>
+                         </button>
+                       </div>
+                     ) : (
+                       <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-emerald-950">
+                         <div>
+                           <span className="font-black flex items-center gap-1.5 text-xs sm:text-sm text-emerald-800">
+                             <Package className="w-4 h-4 text-emerald-600" />
+                             {isAr ? 'التسبيق المالي المطلوب:' : 'Acompte requis :'}
+                           </span>
+                           <span className="text-[11px] text-emerald-700/90 font-medium block mt-0.5">
+                             {isAr ? 'صيفط غير الثوب والمستلزمات، كنبداو الفصالة والخياطة مباشرة (الخلاص عند التسليم)' : 'Envoyez le tissu, règlement 100% à la livraison'}
+                           </span>
+                         </div>
+                         <span className="font-black text-sm text-emerald-800 bg-emerald-100/90 px-3.5 py-1.5 rounded-xl shrink-0">
+                           {isAr ? '0 درهم (بدون تسبيق)' : '0 MAD (Sans acompte)'}
+                         </span>
+                       </div>
+                     )}
+
+                     {/* E. COMPACT Quantity Simulator Strip (SMALL & placed directly ABOVE Confirmation Box!) */}
+                     {d.crmDevisMode !== 'echantillon' && (
+                       <div className="rounded-2xl border border-indigo-200/80 bg-slate-50/70 overflow-hidden transition-all">
+                         <button
+                           type="button"
+                           onClick={() => setShowQuantitySimulator(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
+                           className="w-full px-4 py-2.5 flex items-center justify-between gap-2 text-xs hover:bg-indigo-50/60 transition-colors cursor-pointer"
+                         >
+                           <div className="flex items-center gap-2 min-w-0">
+                             <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                               <Calculator className="w-3.5 h-3.5" />
+                             </div>
+                             <div className="min-w-0 flex items-center gap-2 flex-wrap">
+                               <span className="font-black text-slate-800 truncate">
+                                 {isAr ? 'تعديل الكمية (طلع الكمية باش ينقص التمن)' : 'Simuler quantité (plus = moins cher)'}
+                               </span>
+                               <span className="px-2 py-0.5 bg-white border border-slate-200 rounded-md text-[10px] font-mono font-black text-indigo-700">
+                                 {currentQty} pcs • {activeUnitPrice} MAD/pc
+                               </span>
+                               {savingsVsBase > 0 && (
+                                 <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md text-[10px] font-black">
+                                   {isAr ? `تخفيض -${savingsVsBase}%` : `-${savingsVsBase}%`}
+                                 </span>
+                               )}
+                             </div>
+                           </div>
+                           <span className="px-2.5 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-black flex items-center gap-1 shrink-0 shadow-2xs">
+                             <span>{showQuantitySimulator[d.id] ? (isAr ? 'إغلاق' : 'Fermer') : (isAr ? 'حاسبة الكمية' : 'Simuler')}</span>
+                             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showQuantitySimulator[d.id] ? 'rotate-180' : ''}`} />
+                           </span>
+                         </button>
+
+                         {showQuantitySimulator[d.id] && (
+                           <div className="p-3.5 bg-white border-t border-indigo-100 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                             <div className="flex flex-wrap items-center gap-1.5">
+                               {simPresets.map(q => {
+                                 const tierUnit = computeSimulatedUnitPrice(q, selectedBasePrice, baseOrderQty);
+                                 const tierPct = selectedBasePrice > 0 && tierUnit < selectedBasePrice
+                                   ? Math.round(((selectedBasePrice - tierUnit) / selectedBasePrice) * 100)
+                                   : 0;
+                                 const isSelected = currentQty === q;
+                                 return (
+                                   <button
+                                     key={q}
+                                     type="button"
+                                     onClick={() => setSelectedTierQty(prev => ({ ...prev, [d.id]: q }))}
+                                     className={`px-3 py-1.5 rounded-xl border text-center transition-all cursor-pointer text-[11px] flex items-center gap-1.5 ${
+                                       isSelected
+                                         ? 'bg-indigo-600 text-white border-indigo-600 font-black shadow-xs'
+                                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-indigo-300 font-bold'
+                                     }`}
+                                   >
+                                     <span>{q} pcs</span>
+                                     <span className={`text-[9px] font-mono ${isSelected ? 'text-amber-300' : 'text-emerald-600'}`}>
+                                       {tierPct > 0 ? `-${tierPct}%` : (isAr ? 'الأساس' : 'Base')}
+                                     </span>
+                                   </button>
+                                 );
+                               })}
+                               {currentQty !== baseOrderQty && (
+                                 <button
+                                   type="button"
+                                   onClick={() => setSelectedTierQty(prev => {
+                                     const copy = { ...prev };
+                                     delete copy[d.id];
+                                     return copy;
+                                   })}
+                                   className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold cursor-pointer ms-auto"
+                                 >
+                                   {isAr ? `إرجاع (${baseOrderQty})` : `Reset (${baseOrderQty})`}
+                                 </button>
+                               )}
+                             </div>
+
+                             <div className="flex items-center gap-3 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
+                               <span className="text-[10px] font-bold text-slate-500 shrink-0">{isAr ? 'الكمية:' : 'Qté :'}</span>
+                               <input
+                                 type="range"
+                                 min={Math.max(10, Math.floor(baseOrderQty * 0.5))}
+                                 max={Math.max(500, baseOrderQty * 5)}
+                                 step={10}
+                                 value={currentQty}
+                                 onChange={(e) => setSelectedTierQty(prev => ({ ...prev, [d.id]: Number(e.target.value) }))}
+                                 className="w-full accent-indigo-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
+                               />
+                               <span className="px-2.5 py-1 bg-slate-900 text-white rounded-lg text-[11px] font-mono font-black shrink-0">
+                                 {currentQty} pcs
+                               </span>
+                             </div>
+
+                             <div className="flex items-center justify-between text-[11px] px-1 pt-0.5 flex-wrap gap-2">
+                               <span className="text-slate-600 font-bold">
+                                 {isAr ? `السعر الجديد: ${activeUnitPrice} MAD/قطعة` : `Nouveau P.U : ${activeUnitPrice} MAD/pc`}
+                               </span>
+                               <span className="font-black text-indigo-950 font-mono">
+                                 {isAr ? `المجموع: ${activeTotalPrice.toLocaleString()} MAD • التسبيق: ${acompteRequired.toLocaleString()} MAD` : `Total : ${activeTotalPrice.toLocaleString()} MAD • Avance : ${acompteRequired.toLocaleString()} MAD`}
+                               </span>
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                     )}
+
+                     {/* F. MAIN CONFIRMATION & ACTIONS BOX (Directly below Compact Simulator) */}
+                     <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                       {!isClientFabric ? (
+                         singleDevState.isConfirmedByAtelier && !singleDevState.isVal ? (
+                           <button
+                             type="button"
+                             onClick={() => setValidatingDevisLead(d)}
+                             className="py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-[0.99] cursor-pointer sm:col-span-2 lg:col-span-1"
+                           >
+                             <CheckCircle className="w-4 h-4 shrink-0" />
+                             <span>{isAr ? 'تأكيد الدوفيز والبدء' : 'Valider le Devis'}</span>
+                           </button>
+                         ) : singleDevState.isVal ? (
+                           <div className="py-3.5 px-4 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2">
+                             <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                             <span>{isAr ? 'تم تأكيد الدوفيز ✓' : 'Devis Validé ✓'}</span>
+                           </div>
+                         ) : (
+                           <div className="py-3.5 px-4 bg-amber-50 text-amber-800 border border-amber-200 rounded-2xl text-xs font-bold flex items-center justify-center gap-2">
+                             <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                             <span>{isAr ? 'في انتظار الدوفيز الرسمي' : 'En attente devis officiel'}</span>
+                           </div>
+                         )
+                       ) : (
+                         <a
+                           href={waUrl}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-[0.99] cursor-pointer"
+                         >
+                           <Package className="w-4 h-4 shrink-0" />
+                           <span>{isAr ? 'تأكيد وإرسال الثوب (0 DH)' : 'Valider & Envoyer Tissu'}</span>
+                         </a>
+                       )}
+
+                       {isDevisReady ? (
+                         <button
+                           type="button"
+                           onClick={() => handlePrintDevis(d)}
+                           className="py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer border border-slate-700"
+                           title={isAr ? 'تحميل أو طباعة ملف الدوفيز الرسمي PDF' : 'Télécharger Devis PDF'}
+                         >
+                           <Download className="w-4 h-4 text-emerald-400 shrink-0" />
+                           <span className="truncate">
+                             {officialLeadDevis
+                               ? (isAr ? `الدوفيز ${officialLeadDevis.numero} (PDF)` : `Devis ${officialLeadDevis.numero} (PDF)`)
+                               : (isAr ? 'تحميل الدوفيز (PDF)' : 'Devis Officiel (PDF)')}
+                           </span>
+                         </button>
+                       ) : (
+                         <div className="py-3.5 px-4 bg-slate-100 text-slate-400 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 border border-slate-200 cursor-not-allowed select-none">
+                           <Clock className="w-4 h-4 text-amber-500 shrink-0" />
+                           <span className="truncate">{isAr ? 'PDF قيد الإعداد ⏳' : 'PDF en cours ⏳'}</span>
+                         </div>
+                       )}
+
+                       <a
+                         href={waUrl}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md cursor-pointer"
+                       >
+                         <MessageCircle className="w-4 h-4 shrink-0" />
+                         <span>{isAr ? 'تواصل واتساب' : 'WhatsApp Atelier'}</span>
+                       </a>
+
+                       <button
+                         type="button"
+                         onClick={() => setConsultingDemande(d)}
+                         className="py-3.5 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-indigo-200/90 cursor-pointer active:scale-95"
+                       >
+                         <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                         <span>{isAr ? 'اسأل مستشار الورشة' : 'Poser une question'}</span>
+                       </button>
+                     </div>
+                   </div>
+
+                   {/* 4. Secondary Clean Collapsible Section (ONLY shown when Sizes / Assigned Supplier / Custom Fees exist) */}
+                   {hasExtraDetailsSection && (
+                     <div className="space-y-3">
+                       <div className="text-center">
+                         <button
+                           type="button"
+                           onClick={() => setShowFullStudy(!showFullStudy)}
+                           className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all shadow-xs cursor-pointer"
+                         >
+                           <span>{showFullStudy ? '▲' : '▼'}</span>
+                           <span>{showFullStudy
+                             ? (isAr ? 'إخفاء المقاسات وتفاصيل الباترون والمورد' : 'Masquer tailles & détails complémentaires')
+                             : (isAr ? 'عرض جدول المقاسات وتفاصيل الباترون والمورد' : 'Voir grille des tailles, patronage & fournisseur')}
+                           </span>
+                         </button>
+                       </div>
+
+                       {showFullStudy && (
+                         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-md p-5 md:p-7 space-y-6">
+                           {/* Sizes Grid */}
+                           {hasCustomSizes && (
+                             <div>
+                               <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                 <Layers className="w-4 h-4 text-indigo-600" />
+                                 {isAr ? 'المقاسات والكميات المطلوبة' : 'Grille des Tailles'}
+                               </h3>
+                               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 text-center">
+                                 {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
+                                   <div key={sz} className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                     <span className="block text-[10px] font-black text-slate-400 uppercase mb-0.5">{sz}</span>
+                                     <span className="text-sm font-black text-slate-900">{sizes[sz] ? `${sizes[sz]} pcs` : '0'}</span>
+                                   </div>
+                                 ))}
+                               </div>
+                             </div>
+                           )}
+
+                           {/* Assigned Fabric Supplier (ONLY when Admin explicitly selected one) */}
+                           {analysis.hasCustomFournisseur && (
+                             <div className="p-5 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl border border-slate-800 space-y-3">
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-white/10">
+                                 <div>
+                                   <span className="px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-black rounded-md uppercase inline-block mb-1">
+                                     {isAr ? 'مورد القماش الموصى به من الورشة' : 'Fournisseur Tissu Recommandé'}
+                                   </span>
+                                   <h4 className="text-base font-black text-white">{analysis.fournisseurNom}</h4>
+                                   {analysis.fournisseurVille && (
+                                     <p className="text-xs text-slate-300 flex items-center gap-1 mt-0.5">
+                                       <MapPin className="w-3.5 h-3.5 text-indigo-400" />
+                                       <span>{analysis.fournisseurVille}</span>
+                                     </p>
+                                   )}
+                                 </div>
+                                 {analysis.fournisseurCode && (
+                                   <button
+                                     type="button"
+                                     onClick={() => {
+                                       navigator.clipboard.writeText(analysis.fournisseurCode);
+                                       showNotification(isAr ? `تم نسخ كود الشراكة: ${analysis.fournisseurCode}` : `Code copié: ${analysis.fournisseurCode}`, 'Code BEYA', 'success');
+                                     }}
+                                     className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer self-start"
+                                   >
+                                     <Copy className="w-3.5 h-3.5 text-amber-400" />
+                                     <span>{analysis.fournisseurCode}</span>
+                                   </button>
+                                 )}
+                               </div>
+
+                               {analysis.fournisseurCouleurs && (
+                                 <div className="flex flex-wrap gap-1.5">
+                                   {analysis.fournisseurCouleurs.split(/[،,]/).map((col, idx) => (
+                                     col.trim() ? (
+                                       <span key={idx} className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white/10 border border-white/15 text-white">
+                                         {col.trim()}
+                                       </span>
+                                     ) : null
+                                   ))}
+                                 </div>
+                               )}
+
+                               {analysis.fournisseurNote && (
+                                 <p className="text-xs text-amber-200/90 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                                   💡 {analysis.fournisseurNote}
+                                 </p>
+                               )}
+
+                               <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                                 <a
+                                   href={`https://wa.me/${cleanPhoneForWa(analysis.fournisseurTel)}?text=${encodeURIComponent(
+                                     isAr
+                                       ? `السلام عليكم، أنا زبون من طرف ورشة BEYA Creative (كود: ${analysis.fournisseurCode || 'BEYA'}). عندي طلبية لموديل ${analysis.modeleReel} (${currentQty} قطعة).`
+                                       : `Bonjour, client de l'Atelier BEYA Creative (Code: ${analysis.fournisseurCode || 'BEYA'}) pour le modèle ${analysis.modeleReel} (${currentQty} pcs).`
+                                   )}`}
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   className="flex-1 py-2.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer"
+                                 >
+                                   <MessageCircle className="w-4 h-4" />
+                                   <span>{isAr ? `تواصل مع ${analysis.fournisseurNom}` : `Contacter ${analysis.fournisseurNom}`}</span>
+                                 </a>
+                                 {analysis.fournisseurTel && (
+                                   <a
+                                     href={`tel:${cleanPhoneForWa(analysis.fournisseurTel)}`}
+                                     className="py-2.5 px-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 border border-white/15"
+                                   >
+                                     <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                                     <span dir="ltr">{analysis.fournisseurTel}</span>
+                                   </a>
+                                 )}
+                               </div>
+                             </div>
+                           )}
+                         </div>
+                       )}
+                     </div>
+                   )}
                  </div>
                );
              }
@@ -8018,7 +7453,13 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
       {validatingDevisLead && (() => {
         const d = validatingDevisLead;
         const analysis = getDemandeAnalysis(d, isAr);
-        const acompte50 = Math.round(analysis.totalPrice * 0.5);
+        const modalBaseQty = Math.max(1, Number(analysis.qty) || Number(d.quantity) || 1);
+        const modalQty = selectedTierQty[d.id] !== undefined ? selectedTierQty[d.id] : modalBaseQty;
+        const modalIsClientFab = analysis.canSwitchFabricSource && fabricOption[d.id] === 'client';
+        const modalBasePrice = modalIsClientFab ? analysis.confectionPrice : analysis.fullPackagePrice;
+        const modalUnitPrice = computeSimulatedUnitPrice(modalQty, modalBasePrice, modalBaseQty);
+        const modalTotalPrice = modalUnitPrice * modalQty;
+        const acompte50 = modalIsClientFab ? 0 : Math.round(modalTotalPrice * 0.5);
 
         return (
           <div className="fixed inset-0 z-[250] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in" dir={isAr ? 'rtl' : 'ltr'}>
@@ -8080,15 +7521,15 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="p-2.5 bg-white rounded-xl border border-slate-100">
                           <span className="block text-[10px] font-bold text-slate-400 uppercase">{isAr ? 'الكمية' : 'Quantité'}</span>
-                          <span className="text-sm font-black text-slate-900">{analysis.qty} pcs</span>
+                          <span className="text-sm font-black text-slate-900">{modalQty} pcs</span>
                         </div>
                         <div className="p-2.5 bg-white rounded-xl border border-slate-100">
                           <span className="block text-[10px] font-bold text-slate-400 uppercase">{isAr ? 'سعر البياسة' : 'Prix unitaire'}</span>
-                          <span className="text-sm font-black text-indigo-600">{analysis.unitPrice} MAD</span>
+                          <span className="text-sm font-black text-indigo-600">{modalUnitPrice} MAD</span>
                         </div>
                         <div className="p-2.5 bg-white rounded-xl border border-slate-100">
                           <span className="block text-[10px] font-bold text-slate-400 uppercase">{isAr ? 'مجموع الدوفيز' : 'Total Devis'}</span>
-                          <span className="text-sm font-black text-slate-900">{analysis.totalPrice.toLocaleString('fr-FR')} MAD</span>
+                          <span className="text-sm font-black text-slate-900">{modalTotalPrice.toLocaleString('fr-FR')} MAD</span>
                         </div>
                       </div>
 
@@ -8200,11 +7641,26 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                           </button>
                         )}
                       </div>
-                      <p className="text-[10px] text-slate-500 leading-relaxed">
-                        {isAr
-                          ? 'يمكنك أيضاً تأكيد الاتفاق الآن وتزويد المعلم بالوصل عبر محادثة واتساب.'
-                          : 'Vous pouvez également valider maintenant et transmettre le reçu via WhatsApp.'}
-                      </p>
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <p className="text-[10px] text-slate-500 leading-relaxed">
+                          {isAr
+                            ? 'يمكنك إرفاق الوصل هنا أو إرساله عبر صفحة التحويلات / واتساب.'
+                            : 'Joignez le reçu ici ou passez par la page Paiements / WhatsApp.'}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setValidatingDevisLead(null);
+                            setSelectedDemandePage(null);
+                            setVirementCommandeId(d.id);
+                            setVirementMontant(String(acompte50));
+                            setActiveTab('payments');
+                          }}
+                          className="text-[10px] font-black text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+                        >
+                          {isAr ? 'فتح صفحة الأداءات الكاملة (QR) ←' : 'Page Paiements Complète (QR) →'}
+                        </button>
+                      </div>
                     </div>
                   </>
                 )}
@@ -8415,7 +7871,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                           {art.designation || analysis.modeleReel}
                         </td>
                         <td style={{ padding: '12px', color: '#475569' }}>
-                          {analysis.tissuSuggere}
+                          {analysis.tissuSuggere || analysis.techDetails || (isAr ? 'حسب قرار الورشة المعتمد' : 'Selon décision atelier')}
                         </td>
                         <td style={{ padding: '12px', textAlign: 'center', fontWeight: 700 }}>
                           {art.quantite} {isAr ? 'قطعة' : 'pcs'}
@@ -8437,7 +7893,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                           <span style={{ fontSize: '10.5px', fontWeight: 500, color: '#64748b' }}>{analysis.modeleReel}</span>
                         </td>
                         <td style={{ padding: '12px', color: '#475569' }}>
-                          <strong>{isAr ? 'الثوب:' : 'Tissu :'}</strong> {analysis.tissuSuggere}
+                          {analysis.tissuSuggere ? (
+                            <><strong>{isAr ? 'الثوب:' : 'Tissu :'}</strong> {analysis.tissuSuggere}</>
+                          ) : (
+                            <span>{analysis.modeleReel}</span>
+                          )}
                           {analysis.techDetails && (
                             <>
                               <br />

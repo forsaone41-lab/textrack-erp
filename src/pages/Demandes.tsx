@@ -767,40 +767,74 @@ export default function Demandes() {
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
 
-    // Save price to lead automatically and confirm official devis
+    // Save price to lead automatically and confirm official devis strictly using Admin's entered data
     let extDetails: any = {};
     try { extDetails = parseLeadDetailsJson(devisLead.details); } catch(e) {}
     extDetails.devisOfficielConfirmed = devisOfficielConfirmed;
     extDetails.devisStatus = devisOfficielConfirmed ? 'devis_confirme_atelier' : 'estimation';
     extDetails.devisOfficielDate = new Date().toISOString();
-    extDetails.supplierName = devisSupplierNom;
-    extDetails.supplierPhone = devisSupplierTel;
-    extDetails.supplierCity = devisSupplierCity;
-    extDetails.supplierCode = devisSupplierCode;
-    extDetails.supplierColors = devisSupplierColors;
-    extDetails.supplierNotes = devisSupplierNotes;
+    extDetails.adminHasOfficialDecision = devisOfficielConfirmed;
+    extDetails.matierePrice = Number(matierePrice || 0);
+    extDetails.laborPrice = Number(laborPrice || 0);
+    extDetails.adminFabric = fabricType.trim();
+    extDetails.adminTechDetails = devisTechDetails.trim();
+    extDetails.adminReponse = devisReponse.trim();
+    extDetails.adminDelai = devisDelai.trim();
+    extDetails.adminMode = devisMode;
+    extDetails.adminQty = currentQuantity;
+    if (devisPatronagePrice) {
+      extDetails.patronagePrice = Number(devisPatronagePrice);
+      extDetails.patronageStatus = 'priced';
+    }
+    if (devisPrixEchantillon) {
+      extDetails.prixEchantillon = Number(devisPrixEchantillon);
+    }
+    if (devisSupplierNom.trim()) {
+      extDetails.supplierName = devisSupplierNom.trim();
+      extDetails.supplierPhone = devisSupplierTel.trim();
+      extDetails.supplierCity = devisSupplierCity.trim();
+      extDetails.supplierCode = devisSupplierCode.trim();
+      extDetails.supplierColors = devisSupplierColors.trim();
+      extDetails.supplierNotes = devisSupplierNotes.trim();
+    } else {
+      delete extDetails.supplierName;
+      delete extDetails.supplierPhone;
+      delete extDetails.supplierCity;
+      delete extDetails.supplierCode;
+      delete extDetails.supplierColors;
+      delete extDetails.supplierNotes;
+    }
 
-    const updatedLead = { 
+    const updatedLead: Lead = { 
       ...devisLead, 
       details: JSON.stringify(extDetails),
+      modeleReel: devisModeleReel.trim() || devisLead.modeleReel || devisLead.type,
+      tissuSuggere: fabricType.trim(),
+      techDetails: devisTechDetails.trim(),
+      delaiEstime: devisDelai.trim(),
+      reponseAtelier: devisReponse.trim(),
+      patronagePrice: devisPatronagePrice ? Number(devisPatronagePrice) : devisLead.patronagePrice,
+      prixEchantillon: devisPrixEchantillon ? Number(devisPrixEchantillon) : devisLead.prixEchantillon,
       unitPrice: unitPrice,
       totalPrice: total,
-      crmPrice: total, 
-      crmPriceConfirmed: true,
+      crmPrice: unitPrice, 
+      crmPriceConfirmed: devisOfficielConfirmed,
       crmDevisMode: devisMode, 
       crmStage: (devisLead.crmStage || 'contact_en_cours') as any,
+      statusProgression: devisProgression || devisLead.statusProgression || 'etude',
       reponseAtelierDate: new Date().toISOString()
     };
     (updatedLead as any).devisOfficielConfirmed = devisOfficielConfirmed;
     (updatedLead as any).devisStatus = devisOfficielConfirmed ? 'devis_confirme_atelier' : 'estimation';
-    (updatedLead as any).fournisseurNom = devisSupplierNom;
-    (updatedLead as any).fournisseurTel = devisSupplierTel;
-    (updatedLead as any).fournisseurVille = devisSupplierCity;
-    (updatedLead as any).fournisseurCode = devisSupplierCode;
-    (updatedLead as any).fournisseurCouleurs = devisSupplierColors;
-    (updatedLead as any).fournisseurNote = devisSupplierNotes;
+    (updatedLead as any).fournisseurNom = devisSupplierNom.trim() || undefined;
+    (updatedLead as any).fournisseurTel = devisSupplierTel.trim() || undefined;
+    (updatedLead as any).fournisseurVille = devisSupplierCity.trim() || undefined;
+    (updatedLead as any).fournisseurCode = devisSupplierCode.trim() || undefined;
+    (updatedLead as any).fournisseurCouleurs = devisSupplierColors.trim() || undefined;
+    (updatedLead as any).fournisseurNote = devisSupplierNotes.trim() || undefined;
     (updatedLead as any).crmPriceConfirmed = devisOfficielConfirmed;
     saveRecord('leads', updatedLead);
+    setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
 
     if (!isPDF) {
       // Intentionally keeping modal open
@@ -861,26 +895,33 @@ export default function Demandes() {
   const openDevisModal = (lead: Lead, mode: 'echantillon' | 'commande' = 'commande') => {
     setDevisLead(lead);
     setDevisMode(mode);
-    setDevisModeleReel(lead.modeleReel || lead.type || '');
-    setDevisDelai(lead.delaiEstime || '7 - 10 jours ouvrables');
-    setDevisReponse(lead.reponseAtelier || '');
-    setDevisTechDetails(lead.techDetails || '');
-    setDevisProgression(lead.statusProgression || 'etude');
-    setFabricType(lead.tissuSuggere || '');
     let ext: any = {};
     try { ext = parseLeadDetailsJson(lead.details); } catch(e) {}
+    const legacyFakeFabric = lead.tissuSuggere === 'مولتون قطن مبطن 320g / French Terry' && !ext.adminFabric;
+    const legacyFakeTech = lead.techDetails === 'طبعة سيريغرافي فالصدر • كابوش مبطن بكوردون' && !ext.adminTechDetails;
+
+    setDevisModeleReel(lead.modeleReel || lead.type || '');
+    setDevisDelai(ext.adminDelai || lead.delaiEstime || '');
+    setDevisReponse(ext.adminReponse !== undefined ? ext.adminReponse : (lead.reponseAtelier || ''));
+    setDevisTechDetails(ext.adminTechDetails !== undefined ? ext.adminTechDetails : (legacyFakeTech ? '' : (lead.techDetails || '')));
+    setDevisProgression(lead.statusProgression || 'etude');
+    setFabricType(ext.adminFabric !== undefined ? ext.adminFabric : (legacyFakeFabric ? '' : (lead.tissuSuggere || '')));
     setDevisPatronagePrice(lead.patronagePrice ? String(lead.patronagePrice) : ext.patronagePrice ? String(ext.patronagePrice) : '');
     setDevisPrixEchantillon(lead.prixEchantillon ? String(lead.prixEchantillon) : ext.prixEchantillon ? String(ext.prixEchantillon) : '');
     setDevisSupplierNom(ext.supplierName || (lead as any).fournisseurNom || '');
     setDevisSupplierTel(ext.supplierPhone || (lead as any).fournisseurTel || '');
     setDevisSupplierCity(ext.supplierCity || (lead as any).fournisseurVille || '');
-    setDevisSupplierCode(ext.supplierCode || (lead as any).fournisseurCode || 'BEYA-FABRIC-2026');
+    setDevisSupplierCode(ext.supplierCode || (lead as any).fournisseurCode || '');
     setDevisSupplierColors(ext.supplierColors || (lead as any).fournisseurCouleurs || '');
     setDevisSupplierNotes(ext.supplierNotes || (lead as any).fournisseurNote || '');
     setDevisOfficielConfirmed(ext.devisOfficielConfirmed !== undefined ? ext.devisOfficielConfirmed : true);
-    if (lead.unitPrice) {
-      setMatierePrice(String(Math.round(lead.unitPrice * 0.6)));
-      setLaborPrice(String(Math.round(lead.unitPrice * 0.4)));
+
+    if (ext.matierePrice !== undefined || ext.laborPrice !== undefined) {
+      setMatierePrice(ext.matierePrice ? String(ext.matierePrice) : '');
+      setLaborPrice(ext.laborPrice ? String(ext.laborPrice) : '');
+    } else if (lead.unitPrice) {
+      setMatierePrice('');
+      setLaborPrice(String(lead.unitPrice));
     } else {
       setMatierePrice('');
       setLaborPrice('');
@@ -902,20 +943,24 @@ export default function Demandes() {
     const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
     const due = new Date();
     due.setDate(due.getDate() + 15);
+    const existingDevisDoc = existingFactures.find(
+      f => f.typeDoc === 'devis' && (f as any).leadId === devisLead.id
+    );
     const devis: Facture = {
-      id: genId(),
-      numero: `${prefix}${String(nextNum).padStart(3, '0')}`,
+      id: existingDevisDoc?.id || genId(),
+      numero: existingDevisDoc?.numero || `${prefix}${String(nextNum).padStart(3, '0')}`,
       client: devisLead.name,
       montant: total,
-      avance: 0,
+      avance: existingDevisDoc?.avance || 0,
       date: new Date().toISOString().split('T')[0],
       echeance: due.toISOString().split('T')[0],
-      statut: 'en_attente',
+      statut: existingDevisDoc?.statut || 'en_attente',
       typeDoc: 'devis',
     };
+    (devis as any).leadId = devisLead.id;
     await saveRecord('factures', devis);
 
-    // Save full technical & commercial response directly on the Lead so Portail Client gets updated instantly
+    // Save strictly what the Admin decided so Portail Client displays ONLY Admin's real decision
     let extDetails: any = {};
     try { extDetails = parseLeadDetailsJson(devisLead.details); } catch(e) {}
     if (devisPatronagePrice) {
@@ -928,6 +973,31 @@ export default function Demandes() {
     extDetails.devisOfficielConfirmed = true;
     extDetails.devisStatus = 'devis_confirme_atelier';
     extDetails.devisOfficielDate = new Date().toISOString();
+    extDetails.adminHasOfficialDecision = true;
+    extDetails.matierePrice = Number(matierePrice || 0);
+    extDetails.laborPrice = Number(laborPrice || 0);
+    extDetails.adminFabric = fabricType.trim();
+    extDetails.adminTechDetails = devisTechDetails.trim();
+    extDetails.adminReponse = devisReponse.trim();
+    extDetails.adminDelai = devisDelai.trim();
+    extDetails.adminMode = devisMode;
+    extDetails.adminQty = currentQuantity;
+
+    if (devisSupplierNom.trim()) {
+      extDetails.supplierName = devisSupplierNom.trim();
+      extDetails.supplierPhone = devisSupplierTel.trim();
+      extDetails.supplierCity = devisSupplierCity.trim();
+      extDetails.supplierCode = devisSupplierCode.trim();
+      extDetails.supplierColors = devisSupplierColors.trim();
+      extDetails.supplierNotes = devisSupplierNotes.trim();
+    } else {
+      delete extDetails.supplierName;
+      delete extDetails.supplierPhone;
+      delete extDetails.supplierCity;
+      delete extDetails.supplierCode;
+      delete extDetails.supplierColors;
+      delete extDetails.supplierNotes;
+    }
 
     const updatedLead: Lead = {
       ...devisLead,
@@ -937,10 +1007,10 @@ export default function Demandes() {
       modeleReel: devisModeleReel.trim() || devisLead.type,
       unitPrice,
       totalPrice: total,
-      tissuSuggere: fabricType.trim() || devisLead.tissuSuggere || 'مولتون قطن مبطن 320g / French Terry',
-      delaiEstime: devisDelai.trim() || devisLead.delaiEstime || '7 - 10 jours ouvrables',
-      techDetails: devisTechDetails.trim() || devisLead.techDetails || 'طبعة سيريغرافي فالصدر • كابوش مبطن بكوردون',
-      reponseAtelier: devisReponse.trim() || (isAr ? `تمت دراسة الباترون والثوب متوفر، سنبدأ العينة فور تأكيدكم (ثمن البياسة: ${unitPrice} درهم).` : `Patronage étudié et tissu disponible, prêt pour lancer l'échantillon dès confirmation (${unitPrice} MAD/pc).`),
+      tissuSuggere: fabricType.trim(),
+      delaiEstime: devisDelai.trim(),
+      techDetails: devisTechDetails.trim(),
+      reponseAtelier: devisReponse.trim(),
       reponseAtelierDate: new Date().toISOString(),
       crmPrice: unitPrice,
       crmPriceConfirmed: true,
@@ -949,6 +1019,12 @@ export default function Demandes() {
     };
     (updatedLead as any).devisOfficielConfirmed = true;
     (updatedLead as any).devisStatus = 'devis_confirme_atelier';
+    (updatedLead as any).fournisseurNom = devisSupplierNom.trim() || undefined;
+    (updatedLead as any).fournisseurTel = devisSupplierTel.trim() || undefined;
+    (updatedLead as any).fournisseurVille = devisSupplierCity.trim() || undefined;
+    (updatedLead as any).fournisseurCode = devisSupplierCode.trim() || undefined;
+    (updatedLead as any).fournisseurCouleurs = devisSupplierColors.trim() || undefined;
+    (updatedLead as any).fournisseurNote = devisSupplierNotes.trim() || undefined;
     await saveRecord('leads', updatedLead);
     setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
 
