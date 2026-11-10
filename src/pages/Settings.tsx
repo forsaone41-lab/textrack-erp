@@ -810,7 +810,7 @@ export default function Settings() {
             <div className="flex items-center gap-4">
               <div className="w-24 h-24 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl overflow-hidden flex items-center justify-center">
                 {profile.bankQrCode ? (
-                  <img src={profile.bankQrCode} className="w-full h-full object-cover" />
+                  <img src={profile.bankQrCode} className="w-full h-full object-contain p-1" />
                 ) : (
                   <ImageIcon className="w-6 h-6 text-slate-300" />
                 )}

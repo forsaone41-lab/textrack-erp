@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2, Camera } from 'lucide-react';
-import { Facture, Commande, User, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile } from '../types';
+import { Facture, Commande, User, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile, syncCompanyProfile } from '../types';
 import { printFacture, exportFacturesCSV } from '../utils/print';
 import { printElement } from '../utils/pdf';
 import { InvoicePRO } from '../components/InvoicePRO';
@@ -11,7 +11,7 @@ import { PageLoader } from '../components/PageLoader';
 
 export default function Recus() {
   const { lang, isAr } = useLang();
-  const company = loadCompanyProfile();
+  const [company, setCompany] = useState(loadCompanyProfile());
   const [factures, setFactures] = useState<Facture[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [clients, setClients] = useState<User[]>([]);
@@ -27,6 +27,7 @@ export default function Recus() {
 
   useEffect(() => {
     setLoading(true);
+    syncCompanyProfile().then(setCompany).catch(() => {});
     Promise.all([
       loadData<Facture>('factures'),
       loadData<Commande>('commandes'),

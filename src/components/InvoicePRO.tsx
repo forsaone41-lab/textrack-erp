@@ -245,16 +245,30 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
 
         {/* Totals & Bank Info Row */}
         <div className="flex justify-between items-start gap-6 mt-6">
-          <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-5 text-[11px] text-slate-600 space-y-1.5">
-            <p className="text-[10px] font-black text-slate-800 uppercase tracking-wider mb-2">
-              {isAr ? 'بيانات التحويل البنكي' : 'Coordonnées Bancaires'}
-            </p>
-            <p><strong className="text-slate-800">{isAr ? 'البنك:' : 'Banque :'}</strong> {company.bankName || '—'}</p>
-            <p><strong className="text-slate-800">{isAr ? 'المستفيد:' : 'Titulaire :'}</strong> {company.bankBeneficiary || company.name || '—'}</p>
-            {company.rib && (
-              <p className="font-mono font-bold text-slate-900 bg-white border border-slate-200 rounded-lg px-3 py-1.5 inline-block mt-1" dir="ltr">
-                RIB : {company.rib}
+          <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-5 text-[11px] text-slate-600 flex items-center justify-between gap-4">
+            <div className="space-y-1.5 min-w-0">
+              <p className="text-[10px] font-black text-slate-800 uppercase tracking-wider mb-2">
+                {isAr ? 'بيانات التحويل البنكي' : 'Coordonnées Bancaires'}
               </p>
+              <p><strong className="text-slate-800">{isAr ? 'البنك:' : 'Banque :'}</strong> {company.bankName || '—'}</p>
+              <p><strong className="text-slate-800">{isAr ? 'المستفيد:' : 'Titulaire :'}</strong> {company.bankBeneficiary || company.name || '—'}</p>
+              {company.rib && (
+                <p className="font-mono font-bold text-slate-900 bg-white border border-slate-200 rounded-lg px-3 py-1.5 inline-block mt-1" dir="ltr">
+                  RIB : {company.rib}
+                </p>
+              )}
+            </div>
+            {company.bankQrCode && (
+              <div className="shrink-0 flex flex-col items-center bg-white border border-slate-200 rounded-xl p-2 shadow-xs">
+                <img
+                  src={company.bankQrCode}
+                  alt="QR Paiement"
+                  className="w-24 h-24 object-contain rounded-lg"
+                />
+                <span className="text-[8px] font-black uppercase tracking-wider text-slate-600 mt-1 text-center">
+                  {isAr ? 'امسح للدفع السريع' : 'Scanner pour payer'}
+                </span>
+              </div>
             )}
           </div>
 
