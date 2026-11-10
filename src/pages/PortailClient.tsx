@@ -837,6 +837,94 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [validatingDevisSending, setValidatingDevisSending] = useState(false);
   const [validatingDevisSuccess, setValidatingDevisSuccess] = useState(false);
 
+  const normalizePortalKey = (val?: string | null) =>
+    (val || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+  const isClientFacturaMatch = (f: Facture): boolean => {
+    if (f.commandeId && found.some(c => c.id === f.commandeId)) return true;
+    if (f.commandeId && mesDemandes.some(d => d.id === f.commandeId)) return true;
+    if ((f as any).clientId && currentUser?.id && (f as any).clientId === currentUser.id) return true;
+    const fClient = normalizePortalKey(f.client);
+    if (!fClient) return false;
+    const userKeys = [
+      currentUser?.nom,
+      currentUser?.brandName,
+      currentUser?.email,
+      (currentUser as any)?.username,
+    ]
+      .map(normalizePortalKey)
+      .filter(Boolean);
+    return userKeys.includes(fClient);
+  };
+
+  const clientDocsAll = factures.filter(isClientFacturaMatch);
+  const clientDevisDocs = clientDocsAll
+    .filter(f => f.typeDoc === 'devis')
+    .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+
+  const getOfficialDevisForCommande = (cmd: Commande): Facture | undefined => {
+    const byId = clientDevisDocs.find(f => f.commandeId === cmd.id);
+    if (byId) return byId;
+    const cmdRef = normalizePortalKey(cmd.reference);
+    if (!cmdRef) return undefined;
+    return clientDevisDocs.find(f =>
+      normalizePortalKey((f as any).commandeReference) === cmdRef ||
+      (f.articles || []).some(a => normalizePortalKey(a.designation).includes(cmdRef))
+    );
+  };
+
+  const getOfficialDevisForLead = (d: Lead): Facture | undefined => {
+    let ext: any = {};
+    try { ext = JSON.parse(d.details || '{}'); } catch {}
+    const directDevisId = ext.devisId || (d as any).devisId;
+    if (directDevisId) {
+      const match = clientDevisDocs.find(f => f.id === directDevisId);
+      if (match) return match;
+    }
+    const directDevisNum = ext.devisNumero || (d as any).devisNumero;
+    if (directDevisNum) {
+      const match = clientDevisDocs.find(f => f.numero === directDevisNum);
+      if (match) return match;
+    }
+    const directCmdId = ext.commandeId || (d as any).commandeId;
+    if (directCmdId) {
+      const match = clientDevisDocs.find(f => f.commandeId === directCmdId);
+      if (match) return match;
+    }
+    const byLeadId = clientDevisDocs.find(f => f.commandeId === d.id);
+    if (byLeadId) return byLeadId;
+
+    const leadType = normalizePortalKey(d.type);
+    const leadModele = normalizePortalKey(d.modeleReel);
+    const matchingCmd = found.find(c => {
+      const cModele = normalizePortalKey(c.modele);
+      const qtyMatch = !d.quantity || Number(c.quantite) === Number(d.quantity);
+      return qtyMatch && ((leadType && cModele === leadType) || (leadModele && cModele === leadModele));
+    });
+    if (matchingCmd) {
+      const cmdDevis = getOfficialDevisForCommande(matchingCmd);
+      if (cmdDevis) return cmdDevis;
+    }
+
+    const byArticle = clientDevisDocs.find(f =>
+      (f.articles || []).some(a => {
+        const des = normalizePortalKey(a.designation);
+        return (leadType && des.includes(leadType)) || (leadModele && des.includes(leadModele));
+      })
+    );
+    if (byArticle) return byArticle;
+
+    const activeLeadsCount = mesDemandes.filter(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__').length;
+    if (clientDevisDocs.length === 1 && activeLeadsCount === 1) {
+      return clientDevisDocs[0];
+    }
+    const confirmedLeads = mesDemandes.filter(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__' && m.crmStage === 'confirme');
+    if (clientDevisDocs.length === 1 && confirmedLeads.length === 1 && confirmedLeads[0].id === d.id) {
+      return clientDevisDocs[0];
+    }
+    return undefined;
+  };
+
   const handleValidateDevisAndVirement = async (lead: Lead) => {
     setValidatingDevisSending(true);
     try {
@@ -873,6 +961,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   };
 
   const handlePrintDevis = (lead: Lead) => {
+    const officialDevis = getOfficialDevisForLead(lead);
+    if (officialDevis) {
+      setSelectedFacture(officialDevis);
+      setShowInvoiceView(true);
+      return;
+    }
     const devState = getLeadDevisState(lead);
     if (!devState.isConfirmedByAtelier && !devState.isVal) {
       showNotification(isAr ? 'الدوفيز الرسمي قيد الإعداد والمراجعة من طرف الورشة، سيصبح متاحاً للتحميل فور اعتماده.' : "Le devis officiel est en cours de préparation par l'atelier.", isAr ? '⏳ قيد المراجعة' : '⏳ En cours', 'info');
@@ -1127,11 +1221,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       // If a user is logged in, show their orders & demands automatically
       if (currentUser) {
         const myCommandes = (allCommandes || []).filter(c =>
-          (c.client || '').trim().toLowerCase() === (currentUser.nom || '').trim().toLowerCase() ||
+          normalizePortalKey(c.client) === normalizePortalKey(currentUser.nom) ||
+          (currentUser.brandName && normalizePortalKey(c.client) === normalizePortalKey(currentUser.brandName)) ||
           (currentUser.email && (c as any).email?.trim().toLowerCase() === currentUser.email.trim().toLowerCase())
         );
         const myLeads = (clientOrAllLeads || []).filter(l =>
-          (l.name || '').trim().toLowerCase() === (currentUser.nom || '').trim().toLowerCase() ||
+          normalizePortalKey(l.name) === normalizePortalKey(currentUser.nom) ||
           ((l.email || '').trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase() && currentUser.email) ||
           ((l.phone || '').trim() === (currentUser.telephone || '').trim() && currentUser.telephone)
         );
@@ -1161,6 +1256,32 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
     return () => clearTimeout(failsafeTimer);
   }, [currentUser]);
+
+  // Keep client quotes, invoices and orders synced when navigating tabs
+  useEffect(() => {
+    if (!currentUser) return;
+    if (!['overview', 'demandes', 'orders', 'docs', 'payments'].includes(activeTab)) return;
+    let cancelled = false;
+    Promise.all([
+      loadData<Facture>('factures').catch(() => []),
+      loadData<Commande>('commandes').catch(() => []),
+    ]).then(([freshFactures, freshCommandes]) => {
+      if (cancelled) return;
+      if (Array.isArray(freshFactures) && freshFactures.length > 0) {
+        setFactures(freshFactures);
+      }
+      if (Array.isArray(freshCommandes) && freshCommandes.length > 0) {
+        setCommandes(freshCommandes);
+        const myCmds = freshCommandes.filter(c =>
+          normalizePortalKey(c.client) === normalizePortalKey(currentUser.nom) ||
+          (currentUser.brandName && normalizePortalKey(c.client) === normalizePortalKey(currentUser.brandName)) ||
+          (currentUser.email && (c as any).email?.trim().toLowerCase() === currentUser.email.trim().toLowerCase())
+        );
+        setFound(myCmds);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [activeTab, currentUser]);
 
   useEffect(() => {
     if (!virementCommandeId) {
@@ -1865,13 +1986,15 @@ function translateFrenchAtelierPhrases(text: string): string {
 const getLeadDevisState = (d: Lead) => {
   let ext: any = {};
   try { ext = JSON.parse(d.details || '{}'); } catch(e) {}
+  const officialDevis = getOfficialDevisForLead(d);
   
   // 1. Is it validated by the client / deposit paid?
   const isVal = ext.devisStatus === 'valide' || 
                 ext.devisStatus === 'acompte_paye' || 
                 (d as any).devisStatus === 'valide' || 
                 (d as any).devisStatus === 'acompte_paye' || 
-                d.crmStage === 'confirme';
+                d.crmStage === 'confirme' ||
+                officialDevis?.statut === 'payée';
   if (isVal) {
     return {
       status: 'valide' as const,
@@ -1882,14 +2005,14 @@ const getLeadDevisState = (d: Lead) => {
   }
 
   // 2. Is it officially confirmed / created by the workshop?
-  // Only true if the workshop explicitly confirmed it via the modal (devisOfficielConfirmed === true),
-  // or set devisStatus to 'devis_confirme_atelier', or d.crmPriceConfirmed === true (from Demandes admin)
+  // True when confirmed via modal, Demandes CRM, OR an official Devis document exists in factures
   const isConfirmedByAtelier = Boolean(
     ext.devisOfficielConfirmed === true ||
     (d as any).devisOfficielConfirmed === true ||
     ext.devisStatus === 'devis_confirme_atelier' ||
     (d as any).devisStatus === 'devis_confirme_atelier' ||
-    d.crmPriceConfirmed === true
+    d.crmPriceConfirmed === true ||
+    officialDevis
   );
 
   if (isConfirmedByAtelier) {
@@ -2593,7 +2716,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                     badge: 'VIP' 
                   }
                 ] : []),
-                { id: 'docs', icon: <Receipt className="w-5 h-5 shrink-0" />, label: isAr ? 'الفواتير والوثائق' : 'Factures & Docs' },
+                { id: 'docs', icon: <Receipt className="w-5 h-5 shrink-0" />, label: isAr ? 'الفواتير والوثائق' : 'Factures & Docs', ...(clientDevisDocs.length > 0 ? { badge: String(clientDevisDocs.length) } : {}) },
                 { id: 'payments', icon: <CreditCard className="w-5 h-5 shrink-0" />, label: isAr ? 'الدفع والأداء' : 'Paiements' },
                 { id: 'support', icon: <Bell className="w-5 h-5 shrink-0" />, label: isAr ? 'الدعم الفني VIP' : 'Support VIP' },
               ].map((item) => {
@@ -3196,6 +3319,64 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                      >
                        {isAr ? 'أنشئ متجري الآن' : 'Créer ma boutique'}
                      </button>
+                   </div>
+                 </div>
+               )}
+
+               {/* Official Devis Overview Strip */}
+               {clientDevisDocs.length > 0 && (
+                 <div className="bg-gradient-to-r from-amber-50 via-white to-indigo-50 border border-amber-200/80 rounded-3xl p-5 md:p-6 shadow-sm">
+                   <div className="flex items-center justify-between gap-4 mb-4">
+                     <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-md shadow-amber-500/20">
+                         <FileText className="w-5 h-5" />
+                       </div>
+                       <div>
+                         <h3 className="text-sm md:text-base font-black text-slate-900 uppercase tracking-tight">
+                           {isAr ? 'عروض الأسعار الرسمية (Devis)' : 'Vos Devis Officiels Atelier'}
+                         </h3>
+                         <p className="text-xs text-slate-500 font-medium">
+                           {isAr ? 'جاهزة للمعاينة والتحميل بصيغة PDF' : 'Prêts pour consultation et téléchargement PDF'}
+                         </p>
+                       </div>
+                     </div>
+                     <button
+                       type="button"
+                       onClick={() => setActiveTab('docs')}
+                       className="text-xs font-black text-indigo-600 hover:underline uppercase tracking-wider cursor-pointer"
+                     >
+                       {isAr ? 'كل الوثائق' : 'Tout voir'}
+                     </button>
+                   </div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                     {clientDevisDocs.slice(0, 4).map(dev => {
+                       const linkedCmd = found.find(c => c.id === dev.commandeId) || commandes.find(c => c.id === dev.commandeId);
+                       return (
+                         <div key={dev.id} className="bg-white border border-amber-200/70 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
+                           <div className="min-w-0">
+                             <div className="flex items-center gap-2 flex-wrap">
+                               <span className="text-xs font-black text-slate-900 font-mono">{dev.numero}</span>
+                               {linkedCmd?.reference && (
+                                 <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md text-[10px] font-black font-mono">
+                                   {linkedCmd.reference}
+                                 </span>
+                               )}
+                             </div>
+                             <p className="text-sm font-black text-amber-700 mt-1">
+                               {dev.montant.toLocaleString()} MAD
+                             </p>
+                           </div>
+                           <button
+                             type="button"
+                             onClick={() => { setSelectedFacture(dev); setShowInvoiceView(true); }}
+                             className="px-3.5 py-2.5 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                           >
+                             <Download className="w-3.5 h-3.5 text-amber-400" />
+                             <span>{isAr ? 'عرض / PDF' : 'Voir / PDF'}</span>
+                           </button>
+                         </div>
+                       );
+                     })}
                    </div>
                  </div>
                )}
@@ -4267,7 +4448,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                               })()}
 
                               {(() => {
-                                const isDevisReady = singleDevState.isConfirmedByAtelier || singleDevState.isVal;
+                                const officialLeadDevis = getOfficialDevisForLead(d);
+                                const isDevisReady = singleDevState.isConfirmedByAtelier || singleDevState.isVal || Boolean(officialLeadDevis);
 
                                 if (isDevisReady) {
                                   return (
@@ -4278,7 +4460,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                       title={isAr ? 'تحميل أو طباعة ملف الدوفيز الرسمي PDF' : 'Télécharger Devis PDF'}
                                     >
                                       <Download className="w-4 h-4 text-emerald-400" />
-                                      <span>{isAr ? 'تحميل ملف الدوفيز (PDF)' : 'Fichier Devis (PDF)'}</span>
+                                      <span>
+                                        {officialLeadDevis
+                                          ? (isAr ? `الدوفيز الرسمي ${officialLeadDevis.numero} (${officialLeadDevis.montant.toLocaleString()} MAD)` : `Devis ${officialLeadDevis.numero} • ${officialLeadDevis.montant.toLocaleString()} MAD`)
+                                          : (isAr ? 'تحميل ملف الدوفيز (PDF)' : 'Fichier Devis (PDF)')}
+                                      </span>
                                     </button>
                                   );
                                 }
@@ -5197,6 +5383,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
                                 {(() => {
                                   const devState = getLeadDevisState(d);
+                                  const officialLeadDevis = getOfficialDevisForLead(d);
 
                                   return (
                                     <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2.5">
@@ -5253,6 +5440,25 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                           <span className="text-[10px] text-slate-500 font-mono bg-white px-2 py-0.5 rounded-md border border-slate-200">{isAr ? 'تقدير أولي' : 'Indicatif'}</span>
                                         </div>
                                       )}
+                                      {officialLeadDevis && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedFacture(officialLeadDevis);
+                                            setShowInvoiceView(true);
+                                          }}
+                                          className="w-full p-2.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl flex items-center justify-between text-xs text-indigo-950 font-black transition-all cursor-pointer"
+                                        >
+                                          <span className="flex items-center gap-1.5">
+                                            <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                                            <span>{officialLeadDevis.numero}</span>
+                                          </span>
+                                          <span className="px-2 py-0.5 bg-indigo-600 text-white rounded-md text-[10px] font-mono">
+                                            {officialLeadDevis.montant.toLocaleString()} MAD
+                                          </span>
+                                        </button>
+                                      )}
                                     </div>
                                   );
                                 })()}
@@ -5294,7 +5500,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
                               <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
                                 {(() => {
-                                  const isDevisReady = devState.isConfirmedByAtelier || devState.isVal;
+                                  const officialLeadDevis = getOfficialDevisForLead(d);
+                                  const isDevisReady = devState.isConfirmedByAtelier || devState.isVal || Boolean(officialLeadDevis);
 
                                   if (isDevisReady) {
                                     return (
@@ -5308,7 +5515,11 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                         title={isAr ? 'تحميل أو طباعة ملف الدوفيز PDF' : 'Télécharger Devis PDF'}
                                       >
                                         <FileText className="w-4 h-4 text-amber-700" />
-                                        <span>{isAr ? '📄 ملف الدوفيز (DEVIS)' : '📄 Devis (PDF)'}</span>
+                                        <span>
+                                          {officialLeadDevis
+                                            ? (isAr ? `📄 ${officialLeadDevis.numero} (${officialLeadDevis.montant.toLocaleString()} DH)` : `📄 Devis ${officialLeadDevis.numero} (PDF)`)
+                                            : (isAr ? '📄 ملف الدوفيز (DEVIS)' : '📄 Devis (PDF)')}
+                                        </span>
                                       </button>
                                     );
                                   }
@@ -5826,6 +6037,34 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                <Truck className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500" />
                                {isAr ? 'الكمية:' : 'Quantité:'} <span className="text-slate-950 ml-1 font-black">{cmd.quantite} Pcs</span>
                             </div>
+                            {(() => {
+                              const cmdDevis = getOfficialDevisForCommande(cmd);
+                              const cmdOtherDoc = clientDocsAll.find(f => f.commandeId === cmd.id && f.typeDoc !== 'devis');
+                              return (
+                                <>
+                                  {cmdDevis && (
+                                    <button
+                                      type="button"
+                                      onClick={() => { setSelectedFacture(cmdDevis); setShowInvoiceView(true); }}
+                                      className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer"
+                                    >
+                                      <FileText className="w-3.5 h-3.5 text-amber-700" />
+                                      <span>{isAr ? `الدوفيز ${cmdDevis.numero}` : `Devis ${cmdDevis.numero}`} • {cmdDevis.montant.toLocaleString()} MAD</span>
+                                    </button>
+                                  )}
+                                  {cmdOtherDoc && (
+                                    <button
+                                      type="button"
+                                      onClick={() => { setSelectedFacture(cmdOtherDoc); setShowInvoiceView(true); }}
+                                      className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer"
+                                    >
+                                      <Receipt className="w-3.5 h-3.5 text-indigo-600" />
+                                      <span>{cmdOtherDoc.numero} • {cmdOtherDoc.montant.toLocaleString()} MAD</span>
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
                          </div>
                          
                          {/* Annulation button */}
@@ -5915,7 +6154,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
                {/* Financial Documents Sections */}
                {(() => {
-                 const clientDocs = factures.filter(f => (f.client || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase());
+                 const clientDocs = clientDocsAll;
                  const devisList = clientDocs.filter(f => f.typeDoc === 'devis');
                  const recusList = clientDocs.filter(f => f.typeDoc === 'recu');
                  const facturesList = clientDocs.filter(f => !f.typeDoc || f.typeDoc === 'facture');
@@ -7399,13 +7638,19 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                     <Receipt className="w-6 h-6" />
                  </div>
                  <div>
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter italic">{isAr ? 'معاينة الفاتورة' : 'Aperçu Document'}</h3>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter italic">
+                      {selectedFacture.typeDoc === 'devis'
+                        ? (isAr ? 'معاينة عرض السعر الرسمي' : 'Aperçu du Devis')
+                        : selectedFacture.typeDoc === 'recu'
+                        ? (isAr ? 'معاينة وصل الأداء' : 'Aperçu du Reçu')
+                        : (isAr ? 'معاينة الفاتورة' : 'Aperçu Document')}
+                    </h3>
                     <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{selectedFacture.numero}</p>
                  </div>
               </div>
               <div className="flex items-center gap-4">
                  <button onClick={() => setShowInvoiceView(false)} className="px-6 py-3 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">{isAr ? 'إغلاق' : 'Fermer'}</button>
-                 <button onClick={() => printElement(`invoice-${selectedFacture.id}`)} className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-100 flex items-center gap-3">
+                 <button onClick={() => printElement(`invoice-${selectedFacture.id}`)} className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-100 flex items-center gap-3 cursor-pointer">
                     <Download className="w-4 h-4" />
                     {isAr ? 'حفظ / طباعة' : 'Imprimer PDF'}
                  </button>
@@ -7415,7 +7660,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                <InvoicePRO 
                   id={`invoice-${selectedFacture.id}`}
                   facture={selectedFacture}
-                  commande={commandes.find(c => c.id === selectedFacture.commandeId)}
+                  commande={commandes.find(c => c.id === selectedFacture.commandeId) || found.find(c => c.id === selectedFacture.commandeId)}
                   company={company}
                />
             </div>
@@ -7489,7 +7734,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="p-2.5 bg-white rounded-xl border border-slate-100">
                           <span className="block text-[10px] font-bold text-slate-400 uppercase">{isAr ? 'الكمية' : 'Quantité'}</span>
-                          <span className="text-sm font-black text-slate-900">{analysis.quantity} pcs</span>
+                          <span className="text-sm font-black text-slate-900">{analysis.qty} pcs</span>
                         </div>
                         <div className="p-2.5 bg-white rounded-xl border border-slate-100">
                           <span className="block text-[10px] font-bold text-slate-400 uppercase">{isAr ? 'سعر البياسة' : 'Prix unitaire'}</span>
@@ -7674,11 +7919,12 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         const dateStr = new Date().toLocaleDateString('fr-MA', { day: '2-digit', month: 'long', year: 'numeric' });
 
         return (
-          <div
-            id={`devis-doc-${lead.id}`}
-            className="fixed -left-[9999px] top-0 bg-white"
-            style={{ width: '210mm', minHeight: '297mm', padding: '15mm 18mm', color: '#0f172a', fontFamily: 'sans-serif' }}
-          >
+          <div className="fixed -left-[9999px] top-0 pointer-events-none opacity-0" aria-hidden="true">
+            <div
+              id={`devis-doc-${lead.id}`}
+              className="bg-white"
+              style={{ width: '210mm', minHeight: '297mm', padding: '15mm 18mm', color: '#0f172a', fontFamily: 'sans-serif' }}
+            >
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #0f172a', paddingBottom: '16px', marginBottom: '24px' }}>
               <div>
@@ -7710,9 +7956,9 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
               <div>
                 <span style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Client / Donneur d'Ordre</span>
                 <p style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', margin: '4px 0 2px' }}>
-                  {lead.client || currentUser?.name || currentUser?.email || 'Client Partenaire BEYA'}
+                  {(lead as any).client || lead.name || currentUser?.nom || currentUser?.email || 'Client Partenaire BEYA'}
                 </p>
-                <p style={{ fontSize: '11px', color: '#475569', margin: '0 0 2px' }}>Tél : {clientPhone || lead.phone || '—'}</p>
+                <p style={{ fontSize: '11px', color: '#475569', margin: '0 0 2px' }}>Tél : {clientPhone || lead.phone || currentUser?.telephone || '—'}</p>
                 <p style={{ fontSize: '11px', color: '#475569', margin: 0 }}>Email : {currentUser?.email || lead.email || '—'}</p>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -7720,7 +7966,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                 <p style={{ fontSize: '14px', fontWeight: 800, color: '#4f46e5', margin: '4px 0 2px' }}>
                   {analysis.modeleReel}
                 </p>
-                <p style={{ fontSize: '11px', color: '#475569', margin: 0 }}>Quantité Totale : {analysis.quantity} pièces</p>
+                <p style={{ fontSize: '11px', color: '#475569', margin: 0 }}>Quantité Totale : {analysis.qty} pièces</p>
               </div>
             </div>
 
@@ -7747,9 +7993,9 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                     <br />
                     <span style={{ fontSize: '10px', color: '#64748b' }}>{analysis.techDetails}</span>
                   </td>
-                  <td style={{ padding: '12px 14px', textAlign: 'center', fontWeight: 800 }}>{analysis.quantity} pcs</td>
-                  <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>{analysis.unitPrice.toFixed(2)}</td>
-                  <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, color: '#0f172a' }}>{analysis.totalPrice.toFixed(2)}</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'center', fontWeight: 800 }}>{analysis.qty} pcs</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>{Number(analysis.unitPrice || 0).toFixed(2)}</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, color: '#0f172a' }}>{Number(analysis.totalPrice || 0).toFixed(2)}</td>
                 </tr>
 
                 {analysis.hasCustomPatronage && (
@@ -7759,8 +8005,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                     </td>
                     <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '11px' }}>Fichier DXF / Barème de mesures validé</td>
                     <td style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700 }}>1 forfait</td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>{analysis.patronagePrice.toFixed(2)}</td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>{analysis.patronagePrice.toFixed(2)}</td>
+                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>{Number(analysis.patronagePrice || 0).toFixed(2)}</td>
+                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>{Number(analysis.patronagePrice || 0).toFixed(2)}</td>
                   </tr>
                 )}
               </tbody>
@@ -7840,6 +8086,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   "Lu et approuvé, bon pour commande"
                 </div>
               </div>
+            </div>
             </div>
           </div>
         );

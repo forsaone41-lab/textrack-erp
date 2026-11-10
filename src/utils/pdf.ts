@@ -24,12 +24,28 @@ export function printElement(elementId: string) {
   const doc = iframe.contentWindow?.document;
   if (!doc) return;
 
-  // Clone element, DO NOT strip classes so Tailwind styles remain
+  // Clone element and normalize layout/positioning so off-screen templates print on page 1
   const clone = original.cloneNode(true) as HTMLElement;
-  clone.classList.remove('opacity-0', 'pointer-events-none', '-z-[100]', 'hidden', 'invisible');
+  clone.classList.remove(
+    'opacity-0', 'pointer-events-none', '-z-[100]', '-z-50', 'hidden', 'invisible',
+    'fixed', 'absolute', '-left-[9999px]', 'left-[-9999px]', '-top-[9999px]', 'top-[-9999px]', 'top-0', 'left-0'
+  );
+  Array.from(clone.classList).forEach(cls => {
+    if (/^-?(left|top|right|bottom)-\[.+\]$/.test(cls)) {
+      clone.classList.remove(cls);
+    }
+  });
+  clone.style.position = 'static';
+  clone.style.left = 'auto';
+  clone.style.right = 'auto';
+  clone.style.top = 'auto';
+  clone.style.bottom = 'auto';
+  clone.style.transform = 'none';
+  clone.style.margin = '0 auto';
+  clone.style.zIndex = 'auto';
   clone.style.opacity = '1';
   clone.style.visibility = 'visible';
-  clone.style.display = 'block';  
+  clone.style.display = 'block';
   // Get all styles from the parent document to inject into iframe
   let stylesHtml = '';
   document.querySelectorAll('style, link[rel="stylesheet"]').forEach(el => {
@@ -40,12 +56,13 @@ export function printElement(elementId: string) {
   doc.write(`<!DOCTYPE html><html dir="auto"><head><title>Document</title>
     ${stylesHtml}
     <style>
-      body { margin: 0; padding: 0; background: white !important; font-family: sans-serif; color: #0f172a !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; display: flex; justify-content: center; }
-      body > div { max-width: 100% !important; margin: 0 auto; }
+      html, body { margin: 0; padding: 0; background: white !important; font-family: sans-serif; color: #0f172a !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body > div { position: static !important; left: auto !important; top: auto !important; transform: none !important; max-width: 100% !important; margin: 0 auto !important; opacity: 1 !important; visibility: visible !important; display: block !important; }
       img { max-width: 100% !important; height: auto !important; }
       @page { margin: 1.5cm; size: auto; }
-      @media print { 
+      @media print {
         html, body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        body > div { position: static !important; left: auto !important; top: auto !important; transform: none !important; opacity: 1 !important; visibility: visible !important; }
         /* Ensure background colors are printed */
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       }
@@ -53,13 +70,16 @@ export function printElement(elementId: string) {
     <body>${clone.outerHTML}</body></html>`);
   doc.close();
 
+  let printed = false;
   const printWhenReady = () => {
+    if (printed) return;
+    printed = true;
     const images = Array.from(doc.querySelectorAll('img'));
     Promise.all(images.map(img => img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; }))).then(() => {
-      setTimeout(() => { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); }, 800);
+      setTimeout(() => { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); }, 450);
     });
   };
-  if (iframe.contentWindow) { iframe.onload = printWhenReady; setTimeout(printWhenReady, 1500); }
+  if (iframe.contentWindow) { iframe.onload = printWhenReady; setTimeout(printWhenReady, 1200); }
 }
 
 /**

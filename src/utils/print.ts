@@ -17,18 +17,29 @@ function printHTML(html: string, title: string) {
 // ─── Facture PDF ────────────────────────────────────────────────
 export function printFacture(facture: Facture, commande?: Commande) {
   const company = loadCompanyProfile();
+  const isDevisDoc = facture.typeDoc === 'devis';
+  const isRecuDoc = facture.typeDoc === 'recu';
+  const docLabel = isDevisDoc ? 'DEVIS' : isRecuDoc ? 'REÇU' : 'FACTURE';
+  const docLabelCap = isDevisDoc ? 'Devis' : isRecuDoc ? 'Reçu' : 'Facture';
   const statutLabel = facture.statut === 'payée' ? 'PAYÉE' : facture.statut === 'en_attente' ? 'EN ATTENTE' : 'IMPAYÉE';
   const statutColor = facture.statut === 'payée' ? '#059669' : facture.statut === 'en_attente' ? '#d97706' : '#dc2626';
 
   const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-MA', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
   const fmtNum  = (n: number)  => n.toLocaleString('fr-MA');
 
-  const itemsRows = commande
+  const itemsRows = (facture.articles && facture.articles.length > 0)
+    ? facture.articles.map(art => `<tr>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;">${art.designation || 'Article / Service'}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:center;">${art.quantite} pcs</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:right;">${fmtNum(art.prixUnitaire)} MAD</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:700;">${fmtNum(art.total)} MAD</td>
+       </tr>`).join('')
+    : commande
     ? `<tr>
         <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;">${commande.modele}</td>
         <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:center;">${commande.quantite} pcs</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:right;">${fmtNum(commande.prix)} MAD</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:700;">${fmtNum(commande.quantite * commande.prix)} MAD</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:right;">${fmtNum(commande.prix || Math.round(facture.montant / Math.max(1, commande.quantite)))} MAD</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:700;">${fmtNum(facture.montant)} MAD</td>
        </tr>`
     : `<tr>
         <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;">Prestation / Services</td>
@@ -41,7 +52,7 @@ export function printFacture(facture: Facture, commande?: Commande) {
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Facture ${facture.numero}</title>
+  <title>${docLabelCap} ${facture.numero}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; background: #fff; }
@@ -97,7 +108,7 @@ export function printFacture(facture: Facture, commande?: Commande) {
         </div>
       </div>
       <div class="invoice-meta">
-        <div class="invoice-title">FACTURE</div>
+        <div class="invoice-title">${docLabel}</div>
         <div class="invoice-num">${facture.numero}</div>
         <div class="statut-badge">${statutLabel}</div>
       </div>
@@ -157,7 +168,7 @@ export function printFacture(facture: Facture, commande?: Commande) {
 </body>
 </html>`;
 
-  printHTML(html, `Facture ${facture.numero}`);
+  printHTML(html, `${docLabelCap} ${facture.numero}`);
 }
 
 // ─── Export CSV Factures ─────────────────────────────────────────
