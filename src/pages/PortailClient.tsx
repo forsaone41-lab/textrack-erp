@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Copy, Search, LogOut, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Minus, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator, Phone } from 'lucide-react';
+import { ChevronDown, Copy, Search, LogOut, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Minus, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, EyeOff, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone, Mail, Lock, CheckCircle, Loader2, Printer, ExternalLink, ChevronRight, Tag, AlertCircle, Users, MessageSquare, Handshake, ThumbsUp, MapPin, Key, Calculator, Phone } from 'lucide-react';
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
@@ -194,7 +194,12 @@ const LeadCardImage = ({
   );
 };
 
-export default function PortailClient({ currentUser, onLogout }: PortailClientProps) {
+export default function PortailClient({ currentUser: currentUserProp, onLogout }: PortailClientProps) {
+  const [localUser, setLocalUser] = useState<User | null | undefined>(currentUserProp);
+  useEffect(() => {
+    setLocalUser(currentUserProp);
+  }, [currentUserProp]);
+  const currentUser = localUser;
   const [commandes, setCommandes] = useState<Commande[]>(() => {
     try {
       const raw = localStorage.getItem('textrack_data_commandes');
@@ -372,6 +377,18 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [confirmDirectPassword, setConfirmDirectPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordSavedSuccess, setPasswordSavedSuccess] = useState(false);
+
+  // Edit Profile Modal states (Name, Phone, Email & Password)
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [profileNomInput, setProfileNomInput] = useState('');
+  const [profileEmailInput, setProfileEmailInput] = useState('');
+  const [profilePhoneInput, setProfilePhoneInput] = useState('');
+  const [profileNewPassword, setProfileNewPassword] = useState('');
+  const [profileConfirmPassword, setProfileConfirmPassword] = useState('');
+  const [showProfilePassword, setShowProfilePassword] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileSavedMsg, setProfileSavedMsg] = useState('');
   const [selectedDemandeFiche, setSelectedDemandeFiche] = useState<Lead | null>(null);
   const [selectedDemandePage, setSelectedDemandePage] = useState<Lead | null>(null);
   const [consultingDemande, setConsultingDemande] = useState<Lead | null>(null);
@@ -1611,6 +1628,142 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     }
   };
 
+  const persistUpdatedCurrentUser = async (updatedUser: User) => {
+    await saveRecord('users', updatedUser, true);
+    localStorage.setItem('textrack_auth', JSON.stringify(updatedUser));
+    setLocalUser(updatedUser);
+    setPortalUsers(prev =>
+      prev.some(u => u.id === updatedUser.id)
+        ? prev.map(u => (u.id === updatedUser.id ? updatedUser : u))
+        : [updatedUser, ...prev]
+    );
+    window.dispatchEvent(new CustomEvent('beya_user_updated', { detail: updatedUser }));
+  };
+
+  const openEditProfileModal = () => {
+    if (!currentUser) return;
+    setProfileNomInput(currentUser.nom || '');
+    setProfileEmailInput(currentUser.email || '');
+    setProfilePhoneInput(clientPhone || currentUser.telephone || '');
+    setProfileNewPassword('');
+    setProfileConfirmPassword('');
+    setShowProfilePassword(false);
+    setProfileError('');
+    setProfileSavedMsg('');
+    setShowEditProfileModal(true);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    setProfileError('');
+    setProfileSavedMsg('');
+
+    const cleanNom = profileNomInput.trim();
+    const cleanEmail = profileEmailInput.trim().toLowerCase();
+    const cleanPhone = profilePhoneInput.trim();
+    const oldEmail = (currentUser.email || '').trim().toLowerCase();
+    const emailChanged = Boolean(cleanEmail && cleanEmail !== oldEmail);
+    const passwordChanged = Boolean(profileNewPassword.length > 0);
+
+    if (!cleanNom) {
+      setProfileError(isAr ? 'المرجو إدخال الاسم الكامل أو اسم العلامة' : 'Veuillez saisir votre nom ou marque.');
+      return;
+    }
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setProfileError(isAr ? 'المرجو إدخال بريد إلكتروني صحيح' : 'Veuillez saisir une adresse email valide.');
+      return;
+    }
+    if (passwordChanged) {
+      if (profileNewPassword.length < 6) {
+        setProfileError(isAr ? 'كلمة المرور يجب أن تحتوي على 6 أحرف على الأقل' : 'Le mot de passe doit contenir au moins 6 caractères.');
+        return;
+      }
+      if (profileNewPassword !== profileConfirmPassword) {
+        setProfileError(isAr ? 'كلمات المرور غير متطابقة' : 'Les mots de passe ne correspondent pas.');
+        return;
+      }
+    }
+
+    setSavingProfile(true);
+    try {
+      const latestUsers = await loadData<User>('users');
+      const emailConflict = (latestUsers || []).find(
+        u => u.id !== currentUser.id && (u.email || '').trim().toLowerCase() === cleanEmail
+      );
+      if (emailConflict) {
+        setProfileError(isAr ? 'هذا البريد الإلكتروني مستعمل مسبقاً في حساب آخر.' : 'Cette adresse email est déjà utilisée par un autre compte.');
+        setSavingProfile(false);
+        return;
+      }
+
+      // Sync with Supabase Auth session when active
+      let authEmailNote = '';
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session) {
+          const authPayload: { email?: string; password?: string; data?: Record<string, any> } = {
+            data: { full_name: cleanNom }
+          };
+          if (emailChanged) authPayload.email = cleanEmail;
+          if (passwordChanged) authPayload.password = profileNewPassword;
+          const { error: authErr } = await supabase.auth.updateUser(authPayload);
+          if (authErr) {
+            const msg = (authErr.message || '').toLowerCase();
+            if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
+              setProfileError(isAr ? 'هذا البريد الإلكتروني مسجل مسبقاً.' : 'Cet email est déjà utilisé.');
+              setSavingProfile(false);
+              return;
+            }
+          } else if (emailChanged) {
+            authEmailNote = isAr
+              ? ' تم إرسال رابط التأكيد إلى بريدك الجديد.'
+              : ' Un email de confirmation a été envoyé à la nouvelle adresse.';
+          }
+        }
+      } catch {}
+
+      const updatedUser: User = {
+        ...currentUser,
+        nom: cleanNom,
+        email: cleanEmail,
+        ...(cleanPhone ? { telephone: cleanPhone } : {}),
+        ...(passwordChanged ? { password: profileNewPassword, pinCode: profileNewPassword } : {}),
+        ...(emailChanged ? { emailVerified: false } : {}),
+      };
+
+      await persistUpdatedCurrentUser(updatedUser);
+
+      // Migrate cached phone / city keys if email changed
+      try {
+        if (cleanPhone) {
+          setClientPhone(cleanPhone);
+          localStorage.setItem(`beya_client_phone_${cleanEmail}`, cleanPhone);
+        }
+        if (emailChanged && oldEmail) {
+          const prevCity = localStorage.getItem(`beya_client_city_${oldEmail}`);
+          if (prevCity) localStorage.setItem(`beya_client_city_${cleanEmail}`, prevCity);
+          localStorage.removeItem(`beya_email_verified_${oldEmail}`);
+        }
+        if (emailChanged) setShowEmailBanner(true);
+      } catch {}
+
+      setProfileSavedMsg(
+        (isAr ? 'تم تحديث بيانات حسابك بنجاح!' : 'Profil mis à jour avec succès !') + authEmailNote
+      );
+      setTimeout(() => {
+        setShowEditProfileModal(false);
+        setProfileSavedMsg('');
+        setProfileNewPassword('');
+        setProfileConfirmPassword('');
+      }, 1300);
+    } catch (err: any) {
+      setProfileError(err?.message || (isAr ? 'حدث خطأ أثناء حفظ التعديلات' : 'Erreur lors de la mise à jour du profil.'));
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const handleSaveDirectPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDirectPassword || newDirectPassword.length < 6) {
@@ -1630,8 +1783,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         pinCode: newDirectPassword,
         emailVerified: true
       };
-      await saveRecord('users', updatedUser, true);
-      localStorage.setItem('textrack_auth', JSON.stringify(updatedUser));
+      await persistUpdatedCurrentUser(updatedUser);
 
       try {
         await supabase.auth.updateUser({ password: newDirectPassword });
@@ -3391,9 +3543,13 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           {/* Bottom Profile & Actions */}
           <div className="p-4 border-t border-white/10 space-y-2.5 bg-slate-900/95">
              {currentUser && (
-               <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10">
+               <div
+                 onClick={openEditProfileModal}
+                 className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-400/40 transition-all cursor-pointer group"
+                 title={isAr ? 'تعديل الملف الشخصي (الإيميل وكلمة المرور)' : 'Modifier le profil (Email & Mot de passe)'}
+               >
                  <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400 text-sm font-black border border-indigo-500/30 shrink-0">
-                   {currentUser.nom[0]}
+                   {(currentUser.nom || 'U')[0]}
                  </div>
                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-black truncate uppercase tracking-tight text-white">{currentUser.nom}</p>
@@ -3407,6 +3563,17 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                       )}
                     </div>
                  </div>
+                 <button
+                   type="button"
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     openEditProfileModal();
+                   }}
+                   aria-label={isAr ? 'تعديل الحساب' : 'Modifier le profil'}
+                   className="w-8 h-8 rounded-xl bg-white/10 group-hover:bg-indigo-500 text-indigo-300 group-hover:text-white border border-white/15 flex items-center justify-center transition-all shrink-0 cursor-pointer shadow-xs"
+                 >
+                   <Edit2 className="w-3.5 h-3.5" />
+                 </button>
                </div>
              )}
 
@@ -9187,6 +9354,157 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           </div>
         );
       })()}
+
+      {/* Edit Profile Modal (Name, Phone, Email & Password) */}
+      {showEditProfileModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="p-6 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/25 text-indigo-300 border border-indigo-400/30 flex items-center justify-center shrink-0">
+                  <Edit2 className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-black text-base">{isAr ? 'تعديل الملف الشخصي' : 'Modifier mon Profil'}</h3>
+                  <p className="text-xs text-slate-400 truncate">{isAr ? 'تغيير الاسم، الإيميل وكلمة المرور' : 'Email, mot de passe & informations'}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditProfileModal(false)}
+                className="text-slate-400 hover:text-white p-1.5 rounded-xl cursor-pointer transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="p-6 space-y-4 max-h-[82vh] overflow-y-auto">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'الاسم أو اسم العلامة' : 'Nom complet / Marque'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={profileNomInput}
+                  onChange={(e) => setProfileNomInput(e.target.value)}
+                  placeholder={isAr ? 'الاسم...' : 'Votre nom'}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'البريد الإلكتروني (Email)' : 'Adresse Email'}
+                </label>
+                <div className="relative">
+                  <Mail className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`} />
+                  <input
+                    type="email"
+                    required
+                    value={profileEmailInput}
+                    onChange={(e) => setProfileEmailInput(e.target.value)}
+                    placeholder="email@exemple.com"
+                    className={`w-full py-3 ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isAr ? 'رقم الهاتف (WhatsApp)' : 'Téléphone (WhatsApp)'}
+                </label>
+                <div className="relative">
+                  <Phone className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`} />
+                  <input
+                    type="tel"
+                    value={profilePhoneInput}
+                    onChange={(e) => setProfilePhoneInput(e.target.value)}
+                    placeholder="06..."
+                    className={`w-full py-3 ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white font-mono`}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-amber-500" />
+                    <span>{isAr ? 'كلمة المرور الجديدة (اختياري)' : 'Nouveau mot de passe (optionnel)'}</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowProfilePassword(v => !v)}
+                    className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                  >
+                    {showProfilePassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    <span>{showProfilePassword ? (isAr ? 'إخفاء' : 'Masquer') : (isAr ? 'إظهار' : 'Afficher')}</span>
+                  </button>
+                </div>
+
+                <input
+                  type={showProfilePassword ? 'text' : 'password'}
+                  minLength={6}
+                  value={profileNewPassword}
+                  onChange={(e) => setProfileNewPassword(e.target.value)}
+                  placeholder={isAr ? 'اتركه فارغاً للإبقاء على كلمة المرور الحالية' : 'Laisser vide pour ne pas modifier'}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-600 focus:bg-white font-mono"
+                />
+
+                {profileNewPassword.length > 0 && (
+                  <input
+                    type={showProfilePassword ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    value={profileConfirmPassword}
+                    onChange={(e) => setProfileConfirmPassword(e.target.value)}
+                    placeholder={isAr ? 'تأكيد كلمة المرور الجديدة' : 'Confirmer le nouveau mot de passe'}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-600 focus:bg-white font-mono"
+                  />
+                )}
+              </div>
+
+              {profileError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{profileError}</span>
+                </div>
+              )}
+
+              {profileSavedMsg && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{profileSavedMsg}</span>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditProfileModal(false)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  {isAr ? 'إلغاء' : 'Annuler'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingProfile}
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  {savingProfile ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{isAr ? 'جاري الحفظ...' : 'Enregistrement...'}</span>
+                    </>
+                  ) : (
+                    <span>{isAr ? 'حفظ التعديلات' : 'Enregistrer'}</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Direct Password Modal */}
       {showPasswordModal && (

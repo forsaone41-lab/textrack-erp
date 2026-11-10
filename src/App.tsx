@@ -619,6 +619,21 @@ function AppContent() {
     return () => clearInterval(interval);
   }, [currentUser]);
 
+  useEffect(() => {
+    const onUserUpdated = (e: any) => {
+      if (e?.detail) {
+        setCurrentUser(e.detail);
+      } else {
+        try {
+          const s = localStorage.getItem(AUTH_KEY);
+          if (s) setCurrentUser(JSON.parse(s));
+        } catch {}
+      }
+    };
+    window.addEventListener('beya_user_updated', onUserUpdated);
+    return () => window.removeEventListener('beya_user_updated', onUserUpdated);
+  }, []);
+
 
     function handleLogin(user: User) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(user));
