@@ -2013,6 +2013,238 @@ export async function deleteRecord(table: string, id: string, email?: string): P
   }
 }
 
+export interface UpsertDevisInput {
+  preferredId?: string;
+  preferredNumero?: string;
+  commandeId?: string | null;
+  leadId?: string;
+  leadDetails?: string | null;
+  client: string;
+  clientPhone?: string;
+  clientEmail?: string;
+  montant: number;
+  avance?: number;
+  date?: string;
+  echeance?: string;
+  statut?: Facture['statut'];
+  articles?: LigneFacture[];
+  banque?: string;
+  existingFactures?: Facture[];
+  strictModelMatch?: boolean;
+}
+
+const normalizeMatchText = (s?: string | null): string =>
+  (s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\u0600-\u06ff]+/g, ' ')
+    .trim();
+
+export function findMatchingCommandeForLead(
+  lead: Lead,
+  commandes: Commande[],
+  officialDevis?: Facture
+): Commande | undefined {
+  if (!lead || !commandes.length) return undefined;
+  const ext = parseLeadDetailsJson(lead.details);
+  const directCmdId = ext.commandeId || (lead as any).commandeId;
+  if (directCmdId) {
+    const byId = commandes.find(c => c.id === directCmdId);
+    if (byId) return byId;
+  }
+  const directCmdRef = normalizeMatchText(ext.commandeReference || (lead as any).commandeReference);
+  if (directCmdRef) {
+    const byRef = commandes.find(c => normalizeMatchText(c.reference) === directCmdRef);
+    if (byRef) return byRef;
+  }
+  if (officialDevis?.commandeId) {
+    const byDevisCmd = commandes.find(c => c.id === officialDevis.commandeId);
+    if (byDevisCmd) return byDevisCmd;
+  }
+
+  const leadModele = normalizeMatchText(lead.modeleReel);
+  const leadType = normalizeMatchText(lead.type);
+  const isGenericLeadType = !leadType || leadType.includes('formulaire avanc') || leadType === 'model';
+  const leadQty = Number(ext.clientAdjustedQty || ext.adminQty || lead.quantity || 0);
+  const leadUnit = Number(lead.unitPrice || lead.crmPrice || ext.unitPrice || 0);
+  const leadTotal = Number(
+    lead.totalPrice ||
+      (leadUnit > 0 && leadQty > 0 ? leadUnit * leadQty : 0) ||
+      officialDevis?.montant ||
+      0
+  );
+
+  // Prefer non-sample production orders before sample orders when multiple match
+  const ordered = [...commandes].sort(
+    (a, b) => (a.statut === 'echantillon_en_cours' ? 1 : 0) - (b.statut === 'echantillon_en_cours' ? 1 : 0)
+  );
+  return ordered.find(c => {
+    const cModele = normalizeMatchText(c.modele);
+    const modelMatch = Boolean(
+      (leadModele && cModele === leadModele) ||
+        (!isGenericLeadType && leadType && cModele === leadType)
+    );
+    if (modelMatch && (!leadQty || !c.quantite || Number(c.quantite) === leadQty)) {
+      return true;
+    }
+    const cTotal = Number(c.prix || 0) * Number(c.quantite || 0);
+    if (
+      leadQty > 0 &&
+      Number(c.quantite) === leadQty &&
+      leadTotal > 0 &&
+      cTotal > 0 &&
+      Math.abs(cTotal - leadTotal) < 5
+    ) {
+      return true;
+    }
+    return false;
+  });
+}
+
+export async function upsertClientDevis(
+  input: UpsertDevisInput
+): Promise<{ devis: Facture; updated: boolean }> {
+  const existingFactures = input.existingFactures || (await loadData<Facture>('factures'));
+  const ext = parseLeadDetailsJson(input.leadDetails);
+  const targetCommandeId = input.commandeId || ext.commandeId || undefined;
+
+  const clientAliases = new Set<string>();
+  const primaryClientNorm = normalizeMatchText(input.client);
+  if (primaryClientNorm) clientAliases.add(primaryClientNorm);
+
+  if (input.clientPhone || input.clientEmail) {
+    try {
+      const users = await loadData<User>('users');
+      const phoneTail = (input.clientPhone || '').replace(/\D/g, '').slice(-9);
+      const emailNorm = (input.clientEmail || '').trim().toLowerCase();
+      users.forEach(u => {
+        const uTail = (u.telephone || '').replace(/\D/g, '').slice(-9);
+        const uEmail = (u.email || '').trim().toLowerCase();
+        if ((emailNorm && uEmail === emailNorm) || (phoneTail.length >= 9 && uTail === phoneTail)) {
+          if (u.nom) clientAliases.add(normalizeMatchText(u.nom));
+          if (u.brandName) clientAliases.add(normalizeMatchText(u.brandName));
+        }
+      });
+    } catch {}
+  }
+
+  const sameClient = (name?: string | null) => {
+    const n = normalizeMatchText(name);
+    return Boolean(n && clientAliases.has(n));
+  };
+
+  const articleTextOverlap = (aList?: LigneFacture[], bList?: LigneFacture[]) => {
+    if (!aList?.length || !bList?.length) return true;
+    const stopWords = new Set(['avec', 'pour', 'tissu', 'modele', 'demande', 'confection', 'ensemble', 'via', 'formulaire', 'avance', 'production', 'sourcing', 'marche']);
+    const wordsOf = (list: LigneFacture[]) =>
+      new Set(
+        list
+          .flatMap(x => normalizeMatchText(x.designation).split(' '))
+          .filter(w => w.length >= 3 && !stopWords.has(w))
+      );
+    const wa = wordsOf(aList);
+    const wb = wordsOf(bList);
+    if (wa.size === 0 || wb.size === 0) return true;
+    let shared = 0;
+    wa.forEach(w => {
+      if (wb.has(w)) shared++;
+    });
+    return shared >= Math.min(2, wa.size, wb.size);
+  };
+
+  const devisPool = existingFactures
+    .filter(f => f.typeDoc === 'devis')
+    .sort((a, b) => {
+      const aScore = (a.id === input.preferredId ? 100 : 0) + (a.commandeId ? 10 : 0) + (a.articles?.length ? 5 : 0);
+      const bScore = (b.id === input.preferredId ? 100 : 0) + (b.commandeId ? 10 : 0) + (b.articles?.length ? 5 : 0);
+      if (aScore !== bScore) return bScore - aScore;
+      return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
+    });
+
+  let existingDevis: Facture | undefined;
+  if (input.preferredId) {
+    existingDevis = devisPool.find(f => f.id === input.preferredId);
+  }
+  if (!existingDevis && ext.devisId) {
+    existingDevis = devisPool.find(f => f.id === ext.devisId && f.statut !== 'payée');
+  }
+  if (!existingDevis && ext.devisNumero) {
+    existingDevis = devisPool.find(f => f.numero === ext.devisNumero && f.statut !== 'payée');
+  }
+  if (!existingDevis && targetCommandeId) {
+    existingDevis = devisPool.find(f => f.commandeId === targetCommandeId && f.statut !== 'payée');
+  }
+  if (!existingDevis && input.preferredNumero) {
+    existingDevis = devisPool.find(
+      f => f.numero === input.preferredNumero && f.statut !== 'payée' && sameClient(f.client)
+    );
+  }
+  if (!existingDevis && clientAliases.size > 0) {
+    const clientPending = devisPool.filter(
+      f =>
+        f.statut !== 'payée' &&
+        sameClient(f.client) &&
+        (!targetCommandeId || !f.commandeId || f.commandeId === targetCommandeId || !(f.articles && f.articles.length > 0))
+    );
+    existingDevis =
+      clientPending.find(
+        f =>
+          Math.abs(Number(f.montant || 0) - Number(input.montant || 0)) < 1 &&
+          articleTextOverlap(f.articles, input.articles)
+      ) ||
+      clientPending.find(f => !f.articles?.length || articleTextOverlap(f.articles, input.articles)) ||
+      (!input.strictModelMatch && clientPending.length === 1 ? clientPending[0] : undefined);
+  }
+
+  const todayStr = input.date || new Date().toISOString().split('T')[0];
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 15);
+  const echeanceStr = input.echeance || dueDate.toISOString().split('T')[0];
+
+  let nextNumero = existingDevis?.numero;
+  if (!nextNumero) {
+    const numeroAlreadyTaken = Boolean(
+      input.preferredNumero && existingFactures.some(f => f.numero === input.preferredNumero)
+    );
+    if (input.preferredNumero && !numeroAlreadyTaken) {
+      nextNumero = input.preferredNumero;
+    } else {
+      const year = new Date().getFullYear();
+      const prefix = `DEV-${year}-`;
+      const existingNums = existingFactures
+        .filter(f => f.numero?.startsWith(prefix))
+        .map(f => parseInt(f.numero.replace(prefix, ''), 10))
+        .filter(n => !isNaN(n));
+      const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+      nextNumero = `${prefix}${String(nextNum).padStart(3, '0')}`;
+    }
+  }
+
+  const finalArticles =
+    input.articles && input.articles.length > 0
+      ? input.articles
+      : existingDevis?.articles || [];
+
+  const devisRecord: Facture = {
+    id: existingDevis?.id || genId(),
+    numero: nextNumero,
+    commandeId: targetCommandeId || existingDevis?.commandeId || null,
+    client: input.client || existingDevis?.client || 'Client',
+    montant: input.montant,
+    avance: input.avance !== undefined ? input.avance : existingDevis?.avance || 0,
+    date: todayStr,
+    echeance: echeanceStr,
+    statut: input.statut || existingDevis?.statut || 'en_attente',
+    typeDoc: 'devis',
+    articles: finalArticles,
+    ...(input.banque || existingDevis?.banque ? { banque: input.banque || existingDevis?.banque } : {}),
+  };
+
+  await saveRecord('factures', devisRecord);
+  return { devis: devisRecord, updated: Boolean(existingDevis) };
+}
+
 // Keeping this for backwards compatibility, but it should be avoided
 export function saveData<T>(_key: string, _data: T[]): void {
   // NO-OP: Deprecated. Components should use saveRecord and deleteRecord.

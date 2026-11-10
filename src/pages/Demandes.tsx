@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, Fragment, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight, UserCheck, ChevronDown, ChevronUp, Layers } from 'lucide-react';
-import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, StockTissu, parseLeadDetailsJson } from '../types';
+import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, Commande, StockTissu, parseLeadDetailsJson, upsertClientDevis, findMatchingCommandeForLead } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
 import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
@@ -547,64 +547,79 @@ export default function Demandes() {
         await saveRecord('users', newClient);
       }
 
-      // 3. Create a real Commande record
+      // 3. Create or update real Commande record (avoid duplicate orders for same lead)
+      const existingCommandes = await loadData<Commande>('commandes');
+      const clientNorm = (lead.name || '').trim().toLowerCase();
+      const clientCommandes = existingCommandes.filter(
+        c => (c.client || '').trim().toLowerCase() === clientNorm
+      );
+      const matchedExistingOrder = findMatchingCommandeForLead(lead, clientCommandes);
       const newOrder = {
-        id: genId(),
-        reference: `CMD-${Date.now().toString().slice(-6)}`,
+        ...(matchedExistingOrder || {}),
+        id: matchedExistingOrder?.id || genId(),
+        reference: matchedExistingOrder?.reference || `CMD-${Date.now().toString().slice(-6)}`,
         client: lead.name,
-        modele: lead.type,
-        tissu: confirmDetails.tissu || 'À définir',
-        tissuPhoto: confirmDetails.tissuPhoto || undefined,
-        modelePhoto: confirmDetails.modelePhoto || lead.photo || undefined,
+        modele: lead.modeleReel || lead.type,
+        tissu: confirmDetails.tissu || matchedExistingOrder?.tissu || 'À définir',
+        tissuPhoto: confirmDetails.tissuPhoto || matchedExistingOrder?.tissuPhoto || undefined,
+        modelePhoto: confirmDetails.modelePhoto || lead.photo || matchedExistingOrder?.modelePhoto || undefined,
         couleurs: confirmDetails.couleurs.split(',').map(c => c.trim()).filter(c => c),
         tailles: confirmDetails.tailles,
         quantite: lead.quantity,
-        quantiteLivre: 0,
-        dateCommande: new Date().toISOString().split('T')[0],
-        dateLivraisonPrevue: confirmDetails.dateLivraisonPrevue,
-        phase: 'patronage',
-        prix: Number(confirmDetails.prixUnitaire) || 0,
-        prixUnitaire: Number(confirmDetails.prixUnitaire) || 0,
-        prixEchantillon: Number(confirmDetails.prixEchantillon) || 0,
-        avance: Number(confirmDetails.avance) || 0,
-        rebut: 0,
+        quantiteLivre: matchedExistingOrder?.quantiteLivre || 0,
+        dateCommande: matchedExistingOrder?.dateCommande || new Date().toISOString().split('T')[0],
+        dateLivraisonPrevue: confirmDetails.dateLivraisonPrevue || matchedExistingOrder?.dateLivraisonPrevue || '',
+        phase: matchedExistingOrder?.phase || 'patronage',
+        prix: Number(confirmDetails.prixUnitaire) || matchedExistingOrder?.prix || 0,
+        prixUnitaire: Number(confirmDetails.prixUnitaire) || matchedExistingOrder?.prixUnitaire || 0,
+        prixEchantillon: Number(confirmDetails.prixEchantillon) || matchedExistingOrder?.prixEchantillon || 0,
+        avance: Number(confirmDetails.avance) || matchedExistingOrder?.avance || 0,
+        rebut: matchedExistingOrder?.rebut || 0,
         statut: confirmMode === 'commande' ? 'en_cours' : 'echantillon_en_cours',
-        suivi: [{ phase: 'patronage', date: new Date().toISOString(), note: confirmMode === 'commande' ? 'Commande directe lancée (sans échantillon)' : 'Prix/délai validés et échantillon lancé (Avance payée)' }]
+        suivi: matchedExistingOrder?.suivi?.length
+          ? matchedExistingOrder.suivi
+          : [{ phase: 'patronage', date: new Date().toISOString(), note: confirmMode === 'commande' ? 'Commande directe lancée (sans échantillon)' : 'Prix/délai validés et échantillon lancé (Avance payée)' }]
       };
 
       await saveRecord('commandes', newOrder);
 
-      // 4. Auto-generate Devis in the finance section
+      // 4. Upsert Devis in the finance section (modifies existing unpaid Devis instead of duplicating)
+      const extLeadDetails: any = { ...parseLeadDetailsJson(lead.details) };
+      extLeadDetails.commandeId = newOrder.id;
+      extLeadDetails.commandeReference = newOrder.reference;
+
       const unitPrice = Number(confirmDetails.prixUnitaire) || 0;
       if (unitPrice > 0) {
         const total = unitPrice * lead.quantity;
-        const existingFactures = await loadData<Facture>('factures');
-        const year = new Date().getFullYear();
-        const prefix = `DEV-${year}-`;
-        const existingNums = existingFactures
-          .filter(f => f.numero?.startsWith(prefix))
-          .map(f => parseInt(f.numero.replace(prefix, '')))
-          .filter(n => !isNaN(n));
-        const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
-        const due = new Date();
-        due.setDate(due.getDate() + 15);
-        
-        const autoDevis: Facture = {
-          id: genId(),
-          numero: `${prefix}${String(nextNum).padStart(3, '0')}`,
+        const { devis } = await upsertClientDevis({
+          preferredId: extLeadDetails.devisId,
+          preferredNumero: extLeadDetails.devisNumero,
           commandeId: newOrder.id,
+          leadId: lead.id,
+          leadDetails: lead.details,
           client: lead.name,
+          clientPhone: lead.phone,
+          clientEmail: lead.email,
           montant: total,
           avance: Number(confirmDetails.avance) || 0,
-          date: new Date().toISOString().split('T')[0],
-          echeance: due.toISOString().split('T')[0],
-          statut: 'en_attente',
-          typeDoc: 'devis',
-        };
-        await saveRecord('factures', autoDevis);
+          articles: [{
+            id: genId(),
+            designation: lead.modeleReel || lead.type || 'Confection Sur-Mesure',
+            quantite: lead.quantity,
+            prixUnitaire: unitPrice,
+            total
+          }]
+        });
+        extLeadDetails.devisId = devis.id;
+        extLeadDetails.devisNumero = devis.numero;
       }
 
-      const updatedLead = { ...lead, status: 'completed' as const, crmStage: 'confirme' as const };
+      const updatedLead = {
+        ...lead,
+        details: JSON.stringify(extLeadDetails),
+        status: 'completed' as const,
+        crmStage: 'confirme' as const
+      };
       setLeads(prev => prev.map(l => l.id === lead.id ? updatedLead : l));
       await saveRecord('leads', updatedLead, true);
 
@@ -933,36 +948,42 @@ export default function Demandes() {
     const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
     const currentQuantity = devisMode === 'echantillon' ? 1 : devisLead.quantity;
     const total = unitPrice * currentQuantity;
-    const existingFactures = await loadData<Facture>('factures');
-    const year = new Date().getFullYear();
-    const prefix = `DEV-${year}-`;
-    const existingNums = existingFactures
-      .filter(f => f.numero?.startsWith(prefix))
-      .map(f => parseInt(f.numero.replace(prefix, '')))
-      .filter(n => !isNaN(n));
-    const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
-    const due = new Date();
-    due.setDate(due.getDate() + 15);
-    const existingDevisDoc = existingFactures.find(
-      f => f.typeDoc === 'devis' && (f as any).leadId === devisLead.id
-    );
-    const devis: Facture = {
-      id: existingDevisDoc?.id || genId(),
-      numero: existingDevisDoc?.numero || `${prefix}${String(nextNum).padStart(3, '0')}`,
-      client: devisLead.name,
-      montant: total,
-      avance: existingDevisDoc?.avance || 0,
-      date: new Date().toISOString().split('T')[0],
-      echeance: due.toISOString().split('T')[0],
-      statut: existingDevisDoc?.statut || 'en_attente',
-      typeDoc: 'devis',
-    };
-    (devis as any).leadId = devisLead.id;
-    await saveRecord('factures', devis);
 
     // Save strictly what the Admin decided so Portail Client displays ONLY Admin's real decision
     let extDetails: any = {};
     try { extDetails = parseLeadDetailsJson(devisLead.details); } catch(e) {}
+
+    // Link existing Commande for this client/lead if present so the Devis updates seamlessly
+    const allCommandes = await loadData<Commande>('commandes');
+    const clientNorm = (devisLead.name || '').trim().toLowerCase();
+    const clientCmds = allCommandes.filter(c => (c.client || '').trim().toLowerCase() === clientNorm);
+    const matchedCmd = findMatchingCommandeForLead(devisLead, clientCmds);
+    if (matchedCmd) {
+      extDetails.commandeId = matchedCmd.id;
+      extDetails.commandeReference = matchedCmd.reference;
+    }
+
+    const { devis } = await upsertClientDevis({
+      preferredId: extDetails.devisId,
+      preferredNumero: extDetails.devisNumero,
+      commandeId: extDetails.commandeId || undefined,
+      leadId: devisLead.id,
+      leadDetails: devisLead.details,
+      client: devisLead.name,
+      clientPhone: devisLead.phone,
+      clientEmail: devisLead.email,
+      montant: total,
+      articles: [{
+        id: genId(),
+        designation: devisModeleReel.trim() || devisLead.modeleReel || devisLead.type || 'Confection Sur-Mesure',
+        quantite: currentQuantity,
+        prixUnitaire: unitPrice,
+        total
+      }]
+    });
+
+    extDetails.devisId = devis.id;
+    extDetails.devisNumero = devis.numero;
     if (devisPatronagePrice) {
       extDetails.patronagePrice = Number(devisPatronagePrice);
       extDetails.patronageStatus = 'priced';

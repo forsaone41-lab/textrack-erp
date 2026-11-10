@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2, Camera } from 'lucide-react';
-import { Facture, Commande, User, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile, syncCompanyProfile } from '../types';
+import { Facture, Commande, User, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile, syncCompanyProfile, upsertClientDevis } from '../types';
 import { printFacture, exportFacturesCSV } from '../utils/print';
 import { printElement } from '../utils/pdf';
 import { InvoicePRO } from '../components/InvoicePRO';
@@ -118,9 +118,35 @@ export default function Devis() {
     if (!form.numero || !form.client) return;
     const isNew = !editId;
 
-    // Vérifier si le numéro de facture existe déjà
-    if (isNew && factures.some(f => f.numero === form.numero)) {
+    // Vérifier si le numéro appartient déjà à un autre client
+    const hasConflict = isNew && factures.some(
+      f =>
+        f.numero === form.numero &&
+        (f.client || '').trim().toLowerCase() !== (form.client || '').trim().toLowerCase()
+    );
+    if (hasConflict) {
       alert(`Le numéro de facture "${form.numero}" est déjà utilisé. Veuillez utiliser un numéro unique.`);
+      return;
+    }
+
+    if (isNew && form.typeDoc === 'devis') {
+      const { devis: savedDevis } = await upsertClientDevis({
+        preferredNumero: form.numero,
+        commandeId: form.commandeId || undefined,
+        client: form.client,
+        montant: Number(form.montant || 0),
+        avance: Number(form.avance || 0),
+        date: form.date,
+        echeance: form.echeance,
+        statut: form.statut,
+        articles: form.articles || [],
+        existingFactures: factures
+      });
+      const updated = factures.some(f => f.id === savedDevis.id)
+        ? factures.map(f => (f.id === savedDevis.id ? savedDevis : f))
+        : [...factures, savedDevis];
+      setFactures(updated);
+      setShowModal(false);
       return;
     }
 

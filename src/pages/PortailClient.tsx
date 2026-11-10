@@ -3,7 +3,7 @@ import { ChevronDown, Copy, Search, LogOut, Package, CircleCheck, Clock, Truck, 
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadClientLeads, loadLeadPhoto, deleteRecord, genId, isJwtExpiredError, recoverExpiredJwt, parseLeadDetailsJson
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadClientLeads, loadLeadPhoto, deleteRecord, genId, isJwtExpiredError, recoverExpiredJwt, parseLeadDetailsJson, findMatchingCommandeForLead, upsertClientDevis
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { trackPixelEvent } from '../utils/pixel';
@@ -993,9 +993,27 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   };
 
   const clientDocsAll = factures.filter(isClientFacturaMatch);
-  const clientDevisDocs = clientDocsAll
-    .filter(f => f.typeDoc === 'devis')
-    .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+  const clientDevisDocs = (() => {
+    const sorted = clientDocsAll
+      .filter(f => f.typeDoc === 'devis')
+      .sort((a, b) => {
+        const aRich = (a.articles?.length ? 1 : 0) + (a.commandeId ? 1 : 0);
+        const bRich = (b.articles?.length ? 1 : 0) + (b.commandeId ? 1 : 0);
+        if (aRich !== bRich) return bRich - aRich;
+        return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
+      });
+    const seen = new Set<string>();
+    return sorted.filter(f => {
+      const numKey = f.numero ? `num:${f.numero.trim().toLowerCase()}` : '';
+      const cmdAmtKey = f.statut !== 'payée' && f.commandeId
+        ? `cmd:${f.commandeId}|${Math.round(Number(f.montant || 0))}`
+        : '';
+      if ((numKey && seen.has(numKey)) || (cmdAmtKey && seen.has(cmdAmtKey))) return false;
+      if (numKey) seen.add(numKey);
+      if (cmdAmtKey) seen.add(cmdAmtKey);
+      return true;
+    });
+  })();
 
   const getOfficialDevisForCommande = (cmd: Commande): Facture | undefined => {
     const byId = clientDevisDocs.find(f => f.commandeId === cmd.id);
@@ -1060,6 +1078,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     return undefined;
   };
 
+  const getLinkedCommandeForLead = (d: Lead, cmds: Commande[] = found): Commande | undefined =>
+    findMatchingCommandeForLead(d, cmds, getOfficialDevisForLead(d));
+
+  const isLeadHiddenFromPayments = (d: Lead, cmds: Commande[] = found): boolean => {
+    if (d.status === 'completed' || (d.crmStage as any) === 'rejeté' || (d.crmStage as any) === 'annule') return true;
+    return Boolean(getLinkedCommandeForLead(d, cmds));
+  };
+
   const handleValidateDevisAndVirement = async (lead: Lead) => {
     setValidatingDevisSending(true);
     try {
@@ -1084,6 +1110,104 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       }
       if (virementReceiptFile) extDetails.virementReceipt = virementReceiptFile;
 
+      // Auto-convert or synchronize linked Commande so the confirmed request moves to Production cleanly (no duplicate card)
+      const officialDevisBefore = getOfficialDevisForLead(lead);
+      const allCommandesFresh = await loadData<Commande>('commandes');
+      const clientCmdsFresh = (allCommandesFresh || []).filter(c => isClientCommandeMatch(c));
+      const existingLinkedCmd = findMatchingCommandeForLead(lead, clientCmdsFresh, officialDevisBefore);
+      const isSampleMode = extDetails.adminMode === 'echantillon';
+      const genericModel = !analysis.modeleReel || analysis.modeleReel.toLowerCase().includes('formulaire avanc');
+      const modelLabel = (!genericModel ? analysis.modeleReel : '') || lead.modeleReel || lead.type || 'Confection Sur-Mesure';
+
+      const targetCommande: Commande = existingLinkedCmd
+        ? {
+            ...existingLinkedCmd,
+            quantite: activeQty,
+            prix: activeUnitPrice,
+            prixUnitaire: activeUnitPrice,
+            ...(virementReceiptFile ? { preuveClient: virementReceiptFile, avance: existingLinkedCmd.avance || acompteAmount } : {}),
+          }
+        : {
+            id: genId(),
+            reference: `CMD-${Date.now().toString().slice(-6)}`,
+            client: lead.name || currentUser?.nom || 'Client',
+            modele: modelLabel,
+            tissu: isClientFab ? 'Tissu Client' : (analysis.tissuSuggere || 'À définir'),
+            modelePhoto: lead.photo || (lead.photos && lead.photos[0]) || leadPhotosRef.current[lead.id] || undefined,
+            couleurs: [],
+            tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 },
+            quantite: activeQty,
+            quantiteLivre: 0,
+            dateCommande: new Date().toISOString().split('T')[0],
+            dateLivraisonPrevue: new Date(Date.now() + 21 * 24 * 3600 * 1000).toISOString().split('T')[0],
+            phase: 'patronage',
+            prix: activeUnitPrice,
+            prixUnitaire: activeUnitPrice,
+            prixEchantillon: Number((analysis as any).prixEchantillon || lead.prixEchantillon || 0) || undefined,
+            avance: virementReceiptFile ? acompteAmount : 0,
+            rebut: 0,
+            statut: isSampleMode ? 'echantillon_en_cours' : 'en_cours',
+            suivi: [{
+              phase: 'patronage',
+              date: new Date().toISOString(),
+              note: virementReceiptFile
+                ? 'Devis confirmé et avance envoyée par le client (Portail)'
+                : 'Devis confirmé par le client sur le Portail (création automatique)'
+            }],
+            ...(virementReceiptFile ? { preuveClient: virementReceiptFile } : {}),
+          };
+      (targetCommande as any).prixValide = true;
+
+      try {
+        await saveRecord('commandes', targetCommande);
+        setCommandes(prev =>
+          prev.some(c => c.id === targetCommande.id)
+            ? prev.map(c => (c.id === targetCommande.id ? targetCommande : c))
+            : [targetCommande, ...prev]
+        );
+        setFound(prev =>
+          sortClientCommandes(
+            prev.some(c => c.id === targetCommande.id)
+              ? prev.map(c => (c.id === targetCommande.id ? targetCommande : c))
+              : [targetCommande, ...prev]
+          )
+        );
+      } catch {}
+
+      extDetails.commandeId = targetCommande.id;
+      extDetails.commandeReference = targetCommande.reference;
+
+      // Upsert official Devis document in place & link to targetCommande
+      try {
+        const { devis: syncedDevis } = await upsertClientDevis({
+          preferredId: officialDevisBefore?.id || extDetails.devisId,
+          preferredNumero: officialDevisBefore?.numero || extDetails.devisNumero,
+          commandeId: targetCommande.id,
+          leadId: lead.id,
+          leadDetails: JSON.stringify(extDetails),
+          client: lead.name || currentUser?.nom || 'Client',
+          clientPhone: lead.phone || currentUser?.telephone,
+          clientEmail: lead.email || currentUser?.email,
+          montant: activeTotalPrice,
+          avance: virementReceiptFile ? acompteAmount : (officialDevisBefore?.avance || 0),
+          articles: [{
+            id: officialDevisBefore?.articles?.[0]?.id || genId(),
+            designation: modelLabel,
+            quantite: activeQty,
+            prixUnitaire: activeUnitPrice,
+            total: activeTotalPrice
+          }],
+          existingFactures: factures
+        });
+        extDetails.devisId = syncedDevis.id;
+        extDetails.devisNumero = syncedDevis.numero;
+        setFactures(prev =>
+          prev.some(f => f.id === syncedDevis.id)
+            ? prev.map(f => (f.id === syncedDevis.id ? syncedDevis : f))
+            : [syncedDevis, ...prev]
+        );
+      } catch {}
+
       const updatedLead: Lead = {
         ...lead,
         quantity: activeQty !== baseQty ? activeQty : lead.quantity,
@@ -1091,6 +1215,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         totalPrice: activeQty !== baseQty ? activeTotalPrice : (lead.totalPrice || activeTotalPrice),
         crmPrice: activeQty !== baseQty ? activeUnitPrice : lead.crmPrice,
         details: JSON.stringify(extDetails),
+        status: 'completed',
         crmStage: 'confirme',
         statusProgression: virementReceiptFile ? 'echantillon' : (lead.statusProgression || 'etude'),
         reponseAtelierDate: new Date().toISOString(),
@@ -1100,31 +1225,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
       await saveRecord('leads', updatedLead);
 
-      // Update official devis document total if the client raised quantity in simulator
-      const officialDevis = getOfficialDevisForLead(lead);
-      if (officialDevis && activeQty !== baseQty) {
-        try {
-          await saveRecord('factures', {
-            ...officialDevis,
-            montant: activeTotalPrice,
-            articles: [{
-              id: officialDevis.articles?.[0]?.id || genId(),
-              designation: analysis.modeleReel,
-              quantite: activeQty,
-              prixUnitaire: activeUnitPrice,
-              total: activeTotalPrice
-            }]
-          });
-        } catch {}
-      }
-
-      // If client attached a Virement receipt inside the Validation modal, also save an official Recu in factures
+      // If client attached a Virement receipt inside the Validation modal, also save an official Recu in factures linked to the Commande
       if (virementReceiptFile) {
         try {
           const recuDoc: Partial<Facture> = {
             id: genId(),
             numero: `REC-${Date.now().toString().slice(-6)}`,
             client: currentUser?.nom || lead.name,
+            commandeId: targetCommande.id,
             date: new Date().toISOString(),
             echeance: new Date().toISOString().split('T')[0],
             montant: acompteAmount,
@@ -1133,7 +1241,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
             banque: 'virement',
             articles: [{
               id: genId(),
-              designation: `[#${lead.id.substring(0, 8).toUpperCase()}] ${analysis.modeleReel} (${activeQty} pcs)`,
+              designation: `[${targetCommande.reference}] ${analysis.modeleReel} (${activeQty} pcs)`,
               quantite: activeQty,
               prixUnitaire: activeUnitPrice,
               total: acompteAmount
@@ -1541,13 +1649,23 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   }, [activeTab, currentUser]);
 
   useEffect(() => {
+    const hiddenSelected = mesDemandes.find(
+      d => d.id === virementCommandeId && isLeadHiddenFromPayments(d, found)
+    );
+    if (hiddenSelected) {
+      const linked = getLinkedCommandeForLead(hiddenSelected, found);
+      setVirementCommandeId(linked ? linked.id : (found[0]?.id || ''));
+      return;
+    }
     if (!virementCommandeId) {
       if (found.length === 1) {
         setVirementCommandeId(found[0].id);
       } else if (found.length === 0) {
-        const trueDem = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
-        if (trueDem.length >= 1) {
-          setVirementCommandeId(trueDem[0].id);
+        const payableDem = mesDemandes.filter(
+          d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__' && !isLeadHiddenFromPayments(d, found)
+        );
+        if (payableDem.length >= 1) {
+          setVirementCommandeId(payableDem[0].id);
         }
       }
     }
@@ -6188,11 +6306,12 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
 
           {activeTab === 'payments' && (() => {
             const trueDemandes = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
+            const payableDemandes = trueDemandes.filter(d => !isLeadHiddenFromPayments(d, found));
             
-            // Build all payable items (both official production Commandes and Client Demandes/Devis)
+            // Build all payable items (Commandes + unconverted Demandes only, never doubling a converted Lead with its Commande)
             const allPayableItems = [
               ...found.map(c => {
-                const matchingLead = trueDemandes.find(l => l.type === c.modele);
+                const matchingLead = trueDemandes.find(l => l.type === c.modele || getLinkedCommandeForLead(l, [c])?.id === c.id);
                 const leadImgUrl = matchingLead ? (matchingLead.photo || (matchingLead.photos && matchingLead.photos[0]) || leadPhotos[matchingLead.id]) : null;
                 const imgUrl = (c as any).modelePhoto || c.photo || (c as any).tissuPhoto || leadImgUrl || null;
                 return {
@@ -6208,7 +6327,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   rawCommande: c
                 };
               }),
-              ...trueDemandes.map(d => {
+              ...payableDemandes.map(d => {
                 const analysis = getDemandeAnalysis(d, isAr);
                 const photo = d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null;
                 return {
@@ -7650,9 +7769,10 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                         <button
                           type="button"
                           onClick={() => {
+                            const linkedCmdForPayment = getLinkedCommandeForLead(d, found);
                             setValidatingDevisLead(null);
                             setSelectedDemandePage(null);
-                            setVirementCommandeId(d.id);
+                            setVirementCommandeId(linkedCmdForPayment ? linkedCmdForPayment.id : d.id);
                             setVirementMontant(String(acompte50));
                             setActiveTab('payments');
                           }}

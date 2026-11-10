@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock, User as UserIcon, Maximize2, X, MessageCircle } from 'lucide-react';
-import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord, loadLeads, loadLeadPhoto, loadLeadPhotosBatch } from '../types';
+import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord, loadLeads, loadLeadPhoto, loadLeadPhotosBatch, upsertClientDevis } from '../types';
 import type { User, Lead } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { PageLoader } from '../components/PageLoader';
@@ -303,7 +303,6 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
       return;
     }
 
-    const facId = genId();
     const articles = models.map(m => ({
       id: genId(),
       designation: m.name + (m.fabricType ? ` (${m.fabricType})` : ''),
@@ -312,20 +311,18 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
       total: (m.matierePrice + m.laborPrice) * m.quantity
     }));
 
-    const newDevis: Facture = {
-      id: facId,
-      numero: devisNum,
+    const { devis: savedDevis } = await upsertClientDevis({
+      preferredNumero: devisNum,
       client: clientName,
+      clientPhone,
       montant: totalGeneral,
       date: new Date().toISOString().split('T')[0],
       echeance: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       statut: 'en_attente',
-      typeDoc: 'devis',
-      articles: articles,
+      articles,
       avance: acompte
-    };
-
-    await saveRecord('factures', newDevis);
+    });
+    setDevisNum(savedDevis.numero);
     printElement('devis-builder-pdf');
     if (onBack) onBack();
     else navigate('/devis');

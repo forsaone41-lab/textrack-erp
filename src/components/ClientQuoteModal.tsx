@@ -5,7 +5,7 @@ import {
   Percent, Copy, CheckCircle2, ChevronRight, Layers, Tag, Eye, ShoppingBag, 
   TrendingUp, Compass, AlertCircle, Edit3, Store, Scissors, Package
 } from 'lucide-react';
-import { loadCompanyProfile, saveRecord, genId, Facture, loadData, User } from '../types';
+import { loadCompanyProfile, saveRecord, genId, Facture, loadData, User, upsertClientDevis } from '../types';
 import { printElement } from '../utils/pdf';
 import { getFabricInfo, estimateSourcingBreakdown } from '../lib/fabricCatalog';
 
@@ -311,33 +311,40 @@ export const ClientQuoteModal: React.FC<ClientQuoteModalProps> = ({
   const handleSaveToDevis = async () => {
     setSaving(true);
     try {
-      const newDevis: Facture = {
+      const mappedArticles = articles.map(a => ({
         id: genId(),
-        numero: devisRef,
+        designation: `${a.name} [Tissu: ${a.fabricCommercial} | Sourcing: ${a.marcheSourcing || 'Marché'}]`,
+        type: 'matiere' as const,
+        quantite: a.quantity,
+        prixUnitaire: a.unitPrice,
+        total: a.quantity * a.unitPrice
+      }));
+
+      const { devis: savedDevis, updated: wasUpdated } = await upsertClientDevis({
+        preferredNumero: devisRef,
         client: clientName || (isAr ? 'زبون تجاري' : 'Client Partenaire'),
+        clientPhone,
         montant: totalTTC,
         avance: 0,
         date: devisDate,
         echeance: new Date(Date.now() + validityDays * 24 * 3600 * 1000).toISOString().split('T')[0],
         statut: 'en_attente',
-        typeDoc: 'devis',
-        articles: articles.map(a => ({
-          id: genId(),
-          designation: `${a.name} [Tissu: ${a.fabricCommercial} | Sourcing: ${a.marcheSourcing || 'Marché'}]`,
-          type: 'matiere',
-          quantite: a.quantity,
-          prixUnitaire: a.unitPrice,
-          total: a.quantity * a.unitPrice
-        }))
-      };
+        articles: mappedArticles
+      });
+      setDevisRef(savedDevis.numero);
 
-      await saveRecord('factures', newDevis);
       if (onNotify) {
         onNotify(
-          isAr ? 'تم الحفظ في Devis' : 'Enregistré dans Devis',
-          isAr
-            ? `تم حفظ عرض السعر (${devisRef}) في سجلات Devis بالـ ERP بنجاح!`
-            : `Le devis (${devisRef}) a été enregistré dans le module Devis avec succès !`
+          wasUpdated
+            ? (isAr ? 'تم تحديث عرض السعر السابق' : 'Devis existant mis à jour')
+            : (isAr ? 'تم الحفظ في Devis' : 'Enregistré dans Devis'),
+          wasUpdated
+            ? (isAr
+                ? `تم تعديل عرض السعر (${savedDevis.numero}) تلقائياً بالأسعار الجديدة دون تكرار!`
+                : `Le devis existant (${savedDevis.numero}) a été mis à jour automatiquement (sans doublon) !`)
+            : (isAr
+                ? `تم حفظ عرض السعر (${savedDevis.numero}) في سجلات Devis بالـ ERP بنجاح!`
+                : `Le devis (${savedDevis.numero}) a été enregistré dans le module Devis avec succès !`)
         );
       }
       if (onSaved) onSaved();
