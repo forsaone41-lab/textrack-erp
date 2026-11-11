@@ -5,7 +5,7 @@ import {
   ExternalLink, Copy, Check, Users, Sparkles, Building2, MapPin,
   Video, X
 } from 'lucide-react';
-import { Lead, User as UserType, loadLeads, loadData, saveRecord, deleteRecord, genId } from '../types';
+import { Lead, User as UserType, loadLeads, loadData, saveRecord, deleteRecord, genId, loadClientCityResolver, extractClientCityFromLeads, CLIENT_CITY_LEAD_TYPE } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 interface ClientContact {
@@ -30,6 +30,7 @@ export default function Inbox() {
   const [messages, setMessages] = useState<Lead[]>([]);
   const [users, setUsers] = useState<UserType[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [cityRecords, setCityRecords] = useState<Lead[]>([]);
   const [search, setSearch] = useState('');
   const [filterTab, setFilterTab] = useState<'all' | 'chat' | 'registered'>('all');
   const [loading, setLoading] = useState(true);
@@ -68,9 +69,10 @@ export default function Inbox() {
 
   const fetchData = async () => {
     try {
-      const [leadsData, usersData] = await Promise.all([
+      const [leadsData, usersData, cityResolver] = await Promise.all([
         loadLeads().catch(() => []),
-        loadData<UserType>('users').catch(() => [])
+        loadData<UserType>('users').catch(() => []),
+        loadClientCityResolver().catch(() => ({ cityRecords: [] as Lead[], resolveCity: () => '' }))
       ]);
 
       const chatMsgs = leadsData.filter(l => l.type === '__MESSAGE__' || l.type === '__MESSAGE_REPLY__');
@@ -96,6 +98,7 @@ export default function Inbox() {
       setMessages(chatMsgs);
       setLeads(leadsData);
       setUsers(usersData || []);
+      setCityRecords(cityResolver?.cityRecords || []);
     } catch (err) {
       console.error('Error fetching inbox data:', err);
     } finally {
@@ -144,7 +147,7 @@ export default function Inbox() {
 
     // 2. Add clients from leads / quotes (non-messages) who might not have registered accounts yet
     leads.forEach(l => {
-      if (l.type === '__MESSAGE__' || l.type === '__MESSAGE_REPLY__') return;
+      if (l.type === '__MESSAGE__' || l.type === '__MESSAGE_REPLY__' || l.type === CLIENT_CITY_LEAD_TYPE || l.type?.startsWith('__')) return;
       const normPhone = normalizePhone(l.phone);
       const email = l.email?.toLowerCase().trim();
       const key = normPhone || email;
@@ -240,6 +243,21 @@ export default function Inbox() {
       }
     });
 
+    // Enrich contact cities from cloud city profiles & leads
+    const allCityLookup = [...cityRecords, ...leads];
+    map.forEach(c => {
+      const resolvedCity = extractClientCityFromLeads(allCityLookup, {
+        id: c.id,
+        nom: c.name,
+        email: c.email,
+        telephone: c.phone,
+        ville: c.ville
+      });
+      if (resolvedCity) {
+        c.ville = resolvedCity;
+      }
+    });
+
     // Sort messages within each contact and determine lastMessage
     const contactList = Array.from(map.values()).map(contact => {
       contact.messages.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -260,7 +278,7 @@ export default function Inbox() {
       if (!a.isRegisteredUser && b.isRegisteredUser) return 1;
       return a.name.localeCompare(b.name);
     });
-  }, [users, leads, messages]);
+  }, [users, leads, messages, cityRecords]);
 
   // Filtered contacts according to tab & search
   const filteredContacts = useMemo(() => {

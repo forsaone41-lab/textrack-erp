@@ -3,7 +3,7 @@ import { ChevronDown, Copy, Search, LogOut, Package, CircleCheck, Clock, Truck, 
 import { supabase } from '../supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadClientLeads, loadLeadPhoto, deleteRecord, genId, isJwtExpiredError, recoverExpiredJwt, parseLeadDetailsJson, findMatchingCommandeForLead, upsertClientDevis
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadClientLeads, loadLeadPhoto, deleteRecord, genId, isJwtExpiredError, recoverExpiredJwt, parseLeadDetailsJson, findMatchingCommandeForLead, upsertClientDevis, isClientPortalDemandLead, extractClientCityFromLeads, saveClientCityRecord, CLIENT_CITY_LEAD_TYPE
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { trackPixelEvent } from '../utils/pixel';
@@ -426,73 +426,145 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
   const [cityTab, setCityTab] = useState<'maroc' | 'international'>('maroc');
   const [savingCity, setSavingCity] = useState(false);
   const [cityToastMsg, setCityToastMsg] = useState<string | null>(null);
+  const [cloudCityChecked, setCloudCityChecked] = useState(false);
+
+  const getCityStorageSuffix = (user?: Partial<User> | null): string => {
+    if (!user) return '';
+    return (
+      (user.email || '').toLowerCase().trim() ||
+      (user.telephone || '').replace(/\D/g, '').slice(-9) ||
+      (user.id || '').toLowerCase().trim() ||
+      (user.nom || '').toLowerCase().trim()
+    );
+  };
+
+  const persistLocalClientCity = (city: string, user?: Partial<User> | null) => {
+    const clean = (city || '').trim();
+    if (!clean) return;
+    const suffix = getCityStorageSuffix(user || currentUser);
+    try {
+      if (suffix) {
+        localStorage.setItem(`beya_client_city_${suffix}`, clean);
+        localStorage.setItem(`beya_city_popup_dismissed_${suffix}`, 'true');
+      }
+      if (user?.email) {
+        const emailSuffix = user.email.toLowerCase().trim();
+        localStorage.setItem(`beya_client_city_${emailSuffix}`, clean);
+        localStorage.setItem(`beya_city_popup_dismissed_${emailSuffix}`, 'true');
+      }
+      const rawAuth = localStorage.getItem('textrack_auth');
+      if (rawAuth) {
+        const parsed = JSON.parse(rawAuth);
+        if (parsed && parsed.ville !== clean) {
+          parsed.ville = clean;
+          localStorage.setItem('textrack_auth', JSON.stringify(parsed));
+        }
+      }
+    } catch {}
+  };
 
   const [clientCity, setClientCity] = useState<string>(() => {
-    const emailKey = currentUser?.email?.toLowerCase().trim() || '';
+    const suffix = getCityStorageSuffix(currentUser);
     let saved = '';
     try {
-      if (emailKey) saved = localStorage.getItem(`beya_client_city_${emailKey}`) || '';
+      if (suffix) saved = localStorage.getItem(`beya_client_city_${suffix}`) || '';
+      if (!saved && currentUser?.email) {
+        saved = localStorage.getItem(`beya_client_city_${currentUser.email.toLowerCase().trim()}`) || '';
+      }
       if (!saved) saved = currentUser?.ville || (currentUser as any)?.city || '';
+      if (!saved) {
+        const cityCacheRaw = localStorage.getItem('textrack_client_city_records');
+        const cityCache: Lead[] = cityCacheRaw ? JSON.parse(cityCacheRaw) : [];
+        saved = extractClientCityFromLeads([...(Array.isArray(cityCache) ? cityCache : []), ...mesDemandes], currentUser || undefined, portalUsers);
+      }
     } catch {}
     return saved;
   });
 
-  useEffect(() => {
-    if (!currentUser?.email) return;
-    const emailKey = currentUser.email.toLowerCase().trim();
-    const stored = localStorage.getItem(`beya_client_city_${emailKey}`) || currentUser?.ville || (currentUser as any)?.city || '';
-    const dismissed = localStorage.getItem(`beya_city_popup_dismissed_${emailKey}`) === 'true';
+  const hydrateClientCityFromData = (leadsList: Lead[], usersList: User[] = portalUsers) => {
+    if (!currentUser) return '';
+    let localCityRecs: Lead[] = [];
+    try {
+      const raw = localStorage.getItem('textrack_client_city_records');
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) localCityRecs = parsed;
+    } catch {}
 
-    if (!stored && !dismissed) {
+    const combinedForUser = [...leadsList, ...localCityRecs];
+    const resolvedFromCloud = extractClientCityFromLeads(combinedForUser, currentUser, usersList);
+    if (!resolvedFromCloud) return '';
+
+    setClientCity(prev => (prev === resolvedFromCloud ? prev : resolvedFromCloud));
+    setLocalUser(prev => (prev && prev.ville !== resolvedFromCloud ? { ...prev, ville: resolvedFromCloud } : prev));
+    persistLocalClientCity(resolvedFromCloud, currentUser);
+    setShowCityModal(false);
+    return resolvedFromCloud;
+  };
+
+  useEffect(() => {
+    if (!currentUser || !cloudCityChecked) return;
+    const suffix = getCityStorageSuffix(currentUser);
+    const emailSuffix = currentUser?.email?.toLowerCase().trim() || '';
+    const storedLocal =
+      (suffix ? localStorage.getItem(`beya_client_city_${suffix}`) : '') ||
+      (emailSuffix ? localStorage.getItem(`beya_client_city_${emailSuffix}`) : '') ||
+      '';
+    const resolved = clientCity || storedLocal || currentUser?.ville || (currentUser as any)?.city || extractClientCityFromLeads(mesDemandes, currentUser, portalUsers);
+
+    if (resolved) {
+      if (clientCity !== resolved) setClientCity(resolved);
+      persistLocalClientCity(resolved, currentUser);
+      setShowCityModal(false);
+      return;
+    }
+
+    const dismissed =
+      (suffix && localStorage.getItem(`beya_city_popup_dismissed_${suffix}`) === 'true') ||
+      (emailSuffix && localStorage.getItem(`beya_city_popup_dismissed_${emailSuffix}`) === 'true');
+
+    if (!dismissed) {
       const timer = setTimeout(() => {
-        setSelectedCityDraft(stored || 'الدار البيضاء (Casablanca)');
+        setSelectedCityDraft('الدار البيضاء (Casablanca)');
         setShowCityModal(true);
-      }, 750);
+      }, 350);
       return () => clearTimeout(timer);
     }
-  }, [currentUser?.email, currentUser?.ville]);
+  }, [currentUser?.id, currentUser?.email, currentUser?.ville, cloudCityChecked, clientCity]);
 
   const handleSaveCity = async (chosenCity?: string) => {
     const finalCity = (chosenCity || customCityInput || selectedCityDraft).trim();
     if (!finalCity) return;
     setSavingCity(true);
     try {
-      const emailKey = currentUser?.email?.toLowerCase().trim() || '';
       setClientCity(finalCity);
-      if (emailKey) {
-        localStorage.setItem(`beya_client_city_${emailKey}`, finalCity);
-      }
-      try {
-        const rawAuth = localStorage.getItem('textrack_auth');
-        if (rawAuth) {
-          const parsed = JSON.parse(rawAuth);
-          parsed.ville = finalCity;
-          localStorage.setItem('textrack_auth', JSON.stringify(parsed));
-        }
-      } catch {}
+      persistLocalClientCity(finalCity, currentUser);
 
       if (currentUser) {
         const updatedUser: User = { ...currentUser, ville: finalCity };
+        setLocalUser(updatedUser);
+        setPortalUsers(prev => prev.map(u => (u.id === updatedUser.id ? updatedUser : u)));
         await saveRecord('users', updatedUser, true).catch(() => {});
+
+        // Persist permanent __CLIENT_CITY__ record in Supabase leads so city never resets across logouts/devices
+        const savedCityLead = await saveClientCityRecord(updatedUser, finalCity).catch(() => null);
+        if (savedCityLead) {
+          setMesDemandes(prev => [
+            savedCityLead,
+            ...prev.filter(l => l.type !== CLIENT_CITY_LEAD_TYPE && l.id !== savedCityLead.id)
+          ]);
+        }
       }
 
-      // Update existing leads for this client
+      // Best-effort update on existing real client demands
       try {
-        const matchingLeads = mesDemandes.filter(l => 
-          (currentUser?.email && (l.email || '').trim().toLowerCase() === currentUser.email.trim().toLowerCase()) ||
-          (currentUser?.nom && (l.client || l.name || '').trim().toLowerCase() === currentUser.nom.trim().toLowerCase())
+        const matchingLeads = mesDemandes.filter(l =>
+          isClientPortalDemandLead(l) && l.ville !== finalCity
         );
         for (const l of matchingLeads) {
-          if (l.ville !== finalCity) {
-            const updated = { ...l, ville: finalCity };
-            await saveRecord('leads', updated, true).catch(() => {});
-          }
+          const updated = { ...l, ville: finalCity };
+          await saveRecord('leads', updated, true).catch(() => {});
         }
-        setMesDemandes(prev => prev.map(l => {
-          const isMatch = (currentUser?.email && (l.email || '').trim().toLowerCase() === currentUser?.email?.trim().toLowerCase()) ||
-                          (currentUser?.nom && (l.client || l.name || '').trim().toLowerCase() === currentUser?.nom?.trim().toLowerCase());
-          return isMatch ? { ...l, ville: finalCity } : l;
-        }));
+        setMesDemandes(prev => prev.map(l => (isClientPortalDemandLead(l) ? { ...l, ville: finalCity } : l)));
       } catch (e) {
         console.error('Error updating leads with city:', e);
       }
@@ -508,10 +580,12 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
   };
 
   const handleDismissCityModal = () => {
-    const emailKey = currentUser?.email?.toLowerCase().trim() || '';
-    if (emailKey) {
-      localStorage.setItem(`beya_city_popup_dismissed_${emailKey}`, 'true');
-    }
+    const suffix = getCityStorageSuffix(currentUser);
+    const emailSuffix = currentUser?.email?.toLowerCase().trim() || '';
+    try {
+      if (suffix) localStorage.setItem(`beya_city_popup_dismissed_${suffix}`, 'true');
+      if (emailSuffix) localStorage.setItem(`beya_city_popup_dismissed_${emailSuffix}`, 'true');
+    } catch {}
     setShowCityModal(false);
   };
   const [notifyModal, setNotifyModal] = useState<{
@@ -1262,11 +1336,11 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
     );
     if (byArticle) return byArticle;
 
-    const activeLeadsCount = mesDemandes.filter(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__').length;
+    const activeLeadsCount = mesDemandes.filter(isClientPortalDemandLead).length;
     if (clientDevisDocs.length >= 1 && activeLeadsCount === 1) {
       return clientDevisDocs[0];
     }
-    const confirmedLeads = mesDemandes.filter(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__' && m.crmStage === 'confirme');
+    const confirmedLeads = mesDemandes.filter(m => isClientPortalDemandLead(m) && m.crmStage === 'confirme');
     if (clientDevisDocs.length >= 1 && confirmedLeads.length === 1 && confirmedLeads[0].id === d.id) {
       return clientDevisDocs[0];
     }
@@ -1727,12 +1801,16 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
         ...currentUser,
         nom: cleanNom,
         email: cleanEmail,
+        ...(clientCity ? { ville: clientCity } : {}),
         ...(cleanPhone ? { telephone: cleanPhone } : {}),
         ...(passwordChanged ? { password: profileNewPassword, pinCode: profileNewPassword } : {}),
         ...(emailChanged ? { emailVerified: false } : {}),
       };
 
       await persistUpdatedCurrentUser(updatedUser);
+      if (clientCity) {
+        await saveClientCityRecord(updatedUser, clientCity).catch(() => {});
+      }
 
       // Migrate cached phone / city keys if email changed
       try {
@@ -1779,11 +1857,15 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
     try {
       const updatedUser: User = {
         ...currentUser!,
+        ...(clientCity ? { ville: clientCity } : {}),
         password: newDirectPassword,
         pinCode: newDirectPassword,
         emailVerified: true
       };
       await persistUpdatedCurrentUser(updatedUser);
+      if (clientCity) {
+        await saveClientCityRecord(updatedUser, clientCity).catch(() => {});
+      }
 
       try {
         await supabase.auth.updateUser({ password: newDirectPassword });
@@ -1909,6 +1991,7 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
 
         setFound(myCommandes);
         setMesDemandes(myLeads);
+        hydrateClientCityFromData(myLeads, validUsers);
         lastClientMessageCountRef.current = myLeads.length;
 
         // Load photos for these leads asynchronously
@@ -1928,6 +2011,7 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
       console.warn("Portal load warning:", err);
     }).finally(() => {
       clearTimeout(failsafeTimer);
+      setCloudCityChecked(true);
       setLoading(false);
     });
 
@@ -1965,6 +2049,7 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
         const matchedLeads = freshLeads.filter(l => matchesIdentity(tmpId, l.name, l.id, l.email, l.phone));
         if (matchedLeads.length > 0) {
           latestLeads = matchedLeads;
+          hydrateClientCityFromData(matchedLeads, validUsers);
           setMesDemandes(prev => {
             const existingMap: Record<string, Lead> = {};
             prev.forEach(p => { existingMap[p.id] = p; });
@@ -2000,7 +2085,7 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
       setVirementCommandeId(linked ? linked.id : (found[0]?.id || ''));
       return;
     }
-    const trueDems = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
+    const trueDems = mesDemandes.filter(isClientPortalDemandLead);
     const isCmdPaid = (c: Commande) => {
       const mLead = trueDems.find(l => l.type === c.modele || getLinkedCommandeForLead(l, [c])?.id === c.id);
       return getCommandePaymentAndProofInfo(c, mLead).isPaid;
@@ -3275,7 +3360,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         email: currentUser.email || '',
         phone: currentUser.telephone || pastPhone || newOrderForm.telephone || '',
         phone2: pastPhone2,
-        ville: '',
+        ville: clientCity || currentUser?.ville || '',
         type: newOrderForm.modele,
         quantity: parseInt(newOrderForm.quantite) || 100,
         photo: newOrderForm.photo,
@@ -3934,7 +4019,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                           {isAr ? 'موديلات قيد الدراسة والتسعير' : 'Demandes à l\'étude'}
                         </span>
                         <p className="text-2xl sm:text-3xl font-black text-indigo-300">
-                          {mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__').length}
+                          {mesDemandes.filter(isClientPortalDemandLead).length}
                         </p>
                         <span className="text-[10px] text-slate-400 block font-medium">
                           {isAr ? 'عرض المواصفات والأثمنة ←' : 'Voir les détails →'}
@@ -4324,12 +4409,12 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                           {isAr ? 'لا توجد طلبيات مؤكدة في الإنتاج حالياً' : 'Aucune commande en production pour le moment'}
                         </h4>
                         <p className="text-slate-500 text-sm max-w-md mx-auto mb-6">
-                          {mesDemandes.length > 0 
-                            ? (isAr ? `لديك ${mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__').length} طلب(ات) موديل قيد الدراسة والمراجعة من فريقنا.` : `Vous avez ${mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__').length} demande(s) en cours d'étude par notre équipe.`)
+                          {mesDemandes.filter(isClientPortalDemandLead).length > 0 
+                            ? (isAr ? `لديك ${mesDemandes.filter(isClientPortalDemandLead).length} طلب(ات) موديل قيد الدراسة والمراجعة من فريقنا.` : `Vous avez ${mesDemandes.filter(isClientPortalDemandLead).length} demande(s) en cours d'étude par notre équipe.`)
                             : (isAr ? 'يمكنك تقديم طلب جديد وتحديد الموديلات التي ترغب في تصنيعها.' : 'Vous pouvez soumettre une nouvelle demande et spécifier vos modèles.')}
                         </p>
                         <div className="flex flex-wrap items-center justify-center gap-3">
-                          {mesDemandes.length > 0 && (
+                          {mesDemandes.filter(isClientPortalDemandLead).length > 0 && (
                             <button
                               onClick={() => setActiveTab('demandes')}
                               className="px-6 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition cursor-pointer"
@@ -4477,7 +4562,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
             </div>
           )}
           {activeTab === 'demandes' && (() => {
-             const trueDemandes = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
+             const trueDemandes = mesDemandes.filter(isClientPortalDemandLead);
 
              // ───────────────── DEDICATED FULL PAGE: مستشار ورشة BEYA الذكي بخصوص الموديل ─────────────────
              if (consultingDemande) {
@@ -5941,7 +6026,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                    {isAr ? phaseAr[cmd.phase] : PHASE_LABELS[cmd.phase]}
                                 </span>
                                 {(() => {
-                                  const trueDems = mesDemandes.filter(l => l.type !== '__MESSAGE__' && l.type !== '__MESSAGE_REPLY__');
+                                  const trueDems = mesDemandes.filter(isClientPortalDemandLead);
                                   const mLead = trueDems.find(l => l.type === cmd.modele || getLinkedCommandeForLead(l, [cmd])?.id === cmd.id);
                                   const pInfo = getCommandePaymentAndProofInfo(cmd, mLead);
                                   if (pInfo.isPaid || pInfo.hasProof) {
@@ -6904,7 +6989,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           )}
 
           {activeTab === 'payments' && (() => {
-            const trueDemandes = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
+            const trueDemandes = mesDemandes.filter(isClientPortalDemandLead);
             const payableDemandes = trueDemandes.filter(d => !isLeadHiddenFromPayments(d, found));
 
             // Build enriched items distinguishing Échantillon vs Production, Paid vs Unpaid, and linking Sample -> Production!
@@ -8364,7 +8449,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
             <div className="flex-1 overflow-y-auto p-12 bg-slate-50/50">
                {(() => {
                  const linkedCmd = commandes.find(c => c.id === selectedFacture.commandeId) || found.find(c => c.id === selectedFacture.commandeId);
-                 const linkedLead = mesDemandes.find(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__' && getOfficialDevisForLead(m)?.id === selectedFacture.id);
+                 const linkedLead = mesDemandes.find(m => isClientPortalDemandLead(m) && getOfficialDevisForLead(m)?.id === selectedFacture.id);
                  const resolvedPhoto = (linkedCmd as any)?.modelePhoto || (linkedCmd as any)?.photo || linkedLead?.photo || (linkedLead?.photos && linkedLead.photos[0]) || (linkedLead ? leadPhotos[linkedLead.id] : undefined);
                  return (
                    <InvoicePRO

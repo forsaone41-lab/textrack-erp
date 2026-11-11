@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, Fragment, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight, UserCheck, ChevronDown, ChevronUp, Layers } from 'lucide-react';
-import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, Commande, StockTissu, parseLeadDetailsJson, upsertClientDevis, findMatchingCommandeForLead } from '../types';
+import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, Commande, StockTissu, parseLeadDetailsJson, upsertClientDevis, findMatchingCommandeForLead, loadClientCityResolver, extractClientCityFromLeads } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
 import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
@@ -362,10 +362,11 @@ export default function Demandes() {
       } catch (_) {}
     }
     try {
-      const [leadsData, usersData, tissusData] = await Promise.all([
+      const [leadsData, usersData, tissusData, cityResolver] = await Promise.all([
         loadLeads(),
         loadData<User>('users'),
-        loadData<StockTissu>('tissus')
+        loadData<StockTissu>('tissus'),
+        loadClientCityResolver().catch(() => ({ cityRecords: [] as Lead[], resolveCity: () => '' }))
       ]);
       if (tissusData) setTissus(tissusData);
       if (leadsData) {
@@ -383,6 +384,12 @@ export default function Demandes() {
           validLeads = validLeads.filter(l => !toDelete.includes(l));
         }
 
+        const cityRecords = cityResolver?.cityRecords || [];
+        const allCityLookup = [...cityRecords, ...validLeads];
+        validLeads = validLeads.map(l => {
+          const resolvedVille = extractClientCityFromLeads(allCityLookup, l, (usersData as User[]) || []);
+          return resolvedVille && resolvedVille !== l.ville ? { ...l, ville: resolvedVille } : l;
+        });
         setLeads(validLeads);
         // Fast batch load for the first 30 leads
         loadPhotosForLeads(validLeads.slice(0, 30));

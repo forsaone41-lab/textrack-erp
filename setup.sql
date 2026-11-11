@@ -209,12 +209,14 @@ CREATE TABLE IF NOT EXISTS users (
   "role" text,
   "email" text,
   "telephone" text,
+  "ville" text,
   "password" text,
   "pinCode" text,
   "lastActive" text,
   "employeId" text,
   "photo" text
 );
+ALTER TABLE users ADD COLUMN IF NOT EXISTS "ville" text;
 
 CREATE TABLE IF NOT EXISTS appointments (
   "id" text PRIMARY KEY,

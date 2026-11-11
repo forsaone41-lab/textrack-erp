@@ -5,12 +5,12 @@ import {
   Eye, Copy, RefreshCw, KeyRound, UserX,
   LayoutDashboard, FileText, Scissors, Factory, Package,
   Users, ShoppingCart, Receipt, TrendingDown, ClipboardCheck, Clock,
-  Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings, X, Sparkles, Inbox as InboxIcon, Mail, Video, Briefcase
+  Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings, X, Sparkles, Inbox as InboxIcon, Mail, Video, Briefcase, MapPin
 } from 'lucide-react';
 import {
   User, AppPage, RolePermMap,
   loadData, saveRecord, deleteRecord, genId,
-  loadPermissions, savePermissions, DEFAULT_PERMISSIONS,
+  loadPermissions, savePermissions, DEFAULT_PERMISSIONS, Lead, loadLeads, loadClientCityResolver, extractClientCityFromLeads
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 
@@ -120,6 +120,7 @@ const ALL_PAGES: PageDef[] = [
   { key: 'achats', label: 'Achats & Approvisionnement', labelAr: 'المشتريات والتموين', icon: ShoppingCart, group: 'Stocks' },
   
   { key: 'rh', label: 'Suivi RH & العمال', labelAr: 'الموارد البشرية والعمال', icon: Users, group: 'RH & Finance' },
+  { key: 'balance_paie', label: 'Balance & Pointage Paie', labelAr: 'حسابات العمال والرصيد (Pointage)', icon: ClipboardCheck, group: 'RH & Finance' },
   { key: 'plaintes', label: 'Plaintes', labelAr: 'الشكايات', icon: FileText, group: 'RH & Finance' },
   { key: 'clients', label: 'Base Clients', labelAr: 'قاعدة الزبناء', icon: UserCheck, group: 'RH & Finance' },
   { key: 'commandes', label: 'Commandes', labelAr: 'الطلبيات', icon: ShoppingCart, group: 'RH & Finance' },
@@ -207,7 +208,8 @@ export default function Utilisateurs() {
 
   useEffect(() => {
     async function loadAll() {
-      const uList = await loadData<User>('users');
+      const [uList, leadsData, cityResolver] = await Promise.all([loadData<User>('users'), loadLeads().catch(() => []), loadClientCityResolver().catch(() => ({ cityRecords: [] as Lead[], resolveCity: () => '' }))]);
+      const allCityLookup = [...(cityResolver?.cityRecords || []), ...(leadsData || [])];
       let deletedIds: string[] = [];
       try {
         const raw = localStorage.getItem('textrack_deleted_ids');
@@ -229,7 +231,10 @@ export default function Utilisateurs() {
         }
         return true;
       });
-      setUsers(validUsers);
+      setUsers(validUsers.map(u => {
+        const resolvedVille = extractClientCityFromLeads(allCityLookup, u);
+        return resolvedVille ? { ...u, ville: resolvedVille } : u;
+      }));
     }
     loadAll();
   }, []);
@@ -237,7 +242,7 @@ export default function Utilisateurs() {
   // ── User helpers ──────────────────────────────────────────
   const filtered = users.filter(u => {
     const q = search.toLowerCase();
-    return (u.nom.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+    return (u.nom.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.ville || '').toLowerCase().includes(q))
       && (filterRole === 'all' || u.role === filterRole);
   });
 
@@ -390,6 +395,12 @@ export default function Utilisateurs() {
                       <div className={isAr ? 'text-right' : ''}>
                         <h3 className="font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px]">{u.nom}</h3>
                         <p className="text-[10px] font-bold text-slate-400 truncate max-w-[150px]">{u.email}</p>
+                        {u.ville && (
+                          <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold">
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            <span className="truncate max-w-[140px]">{u.ville}</span>
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className={`flex gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>

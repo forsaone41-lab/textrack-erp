@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, Plus, User, Phone, Mail, MapPin, ExternalLink, MessageSquare, DollarSign, ChevronRight, TrendingUp, History, FileText, X, Printer, Download, Edit2, Copy, Check, Trash2, Key } from 'lucide-react';
-import { Commande, loadData, genId, loadCompanyProfile, deleteRecord } from '../types';
+import { Commande, Lead, loadData, loadLeads, genId, loadCompanyProfile, deleteRecord, loadClientCityResolver, extractClientCityFromLeads, saveClientCityRecord } from '../types';
 import { generatePDF } from '../utils/pdf';
 
 interface Client {
@@ -33,7 +33,10 @@ export default function Clients() {
   const { lang, isAr } = useLang();
   const [clients, setClients] = useState<Client[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [cityRecords, setCityRecords] = useState<Lead[]>([]);
   const [search, setSearch] = useState('');
+  const [cityFilter, setCityFilter] = useState<string>('all');
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<Client>>({});
@@ -49,16 +52,20 @@ export default function Clients() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Load remote users (role client), orders, and invoices
+    // Load remote users (role client), orders, invoices, leads, and cloud client city profiles
     Promise.all([
       loadData<any>('users'),
       loadData<Commande>('commandes'),
-      loadData<any>('factures')
-    ]).then(([storedUsers, storedCommandes, storedFactures]) => {
-      const dbClients = storedUsers.filter((u: any) => u.role === 'client');
+      loadData<any>('factures'),
+      loadLeads().catch(() => []),
+      loadClientCityResolver().catch(() => ({ cityRecords: [] as Lead[], resolveCity: () => '' }))
+    ]).then(([storedUsers, storedCommandes, storedFactures, storedLeads, resolver]) => {
+      const dbClients = (storedUsers || []).filter((u: any) => u.role === 'client');
       setClients(dbClients);
       setCommandes(storedCommandes || []);
       setFactures(storedFactures || []);
+      setLeads(storedLeads || []);
+      setCityRecords(resolver?.cityRecords || []);
     }).catch(err => {
       console.error("Error loading clients/orders/factures data:", err);
     });
@@ -99,14 +106,42 @@ export default function Clients() {
       
       const totalDette = Math.max(0, totalAffaire - totalPaye);
       const cmdCount = clientCmds.length;
-      return { ...client, totalAffaire, totalPaye, totalDette, cmdCount };
+      const resolvedVille = extractClientCityFromLeads([...cityRecords, ...leads], client);
+      return { ...client, ville: resolvedVille || client.ville || '', totalAffaire, totalPaye, totalDette, cmdCount };
     });
-  }, [clients, commandes, factures]);
+  }, [clients, commandes, factures, cityRecords, leads]);
 
-  const filtered = clientStats.filter(c => 
-    (c.nom || '').toLowerCase().includes(search.toLowerCase()) || 
-    (c.telephone || '').includes(search)
-  );
+  const citySummary = useMemo(() => {
+    const counts: Record<string, { label: string; count: number }> = {};
+    let unassignedCount = 0;
+    clientStats.forEach(c => {
+      const rawCity = (c.ville || '').trim();
+      if (!rawCity) {
+        unassignedCount += 1;
+        return;
+      }
+      const key = rawCity.toLowerCase();
+      if (!counts[key]) counts[key] = { label: rawCity, count: 0 };
+      counts[key].count += 1;
+    });
+    const list = Object.values(counts).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+    return { list, unassignedCount };
+  }, [clientStats]);
+
+  const filtered = clientStats.filter(c => {
+    const q = search.trim().toLowerCase();
+    const matchSearch =
+      !q ||
+      (c.nom || '').toLowerCase().includes(q) ||
+      (c.telephone || '').toLowerCase().includes(q) ||
+      (c.email || '').toLowerCase().includes(q) ||
+      (c.ville || '').toLowerCase().includes(q);
+    const cVille = (c.ville || '').trim();
+    const matchCity =
+      cityFilter === 'all' ||
+      (cityFilter === '__NONE__' ? !cVille : cVille.toLowerCase() === cityFilter.toLowerCase());
+    return matchSearch && matchCity;
+  });
 
   const totalDetteGlobale = clientStats.reduce((sum, c) => sum + (c.totalDette || 0), 0);
   const clientActifCount = clientStats.filter(c => (c.cmdCount || 0) > 0).length;
@@ -184,6 +219,12 @@ export default function Clients() {
     // Save to Supabase (as a user with role 'client')
     const { saveRecord } = await import('../types');
     await saveRecord('users', clientData);
+    if (clientData.ville && clientData.ville.trim()) {
+      const savedCityLead = await saveClientCityRecord(clientData, clientData.ville.trim()).catch(() => null);
+      if (savedCityLead) {
+        setCityRecords(prev => [savedCityLead, ...prev.filter(r => r.id !== savedCityLead.id)]);
+      }
+    }
     
     setShowModal(false);
   }
@@ -432,17 +473,73 @@ export default function Clients() {
             </div>
           </div>
 
-          {/* Search */}
-          <div className="relative">
-            <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isAr ? 'right-4' : 'left-4'}`} />
-            <input 
-              type="text"
-              placeholder={isAr ? 'بحث عن زبون (الاسم، الهاتف...)' : "Rechercher un client (Nom, Tél...)"}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className={`w-full bg-white border-2 border-slate-50 rounded-[20px] py-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 shadow-sm ${isAr ? 'pr-12 pl-4 text-right' : 'pl-12 pr-4'}`}
-              dir={isAr ? 'rtl' : 'ltr'}
-            />
+          {/* Search & City Distribution Filter */}
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isAr ? 'right-4' : 'left-4'}`} />
+              <input 
+                type="text"
+                placeholder={isAr ? 'بحث عن زبون (الاسم، الهاتف، المدينة...)' : "Rechercher un client (Nom, Tél, Ville...)"}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className={`w-full bg-white border-2 border-slate-50 rounded-[20px] py-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 shadow-sm ${isAr ? 'pr-12 pl-4 text-right' : 'pl-12 pr-4'}`}
+                dir={isAr ? 'rtl' : 'ltr'}
+              />
+            </div>
+
+            {clientStats.length > 0 && (
+              <div className={`flex flex-wrap items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                  <MapPin className="w-3.5 h-3.5 text-indigo-500" />
+                  {isAr ? 'المدن:' : 'Villes :'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCityFilter('all')}
+                  className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer border ${
+                    cityFilter === 'all'
+                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  {isAr ? `الكل (${clientStats.length})` : `Toutes (${clientStats.length})`}
+                </button>
+                {citySummary.list.map(item => {
+                  const active = cityFilter.toLowerCase() === item.label.toLowerCase();
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => setCityFilter(active ? 'all' : item.label)}
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer border flex items-center gap-1.5 ${
+                        active
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                          : 'bg-indigo-50/60 text-indigo-700 border-indigo-100 hover:bg-indigo-50'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black tabular-nums ${
+                        active ? 'bg-white/20 text-white' : 'bg-white text-indigo-600'
+                      }`}>{item.count}</span>
+                    </button>
+                  );
+                })}
+                {citySummary.unassignedCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setCityFilter(cityFilter === '__NONE__' ? 'all' : '__NONE__')}
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer border flex items-center gap-1.5 ${
+                      cityFilter === '__NONE__'
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>{isAr ? 'غير محددة' : 'Non spécifiée'}</span>
+                    <span className="tabular-nums font-black">{citySummary.unassignedCount}</span>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Clients Grid */}
@@ -458,7 +555,12 @@ export default function Clients() {
                       <div className={`cursor-pointer group/name ${isAr ? 'text-right' : ''}`} onClick={() => { setActiveClientId(c.id); setView('detail'); }}>
                         <h3 className="font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px] group-hover/name:text-indigo-600 transition-colors">{c.nom || (isAr ? 'زبون بدون اسم' : 'Client Sans Nom')}</h3>
                         <div className={`flex items-center gap-2 mt-0.5 ${isAr ? 'flex-row-reverse' : ''}`}>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{c.ville || (isAr ? 'مدينة غير محددة' : 'Ville non spécifiée')}</p>
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${
+                            c.ville ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'text-slate-400'
+                          }`}>
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            <span>{c.ville || (isAr ? 'مدينة غير محددة' : 'Ville non spécifiée')}</span>
+                          </span>
                           {(c as any).password && (
                             <div className={`flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 border border-indigo-100 rounded-lg group/copy relative ${isAr ? 'flex-row-reverse' : ''}`}>
                               <span className="text-[10px] font-black text-indigo-600 tabular-nums">{(c as any).password}</span>

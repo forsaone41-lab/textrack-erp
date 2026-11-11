@@ -222,7 +222,7 @@ export interface Employe {
   rib?: string;
   banque?: string;
   salaireMensuel?: number;
-  remunerationType?: 'mensuel' | 'hebdomadaire' | 'tache';
+  remunerationType?: 'mensuel' | 'hebdomadaire' | 'tache' | 'horaire' | 'modele';
   pin_code?: string;
   adresse?: string;
   photo?: string;
@@ -520,19 +520,19 @@ export type AppPage =
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
   | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space' | 'crm' | 'chef_chaine_portal' | 'validation'
-  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus' | 'evaluation_patronage' | 'commercial_portal' | 'store_plans' | 'atelier_calculator' | 'affiliate_admin' | 'patronage_ai' | 'suivi_modeliste';
+  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus' | 'evaluation_patronage' | 'commercial_portal' | 'store_plans' | 'atelier_calculator' | 'affiliate_admin' | 'patronage_ai' | 'suivi_modeliste' | 'balance_paie';
 
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine' | 'commercial', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard', 'demandes', 'crm', 'evaluation_patronage', 'patronage_ai', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'devis', 'recus', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs', 'tarifs_edit', 'commercial_portal', 'store_plans', 'atelier_calculator', 'affiliate_admin', 'suivi_modeliste'],
+  admin: ['dashboard', 'demandes', 'crm', 'evaluation_patronage', 'patronage_ai', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'balance_paie', 'commandes', 'clients', 'factures', 'devis', 'recus', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs', 'tarifs_edit', 'commercial_portal', 'store_plans', 'atelier_calculator', 'affiliate_admin', 'suivi_modeliste'],
   pointeur: ['dashboard', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'pointage', 'performance', 'worker_portal', 'controle_qualite'],
   client: ['portail_client'],
   worker: ['worker_portal'],
   coupeur: ['ordres', 'patronage_ai'],
   modeliste: ['evaluation_patronage', 'fiches', 'ai_space', 'atelier_calculator', 'suivi_modeliste'],
   controleur: ['scan_production', 'controle_qualite', 'worker_portal'],
-  agent_pointage: ['pointage', 'rh'],
+  agent_pointage: ['pointage', 'rh', 'balance_paie'],
   partenaire: ['partenaire_portal'],
   chef_chaine: ['chef_chaine_portal'],
   commercial: ['commercial_portal', 'crm', 'demandes', 'agenda', 'visio', 'ai_space', 'devis', 'recus']
@@ -584,6 +584,10 @@ export function loadPermissions(): RolePermMap {
       if (!result.admin.includes('devis')) result.admin.push('devis');
       if (!result.admin.includes('recus')) result.admin.push('recus');
       if (!result.admin.includes('commercial_portal')) result.admin.push('commercial_portal');
+      if (!result.admin.includes('balance_paie')) result.admin.push('balance_paie');
+    }
+    if (result.agent_pointage && !result.agent_pointage.includes('balance_paie')) {
+      result.agent_pointage.push('balance_paie');
     }
     
     return result;
@@ -1051,7 +1055,7 @@ export async function loadLeads(): Promise<Lead[]> {
     let res = await supabase
       .from('leads')
       .select(LEADS_COLS)
-      .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__)')
+      .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__,__RH_PAIE_RULE__,__RH_MODEL_LOG__,__RH_PAIE_ADJ__)')
       .order('date', { ascending: false });
 
     if (res.error && isJwtExpiredError(res.error)) {
@@ -1060,7 +1064,7 @@ export async function loadLeads(): Promise<Lead[]> {
       res = await supabase
         .from('leads')
         .select(LEADS_COLS)
-        .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__)')
+        .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__,__RH_PAIE_RULE__,__RH_MODEL_LOG__,__RH_PAIE_ADJ__)')
         .order('date', { ascending: false });
     }
 
@@ -1069,7 +1073,7 @@ export async function loadLeads(): Promise<Lead[]> {
       const fallbackRes = await supabase
         .from('leads')
         .select(LEADS_COLS)
-        .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__)')
+        .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__,__RH_PAIE_RULE__,__RH_MODEL_LOG__,__RH_PAIE_ADJ__)')
         .order('date', { ascending: false })
         .range(0, 499);
       if (!fallbackRes.error && fallbackRes.data) {
@@ -1092,7 +1096,7 @@ export async function loadLeads(): Promise<Lead[]> {
       const old = oldRaw ? JSON.parse(oldRaw) : [];
       const newCache = newRaw ? JSON.parse(newRaw) : [];
       const combined = [...(Array.isArray(old) ? old : []), ...(Array.isArray(newCache) ? newCache : [])];
-      localLeads = combined.filter((l: any) => l && l.id && l.name && l.name !== '__SYSTEM_CONFIG__' && l.name !== '__SYSTEM_LISTE_ATTENTE__' && l.name !== '__WORKER_PHOTO__' && l.type !== '__EN_TEST__' && !deletedIds.includes(l.id));
+      localLeads = combined.filter((l: any) => l && l.id && l.name && l.name !== '__SYSTEM_CONFIG__' && l.name !== '__SYSTEM_LISTE_ATTENTE__' && l.name !== '__WORKER_PHOTO__' && !String(l.name).startsWith('__RH_') && l.type !== '__EN_TEST__' && l.type !== '__CLIENT_CITY__' && !deletedIds.includes(l.id));
     } catch (_) {}
 
     // 3. Merge: Supabase takes priority, add localStorage-only leads
@@ -1105,7 +1109,9 @@ export async function loadLeads(): Promise<Lead[]> {
         l.name !== '__SYSTEM_CONFIG__' &&
         l.name !== '__SYSTEM_LISTE_ATTENTE__' &&
         l.name !== '__DELETED__' &&
+        !String(l.name).startsWith('__RH_') &&
         l.type !== '__EN_TEST__' &&
+        l.type !== '__CLIENT_CITY__' &&
         !deletedIds.includes(l.id)
       ).map((l: any) => parseLeadMeta(l));
 
@@ -1157,7 +1163,7 @@ export async function loadLeads(): Promise<Lead[]> {
     try {
       const raw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
       const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__') : [];
+      return Array.isArray(parsed) ? parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__' && !String(l.name || '').startsWith('__RH_') && l.type !== '__CLIENT_CITY__') : [];
     } catch { return []; }
   }
 }
@@ -1286,16 +1292,23 @@ export async function loadClientLeads(user: { nom: string; email?: string; telep
   let localLeads: Lead[] = [];
   try {
     const raw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        localLeads = parsed.filter((l: any) =>
-          l && l.id && l.name &&
-          ((user.nom && (l.name || '').trim().toLowerCase() === user.nom.trim().toLowerCase()) ||
-           (user.email && (l.email || '').trim().toLowerCase() === user.email.trim().toLowerCase()) ||
-           (user.telephone && (l.phone || '').trim() === user.telephone.trim()))
+    const cityRaw = safeStorage.getItem('textrack_client_city_records');
+    const combinedLocal = [
+      ...(raw ? (JSON.parse(raw) || []) : []),
+      ...(cityRaw ? (JSON.parse(cityRaw) || []) : [])
+    ];
+    if (Array.isArray(combinedLocal)) {
+      const targetPhoneSuffix = (user.telephone || '').replace(/\D/g, '').slice(-9);
+      localLeads = combinedLocal.filter((l: any) => {
+        if (!l || !l.id || !l.name) return false;
+        const leadPhoneSuffix = (l.phone || '').replace(/\D/g, '').slice(-9);
+        return (
+          (user.nom && (l.name || '').trim().toLowerCase() === user.nom.trim().toLowerCase()) ||
+          (user.email && (l.email || '').trim().toLowerCase() === user.email.trim().toLowerCase()) ||
+          (user.telephone && (l.phone || '').trim() === user.telephone.trim()) ||
+          (targetPhoneSuffix.length >= 9 && leadPhoneSuffix === targetPhoneSuffix)
         );
-      }
+      });
     }
   } catch (_) {}
 
@@ -1323,6 +1336,225 @@ export async function loadClientLeads(user: { nom: string; email?: string; telep
   } catch (_) {}
 
   return finalLeads;
+}
+
+export const CLIENT_CITY_LEAD_TYPE = '__CLIENT_CITY__';
+
+export function isClientPortalDemandLead(l?: Partial<Lead> | null): boolean {
+  if (!l) return false;
+  const t = (l.type || '').trim();
+  return t !== '__MESSAGE__' && t !== '__MESSAGE_REPLY__' && t !== CLIENT_CITY_LEAD_TYPE && t !== '__EN_TEST__';
+}
+
+function normalizeCityIdentityPhone(p?: string | null): string {
+  const digits = (p || '').replace(/\D/g, '');
+  return digits.length >= 9 ? digits.slice(-9) : digits;
+}
+
+function doesCityRecordMatchTarget(
+  rec: Partial<Lead>,
+  target?: { id?: string; nom?: string; name?: string; email?: string; telephone?: string; phone?: string }
+): boolean {
+  if (!rec || !target) return false;
+  const recEmail = (rec.email || '').trim().toLowerCase();
+  const targetEmail = (target.email || '').trim().toLowerCase();
+  if (recEmail && targetEmail && recEmail === targetEmail) return true;
+
+  const recPhone = normalizeCityIdentityPhone(rec.phone);
+  const targetPhone = normalizeCityIdentityPhone(target.telephone || target.phone);
+  if (recPhone && targetPhone && recPhone.length >= 9 && recPhone === targetPhone) return true;
+
+  const recName = (rec.name || (rec as any).client || '').trim().toLowerCase();
+  const targetName = (target.nom || target.name || '').trim().toLowerCase();
+  if (recName && targetName && recName === targetName) return true;
+
+  return false;
+}
+
+export function extractClientCityFromLeads(
+  leads: Lead[],
+  target?: { id?: string; nom?: string; name?: string; email?: string; telephone?: string; phone?: string; ville?: string },
+  users: Partial<User>[] = []
+): string {
+  const sorted = [...(leads || [])].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+
+  // 1. Canonical cloud city selection saved by client or admin (__CLIENT_CITY__) takes top priority
+  const cityMetaRec = sorted.find(
+    l => l.type === CLIENT_CITY_LEAD_TYPE && l.ville && l.ville.trim() && (!target || doesCityRecordMatchTarget(l, target))
+  );
+  if (cityMetaRec?.ville?.trim()) return cityMetaRec.ville.trim();
+
+  // 2. Explicit target.ville or matching user.ville
+  if (target?.ville?.trim()) return target.ville.trim();
+  if (target && users.length > 0) {
+    const matchedUser = users.find(u =>
+      (target.id && u.id === target.id) ||
+      (target.email && u.email && u.email.trim().toLowerCase() === target.email.trim().toLowerCase()) ||
+      ((target.nom || target.name) && u.nom && u.nom.trim().toLowerCase() === (target.nom || target.name || '').trim().toLowerCase())
+    );
+    const uVille = (matchedUser?.ville || (matchedUser as any)?.city || '').trim();
+    if (uVille) return uVille;
+  }
+
+  // 3. Fallback to most recent real demand lead with non-empty ville
+  const demandWithCity = sorted.find(
+    l => isClientPortalDemandLead(l) && l.ville && l.ville.trim() && (!target || doesCityRecordMatchTarget(l, target))
+  );
+  return demandWithCity?.ville?.trim() || '';
+}
+
+export async function saveClientCityRecord(
+  user: { id?: string; nom?: string; email?: string; telephone?: string },
+  city: string
+): Promise<Lead | null> {
+  const cleanCity = (city || '').trim();
+  if (!cleanCity) return null;
+
+  const rawKey = (user.id || user.email || user.telephone || user.nom || 'client')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'client';
+  const stableId = `city_${rawKey}`;
+  const nowIso = new Date().toISOString();
+
+  const cityLead: any = {
+    id: stableId,
+    name: (user.nom || user.email || user.telephone || 'Client').trim(),
+    email: (user.email || '').trim().toLowerCase(),
+    phone: (user.telephone || '').trim(),
+    ville: cleanCity,
+    type: CLIENT_CITY_LEAD_TYPE,
+    status: 'completed',
+    date: nowIso,
+    quantity: 0,
+    details: JSON.stringify({
+      userId: user.id || '',
+      city: cleanCity,
+      updatedAt: nowIso
+    })
+  };
+
+  // Persist locally immediately so refreshes/re-renders never lose it
+  try {
+    const raw = safeStorage.getItem('textrack_client_city_records');
+    const existing: any[] = raw ? JSON.parse(raw) : [];
+    const filtered = Array.isArray(existing)
+      ? existing.filter(r => r && r.id !== stableId && !doesCityRecordMatchTarget(r, user))
+      : [];
+    filtered.unshift(cityLead);
+    safeStorage.setItem('textrack_client_city_records', JSON.stringify(filtered.slice(0, 200)));
+  } catch (_) {}
+
+  // Persist to Supabase leads with multi-step fallback (upsert -> delete+insert -> unique insert)
+  try {
+    let { error } = await supabase.from('leads').upsert(cityLead);
+    if (isJwtExpiredError(error)) {
+      await recoverExpiredJwt();
+      const retry = await supabase.from('leads').upsert(cityLead);
+      error = retry.error;
+    }
+
+    if (error) {
+      await supabase.from('leads').delete().eq('id', stableId);
+      const insertRes = await supabase.from('leads').insert(cityLead);
+      if (insertRes.error) {
+        const uniqueLead = { ...cityLead, id: `${stableId}_${Date.now()}` };
+        await supabase.from('leads').insert(uniqueLead);
+        return uniqueLead as Lead;
+      }
+    }
+  } catch (err) {
+    console.warn('[saveClientCityRecord] Cloud sync warning:', err);
+  }
+
+  delete _cache['leads'];
+  return cityLead as Lead;
+}
+
+export interface ClientCityResolver {
+  cityRecords: Lead[];
+  resolveCity: (
+    target?: { id?: string; nom?: string; name?: string; email?: string; telephone?: string; phone?: string; ville?: string }
+  ) => string;
+}
+
+export async function loadClientCityResolver(existingLeads: Lead[] = []): Promise<ClientCityResolver> {
+  const CITY_COLS = 'id, name, email, phone, ville, type, date';
+  let remoteRecords: Lead[] = [];
+
+  try {
+    let { data, error } = await supabase
+      .from('leads')
+      .select(CITY_COLS)
+      .eq('type', CLIENT_CITY_LEAD_TYPE)
+      .order('date', { ascending: false });
+
+    if (isJwtExpiredError(error)) {
+      await recoverExpiredJwt();
+      const retry = await supabase
+        .from('leads')
+        .select(CITY_COLS)
+        .eq('type', CLIENT_CITY_LEAD_TYPE)
+        .order('date', { ascending: false });
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if (!error && Array.isArray(data)) {
+      remoteRecords = data as Lead[];
+    } else {
+      const url = `https://cyduteruvmpefvemeutm.supabase.co/rest/v1/leads?type=eq.${encodeURIComponent(CLIENT_CITY_LEAD_TYPE)}&select=${encodeURIComponent(CITY_COLS)}&order=date.desc`;
+      const res = await fetch(url, {
+        headers: {
+          'apikey': 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr',
+          'Authorization': 'Bearer sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr'
+        }
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows)) remoteRecords = rows as Lead[];
+      }
+    }
+  } catch (_) {}
+
+  let localRecords: Lead[] = [];
+  try {
+    const raw = safeStorage.getItem('textrack_client_city_records');
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(parsed)) localRecords = parsed;
+  } catch (_) {}
+
+  // Merge remote & local __CLIENT_CITY__ records (keeping newest by date per ID)
+  const mergedMap: Record<string, Lead> = {};
+  localRecords.forEach(r => { if (r?.id) mergedMap[r.id] = r; });
+  remoteRecords.forEach(r => {
+    if (r?.id) {
+      const prev = mergedMap[r.id];
+      if (!prev || new Date(r.date || 0).getTime() >= new Date(prev.date || 0).getTime()) {
+        mergedMap[r.id] = r;
+      }
+    }
+  });
+
+  const cityRecords = Object.values(mergedMap).sort(
+    (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
+  );
+
+  // Cache merged city records for faster subsequent loads
+  try {
+    if (cityRecords.length > 0) {
+      safeStorage.setItem('textrack_client_city_records', JSON.stringify(cityRecords.slice(0, 200)));
+    }
+  } catch (_) {}
+
+  const allLookupLeads = [...cityRecords, ...(existingLeads || [])];
+
+  return {
+    cityRecords,
+    resolveCity: (target) => extractClientCityFromLeads(allLookupLeads, target)
+  };
 }
 
 export async function loadLeadPhoto(leadId: string): Promise<string | null> {
