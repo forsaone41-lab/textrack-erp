@@ -14,6 +14,8 @@ import {
   PaiementSalaire
 } from '../types';
 import { useLang } from '../contexts/LangContext';
+import type { Presence } from '../types';
+import { PayrollExtrasData, loadPayrollExtras, computeWorkerMonthBalance } from '../utils/payrollEngine';
 
 const CATEGORIE_LABELS_AR: Record<string, string> = {
   salaires: "الرواتب واليد العاملة",
@@ -94,11 +96,15 @@ export default function Charges() {
   
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [paiements, setPaiements] = useState<PaiementSalaire[]>([]);
+  const [presences, setPresences] = useState<Presence[]>([]);
+  const [payrollExtras, setPayrollExtras] = useState<PayrollExtrasData>({ rules: [], modelLogs: [], adjustments: [] });
 
   useEffect(() => {
     loadData<Charge>('charges').then(setCharges);
     loadData<Employe>('employes').then(setEmployes);
     loadData<PaiementSalaire>('paiements_salaires').then(setPaiements);
+    loadData<Presence>('presences').then(p => setPresences(p || [])).catch(() => {});
+    loadPayrollExtras().then(setPayrollExtras).catch(() => {});
   }, []);
 
   const availableMois = useMemo(() => {
@@ -131,17 +137,10 @@ export default function Charges() {
   const currentMonthStr = new Date().toISOString().slice(0, 7);
   const pendingSalaries = useMemo(() => {
     if (!Array.isArray(employes) || !Array.isArray(paiements)) return 0;
-    
     return employes
       .filter(e => e && e.actif)
-      .reduce((total, emp) => {
-        const paye = paiements
-          .filter(p => p && p.employeId === emp.id && p.mois === currentMonthStr)
-          .reduce((sum, p) => sum + (p.montant || 0), 0);
-        const reste = Math.max(0, (emp.salaireMensuel || 0) - paye);
-        return total + reste;
-      }, 0);
-  }, [employes, paiements, currentMonthStr]);
+      .reduce((total, emp) => total + computeWorkerMonthBalance(emp, currentMonthStr, presences, paiements, payrollExtras).resteAPayer, 0);
+  }, [employes, presences, paiements, payrollExtras, currentMonthStr]);
 
   const totalFiltered = filtered.reduce((a, c) => a + c.montant, 0) + pendingSalaries;
   const totalPaye = filtered.filter(c => c.statut === 'payé').reduce((a, c) => a + c.montant, 0);

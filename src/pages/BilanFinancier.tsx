@@ -13,6 +13,8 @@ import {
 } from 'recharts';
 import { loadData, Facture, Charge, Commande, FicheTechnique, StockTissu, Employe, PaiementSalaire } from '../types';
 import { useLang } from '../contexts/LangContext';
+import type { Presence } from '../types';
+import { PayrollExtrasData, loadPayrollExtras, computeWorkerMonthBalance } from '../utils/payrollEngine';
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'ماي', 'يونيو', 'يوليوز', 'غشت', 'شتنبر', 'أكتوبر', 'نونبر', 'دجنبر'];
@@ -53,6 +55,8 @@ export default function BilanFinancier() {
   const [clients, setClients] = useState<any[]>([]);
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [paiements, setPaiements] = useState<PaiementSalaire[]>([]);
+  const [presences, setPresences] = useState<Presence[]>([]);
+  const [payrollExtras, setPayrollExtras] = useState<PayrollExtrasData>({ rules: [], modelLogs: [], adjustments: [] });
 
   useEffect(() => {
     Promise.all([
@@ -63,8 +67,10 @@ export default function BilanFinancier() {
       loadData<StockTissu>('tissus'),
       loadData<any>('users'),
       loadData<Employe>('employes'),
-      loadData<PaiementSalaire>('paiements_salaires')
-    ]).then(([f, c, cmd, ft, t, u, emp, p]) => {
+      loadData<PaiementSalaire>('paiements_salaires'),
+      loadData<Presence>('presences'),
+      loadPayrollExtras()
+    ]).then(([f, c, cmd, ft, t, u, emp, p, pres, extras]) => {
       setFactures(f);
       setCharges(c);
       setCommandes(cmd);
@@ -73,6 +79,8 @@ export default function BilanFinancier() {
       setClients(u.filter((user: any) => user.role === 'client'));
       setEmployes(emp);
       setPaiements(p);
+      setPresences(pres || []);
+      setPayrollExtras(extras || { rules: [], modelLogs: [], adjustments: [] });
     });
   }, []);
 
@@ -158,13 +166,7 @@ export default function BilanFinancier() {
     const pendingSalaries = Array.isArray(employes) && Array.isArray(paiements)
       ? employes
         .filter(e => e && e.actif)
-        .reduce((total, emp) => {
-          const paye = paiements
-            .filter(p => p && p.employeId === emp.id && p.mois === currentMonthStr)
-            .reduce((sum, p) => sum + (p.montant || 0), 0);
-          const reste = Math.max(0, (emp.salaireMensuel || 0) - paye);
-          return total + reste;
-        }, 0)
+        .reduce((total, emp) => total + computeWorkerMonthBalance(emp, currentMonthStr, presences, paiements, payrollExtras).resteAPayer, 0)
       : 0;
 
     const totalChargesPending = charges.filter(c => c.statut === 'en_attente').reduce((a, c) => a + c.montant, 0) + pendingSalaries;
@@ -176,7 +178,7 @@ export default function BilanFinancier() {
     const marge = ca > 0 ? Math.round((globalProfit / ca) * 100) : 0;
 
     return { ca, caTotal, caAttente, totalCharges, totalChargesPending, totalOrderCosts, globalProfit, marge };
-  }, [factures, charges, orderProfits, employes, paiements]);
+  }, [factures, charges, orderProfits, employes, paiements, presences, payrollExtras]);
 
   const monthlyData = useMemo(() => {
     return (isAr ? MONTHS_AR : MONTHS_FR).map((month, i) => {

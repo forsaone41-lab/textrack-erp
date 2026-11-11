@@ -26,6 +26,7 @@ import {
   OperationModele, 
   SuiviHoraire, 
   PaiementSalaire,
+  Presence,
   Reclamation,
   loadData,
   saveRecord,
@@ -34,6 +35,11 @@ import {
   genId,
   dateNow
 } from '../types';
+import {
+  PayrollExtrasData,
+  loadPayrollExtras,
+  computeWorkerMonthBalance,
+} from '../utils/payrollEngine';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLang } from '../contexts/LangContext';
 
@@ -51,12 +57,15 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
   const [selectedWorkerId, setSelectedWorkerId] = useState(currentUser?.employeId || '');
   const [activeTab, setActiveTab] = useState<'mission' | 'paiements' | 'profil' | 'reclamations'>('mission');
   const [expandedMissionId, setExpandedMissionId] = useState<string | null>(null);
+  const [selectedBalanceMois, setSelectedBalanceMois] = useState(new Date().toISOString().slice(0, 7));
+  const [payrollExtras, setPayrollExtras] = useState<PayrollExtrasData>({ rules: [], modelLogs: [], adjustments: [] });
   const [data, setData] = useState<{
     employes: Employe[];
     commandes: Commande[];
     operations: OperationModele[];
     suivi: SuiviHoraire[];
     paiements: PaiementSalaire[];
+    presences: Presence[];
     reclamations: Reclamation[];
   }>({
     employes: [],
@@ -64,6 +73,7 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
     operations: [],
     suivi: [],
     paiements: [],
+    presences: [],
     reclamations: []
   });
 
@@ -82,16 +92,20 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
       loadData<OperationModele>('operations_modele'),
       loadData<SuiviHoraire>('suivi_horaire'),
       loadData<PaiementSalaire>('paiements_salaires'),
+      loadData<Presence>('presences'),
+      loadPayrollExtras(),
       loadReclamations()
-    ]).then(([emps, cmds, ops, suiv, pays, recs]) => {
+    ]).then(([emps, cmds, ops, suiv, pays, pres, extras, recs]) => {
       setData({
         employes: emps.filter(e => e.actif),
         commandes: cmds,
         operations: ops,
         suivi: suiv,
         paiements: pays,
+        presences: pres || [],
         reclamations: recs || []
       });
+      setPayrollExtras(extras);
       setLoading(false);
     });
   }, [refreshKey]);
@@ -681,17 +695,152 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
           </>
         )}
 
-        {activeTab === 'paiements' && (
+        {activeTab === 'paiements' && (() => {
+          const workerBalance = currentWorker
+            ? computeWorkerMonthBalance(currentWorker, selectedBalanceMois, data.presences, data.paiements, payrollExtras)
+            : null;
+
+          return (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="flex items-center justify-between px-2">
-                <h1 className="text-2xl font-bold tracking-tight">{isAr ? 'سجل الأداء' : 'Mes Paiements'}</h1>
-                <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
-                   <Wallet className="w-5 h-5" />
+             <div className="flex items-center justify-between gap-3 px-2 flex-wrap">
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight">{isAr ? 'حسابي والرصيد (Balance)' : 'Mon Compte & Balance'}</h1>
+                  <p className="text-[11px] font-bold text-slate-400">
+                    {isAr ? 'تفاصيل ساعاتك / موديلاتك والتسبيقات بشفافية تامة' : 'Détail transparent de vos heures, modèles et avances'}
+                  </p>
                 </div>
+                <input
+                  type="month"
+                  value={selectedBalanceMois}
+                  onChange={e => setSelectedBalanceMois(e.target.value)}
+                  className="bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:border-indigo-500"
+                />
+             </div>
+
+             {/* TRANSPARENT WORKER BALANCE SUMMARY CARD */}
+             {workerBalance && (
+               <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 border border-indigo-500/30 rounded-[2rem] p-6 space-y-5 shadow-2xl">
+                 <div className="flex items-center justify-between flex-wrap gap-2">
+                   <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase tracking-wider">
+                     {workerBalance.mode === 'horaire'
+                       ? (isAr ? `⏱️ بالساعة (${workerBalance.tauxHoraire} درهم/س)` : `⏱️ Horaire (${workerBalance.tauxHoraire} MAD/h)`)
+                       : workerBalance.mode === 'modele'
+                       ? (isAr ? `✂️ بالموديل (${workerBalance.tarifParModele} درهم/موديل)` : `✂️ Au Modèle (${workerBalance.tarifParModele} MAD)`)
+                       : (isAr ? '📅 أجر شهري / قار' : '📅 Mensuel Fixe')}
+                   </span>
+                   <span className="text-xs font-bold text-slate-300">
+                     {workerBalance.mode === 'horaire'
+                       ? `${workerBalance.totalHours} h (${workerBalance.daysPresent} ${isAr ? 'أيام' : 'j'})`
+                       : workerBalance.mode === 'modele'
+                       ? `${workerBalance.totalModelsValides} ${isAr ? 'موديل مصادق' : 'modèles validés'}`
+                       : `${workerBalance.daysPresent} ${isAr ? 'أيام حضور' : 'jours présents'}`}
+                   </span>
+                 </div>
+
+                 {/* Final Balance Highlight */}
+                 <div className="p-4 rounded-2xl bg-black/30 border border-white/5 flex items-center justify-between">
+                   <div>
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                       {workerBalance.balanceNet >= 0
+                         ? (isAr ? 'الرصيد الباقي لك هذا الشهر' : 'Reste Net à Percevoir')
+                         : (isAr ? 'تسبيق زائد مأخوذ مسبقاً' : 'Avance prise d\'avance')}
+                     </p>
+                     <p className={`text-3xl font-black tabular-nums mt-0.5 ${workerBalance.balanceNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                       {workerBalance.balanceNet >= 0 ? `+${workerBalance.balanceNet.toLocaleString()}` : `-${workerBalance.avanceExcedentaire.toLocaleString()}`} <span className="text-xs">MAD</span>
+                     </p>
+                   </div>
+                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                     <Wallet className="w-6 h-6" />
+                   </div>
+                 </div>
+
+                 {/* 4-Line Audit Breakdown */}
+                 <div className="grid grid-cols-2 gap-3 text-xs">
+                   <div className="p-3 rounded-xl bg-white/5">
+                     <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'المستحق الأساسي' : 'Base Gagnée'}</p>
+                     <p className="font-black text-white text-sm tabular-nums mt-0.5">{workerBalance.salaireBaseGagne.toLocaleString()} MAD</p>
+                   </div>
+                   <div className="p-3 rounded-xl bg-white/5">
+                     <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'مكافآت (+)' : 'Primes (+)'}</p>
+                     <p className="font-black text-emerald-400 text-sm tabular-nums mt-0.5">+{workerBalance.totalPrimes.toLocaleString()} MAD</p>
+                   </div>
+                   <div className="p-3 rounded-xl bg-white/5">
+                     <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'اقتطاعات (-)' : 'Retenues (-)'}</p>
+                     <p className="font-black text-rose-400 text-sm tabular-nums mt-0.5">-{workerBalance.totalRetenues.toLocaleString()} MAD</p>
+                   </div>
+                   <div className="p-3 rounded-xl bg-white/5">
+                     <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'التسبيقات والأداء (-)' : 'Avances Reçues (-)'}</p>
+                     <p className="font-black text-amber-400 text-sm tabular-nums mt-0.5">-{workerBalance.totalPaye.toLocaleString()} MAD</p>
+                   </div>
+                 </div>
+
+                 {/* Daily Hours Breakdown if Horaire */}
+                 {workerBalance.mode === 'horaire' && workerBalance.hourLogs.length > 0 && (
+                   <div className="pt-3 border-t border-white/10 space-y-2">
+                     <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">
+                       {isAr ? 'تفاصيل ساعات العمل اليومية (Pointage):' : 'Détail de vos heures pointées :'}
+                     </p>
+                     <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                       {workerBalance.hourLogs.map(h => (
+                         <div key={h.presenceId} className="flex items-center justify-between text-[11px] bg-white/5 px-3 py-2 rounded-xl">
+                           <span className="font-mono text-slate-300">{h.date} ({h.heureEntree || '--'} → {h.heureSortie || '--'})</span>
+                           <span className="font-black text-emerald-400 tabular-nums">{h.hours}h · {h.earnedDay} MAD</span>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Models Worked Breakdown if Modele */}
+                 {workerBalance.mode === 'modele' && (workerBalance.modelLogsValides.length > 0 || workerBalance.modelLogsEnAttente.length > 0) && (
+                   <div className="pt-3 border-t border-white/10 space-y-2">
+                     <p className="text-[10px] font-black text-violet-300 uppercase tracking-widest">
+                       {isAr ? 'تفاصيل الموديلات المخدومة:' : 'Vos modèles enregistrés :'}
+                     </p>
+                     <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                       {[...workerBalance.modelLogsValides, ...workerBalance.modelLogsEnAttente].map(m => (
+                         <div key={m.id} className="flex items-center justify-between text-[11px] bg-white/5 px-3 py-2 rounded-xl">
+                           <div>
+                             <p className="font-bold text-white">{m.modeleName}</p>
+                             <p className="text-[9px] text-slate-400">{m.date} · {m.client}</p>
+                           </div>
+                           <div className="text-right">
+                             <p className="font-black text-emerald-400 tabular-nums">{(m.quantite * m.tarifUnitaire).toLocaleString()} MAD</p>
+                             <span className={`text-[9px] font-bold ${m.statut === 'valide' ? 'text-emerald-300' : 'text-amber-300'}`}>
+                               {m.statut === 'valide' ? (isAr ? '✓ مصادق' : '✓ Validé') : (isAr ? '⏳ قيد المراجعة' : '⏳ En attente')}
+                             </span>
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Reasons for Primes & Retenues */}
+                 {(workerBalance.primesList.length > 0 || workerBalance.retenuesList.length > 0) && (
+                   <div className="pt-3 border-t border-white/10 space-y-1.5">
+                     <p className="text-[10px] font-black text-amber-300 uppercase tracking-widest">
+                       {isAr ? 'تفصيل المكافآت والاقتطاعات:' : 'Détail Primes & Retenues :'}
+                     </p>
+                     {[...workerBalance.primesList, ...workerBalance.retenuesList].map(adj => (
+                       <div key={adj.id} className="flex items-center justify-between text-[11px] bg-white/5 px-3 py-2 rounded-xl">
+                         <span className="text-slate-300">{adj.date} — {adj.motif}</span>
+                         <span className={`font-black tabular-nums ${adj.type === 'prime' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                           {adj.type === 'prime' ? '+' : '-'}{adj.montant} MAD
+                         </span>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+               </div>
+             )}
+
+             <div className="px-2">
+               <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">{isAr ? 'سجل التسبيقات والدفعات المستلمة' : 'Historique des Paiements Reçus'}</h2>
              </div>
 
              {workerPaiements.length === 0 ? (
-               <div className="bg-slate-900 rounded-[2.5rem] p-12 text-center border border-dashed border-slate-800">
+               <div className="bg-slate-900 rounded-[2.5rem] p-10 text-center border border-dashed border-slate-800">
                  <p className="text-slate-500 font-bold uppercase text-xs">{isAr ? 'لا يوجد سجل للأداء حالياً' : 'Aucun paiement enregistré pour le moment.'}</p>
                </div>
              ) : (
@@ -723,23 +872,9 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
                   ))}
                </div>
              )}
-
-             <div className="p-6 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] border border-white/5">
-                <div className="flex items-center gap-4 mb-4">
-                   <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500">
-                      <Trophy className="w-5 h-5" />
-                   </div>
-                   <h3 className="text-sm font-bold uppercase tracking-widest text-white">{isAr ? 'مكافأة الأداء' : 'Récompense Bonus'}</h3>
-                </div>
-                <p className="text-xs text-slate-400 font-bold leading-relaxed mb-4">
-                  {isAr ? 'أكمل أهدافك بنسبة 100٪ لمدة 5 أيام متتالية للحصول على مكافأة أداء!' : 'Terminez vos objectifs à 100% pendant 5 jours consécutifs pour recevoir une prime de performance !'}
-                </p>
-                <div className="w-full h-2 bg-black/20 rounded-full overflow-hidden">
-                   <div className="w-[40%] h-full bg-amber-500" />
-                </div>
-             </div>
           </div>
-        )}
+          );
+        })()}
 
         {activeTab === 'profil' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

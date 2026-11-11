@@ -296,13 +296,20 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
 
       {/* Main Controls & Search */}
       <div className="max-w-4xl mx-auto w-full px-6 -mt-12 relative z-20 pb-20">
-        <div className="mb-6 flex justify-center">
+        <div className="mb-6 flex flex-wrap justify-center gap-3">
           <Link 
             to="/kiosk" 
             className="flex items-center gap-2 px-6 py-2.5 bg-white/80 backdrop-blur-md text-indigo-600 rounded-full border border-indigo-100 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/10 transition-all text-xs font-black uppercase tracking-widest shadow-lg shadow-slate-900/5 group"
           >
             <Maximize2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
             {isAr ? 'فتح الماسح الضوئي (PRO)' : 'POINTAGE PRO (KIOSK)'}
+          </Link>
+          <Link 
+            to="/balance-paie?tab=horaire" 
+            className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-amber-400 rounded-full border border-slate-800 hover:bg-slate-800 hover:shadow-xl transition-all text-xs font-black uppercase tracking-widest shadow-lg"
+          >
+            <Clock className="w-4 h-4" />
+            {isAr ? 'خلاص بوانتاج الساعة و Balance' : 'PAIE HORAIRE & BALANCE'}
           </Link>
         </div>
         <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-900/10 p-2 md:p-3 mb-8">

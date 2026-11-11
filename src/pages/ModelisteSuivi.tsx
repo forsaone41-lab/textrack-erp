@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   CheckCircle2, Clock, Search, 
   RefreshCw, MessageCircle, 
@@ -60,7 +61,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         supabase
           .from('leads')
           .select('id, name, phone, ville, type, quantity, status, date, details, photo, crmStage, crmPrice, crmPriceConfirmed')
-          .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__)')
+          .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__,__RH_PAIE_RULE__,__RH_MODEL_LOG__,__RH_PAIE_ADJ__)')
           .order('date', { ascending: false })
           .limit(250),
         loadData<Commande>('commandes'),
@@ -373,7 +374,16 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           </div>
 
           {/* Admin selector & Refresh */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {isAdmin && (
+              <Link
+                to="/balance-paie?tab=modeliste"
+                className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition-all shadow-sm"
+              >
+                <Wallet className="w-3.5 h-3.5" />
+                <span>{isAr ? '⚖️ بوانتاج الموديليست و Balance RH' : '⚖️ Pointage & Balance RH'}</span>
+              </Link>
+            )}
             {isAdmin && modelistes.length > 0 && (
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-1.5 border border-white/20">
                 <select

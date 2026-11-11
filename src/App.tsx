@@ -26,6 +26,7 @@ const ChefChainePortal = lazy(() => import('./pages/ChefChainePortal'));
 const CommercialPortal = lazy(() => import('./pages/CommercialPortal'));
 const StockMateriaux   = lazy(() => import('./pages/StockMateriaux'));
 const SuiviRH          = lazy(() => import('./pages/SuiviRH'));
+const BalancePaie      = lazy(() => import('./pages/BalancePaie'));
 const Echantillons     = lazy(() => import('./pages/Echantillons'));
 const Clients          = lazy(() => import('./pages/Clients'));
 const Commandes        = lazy(() => import('./pages/Commandes'));
@@ -1165,6 +1166,7 @@ function AppContent() {
         <Route path="store-plans" element={can('store_plans') ? <StorePlans /> : <Navigate to="/" replace />} />
         <Route path="affiliate-admin" element={can('affiliate_admin') ? <AffiliateAdmin /> : <Navigate to="/" replace />} />
         <Route path="rh" element={can('rh') ? <SuiviRH /> : <Navigate to="/" replace />} />
+        <Route path="balance-paie" element={(can('balance_paie') || can('rh')) ? <BalancePaie /> : <Navigate to="/" replace />} />
         <Route path="reclamations" element={can('plaintes') ? <Reclamations /> : <Navigate to="/" replace />} />
         <Route path="clients" element={can('clients') ? <Clients /> : <Navigate to="/" replace />} />
         <Route path="fournisseurs" element={can('fournisseurs') ? <Fournisseurs /> : <Navigate to="/" replace />} />

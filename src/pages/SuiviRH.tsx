@@ -1,16 +1,24 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
 import { 
   Plus, Search, Edit2, Trash2, CreditCard, DollarSign, Image as ImageIcon, X, Printer, Download, File, Phone, 
   RotateCw, Copy, Check, Zap, Calculator, Camera, Upload, User as UserIcon, QrCode, ShieldCheck, Scissors,
   FolderOpen, FileCheck, AlertTriangle, ShieldAlert, Award, FileUp, ExternalLink, Calendar, CheckCircle2, AlertCircle, FileText,
-  Eye, ArrowLeft, ArrowRight, Sparkles
+  Eye, ArrowLeft, ArrowRight, Sparkles, Scale
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Employe, EmployeFaute, EmployeDocument, PaiementSalaire, Commande, loadData, genId, loadCompanyProfile, saveRecord, safeStorage } from '../types';
+import { Employe, EmployeFaute, EmployeDocument, PaiementSalaire, Commande, Presence, loadData, genId, loadCompanyProfile, saveRecord, safeStorage } from '../types';
 import { generatePDF, printElement, generateBadgePDF, printBadgeElement, downloadBadgeImage } from '../utils/pdf';
 import { PageLoader } from '../components/PageLoader';
+import {
+  PayrollExtrasData,
+  loadPayrollExtras,
+  computeWorkerMonthBalance,
+  savePayrollRule,
+  getEffectiveHourlyRate,
+  getEffectiveModelRate,
+} from '../utils/payrollEngine';
 
 // Local storage helpers for RH specifically to avoid Supabase schema mismatch
 function getLocalRH<T>(key: string): T[] {
@@ -799,6 +807,9 @@ export default function SuiviRH() {
   const { isAr } = useLang();
   const [employes, setEmployes] = useState<Employe[]>(() => getLocalRH<Employe>('employes'));
   const [paiements, setPaiements] = useState<PaiementSalaire[]>([]);
+  const [presences, setPresences] = useState<Presence[]>([]);
+  const [payrollExtras, setPayrollExtras] = useState<PayrollExtrasData>({ rules: [], modelLogs: [], adjustments: [] });
+  const [ruleRatesForm, setRuleRatesForm] = useState<{ tauxHoraire: number; tarifParModele: number }>({ tauxHoraire: 17.1, tarifParModele: 150 });
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
@@ -923,6 +934,12 @@ export default function SuiviRH() {
     }).catch(() => {
       setPaiements(getLocalRH<PaiementSalaire>('paiements_salaires'));
     });
+
+    loadData<Presence>('presences').then(remotePres => {
+      setPresences(remotePres || []);
+    }).catch(() => {});
+
+    loadPayrollExtras().then(setPayrollExtras).catch(() => {});
 
     loadData<Commande>('commandes').then(remoteCmds => {
       setCommandes(remoteCmds || []);
@@ -1207,18 +1224,21 @@ export default function SuiviRH() {
     return matchSearch && matchType;
   });
 
+  function getEmpBalance(emp: Employe) {
+    return computeWorkerMonthBalance(emp, selectedMois, presences, paiements, payrollExtras);
+  }
+
   function getPaye(empId: string) {
     if (!empId || !Array.isArray(paiements)) return 0;
     return paiements
-      .filter(p => p && p.employeId === empId && p.mois === selectedMois)
-      .reduce((a, p) => a + (p.montant || 0), 0);
+      .filter(p => p && p.employeId === empId && (p.mois === selectedMois || (!p.mois && p.date?.startsWith(selectedMois))))
+      .reduce((a, p) => a + (Number(p.montant) || 0), 0);
   }
 
   function getReste(emp: Employe) {
     if (!emp) return 0;
-    return Math.max(0, (emp.salaireMensuel || 0) - getPaye(emp.id));
+    return getEmpBalance(emp).resteAPayer;
   }
-
 
   const totalPayeMois = useMemo(() => {
     try {
@@ -1230,13 +1250,17 @@ export default function SuiviRH() {
     try {
       return (employes || [])
         .filter(e => e && e.actif)
-        .reduce((a, e) => a + getReste(e), 0);
+        .reduce((a, e) => a + getEmpBalance(e).resteAPayer, 0);
     } catch (err) { return 0; }
-  }, [employes, paiements, selectedMois]);
+  }, [employes, presences, paiements, payrollExtras, selectedMois]);
 
   const atelierCount = useMemo(() => (employes || []).filter(e => e && e.type === 'atelier' && e.actif).length, [employes]);
   const stCount = useMemo(() => (employes || []).filter(e => e && e.type === 'sous_traitance' && e.actif).length, [employes]);
-  const masseSalariale = useMemo(() => (employes || []).filter(e => e && e.type === 'atelier' && e.actif).reduce((a, e) => a + (e.salaireMensuel || 0), 0), [employes]);
+  const masseSalariale = useMemo(() => {
+    return (employes || [])
+      .filter(e => e && e.type === 'atelier' && e.actif)
+      .reduce((a, e) => a + getEmpBalance(e).totalNetGagne, 0);
+  }, [employes, presences, paiements, payrollExtras, selectedMois]);
 
   const compressImageFile = (file: File, maxW = 400, maxH = 480): Promise<string> => {
     return new Promise((resolve) => {
@@ -1360,6 +1384,7 @@ export default function SuiviRH() {
 
   function openCreate() {
     setEditId(null);
+    setRuleRatesForm({ tauxHoraire: 17.1, tarifParModele: 150 });
     setForm({
       nom: '', prenom: '', poste: '', type: 'atelier',
       telephone: '', email: '', adresse: '', cin: '',
@@ -1377,8 +1402,13 @@ export default function SuiviRH() {
 
   function openEdit(e: Employe) {
     const fresh = employes.find(emp => emp.id === e.id) || e;
+    const existingRule = payrollExtras.rules.find(r => r.employeId === fresh.id);
     setEditId(fresh.id);
     setForm({ ...fresh });
+    setRuleRatesForm({
+      tauxHoraire: getEffectiveHourlyRate(fresh, existingRule),
+      tarifParModele: getEffectiveModelRate(fresh, existingRule),
+    });
     setShowModal(true);
   }
 
@@ -1397,6 +1427,21 @@ export default function SuiviRH() {
     try {
       localStorage.setItem('textrack_data_employes', JSON.stringify(updated));
     } catch {}
+
+    // ✅ Sync Payroll Rule cleanly for Balance & Pointage Paie (Zero discrepancy!)
+    const modeToSave = empData.remunerationType || 'mensuel';
+    savePayrollRule({
+      id: `rh_rule_${eId}`,
+      employeId: eId,
+      mode: modeToSave,
+      tauxHoraire: Number(ruleRatesForm.tauxHoraire) || 17.1,
+      tarifParModele: Number(ruleRatesForm.tarifParModele) || 150,
+    }).then(savedRule => {
+      setPayrollExtras(prev => ({
+        ...prev,
+        rules: [...prev.rules.filter(r => r.employeId !== eId), savedRule],
+      }));
+    }).catch(() => {});
 
     // ✅ Update active views immediately so UI never reverts to old state
     if (selectedDossierEmp && selectedDossierEmp.id === eId) {
@@ -2505,40 +2550,71 @@ export default function SuiviRH() {
               </div>
             )}
 
-            {/* TAB 4: PAIEMENTS */}
-            {dossierActiveTab === 'paiements' && (
-              <div className="space-y-4">
-                <div className={`grid grid-cols-2 gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
-                  <div className="bg-emerald-50 border-2 border-emerald-100 p-6 rounded-[30px]">
-                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{isAr ? 'المؤدى هذا الشهر' : 'Payé ce mois'}</p>
-                    <p className="text-3xl font-black text-emerald-700 tabular-nums mt-1">{getPaye(selectedDossierEmp.id).toLocaleString()} MAD</p>
-                  </div>
-                  <div className="bg-rose-50 border-2 border-rose-100 p-6 rounded-[30px]">
-                    <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest">{isAr ? 'الباقي لهذا الشهر' : 'Reste ce mois'}</p>
-                    <p className="text-3xl font-black text-rose-700 tabular-nums mt-1">{getReste(selectedDossierEmp).toLocaleString()} MAD</p>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-[32px] p-6 sm:p-8 border-2 border-slate-100 shadow-sm">
-                  <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{isAr ? 'سجل التحويلات والدفعات' : 'Historique des versements'}</h5>
-                  {paiements.filter(p => p.employeId === selectedDossierEmp.id).length === 0 ? (
-                    <p className="text-xs font-bold text-slate-400 text-center py-8">{isAr ? 'لم يتم تسجيل أي أداءات بعد لهذا الموظف.' : 'Aucun versement enregistré.'}</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {paiements.filter(p => p.employeId === selectedDossierEmp.id).map(p => (
-                        <div key={p.id} className={`flex items-center justify-between p-4 bg-slate-50 rounded-2xl ${isAr ? 'flex-row-reverse' : ''}`}>
-                          <div>
-                            <p className="text-xs font-black text-slate-900">{p.date} • <span className="uppercase text-indigo-600">{p.methode}</span></p>
-                            {p.notes && <p className="text-[10px] text-slate-400 font-bold">{p.notes}</p>}
-                          </div>
-                          <span className="text-base font-black text-emerald-600 tabular-nums">+{p.montant.toLocaleString()} MAD</span>
-                        </div>
-                      ))}
+            {/* TAB 4: PAIEMENTS & BALANCE UNIFIÉE */}
+            {dossierActiveTab === 'paiements' && (() => {
+              const b = getEmpBalance(selectedDossierEmp);
+              return (
+                <div className="space-y-4">
+                  <div className={`flex items-center justify-between flex-wrap gap-2 bg-indigo-50/70 p-4 rounded-2xl border border-indigo-100 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <div className="text-xs font-black text-indigo-900">
+                      {b.mode === 'horaire'
+                        ? (isAr ? `⏱️ نظام الساعة: ${b.totalHours} ساعة × ${b.tauxHoraire} درهم/س` : `⏱️ Horaire: ${b.totalHours}h × ${b.tauxHoraire} MAD/h`)
+                        : b.mode === 'modele'
+                        ? (isAr ? `✂️ نظام الموديليست: ${b.totalModelsValides} موديلات مصادق عليها` : `✂️ Au Modèle: ${b.totalModelsValides} modèles validés`)
+                        : (isAr ? '📅 أجر شهري / قار' : '📅 Salaire Mensuel / Fixe')}
                     </div>
-                  )}
+                    <Link
+                      to="/balance-paie"
+                      className="px-3.5 py-1.5 bg-indigo-600 text-white rounded-xl text-[11px] font-black hover:bg-indigo-700 transition flex items-center gap-1.5"
+                    >
+                      <Scale className="w-3.5 h-3.5" />
+                      <span>{isAr ? 'فتح كشف Balance والتفاصيل ↗' : 'Ouvrir Balance & Détails ↗'}</span>
+                    </Link>
+                  </div>
+
+                  <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <div className="bg-slate-900 text-white p-6 rounded-[30px]">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'المستحق المكتسب الصافي' : 'Total Net Gagné'}</p>
+                      <p className="text-3xl font-black text-white tabular-nums mt-1">{b.totalNetGagne.toLocaleString()} <span className="text-xs">MAD</span></p>
+                      {(b.totalPrimes > 0 || b.totalRetenues > 0) && (
+                        <p className="text-[10px] text-slate-300 mt-1">+{b.totalPrimes} Primes / -{b.totalRetenues} Retenues</p>
+                      )}
+                    </div>
+                    <div className="bg-emerald-50 border-2 border-emerald-100 p-6 rounded-[30px]">
+                      <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{isAr ? 'المؤدى هذا الشهر' : 'Payé ce mois'}</p>
+                      <p className="text-3xl font-black text-emerald-700 tabular-nums mt-1">{b.totalPaye.toLocaleString()} MAD</p>
+                    </div>
+                    <div className={`border-2 p-6 rounded-[30px] ${b.balanceNet < 0 ? 'bg-amber-50 border-amber-200' : 'bg-rose-50 border-rose-100'}`}>
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${b.balanceNet < 0 ? 'text-amber-700' : 'text-rose-600'}`}>
+                        {b.balanceNet < 0 ? (isAr ? 'تسبيق زائد (مسال للشركة)' : 'Avance excédentaire') : (isAr ? 'الباقي للأداء (Balance)' : 'Reste à payer')}
+                      </p>
+                      <p className={`text-3xl font-black tabular-nums mt-1 ${b.balanceNet < 0 ? 'text-amber-700' : 'text-rose-700'}`}>
+                        {(b.balanceNet < 0 ? b.avanceExcedentaire : b.resteAPayer).toLocaleString()} MAD
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-[32px] p-6 sm:p-8 border-2 border-slate-100 shadow-sm">
+                    <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{isAr ? 'سجل التحويلات والدفعات' : 'Historique des versements'}</h5>
+                    {paiements.filter(p => p.employeId === selectedDossierEmp.id).length === 0 ? (
+                      <p className="text-xs font-bold text-slate-400 text-center py-8">{isAr ? 'لم يتم تسجيل أي أداءات بعد لهذا الموظف.' : 'Aucun versement enregistré.'}</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {paiements.filter(p => p.employeId === selectedDossierEmp.id).map(p => (
+                          <div key={p.id} className={`flex items-center justify-between p-4 bg-slate-50 rounded-2xl ${isAr ? 'flex-row-reverse' : ''}`}>
+                            <div>
+                              <p className="text-xs font-black text-slate-900">{p.date} • <span className="uppercase text-indigo-600">{p.methode}</span></p>
+                              {p.notes && <p className="text-[10px] text-slate-400 font-bold">{p.notes}</p>}
+                            </div>
+                            <span className="text-base font-black text-emerald-600 tabular-nums">+{p.montant.toLocaleString()} MAD</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
           </div>
 
@@ -2554,7 +2630,14 @@ export default function SuiviRH() {
               <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">{isAr ? 'تتبع الموارد البشرية والعمال' : 'Suivi RH & Façonniers'}</h1>
               <p className="text-slate-500 text-sm font-medium">{isAr ? 'إدارة موظفي المعمل والعمال الخارجيين' : 'Gestion du personnel atelier et sous-traitance'}</p>
             </div>
-            <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex flex-wrap items-center gap-2.5 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <Link
+                to="/balance-paie"
+                className="flex items-center gap-2 bg-slate-900 text-amber-400 px-4 py-2.5 rounded-2xl hover:bg-slate-800 transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-slate-900/15"
+              >
+                <Scale className="w-4 h-4" />
+                <span>{isAr ? '⚖️ Balance & البوانتاج (ساعة/موديل)' : '⚖️ Balance & Paie'}</span>
+              </Link>
               <button
                 onClick={() => window.open('#/fast-scanner', '_blank')}
                 className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-2xl hover:bg-indigo-700 transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-600/20"
@@ -2671,8 +2754,9 @@ export default function SuiviRH() {
           {/* Employee Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filtered.map(e => {
-              const paye = getPaye(e.id);
-              const reste = getReste(e);
+              const bal = getEmpBalance(e);
+              const paye = bal.totalPaye;
+              const reste = bal.resteAPayer;
               const dossierStats = getDossierStats(e);
               const fautesCount = (e.fautes || []).length;
 
@@ -2790,6 +2874,21 @@ export default function SuiviRH() {
                           <Copy className="w-3 h-3 text-indigo-300 group-hover/pin:text-indigo-600 transition-colors" />
                         </button>
                       )}
+                    </div>
+
+                    {/* Mode / Activity Quick Strip */}
+                    <div className={`mb-2.5 flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-black ${isAr ? 'flex-row-reverse' : ''}`}>
+                      <span className={
+                        bal.mode === 'horaire' ? 'text-indigo-600' :
+                        bal.mode === 'modele' ? 'text-violet-600' : 'text-slate-500'
+                      }>
+                        {bal.mode === 'horaire'
+                          ? (isAr ? `⏱️ بالساعة (${bal.totalHours}h × ${bal.tauxHoraire} MAD)` : `⏱️ Horaire (${bal.totalHours}h × ${bal.tauxHoraire} DH)`)
+                          : bal.mode === 'modele'
+                          ? (isAr ? `✂️ بالموديل (${bal.totalModelsValides} موديل)` : `✂️ Modéliste (${bal.totalModelsValides} mod.)`)
+                          : (isAr ? '📅 شهري / قار' : '📅 Mensuel / Fixe')}
+                      </span>
+                      <span className="text-slate-800 tabular-nums">{bal.totalNetGagne.toLocaleString()} MAD</span>
                     </div>
 
                     {/* Salary Stats Dashboard */}
@@ -3189,14 +3288,28 @@ export default function SuiviRH() {
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'قاعدة الأجر' : 'Base Rémunération'}</label>
                     <select value={form.remunerationType || 'mensuel'} onChange={e => setForm({ ...form, remunerationType: e.target.value as any })} className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 ${isAr ? 'text-right' : ''}`}>
                       <option value="mensuel">{isAr ? 'بالشهر (Mensuel)' : 'Par Mois (Mensuel)'}</option>
+                      <option value="horaire">{isAr ? '⏱️ بالساعة (بوانتاج الساعة)' : '⏱️ Par Heure (Pointage)'}</option>
+                      <option value="modele">{isAr ? '✂️ بالموديل (موديليست)' : '✂️ Au Modèle (Modéliste)'}</option>
                       <option value="hebdomadaire">{isAr ? 'بالأسبوع (Hebdo)' : 'Par Semaine (Hebdo)'}</option>
                       <option value="tache">{isAr ? 'بالمهمة / الطلبية' : 'À la Tâche / Commande'}</option>
                     </select>
                   </div>
-                  <div className={isAr ? 'text-right' : ''}>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'المبلغ (درهم)' : 'Montant Base (MAD)'}</label>
-                    <input type="number" value={form.salaireMensuel || ''} onChange={e => setForm({ ...form, salaireMensuel: parseFloat(e.target.value) || 0 })} className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 focus:border-indigo-500 transition-all outline-none ${isAr ? 'text-right tabular-nums' : ''}`} />
-                  </div>
+                  {form.remunerationType === 'horaire' ? (
+                    <div className={isAr ? 'text-right' : ''}>
+                      <label className="block text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2">{isAr ? 'سعر الساعة (درهم/ساعة)' : 'Taux Horaire (MAD / heure)'}</label>
+                      <input type="number" step="0.5" value={ruleRatesForm.tauxHoraire} onChange={e => setRuleRatesForm(prev => ({ ...prev, tauxHoraire: parseFloat(e.target.value) || 0 }))} className={`w-full bg-indigo-50/50 border-2 border-indigo-200 rounded-2xl py-3 px-4 text-sm font-black text-indigo-900 focus:border-indigo-500 transition-all outline-none ${isAr ? 'text-right tabular-nums' : ''}`} />
+                    </div>
+                  ) : form.remunerationType === 'modele' ? (
+                    <div className={isAr ? 'text-right' : ''}>
+                      <label className="block text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2">{isAr ? 'ثمن الموديل الافتراضي (درهم)' : 'Tarif par Modèle (MAD)'}</label>
+                      <input type="number" value={ruleRatesForm.tarifParModele} onChange={e => setRuleRatesForm(prev => ({ ...prev, tarifParModele: parseFloat(e.target.value) || 0 }))} className={`w-full bg-violet-50/50 border-2 border-violet-200 rounded-2xl py-3 px-4 text-sm font-black text-violet-900 focus:border-violet-500 transition-all outline-none ${isAr ? 'text-right tabular-nums' : ''}`} />
+                    </div>
+                  ) : (
+                    <div className={isAr ? 'text-right' : ''}>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'المبلغ (درهم)' : 'Montant Base (MAD)'}</label>
+                      <input type="number" value={form.salaireMensuel || ''} onChange={e => setForm({ ...form, salaireMensuel: parseFloat(e.target.value) || 0 })} className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 focus:border-indigo-500 transition-all outline-none ${isAr ? 'text-right tabular-nums' : ''}`} />
+                    </div>
+                  )}
                   <div className={isAr ? 'text-right' : ''}>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'البنك' : 'Banque'}</label>
                     <select value={form.banque || ''} onChange={e => setForm({ ...form, banque: e.target.value })} className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 ${isAr ? 'text-right' : ''}`}>
