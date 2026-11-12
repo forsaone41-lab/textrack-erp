@@ -18,6 +18,7 @@ import {
   savePayrollRule,
   getEffectiveHourlyRate,
   getEffectiveModelRate,
+  applyRuleProfileSync,
 } from '../utils/payrollEngine';
 
 // Local storage helpers for RH specifically to avoid Supabase schema mismatch
@@ -809,7 +810,7 @@ export default function SuiviRH() {
   const [paiements, setPaiements] = useState<PaiementSalaire[]>([]);
   const [presences, setPresences] = useState<Presence[]>([]);
   const [payrollExtras, setPayrollExtras] = useState<PayrollExtrasData>({ rules: [], modelLogs: [], adjustments: [] });
-  const [ruleRatesForm, setRuleRatesForm] = useState<{ tauxHoraire: number; tarifParModele: number }>({ tauxHoraire: 17.1, tarifParModele: 150 });
+  const [ruleRatesForm, setRuleRatesForm] = useState<{ tauxHoraire: number; tarifParModele: number }>({ tauxHoraire: 17.1, tarifParModele: 0 });
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
@@ -878,27 +879,33 @@ export default function SuiviRH() {
   useEffect(() => {
     setSyncStatus(isAr ? 'جاري التحميل...' : 'Chargement...');
     
-    loadData<Employe>('employes').then(remoteEmps => {
+    const pickNonEmpty = (locVal: any, remVal: any) => {
+      if (locVal !== undefined && locVal !== null && String(locVal).trim() !== '') return locVal;
+      return remVal || '';
+    };
+
+    Promise.all([loadData<Employe>('employes'), loadPayrollExtras().catch(() => ({ rules: [], modelLogs: [], adjustments: [] }))]).then(([remoteEmps, extrasData]) => {
+      setPayrollExtras(extrasData);
       const localEmps = getLocalRH<Employe>('employes');
       const merged = (remoteEmps || []).map(rem => {
         const loc = localEmps.find(l => l.id === rem.id);
-        if (!loc) return rem;
-        return {
+        const baseEmp: Employe = !loc ? rem : {
           ...rem,
           ...loc,
-          // Local edits take priority over remote so user edits never revert
-          cin: (loc.cin !== undefined && loc.cin !== null) ? loc.cin : (rem.cin || ''),
-          telephone: (loc.telephone !== undefined && loc.telephone !== null) ? loc.telephone : (rem.telephone || ''),
-          adresse: (loc.adresse !== undefined && loc.adresse !== null) ? loc.adresse : (rem.adresse || ''),
+          // Prefer non-empty local edits, but never overwrite filled remote fields with blank local strings
+          cin: pickNonEmpty(loc.cin, rem.cin),
+          telephone: pickNonEmpty(loc.telephone, rem.telephone),
+          adresse: pickNonEmpty(loc.adresse, rem.adresse),
+          email: pickNonEmpty(loc.email, rem.email),
           nom: loc.nom || rem.nom || '',
-          prenom: (loc.prenom !== undefined && loc.prenom !== null) ? loc.prenom : (rem.prenom || ''),
+          prenom: pickNonEmpty(loc.prenom, rem.prenom),
           poste: loc.poste || rem.poste || '',
           type: loc.type || rem.type || 'atelier',
-          banque: (loc.banque !== undefined && loc.banque !== null) ? loc.banque : (rem.banque || ''),
-          rib: (loc.rib !== undefined && loc.rib !== null) ? loc.rib : (rem.rib || ''),
+          banque: pickNonEmpty(loc.banque, rem.banque),
+          rib: pickNonEmpty(loc.rib, rem.rib),
           salaireMensuel: (loc.salaireMensuel !== undefined && loc.salaireMensuel !== null) ? loc.salaireMensuel : (rem.salaireMensuel || 0),
           remunerationType: loc.remunerationType || rem.remunerationType || 'mensuel',
-          pin_code: (loc.pin_code !== undefined && loc.pin_code !== null) ? loc.pin_code : (rem.pin_code || ''),
+          pin_code: pickNonEmpty(loc.pin_code, rem.pin_code),
           photo: loc.photo || rem.photo || '',
           matricule: loc.matricule || rem.matricule || '',
           dateExpiration: loc.dateExpiration || rem.dateExpiration || '',
@@ -909,13 +916,16 @@ export default function SuiviRH() {
           dossierValide: loc.dossierValide !== undefined ? loc.dossierValide : (rem.dossierValide || false),
           fautes: (loc.fautes && loc.fautes.length > 0) ? loc.fautes : (rem.fautes || []),
           documents: (loc.documents && loc.documents.length > 0) ? loc.documents : (rem.documents || []),
-          notesRH: (loc.notesRH !== undefined && loc.notesRH !== null) ? loc.notesRH : (rem.notesRH || ''),
+          notesRH: pickNonEmpty(loc.notesRH, rem.notesRH),
         };
+        const empRule = extrasData.rules.find(r => r.employeId === baseEmp.id);
+        return applyRuleProfileSync(baseEmp, empRule);
       });
       // Keep any local-only employees
       localEmps.forEach(l => {
         if (!merged.find(m => m.id === l.id)) {
-          merged.push(l);
+          const empRule = extrasData.rules.find(r => r.employeId === l.id);
+          merged.push(applyRuleProfileSync(l, empRule));
         }
       });
       setEmployes(merged);
@@ -1384,7 +1394,7 @@ export default function SuiviRH() {
 
   function openCreate() {
     setEditId(null);
-    setRuleRatesForm({ tauxHoraire: 17.1, tarifParModele: 150 });
+    setRuleRatesForm({ tauxHoraire: 17.1, tarifParModele: 0 });
     setForm({
       nom: '', prenom: '', poste: '', type: 'atelier',
       telephone: '', email: '', adresse: '', cin: '',
@@ -1416,7 +1426,8 @@ export default function SuiviRH() {
     if (!form.nom) return;
     const isNew = !editId;
     const eId = editId || genId();
-    const empData = { id: eId, ...form } as Employe;
+    const nowIso = new Date().toISOString();
+    const empData = { id: eId, ...form, updatedAt: nowIso } as Employe;
 
     const updated = isNew
       ? [...employes, empData]
@@ -1428,14 +1439,22 @@ export default function SuiviRH() {
       localStorage.setItem('textrack_data_employes', JSON.stringify(updated));
     } catch {}
 
-    // ✅ Sync Payroll Rule cleanly for Balance & Pointage Paie (Zero discrepancy!)
+    // ✅ Sync Payroll Rule + Bank/Profile cleanly for Balance & Pointage Paie (Zero discrepancy!)
     const modeToSave = empData.remunerationType || 'mensuel';
     savePayrollRule({
       id: `rh_rule_${eId}`,
       employeId: eId,
       mode: modeToSave,
       tauxHoraire: Number(ruleRatesForm.tauxHoraire) || 17.1,
-      tarifParModele: Number(ruleRatesForm.tarifParModele) || 150,
+      tarifParModele: Math.max(0, Number(ruleRatesForm.tarifParModele) || 0),
+      banque: empData.banque || '',
+      rib: empData.rib || '',
+      cin: empData.cin || '',
+      telephone: empData.telephone || '',
+      adresse: empData.adresse || '',
+      email: empData.email || '',
+      nomComplet: `${empData.prenom || ''} ${empData.nom || ''}`.trim(),
+      profileUpdatedAt: nowIso,
     }).then(savedRule => {
       setPayrollExtras(prev => ({
         ...prev,
@@ -2522,9 +2541,25 @@ export default function SuiviRH() {
                         <span className="text-slate-400">{isAr ? 'الراتب الأساسي:' : 'Salaire:'}</span>
                         <span className="text-emerald-600 font-black">{(selectedDossierEmp.salaireMensuel || 0).toLocaleString()} MAD</span>
                       </div>
-                      <div className="flex justify-between border-b border-slate-50 pb-2">
+                      <div className="flex justify-between items-center border-b border-slate-50 pb-2 gap-2">
                         <span className="text-slate-400">{isAr ? 'البنك و RIB:' : 'Banque & RIB:'}</span>
-                        <span className="text-slate-900 font-mono text-[11px]">{selectedDossierEmp.banque ? `${selectedDossierEmp.banque} - ${selectedDossierEmp.rib || ''}` : '—'}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-900 font-mono text-[11px]">
+                            {selectedDossierEmp.banque || selectedDossierEmp.rib
+                              ? `${selectedDossierEmp.banque ? selectedDossierEmp.banque + ' — ' : ''}${selectedDossierEmp.rib || ''}`
+                              : '—'}
+                          </span>
+                          {selectedDossierEmp.rib && (
+                            <button
+                              type="button"
+                              onClick={() => navigator.clipboard?.writeText(selectedDossierEmp.rib || '')}
+                              title={isAr ? 'نسخ RIB' : 'Copier RIB'}
+                              className="p-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition cursor-pointer"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">{isAr ? 'رمز الولوج (PIN):' : 'Code PIN:'}</span>
@@ -3300,9 +3335,39 @@ export default function SuiviRH() {
                       <input type="number" step="0.5" value={ruleRatesForm.tauxHoraire} onChange={e => setRuleRatesForm(prev => ({ ...prev, tauxHoraire: parseFloat(e.target.value) || 0 }))} className={`w-full bg-indigo-50/50 border-2 border-indigo-200 rounded-2xl py-3 px-4 text-sm font-black text-indigo-900 focus:border-indigo-500 transition-all outline-none ${isAr ? 'text-right tabular-nums' : ''}`} />
                     </div>
                   ) : form.remunerationType === 'modele' ? (
-                    <div className={isAr ? 'text-right' : ''}>
-                      <label className="block text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2">{isAr ? 'ثمن الموديل الافتراضي (درهم)' : 'Tarif par Modèle (MAD)'}</label>
-                      <input type="number" value={ruleRatesForm.tarifParModele} onChange={e => setRuleRatesForm(prev => ({ ...prev, tarifParModele: parseFloat(e.target.value) || 0 }))} className={`w-full bg-violet-50/50 border-2 border-violet-200 rounded-2xl py-3 px-4 text-sm font-black text-violet-900 focus:border-violet-500 transition-all outline-none ${isAr ? 'text-right tabular-nums' : ''}`} />
+                    <div className={`space-y-2 ${isAr ? 'text-right' : ''}`}>
+                      <label className="block text-[10px] font-black text-violet-600 uppercase tracking-widest">{isAr ? 'تسعيرة الموديلات' : 'Tarification Modèles'}</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setRuleRatesForm(prev => ({ ...prev, tarifParModele: 0 }))}
+                          className={`py-2 px-3 rounded-xl text-[11px] font-black border transition cursor-pointer ${
+                            ruleRatesForm.tarifParModele === 0
+                              ? 'bg-violet-600 text-white border-violet-600'
+                              : 'bg-white text-slate-600 border-violet-200 hover:border-violet-400'
+                          }`}
+                        >
+                          {isAr ? '✨ متغير حسب الموديل' : '✨ Variable / modèle'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRuleRatesForm(prev => ({ ...prev, tarifParModele: prev.tarifParModele > 0 ? prev.tarifParModele : 150 }))}
+                          className={`py-2 px-3 rounded-xl text-[11px] font-black border transition cursor-pointer ${
+                            ruleRatesForm.tarifParModele > 0
+                              ? 'bg-violet-600 text-white border-violet-600'
+                              : 'bg-white text-slate-600 border-violet-200 hover:border-violet-400'
+                          }`}
+                        >
+                          {isAr ? '📌 ثمن افتراضي' : '📌 Tarif par défaut'}
+                        </button>
+                      </div>
+                      {ruleRatesForm.tarifParModele > 0 ? (
+                        <input type="number" min={0} value={ruleRatesForm.tarifParModele} onChange={e => setRuleRatesForm(prev => ({ ...prev, tarifParModele: Math.max(0, parseFloat(e.target.value) || 0) }))} className={`w-full bg-violet-50/50 border-2 border-violet-200 rounded-2xl py-2.5 px-4 text-sm font-black text-violet-900 focus:border-violet-500 transition-all outline-none ${isAr ? 'text-right tabular-nums' : ''}`} />
+                      ) : (
+                        <p className="text-[11px] font-bold text-violet-700 bg-violet-50/60 border border-violet-200 rounded-xl px-3 py-2">
+                          {isAr ? 'كل موديل كيتحسب بثمنو الخاص وقت التسجيل.' : 'Chaque modèle aura son propre prix lors du pointage.'}
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <div className={isAr ? 'text-right' : ''}>

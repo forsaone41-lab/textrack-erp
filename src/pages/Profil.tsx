@@ -1,8 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
-import { User as UserIcon, Mail, Phone, Shield, Calendar, Save, Camera, Lock, Trash2 } from 'lucide-react';
-import { User, saveRecord, loadData, OperationModele, Commande, SuiviHoraire } from '../types';
+import { User as UserIcon, Mail, Phone, Shield, Calendar, Save, Camera, Lock, Trash2, CreditCard, Building2, MapPin, Copy, Check } from 'lucide-react';
+import { User, Employe, saveRecord, loadData, OperationModele, Commande, SuiviHoraire } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { QRCodeSVG } from 'qrcode.react';
+import {
+  PayrollExtrasData,
+  loadPayrollExtras,
+  findMatchingEmployeeForUser,
+  applyRuleProfileSync,
+  syncEmployeeProfileAndBank
+} from '../utils/payrollEngine';
 
 interface ProfilProps {
   currentUser: User;
@@ -15,8 +22,15 @@ export default function Profil({ currentUser }: ProfilProps) {
     email: currentUser.email,
     telephone: currentUser.telephone || '',
     role: currentUser.role,
-    photo: currentUser.photo || ''
+    photo: currentUser.photo || '',
+    cin: '',
+    adresse: currentUser.adresse || '',
+    banque: '',
+    rib: ''
   });
+  const [rhEmployes, setRhEmployes] = useState<Employe[]>([]);
+  const [payrollExtras, setPayrollExtras] = useState<PayrollExtrasData>({ rules: [], modelLogs: [], adjustments: [] });
+  const [copiedRib, setCopiedRib] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [viewImage, setViewImage] = useState(false);
@@ -34,9 +48,17 @@ export default function Profil({ currentUser }: ProfilProps) {
     Promise.all([
       loadData<SuiviHoraire>('suivi_horaire'),
       loadData<OperationModele>('operations_modele'),
-      loadData<Commande>('commandes')
-    ]).then(([s, o, c]) => {
+      loadData<Commande>('commandes'),
+      loadData<Employe>('employes').catch(() => [] as Employe[]),
+      loadPayrollExtras().catch(() => ({ rules: [], modelLogs: [], adjustments: [] } as PayrollExtrasData))
+    ]).then(([s, o, c, emps, extras]) => {
       setMissions({ suivi: s, operations: o, commandes: c });
+      const hydrated = (emps || []).map(emp => {
+        const empRule = extras.rules.find(r => r.employeId === emp.id);
+        return applyRuleProfileSync(emp, empRule);
+      });
+      setRhEmployes(hydrated);
+      setPayrollExtras(extras);
     });
   }, []);
 
@@ -59,14 +81,19 @@ export default function Profil({ currentUser }: ProfilProps) {
   }, [missions, currentUser.id]);
 
   useEffect(() => {
+    const matchedEmp = findMatchingEmployeeForUser(currentUser, rhEmployes);
     setFormData({
       nom: currentUser.nom,
       email: currentUser.email,
-      telephone: currentUser.telephone || '',
+      telephone: matchedEmp?.telephone || currentUser.telephone || '',
       role: currentUser.role,
-      photo: currentUser.photo || ''
+      photo: currentUser.photo || '',
+      cin: matchedEmp?.cin || '',
+      adresse: matchedEmp?.adresse || currentUser.adresse || '',
+      banque: matchedEmp?.banque || '',
+      rib: matchedEmp?.rib || ''
     });
-  }, [currentUser]);
+  }, [currentUser, rhEmployes]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -95,6 +122,40 @@ export default function Profil({ currentUser }: ProfilProps) {
 
       // 2. Save via saveRecord
       await saveRecord('users', updatedUser);
+
+      // 2b. Auto-sync personal & bank (RIB) info to RH (employes) for Modéliste & staff
+      const matchedEmp = findMatchingEmployeeForUser(currentUser, rhEmployes);
+      const shouldSyncRh =
+        currentUser.role !== 'client' &&
+        (currentUser.role === 'modeliste' || Boolean(matchedEmp) || Boolean(formData.rib.trim()) || Boolean(formData.banque.trim()) || Boolean(formData.cin.trim()));
+
+      if (shouldSyncRh) {
+        try {
+          const existingRule = matchedEmp ? payrollExtras.rules.find(r => r.employeId === matchedEmp.id) : undefined;
+          const synced = await syncEmployeeProfileAndBank({
+            user: updatedUser,
+            employes: rhEmployes,
+            existingRule,
+            profile: {
+              nom: formData.nom,
+              telephone: cleanPhone,
+              email: formData.email,
+              cin: formData.cin,
+              adresse: formData.adresse,
+              banque: formData.banque,
+              rib: formData.rib,
+              photo: formData.photo
+            }
+          });
+          setRhEmployes(prev => {
+            const exists = prev.some(e => e.id === synced.employe.id);
+            return exists ? prev.map(e => (e.id === synced.employe.id ? synced.employe : e)) : [...prev, synced.employe];
+          });
+          updatedUser.employeId = synced.employe.id;
+        } catch (syncErr) {
+          console.warn('RH bank/profile sync warning:', syncErr);
+        }
+      }
       
       // 3. Backup save photo to leads table to ensure cross-device sync
       if (formData.photo && formData.photo !== currentUser.photo) {
@@ -427,7 +488,7 @@ export default function Profil({ currentUser }: ProfilProps) {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Téléphone</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">{isAr ? 'الهاتف' : 'Téléphone'}</label>
                 <div className="relative">
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
@@ -439,6 +500,92 @@ export default function Profil({ currentUser }: ProfilProps) {
                   />
                 </div>
               </div>
+
+              {currentUser.role !== 'client' && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">{isAr ? 'البطاقة الوطنية (CIN)' : 'CIN'}</label>
+                    <input
+                      type="text"
+                      value={formData.cin}
+                      onChange={(e) => setFormData({ ...formData, cin: e.target.value.toUpperCase() })}
+                      placeholder="Ex: D123456"
+                      className="w-full px-4 py-4 bg-slate-50 border-none rounded-[1.2rem] text-sm font-bold uppercase focus:ring-2 focus:ring-indigo-500 transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">{isAr ? 'العنوان' : 'Adresse'}</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={formData.adresse}
+                        onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
+                        placeholder={isAr ? 'المدينة، الحي...' : 'Ville, Quartier...'}
+                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-[1.2rem] text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 p-5 rounded-[1.5rem] bg-indigo-50/70 border border-indigo-100 space-y-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-black text-indigo-800 uppercase tracking-wider flex items-center gap-2">
+                        <CreditCard className="w-4 h-4" />
+                        <span>{isAr ? 'الحساب البنكي (RIB) — مزامنة تلقائية مع الـ RH' : 'Coordonnées Bancaires (RIB) — Synchro RH'}</span>
+                      </span>
+                      {formData.rib && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard?.writeText(formData.rib.replace(/\s+/g, ''));
+                            setCopiedRib(true);
+                            setTimeout(() => setCopiedRib(false), 2000);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-white border border-indigo-200 text-indigo-700 text-[11px] font-black flex items-center gap-1 cursor-pointer"
+                        >
+                          {copiedRib ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedRib ? (isAr ? 'تم النسخ' : 'Copié') : 'RIB'}</span>
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-black text-slate-500 uppercase px-1 flex items-center gap-1">
+                          <Building2 className="w-3 h-3" />
+                          <span>{isAr ? 'البنك' : 'Banque'}</span>
+                        </label>
+                        <select
+                          value={formData.banque}
+                          onChange={(e) => setFormData({ ...formData, banque: e.target.value })}
+                          className="w-full px-3.5 py-3.5 bg-white border border-indigo-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                          <option value="">{isAr ? 'اختر البنك...' : 'Banque...'}</option>
+                          {['CIH', 'Attijari', 'BP', 'BMCE', 'Al Barid', 'SG', 'BMCI', 'Crédit Agricole'].map(b => (
+                            <option key={b} value={b}>{b}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2 space-y-1">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-[11px] font-black text-slate-500 uppercase">RIB (24 Chiffres)</label>
+                          <span className={`text-[11px] font-black ${formData.rib.replace(/\s+/g, '').length === 24 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            {formData.rib.replace(/\s+/g, '').length} / 24
+                          </span>
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.rib}
+                          onChange={(e) => setFormData({ ...formData, rib: e.target.value.replace(/[^\d\s]/g, '') })}
+                          placeholder="230 780 1234567890123456 78"
+                          dir="ltr"
+                          className="w-full px-4 py-3.5 bg-white border border-indigo-200 rounded-xl text-sm font-mono font-black tracking-wider outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="pt-4 flex justify-end">

@@ -21,7 +21,14 @@ import {
   Play,
   Send,
   FileCheck,
-  TrendingUp
+  TrendingUp,
+  CreditCard,
+  Copy,
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  ShieldCheck
 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import {
@@ -46,7 +53,10 @@ import {
   loadPayrollExtras,
   saveModelisteWorkLog,
   computeWorkerMonthBalance,
-  isModelisteEmployee
+  isModelisteEmployee,
+  findMatchingEmployeeForUser,
+  applyRuleProfileSync,
+  syncEmployeeProfileAndBank
 } from '../utils/payrollEngine';
 
 interface ModelisteSuiviProps {
@@ -54,7 +64,7 @@ interface ModelisteSuiviProps {
 }
 
 export type ModelisteWorkStatus = 'a_faire' | 'en_cours' | 'termine';
-type MainTab = 'dashboard' | 'a_tarifer' | 'travaux' | 'reglements';
+type MainTab = 'dashboard' | 'a_tarifer' | 'travaux' | 'reglements' | 'profil';
 
 export interface ModelItem {
   id: string;
@@ -202,6 +212,19 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     notes: ''
   });
 
+  // Modéliste Profile & RIB (auto-synced with RH)
+  const [profileForm, setProfileForm] = useState({
+    nom: currentUser.nom || '',
+    telephone: currentUser.telephone || '',
+    email: currentUser.email || '',
+    cin: '',
+    adresse: '',
+    banque: '',
+    rib: ''
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [copiedRib, setCopiedRib] = useState(false);
+
   const showToast = (text: string, isError = false) => {
     setToast({ text, isError });
     setTimeout(() => setToast(null), 3500);
@@ -249,38 +272,104 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
   const modelistes = useMemo(() => users.filter(u => u.role === 'modeliste'), [users]);
 
+  const hydratedEmployes = useMemo(() => {
+    return employes.map(emp => {
+      const empRule = payrollExtras.rules.find(r => r.employeId === emp.id);
+      return applyRuleProfileSync(emp, empRule);
+    });
+  }, [employes, payrollExtras.rules]);
+
+  // Active target Modéliste user for Profile / RIB view
+  const activeProfileUser: User = useMemo(() => {
+    if (isAdmin && selectedModelisteId !== 'all') {
+      return users.find(u => u.id === selectedModelisteId) || currentUser;
+    }
+    if (isAdmin && selectedModelisteId === 'all' && modelistes.length > 0) {
+      return modelistes[0];
+    }
+    return users.find(u => u.id === currentUser.id) || currentUser;
+  }, [isAdmin, selectedModelisteId, users, modelistes, currentUser]);
+
   // Match the selected or logged-in modéliste user to an Employe record in RH for balance & payment sync
   const linkedEmployee: Employe | undefined = useMemo(() => {
     const targetUserId = isAdmin ? (selectedModelisteId === 'all' ? '' : selectedModelisteId) : currentUser.id;
     const targetUser = users.find(u => u.id === targetUserId) || (!isAdmin ? currentUser : undefined);
+    return findMatchingEmployeeForUser(targetUser, hydratedEmployes);
+  }, [isAdmin, selectedModelisteId, currentUser, users, hydratedEmployes]);
 
-    if (targetUser) {
-      const directEmpId = (targetUser as any).employeId;
-      if (directEmpId) {
-        const byId = employes.find(e => e.id === directEmpId);
-        if (byId) return byId;
-      }
-      const uEmail = (targetUser.email || '').toLowerCase().trim();
-      if (uEmail) {
-        const byEmail = employes.find(e => (e.email || '').toLowerCase().trim() === uEmail);
-        if (byEmail) return byEmail;
-      }
-      const uName = normalizeName(targetUser.nom);
-      if (uName) {
-        const byName = employes.find(e => {
-          const full1 = normalizeName(`${e.prenom || ''} ${e.nom || ''}`);
-          const full2 = normalizeName(`${e.nom || ''} ${e.prenom || ''}`);
-          return full1 === uName || full2 === uName || full1.includes(uName) || uName.includes(full1);
-        });
-        if (byName) return byName;
-      }
-    }
+  // Employee linked to `activeProfileUser` (used in Profil & RIB tab)
+  const profileTargetEmployee: Employe | undefined = useMemo(() => {
+    return findMatchingEmployeeForUser(activeProfileUser, hydratedEmployes);
+  }, [activeProfileUser, hydratedEmployes]);
 
-    if (!isAdmin) {
-      return employes.find(e => isModelisteEmployee(e) && e.actif);
+  useEffect(() => {
+    const emp = profileTargetEmployee;
+    const fullNameFromEmp = emp ? `${emp.prenom || ''} ${emp.nom || ''}`.trim() : '';
+    setProfileForm({
+      nom: fullNameFromEmp || activeProfileUser.nom || '',
+      telephone: emp?.telephone || activeProfileUser.telephone || '',
+      email: emp?.email || activeProfileUser.email || '',
+      cin: emp?.cin || '',
+      adresse: emp?.adresse || activeProfileUser.adresse || '',
+      banque: emp?.banque || '',
+      rib: emp?.rib || ''
+    });
+  }, [profileTargetEmployee, activeProfileUser]);
+
+  const copyRibToClipboard = (rib?: string) => {
+    const clean = (rib || '').replace(/\s+/g, '');
+    if (!clean) return;
+    navigator.clipboard?.writeText(clean);
+    setCopiedRib(true);
+    showToast(isAr ? 'تم نسخ رقم RIB بنجاح' : 'RIB copié dans le presse-papiers');
+    setTimeout(() => setCopiedRib(false), 2000);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanRib = profileForm.rib.replace(/\s+/g, '');
+    if (cleanRib && cleanRib.length !== 24) {
+      showToast(
+        isAr ? 'رقم الحساب البنكي RIB يجب أن يتكون من 24 رقماً' : 'Le RIB marocain doit contenir exactement 24 chiffres',
+        true
+      );
+      return;
     }
-    return undefined;
-  }, [isAdmin, selectedModelisteId, currentUser, users, employes]);
+    setSavingProfile(true);
+    try {
+      const targetEmp = profileTargetEmployee;
+      const existingRule = targetEmp ? payrollExtras.rules.find(r => r.employeId === targetEmp.id) : undefined;
+      const res = await syncEmployeeProfileAndBank({
+        user: activeProfileUser,
+        employes: hydratedEmployes,
+        existingRule,
+        profile: {
+          ...profileForm,
+          rib: cleanRib
+        }
+      });
+
+      setEmployes(prev => {
+        const exists = prev.some(emp => emp.id === res.employe.id);
+        return exists ? prev.map(emp => (emp.id === res.employe.id ? res.employe : emp)) : [...prev, res.employe];
+      });
+      setUsers(prev => prev.map(u => (u.id === res.user.id ? res.user : u)));
+      setPayrollExtras(prev => ({
+        ...prev,
+        rules: [...prev.rules.filter(r => r.employeId !== res.employe.id), res.rule]
+      }));
+      showToast(
+        isAr
+          ? 'تم حفظ معلوماتك و RIB ومزامنتها تلقائياً مع صفحة الـ RH'
+          : 'Profil & RIB enregistrés et synchronisés automatiquement avec RH'
+      );
+    } catch (err) {
+      console.error('Erreur sauvegarde profil modéliste:', err);
+      showToast(isAr ? 'تعذر حفظ المعلومات، حاول مجدداً' : 'Erreur lors de la sauvegarde du profil', true);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   // Build unified model items from Leads + Fiches Techniques
   const modelItems: ModelItem[] = useMemo(() => {
@@ -717,14 +806,15 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       let chargeId: string | null = ext.patronagePaidChargeId || null;
 
       if (newPaid) {
-        // Resolve employee to credit in RH Paiements
+        // Resolve employee to credit in RH Paiements (hydrated with RIB/Bank)
         const modUser = users.find(u => u.id === item.modelisteId);
         const empTarget =
           linkedEmployee ||
-          employes.find(e => modUser && normalizeName(`${e.prenom || ''} ${e.nom || ''}`).includes(normalizeName(modUser.nom))) ||
-          employes.find(e => isModelisteEmployee(e) && e.actif);
+          (modUser ? findMatchingEmployeeForUser(modUser, hydratedEmployes) : undefined) ||
+          hydratedEmployes.find(e => isModelisteEmployee(e) && e.actif);
 
         if (empTarget && item.patronagePrice > 0) {
+          const hasRib = Boolean(empTarget.rib && empTarget.rib.trim());
           salaireId = genId();
           const payRec: PaiementSalaire = {
             id: salaireId,
@@ -732,8 +822,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             montant: item.patronagePrice,
             date: todayYmd,
             mois: payMois,
-            methode: 'especes',
-            notes: `Patronage Modèle: ${item.modele} (${item.client})`
+            methode: hasRib ? 'virement' : 'especes',
+            notes: `Patronage Modèle: ${item.modele} (${item.client})${hasRib ? ` • RIB: ${empTarget.banque ? empTarget.banque + ' ' : ''}${empTarget.rib}` : ''}`
           };
           await saveRecord('paiements_salaires', payRec, true);
 
@@ -879,6 +969,11 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       label: isAr ? 'المدفوعات والحساب' : 'Règlements & Balance',
       badge: summary.enAttenteReglementCount,
       icon: <Wallet className="w-4 h-4" />
+    },
+    {
+      id: 'profil',
+      label: isAr ? 'ملفي الشخصي و RIB' : 'Profil & RIB',
+      icon: <CreditCard className="w-4 h-4" />
     }
   ];
 
@@ -1185,6 +1280,59 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 </p>
               </div>
             </div>
+
+            {/* Bank / RIB Quick Card on Dashboard */}
+            {(linkedEmployee?.rib || profileTargetEmployee?.rib) ? (
+              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black text-indigo-700 uppercase flex items-center gap-1.5">
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span>{isAr ? 'معلومات التحويل (RIB)' : 'RIB Virement'}</span>
+                  </span>
+                  {(linkedEmployee || profileTargetEmployee)?.banque && (
+                    <span className="px-2 py-0.5 rounded-md bg-white border border-indigo-200 text-[10px] font-black text-indigo-800">
+                      {(linkedEmployee || profileTargetEmployee)?.banque}
+                    </span>
+                  )}
+                </div>
+                <p className="font-mono font-black text-xs text-slate-800 tracking-wide break-all">
+                  {(linkedEmployee || profileTargetEmployee)?.rib?.replace(/(.{4})/g, '$1 ').trim()}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => copyRibToClipboard((linkedEmployee || profileTargetEmployee)?.rib)}
+                    className="flex-1 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    {copiedRib ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedRib ? (isAr ? 'تم النسخ!' : 'Copié !') : (isAr ? 'نسخ RIB' : 'Copier RIB')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('profil')}
+                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-bold cursor-pointer"
+                  >
+                    {isAr ? 'تعديل' : 'Éditer'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setActiveTab('profil')}
+                className="w-full p-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100/70 border border-dashed border-amber-300 text-amber-800 text-xs font-bold flex items-center justify-between gap-2 transition cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>
+                    {isAr
+                      ? 'أضف رقم الحساب البنكي (RIB) ومعلوماتك لتسهيل التحويلات'
+                      : 'Ajouter votre RIB & infos (synchro RH)'}
+                  </span>
+                </span>
+                <span className="font-black underline shrink-0">{isAr ? 'فتح' : 'Ouvrir'}</span>
+              </button>
+            )}
 
             {isAdmin && (
               <Link
@@ -1782,6 +1930,277 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               </div>
             </div>
           )}
+
+          {/* Bank / Virement Info Card for Admin */}
+          {(linkedEmployee?.rib || profileTargetEmployee?.rib) && (
+            <div className="bg-gradient-to-r from-indigo-50 to-slate-50 rounded-2xl border-2 border-indigo-200 p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-indigo-700 font-black text-xs uppercase tracking-wider">
+                  <CreditCard className="w-4 h-4" />
+                  <span>{isAr ? 'معلومات التحويل البنكي (Virement)' : 'Coordonnées Bancaires pour Virement'}</span>
+                </div>
+                <p className="font-black text-slate-900 text-base">
+                  {(linkedEmployee || profileTargetEmployee)?.prenom} {(linkedEmployee || profileTargetEmployee)?.nom}
+                  {(linkedEmployee || profileTargetEmployee)?.banque && (
+                    <span className="mx-2 px-2.5 py-0.5 bg-indigo-100 text-indigo-800 rounded-lg text-xs">
+                      {(linkedEmployee || profileTargetEmployee)?.banque}
+                    </span>
+                  )}
+                </p>
+                <p className="font-mono font-black text-sm text-slate-700 tracking-wider">
+                  {(linkedEmployee || profileTargetEmployee)?.rib?.replace(/(.{4})/g, '$1 ').trim()}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => copyRibToClipboard((linkedEmployee || profileTargetEmployee)?.rib)}
+                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-2 shrink-0 cursor-pointer shadow-sm"
+              >
+                {copiedRib ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedRib ? (isAr ? 'تم النسخ!' : 'Copié !') : (isAr ? 'نسخ رقم RIB' : 'Copier le RIB')}</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* TAB 5: PROFIL & RIB (AUTO-SYNCED WITH RH)                   */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      {activeTab === 'profil' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Summary / Virement Quick View */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 text-white shadow-xl space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-2xl font-black text-indigo-300">
+                  {(profileForm.nom || 'M')[0].toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-black text-lg truncate">{profileForm.nom || activeProfileUser.nom}</p>
+                  <p className="text-xs text-indigo-300 font-bold">
+                    {isAr ? 'موديليست — مزامنة تلقائية مع RH' : 'Modéliste — Synchronisé RH'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white/10 border border-white/10 space-y-2">
+                <div className="flex items-center justify-between text-xs text-indigo-200 font-bold">
+                  <span>{isAr ? 'الحساب البنكي (RIB)' : 'Compte Bancaire (RIB)'}</span>
+                  {profileForm.banque && (
+                    <span className="px-2 py-0.5 bg-indigo-500/40 rounded-md text-white">{profileForm.banque}</span>
+                  )}
+                </div>
+                {profileForm.rib ? (
+                  <>
+                    <p className="font-mono font-black text-sm tracking-wider text-white break-all">
+                      {profileForm.rib.replace(/\s+/g, '').replace(/(.{4})/g, '$1 ').trim()}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => copyRibToClipboard(profileForm.rib)}
+                      className="w-full mt-2 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer"
+                    >
+                      {copiedRib ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedRib ? (isAr ? 'تم النسخ!' : 'RIB Copié !') : (isAr ? 'نسخ رقم RIB للتحويل' : 'Copier RIB pour Virement')}</span>
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-xs text-amber-300 font-semibold">
+                    {isAr ? 'لم يتم إدخال RIB بعد — أضفه لتسهيل التحويل البنكي' : 'Aucun RIB enregistré — Ajoutez-le pour vos virements'}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-emerald-300 font-bold bg-emerald-500/15 border border-emerald-400/20 rounded-xl px-3.5 py-2.5">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span>
+                  {profileTargetEmployee
+                    ? isAr
+                      ? `مربوط بملف الـ RH (${profileTargetEmployee.poste || 'Modéliste'})`
+                      : `Lié au dossier RH (${profileTargetEmployee.poste || 'Modéliste'})`
+                    : isAr
+                    ? 'سيتم ربط الملف تلقائياً بصفحة الـ RH عند الحفظ'
+                    : 'Création & liaison automatique dans RH à l’enregistrement'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Form: Personal + Bank Info */}
+          <form onSubmit={handleSaveProfile} className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+              <div>
+                <h2 className="text-xl font-black text-slate-900">
+                  {isAr ? 'المعلومات الشخصية والحساب البنكي (RIB)' : 'Informations Personnelles & Coordonnées Bancaires'}
+                </h2>
+                <p className="text-xs text-slate-500 font-medium mt-1">
+                  {isAr
+                    ? 'أي تعديل تقوم به هنا يتم تحديثه تلقائياً في صفحة الموارد البشرية (RH) لتسهيل التحويلات البنكية.'
+                    : 'Toute modification enregistrée ici met automatiquement à jour votre fiche dans Suivi RH pour faciliter les virements.'}
+                </p>
+              </div>
+              {isAdmin && modelistes.length > 0 && (
+                <select
+                  value={activeProfileUser.id}
+                  onChange={e => setSelectedModelisteId(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 outline-none"
+                >
+                  {modelistes.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.nom}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1.5">
+                  {isAr ? 'الاسم الكامل *' : 'Nom Complet *'}
+                </label>
+                <div className="relative">
+                  <UserIcon className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`} />
+                  <input
+                    type="text"
+                    required
+                    value={profileForm.nom}
+                    onChange={e => setProfileForm({ ...profileForm, nom: e.target.value })}
+                    className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none text-sm font-bold`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1.5">
+                  {isAr ? 'رقم الهاتف' : 'Téléphone'}
+                </label>
+                <div className="relative">
+                  <Phone className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`} />
+                  <input
+                    type="tel"
+                    value={profileForm.telephone}
+                    onChange={e => setProfileForm({ ...profileForm, telephone: e.target.value })}
+                    placeholder="+212 6..."
+                    className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none text-sm font-bold`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1.5">
+                  {isAr ? 'البريد الإلكتروني' : 'Email'}
+                </label>
+                <div className="relative">
+                  <Mail className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`} />
+                  <input
+                    type="email"
+                    value={profileForm.email}
+                    onChange={e => setProfileForm({ ...profileForm, email: e.target.value })}
+                    className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none text-sm font-bold`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1.5">
+                  {isAr ? 'رقم البطاقة الوطنية (CIN)' : 'Numéro CIN'}
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.cin}
+                  onChange={e => setProfileForm({ ...profileForm, cin: e.target.value.toUpperCase() })}
+                  placeholder="Ex: D123456"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none text-sm font-bold uppercase"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-black text-slate-700 mb-1.5">
+                  {isAr ? 'العنوان الكامل' : 'Adresse'}
+                </label>
+                <div className="relative">
+                  <MapPin className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`} />
+                  <input
+                    type="text"
+                    value={profileForm.adresse}
+                    onChange={e => setProfileForm({ ...profileForm, adresse: e.target.value })}
+                    placeholder={isAr ? 'المدينة، الحي...' : 'Ville, Quartier...'}
+                    className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none text-sm font-bold`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Bank Details Section */}
+            <div className="p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-4">
+              <div className="flex items-center gap-2 text-indigo-800 font-black text-sm">
+                <Building2 className="w-4 h-4" />
+                <span>{isAr ? 'معلومات الحساب البنكي للتحويل (Virement Bancaire)' : 'Informations Bancaires (Virement)'}</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1.5">
+                    {isAr ? 'البنك' : 'Banque'}
+                  </label>
+                  <select
+                    value={profileForm.banque}
+                    onChange={e => setProfileForm({ ...profileForm, banque: e.target.value })}
+                    className="w-full px-3.5 py-3 rounded-xl border border-indigo-200 bg-white focus:border-indigo-500 outline-none text-sm font-bold"
+                  >
+                    <option value="">{isAr ? 'اختر البنك...' : 'Sélectionner banque...'}</option>
+                    {['CIH', 'Attijari', 'BP', 'BMCE', 'Al Barid', 'SG', 'BMCI', 'Crédit Agricole'].map(b => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-black text-slate-700">
+                      {isAr ? 'رقم الحساب البنكي RIB (24 رقماً)' : 'RIB Bancaire (24 Chiffres)'}
+                    </label>
+                    <span
+                      className={`text-[11px] font-black ${
+                        profileForm.rib.replace(/\s+/g, '').length === 24 ? 'text-emerald-600' : 'text-slate-400'
+                      }`}
+                    >
+                      {profileForm.rib.replace(/\s+/g, '').length} / 24
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    value={profileForm.rib}
+                    onChange={e => setProfileForm({ ...profileForm, rib: e.target.value.replace(/[^\d\s]/g, '') })}
+                    placeholder="230 780 1234567890123456 78"
+                    dir="ltr"
+                    className="w-full px-4 py-3 rounded-xl border border-indigo-200 bg-white focus:border-indigo-500 outline-none text-sm font-mono font-black tracking-wider text-slate-900"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={savingProfile}
+                className="px-8 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm flex items-center gap-2 shadow-lg shadow-indigo-500/20 disabled:opacity-50 cursor-pointer"
+              >
+                {savingProfile ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                <span>
+                  {isAr ? 'حفظ ومزامنة تلقائية مع الـ RH' : 'Enregistrer & Synchroniser avec RH'}
+                </span>
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
