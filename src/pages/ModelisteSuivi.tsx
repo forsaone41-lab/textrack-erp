@@ -1,21 +1,60 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  CheckCircle2, Clock, Search, 
-  RefreshCw, MessageCircle, 
-  Scissors, Calendar, User as UserIcon, Eye, X, 
-  Check, DollarSign, Wallet, RotateCcw
+import {
+  CheckCircle2,
+  Clock,
+  Search,
+  RefreshCw,
+  MessageCircle,
+  Scissors,
+  Calendar,
+  User as UserIcon,
+  Eye,
+  X,
+  Check,
+  DollarSign,
+  Wallet,
+  RotateCcw,
+  LayoutDashboard,
+  AlertTriangle,
+  Plus,
+  Play,
+  Send,
+  FileCheck,
+  TrendingUp
 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
-import { 
-  FicheTechnique, Commande, Facture, User, Lead,
-  loadData, saveRecord 
+import {
+  FicheTechnique,
+  Commande,
+  Facture,
+  User,
+  Lead,
+  Employe,
+  PaiementSalaire,
+  Charge,
+  loadData,
+  saveRecord,
+  deleteRecord,
+  parseLeadMeta,
+  parseLeadDetailsJson,
+  genId
 } from '../types';
 import { supabase } from '../supabase';
+import {
+  PayrollExtrasData,
+  loadPayrollExtras,
+  saveModelisteWorkLog,
+  computeWorkerMonthBalance,
+  isModelisteEmployee
+} from '../utils/payrollEngine';
 
 interface ModelisteSuiviProps {
   currentUser: User;
 }
+
+export type ModelisteWorkStatus = 'a_faire' | 'en_cours' | 'termine';
+type MainTab = 'dashboard' | 'a_tarifer' | 'travaux' | 'reglements';
 
 export interface ModelItem {
   id: string;
@@ -25,16 +64,90 @@ export interface ModelItem {
   phone?: string;
   ville?: string;
   photo?: string;
-  date: string;
+  rawDate: string; // YYYY-MM-DD or ISO
+  date: string;    // formatted display date
+  quantity?: number;
   patronagePrice: number;
+  prixEchantillon: number;
   patronageStatus: 'requested' | 'priced';
   patronageNotes?: string;
+  clientNotes?: string;
   patronagePaid: boolean;
+  patronagePaidAt?: string | null;
+  patronagePaidMois?: string | null;
   isValidatedByClient: boolean;
+  isValidatedByAdmin: boolean;
+  isValidatedToWork: boolean; // Client OR Admin validated
+  deadlineDate?: string;      // YYYY-MM-DD assigned target date
+  workStatus: ModelisteWorkStatus;
+  workCompletedAt?: string | null;
   modelisteId?: string;
   modelisteName?: string;
   lead?: Lead;
   fiche?: FicheTechnique;
+}
+
+function normalizeName(str?: string): string {
+  return (str || '').toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function toYmd(raw?: string | null): string {
+  if (!raw) return '';
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
+}
+
+function getDeadlineBadge(
+  deadlineDate: string | undefined,
+  workStatus: ModelisteWorkStatus,
+  isAr: boolean
+): { label: string; cls: string; urgency: number } {
+  if (workStatus === 'termine') {
+    return {
+      label: isAr ? 'منجز ومسلّم' : 'Terminé & Livré',
+      cls: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      urgency: 99
+    };
+  }
+  if (!deadlineDate) {
+    return {
+      label: isAr ? 'تاريخ التسليم غير محدد' : 'Date limite non définie',
+      cls: 'bg-slate-100 text-slate-600 border-slate-200',
+      urgency: 50
+    };
+  }
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const diffMs = new Date(deadlineDate + 'T00:00:00').getTime() - new Date(todayStr + 'T00:00:00').getTime();
+  const diffDays = Math.round(diffMs / 86400000);
+
+  if (diffDays < 0) {
+    return {
+      label: isAr ? `متأخر بـ ${Math.abs(diffDays)} يوم` : `En retard (${Math.abs(diffDays)} j)`,
+      cls: 'bg-rose-50 text-rose-700 border-rose-200',
+      urgency: diffDays
+    };
+  }
+  if (diffDays === 0) {
+    return {
+      label: isAr ? 'التسليم اليوم' : "Aujourd'hui",
+      cls: 'bg-amber-50 text-amber-700 border-amber-300',
+      urgency: 0
+    };
+  }
+  if (diffDays <= 3) {
+    return {
+      label: isAr ? `بعد ${diffDays} أيام` : `Dans ${diffDays} j`,
+      cls: 'bg-amber-50 text-amber-700 border-amber-200',
+      urgency: diffDays
+    };
+  }
+  return {
+    label: isAr ? `بعد ${diffDays} يوم` : `Dans ${diffDays} j`,
+    cls: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    urgency: diffDays
+  };
 }
 
 export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
@@ -47,36 +160,84 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [employes, setEmployes] = useState<Employe[]>([]);
+  const [paiements, setPaiements] = useState<PaiementSalaire[]>([]);
+  const [payrollExtras, setPayrollExtras] = useState<PayrollExtrasData>({
+    rules: [],
+    modelLogs: [],
+    adjustments: []
+  });
+
+  const [selectedMois, setSelectedMois] = useState<string>(() => new Date().toISOString().slice(0, 7));
+  const [activeTab, setActiveTab] = useState<MainTab>('dashboard');
+  const [pricingFilter, setPricingFilter] = useState<'requested' | 'priced_waiting' | 'all'>('requested');
+  const [workFilter, setWorkFilter] = useState<'pending' | 'termine' | 'all'>('pending');
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'regles' | 'en_attente'>('all');
 
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'en_attente_client' | 'payes' | 'en_attente_paiement'>('all');
   const [selectedModelisteId, setSelectedModelisteId] = useState<string>(isAdmin ? 'all' : currentUser.id);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
   const [actionPendingId, setActionPendingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ text: string; isError?: boolean } | null>(null);
+
+  // Modal: Price Entry / Edit
+  const [pricingItem, setPricingItem] = useState<ModelItem | null>(null);
+  const [priceInput, setPriceInput] = useState('');
+  const [echPriceInput, setEchPriceInput] = useState('');
+  const [notesInput, setNotesInput] = useState('');
+
+  // Modal: Admin Validate & Assign Deadline Date
+  const [validateModalItem, setValidateModalItem] = useState<ModelItem | null>(null);
+  const [deadlineInput, setDeadlineInput] = useState('');
+  const [assignModelisteInput, setAssignModelisteInput] = useState('');
+
+  // Modal: Admin Quick Send New Model for Pricing
+  const [showNewModelModal, setShowNewModelModal] = useState(false);
+  const [newModelForm, setNewModelForm] = useState({
+    modele: '',
+    client: '',
+    quantity: '1',
+    deadlineDate: '',
+    modelisteId: '',
+    notes: ''
+  });
+
+  const showToast = (text: string, isError = false) => {
+    setToast({ text, isError });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [leadsRes, cmdsData, factsData, fichesData, usersData] = await Promise.all([
+      const [leadsRes, cmdsData, factsData, fichesData, usersData, empsData, paysData, extrasData] = await Promise.all([
         supabase
           .from('leads')
           .select('id, name, phone, ville, type, quantity, status, date, details, photo, crmStage, crmPrice, crmPriceConfirmed')
           .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__,__RH_PAIE_RULE__,__RH_MODEL_LOG__,__RH_PAIE_ADJ__)')
           .order('date', { ascending: false })
-          .limit(250),
+          .limit(300),
         loadData<Commande>('commandes'),
         loadData<Facture>('factures'),
         loadData<FicheTechnique>('fiches'),
-        loadData<User>('users')
+        loadData<User>('users'),
+        loadData<Employe>('employes'),
+        loadData<PaiementSalaire>('paiements_salaires'),
+        loadPayrollExtras()
       ]);
 
-      setLeads(leadsRes.data || []);
+      const parsedLeads = (leadsRes.data || []).map((raw: any) => parseLeadMeta(raw));
+      setLeads(parsedLeads);
       setCommandes(cmdsData || []);
       setFactures(factsData || []);
       setFiches(fichesData || []);
       setUsers(usersData || []);
+      setEmployes(empsData || []);
+      setPaiements(paysData || []);
+      setPayrollExtras(extrasData);
     } catch (e) {
       console.error('Erreur chargement données Modéliste:', e);
+      showToast(isAr ? 'حدث خطأ أثناء تحميل البيانات' : 'Erreur de chargement des données', true);
     } finally {
       setLoading(false);
     }
@@ -86,103 +247,158 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     fetchData();
   }, []);
 
-  // Filter modelistes for admin dropdown selector
-  const modelistes = useMemo(() => {
-    return users.filter(u => u.role === 'modeliste');
-  }, [users]);
+  const modelistes = useMemo(() => users.filter(u => u.role === 'modeliste'), [users]);
 
-  // Correlate Patronage Leads and Fiches
+  // Match the selected or logged-in modéliste user to an Employe record in RH for balance & payment sync
+  const linkedEmployee: Employe | undefined = useMemo(() => {
+    const targetUserId = isAdmin ? (selectedModelisteId === 'all' ? '' : selectedModelisteId) : currentUser.id;
+    const targetUser = users.find(u => u.id === targetUserId) || (!isAdmin ? currentUser : undefined);
+
+    if (targetUser) {
+      const directEmpId = (targetUser as any).employeId;
+      if (directEmpId) {
+        const byId = employes.find(e => e.id === directEmpId);
+        if (byId) return byId;
+      }
+      const uEmail = (targetUser.email || '').toLowerCase().trim();
+      if (uEmail) {
+        const byEmail = employes.find(e => (e.email || '').toLowerCase().trim() === uEmail);
+        if (byEmail) return byEmail;
+      }
+      const uName = normalizeName(targetUser.nom);
+      if (uName) {
+        const byName = employes.find(e => {
+          const full1 = normalizeName(`${e.prenom || ''} ${e.nom || ''}`);
+          const full2 = normalizeName(`${e.nom || ''} ${e.prenom || ''}`);
+          return full1 === uName || full2 === uName || full1.includes(uName) || uName.includes(full1);
+        });
+        if (byName) return byName;
+      }
+    }
+
+    if (!isAdmin) {
+      return employes.find(e => isModelisteEmployee(e) && e.actif);
+    }
+    return undefined;
+  }, [isAdmin, selectedModelisteId, currentUser, users, employes]);
+
+  // Build unified model items from Leads + Fiches Techniques
   const modelItems: ModelItem[] = useMemo(() => {
     const items: ModelItem[] = [];
 
-    // 1. Process Leads sent for patronage evaluation (EvaluationPatronage)
+    // 1. Process Leads sent for patronage evaluation / work
     leads.forEach(lead => {
-      let ext: any = {};
-      try { ext = JSON.parse(lead.details || '{}'); } catch(e) {}
+      const ext = parseLeadDetailsJson(lead.details);
+      const patPrice = Number(ext.patronagePrice ?? (lead as any).patronagePrice) || 0;
+      const echPrice = Number(ext.prixEchantillon ?? (lead as any).prixEchantillon) || 0;
 
-      // Must be a lead where patronage was requested or priced
-      const isPatronageLead = ext.patronageStatus === 'requested' || 
-                              ext.patronageStatus === 'priced' || 
-                              Boolean(ext.patronagePrice);
+      const isPatronageLead =
+        ext.patronageStatus === 'requested' ||
+        ext.patronageStatus === 'priced' ||
+        patPrice > 0 ||
+        Boolean(ext.adminValidatedToWork);
       if (!isPatronageLead) return;
 
-      const normClient = (lead.name || '').toLowerCase().trim();
-      const normModele = (lead.type || '').toLowerCase().trim();
+      const normClient = normalizeName(lead.name);
+      const normModele = normalizeName(lead.type);
 
-      // Check if order exists for client validation
       const cmd = commandes.find(c => {
-        const cClient = (c.client || '').toLowerCase().trim();
-        const cModele = (c.modele || '').toLowerCase().trim();
-        return (cClient && (cClient === normClient || cClient.includes(normClient) || normClient.includes(cClient))) ||
-               (cModele && normModele && (cModele === normModele || cModele.includes(normModele) || normModele.includes(cModele)));
+        if (ext.commandeId && c.id === ext.commandeId) return true;
+        const cClient = normalizeName(c.client);
+        const cModele = normalizeName(c.modele);
+        return (
+          (cClient && normClient && (cClient === normClient || cClient.includes(normClient) || normClient.includes(cClient))) &&
+          (!normModele || !cModele || cModele === normModele || cModele.includes(normModele) || normModele.includes(cModele))
+        );
       });
 
       const devis = factures.find(f => {
         if (f.typeDoc !== 'devis') return false;
-        const fClient = (f.client || '').toLowerCase().trim();
-        return fClient && (fClient === normClient || fClient.includes(normClient) || normClient.includes(fClient));
+        const fClient = normalizeName(f.client);
+        return fClient && normClient && (fClient === normClient || fClient.includes(normClient) || normClient.includes(fClient));
       });
 
       const facture = factures.find(f => {
         if (f.typeDoc === 'devis' || f.typeDoc === 'recu') return false;
-        const fClient = (f.client || '').toLowerCase().trim();
-        return fClient && (fClient === normClient || fClient.includes(normClient) || normClient.includes(fClient));
+        const fClient = normalizeName(f.client);
+        return fClient && normClient && (fClient === normClient || fClient.includes(normClient) || normClient.includes(fClient));
       });
 
-      // Validated when client accepted
-      const isValidated = Boolean(
+      const isValidatedByClient = Boolean(
         ext.clientValidated === true ||
-        lead.crmStage === 'confirme' ||
-        lead.status === 'completed' ||
-        lead.crmPriceConfirmed === true ||
-        (cmd && ['echantillon_valide', 'en_cours', 'terminé', 'livré'].includes(cmd.statut)) ||
-        (facture && ['payée', 'en_cours'].includes(facture.statut)) ||
-        (devis && devis.statut === 'payée')
+          lead.crmStage === 'confirme' ||
+          lead.status === 'completed' ||
+          lead.crmPriceConfirmed === true ||
+          (cmd && ['echantillon_valide', 'en_cours', 'terminé', 'livré'].includes(cmd.statut)) ||
+          (facture && ['payée', 'en_cours'].includes(facture.statut)) ||
+          (devis && devis.statut === 'payée')
       );
 
-      const patPrice = Number(ext.patronagePrice) || 0;
-      const isPaid = Boolean(ext.patronagePaid === true);
+      const isValidatedByAdmin = Boolean(ext.adminValidatedToWork === true);
+      const isValidatedToWork = isValidatedByClient || isValidatedByAdmin;
+      const deadlineDate = toYmd(ext.deadlineDate || cmd?.dateLivraisonPrevue);
+
+      let workStatus: ModelisteWorkStatus = 'a_faire';
+      if (ext.workStatus === 'en_cours' || ext.workStatus === 'termine' || ext.workStatus === 'a_faire') {
+        workStatus = ext.workStatus;
+      } else if (cmd && ['terminé', 'livré'].includes(cmd.statut)) {
+        workStatus = 'termine';
+      }
+
+      const rawDate = toYmd(ext.patronagePricedAt || ext.clientValidatedAt || ext.adminValidatedAt || lead.date) || new Date().toISOString().slice(0, 10);
 
       items.push({
         id: lead.id,
         sourceType: 'lead',
-        modele: lead.type || 'Modèle Référence',
+        modele: (lead.type || 'Modèle Référence').replace(' (CMT - Client Tissu)', ''),
         client: lead.name || 'Client',
         phone: lead.phone,
         ville: lead.ville,
-        photo: lead.photo,
+        photo: lead.photo || (lead.photos && lead.photos[0]),
+        rawDate,
         date: lead.date ? new Date(lead.date).toLocaleDateString('fr-FR') : '—',
+        quantity: Number(lead.quantity) || 1,
         patronagePrice: patPrice,
-        patronageStatus: ext.patronageStatus || (patPrice > 0 ? 'priced' : 'requested'),
+        prixEchantillon: echPrice,
+        patronageStatus: ext.patronageStatus === 'priced' || patPrice > 0 ? 'priced' : 'requested',
         patronageNotes: ext.patronageNotes || '',
-        patronagePaid: isPaid,
-        isValidatedByClient: isValidated,
+        clientNotes: ext.clientNotes || (!lead.details?.trim().startsWith('{') ? lead.details : ''),
+        patronagePaid: Boolean(ext.patronagePaid === true),
+        patronagePaidAt: ext.patronagePaidAt || null,
+        patronagePaidMois: ext.patronagePaidMois || null,
+        isValidatedByClient,
+        isValidatedByAdmin,
+        isValidatedToWork,
+        deadlineDate,
+        workStatus,
+        workCompletedAt: ext.workCompletedAt || null,
         modelisteId: ext.modelisteId,
         modelisteName: ext.modelisteName,
         lead
       });
     });
 
-    // 2. Process any Fiches Techniques explicitly assigned to a modeliste
+    // 2. Process any Fiches Techniques explicitly assigned to a modéliste
     fiches.forEach(fiche => {
       if (!fiche.modelisteId) return;
 
-      const normFicheModele = (fiche.modele || '').toLowerCase().trim();
-      const normFicheClient = (fiche.client || '').toLowerCase().trim();
+      const normFicheModele = normalizeName(fiche.modele);
+      const normFicheClient = normalizeName(fiche.client);
 
-      const alreadyInLead = items.some(it => 
-        it.modele.toLowerCase().trim() === normFicheModele && 
-        it.client.toLowerCase().trim() === normFicheClient
+      const alreadyInLead = items.some(
+        it => normalizeName(it.modele) === normFicheModele && normalizeName(it.client) === normFicheClient
       );
       if (alreadyInLead) return;
 
       const cmd = commandes.find(c => {
-        const cClient = (c.client || '').toLowerCase().trim();
-        const cModele = (c.modele || '').toLowerCase().trim();
-        return (cClient === normFicheClient) && (cModele === normFicheModele || cModele.includes(normFicheModele));
+        const cClient = normalizeName(c.client);
+        const cModele = normalizeName(c.modele);
+        return cClient === normFicheClient && (cModele === normFicheModele || cModele.includes(normFicheModele));
       });
 
-      const isValidated = Boolean(cmd && ['echantillon_valide', 'en_cours', 'terminé', 'livré'].includes(cmd.statut));
+      const isValidatedByClient = Boolean(
+        cmd && ['echantillon_valide', 'en_cours', 'terminé', 'livré'].includes(cmd.statut)
+      );
       const modUser = users.find(u => u.id === fiche.modelisteId);
 
       items.push({
@@ -191,11 +407,18 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         modele: fiche.modele,
         client: fiche.client,
         photo: fiche.photo || fiche.patronagePhoto,
+        rawDate: toYmd(fiche.createdAt) || new Date().toISOString().slice(0, 10),
         date: fiche.createdAt || '—',
+        quantity: 1,
         patronagePrice: 0,
+        prixEchantillon: 0,
         patronageStatus: 'priced',
         patronagePaid: false,
-        isValidatedByClient: isValidated,
+        isValidatedByClient,
+        isValidatedByAdmin: false,
+        isValidatedToWork: isValidatedByClient,
+        deadlineDate: toYmd(cmd?.dateLivraisonPrevue),
+        workStatus: cmd && ['terminé', 'livré'].includes(cmd.statut) ? 'termine' : 'a_faire',
         modelisteId: fiche.modelisteId,
         modelisteName: modUser?.nom,
         fiche
@@ -205,13 +428,12 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     return items;
   }, [leads, fiches, commandes, factures, users]);
 
-  // Filtered by modeliste role / selection
+  // Scope items to selected modéliste (or current modéliste)
   const filteredByRole = useMemo(() => {
     if (isAdmin) {
       if (selectedModelisteId === 'all') return modelItems;
-      return modelItems.filter(item => item.modelisteId === selectedModelisteId);
+      return modelItems.filter(item => !item.modelisteId || item.modelisteId === selectedModelisteId);
     }
-    // For modeliste: show models assigned to him or sent to modeliste
     return modelItems.filter(item => {
       if (item.modelisteId && item.modelisteId === currentUser.id) return true;
       if (!item.modelisteId && item.sourceType === 'lead') return true;
@@ -219,115 +441,401 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     });
   }, [modelItems, isAdmin, selectedModelisteId, currentUser.id]);
 
-  // Summary Metrics strictly focused on Patronage Fees
-  const stats = useMemo(() => {
-    const pricedModels = filteredByRole.filter(i => i.patronageStatus === 'priced');
-    const validesClient = pricedModels.filter(i => i.isValidatedByClient);
-    const enAttenteClient = pricedModels.filter(i => !i.isValidatedByClient);
+  // Unified Monthly Financial Balance + Workflow Counts
+  const summary = useMemo(() => {
+    const newToPrice = filteredByRole.filter(i => i.patronageStatus === 'requested');
+    const pricedAwaitingValidation = filteredByRole.filter(i => i.patronageStatus === 'priced' && !i.isValidatedToWork);
+    const allValidatedWork = filteredByRole.filter(i => i.isValidatedToWork);
+    const activeWork = allValidatedWork.filter(i => i.workStatus !== 'termine');
+    const completedWork = allValidatedWork.filter(i => i.workStatus === 'termine');
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const overdueCount = activeWork.filter(i => i.deadlineDate && i.deadlineDate < todayStr).length;
 
-    // Patronage Earnings (strictly the modeliste's price):
-    const totalPatronageMAD = validesClient.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
-    const payesList = validesClient.filter(i => i.patronagePaid);
-    const totalPayeMAD = payesList.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
-    const totalResteMAD = Math.max(0, totalPatronageMAD - totalPayeMAD);
-    const enAttentePayCount = validesClient.filter(i => !i.patronagePaid).length;
+    // Monthly balance calculation for `selectedMois`
+    const monthValidatedModels = allValidatedWork.filter(i => {
+      const m = (i.workCompletedAt || i.rawDate || '').slice(0, 7);
+      return m === selectedMois;
+    });
+
+    // RH Balance Engine if linked employee exists
+    let rhBalance: ReturnType<typeof computeWorkerMonthBalance> | null = null;
+    if (linkedEmployee) {
+      rhBalance = computeWorkerMonthBalance(linkedEmployee, selectedMois, [], paiements, payrollExtras);
+    }
+
+    // Total Earned in selectedMois: combine validated models in selectedMois + unlinked RH ModelisteWorkLog
+    const modelsTotalThisMonth = monthValidatedModels.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
+    const unlinkedExtraLogs = (rhBalance?.modelLogsValides || []).filter(
+      log => !log.sourceLeadId || !allValidatedWork.some(it => it.id === log.sourceLeadId)
+    );
+    const extraLogsTotal = unlinkedExtraLogs.reduce((sum, l) => sum + l.quantite * l.tarifUnitaire, 0);
+    const primesNet = (rhBalance?.totalPrimes || 0) - (rhBalance?.totalRetenues || 0) + (rhBalance?.baseMensuelle || 0);
+    const monthEarnedMAD = Math.max(0, modelsTotalThisMonth + extraLogsTotal + primesNet);
+
+    // Total Paid in selectedMois:
+    // Use RH paiements_salaires for linkedEmployee in selectedMois, PLUS any paid models whose payment wasn't mirrored into paiements_salaires
+    const rhPaysInMonth = linkedEmployee
+      ? paiements.filter(p => p.employeId === linkedEmployee.id && p.mois === selectedMois)
+      : [];
+    const rhPaidSum = rhPaysInMonth.reduce((sum, p) => sum + (Number(p.montant) || 0), 0);
+
+    const paidModelsInMonthWithoutRh = monthValidatedModels.filter(i => {
+      if (!i.patronagePaid) return false;
+      const ext = i.lead ? parseLeadDetailsJson(i.lead.details) : {};
+      if (ext.patronagePaidSalaireId && rhPaysInMonth.some(p => p.id === ext.patronagePaidSalaireId)) {
+        return false; // already counted in rhPaidSum
+      }
+      return !linkedEmployee; // if no RH employee, use model-level paid flag
+    });
+    const unlinkedPaidModelsSum = paidModelsInMonthWithoutRh.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
+    const monthPaidMAD = rhPaidSum + unlinkedPaidModelsSum;
+    const monthRemainingMAD = Math.max(0, monthEarnedMAD - monthPaidMAD);
+
+    // Overall validated totals (all-time) for Règlements tab
+    const totalValidatedAllMAD = allValidatedWork.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
+    const reglesList = allValidatedWork.filter(i => i.patronagePaid);
+    const enAttenteReglementList = allValidatedWork.filter(i => !i.patronagePaid);
+    const totalRegleAllMAD = reglesList.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
+    const totalResteAllMAD = Math.max(0, totalValidatedAllMAD - totalRegleAllMAD);
 
     return {
-      totalValides: validesClient.length,
-      enAttenteClientCount: enAttenteClient.length,
-      totalPatronageMAD,
-      payesCount: payesList.length,
-      enAttentePayCount,
-      totalPayeMAD,
-      totalResteMAD
+      newToPriceCount: newToPrice.length,
+      pricedAwaitingValidationCount: pricedAwaitingValidation.length,
+      activeWorkCount: activeWork.length,
+      completedWorkCount: completedWork.length,
+      overdueCount,
+      allValidatedCount: allValidatedWork.length,
+      monthModelsCount: monthValidatedModels.length,
+      monthEarnedMAD,
+      monthPaidMAD,
+      monthRemainingMAD,
+      rhPaysInMonth,
+      reglesCount: reglesList.length,
+      enAttenteReglementCount: enAttenteReglementList.length,
+      totalValidatedAllMAD,
+      totalRegleAllMAD,
+      totalResteAllMAD
     };
-  }, [filteredByRole]);
+  }, [filteredByRole, selectedMois, linkedEmployee, paiements, payrollExtras]);
 
-  // Filtered by Tab and Search Query
-  // CRITICAL: "Tous" displays ONLY models priced and accepted by client!
-  const displayedItems = useMemo(() => {
+  // Search helper
+  const matchesSearch = (item: ModelItem) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase().trim();
+    return (
+      (item.modele || '').toLowerCase().includes(q) ||
+      (item.client || '').toLowerCase().includes(q) ||
+      (item.modelisteName || '').toLowerCase().includes(q)
+    );
+  };
+
+  // Items for Section 2: À Tarifer
+  const pricingItems = useMemo(() => {
     return filteredByRole.filter(item => {
-      // Must have been priced by modeliste
-      if (item.patronageStatus !== 'priced') return false;
+      if (!matchesSearch(item)) return false;
+      if (pricingFilter === 'requested') return item.patronageStatus === 'requested';
+      if (pricingFilter === 'priced_waiting') return item.patronageStatus === 'priced' && !item.isValidatedToWork;
+      return item.patronageStatus === 'requested' || (item.patronageStatus === 'priced' && !item.isValidatedToWork);
+    });
+  }, [filteredByRole, pricingFilter, search]);
 
-      // Tab filter
-      if (activeTab === 'all') {
-        // "Tous (Validés Client)": Only models validated and accepted by client!
-        if (!item.isValidatedByClient) return false;
-      } else if (activeTab === 'en_attente_client') {
-        // Models waiting for client confirmation
-        if (item.isValidatedByClient) return false;
-      } else if (activeTab === 'payes') {
-        // Models where patronage fee is paid
-        if (!item.isValidatedByClient || !item.patronagePaid) return false;
-      } else if (activeTab === 'en_attente_paiement') {
-        // Validated by client but patronage fee is pending
-        if (!item.isValidatedByClient || item.patronagePaid) return false;
-      }
+  // Items for Section 3: Travaux à Faire (Validated by Admin OR Client)
+  const workItems = useMemo(() => {
+    return filteredByRole
+      .filter(item => {
+        if (!item.isValidatedToWork) return false;
+        if (!matchesSearch(item)) return false;
+        if (workFilter === 'pending') return item.workStatus !== 'termine';
+        if (workFilter === 'termine') return item.workStatus === 'termine';
+        return true;
+      })
+      .sort((a, b) => {
+        const badgeA = getDeadlineBadge(a.deadlineDate, a.workStatus, isAr);
+        const badgeB = getDeadlineBadge(b.deadlineDate, b.workStatus, isAr);
+        return badgeA.urgency - badgeB.urgency;
+      });
+  }, [filteredByRole, workFilter, search, isAr]);
 
-      // Search filter
-      if (search.trim()) {
-        const q = search.toLowerCase().trim();
-        const matchModele = (item.modele || '').toLowerCase().includes(q);
-        const matchClient = (item.client || '').toLowerCase().includes(q);
-        return matchModele || matchClient;
-      }
-
+  // Items for Section 4: Règlements & Balance
+  const paymentItems = useMemo(() => {
+    return filteredByRole.filter(item => {
+      if (!item.isValidatedToWork) return false;
+      if (!matchesSearch(item)) return false;
+      if (paymentFilter === 'regles') return item.patronagePaid;
+      if (paymentFilter === 'en_attente') return !item.patronagePaid;
       return true;
     });
-  }, [filteredByRole, activeTab, search]);
+  }, [filteredByRole, paymentFilter, search]);
 
-  // One-click validation: confirm that client accepted the model
-  const handleValidateClient = async (item: ModelItem) => {
-    if (!item.lead) return;
-    setActionPendingId(item.id);
+  // Open Pricing Modal
+  const openPricingModal = (item: ModelItem) => {
+    setPricingItem(item);
+    setPriceInput(item.patronagePrice > 0 ? String(item.patronagePrice) : '');
+    setEchPriceInput(item.prixEchantillon > 0 ? String(item.prixEchantillon) : '');
+    setNotesInput(item.patronageNotes || '');
+  };
+
+  // Save Modéliste Price (stays 100% synced with EvaluationPatronage)
+  const handleSavePrice = async () => {
+    if (!pricingItem?.lead) return;
+    const patPrice = Number(priceInput);
+    if (!priceInput || isNaN(patPrice) || patPrice <= 0) {
+      showToast(isAr ? 'المرجو إدخال ثمن الباتروناج بشكل صحيح' : 'Veuillez saisir un prix de patronage valide', true);
+      return;
+    }
+    const echPrice = echPriceInput ? Number(echPriceInput) || 0 : 0;
+    setActionPendingId(pricingItem.id);
     try {
-      let ext: any = {};
-      try { ext = JSON.parse(item.lead.details || '{}'); } catch(e) {}
+      const ext = parseLeadDetailsJson(pricingItem.lead.details);
       const newDetails = {
         ...ext,
-        clientValidated: true,
-        clientValidatedAt: new Date().toISOString(),
-        clientValidatedBy: currentUser?.nom || 'Atelier'
+        patronageStatus: 'priced',
+        patronagePrice: patPrice,
+        prixEchantillon: echPrice,
+        patronageNotes: notesInput,
+        modelisteId: ext.modelisteId || (!isAdmin ? currentUser.id : undefined),
+        modelisteName: ext.modelisteName || (!isAdmin ? currentUser.nom : undefined),
+        patronagePricedAt: new Date().toISOString()
       };
-      const updatedLead = {
-        ...item.lead,
-        crmStage: 'confirme' as const,
-        status: 'completed' as const,
-        crmPriceConfirmed: true,
+      const updatedLead: any = {
+        ...pricingItem.lead,
+        patronagePrice: patPrice,
+        prixEchantillon: echPrice,
         details: JSON.stringify(newDetails)
       };
       await saveRecord('leads', updatedLead, true);
+      setPricingItem(null);
+      showToast(isAr ? 'تم حفظ التسعيرة وإرسالها للمصادقة بنجاح' : 'Tarif enregistré et envoyé pour validation');
       await fetchData();
     } catch (e) {
-      console.error('Erreur validation client:', e);
+      console.error('Erreur sauvegarde tarif:', e);
+      showToast(isAr ? 'حدث خطأ أثناء حفظ التسعيرة' : 'Erreur lors de la sauvegarde du tarif', true);
     } finally {
       setActionPendingId(null);
     }
   };
 
-  // Toggle Patronage Paid / Pending (خلاص الباترون للمودليست)
+  // Open Admin Validate + Deadline Date Modal
+  const openValidateModal = (item: ModelItem) => {
+    setValidateModalItem(item);
+    const defaultDate = item.deadlineDate || new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+    setDeadlineInput(defaultDate);
+    setAssignModelisteInput(item.modelisteId || (!isAdmin ? currentUser.id : modelistes[0]?.id || ''));
+  };
+
+  // Save Admin Validation + Assigned Deadline Date
+  const handleConfirmAdminValidate = async () => {
+    if (!validateModalItem?.lead) return;
+    if (!deadlineInput) {
+      showToast(isAr ? 'المرجو تحديد تاريخ التسليم المطلوب' : 'Veuillez choisir la date limite de réalisation', true);
+      return;
+    }
+    setActionPendingId(validateModalItem.id);
+    try {
+      const ext = parseLeadDetailsJson(validateModalItem.lead.details);
+      const assignedUser = users.find(u => u.id === assignModelisteInput);
+      const newDetails = {
+        ...ext,
+        adminValidatedToWork: true,
+        adminValidatedAt: new Date().toISOString(),
+        adminValidatedBy: currentUser.nom || 'Administration',
+        deadlineDate: deadlineInput,
+        workStatus: ext.workStatus || 'a_faire',
+        modelisteId: assignModelisteInput || ext.modelisteId,
+        modelisteName: assignedUser?.nom || ext.modelisteName
+      };
+      const updatedLead: Lead = {
+        ...validateModalItem.lead,
+        details: JSON.stringify(newDetails)
+      };
+      await saveRecord('leads', updatedLead, true);
+
+      // Sync work log to payrollEngine if employee matched & price exists
+      if (linkedEmployee && validateModalItem.patronagePrice > 0) {
+        await saveModelisteWorkLog({
+          employeId: linkedEmployee.id,
+          date: new Date().toISOString().slice(0, 10),
+          modeleName: validateModalItem.modele,
+          client: validateModalItem.client,
+          typeTravail: 'patronage_complet',
+          quantite: 1,
+          tarifUnitaire: validateModalItem.patronagePrice,
+          statut: 'valide',
+          sourceLeadId: validateModalItem.id,
+          notes: `Date limite: ${deadlineInput}`
+        });
+      }
+
+      setValidateModalItem(null);
+      showToast(isAr ? 'تمت المصادقة وإضافة الموديل لقائمة العمل مع التاريخ المحدد' : 'Modèle validé et planifié dans Travaux à Faire');
+      await fetchData();
+    } catch (e) {
+      console.error('Erreur validation atelier:', e);
+      showToast(isAr ? 'تعذر حفظ المصادقة' : 'Erreur lors de la validation', true);
+    } finally {
+      setActionPendingId(null);
+    }
+  };
+
+  // Update Work Status (À faire -> En cours -> Terminé)
+  const handleUpdateWorkStatus = async (item: ModelItem, nextStatus: ModelisteWorkStatus) => {
+    if (!item.lead) return;
+    setActionPendingId(item.id);
+    try {
+      const ext = parseLeadDetailsJson(item.lead.details);
+      const newDetails = {
+        ...ext,
+        workStatus: nextStatus,
+        workCompletedAt: nextStatus === 'termine' ? new Date().toISOString() : null
+      };
+      await saveRecord('leads', { ...item.lead, details: JSON.stringify(newDetails) }, true);
+      showToast(
+        nextStatus === 'termine'
+          ? isAr ? 'تم تسجيل الموديل كمنجز ومسلّم' : 'Modèle marqué comme terminé & livré'
+          : isAr ? 'تم تحديث حالة العمل' : 'Statut du travail mis à jour'
+      );
+      await fetchData();
+    } catch (e) {
+      console.error('Erreur mise à jour statut travail:', e);
+    } finally {
+      setActionPendingId(null);
+    }
+  };
+
+  // Toggle Paid / Unpaid with unified RH & Charges sync
   const handleTogglePatronagePaid = async (item: ModelItem) => {
     if (!item.lead) return;
     setActionPendingId(item.id);
     try {
-      let ext: any = {};
-      try { ext = JSON.parse(item.lead.details || '{}'); } catch(e) {}
+      const ext = parseLeadDetailsJson(item.lead.details);
       const newPaid = !ext.patronagePaid;
+      const nowIso = new Date().toISOString();
+      const todayYmd = nowIso.slice(0, 10);
+      const payMois = selectedMois || todayYmd.slice(0, 7);
+
+      let salaireId: string | null = ext.patronagePaidSalaireId || null;
+      let chargeId: string | null = ext.patronagePaidChargeId || null;
+
+      if (newPaid) {
+        // Resolve employee to credit in RH Paiements
+        const modUser = users.find(u => u.id === item.modelisteId);
+        const empTarget =
+          linkedEmployee ||
+          employes.find(e => modUser && normalizeName(`${e.prenom || ''} ${e.nom || ''}`).includes(normalizeName(modUser.nom))) ||
+          employes.find(e => isModelisteEmployee(e) && e.actif);
+
+        if (empTarget && item.patronagePrice > 0) {
+          salaireId = genId();
+          const payRec: PaiementSalaire = {
+            id: salaireId,
+            employeId: empTarget.id,
+            montant: item.patronagePrice,
+            date: todayYmd,
+            mois: payMois,
+            methode: 'especes',
+            notes: `Patronage Modèle: ${item.modele} (${item.client})`
+          };
+          await saveRecord('paiements_salaires', payRec, true);
+
+          chargeId = genId();
+          const chargeRec: Charge = {
+            id: chargeId,
+            designation: `Règlement Patronage - ${item.modele} (${empTarget.prenom} ${empTarget.nom})`,
+            categorie: 'salaires',
+            montant: item.patronagePrice,
+            date: todayYmd,
+            statut: 'payé',
+            recurrence: 'ponctuel',
+            fournisseur: `${empTarget.prenom} ${empTarget.nom}`,
+            notes: `Sync Modéliste (${payMois})`
+          };
+          await saveRecord('charges', chargeRec, true);
+
+          await saveModelisteWorkLog({
+            employeId: empTarget.id,
+            date: toYmd(item.workCompletedAt || item.rawDate) || todayYmd,
+            modeleName: item.modele,
+            client: item.client,
+            typeTravail: 'patronage_complet',
+            quantite: 1,
+            tarifUnitaire: item.patronagePrice,
+            statut: 'valide',
+            sourceLeadId: item.id
+          });
+        }
+      } else {
+        if (salaireId) {
+          await deleteRecord('paiements_salaires', salaireId);
+          salaireId = null;
+        }
+        if (chargeId) {
+          await deleteRecord('charges', chargeId);
+          chargeId = null;
+        }
+      }
+
       const newDetails = {
         ...ext,
         patronagePaid: newPaid,
-        patronagePaidAt: newPaid ? new Date().toISOString() : null,
-        patronagePaidBy: newPaid ? (currentUser?.nom || 'Atelier') : null
+        patronagePaidAt: newPaid ? nowIso : null,
+        patronagePaidMois: newPaid ? payMois : null,
+        patronagePaidBy: newPaid ? currentUser.nom || 'Administration' : null,
+        patronagePaidSalaireId: salaireId,
+        patronagePaidChargeId: chargeId
       };
-      const updatedLead = {
-        ...item.lead,
-        details: JSON.stringify(newDetails)
-      };
-      await saveRecord('leads', updatedLead, true);
+      await saveRecord('leads', { ...item.lead, details: JSON.stringify(newDetails) }, true);
+      showToast(
+        newPaid
+          ? isAr ? 'تم تأكيد الدفع ومزامنته مع الرصيد المالي' : 'Règlement enregistré et synchronisé avec la balance'
+          : isAr ? 'تم إلغاء حالة الدفع' : 'Règlement annulé'
+      );
       await fetchData();
     } catch (e) {
       console.error('Erreur toggle règlement:', e);
+      showToast(isAr ? 'حدث خطأ أثناء تحديث الدفع' : 'Erreur lors du règlement', true);
+    } finally {
+      setActionPendingId(null);
+    }
+  };
+
+  // Admin: Quick create & send a new model directly to Modéliste
+  const handleCreateNewModel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newModelForm.modele.trim() || !newModelForm.client.trim()) {
+      showToast(isAr ? 'اسم الموديل والزبون إجباريان' : 'Le modèle et le client sont obligatoires', true);
+      return;
+    }
+    setActionPendingId('new-model');
+    try {
+      const assignedMod = users.find(u => u.id === newModelForm.modelisteId);
+      const detailsObj: any = {
+        patronageStatus: 'requested',
+        clientNotes: newModelForm.notes.trim(),
+        deadlineDate: newModelForm.deadlineDate || undefined,
+        modelisteId: assignedMod?.id || undefined,
+        modelisteName: assignedMod?.nom || undefined
+      };
+      const newLead: Lead = {
+        id: genId(),
+        name: newModelForm.client.trim(),
+        phone: '',
+        ville: '',
+        type: newModelForm.modele.trim(),
+        quantity: Math.max(1, Number(newModelForm.quantity) || 1),
+        status: 'new',
+        date: new Date().toISOString(),
+        details: JSON.stringify(detailsObj)
+      };
+      await saveRecord('leads', newLead, true);
+      setShowNewModelModal(false);
+      setNewModelForm({ modele: '', client: '', quantity: '1', deadlineDate: '', modelisteId: '', notes: '' });
+      setActiveTab('a_tarifer');
+      setPricingFilter('requested');
+      showToast(isAr ? 'تم إرسال الموديل الجديد للتسعير' : 'Nouveau modèle envoyé au modéliste pour tarification');
+      await fetchData();
+    } catch (err) {
+      console.error('Erreur création modèle:', err);
+      showToast(isAr ? 'تعذر إضافة الموديل' : 'Erreur lors de la création', true);
     } finally {
       setActionPendingId(null);
     }
@@ -335,476 +843,1219 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
   const openWhatsApp = (phone?: string, clientName?: string, modeleName?: string) => {
     if (!phone) {
-      alert(isAr ? 'رقم الهاتف غير متوفر' : 'Numéro de téléphone non disponible');
+      showToast(isAr ? 'رقم الهاتف غير متوفر' : 'Numéro de téléphone non disponible', true);
       return;
     }
     let p = phone.replace(/\D/g, '');
     if (p.startsWith('0')) p = '212' + p.substring(1);
     const msg = encodeURIComponent(
-      isAr 
+      isAr
         ? `السلام عليكم ${clientName || ''}، بخصوص موديل "${modeleName || ''}"...`
         : `Bonjour ${clientName || ''}, concernant le modèle "${modeleName || ''}"...`
     );
     window.open(`https://wa.me/${p}?text=${msg}`, '_blank');
   };
 
+  const tabs: { id: MainTab; label: string; badge?: number; icon: React.ReactNode }[] = [
+    {
+      id: 'dashboard',
+      label: isAr ? 'الرئيسية والرصيد' : 'Tableau de Bord',
+      icon: <LayoutDashboard className="w-4 h-4" />
+    },
+    {
+      id: 'a_tarifer',
+      label: isAr ? 'موديلات جديدة للتسعير' : 'Nouveaux à Tarifer',
+      badge: summary.newToPriceCount + summary.pricedAwaitingValidationCount,
+      icon: <Scissors className="w-4 h-4" />
+    },
+    {
+      id: 'travaux',
+      label: isAr ? 'الموديلات المطلوب إنجازها' : 'Travaux à Faire',
+      badge: summary.activeWorkCount,
+      icon: <FileCheck className="w-4 h-4" />
+    },
+    {
+      id: 'reglements',
+      label: isAr ? 'المدفوعات والحساب' : 'Règlements & Balance',
+      badge: summary.enAttenteReglementCount,
+      icon: <Wallet className="w-4 h-4" />
+    }
+  ];
+
   return (
     <div className={`space-y-6 ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
-      
-      {/* ─── Header ────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed bottom-5 ${isAr ? 'left-5' : 'right-5'} z-[350] px-5 py-3.5 rounded-2xl shadow-2xl font-bold text-sm flex items-center gap-2.5 border ${
+            toast.isError
+              ? 'bg-rose-600 text-white border-rose-500'
+              : 'bg-slate-900 text-white border-slate-700'
+          }`}
+        >
+          {toast.isError ? <AlertTriangle className="w-4 h-4 shrink-0" /> : <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
+          <span>{toast.text}</span>
+        </div>
+      )}
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      {/* ─── Header & Month Balance Bar ───────────────────────────── */}
+      <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-bold">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-bold text-indigo-200 border border-white/10">
               <Scissors className="w-3.5 h-3.5" />
-              <span>{isAr ? 'مستحقات وأجرة الباترون' : 'Honoraires & Règlements Patronage'}</span>
+              <span>{isAr ? 'فضاء الموديليست المنظم' : 'Espace Modéliste Unifié'}</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black tracking-tight">
-              {isAr ? 'موديلاتي وأجرة الباترون' : 'Mes Modèles & Rémunération Patronage'}
+              {isAr ? 'لوحة الموديليست: الخدمات، التسعير والرصيد' : 'Tableau de Bord Modéliste — Travaux & Balance'}
             </h1>
-            <p className="text-slate-300 text-xs md:text-sm max-w-2xl leading-relaxed">
-              {isAr 
-                ? 'متابعة أتعاب وخلاص الباترون للموديلات المسعرة والمقبولة من الزبون، بالأرقام المحددة الخاصة بك حصراً.'
-                : 'Suivez exclusivement vos honoraires de patronage fixés pour les modèles validés par le client.'
-              }
+            <p className="text-slate-300 text-sm max-w-2xl">
+              {isAr
+                ? 'تسعير الموديلات الجديدة، متابعة الخدمات المصادق عليها حسب تاريخ التسليم، والاطلاع على الرصيد الشهري بدقة.'
+                : 'Tarifez les nouveaux modèles, suivez vos travaux validés avec date limite, et consultez votre balance mensuelle en temps réel.'}
             </p>
           </div>
 
-          {/* Admin selector & Refresh */}
           <div className="flex flex-wrap items-center gap-3">
+            {/* Month Filter */}
+            <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3 py-2">
+              <Calendar className="w-4 h-4 text-indigo-300" />
+              <input
+                type="month"
+                value={selectedMois}
+                onChange={e => setSelectedMois(e.target.value)}
+                className="bg-transparent text-white text-sm font-bold outline-none cursor-pointer [color-scheme:dark]"
+              />
+            </div>
+
             {isAdmin && (
-              <Link
-                to="/balance-paie?tab=modeliste"
-                className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition-all shadow-sm"
-              >
-                <Wallet className="w-3.5 h-3.5" />
-                <span>{isAr ? '⚖️ بوانتاج الموديليست و Balance RH' : '⚖️ Pointage & Balance RH'}</span>
-              </Link>
-            )}
-            {isAdmin && modelistes.length > 0 && (
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-1.5 border border-white/20">
+              <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3 py-2">
+                <UserIcon className="w-4 h-4 text-indigo-300" />
                 <select
                   value={selectedModelisteId}
                   onChange={e => setSelectedModelisteId(e.target.value)}
-                  className="bg-transparent text-white text-xs font-bold px-3 py-1.5 rounded-xl outline-none cursor-pointer"
+                  className="bg-transparent text-white text-sm font-bold outline-none cursor-pointer"
                 >
-                  <option value="all" className="bg-slate-900 text-white">{isAr ? 'جميع المودليست' : 'Tous les modélistes'}</option>
+                  <option value="all" className="text-slate-900">
+                    {isAr ? 'جميع الموديليست' : 'Tous les Modélistes'}
+                  </option>
                   {modelistes.map(m => (
-                    <option key={m.id} value={m.id} className="bg-slate-900 text-white">{m.nom}</option>
+                    <option key={m.id} value={m.id} className="text-slate-900">
+                      {m.nom}
+                    </option>
                   ))}
                 </select>
               </div>
             )}
 
+            {isAdmin && (
+              <button
+                onClick={() => setShowNewModelModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition shadow-lg cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{isAr ? 'إرسال موديل جديد' : 'Envoyer un Modèle'}</span>
+              </button>
+            )}
+
             <button
               onClick={fetchData}
               disabled={loading}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm active:scale-95 text-white"
+              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold text-sm transition shadow-lg disabled:opacity-50 cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>{isAr ? 'تحديث' : 'Actualiser'}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* ─── Metrics Bar: Focused Strictly on Patronage Fees ──────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Metric 1: Validated Models */}
-        <div 
-          onClick={() => setActiveTab('all')}
-          className={`bg-white rounded-2xl p-5 border cursor-pointer transition-all ${
-            activeTab === 'all' 
-              ? 'border-indigo-500 shadow-md ring-2 ring-indigo-500/20' 
-              : 'border-slate-200/80 hover:border-slate-300 shadow-xs'
-          }`}
+      {/* ─── Top 4 KPIs ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {/* KPI 1: Monthly Remaining Balance */}
+        <div
+          onClick={() => setActiveTab('reglements')}
+          className="cursor-pointer bg-white rounded-2xl p-5 border-2 border-indigo-100 hover:border-indigo-300 shadow-sm transition-all"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? 'مقبولة من الزبون (Tous)' : 'Validés par le Client'}
+              {isAr ? `الرصيد المتبقي (${selectedMois})` : `Solde Restant (${selectedMois})`}
             </span>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="text-3xl font-black text-slate-900">{stats.totalValides}</div>
-          <div className="text-xs text-emerald-600 mt-1 font-bold flex items-center gap-1">
-            <Check className="w-3 h-3" />
-            {isAr ? 'موديلات تمت موافقة الزبون عليها' : 'Modèles acceptés et confirmés'}
-          </div>
-        </div>
-
-        {/* Metric 2: Total Patronage Earnings */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? 'مجموع أتعاب الباترون' : 'Total Patronage Dû'}
-            </span>
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-              <Scissors className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-indigo-600">{stats.totalPatronageMAD.toLocaleString('fr-MA')} <span className="text-sm font-bold">MAD</span></div>
-          <div className="text-xs text-indigo-700/80 mt-1 font-medium">
-            {isAr ? 'إجمالي مستحقات الباترون المحددة' : 'Montant total fixé en patronage'}
-          </div>
-        </div>
-
-        {/* Metric 3: Paid (Khlas Daz) */}
-        <div 
-          onClick={() => setActiveTab('payes')}
-          className={`bg-white rounded-2xl p-5 border cursor-pointer transition-all ${
-            activeTab === 'payes' 
-              ? 'border-blue-500 shadow-md ring-2 ring-blue-500/20' 
-              : 'border-slate-200/80 hover:border-slate-300 shadow-xs'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? 'الخلاص داز (مؤدى)' : 'Patronage Payé (Khlas Daz)'}
-            </span>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <Wallet className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-600">{stats.totalPayeMAD.toLocaleString('fr-MA')} <span className="text-sm font-bold">MAD</span></div>
-          <div className="text-xs text-emerald-700/80 mt-1 font-medium">
-            {stats.payesCount} {isAr ? 'موديل مؤدى بالكامل' : 'modèle(s) réglé(s)'}
+          <div className="text-3xl font-black text-indigo-700">
+            {summary.monthRemainingMAD.toLocaleString()} <span className="text-base font-bold">MAD</span>
+          </div>
+          <div className="flex items-center gap-3 text-[11px] font-bold mt-2 text-slate-500">
+            <span className="text-emerald-600">
+              {isAr ? `المستحق: ${summary.monthEarnedMAD}` : `Dû: ${summary.monthEarnedMAD}`}
+            </span>
+            <span>•</span>
+            <span className="text-slate-600">
+              {isAr ? `المدفوع: ${summary.monthPaidMAD}` : `Réglé: ${summary.monthPaidMAD}`}
+            </span>
           </div>
         </div>
 
-        {/* Metric 4: Pending (Khlas Baqi) */}
-        <div 
-          onClick={() => setActiveTab('en_attente_paiement')}
-          className={`bg-white rounded-2xl p-5 border cursor-pointer transition-all ${
-            activeTab === 'en_attente_paiement' 
-              ? 'border-amber-500 shadow-md ring-2 ring-amber-500/20' 
-              : 'border-slate-200/80 hover:border-slate-300 shadow-xs'
+        {/* KPI 2: New Models Awaiting Pricing */}
+        <div
+          onClick={() => {
+            setActiveTab('a_tarifer');
+            setPricingFilter('requested');
+          }}
+          className={`cursor-pointer bg-white rounded-2xl p-5 border-2 shadow-sm transition-all ${
+            summary.newToPriceCount > 0 ? 'border-amber-300 bg-amber-50/30' : 'border-slate-100 hover:border-amber-200'
           }`}
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? 'الخلاص باقي (معلق)' : 'Patronage En Attente'}
+              {isAr ? 'جديد ينتظر التسعير' : 'Nouveaux à Tarifer'}
             </span>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-              <DollarSign className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Scissors className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-2xl font-black text-amber-600">{stats.totalResteMAD.toLocaleString('fr-MA')} <span className="text-sm font-bold">MAD</span></div>
-          <div className="text-xs text-amber-700/80 mt-1 font-medium">
-            {stats.enAttentePayCount} {isAr ? 'موديل قيد انتظار الخلاص' : 'modèle(s) à régler'}
-          </div>
+          <div className="text-3xl font-black text-amber-600">{summary.newToPriceCount}</div>
+          <p className="text-xs text-slate-500 font-semibold mt-1">
+            {isAr
+              ? `${summary.pricedAwaitingValidationCount} مسعّرة تنتظر المصادقة`
+              : `${summary.pricedAwaitingValidationCount} tarifé(s) en attente validation`}
+          </p>
         </div>
 
+        {/* KPI 3: Active Work Left to Execute */}
+        <div
+          onClick={() => {
+            setActiveTab('travaux');
+            setWorkFilter('pending');
+          }}
+          className={`cursor-pointer bg-white rounded-2xl p-5 border-2 shadow-sm transition-all ${
+            summary.overdueCount > 0 ? 'border-rose-300' : 'border-slate-100 hover:border-indigo-200'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              {isAr ? 'مطلوب إنجازها الآن' : 'Travaux à Exécuter'}
+            </span>
+            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Clock className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="text-3xl font-black text-slate-900">{summary.activeWorkCount}</div>
+          <p className={`text-xs font-bold mt-1 ${summary.overdueCount > 0 ? 'text-rose-600' : 'text-slate-500'}`}>
+            {summary.overdueCount > 0
+              ? isAr
+                ? `⚠️ ${summary.overdueCount} متأخرة عن الموعد`
+                : `⚠️ ${summary.overdueCount} en retard`
+              : isAr
+              ? 'مصادق عليها ومبرمجة'
+              : 'Modèles validés en cours'}
+          </p>
+        </div>
+
+        {/* KPI 4: Completed Models */}
+        <div
+          onClick={() => {
+            setActiveTab('travaux');
+            setWorkFilter('termine');
+          }}
+          className="cursor-pointer bg-white rounded-2xl p-5 border-2 border-slate-100 hover:border-emerald-200 shadow-sm transition-all"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              {isAr ? 'الموديلات المنجزة' : 'Modèles Réalisés'}
+            </span>
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="text-3xl font-black text-emerald-600">{summary.completedWorkCount}</div>
+          <p className="text-xs text-slate-500 font-semibold mt-1">
+            {isAr
+              ? `إجمالي المدفوع: ${summary.totalRegleAllMAD.toLocaleString()} MAD`
+              : `Total réglé: ${summary.totalRegleAllMAD.toLocaleString()} MAD`}
+          </p>
+        </div>
       </div>
 
-      {/* ─── Search & Tab Filters ──────────────────────────────── */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        
-        {/* Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto">
-          {/* TOUS (VALIDÉS CLIENT) */}
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeTab === 'all' 
-                ? 'bg-slate-900 text-white shadow-sm' 
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{isAr ? `المقبولة من الزبون - الكل (${stats.totalValides})` : `Tous - Validés Client (${stats.totalValides})`}</span>
-          </button>
-          
-          {/* EN ATTENTE ACCORD CLIENT */}
-          <button
-            onClick={() => setActiveTab('en_attente_client')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeTab === 'en_attente_client' 
-                ? 'bg-amber-500 text-white shadow-sm' 
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>{isAr ? `في انتظار موافقة الزبون (${stats.enAttenteClientCount})` : `En attente client (${stats.enAttenteClientCount})`}</span>
-          </button>
-
-          {/* KHLAS DAZ */}
-          <button
-            onClick={() => setActiveTab('payes')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeTab === 'payes' 
-                ? 'bg-emerald-600 text-white shadow-sm' 
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Wallet className="w-3.5 h-3.5" />
-            <span>{isAr ? `الخلاص داز (${stats.payesCount})` : `Khlas Daz (${stats.payesCount})`}</span>
-          </button>
-
-          {/* KHLAS BAQI */}
-          <button
-            onClick={() => setActiveTab('en_attente_paiement')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeTab === 'en_attente_paiement' 
-                ? 'bg-amber-600 text-white shadow-sm' 
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <DollarSign className="w-3.5 h-3.5" />
-            <span>{isAr ? `الخلاص باقي (${stats.enAttentePayCount})` : `Khlas Baqi (${stats.enAttentePayCount})`}</span>
-          </button>
+      {/* ─── Organized 4-Tab Bar + Search ─────────────────────────── */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === tab.id
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+              {typeof tab.badge === 'number' && tab.badge > 0 && (
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+                    activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
+                  }`}
+                >
+                  {tab.badge}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
-        {/* Search */}
-        <div className="relative w-full md:w-72">
-          <Search className={`w-4 h-4 absolute ${isAr ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-slate-400`} />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={isAr ? 'بحث بالموديل أو الزبون...' : 'Recherche modèle ou client...'}
-            className={`w-full ${isAr ? 'pr-9 pl-4' : 'pl-9 pr-4'} py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all`}
-          />
-        </div>
-
+        {activeTab !== 'dashboard' && (
+          <div className="relative w-full lg:w-72">
+            <Search
+              className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`}
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={isAr ? 'بحث بالموديل أو الزبون...' : 'Rechercher modèle ou client...'}
+              className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+            />
+          </div>
+        )}
       </div>
 
-      {/* ─── Model Items List ──────────────────────────────────── */}
-      {loading ? (
-        <div className="bg-white rounded-3xl p-12 text-center border border-slate-100">
-          <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
-          <p className="text-slate-500 text-sm font-bold">{isAr ? 'جاري تحميل الموديلات...' : 'Chargement des modèles...'}</p>
-        </div>
-      ) : displayedItems.length === 0 ? (
-        <div className="bg-white rounded-3xl p-16 text-center border border-slate-100 shadow-sm space-y-4">
-          <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mx-auto">
-            <Scissors className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="text-lg font-black text-slate-800">
-              {activeTab === 'all'
-                ? (isAr ? 'لا توجد موديلات مقبولة من طرف الزبون حالياً' : 'Aucun modèle validé par le client pour l\'instant')
-                : (isAr ? 'لا توجد نتائج في هذا التبويب' : 'Aucun modèle dans cet onglet')}
-            </h3>
-            <p className="text-slate-400 text-xs mt-1 max-w-md mx-auto">
-              {activeTab === 'all'
-                ? (isAr ? 'الموديلات تظهر هنا تلقائياً بمجرد تحديد ثمن الباترون ومصادقة الزبون على الطلبية، أو يمكنك تصفح الموديلات المعلقة عبر تبويب "في انتظار موافقة الزبون".' : 'Les modèles apparaissent ici dès qu\'ils sont chiffrés et acceptés par le client.')
-                : (isAr ? 'لم يتم العثور على أي موديل يوافق البحث أو الفلتر المحدد.' : 'Aucun résultat trouvé pour vos critères de recherche.')}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {displayedItems.map((item, idx) => {
-            const { isValidatedByClient } = item;
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* TAB 1: DASHBOARD HOME                                       */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      {activeTab === 'dashboard' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Monthly Financial Balance Card */}
+          <div className="lg:col-span-1 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-indigo-600" />
+                <span>{isAr ? 'ملخص الرصيد الشهري' : 'Balance Mensuelle'}</span>
+              </h2>
+              <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-black">
+                {selectedMois}
+              </span>
+            </div>
 
-            return (
-              <div 
-                key={item.id || idx}
-                className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all space-y-4"
+            <div className="space-y-3 bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600 font-semibold">
+                  {isAr ? `المستحق عن الموديلات (${summary.monthModelsCount})` : `Gains validés (${summary.monthModelsCount})`}
+                </span>
+                <span className="font-black text-slate-900">{summary.monthEarnedMAD.toLocaleString()} MAD</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600 font-semibold">
+                  {isAr ? 'المبالغ المدفوعة / التسبيقات' : 'Règlements & Avances reçus'}
+                </span>
+                <span className="font-black text-emerald-600">- {summary.monthPaidMAD.toLocaleString()} MAD</span>
+              </div>
+              <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
+                <span className="font-black text-slate-900 text-sm">
+                  {isAr ? 'الرصيد المتبقي للصرف' : 'Reste à Percevoir'}
+                </span>
+                <span className="text-2xl font-black text-indigo-700">
+                  {summary.monthRemainingMAD.toLocaleString()} MAD
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-100">
+                <p className="text-[11px] font-bold text-emerald-700 uppercase">
+                  {isAr ? 'تم الدفع (الكل)' : 'Total Réglé'}
+                </p>
+                <p className="text-lg font-black text-emerald-800 mt-0.5">
+                  {summary.totalRegleAllMAD.toLocaleString()} MAD
+                </p>
+              </div>
+              <div className="p-3 rounded-2xl bg-amber-50 border border-amber-100">
+                <p className="text-[11px] font-bold text-amber-700 uppercase">
+                  {isAr ? 'بانتظار الدفع' : 'En Attente'}
+                </p>
+                <p className="text-lg font-black text-amber-800 mt-0.5">
+                  {summary.totalResteAllMAD.toLocaleString()} MAD
+                </p>
+              </div>
+            </div>
+
+            {isAdmin && (
+              <Link
+                to="/balance-paie"
+                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition"
               >
-                {/* Upper Row: Photo, Modele, Client, and Validation Badge */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-                  
-                  <div className="flex items-center gap-4">
-                    {/* Thumbnail Photo with Zoom */}
-                    <div 
+                <DollarSign className="w-4 h-4" />
+                <span>{isAr ? 'فتح صفحة الحساب الشامل (RH)' : 'Ouvrir Balance Paie RH'}</span>
+              </Link>
+            )}
+          </div>
+
+          {/* Action Queue: New Models + Urgent Deadlines */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* New Models Awaiting Pricing Alert */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <Scissors className="w-5 h-5 text-amber-500" />
+                  <span>{isAr ? 'موديلات جديدة في انتظار التسعير' : 'Nouveaux Modèles à Tarifer'}</span>
+                </h3>
+                <button
+                  onClick={() => {
+                    setActiveTab('a_tarifer');
+                    setPricingFilter('requested');
+                  }}
+                  className="text-xs font-black text-indigo-600 hover:underline cursor-pointer"
+                >
+                  {isAr ? 'عرض الكل ←' : 'Voir tout →'}
+                </button>
+              </div>
+
+              {filteredByRole.filter(i => i.patronageStatus === 'requested').length === 0 ? (
+                <div className="text-center py-6 bg-slate-50 rounded-2xl text-sm font-semibold text-slate-400">
+                  {isAr ? 'لا توجد موديلات جديدة تحتاج تسعيراً حالياً' : 'Aucun nouveau modèle en attente de tarif'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {filteredByRole
+                    .filter(i => i.patronageStatus === 'requested')
+                    .slice(0, 4)
+                    .map(item => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-amber-200 bg-amber-50/40"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                            {item.photo ? (
+                              <img src={item.photo} alt={item.modele} className="w-full h-full object-cover" />
+                            ) : (
+                              <Scissors className="w-5 h-5 text-slate-300" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-black text-slate-900 text-sm truncate">{item.modele}</p>
+                            <p className="text-xs font-semibold text-slate-500 truncate">{item.client}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => openPricingModal(item)}
+                          className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shrink-0 cursor-pointer"
+                        >
+                          {isAr ? 'وضع الثمن' : 'Tarifer'}
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Active Validated Work with Deadlines */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-indigo-600" />
+                  <span>{isAr ? 'قائمة الأعمال المطلوب إنجازها (حسب الموعد)' : 'Travaux Validés à Exécuter (Par Échéance)'}</span>
+                </h3>
+                <button
+                  onClick={() => {
+                    setActiveTab('travaux');
+                    setWorkFilter('pending');
+                  }}
+                  className="text-xs font-black text-indigo-600 hover:underline cursor-pointer"
+                >
+                  {isAr ? 'إدارة الأعمال ←' : 'Gérer →'}
+                </button>
+              </div>
+
+              {filteredByRole.filter(i => i.isValidatedToWork && i.workStatus !== 'termine').length === 0 ? (
+                <div className="text-center py-6 bg-slate-50 rounded-2xl text-sm font-semibold text-slate-400">
+                  {isAr ? 'لا توجد موديلات قيد الإنجاز حالياً' : 'Aucun travail en attente pour le moment'}
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {filteredByRole
+                    .filter(i => i.isValidatedToWork && i.workStatus !== 'termine')
+                    .sort((a, b) => getDeadlineBadge(a.deadlineDate, a.workStatus, isAr).urgency - getDeadlineBadge(b.deadlineDate, b.workStatus, isAr).urgency)
+                    .slice(0, 5)
+                    .map(item => {
+                      const dl = getDeadlineBadge(item.deadlineDate, item.workStatus, isAr);
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200 hover:border-indigo-200 bg-slate-50/50"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                              {item.photo ? (
+                                <img src={item.photo} alt={item.modele} className="w-full h-full object-cover" />
+                              ) : (
+                                <Scissors className="w-5 h-5 text-slate-300" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-black text-slate-900 text-sm">{item.modele}</p>
+                              <p className="text-xs font-semibold text-slate-500">
+                                {item.client} • {item.patronagePrice} MAD
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2.5 py-1 rounded-lg border text-xs font-black ${dl.cls}`}>
+                              {item.deadlineDate ? `${item.deadlineDate} (${dl.label})` : dl.label}
+                            </span>
+                            <button
+                              onClick={() => handleUpdateWorkStatus(item, 'termine')}
+                              disabled={actionPendingId === item.id}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer"
+                            >
+                              {isAr ? 'تم الإنجاز' : 'Terminer'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* TAB 2: NOUVEAUX MODÈLES À TARIFER (PRICING & VALIDATION)    */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      {activeTab === 'a_tarifer' && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setPricingFilter('requested')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                pricingFilter === 'requested' ? 'bg-amber-500 text-white' : 'bg-white border border-slate-200 text-slate-600'
+              }`}
+            >
+              {isAr ? `تنتظر التسعير (${summary.newToPriceCount})` : `En attente de tarif (${summary.newToPriceCount})`}
+            </button>
+            <button
+              onClick={() => setPricingFilter('priced_waiting')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                pricingFilter === 'priced_waiting' ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
+              }`}
+            >
+              {isAr
+                ? `مسعّرة تنتظر المصادقة (${summary.pricedAwaitingValidationCount})`
+                : `Tarifés — En attente validation (${summary.pricedAwaitingValidationCount})`}
+            </button>
+            <button
+              onClick={() => setPricingFilter('all')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                pricingFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'
+              }`}
+            >
+              {isAr ? 'الكل' : 'Tous'}
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="py-16 text-center text-slate-400 font-bold">{isAr ? 'جاري التحميل...' : 'Chargement...'}</div>
+          ) : pricingItems.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
+              <Scissors className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <p className="font-black text-slate-800">
+                {isAr ? 'لا توجد موديلات في هذا القسم حالياً' : 'Aucun modèle dans cette section'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pricingItems.map(item => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-indigo-300 transition flex flex-col justify-between gap-4"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3.5">
+                      <div
+                        onClick={() => item.photo && setZoomImage(item.photo)}
+                        className={`w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center relative group ${
+                          item.photo ? 'cursor-pointer' : ''
+                        }`}
+                      >
+                        {item.photo ? (
+                          <>
+                            <img src={item.photo} alt={item.modele} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                              <Eye className="w-4 h-4 text-white" />
+                            </div>
+                          </>
+                        ) : (
+                          <Scissors className="w-6 h-6 text-slate-300" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase mb-1 ${
+                            item.patronageStatus === 'requested'
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-indigo-100 text-indigo-700'
+                          }`}
+                        >
+                          {item.patronageStatus === 'requested'
+                            ? isAr ? 'جديد للتسعير' : 'À Tarifer'
+                            : isAr ? 'مسعّر — ينتظر المصادقة' : 'Tarif proposé'}
+                        </span>
+                        <h3 className="font-black text-slate-900 text-base truncate">{item.modele}</h3>
+                        <p className="text-xs font-semibold text-slate-500 truncate">
+                          {item.client} • {item.quantity || 1} {isAr ? 'قطعة' : 'pcs'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {item.clientNotes && (
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600 line-clamp-2">
+                        {item.clientNotes}
+                      </div>
+                    )}
+
+                    {item.patronageStatus === 'priced' && (
+                      <div className="p-3 bg-indigo-50/70 rounded-xl border border-indigo-100 flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] font-bold text-indigo-500 uppercase">
+                            {isAr ? 'ثمن الباترون المقترح' : 'Prix Patronage'}
+                          </p>
+                          <p className="text-lg font-black text-indigo-900">{item.patronagePrice} MAD</p>
+                        </div>
+                        {item.prixEchantillon > 0 && (
+                          <div className="text-right">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase">
+                              {isAr ? 'ثمن العينة' : 'Échantillon'}
+                            </p>
+                            <p className="text-sm font-black text-slate-700">{item.prixEchantillon} MAD</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+                    <button
+                      onClick={() => openPricingModal(item)}
+                      disabled={actionPendingId === item.id}
+                      className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer"
+                    >
+                      <DollarSign className="w-4 h-4" />
+                      <span>
+                        {item.patronageStatus === 'priced'
+                          ? isAr ? 'تعديل التسعيرة' : 'Modifier le Tarif'
+                          : isAr ? 'إدخال ثمن الباترون' : 'Fixer le Tarif'}
+                      </span>
+                    </button>
+
+                    {isAdmin && item.patronageStatus === 'priced' && !item.isValidatedToWork && (
+                      <button
+                        onClick={() => openValidateModal(item)}
+                        disabled={actionPendingId === item.id}
+                        className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span>{isAr ? 'المصادقة وتحديد تاريخ التسليم' : 'Valider & Définir Date Limite'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* TAB 3: TRAVAUX À FAIRE (VALIDATED BY ADMIN OR CLIENT)       */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      {activeTab === 'travaux' && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setWorkFilter('pending')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                workFilter === 'pending' ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
+              }`}
+            >
+              {isAr ? `قيد التنفيذ والمطلوبة (${summary.activeWorkCount})` : `À exécuter (${summary.activeWorkCount})`}
+            </button>
+            <button
+              onClick={() => setWorkFilter('termine')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                workFilter === 'termine' ? 'bg-emerald-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
+              }`}
+            >
+              {isAr ? `المكتملة والمسلّمة (${summary.completedWorkCount})` : `Terminés & Livrés (${summary.completedWorkCount})`}
+            </button>
+            <button
+              onClick={() => setWorkFilter('all')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                workFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'
+              }`}
+            >
+              {isAr ? `الكل (${summary.allValidatedCount})` : `Tous (${summary.allValidatedCount})`}
+            </button>
+          </div>
+
+          {workItems.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
+              <FileCheck className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <p className="font-black text-slate-800">
+                {isAr ? 'لا توجد موديلات مصادق عليها للعمل حالياً' : 'Aucun travail validé dans cette catégorie'}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                {isAr
+                  ? 'تظهر هنا الموديلات فور مصادقة الإدارة أو الزبون مع تاريخ التسليم المحدد.'
+                  : 'Les modèles apparaissent ici dès validation par l’atelier ou le client.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {workItems.map(item => {
+                const dl = getDeadlineBadge(item.deadlineDate, item.workStatus, isAr);
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-indigo-300 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      <div
+                        onClick={() => item.photo && setZoomImage(item.photo)}
+                        className={`w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center relative group ${
+                          item.photo ? 'cursor-pointer' : ''
+                        }`}
+                      >
+                        {item.photo ? (
+                          <>
+                            <img src={item.photo} alt={item.modele} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                              <Eye className="w-4 h-4 text-white" />
+                            </div>
+                          </>
+                        ) : (
+                          <Scissors className="w-6 h-6 text-slate-300" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-black text-slate-900 text-lg">{item.modele}</h3>
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                            {item.isValidatedByClient
+                              ? isAr ? 'مصادق من الزبون' : 'Validé Client'
+                              : isAr ? 'مصادق من الإدارة' : 'Validé Atelier'}
+                          </span>
+                          <span className={`px-2.5 py-0.5 rounded-md border text-[11px] font-black ${dl.cls}`}>
+                            {item.deadlineDate ? `📅 ${item.deadlineDate} — ${dl.label}` : dl.label}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-500">
+                          <span>👤 {item.client}</span>
+                          <span>• {item.quantity || 1} {isAr ? 'قطعة' : 'pcs'}</span>
+                          <span className="text-indigo-700 font-black">• {item.patronagePrice} MAD</span>
+                          {item.modelisteName && <span>• {isAr ? 'الموديليست:' : 'Modéliste:'} {item.modelisteName}</span>}
+                        </div>
+
+                        {item.patronageNotes && (
+                          <p className="text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                            {item.patronageNotes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Work Action Controls */}
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                      {isAdmin && (
+                        <button
+                          onClick={() => openValidateModal(item)}
+                          className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                          title={isAr ? 'تعديل تاريخ التسليم' : 'Modifier date limite'}
+                        >
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>{isAr ? 'الموعد' : 'Date limite'}</span>
+                        </button>
+                      )}
+
+                      {item.workStatus === 'a_faire' && (
+                        <button
+                          onClick={() => handleUpdateWorkStatus(item, 'en_cours')}
+                          disabled={actionPendingId === item.id}
+                          className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          <span>{isAr ? 'بدء العمل' : 'Démarrer'}</span>
+                        </button>
+                      )}
+
+                      {item.workStatus !== 'termine' ? (
+                        <button
+                          onClick={() => handleUpdateWorkStatus(item, 'termine')}
+                          disabled={actionPendingId === item.id}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>{isAr ? 'تأكيد الإنجاز والتسليم' : 'Marquer Terminé'}</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleUpdateWorkStatus(item, 'en_cours')}
+                          disabled={actionPendingId === item.id}
+                          className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>{isAr ? 'منجز ومسلّم' : 'Terminé & Livré'}</span>
+                        </button>
+                      )}
+
+                      {item.phone && (
+                        <button
+                          onClick={() => openWhatsApp(item.phone, item.client, item.modele)}
+                          className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-pointer"
+                          title="WhatsApp"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* TAB 4: RÈGLEMENTS & BALANCE (CLEAN FR/AR — NO DARIJA LATIN) */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      {activeTab === 'reglements' && (
+        <div className="space-y-4">
+          {/* Clean Filter Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setPaymentFilter('all')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                paymentFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'
+              }`}
+            >
+              {isAr ? `جميع المصادق عليها (${summary.allValidatedCount})` : `Tous Validés (${summary.allValidatedCount})`}
+            </button>
+            <button
+              onClick={() => setPaymentFilter('regles')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                paymentFilter === 'regles' ? 'bg-emerald-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
+              }`}
+            >
+              <Wallet className="w-3.5 h-3.5" />
+              <span>{isAr ? `تم الدفع (${summary.reglesCount})` : `Réglés (${summary.reglesCount})`}</span>
+            </button>
+            <button
+              onClick={() => setPaymentFilter('en_attente')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                paymentFilter === 'en_attente' ? 'bg-amber-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
+              }`}
+            >
+              <DollarSign className="w-3.5 h-3.5" />
+              <span>
+                {isAr
+                  ? `بانتظار الدفع (${summary.enAttenteReglementCount})`
+                  : `En attente de règlement (${summary.enAttenteReglementCount})`}
+              </span>
+            </button>
+          </div>
+
+          {paymentItems.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center text-slate-400 font-bold">
+              {isAr ? 'لا توجد موديلات مطابقة في هذه القائمة' : 'Aucun élément trouvé'}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {paymentItems.map(item => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div
                       onClick={() => item.photo && setZoomImage(item.photo)}
-                      className={`w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity relative group ${
-                        item.photo ? '' : 'cursor-default'
+                      className={`w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center ${
+                        item.photo ? 'cursor-pointer' : ''
                       }`}
                     >
                       {item.photo ? (
                         <img src={item.photo} alt={item.modele} className="w-full h-full object-cover" />
                       ) : (
-                        <Scissors className="w-7 h-7 text-slate-400" />
-                      )}
-                      {item.photo && (
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                          <Eye className="w-4 h-4" />
-                        </div>
+                        <Scissors className="w-5 h-5 text-slate-300" />
                       )}
                     </div>
-
-                    {/* Modele & Client Info */}
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-base font-black text-slate-900 tracking-tight">
-                          {item.modele}
-                        </h3>
-
-                        {item.modelisteName && isAdmin && (
-                          <span className="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-[11px] font-bold border border-indigo-100 flex items-center gap-1">
-                            <UserIcon className="w-3 h-3" />
-                            {item.modelisteName}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500 font-medium flex-wrap">
-                        <span className="flex items-center gap-1 font-bold text-slate-700">
-                          <UserIcon className="w-3.5 h-3.5 text-slate-400" />
-                          {item.client || (isAr ? 'زبون غير محدد' : 'Client inconnu')}
-                        </span>
-                        {item.phone && (
-                          <>
-                            <span>•</span>
-                            <span className="font-mono text-slate-600">{item.phone}</span>
-                          </>
-                        )}
-                        <span>•</span>
-                        <span className="flex items-center gap-1 text-slate-400">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {item.date || '—'}
-                        </span>
-                      </div>
+                    <div className="min-w-0">
+                      <h3 className="font-black text-slate-900 text-base truncate">{item.modele}</h3>
+                      <p className="text-xs font-semibold text-slate-500">
+                        {item.client} • {item.date}
+                        {item.patronagePaidAt && ` • ${isAr ? 'تاريخ الأداء:' : 'Réglé le:'} ${toYmd(item.patronagePaidAt)}`}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Right side: Client Validation Badge & WhatsApp quick link */}
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
-                    
-                    {/* Status Badge */}
-                    {isValidatedByClient ? (
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black shadow-xs">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span>{isAr ? 'مقبول من طرف الزبون ✅' : 'Client Validé (Accepté) ✅'}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold">
-                          <Clock className="w-3.5 h-3.5 text-amber-500" />
-                          <span>{isAr ? 'في انتظار موافقة الزبون' : 'En attente client'}</span>
-                        </div>
-
-                        {/* One-click validate client acceptance button */}
-                        <button
-                          onClick={() => handleValidateClient(item)}
-                          disabled={actionPendingId === item.id}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs transition-all active:scale-95 disabled:opacity-50"
-                          title={isAr ? 'تأكيد موافقة وقبول الزبون لهذا الموديل' : 'Confirmer l\'accord du client'}
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>{isAr ? 'تأكيد قبول الزبون' : 'Valider client'}</span>
-                        </button>
-                      </div>
-                    )}
-
-                    {/* WhatsApp button */}
-                    {item.phone && (
-                      <button
-                        onClick={() => openWhatsApp(item.phone, item.client, item.modele)}
-                        title={isAr ? 'مراسلة عبر واتساب' : 'Contacter sur WhatsApp'}
-                        className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl border border-emerald-200 transition-colors"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                </div>
-
-                {/* ─── Lower Section: PRIX PATRONAGE & RÈGLEMENT MODÉLISTE (NO INVOICE OR FACTORY NUMBERS) ─── */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80">
-                  
-                  {/* Left: Patronage Price Fixed By Him */}
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-black shadow-xs">
-                      <Scissors className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-0.5">
-                        {isAr ? 'ثمن وأجرة الباترون المسجلة (Prix Patronage)' : 'Prix de Patronage Fixé'}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                        {isAr ? 'ثمن الباترون' : 'Montant Patronage'}
                       </span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-2xl font-black text-slate-900 font-mono">
-                          {item.patronagePrice > 0 ? item.patronagePrice : '—'}
-                        </span>
-                        <span className="text-xs font-black text-indigo-600">MAD</span>
-                        {item.patronageNotes && (
-                          <span className="text-[11px] text-slate-500 font-medium mr-2 max-w-xs truncate">
-                            ({item.patronageNotes})
-                          </span>
-                        )}
-                      </div>
+                      <span className="text-lg font-black text-indigo-700">{item.patronagePrice} MAD</span>
                     </div>
-                  </div>
 
-                  {/* Right: Payment Status of Patronage Fee */}
-                  <div className="flex items-center gap-3 justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200/60">
                     {item.patronagePaid ? (
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black shadow-xs">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                          <span>{isAr ? 'خلاص الباترون داز ✅' : 'Patronage Réglé (Payé) ✅'}</span>
-                        </div>
-                        {isAdmin && (
+                        <span className="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>{isAr ? 'تم الدفع' : 'Réglé'}</span>
+                        </span>
+                        {isAdmin && item.lead && (
                           <button
                             onClick={() => handleTogglePatronagePaid(item)}
                             disabled={actionPendingId === item.id}
-                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-all"
-                            title={isAr ? 'إلغاء التأشير' : 'Annuler'}
+                            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer"
+                            title={isAr ? 'التراجع عن الدفع' : 'Annuler règlement'}
                           >
-                            <RotateCcw className="w-3.5 h-3.5" />
+                            <RotateCcw className="w-4 h-4" />
                           </button>
                         )}
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
-                          <Clock className="w-4 h-4 text-amber-600" />
-                          <span>{isAr ? 'الخلاص باقي ⏳' : 'En attente de paiement ⏳'}</span>
-                        </div>
-
-                        {/* Action button to mark as paid */}
-                        <button
-                          onClick={() => handleTogglePatronagePaid(item)}
-                          disabled={actionPendingId === item.id}
-                          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-sm transition-all active:scale-95 disabled:opacity-50"
-                          title={isAr ? 'تأكيد استلام خلاص أتعاب الباترون لهذا الموديل' : 'Marquer comme réglé'}
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>{isAr ? 'تأكيد الخلاص ✓' : 'Marquer Payé'}</span>
-                        </button>
+                        <span className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-black flex items-center gap-1.5">
+                          <Clock className="w-4 h-4" />
+                          <span>{isAr ? 'بانتظار الدفع' : 'En attente de règlement'}</span>
+                        </span>
+                        {isAdmin && item.lead && (
+                          <button
+                            onClick={() => handleTogglePatronagePaid(item)}
+                            disabled={actionPendingId === item.id}
+                            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm cursor-pointer"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>{isAr ? 'تأكيد الدفع' : 'Marquer Réglé'}</span>
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
-
                 </div>
+              ))}
+            </div>
+          )}
 
+          {/* Monthly RH Advances / Salary Payments Breakdown */}
+          {summary.rhPaysInMonth.length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm mt-4">
+              <h3 className="font-black text-slate-800 text-sm mb-3">
+                {isAr
+                  ? `سجل الدفعات والتسبيقات المسجلة في النظام لشهر ${selectedMois}`
+                  : `Historique des règlements & avances enregistrés (${selectedMois})`}
+              </h3>
+              <div className="space-y-2">
+                {summary.rhPaysInMonth.map(p => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between text-xs p-3 rounded-xl bg-slate-50 border border-slate-100"
+                  >
+                    <div>
+                      <span className="font-black text-slate-800">{p.notes || (isAr ? 'دفعة مالية' : 'Règlement')}</span>
+                      <span className="text-slate-400 mx-2">• {p.date}</span>
+                    </div>
+                    <span className="font-black text-emerald-700">{Number(p.montant).toLocaleString()} MAD</span>
+                  </div>
+                ))}
               </div>
-            );
-          })}
+            </div>
+          )}
         </div>
       )}
 
-      {/* ─── Image Zoom Modal ──────────────────────────────────── */}
-      {zoomImage && (
-        <div 
-          onClick={() => setZoomImage(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-        >
-          <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl p-2" onClick={e => e.stopPropagation()}>
-            <button
-              onClick={() => setZoomImage(null)}
-              className="absolute top-4 right-4 z-10 w-9 h-9 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <img 
-              src={zoomImage} 
-              alt="Zoom Patronage" 
-              className="w-full h-auto max-h-[80vh] object-contain rounded-xl"
-            />
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* MODAL: SET / EDIT PATRONAGE PRICE                           */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      {pricingItem && (
+        <div className="fixed inset-0 z-[250] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="font-black text-slate-900 flex items-center gap-2">
+                <Scissors className="w-5 h-5 text-amber-500" />
+                <span>{isAr ? 'تسعير الموديل للمصادقة' : 'Tarification du Modèle'}</span>
+              </h3>
+              <button onClick={() => setPricingItem(null)} className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                {pricingItem.photo && (
+                  <img src={pricingItem.photo} alt={pricingItem.modele} className="w-14 h-14 rounded-xl object-cover" />
+                )}
+                <div>
+                  <p className="font-black text-slate-900">{pricingItem.modele}</p>
+                  <p className="text-xs font-semibold text-slate-500">
+                    {pricingItem.client} • {pricingItem.quantity || 1} {isAr ? 'قطعة' : 'pcs'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1.5">
+                    {isAr ? 'ثمن الباترون والتدريج (MAD) *' : 'Prix Patronage (MAD) *'}
+                  </label>
+                  <input
+                    type="number"
+                    value={priceInput}
+                    onChange={e => setPriceInput(e.target.value)}
+                    placeholder="250"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-amber-500 outline-none text-lg font-black text-amber-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1.5">
+                    {isAr ? 'ثمن العينة (MAD)' : 'Prix Échantillon (MAD)'}
+                  </label>
+                  <input
+                    type="number"
+                    value={echPriceInput}
+                    onChange={e => setEchPriceInput(e.target.value)}
+                    placeholder="350"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none text-lg font-black text-indigo-700"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1.5">
+                  {isAr ? 'ملاحظات تقنية (اختياري)' : 'Notes techniques (optionnel)'}
+                </label>
+                <textarea
+                  rows={3}
+                  value={notesInput}
+                  onChange={e => setNotesInput(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none text-sm font-medium resize-none"
+                />
+              </div>
+
+              <button
+                onClick={handleSavePrice}
+                disabled={actionPendingId === pricingItem.id}
+                className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm transition cursor-pointer disabled:opacity-50"
+              >
+                {isAr ? 'حفظ التسعيرة وإرسالها' : 'Enregistrer le Tarif'}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* MODAL: ADMIN VALIDATE & ASSIGN DEADLINE DATE                */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      {validateModalItem && (
+        <div className="fixed inset-0 z-[250] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="font-black text-slate-900 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-emerald-600" />
+                <span>{isAr ? 'المصادقة وتحديد يوم التسليم' : 'Valider & Planifier le Travail'}</span>
+              </h3>
+              <button onClick={() => setValidateModalItem(null)} className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <p className="font-black text-slate-900">{validateModalItem.modele}</p>
+                <p className="text-xs font-semibold text-slate-600 mt-0.5">
+                  {validateModalItem.client} • {validateModalItem.patronagePrice} MAD
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1.5">
+                  {isAr ? 'تاريخ التسليم المحدد للموديليست *' : 'Date limite de remise *'}
+                </label>
+                <input
+                  type="date"
+                  value={deadlineInput}
+                  onChange={e => setDeadlineInput(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 outline-none font-bold text-sm"
+                />
+              </div>
+
+              {modelistes.length > 0 && (
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1.5">
+                    {isAr ? 'تعيين الموديليست المسؤول' : 'Modéliste assigné'}
+                  </label>
+                  <select
+                    value={assignModelisteInput}
+                    onChange={e => setAssignModelisteInput(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 outline-none font-bold text-sm bg-white"
+                  >
+                    <option value="">{isAr ? 'تلقائي / متاح للجميع' : 'Automatique'}</option>
+                    {modelistes.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.nom}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <button
+                onClick={handleConfirmAdminValidate}
+                disabled={actionPendingId === validateModalItem.id}
+                className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm transition cursor-pointer"
+              >
+                {isAr ? 'تأكيد وإرسال لقائمة الخدمات' : 'Confirmer & Envoyer aux Travaux'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* MODAL: ADMIN SEND NEW MODEL TO MODÉLISTE                    */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      {showNewModelModal && (
+        <div className="fixed inset-0 z-[250] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="font-black text-slate-900 flex items-center gap-2">
+                <Plus className="w-5 h-5 text-indigo-600" />
+                <span>{isAr ? 'إرسال موديل جديد للتسعير' : 'Envoyer un Nouveau Modèle'}</span>
+              </h3>
+              <button onClick={() => setShowNewModelModal(false)} className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateNewModel} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1">
+                  {isAr ? 'اسم الموديل *' : 'Nom du Modèle *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newModelForm.modele}
+                  onChange={e => setNewModelForm({ ...newModelForm, modele: e.target.value })}
+                  placeholder={isAr ? 'مثال: عباية، جاكيت...' : 'Ex: Robe, Ensemble...'}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1">
+                    {isAr ? 'الزبون *' : 'Client *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newModelForm.client}
+                    onChange={e => setNewModelForm({ ...newModelForm, client: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1">
+                    {isAr ? 'الكمية' : 'Quantité'}
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newModelForm.quantity}
+                    onChange={e => setNewModelForm({ ...newModelForm, quantity: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1">
+                    {isAr ? 'تاريخ التسليم المقترح' : 'Date limite souhaitée'}
+                  </label>
+                  <input
+                    type="date"
+                    value={newModelForm.deadlineDate}
+                    onChange={e => setNewModelForm({ ...newModelForm, deadlineDate: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1">
+                    {isAr ? 'الموديليست' : 'Modéliste'}
+                  </label>
+                  <select
+                    value={newModelForm.modelisteId}
+                    onChange={e => setNewModelForm({ ...newModelForm, modelisteId: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-indigo-500 bg-white"
+                  >
+                    <option value="">{isAr ? 'الكل' : 'Tous'}</option>
+                    {modelistes.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.nom}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1">
+                  {isAr ? 'ملاحظات' : 'Notes'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={newModelForm.notes}
+                  onChange={e => setNewModelForm({ ...newModelForm, notes: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-500 resize-none"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={actionPendingId === 'new-model'}
+                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm transition cursor-pointer"
+              >
+                {isAr ? 'إرسال للتسعير' : 'Envoyer au Modéliste'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Image Zoom Modal ──────────────────────────────────────── */}
+      {zoomImage && (
+        <div
+          className="fixed inset-0 z-[300] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setZoomImage(null)}
+        >
+          <div className="relative max-w-3xl w-full bg-white rounded-3xl p-2 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setZoomImage(null)}
+              className="absolute -top-3 -right-3 w-9 h-9 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-600 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img src={zoomImage} alt="Modèle" className="w-full max-h-[80vh] object-contain rounded-2xl" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { Search, Save, Package, Phone, CheckCircle, ChevronDown, Check, Scissors, AlertCircle, X, ShieldAlert } from 'lucide-react';
-import { Lead, saveRecord, User } from '../types';
+import { Lead, saveRecord, User, parseLeadMeta, parseLeadDetailsJson } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 interface EvaluationPatronageProps {
@@ -36,18 +36,18 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
         .limit(200);
       if (error) throw error;
       if (data) {
-        const filtered = data.filter(l => {
-           let details: any = {};
-           try { details = JSON.parse(l.details || '{}'); } catch(e) {}
-           return details.patronageStatus === 'requested' || details.patronageStatus === 'priced';
+        const parsedAll = data.map(l => parseLeadMeta(l));
+        const filtered = parsedAll.filter(l => {
+          const details = parseLeadDetailsJson(l.details);
+          return details.patronageStatus === 'requested' || details.patronageStatus === 'priced';
         });
-        
+
         const mapped = filtered.map(l => {
-          let extra: any = {};
-          try { extra = JSON.parse(l.details || '{}'); } catch(e) {}
+          const extra = parseLeadDetailsJson(l.details);
           return {
             ...l,
             ...extra,
+            details: l.details,
             id: l.id
           };
         });
@@ -66,8 +66,7 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
 
   const handleSelectLead = (lead: Lead) => {
     setSelectedLead(lead);
-    let ext: any = {};
-    try { ext = JSON.parse(lead.details || '{}'); } catch(e) {}
+    const ext = parseLeadDetailsJson(lead.details);
     setPriceInput(lead.patronagePrice ? String(lead.patronagePrice) : ext.patronagePrice ? String(ext.patronagePrice) : '');
     setEchantillonInput(lead.prixEchantillon ? String(lead.prixEchantillon) : ext.prixEchantillon ? String(ext.prixEchantillon) : '');
     setNotesInput(lead.patronageNotes || ext.patronageNotes || '');
@@ -87,32 +86,26 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
     try {
       const patPrice = Number(priceInput);
       const echPrice = echantillonInput ? Number(echantillonInput) : 0;
+      const prevExt = parseLeadDetailsJson(selectedLead.details);
 
       const newDetails = {
-        ...(selectedLead as any),
+        ...prevExt,
         patronageStatus: 'priced',
         patronagePrice: patPrice,
         prixEchantillon: echPrice,
         patronageNotes: notesInput,
-        modelisteId: currentUser?.id,
-        modelisteName: currentUser?.nom,
+        modelisteId: currentUser?.id || prevExt.modelisteId,
+        modelisteName: currentUser?.nom || prevExt.modelisteName,
         patronagePricedAt: new Date().toISOString()
       };
-      
+
       const dbLead = {
-        id: selectedLead.id,
-        name: selectedLead.name,
-        phone: selectedLead.phone,
-        ville: selectedLead.ville,
-        type: selectedLead.type,
-        quantity: selectedLead.quantity,
-        status: selectedLead.status,
-        date: selectedLead.date,
+        ...selectedLead,
         patronagePrice: patPrice,
         prixEchantillon: echPrice,
         details: JSON.stringify(newDetails)
       };
-      
+
       await saveRecord('leads', dbLead, true);
       setCustomAlert({
         title: isAr ? 'تم بنجاح! 🎉' : 'Succès! 🎉',
@@ -198,6 +191,11 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
                     <h3 className="font-black text-slate-800 text-sm line-clamp-2">{lead.type.replace(' (CMT - Client Tissu)', '')}</h3>
                     <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{lead.name}</p>
                     <p className="text-[10px] font-bold text-slate-400 mt-0.5">{new Date(lead.date).toLocaleDateString()}</p>
+                    {(lead as any).deadlineDate && (
+                      <p className="text-[10px] font-black text-indigo-600 mt-0.5">
+                        📅 {(lead as any).deadlineDate}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -301,7 +299,7 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
                 </div>
                 <div>
                   <label className="block text-[11px] font-black text-slate-700 uppercase tracking-widest mb-2">
-                    {isAr ? 'ملاحظات المودليست (اختياري)' : 'Notes du Modéliste (Optionnel)'}
+                    {isAr ? 'ملاحظات الموديليست (اختياري)' : 'Notes du Modéliste (Optionnel)'}
                   </label>
                   <textarea 
                     value={notesInput}

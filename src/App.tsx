@@ -1089,6 +1089,16 @@ function AppContent() {
   const userRole = userRoleRaw as keyof typeof permissions;
   const allowed = permissions[userRole] || [];
   const can = (page: AppPage) => allowed.includes(page);
+  const defaultHomeRoute =
+    userRoleRaw === 'modeliste'
+      ? '/suivi-modeliste'
+      : can('worker_portal')
+      ? '/worker-portal'
+      : can('pointage')
+      ? '/pointage'
+      : can('evaluation_patronage')
+      ? '/evaluation-patronage'
+      : '/profil';
 
   if (showClientPortal) {
     return (
@@ -1117,8 +1127,8 @@ function AppContent() {
           />
         }
       >
-        <Route index element={can('dashboard') ? <Dashboard allUsers={allUsers} /> : <Navigate to={can('worker_portal') ? "/worker-portal" : "/"} replace />} />
-        <Route path="dashboard" element={can('dashboard') ? <Dashboard allUsers={allUsers} /> : <Navigate to={can('worker_portal') ? "/worker-portal" : "/"} replace />} />
+        <Route index element={can('dashboard') ? <Dashboard allUsers={allUsers} /> : <Navigate to={defaultHomeRoute} replace />} />
+        <Route path="dashboard" element={can('dashboard') ? <Dashboard allUsers={allUsers} /> : <Navigate to={defaultHomeRoute} replace />} />
         
         {/* Recruitment & Other */}
         <Route path="recrutement" element={<Recrutement />} />
@@ -1280,7 +1290,7 @@ function AppContent() {
       <Route path="/store/:storeNameUrl" element={<div className="min-h-screen bg-white"><StoreBuilder isLiveStore={true} /></div>} />
       <Route path="/saas-admin" element={<Suspense fallback={<PageLoader />}><SaaSAdminPage /></Suspense>} />
       <Route path="/godmode" element={<Suspense fallback={<PageLoader />}><SaaSAdminPage /></Suspense>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to={can('dashboard') ? "/" : defaultHomeRoute} replace />} />
     </Routes>
   );
 }

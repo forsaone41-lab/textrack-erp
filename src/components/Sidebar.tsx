@@ -340,6 +340,9 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           
           {/* Group 1: Access */}
           <div className="space-y-1">
+            {currentUser?.role === 'modeliste' && (
+              <NavItem to="/suivi-modeliste" icon={LayoutDashboard} label={isAr ? 'لوحة الموديليست (الرئيسية)' : 'Accueil Modéliste'} />
+            )}
             <NavItem to="/profil" icon={UserIcon} label={isAr ? 'حسابي' : 'Mon Profil'} />
             {can('dashboard') && <NavItem to="/" icon={LayoutDashboard} label={t('dashboard', lang)} end />}
             {can('worker_portal') && <NavItem to="/worker-portal" icon={UserIcon} label={isAr ? 'فضاء العامل' : 'Espace Ouvrier'} />}
@@ -398,10 +401,10 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               <NavItem to="/fiches-techniques" icon={FileText} label={isAr ? 'البطاقات التقنية' : 'Fiches Tech.'} />
             )}
             {can('evaluation_patronage') && (
-              <NavItem to="/evaluation-patronage" icon={Scissors} label={isAr ? 'تسعير الباترون' : 'Prix Patronage'} />
+              <NavItem to="/evaluation-patronage" icon={Scissors} label={isAr ? 'تسعير الباترون' : 'Tarification Patronage'} />
             )}
-            {(can('suivi_modeliste') || currentUser?.role === 'modeliste' || currentUser?.role === 'admin') && (
-              <NavItem to="/suivi-modeliste" icon={CheckCircle} label={isAr ? 'موديلاتي والمدفوعات' : 'Modèles & Règlements'} />
+            {currentUser?.role !== 'modeliste' && (can('suivi_modeliste') || currentUser?.role === 'admin') && (
+              <NavItem to="/suivi-modeliste" icon={CheckCircle} label={isAr ? 'متابعة الموديليست والمدفوعات' : 'Suivi Modéliste & Règlements'} />
             )}
             {currentUser?.role !== 'modeliste' && (can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin') && (
               <NavItem to="/patronage-ai" icon={Sparkles} label={isAr ? 'استوديو الباترون (AI)' : 'Patronage Studio (AI)'} pro />

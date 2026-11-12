@@ -2922,10 +2922,19 @@ export default function Demandes() {
                                 {!lead.type.startsWith('RECRUTEMENT:') && (
                                   <button 
                                     onClick={async () => {
-                                      if (window.confirm(isAr ? 'إرسال طلب تسعير الباترون للمودليست؟' : 'Demander le prix de patronage au modéliste?')) {
-                                        let extras: any = {};
-                                        try { extras = JSON.parse(lead.details || '{}'); } catch(e){ extras = { clientNotes: lead.details }; }
-                                        const updated = { ...lead, details: JSON.stringify({...extras, patronageStatus: 'requested'}) };
+                                      if (window.confirm(isAr ? 'إرسال طلب تسعير الباترون للموديليست؟' : 'Demander le prix de patronage au modéliste?')) {
+                                        const parsedExt = parseLeadDetailsJson(lead.details);
+                                        const clientNotesFallback = lead.details && !lead.details.trim().startsWith('{')
+                                          ? lead.details.split('| AI_NOTES:')[0].split('| ATELIER_DEVIS:')[0].replace('| COM_UNLOCK:true', '').trim()
+                                          : parsedExt.clientNotes;
+                                        const updated = {
+                                          ...lead,
+                                          details: JSON.stringify({
+                                            ...parsedExt,
+                                            ...(clientNotesFallback ? { clientNotes: clientNotesFallback } : {}),
+                                            patronageStatus: parsedExt.patronageStatus === 'priced' ? 'priced' : 'requested'
+                                          })
+                                        };
                                         setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
                                         await saveRecord('leads', updated, true);
                                       }
