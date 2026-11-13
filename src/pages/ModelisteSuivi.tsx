@@ -32,7 +32,7 @@ import {
   Printer,
   FileText
 } from 'lucide-react';
-import FicheTechniqueModelisteModal, { printFicheTechniqueModeliste } from '../components/FicheTechniqueModelisteModal';
+import FicheTechniqueModelisteModal, { printFicheTechniqueModeliste, sanitizeNotesForModeliste } from '../components/FicheTechniqueModelisteModal';
 import { useLang } from '../contexts/LangContext';
 import {
   FicheTechnique,
@@ -96,6 +96,9 @@ export interface ModelItem {
   workCompletedAt?: string | null;
   modelisteId?: string;
   modelisteName?: string;
+  adminCounterPrice?: number;
+  patronageNegotiationNotes?: string;
+  patronageNegotiationStatus?: string;
   lead?: Lead;
   fiche?: FicheTechnique;
 }
@@ -483,7 +486,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         prixEchantillon: echPrice,
         patronageStatus: ext.patronageStatus === 'priced' || patPrice > 0 ? 'priced' : 'requested',
         patronageNotes: ext.patronageNotes || '',
-        clientNotes: ext.clientNotes || (!lead.details?.trim().startsWith('{') ? lead.details : ''),
+        clientNotes: sanitizeNotesForModeliste(ext.clientNotes || (!lead.details?.trim().startsWith('{') ? lead.details : '')),
         patronagePaid: Boolean(ext.patronagePaid === true),
         patronagePaidAt: ext.patronagePaidAt || null,
         patronagePaidMois: ext.patronagePaidMois || null,
@@ -493,6 +496,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         deadlineDate,
         workStatus,
         workCompletedAt: ext.workCompletedAt || null,
+        adminCounterPrice: Number(ext.adminCounterPrice) || 0,
+        patronageNegotiationNotes: ext.patronageNegotiationNotes || '',
+        patronageNegotiationStatus: ext.patronageNegotiationStatus || '',
         modelisteId: ext.modelisteId,
         modelisteName: ext.modelisteName,
         lead
@@ -932,7 +938,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       const assignedMod = users.find(u => u.id === newModelForm.modelisteId);
       const detailsObj: any = {
         patronageStatus: 'requested',
-        clientNotes: newModelForm.notes.trim(),
+        clientNotes: sanitizeNotesForModeliste(newModelForm.notes.trim()),
         deadlineDate: newModelForm.deadlineDate || undefined,
         modelisteId: assignedMod?.id || undefined,
         modelisteName: assignedMod?.nom || undefined
@@ -1629,6 +1635,20 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                         )}
                       </div>
                     )}
+
+                    {Boolean(item.adminCounterPrice && item.adminCounterPrice > 0) && (
+                      <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black text-amber-800 uppercase flex items-center gap-1">
+                            ⚠️ {isAr ? 'عرض مضاد وميزانية الكليان' : 'Contre-offre Atelier / Client'}
+                          </p>
+                          <span className="font-mono font-black text-sm text-amber-900">{item.adminCounterPrice} MAD</span>
+                        </div>
+                        {item.patronageNegotiationNotes && (
+                          <p className="text-xs text-amber-700 mt-1 italic">"{item.patronageNegotiationNotes}"</p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
@@ -2321,6 +2341,32 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                   <span>{isAr ? 'البطاقة التقنية' : 'Fiche Tech'}</span>
                 </button>
               </div>
+
+              {Boolean(pricingItem.adminCounterPrice && pricingItem.adminCounterPrice > 0) && (
+                <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest flex items-center gap-1">
+                      ⚠️ {isAr ? 'عرض مضاد وميزانية الكليان من الورشة' : 'Contre-proposition Atelier / Budget Client'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPriceInput(String(pricingItem.adminCounterPrice))}
+                      className="px-2 py-0.5 rounded-lg bg-amber-600 text-white text-[10px] font-black hover:bg-amber-700 transition cursor-pointer"
+                    >
+                      {isAr ? 'تطبيق هذا الثمن' : 'Appliquer ce tarif'}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs font-bold text-slate-700">{isAr ? 'الثمن المطلوب من طرف الورشة:' : 'Prix proposé par l\'atelier :'}</span>
+                    <span className="text-base font-black text-amber-900 font-mono">{pricingItem.adminCounterPrice} MAD</span>
+                  </div>
+                  {pricingItem.patronageNegotiationNotes && (
+                    <p className="text-xs text-slate-600 mt-1 italic bg-white/70 p-2 rounded-xl border border-amber-200/50">
+                      💬 {pricingItem.patronageNegotiationNotes}
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>

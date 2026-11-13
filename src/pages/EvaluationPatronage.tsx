@@ -3,6 +3,7 @@ import { supabase } from '../supabase';
 import { Search, Save, Package, Phone, CheckCircle, ChevronDown, Check, Scissors, AlertCircle, X, ShieldAlert } from 'lucide-react';
 import { Lead, saveRecord, User, parseLeadMeta, parseLeadDetailsJson } from '../types';
 import { useLang } from '../contexts/LangContext';
+import { sanitizeNotesForModeliste } from '../components/FicheTechniqueModelisteModal';
 
 interface EvaluationPatronageProps {
   currentUser?: User;
@@ -200,10 +201,19 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
                 </div>
 
                 {lead.patronageStatus === 'priced' ? (
-                  <div className="mt-4 p-3 bg-white rounded-xl border border-emerald-100 text-center">
-                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-1">{isAr ? 'تم التسعير' : 'Prix fixé'}</p>
-                    <p className="text-xl font-black text-emerald-700">{lead.patronagePrice} MAD</p>
-                  </div>
+                  <>
+                    <div className="mt-4 p-3 bg-white rounded-xl border border-emerald-100 text-center">
+                      <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-1">{isAr ? 'تم التسعير' : 'Prix fixé'}</p>
+                      <p className="text-xl font-black text-emerald-700">{lead.patronagePrice} MAD</p>
+                    </div>
+                    {Boolean((lead as any).adminCounterPrice && (lead as any).adminCounterPrice > 0) && (
+                      <div className="mt-2 p-1.5 bg-amber-50 rounded-xl border border-amber-200 text-center">
+                        <span className="text-[10px] font-black text-amber-800">
+                          💬 {isAr ? 'عرض مضاد: ' + (lead as any).adminCounterPrice + ' د.م' : 'Contre-offre: ' + (lead as any).adminCounterPrice + ' MAD'}
+                        </span>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100 text-center">
                     <p className="text-xs font-black text-amber-600 flex items-center justify-center gap-1">
@@ -263,10 +273,43 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
                 </div>
               </div>
 
-              {((selectedLead as any).clientNotes || (selectedLead.details && !selectedLead.details.trim().startsWith('{'))) && (
+              {Boolean(sanitizeNotesForModeliste((selectedLead as any).clientNotes || selectedLead.details)) && (
                 <div className="mb-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">{isAr ? 'التفاصيل / ملاحظات الكليان' : 'Détails du client'}</p>
-                  <p className="text-sm font-bold text-slate-700 whitespace-pre-wrap">{(selectedLead as any).clientNotes || selectedLead.details}</p>
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">{isAr ? 'التفاصيل / ملاحظات الموديل' : 'Détails & Spécifications du modèle'}</p>
+                  <p className="text-sm font-bold text-slate-700 whitespace-pre-wrap">{sanitizeNotesForModeliste((selectedLead as any).clientNotes || selectedLead.details)}</p>
+                </div>
+              )}
+
+              {Boolean((selectedLead as any).adminCounterPrice || (selectedLead as any).patronageNegotiationNotes) && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest flex items-center gap-1">
+                      ⚠️ {isAr ? 'عرض ثمن بديل من الورشة للباترون' : 'Proposition Tarifaire Atelier (Patronage)'}
+                    </span>
+                    <span className="text-xs font-black text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                      {isAr ? 'مفاوضة الثمن' : 'Négociation'}
+                    </span>
+                  </div>
+                  {Boolean((selectedLead as any).adminCounterPrice) && (
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs font-bold text-slate-700">{isAr ? 'الثمن المطلوب من طرف الورشة:' : 'Prix proposé par l\'atelier :'}</span>
+                      <span className="text-lg font-black text-amber-900 font-mono">{(selectedLead as any).adminCounterPrice} MAD</span>
+                    </div>
+                  )}
+                  {Boolean((selectedLead as any).patronageNegotiationNotes) && (
+                    <p className="text-xs font-semibold text-slate-600 mt-2 bg-white/70 p-2 rounded-xl border border-amber-200/50">
+                      💬 {(selectedLead as any).patronageNegotiationNotes}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPriceInput(String((selectedLead as any).adminCounterPrice || ''));
+                    }}
+                    className="mt-3 w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    ✓ {isAr ? 'تطبيق عرض الورشة (' + (selectedLead as any).adminCounterPrice + ' MAD)' : 'Appliquer le tarif atelier (' + (selectedLead as any).adminCounterPrice + ' MAD)'}
+                  </button>
                 </div>
               )}
 

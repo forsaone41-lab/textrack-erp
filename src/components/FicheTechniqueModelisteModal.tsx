@@ -63,6 +63,92 @@ function detectGarmentCategory(name?: string): GarmentType {
   return 'robe'; // Default general garment
 }
 
+/**
+ * Purges all commercial, budget, price, CRM intake metadata and empty template lines
+ * so the Modéliste and printed Tech Pack exclusively contain pure technical instructions.
+ */
+export function sanitizeNotesForModeliste(rawNotes?: string | null): string {
+  if (!rawNotes || typeof rawNotes !== 'string') return '';
+
+  const lines = rawNotes.split(/\r?\n/);
+  const cleaned: string[] = [];
+
+  for (const line of lines) {
+    let trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // 1. Discard entire CRM lead intake header line
+    // e.g. "Type Client: debutant | Nom: N/A | Budget: 5000-10000 | Délai: normal"
+    if (/^type\s*client\s*:/i.test(trimmed)) {
+      continue;
+    }
+
+    // 2. Discard pure boilerplate lines and templates
+    if (/^nom\s*:\s*(n\/a|none|null|\s*)$/i.test(trimmed)) continue;
+    if (/^budget\s*:\s*[^\r\n]+/i.test(trimmed)) continue;
+    if (/^délai\s*:\s*(normal|urgent|standard|\s*)$/i.test(trimmed)) continue;
+    if (/^modèle:\s*[^|]+\|\s*qté:\s*\d+$/i.test(trimmed)) continue;
+    if (/^tailles:\s*(\{\}|\[\]|\s*)$/i.test(trimmed)) continue;
+    if (/^détails:\s*$/i.test(trimmed)) continue;
+    if (/^notes:\s*$/i.test(trimmed)) continue;
+
+    // 3. Format sizes JSON cleanly if populated: e.g. "Tailles: {"M": 10}" -> "Tailles demandées: M (10 pcs)"
+    const sizesMatch = trimmed.match(/^tailles:\s*(\{.*\})/i);
+    if (sizesMatch) {
+      try {
+        const parsedObj = JSON.parse(sizesMatch[1]);
+        const entries = Object.entries(parsedObj).filter(
+          ([_, v]) => v !== '' && v !== null && v !== undefined && v !== 0 && v !== '0'
+        );
+        if (entries.length > 0) {
+          cleaned.push(`Tailles demandées : ${entries.map(([k, v]) => `${k} (${v} pcs)`).join(', ')}`);
+        }
+      } catch {
+        // ignore malformed sizes JSON
+      }
+      continue;
+    }
+
+    // 4. If line contains pipe separators, filter out any commercial segments
+    if (trimmed.includes('|')) {
+      const parts = trimmed.split('|').map(p => p.trim());
+      const safeParts = parts.filter(p => {
+        if (/^type\s*client/i.test(p)) return false;
+        if (/^nom\s*:/i.test(p)) return false;
+        if (/budget/i.test(p)) return false;
+        if (/prix/i.test(p)) return false;
+        if (/tarif/i.test(p)) return false;
+        if (/devis/i.test(p)) return false;
+        if (/\b\d+[\s.,\-]*\d*\s*(MAD|DH|Dhs|درهم|EUR|€|\$|USD)\b/i.test(p)) return false;
+        return true;
+      });
+      trimmed = safeParts.join(' | ').trim();
+      if (!trimmed) continue;
+    }
+
+    // 5. Strip out any residual inline budget, price, or currency mentions
+    trimmed = trimmed
+      .replace(/\|\s*Budget\s*:\s*[^|]+/gi, '')
+      .replace(/Budget\s*:\s*[^|\r\n]+/gi, '')
+      .replace(/\bbudget\s*[:=\-]?\s*[^\r\n,;]+/gi, '')
+      .replace(/\bprix\s*[:=\-]?\s*[^\r\n,;]+/gi, '')
+      .replace(/\btarif\s*[:=\-]?\s*[^\r\n,;]+/gi, '')
+      .replace(/\bdevis\s*[:=\-]?\s*[^\r\n,;]+/gi, '')
+      .replace(/\b\d+[\s.,\-]*\d*\s*(MAD|DH|Dhs|درهم|EUR|€|\$|USD)\b/gi, '')
+      .replace(/\|\s*\|\s*/g, ' | ')
+      .trim();
+
+    // Clean leading/trailing pipes or hyphens
+    trimmed = trimmed.replace(/^[|\-\s]+/, '').replace(/[|\-\s]+$/, '').trim();
+
+    if (trimmed && !/^détails:\s*$/i.test(trimmed) && !/^notes:\s*$/i.test(trimmed)) {
+      cleaned.push(trimmed);
+    }
+  }
+
+  return cleaned.join('\n').trim();
+}
+
 export function printFicheTechniqueModeliste(
   item: ModelItem,
   matchingFiche?: FicheTechnique | null
@@ -99,6 +185,14 @@ export function printFicheTechniqueModeliste(
     { label: 'Tour de Bras / Emmanchure', key: 'tourBras', tol: '± 0.5' },
     { label: 'Largeur Bas / Ourlet', key: 'largeurBas', tol: '± 1.0' },
   ];
+
+  // Purge any client commercial / budget / price data before generating printout
+  const safePatronageNotes = sanitizeNotesForModeliste(item.patronageNotes);
+  const safeClientNotes = sanitizeNotesForModeliste(item.clientNotes);
+  const combinedSafeNotes = [safePatronageNotes, safeClientNotes].filter(Boolean).join('\n');
+  const safeNotesDisplay =
+    combinedSafeNotes ||
+    'Spécifications de patronage et confection conformes au standard atelier. Respecter les tolérances dimensionnelles, l\'aplomb des pièces et le sens droit-fil. Confectionner un prototype avant gradation série.';
 
   const html = `<!DOCTYPE html>
 <html lang="fr">
@@ -451,13 +545,12 @@ export function printFicheTechniqueModeliste(
       </table>
     </div>
 
-    ${item.patronageNotes || item.clientNotes ? `
     <div class="section-card" style="margin-top: 10px;">
       <div class="section-title">
         <span>Remarques Techniques & Instructions Atelier</span>
       </div>
-      <p style="font-size: 10px; color: #334155; line-height: 1.5; white-space: pre-wrap;">${(item.patronageNotes || '') + (item.clientNotes ? '\n' + item.clientNotes : '')}</p>
-    </div>` : ''}
+      <p style="font-size: 10px; color: #334155; line-height: 1.5; white-space: pre-wrap;">${safeNotesDisplay}</p>
+    </div>
 
     <div class="signatures-grid">
       <div class="signature-box">
@@ -503,6 +596,7 @@ export default function FicheTechniqueModelisteModal({
     () => GARMENT_DEFAULT_MEASUREMENTS[category] || GARMENT_DEFAULT_MEASUREMENTS.robe,
     [category]
   );
+  const safeClientNotes = useMemo(() => sanitizeNotesForModeliste(item?.clientNotes), [item?.clientNotes]);
 
   if (!isOpen || !item) return null;
 
@@ -793,6 +887,16 @@ export default function FicheTechniqueModelisteModal({
                   </div>
                 </div>
               </div>
+
+              {/* Technical instructions from order (sanitized of prices / budget) */}
+              {safeClientNotes && (
+                <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-1.5 text-xs">
+                  <span className="font-black text-indigo-900 uppercase block tracking-wider">
+                    {isAr ? 'ملاحظات وتوجيهات الطلب (خالية من الأسعار والميزانيات)' : 'Instructions & Spécifications du Dossier'}
+                  </span>
+                  <p className="text-slate-700 font-semibold whitespace-pre-wrap">{safeClientNotes}</p>
+                </div>
+              )}
 
               {/* Modéliste's Own Technical Notes */}
               <div className="space-y-2">
