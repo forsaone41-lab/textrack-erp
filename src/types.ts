@@ -1057,6 +1057,22 @@ export async function deleteCandidatFromCloud(id: string): Promise<void> {
   }
 }
 
+export interface SupabaseConnectionStatus {
+  isOffline: boolean;
+  errorCode?: string | number;
+  errorMessage?: string;
+  lastChecked: number;
+}
+
+export let supabaseConnectionStatus: SupabaseConnectionStatus = {
+  isOffline: false,
+  lastChecked: 0,
+};
+
+export function getSupabaseConnectionStatus(): SupabaseConnectionStatus {
+  return supabaseConnectionStatus;
+}
+
 export async function loadLeads(): Promise<Lead[]> {
   try {
     // Get deleted IDs to exclude
@@ -1105,7 +1121,20 @@ export async function loadLeads(): Promise<Lead[]> {
       supaData = res.data;
     }
 
-    if (error) console.error('[loadLeads] Supabase error:', error.message, error.code);
+    if (error) {
+      console.error('[loadLeads] Supabase error:', error.message, error.code);
+      supabaseConnectionStatus = {
+        isOffline: true,
+        errorCode: error.code || error.status || '522/TIMEOUT',
+        errorMessage: error.message || 'Connection Timed Out / Server Paused',
+        lastChecked: Date.now()
+      };
+    } else {
+      supabaseConnectionStatus = {
+        isOffline: false,
+        lastChecked: Date.now()
+      };
+    }
 
     // 2. Load from BOTH localStorage keys (old + new format)
     let localLeads: Lead[] = [];
@@ -1172,12 +1201,19 @@ export async function loadLeads(): Promise<Lead[]> {
     // Sort by date desc
     finalData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    // Update cache
-    safeStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
-    _cache['leads'] = { data: finalData, ts: Date.now() };
+    // Update cache only if live Supabase query succeeded to avoid overwriting good cache with incomplete offline data
+    if (!error && Array.isArray(supaData) && supaData.length > 0) {
+      safeStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
+      _cache['leads'] = { data: finalData, ts: Date.now() };
+    }
     return finalData;
-  } catch (err) {
+  } catch (err: any) {
     console.error("Error in loadLeads:", err);
+    supabaseConnectionStatus = {
+      isOffline: true,
+      errorMessage: err?.message || String(err),
+      lastChecked: Date.now()
+    };
     // Emergency fallback
     try {
       const raw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');

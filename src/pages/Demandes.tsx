@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, Fragment, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight, UserCheck, ChevronDown, ChevronUp, Layers, Clock, Send, DollarSign, AlertCircle, Sparkles, Check } from 'lucide-react';
-import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, Commande, StockTissu, parseLeadDetailsJson, upsertClientDevis, findMatchingCommandeForLead, loadClientCityResolver, extractClientCityFromLeads } from '../types';
+import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, Commande, StockTissu, parseLeadDetailsJson, upsertClientDevis, findMatchingCommandeForLead, loadClientCityResolver, extractClientCityFromLeads, getSupabaseConnectionStatus } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
 import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
@@ -229,6 +229,7 @@ export default function Demandes() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [lensEnabled, setLensEnabled] = useState(false);
   const [lensPos, setLensPos] = useState({ x: 50, y: 50 });
+  const [isDbOffline, setIsDbOffline] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [newClientCode, setNewClientCode] = useState<{ name: string, code: string, email: string, phone: string } | null>(null);
@@ -364,13 +365,8 @@ export default function Demandes() {
     setLeads(prev => prev.map(l => l.id === id ? { ...l, photo, ...(photos ? { photos } : {}) } : l));
   };
 
-  const refreshData = async (forceClearCache = false) => {
+  const refreshData = async (_forceClearCache = false) => {
     setLoading(true);
-    if (forceClearCache) {
-      try {
-        localStorage.removeItem('textrack_data_leads');
-      } catch (_) {}
-    }
     try {
       const [leadsData, usersData, tissusData, cityResolver] = await Promise.all([
         loadLeads(),
@@ -378,6 +374,8 @@ export default function Demandes() {
         loadData<StockTissu>('tissus'),
         loadClientCityResolver().catch(() => ({ cityRecords: [] as Lead[], resolveCity: () => '' }))
       ]);
+      const syncStatus = getSupabaseConnectionStatus();
+      setIsDbOffline(syncStatus.isOffline);
       if (tissusData) setTissus(tissusData);
       if (leadsData) {
         let validLeads = (leadsData as Lead[]).filter(l => l && !l.name?.startsWith('__') && (l.type === '__FOURNISSEUR__' || !l.type?.startsWith('__'))).map(sanitizeLead);
@@ -407,6 +405,7 @@ export default function Demandes() {
       if (usersData) setUsers((usersData as User[]) || []);
     } catch (e) {
       console.warn('Refresh failed, using cache', e);
+      setIsDbOffline(true);
     } finally {
       setLoading(false);
     }
@@ -2838,6 +2837,40 @@ export default function Demandes() {
           </div>
         </div>
       </div>
+
+      {/* Offline / Supabase Paused Warning Banner */}
+      {isDbOffline && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-amber-950 shadow-sm">
+          <div className="flex items-start sm:items-center gap-3.5 w-full sm:w-auto">
+            <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-sm shrink-0 mt-0.5 sm:mt-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+                <p className="text-sm font-black text-amber-950">
+                  {isAr
+                    ? 'تنبيه: تعذر الاتصال بقاعدة البيانات السحابية (Supabase غير متاح حالياً - Error 522)'
+                    : 'Attention : Serveur Supabase inaccessible (Erreur 522)'}
+                </p>
+              </div>
+              <p className="text-xs font-semibold text-amber-800/90 mt-1 leading-relaxed">
+                {isAr
+                  ? 'يتم حالياً عرض البيانات المخزنة مؤقتاً في هذا المتصفح فقط. بياناتك كاملة لم تُحذف! يرجى الدخول إلى Supabase Dashboard وتفعيل أو إعادة تشغيل المشروع (Unpause / Restore).'
+                  : 'Seules les données sauvegardées localement dans ce navigateur sont affichées. Aucune donnée n\'a été perdue ! Veuillez réactiver le projet sur Supabase.'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => refreshData()}
+            disabled={loading}
+            className="w-full sm:w-auto px-4 py-2.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span>{isAr ? 'إعادة فحص الاتصال' : 'Réessayer'}</span>
+          </button>
+        </div>
+      )}
 
       {/* Stats Dashboard + Search */}
       {category === 'clients' && (() => {
