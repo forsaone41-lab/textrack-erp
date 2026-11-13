@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   X,
   Printer,
@@ -15,7 +15,9 @@ import {
   Package,
   Sparkles,
   Save,
-  Check
+  Check,
+  Pencil,
+  RefreshCw
 } from 'lucide-react';
 import { FicheTechnique, Lead, loadCompanyProfile } from '../types';
 import { ModelItem } from '../pages/ModelisteSuivi';
@@ -27,6 +29,7 @@ interface FicheTechniqueModelisteModalProps {
   item: ModelItem | null;
   matchingFiche?: FicheTechnique | null;
   onSaveTechnicalNotes?: (leadId: string, notes: string) => Promise<void>;
+  onSaveMeasurements?: (itemId: string, measurements: any, sourceType: 'lead' | 'fiche') => Promise<void>;
   isAr?: boolean;
 }
 
@@ -151,11 +154,14 @@ export function sanitizeNotesForModeliste(rawNotes?: string | null): string {
 
 export function printFicheTechniqueModeliste(
   item: ModelItem,
-  matchingFiche?: FicheTechnique | null
+  matchingFiche?: FicheTechnique | null,
+  isAr: boolean = false,
+  customMeasurements?: Record<string, Record<string, any>>
 ) {
   const company = loadCompanyProfile();
   const category = detectGarmentCategory(item.modele);
-  const catMeasurements = GARMENT_DEFAULT_MEASUREMENTS[category] || GARMENT_DEFAULT_MEASUREMENTS.robe;
+  const defaultMeas = GARMENT_DEFAULT_MEASUREMENTS[category] || GARMENT_DEFAULT_MEASUREMENTS.robe;
+  const catMeasurements = customMeasurements || item.modelisteGradation || defaultMeas;
 
   const refCode = `TECH-MOD-${item.id.slice(0, 8).toUpperCase()}`;
   const printDate = new Date().toLocaleDateString('fr-FR', {
@@ -515,7 +521,9 @@ export function printFicheTechniqueModeliste(
     <div class="section-card">
       <div class="section-title">
         <span>Tableau des Mesures Industrielles & Gradation (cm)</span>
-        <span style="font-size: 8px; color: #64748b;">Tolérance standard conforme textile</span>
+        <span style="font-size: 8px; color: ${customMeasurements || item.modelisteGradation ? '#4f46e5; font-weight:bold;' : '#64748b;'}">
+          ${customMeasurements || item.modelisteGradation ? '★ Validé & Ajusté par le Modéliste' : 'Tolérance standard conforme textile'}
+        </span>
       </div>
       <table class="mesures-table">
         <thead>
@@ -934,12 +942,7 @@ export default function FicheTechniqueModelisteModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
-          <span className="text-[11px] font-bold text-slate-500">
-            {isAr
-              ? '🔒 بطاقة تقنية خاصة بالموديليست (بدون أسعار البيع أو هوامش الربح)'
-              : '🔒 Fiche technique exclusive modéliste (exempte de tout tarif commercial)'}
-          </span>
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end shrink-0">
           <button
             onClick={onClose}
             className="px-6 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition cursor-pointer"
