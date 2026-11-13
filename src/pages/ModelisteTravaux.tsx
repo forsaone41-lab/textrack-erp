@@ -640,7 +640,6 @@ export default function ModelisteTravaux({ currentUser }: ModelisteTravauxProps)
                       </div>
                       <p className="text-xs font-bold text-slate-600 mt-0.5">
                         {isAr ? 'الزبون:' : 'Client:'} <span className="text-indigo-600 font-black">{item.client}</span>
-                        {item.quantity && <span> • {item.quantity} {isAr ? 'قطعة' : 'pcs'}</span>}
                       </p>
                       {item.deadlineDate && (
                         <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200 w-fit mt-1.5">

@@ -816,10 +816,10 @@ export default function FicheTechniqueModelisteModal({
             </div>
             <div>
               <span className="text-[10px] font-black uppercase text-slate-400 block">
-                {isAr ? 'الكمية المطلوبة' : 'Quantité totale'}
+                {isAr ? 'نوع العمل المطلوب' : 'Mission'}
               </span>
               <span className="text-sm font-black text-slate-900">
-                {item.quantity || 1} {isAr ? 'قطعة' : 'pièces'}
+                {isAr ? 'باترون وتدريج صناعي' : 'Patronage & Gradation'}
               </span>
             </div>
             <div>

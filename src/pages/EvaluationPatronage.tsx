@@ -264,7 +264,6 @@ export default function EvaluationPatronage({ currentUser }: EvaluationPatronage
                 </div>
                 <div className="flex flex-col justify-center">
                   <h4 className="font-black text-slate-800 text-sm">{selectedLead.type.replace(' (CMT - Client Tissu)', '')}</h4>
-                  <p className="text-xs text-slate-500 font-medium mt-1">{selectedLead.quantity} Pièces</p>
                   {selectedLead.type.includes('CMT') && (
                     <span className="mt-2 w-fit px-2 py-1 bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-widest rounded">
                       ✂️ Tissu Client (CMT)
