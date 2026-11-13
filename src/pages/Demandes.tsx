@@ -2036,6 +2036,329 @@ export default function Demandes() {
         </div>
       )}
 
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* PATRONAGE DECISION & NEGOTIATION MODAL (RÉPONSE MODÉLISTE)  */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {patronageModalLead && (() => {
+        const ext = parseLeadDetailsJson(patronageModalLead.details);
+        const patPrice = Number(ext.patronagePrice ?? (patronageModalLead as any).patronagePrice) || 0;
+        const echPrice = Number(ext.prixEchantillon ?? (patronageModalLead as any).prixEchantillon) || 0;
+        const assignedUser = users.find(u => u.id === patronageModelisteId) || users.find(u => u.id === ext.modelisteId) || modelistes[0];
+        const modelisteName = assignedUser?.nom || ext.modelisteName || (isAr ? 'موديليست معتمد' : 'Modéliste Agréé');
+        const modelistePhone = (assignedUser?.telephone || '').replace(/\D/g, '');
+        const isPriced = ext.patronageStatus === 'priced' || patPrice > 0;
+        const isValidated = Boolean(ext.adminValidatedToWork || ext.clientValidated || patronageModalLead.crmPriceConfirmed);
+        const isCounterOffered = ext.patronageNegotiationStatus === 'counter_offered';
+        const clientBudget = ext.clientBudget || ext.budget || (patronageModalLead.crmPrice && Number(patronageModalLead.crmPrice) > 0 ? Number(patronageModalLead.crmPrice) : 0);
+        const photo = patronageModalLead.photo || (patronageModalLead.photos && patronageModalLead.photos[0]) || photoCache[patronageModalLead.id];
+        const modeleClean = (patronageModalLead.type || 'Modèle').replace(' (CMT - Client Tissu)', '').replace('RECRUTEMENT:', '');
+
+        return (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-slate-900/65 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
+            <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-7 max-w-2xl w-full shadow-2xl border border-slate-100 relative my-4 sm:my-8 text-right font-sans" dir={isAr ? 'rtl' : 'ltr'}>
+              
+              {/* Close Button */}
+              <button
+                onClick={() => setPatronageModalLead(null)}
+                className="absolute top-4 left-4 sm:top-6 sm:left-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all cursor-pointer z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Modal Header */}
+              <div className="flex items-center gap-3 sm:gap-4 mb-5 border-b border-slate-100 pb-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-tr from-indigo-500 to-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
+                  <Scissors className="w-6 h-6 sm:w-7 sm:h-7" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                      {isAr ? 'قرار وتسعير الباترون (Modéliste)' : 'Décision & Tarif Patronage'}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      {modeleClean}
+                    </span>
+                  </div>
+                  <p className="text-slate-500 font-bold text-xs mt-0.5">
+                    {isAr ? 'الرد على الموديليست: إما المصادقة (Validé) للبدء في العمل، أو خفض الثمن بميزانية الكليان' : 'Valider pour lancer le travail ou proposer une contre-offre au modéliste'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Model & Modéliste Offer Card */}
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 mb-5 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-14 h-14 rounded-xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-xs">
+                      {photo ? (
+                        <img src={photo} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <Package className="w-6 h-6 text-slate-300" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{isAr ? 'العميل' : 'Client'}: {patronageModalLead.name}</p>
+                      <h4 className="font-black text-slate-900 text-sm truncate">{modeleClean}</h4>
+                      <p className="text-xs font-semibold text-slate-500">
+                        {patronageModalLead.quantity || 1} {isAr ? 'قطعة' : 'pcs'} {patronageModalLead.ville ? `• ${patronageModalLead.ville}` : ''}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div className="text-left shrink-0">
+                    {isValidated ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-black border border-emerald-300">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        {isAr ? 'مصادق عليه للعمل ✓' : 'Validé pour exécution ✓'}
+                      </span>
+                    ) : isCounterOffered ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-100 text-amber-800 text-xs font-black border border-amber-300">
+                        <Clock className="w-3.5 h-3.5" />
+                        {isAr ? `عرض مضاد: ${ext.adminCounterPrice} د.م` : `Contre-offre: ${ext.adminCounterPrice} MAD`}
+                      </span>
+                    ) : isPriced ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-indigo-100 text-indigo-800 text-xs font-black border border-indigo-300 animate-pulse">
+                        <Scissors className="w-3.5 h-3.5" />
+                        {isAr ? 'تم التسعير — ينتظر قرارك' : 'Tarif reçu — En attente'}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold">
+                        {isAr ? 'في انتظار التسعير' : 'En attente de tarif'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Offer Details if priced */}
+                {isPriced ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-200">
+                    <div className="p-2.5 bg-white rounded-xl border border-indigo-100">
+                      <p className="text-[10px] font-black text-indigo-500 uppercase">{isAr ? 'ثمن الباترون المقترح' : 'Prix Patronage Proposé'}</p>
+                      <p className="text-xl font-black text-indigo-950 font-mono">{patPrice} <span className="text-xs font-sans text-indigo-600">MAD</span></p>
+                    </div>
+                    <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                      <p className="text-[10px] font-black text-slate-500 uppercase">{isAr ? 'ثمن العينة الأولية' : 'Prix Échantillon'}</p>
+                      <p className="text-base font-black text-slate-800 font-mono">{echPrice > 0 ? `${echPrice} MAD` : '—'}</p>
+                    </div>
+                    <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex flex-col justify-between">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase">{isAr ? 'الموديليست' : 'Modéliste'}</p>
+                        <p className="text-xs font-black text-slate-900 truncate">{modelisteName}</p>
+                      </div>
+                      {modelistePhone && (
+                        <a
+                          href={`https://wa.me/${modelistePhone}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[10px] font-black text-emerald-600 hover:underline flex items-center gap-1 mt-1"
+                        >
+                          <span>WhatsApp</span> ↗
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs font-bold text-amber-800 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>{isAr ? 'لم يقم الموديليست بإدخال الثمن بعد، أو يمكنك إدخال الثمن والمصادقة عليه مباشرة أدناه.' : 'Le modéliste n\'a pas encore fixé le tarif, vous pouvez aussi le fixer directement ci-dessous.'}</span>
+                  </div>
+                )}
+
+                {ext.patronageNotes && (
+                  <div className="p-2.5 bg-white/80 rounded-xl border border-slate-200 text-xs text-slate-600">
+                    <span className="font-bold text-slate-800">{isAr ? 'ملاحظة الموديليست:' : 'Note modéliste:'}</span> {ext.patronageNotes}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Tabs: 1. Valider / 2. Négocier */}
+              <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl mb-5">
+                <button
+                  type="button"
+                  onClick={() => setPatronageTab('validate')}
+                  className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition cursor-pointer ${
+                    patronageTab === 'validate'
+                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{isAr ? '1. قبول ومصادقة على العمل (VALIDÉ)' : '1. Valider & Lancer (VALIDÉ)'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPatronageTab('negotiate')}
+                  className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition cursor-pointer ${
+                    patronageTab === 'negotiate'
+                      ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span>{isAr ? '2. خفض الثمن بميزانية الكليان (Négocier)' : '2. Proposer Budget Client (Négocier)'}</span>
+                </button>
+              </div>
+
+              {/* TAB 1: VALIDATION & LAUNCH */}
+              {patronageTab === 'validate' && (
+                <div className="space-y-4">
+                  <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs font-bold text-emerald-900 flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span>
+                      {isAr
+                        ? `عند الضغط على "مصادقة (Validé)" سيتم اعتماد سعر ${patPrice} درهم، ونقل الموديل فوراً إلى لائحة أشغال الموديليست لتنفيذه.`
+                        : `En validant, le montant de ${patPrice} MAD sera approuvé et le modèle sera planifié dans les travaux à exécuter du modéliste.`}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                        {isAr ? 'تاريخ التسليم المطلوب (Date Limite)' : 'Date Limite de Livraison'} *
+                      </label>
+                      <input
+                        type="date"
+                        value={patronageDeadline}
+                        onChange={e => setPatronageDeadline(e.target.value)}
+                        className="w-full bg-white border-2 border-slate-200 rounded-xl py-2.5 px-3 text-sm font-bold text-slate-900 outline-none focus:border-emerald-600 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                        {isAr ? 'الموديليست المكلف' : 'Modéliste Assigné'}
+                      </label>
+                      <select
+                        value={patronageModelisteId}
+                        onChange={e => setPatronageModelisteId(e.target.value)}
+                        className="w-full bg-white border-2 border-slate-200 rounded-xl py-2.5 px-3 text-sm font-bold text-slate-900 outline-none focus:border-emerald-600 transition"
+                      >
+                        {modelistes.length > 0 ? (
+                          modelistes.map(m => (
+                            <option key={m.id} value={m.id}>{m.nom} {m.telephone ? `(${m.telephone})` : ''}</option>
+                          ))
+                        ) : (
+                          <option value="">{modelisteName || (isAr ? 'موديليست معتمد' : 'Modéliste Principal')}</option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={patronageSubmitting}
+                    onClick={handleValidatePatronageAndLaunch}
+                    className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition cursor-pointer"
+                  >
+                    <Check className="w-5 h-5" />
+                    <span>
+                      {patronageSubmitting
+                        ? (isAr ? 'جاري الحفظ والمصادقة...' : 'Validation en cours...')
+                        : (isAr ? `✓ مصادقة على العمل والبدء في الإنجاز (VALIDÉ — ${patPrice} MAD)` : `✓ VALIDER & LANCER LE TRAVAIL (${patPrice} MAD)`)}
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {/* TAB 2: NEGOTIATE / COUNTER PROPOSAL */}
+              {patronageTab === 'negotiate' && (
+                <div className="space-y-4">
+                  <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-xs font-bold text-amber-900 flex items-start gap-2">
+                    <DollarSign className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span>
+                      {isAr
+                        ? 'يمكنك هنا اقتراح ثمن أقل للموديليست استناداً إلى ميزانية العميل، وسيصل العرض مباشرة في لوحة الموديليست وعلى واتساب.'
+                        : 'Proposez un tarif réduit au modéliste selon le budget demandé par le client.'}
+                    </span>
+                  </div>
+
+                  {/* Client Budget Quick Fill if known */}
+                  {clientBudget > 0 && (
+                    <div className="p-3 bg-indigo-50/70 rounded-xl border border-indigo-100 flex items-center justify-between">
+                      <div className="text-xs">
+                        <span className="font-bold text-indigo-900">{isAr ? 'ميزانية العميل المرصودة في الطلب:' : 'Budget client indiqué :'} </span>
+                        <span className="font-black text-indigo-700 font-mono">{clientBudget} MAD</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPatronageCounterPrice(String(clientBudget))}
+                        className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition cursor-pointer"
+                      >
+                        {isAr ? 'تطبيق ميزانية الكليان' : 'Appliquer ce montant'}
+                      </button>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      {isAr ? 'الثمن المقترح للموديليست (MAD) / العرض المضاد' : 'Tarif Proposé au Modéliste (MAD)'} *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder={isAr ? "مثال: 200 أو 250" : "Ex: 200 ou 250"}
+                        value={patronageCounterPrice}
+                        onChange={e => setPatronageCounterPrice(e.target.value)}
+                        className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-xl font-black text-amber-600 font-mono outline-none focus:border-amber-500 transition"
+                      />
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
+                        MAD
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                        {isAr ? 'ملاحظة أو سبب التخفيض للموديليست' : 'Note de négociation / Motif'}
+                      </label>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setPatronageNegotiationNotes(isAr ? 'ميزانية الكليان محدودة ولا تسمح بأكثر من ذلك' : 'Budget client limité')}
+                          className="px-2 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:bg-slate-200"
+                        >
+                          {isAr ? 'ميزانية محدودة' : 'Budget limité'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPatronageNegotiationNotes(isAr ? 'الموديل كلاسيكي سريع الفصالة وهناك طلبيات متكررة' : 'Modèle simple & commandes récurrentes')}
+                          className="px-2 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:bg-slate-200"
+                        >
+                          {isAr ? 'موديل كلاسيكي' : 'Modèle simple'}
+                        </button>
+                      </div>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={patronageNegotiationNotes}
+                      onChange={e => setPatronageNegotiationNotes(e.target.value)}
+                      placeholder={isAr ? "مثال: الكليان طالب ثمن مناسب وعندنا كمية إنتاج، إلا مسلكاك نقدر نڤاليديو دابا..." : "Ex: Le client a un budget serré, si c'est bon pour vous on valide..."}
+                      className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-900 outline-none focus:border-amber-500 transition"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={patronageSubmitting || !patronageCounterPrice}
+                    onClick={handleSendCounterProposalToModeliste}
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-indigo-600 hover:from-amber-600 hover:to-indigo-700 disabled:opacity-50 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition cursor-pointer"
+                  >
+                    <Send className="w-5 h-5" />
+                    <span>
+                      {patronageSubmitting
+                        ? (isAr ? 'جاري إرسال العرض...' : 'Envoi en cours...')
+                        : (isAr ? `💬 إرسال العرض المضاد وتخفيض الثمن (${patronageCounterPrice || 0} MAD)` : `💬 ENVOYER LA CONTRE-PROPOSITION (${patronageCounterPrice || 0} MAD)`)}
+                    </span>
+                  </button>
+                </div>
+              )}
+
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Custom Confirmation Modal */}
       {confirmLead && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
@@ -2920,7 +3243,9 @@ export default function Demandes() {
                                   <span className="flex items-center gap-1 text-emerald-600 font-black text-sm uppercase tracking-tight">
                                     <Package className="w-3.5 h-3.5" /> 
                                     {lead.type === 'Demande via New Landing' ? (isAr ? 'مشروع جديد' : 'Nouveau Projet') : lead.type.replace(' (CMT - Client Tissu)', '')} 
-                                    <span className="text-slate-400 text-xs font-bold">({lead.quantity} pcs)</span>
+                                    {lead.quantity && Number(lead.quantity) > 0 ? (
+                                      <span className="text-slate-400 text-xs font-bold" dir="ltr">({lead.quantity} {isAr ? 'قطعة' : 'pcs'})</span>
+                                    ) : null}
                                   </span>
                                   {lead.type.includes('CMT - Client Tissu') && (
                                     <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 border border-amber-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
@@ -2930,14 +3255,26 @@ export default function Demandes() {
                                   {(() => {
                                     let ext = {} as any;
                                     try { ext = JSON.parse(lead.details || '{}'); } catch(e){}
-                                    if (ext.patronageStatus === 'requested') return (
-                                      <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-600 border border-indigo-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
-                                        ⏳ Patronage...
+                                    const patPrice = Number(ext.patronagePrice ?? (lead as any).patronagePrice) || 0;
+                                    const isValidated = Boolean(ext.adminValidatedToWork || ext.clientValidated || lead.crmPriceConfirmed);
+                                    if (isValidated && patPrice > 0) return (
+                                      <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-300 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
+                                        ✓ {isAr ? `باترون مصادق: ${patPrice} د.م` : `Patronage Validé: ${patPrice} MAD`}
                                       </span>
                                     );
-                                    if (ext.patronageStatus === 'priced') return (
-                                      <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-600 border border-emerald-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
-                                        ✂️ Patronage: {ext.patronagePrice} MAD
+                                    if (ext.patronageNegotiationStatus === 'counter_offered') return (
+                                      <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
+                                        💬 {isAr ? `عرض مضاد: ${ext.adminCounterPrice} د.م` : `Contre-offre: ${ext.adminCounterPrice} MAD`}
+                                      </span>
+                                    );
+                                    if (ext.patronageStatus === 'priced' || patPrice > 0) return (
+                                      <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 border border-indigo-300 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm animate-pulse">
+                                        ✂️ {isAr ? `ثمن الموديليست: ${patPrice} د.م` : `Tarif Modéliste: ${patPrice} MAD`}
+                                      </span>
+                                    );
+                                    if (ext.patronageStatus === 'requested') return (
+                                      <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 border border-indigo-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
+                                        ⏳ {isAr ? 'في انتظار تسعير الباترون...' : 'Patronage en attente...'}
                                       </span>
                                     );
                                     return null;
@@ -3089,33 +3426,77 @@ export default function Demandes() {
                                     <span>{isAr ? 'تحليل الموديل' : 'Analyse'}</span>
                                   </button>
                                 )}
-                                {!lead.type.startsWith('RECRUTEMENT:') && (
-                                  <button 
-                                    onClick={async () => {
-                                      if (window.confirm(isAr ? 'إرسال طلب تسعير الباترون للموديليست؟' : 'Demander le prix de patronage au modéliste?')) {
-                                        const parsedExt = parseLeadDetailsJson(lead.details);
-                                        const clientNotesFallback = lead.details && !lead.details.trim().startsWith('{')
-                                          ? lead.details.split('| AI_NOTES:')[0].split('| ATELIER_DEVIS:')[0].replace('| COM_UNLOCK:true', '').trim()
-                                          : parsedExt.clientNotes;
-                                        const updated = {
-                                          ...lead,
-                                          details: JSON.stringify({
-                                            ...parsedExt,
-                                            ...(clientNotesFallback ? { clientNotes: clientNotesFallback } : {}),
-                                            patronageStatus: parsedExt.patronageStatus === 'priced' ? 'priced' : 'requested'
-                                          })
-                                        };
-                                        setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
-                                        await saveRecord('leads', updated, true);
-                                      }
-                                    }} 
-                                    title={isAr ? 'طلب تسعير الباترون' : 'Demander Prix Patronage'}
-                                    className="h-9 px-2.5 rounded-xl text-xs font-black border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
-                                  >
-                                    <Scissors className="w-3.5 h-3.5" />
-                                    <span>{isAr ? 'باترون' : 'Patronage'}</span>
-                                  </button>
-                                )}
+                                {!lead.type.startsWith('RECRUTEMENT:') && (() => {
+                                  const ext = parseLeadDetailsJson(lead.details);
+                                  const patPrice = Number(ext.patronagePrice ?? (lead as any).patronagePrice) || 0;
+                                  const isValidated = Boolean(ext.adminValidatedToWork || ext.clientValidated || lead.crmPriceConfirmed);
+                                  const isNegotiating = ext.patronageNegotiationStatus === 'counter_offered';
+                                  const isPriced = ext.patronageStatus === 'priced' || patPrice > 0;
+                                  const isRequested = ext.patronageStatus === 'requested';
+
+                                  if (isPriced && !isValidated) {
+                                    return (
+                                      <button 
+                                        onClick={() => openPatronageModal(lead)}
+                                        title={isAr ? 'الرد على الموديليست وتحديد القرار (قبول أو تفاوض)' : 'Répondre au modéliste (Valider ou négocier)'}
+                                        className="h-9 px-3 rounded-xl text-xs font-black border bg-gradient-to-r from-amber-500 via-indigo-600 to-indigo-700 text-white hover:brightness-110 transition-all shadow-md flex items-center gap-1.5 cursor-pointer animate-pulse"
+                                      >
+                                        <Scissors className="w-3.5 h-3.5" />
+                                        <span>{isAr ? `قرار الباترون (${patPrice} د.م)` : `Décision (${patPrice} MAD)`}</span>
+                                      </button>
+                                    );
+                                  }
+
+                                  if (isValidated) {
+                                    return (
+                                      <button 
+                                        onClick={() => openPatronageModal(lead)}
+                                        title={isAr ? 'الباترون مصادق عليه — عرض التفاصيل والمتابعة' : 'Patronage Validé — Voir détails'}
+                                        className="h-9 px-2.5 rounded-xl text-xs font-black border bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                      >
+                                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                                        <span>{isAr ? `✓ باترون مصادق (${patPrice} د.م)` : `✓ Validé (${patPrice} MAD)`}</span>
+                                      </button>
+                                    );
+                                  }
+
+                                  if (isNegotiating) {
+                                    return (
+                                      <button 
+                                        onClick={() => openPatronageModal(lead)}
+                                        title={isAr ? 'عرض مضاد قيد التفاوض — اضغط للتعديل أو المتابعة' : 'Négociation en cours'}
+                                        className="h-9 px-2.5 rounded-xl text-xs font-black border bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                      >
+                                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                        <span>{isAr ? `تفاوض (${ext.adminCounterPrice || patPrice} د.م)` : `Négociation (${ext.adminCounterPrice || patPrice} MAD)`}</span>
+                                      </button>
+                                    );
+                                  }
+
+                                  if (isRequested) {
+                                    return (
+                                      <button 
+                                        onClick={() => openPatronageModal(lead)}
+                                        title={isAr ? 'طلب الباترون مرسل — في انتظار تسعير الموديليست' : 'En attente de tarif modéliste'}
+                                        className="h-9 px-2.5 rounded-xl text-xs font-black border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                      >
+                                        <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                                        <span>{isAr ? 'بانتظار الموديليست ⏳' : 'Attente Modéliste ⏳'}</span>
+                                      </button>
+                                    );
+                                  }
+
+                                  return (
+                                    <button 
+                                      onClick={() => openPatronageModal(lead)}
+                                      title={isAr ? 'طلب تسعير ومصادقة الباترون' : 'Demander / Gérer Patronage'}
+                                      className="h-9 px-2.5 rounded-xl text-xs font-black border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <Scissors className="w-3.5 h-3.5" />
+                                      <span>{isAr ? 'باترون' : 'Patronage'}</span>
+                                    </button>
+                                  );
+                                })()}
                               </div>
 
                               {/* 4. Compact Utilities Toolbar (Details, Star, Edit, Delete) */}

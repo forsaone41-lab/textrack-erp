@@ -318,8 +318,15 @@ export interface Facture {
   numero: string;
   commandeId?: string | null;
   client: string;
+  clientIce?: string;
+  clientRc?: string;
+  clientAdresse?: string;
+  clientVille?: string;
+  clientGerant?: string;
   montant: number;
   avance?: number;
+  modePaiement?: string;
+  notePaiement?: string;
   preuvePaiement?: string;
   preuveClient?: string;
   date: string;
@@ -634,6 +641,9 @@ export interface CompanyProfile {
   rc: string;
   if_tax: string;
   patente: string;
+  cnie?: string;
+  dirigeant?: string;
+  regimeFiscal?: string;
   phone: string;
   email: string;
   bankName?: string;

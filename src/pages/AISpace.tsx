@@ -2081,6 +2081,67 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [piecesMesures, setPiecesMesures] = useState<any[][]>([]);
   const [editingPieceNameIdx, setEditingPieceNameIdx] = useState<number | null>(null);
   const [tempPieceName, setTempPieceName] = useState('');
+  const [editingPieceConsoIdx, setEditingPieceConsoIdx] = useState<number | null>(null);
+  const [tempPieceConso, setTempPieceConso] = useState('');
+  const [editingPieceCostIdx, setEditingPieceCostIdx] = useState<number | null>(null);
+  const [tempPieceCost, setTempPieceCost] = useState('');
+
+  const handleUpdatePieceConsumption = (pieceIdx: number, newConso: string) => {
+    if (!analysisResult) return;
+    let formatted = newConso.trim();
+    if (!formatted) return;
+    const num = parseFloat(formatted.replace(/[^0-9.]/g, ''));
+    if (!isNaN(num) && num > 0 && !formatted.toLowerCase().includes('m')) {
+      formatted = `${num.toFixed(2)}m`;
+    }
+
+    const parseNum = (c: string) => parseFloat((c || '').replace(/[^0-9.]/g, '')) || 0;
+
+    if (analysisResult.pieces && analysisResult.pieces.length > 0) {
+      const updatedPieces = [...analysisResult.pieces];
+      if (updatedPieces[pieceIdx]) {
+        updatedPieces[pieceIdx] = { ...updatedPieces[pieceIdx], consumption: formatted };
+      }
+      const totConso = updatedPieces.reduce((acc: number, it: any) => acc + parseNum(it.consumption), 0);
+      setAnalysisResult({
+        ...analysisResult,
+        pieces: updatedPieces,
+        consumption: `${totConso.toFixed(2)}m`,
+      });
+    } else {
+      setAnalysisResult({
+        ...analysisResult,
+        consumption: formatted,
+      });
+    }
+  };
+
+  const handleUpdatePieceCost = (pieceIdx: number, newCost: string) => {
+    if (!analysisResult) return;
+    const trimmed = newCost.trim();
+    if (!trimmed) return;
+
+    if (analysisResult.pieces && analysisResult.pieces.length > 0) {
+      const updatedPieces = [...analysisResult.pieces];
+      if (updatedPieces[pieceIdx]) {
+        updatedPieces[pieceIdx] = { ...updatedPieces[pieceIdx], costEstimate: trimmed };
+      }
+      setAnalysisResult({
+        ...analysisResult,
+        costEstimate: analysisResult.pieces.length === 1 ? trimmed : analysisResult.costEstimate,
+        pieces: updatedPieces,
+      });
+      if (analysisResult.pieces.length === 1) {
+        setCustomCostOverride(trimmed);
+      }
+    } else {
+      setAnalysisResult({
+        ...analysisResult,
+        costEstimate: trimmed,
+      });
+      setCustomCostOverride(trimmed);
+    }
+  };
 
   const handleRenamePiece = (pieceIdx: number, newName: string) => {
     if (!analysisResult?.pieces) return;
@@ -5565,22 +5626,117 @@ ${userMessage}
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                              <span className="px-2.5 py-1 bg-white text-indigo-700 text-xs font-black rounded-xl border border-indigo-200/80 shadow-xs">
-                                ✂️ {p.consumption || '1.50m'}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setTempCustomCost(p.costEstimate || customCostOverride || analysisResult.costEstimate || '');
-                                  setIsEditingCustomCost(true);
-                                }}
-                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-xs flex items-center gap-1 cursor-pointer transition-all active:scale-95"
-                                title={isAr ? 'تعديل ثمن الفصالة والخياطة' : 'Modifier le coût façon'}
-                              >
-                                <span>💰 {p.costEstimate || (analysisResult.pieces?.length === 1 && customCostOverride) || '—'}</span>
-                                <Pencil className="w-3 h-3 opacity-75" />
-                              </button>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {/* Consumption (Métrage) badge with Inline Edit */}
+                              {editingPieceConsoIdx === safeIdx ? (
+                                <div className="flex items-center gap-1 bg-white px-2 py-0.5 rounded-xl border-2 border-indigo-500 shadow-sm">
+                                  <span className="text-xs">✂️</span>
+                                  <input
+                                    type="text"
+                                    autoFocus
+                                    value={tempPieceConso}
+                                    onChange={(e) => setTempPieceConso(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleUpdatePieceConsumption(safeIdx, tempPieceConso);
+                                        setEditingPieceConsoIdx(null);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingPieceConsoIdx(null);
+                                      }
+                                    }}
+                                    className="w-20 px-1 py-0.5 text-xs font-black text-indigo-950 font-mono focus:outline-none"
+                                    placeholder="ex: 3.20m"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdatePieceConsumption(safeIdx, tempPieceConso);
+                                      setEditingPieceConsoIdx(null);
+                                    }}
+                                    className="p-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-bold transition-all shadow-xs cursor-pointer"
+                                    title={isAr ? 'تأكيد وحفظ الميتراج' : 'Valider'}
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingPieceConsoIdx(null)}
+                                    className="p-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md text-xs transition-all cursor-pointer"
+                                    title={isAr ? 'إلغاء' : 'Annuler'}
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingPieceConsoIdx(safeIdx);
+                                    setTempPieceConso(p.consumption || '1.50m');
+                                  }}
+                                  className="px-2.5 py-1 bg-white hover:bg-indigo-50 text-indigo-700 text-xs font-black rounded-xl border border-indigo-200/80 hover:border-indigo-400 shadow-xs flex items-center gap-1 cursor-pointer transition-all active:scale-95 group"
+                                  title={isAr ? 'انقر لتعديل ميتراج الثوب (Consommation)' : 'Cliquer pour modifier le métrage'}
+                                >
+                                  <span>✂️ {p.consumption || '1.50m'}</span>
+                                  <Pencil className="w-3 h-3 text-indigo-400 group-hover:text-indigo-600 transition-colors" />
+                                </button>
+                              )}
+
+                              {/* Piece Façon Cost with Inline Edit */}
+                              {editingPieceCostIdx === safeIdx ? (
+                                <div className="flex items-center gap-1 bg-white px-2 py-0.5 rounded-xl border-2 border-emerald-500 shadow-sm">
+                                  <span className="text-xs">💰</span>
+                                  <input
+                                    type="text"
+                                    autoFocus
+                                    value={tempPieceCost}
+                                    onChange={(e) => setTempPieceCost(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleUpdatePieceCost(safeIdx, tempPieceCost);
+                                        setEditingPieceCostIdx(null);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingPieceCostIdx(null);
+                                      }
+                                    }}
+                                    className="w-24 px-1 py-0.5 text-xs font-black text-emerald-950 font-mono focus:outline-none"
+                                    placeholder="ex: 40 - 20 MAD"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdatePieceCost(safeIdx, tempPieceCost);
+                                      setEditingPieceCostIdx(null);
+                                    }}
+                                    className="p-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-bold transition-all shadow-xs cursor-pointer"
+                                    title={isAr ? 'تأكيد وحفظ السعر' : 'Valider'}
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingPieceCostIdx(null)}
+                                    className="p-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md text-xs transition-all cursor-pointer"
+                                    title={isAr ? 'إلغاء' : 'Annuler'}
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingPieceCostIdx(safeIdx);
+                                    setTempPieceCost(p.costEstimate || (analysisResult.pieces?.length === 1 && customCostOverride) || '');
+                                  }}
+                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-xs flex items-center gap-1 cursor-pointer transition-all active:scale-95"
+                                  title={isAr ? 'تعديل ثمن الفصالة والخياطة' : 'Modifier le coût façon'}
+                                >
+                                  <span>💰 {p.costEstimate || (analysisResult.pieces?.length === 1 && customCostOverride) || '—'}</span>
+                                  <Pencil className="w-3 h-3 opacity-75" />
+                                </button>
+                              )}
+
                               <button
                                 type="button"
                                 onClick={() => {
@@ -5786,7 +5942,20 @@ ${userMessage}
                         {/* Cost Breakdown & Complexity Card */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-                            <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">{isAr ? 'استهلاك الثوب للقطعة (لعرض 1.50م)' : 'Consommation (laize 1.50m)'}</span>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-black text-slate-400 uppercase block">{isAr ? 'استهلاك الثوب للقطعة (لعرض 1.50م)' : 'Consommation (laize 1.50m)'}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingPieceConsoIdx(safeIdx);
+                                  setTempPieceConso(p.consumption || '1.50m');
+                                }}
+                                className="text-indigo-500 hover:text-indigo-700 p-0.5 rounded transition-colors cursor-pointer"
+                                title={isAr ? 'تعديل ميتراج استهلاك الثوب' : 'Modifier le métrage'}
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                            </div>
                             <p className="text-sm font-black text-slate-900">{p.consumption || '1.50m'}</p>
                           </div>
                           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
@@ -5794,7 +5963,20 @@ ${userMessage}
                             <p className="text-sm font-black text-slate-900">{p.fit || 'Regular / عادي'}</p>
                           </div>
                           <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
-                            <span className="text-[10px] font-black text-emerald-600 uppercase block mb-1">{isAr ? 'التكلفة التقديرية للقطعة' : 'Coût Estimé'}</span>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-black text-emerald-600 uppercase block">{isAr ? 'التكلفة التقديرية للقطعة' : 'Coût Estimé'}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingPieceCostIdx(safeIdx);
+                                  setTempPieceCost(p.costEstimate || (analysisResult.pieces?.length === 1 && customCostOverride) || '');
+                                }}
+                                className="text-emerald-600 hover:text-emerald-800 p-0.5 rounded transition-colors cursor-pointer"
+                                title={isAr ? 'تعديل التكلفة التقديرية' : 'Modifier le coût façon'}
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                            </div>
                             <p className="text-base font-black text-emerald-700">{p.costEstimate || '—'}</p>
                           </div>
                         </div>
