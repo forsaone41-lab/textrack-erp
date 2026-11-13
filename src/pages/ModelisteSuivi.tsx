@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CheckCircle2,
@@ -30,7 +30,17 @@ import {
   Mail,
   ShieldCheck,
   Printer,
-  FileText
+  FileText,
+  Upload,
+  Download,
+  Paperclip,
+  Trash2,
+  FileArchive,
+  Image as ImageIcon,
+  MessageSquare,
+  ArrowRight,
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import FicheTechniqueModelisteModal, { printFicheTechniqueModeliste, sanitizeNotesForModeliste } from '../components/FicheTechniqueModelisteModal';
 import { useLang } from '../contexts/LangContext';
@@ -67,7 +77,25 @@ interface ModelisteSuiviProps {
 }
 
 export type ModelisteWorkStatus = 'a_faire' | 'en_cours' | 'termine';
-type MainTab = 'dashboard' | 'a_tarifer' | 'travaux' | 'reglements' | 'profil';
+type MainTab = 'dashboard' | 'a_tarifer' | 'travaux' | 'profil';
+
+export interface PatronFileAttachment {
+  id: string;
+  name: string;
+  size?: string;
+  type: string; // 'pdf' | 'archive' | 'image' | 'dxf' | 'other'
+  url: string; // dataUrl or storage url
+  uploadedAt: string;
+  uploadedBy: string;
+}
+
+export interface PatronMessage {
+  id: string;
+  sender: 'modeliste' | 'admin' | 'client';
+  senderName: string;
+  text: string;
+  date: string;
+}
 
 export interface ModelItem {
   id: string;
@@ -100,6 +128,8 @@ export interface ModelItem {
   patronageNegotiationNotes?: string;
   patronageNegotiationStatus?: string;
   modelisteGradation?: Record<string, Record<string, any>>;
+  patronFiles: PatronFileAttachment[];
+  patronMessages: PatronMessage[];
   lead?: Lead;
   fiche?: FicheTechnique;
 }
@@ -123,14 +153,14 @@ function getDeadlineBadge(
 ): { label: string; cls: string; urgency: number } {
   if (workStatus === 'termine') {
     return {
-      label: isAr ? 'منجز ومسلّم' : 'Terminé & Livré',
+      label: isAr ? 'منجز ومسلّم ✓' : 'Terminé & Livré ✓',
       cls: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       urgency: 99
     };
   }
   if (!deadlineDate) {
     return {
-      label: isAr ? 'تاريخ التسليم غير محدد' : 'Date limite non définie',
+      label: isAr ? 'التسليم: غير محدد' : 'Délai : Non défini',
       cls: 'bg-slate-100 text-slate-600 border-slate-200',
       urgency: 50
     };
@@ -142,26 +172,26 @@ function getDeadlineBadge(
   if (diffDays < 0) {
     return {
       label: isAr ? `متأخر بـ ${Math.abs(diffDays)} يوم` : `En retard (${Math.abs(diffDays)} j)`,
-      cls: 'bg-rose-50 text-rose-700 border-rose-200',
+      cls: 'bg-rose-50 text-rose-700 border-rose-200 font-bold',
       urgency: diffDays
     };
   }
   if (diffDays === 0) {
     return {
-      label: isAr ? 'التسليم اليوم' : "Aujourd'hui",
-      cls: 'bg-amber-50 text-amber-700 border-amber-300',
+      label: isAr ? 'التسليم اليوم !' : "Aujourd'hui !",
+      cls: 'bg-amber-100 text-amber-800 border-amber-300 font-bold',
       urgency: 0
     };
   }
   if (diffDays <= 3) {
     return {
-      label: isAr ? `بعد ${diffDays} أيام` : `Dans ${diffDays} j`,
+      label: isAr ? `خلال ${diffDays} أيام` : `Dans ${diffDays} j`,
       cls: 'bg-amber-50 text-amber-700 border-amber-200',
       urgency: diffDays
     };
   }
   return {
-    label: isAr ? `بعد ${diffDays} يوم` : `Dans ${diffDays} j`,
+    label: isAr ? `خلال ${diffDays} يوم` : `Dans ${diffDays} j`,
     cls: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     urgency: diffDays
   };
@@ -187,9 +217,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
   const [selectedMois, setSelectedMois] = useState<string>(() => new Date().toISOString().slice(0, 7));
   const [activeTab, setActiveTab] = useState<MainTab>('dashboard');
-  const [pricingFilter, setPricingFilter] = useState<'requested' | 'priced_waiting' | 'all'>('requested');
-  const [workFilter, setWorkFilter] = useState<'pending' | 'termine' | 'all'>('pending');
-  const [paymentFilter, setPaymentFilter] = useState<'all' | 'regles' | 'en_attente'>('all');
+  const [pricingSubFilter, setPricingSubFilter] = useState<'all' | 'unpriced' | 'priced'>('all');
+  const [workFilter, setWorkFilter] = useState<'all' | 'pending' | 'termine'>('pending');
 
   const [search, setSearch] = useState('');
   const [selectedModelisteId, setSelectedModelisteId] = useState<string>(isAdmin ? 'all' : currentUser.id);
@@ -197,18 +226,13 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
   const [actionPendingId, setActionPendingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; isError?: boolean } | null>(null);
 
-  // Modal: Price Entry / Edit
+  // Pricing inputs
   const [pricingItem, setPricingItem] = useState<ModelItem | null>(null);
   const [priceInput, setPriceInput] = useState('');
-  const [echPriceInput, setEchPriceInput] = useState('');
+  const [counterPriceInput, setCounterPriceInput] = useState<Record<string, string>>({});
   const [notesInput, setNotesInput] = useState('');
 
-  // Modal: Admin Validate & Assign Deadline Date
-  const [validateModalItem, setValidateModalItem] = useState<ModelItem | null>(null);
-  const [deadlineInput, setDeadlineInput] = useState('');
-  const [assignModelisteInput, setAssignModelisteInput] = useState('');
-
-  // Modal: Admin Quick Send New Model for Pricing
+  // Admin Quick Send New Model for Pricing
   const [showNewModelModal, setShowNewModelModal] = useState(false);
   const [newModelForm, setNewModelForm] = useState({
     modele: '',
@@ -233,60 +257,12 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
   const [copiedRib, setCopiedRib] = useState(false);
   const [techPackItem, setTechPackItem] = useState<ModelItem | null>(null);
 
-  const getMatchingFiche = (mItem: ModelItem | null): FicheTechnique | undefined => {
-    if (!mItem) return undefined;
-    if (mItem.fiche) return mItem.fiche;
-    const normItemModele = normalizeName(mItem.modele);
-    const normItemClient = normalizeName(mItem.client);
-    return fiches.find(f => {
-      const normFicheModele = normalizeName(f.modele);
-      const normFicheClient = normalizeName(f.client);
-      return (
-        (normFicheModele === normItemModele || (normFicheModele && normItemModele && (normFicheModele.includes(normItemModele) || normItemModele.includes(normFicheModele)))) &&
-        (!normItemClient || !normFicheClient || normFicheClient === normItemClient || normFicheClient.includes(normItemClient) || normItemClient.includes(normFicheClient))
-      );
-    });
-  };
+  // On-site chat & notes
+  const [activeChatModelId, setActiveChatModelId] = useState<string | null>(null);
+  const [chatMessageInput, setChatMessageInput] = useState('');
+  const [uploadingModelId, setUploadingModelId] = useState<string | null>(null);
 
-  const handleSaveModelisteTechnicalNotes = async (leadId: string, techNotes: string) => {
-    const lead = leads.find(l => l.id === leadId);
-    if (!lead) return;
-    const ext = parseLeadDetailsJson(lead.details);
-    const newDetails = {
-      ...ext,
-      patronageNotes: techNotes
-    };
-    await saveRecord('leads', { ...lead, details: JSON.stringify(newDetails) }, true);
-    showToast(isAr ? 'تم حفظ الملاحظات التقنية بنجاح' : 'Notes techniques enregistrées avec succès');
-    await fetchData();
-  };
-
-  const handleSaveModelisteMeasurements = async (
-    itemId: string,
-    measurements: any,
-    sourceType: 'lead' | 'fiche'
-  ) => {
-    if (sourceType === 'lead') {
-      const lead = leads.find(l => l.id === itemId);
-      if (!lead) return;
-      const ext = parseLeadDetailsJson(lead.details);
-      const newDetails = {
-        ...ext,
-        modelisteGradation: measurements
-      };
-      await saveRecord('leads', { ...lead, details: JSON.stringify(newDetails) }, true);
-    } else {
-      const fiche = fiches.find(f => f.id === itemId);
-      if (!fiche) return;
-      const updatedFiche: any = {
-        ...fiche,
-        modelisteGradation: measurements
-      };
-      await saveRecord('fiches_techniques', updatedFiche, true);
-    }
-    showToast(isAr ? 'تم حفظ وتحديث جدول القياسات بنجاح!' : 'Tableau de mesures enregistré avec succès !');
-    await fetchData();
-  };
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (text: string, isError = false) => {
     setToast({ text, isError });
@@ -302,7 +278,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           .select('id, name, phone, ville, type, quantity, status, date, details, photo, crmStage, crmPrice, crmPriceConfirmed')
           .not('name', 'in', '(__SYSTEM_CONFIG__,__WORKER_PHOTO__,__SYSTEM_LISTE_ATTENTE__,__DELETED__,__RH_PAIE_RULE__,__RH_MODEL_LOG__,__RH_PAIE_ADJ__)')
           .order('date', { ascending: false })
-          .limit(300),
+          .limit(350),
         loadData<Commande>('commandes'),
         loadData<Facture>('factures'),
         loadData<FicheTechnique>('fiches'),
@@ -342,7 +318,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     });
   }, [employes, payrollExtras.rules]);
 
-  // Active target Modéliste user for Profile / RIB view
+  // Target modéliste user
   const activeProfileUser: User = useMemo(() => {
     if (isAdmin && selectedModelisteId !== 'all') {
       return users.find(u => u.id === selectedModelisteId) || currentUser;
@@ -353,14 +329,12 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     return users.find(u => u.id === currentUser.id) || currentUser;
   }, [isAdmin, selectedModelisteId, users, modelistes, currentUser]);
 
-  // Match the selected or logged-in modéliste user to an Employe record in RH for balance & payment sync
   const linkedEmployee: Employe | undefined = useMemo(() => {
     const targetUserId = isAdmin ? (selectedModelisteId === 'all' ? '' : selectedModelisteId) : currentUser.id;
     const targetUser = users.find(u => u.id === targetUserId) || (!isAdmin ? currentUser : undefined);
     return findMatchingEmployeeForUser(targetUser, hydratedEmployes);
   }, [isAdmin, selectedModelisteId, currentUser, users, hydratedEmployes]);
 
-  // Employee linked to `activeProfileUser` (used in Profil & RIB tab)
   const profileTargetEmployee: Employe | undefined = useMemo(() => {
     return findMatchingEmployeeForUser(activeProfileUser, hydratedEmployes);
   }, [activeProfileUser, hydratedEmployes]);
@@ -379,66 +353,10 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     });
   }, [profileTargetEmployee, activeProfileUser]);
 
-  const copyRibToClipboard = (rib?: string) => {
-    const clean = (rib || '').replace(/\s+/g, '');
-    if (!clean) return;
-    navigator.clipboard?.writeText(clean);
-    setCopiedRib(true);
-    showToast(isAr ? 'تم نسخ رقم RIB بنجاح' : 'RIB copié dans le presse-papiers');
-    setTimeout(() => setCopiedRib(false), 2000);
-  };
-
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanRib = profileForm.rib.replace(/\s+/g, '');
-    if (cleanRib && cleanRib.length !== 24) {
-      showToast(
-        isAr ? 'رقم الحساب البنكي RIB يجب أن يتكون من 24 رقماً' : 'Le RIB marocain doit contenir exactement 24 chiffres',
-        true
-      );
-      return;
-    }
-    setSavingProfile(true);
-    try {
-      const targetEmp = profileTargetEmployee;
-      const existingRule = targetEmp ? payrollExtras.rules.find(r => r.employeId === targetEmp.id) : undefined;
-      const res = await syncEmployeeProfileAndBank({
-        user: activeProfileUser,
-        employes: hydratedEmployes,
-        existingRule,
-        profile: {
-          ...profileForm,
-          rib: cleanRib
-        }
-      });
-
-      setEmployes(prev => {
-        const exists = prev.some(emp => emp.id === res.employe.id);
-        return exists ? prev.map(emp => (emp.id === res.employe.id ? res.employe : emp)) : [...prev, res.employe];
-      });
-      setUsers(prev => prev.map(u => (u.id === res.user.id ? res.user : u)));
-      setPayrollExtras(prev => ({
-        ...prev,
-        rules: [...prev.rules.filter(r => r.employeId !== res.employe.id), res.rule]
-      }));
-      showToast(
-        isAr
-          ? 'تم حفظ معلوماتك و RIB ومزامنتها تلقائياً مع صفحة الـ RH'
-          : 'Profil & RIB enregistrés et synchronisés automatiquement avec RH'
-      );
-    } catch (err) {
-      console.error('Erreur sauvegarde profil modéliste:', err);
-      showToast(isAr ? 'تعذر حفظ المعلومات، حاول مجدداً' : 'Erreur lors de la sauvegarde du profil', true);
-    } finally {
-      setSavingProfile(false);
-    }
-  };
-
-  // Build unified model items from Leads + Fiches Techniques
+  // Build unified model items
   const modelItems: ModelItem[] = useMemo(() => {
     const items: ModelItem[] = [];
 
-    // 1. Process Leads sent for patronage evaluation / work
     leads.forEach(lead => {
       const ext = parseLeadDetailsJson(lead.details);
       const patPrice = Number(ext.patronagePrice ?? (lead as any).patronagePrice) || 0;
@@ -499,6 +417,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
       const rawDate = toYmd(ext.patronagePricedAt || ext.clientValidatedAt || ext.adminValidatedAt || lead.date) || new Date().toISOString().slice(0, 10);
 
+      const patronFiles: PatronFileAttachment[] = Array.isArray(ext.patronFiles) ? ext.patronFiles : [];
+      const patronMessages: PatronMessage[] = Array.isArray(ext.patronMessages) ? ext.patronMessages : [];
+
       items.push({
         id: lead.id,
         sourceType: 'lead',
@@ -530,11 +451,12 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         modelisteId: ext.modelisteId,
         modelisteName: ext.modelisteName,
         modelisteGradation: ext.modelisteGradation || ext.customMesures,
+        patronFiles,
+        patronMessages,
         lead
       });
     });
 
-    // 2. Process any Fiches Techniques explicitly assigned to a modéliste
     fiches.forEach(fiche => {
       if (!fiche.modelisteId) return;
 
@@ -578,6 +500,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         modelisteId: fiche.modelisteId,
         modelisteName: modUser?.nom,
         modelisteGradation: (fiche as any).modelisteGradation,
+        patronFiles: [],
+        patronMessages: [],
         fiche
       });
     });
@@ -585,7 +509,6 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     return items;
   }, [leads, fiches, commandes, factures, users]);
 
-  // Scope items to selected modéliste (or current modéliste)
   const filteredByRole = useMemo(() => {
     if (isAdmin) {
       if (selectedModelisteId === 'all') return modelItems;
@@ -598,82 +521,56 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     });
   }, [modelItems, isAdmin, selectedModelisteId, currentUser.id]);
 
-  // Unified Monthly Financial Balance + Workflow Counts
+  // Executive Analytics Summary
   const summary = useMemo(() => {
-    const newToPrice = filteredByRole.filter(i => i.patronageStatus === 'requested');
-    const pricedAwaitingValidation = filteredByRole.filter(i => i.patronageStatus === 'priced' && !i.isValidatedToWork);
+    const unpricedList = filteredByRole.filter(i => i.patronageStatus === 'requested');
+    const pricedAwaitingAgreement = filteredByRole.filter(i => i.patronageStatus === 'priced' && !i.isValidatedToWork);
     const allValidatedWork = filteredByRole.filter(i => i.isValidatedToWork);
     const activeWork = allValidatedWork.filter(i => i.workStatus !== 'termine');
     const completedWork = allValidatedWork.filter(i => i.workStatus === 'termine');
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const overdueCount = activeWork.filter(i => i.deadlineDate && i.deadlineDate < todayStr).length;
 
-    // Monthly balance calculation for `selectedMois`
-    const monthValidatedModels = allValidatedWork.filter(i => {
+    // Values
+    const totalCompletedMAD = completedWork.reduce((s, i) => s + (Number(i.patronagePrice) || 0), 0);
+    const totalActiveMAD = activeWork.reduce((s, i) => s + (Number(i.patronagePrice) || 0), 0);
+    const totalValidatedAllMAD = allValidatedWork.reduce((s, i) => s + (Number(i.patronagePrice) || 0), 0);
+
+    // Selected Month specifics
+    const monthCompletedModels = completedWork.filter(i => {
       const m = (i.workCompletedAt || i.rawDate || '').slice(0, 7);
       return m === selectedMois;
     });
+    const monthEarnedMAD = monthCompletedModels.reduce((s, i) => s + (Number(i.patronagePrice) || 0), 0);
 
-    // RH Balance Engine if linked employee exists
-    let rhBalance: ReturnType<typeof computeWorkerMonthBalance> | null = null;
-    if (linkedEmployee) {
-      rhBalance = computeWorkerMonthBalance(linkedEmployee, selectedMois, [], paiements, payrollExtras);
-    }
-
-    // Total Earned in selectedMois: combine validated models in selectedMois + unlinked RH ModelisteWorkLog
-    const modelsTotalThisMonth = monthValidatedModels.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
-    const unlinkedExtraLogs = (rhBalance?.modelLogsValides || []).filter(
-      log => !log.sourceLeadId || !allValidatedWork.some(it => it.id === log.sourceLeadId)
-    );
-    const extraLogsTotal = unlinkedExtraLogs.reduce((sum, l) => sum + l.quantite * l.tarifUnitaire, 0);
-    const primesNet = (rhBalance?.totalPrimes || 0) - (rhBalance?.totalRetenues || 0) + (rhBalance?.baseMensuelle || 0);
-    const monthEarnedMAD = Math.max(0, modelsTotalThisMonth + extraLogsTotal + primesNet);
-
-    // Total Paid in selectedMois:
-    // Use RH paiements_salaires for linkedEmployee in selectedMois, PLUS any paid models whose payment wasn't mirrored into paiements_salaires
+    // Payments in selected month
     const rhPaysInMonth = linkedEmployee
       ? paiements.filter(p => p.employeId === linkedEmployee.id && p.mois === selectedMois)
       : [];
-    const rhPaidSum = rhPaysInMonth.reduce((sum, p) => sum + (Number(p.montant) || 0), 0);
-
-    const paidModelsInMonthWithoutRh = monthValidatedModels.filter(i => {
-      if (!i.patronagePaid) return false;
-      const ext = i.lead ? parseLeadDetailsJson(i.lead.details) : {};
-      if (ext.patronagePaidSalaireId && rhPaysInMonth.some(p => p.id === ext.patronagePaidSalaireId)) {
-        return false; // already counted in rhPaidSum
-      }
-      return !linkedEmployee; // if no RH employee, use model-level paid flag
-    });
-    const unlinkedPaidModelsSum = paidModelsInMonthWithoutRh.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
-    const monthPaidMAD = rhPaidSum + unlinkedPaidModelsSum;
+    const monthPaidMAD = rhPaysInMonth.reduce((s, p) => s + (Number(p.montant) || 0), 0);
     const monthRemainingMAD = Math.max(0, monthEarnedMAD - monthPaidMAD);
 
-    // Overall validated totals (all-time) for Règlements tab
-    const totalValidatedAllMAD = allValidatedWork.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
-    const reglesList = allValidatedWork.filter(i => i.patronagePaid);
-    const enAttenteReglementList = allValidatedWork.filter(i => !i.patronagePaid);
-    const totalRegleAllMAD = reglesList.reduce((sum, i) => sum + (Number(i.patronagePrice) || 0), 0);
-    const totalResteAllMAD = Math.max(0, totalValidatedAllMAD - totalRegleAllMAD);
+    // All-time balance
+    const totalPaidAllTime = linkedEmployee
+      ? paiements.filter(p => p.employeId === linkedEmployee.id).reduce((s, p) => s + (Number(p.montant) || 0), 0)
+      : allValidatedWork.filter(i => i.patronagePaid).reduce((s, i) => s + (Number(i.patronagePrice) || 0), 0);
+    const totalRemainingAllTime = Math.max(0, totalCompletedMAD - totalPaidAllTime);
 
     return {
-      newToPriceCount: newToPrice.length,
-      pricedAwaitingValidationCount: pricedAwaitingValidation.length,
-      activeWorkCount: activeWork.length,
-      completedWorkCount: completedWork.length,
-      overdueCount,
-      allValidatedCount: allValidatedWork.length,
-      monthModelsCount: monthValidatedModels.length,
+      completedCount: completedWork.length,
+      completedMAD: totalCompletedMAD,
+      activeCount: activeWork.length,
+      activeMAD: totalActiveMAD,
+      unpricedCount: unpricedList.length,
+      pricedAwaitingCount: pricedAwaitingAgreement.length,
+      totalToPriceCount: unpricedList.length + pricedAwaitingAgreement.length,
+      monthCompletedCount: monthCompletedModels.length,
       monthEarnedMAD,
       monthPaidMAD,
       monthRemainingMAD,
-      rhPaysInMonth,
-      reglesCount: reglesList.length,
-      enAttenteReglementCount: enAttenteReglementList.length,
-      totalValidatedAllMAD,
-      totalRegleAllMAD,
-      totalResteAllMAD
+      totalCompletedMAD,
+      totalPaidAllTime,
+      totalRemainingAllTime
     };
-  }, [filteredByRole, selectedMois, linkedEmployee, paiements, payrollExtras]);
+  }, [filteredByRole, selectedMois, linkedEmployee, paiements]);
 
   // Search helper
   const matchesSearch = (item: ModelItem) => {
@@ -686,17 +583,18 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     );
   };
 
-  // Items for Section 2: À Tarifer
+  // Pricing Items (Tab 2)
   const pricingItems = useMemo(() => {
     return filteredByRole.filter(item => {
       if (!matchesSearch(item)) return false;
-      if (pricingFilter === 'requested') return item.patronageStatus === 'requested';
-      if (pricingFilter === 'priced_waiting') return item.patronageStatus === 'priced' && !item.isValidatedToWork;
-      return item.patronageStatus === 'requested' || (item.patronageStatus === 'priced' && !item.isValidatedToWork);
+      if (item.isValidatedToWork) return false; // already agreed & moved to tasks!
+      if (pricingSubFilter === 'unpriced') return item.patronageStatus === 'requested';
+      if (pricingSubFilter === 'priced') return item.patronageStatus === 'priced';
+      return true;
     });
-  }, [filteredByRole, pricingFilter, search]);
+  }, [filteredByRole, pricingSubFilter, search]);
 
-  // Items for Section 3: Travaux à Faire (Validated by Admin OR Client)
+  // Work Items (Tab 3: Tasks & Delivery)
   const workItems = useMemo(() => {
     return filteredByRole
       .filter(item => {
@@ -713,56 +611,32 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       });
   }, [filteredByRole, workFilter, search, isAr]);
 
-  // Items for Section 4: Règlements & Balance
-  const paymentItems = useMemo(() => {
-    return filteredByRole.filter(item => {
-      if (!item.isValidatedToWork) return false;
-      if (!matchesSearch(item)) return false;
-      if (paymentFilter === 'regles') return item.patronagePaid;
-      if (paymentFilter === 'en_attente') return !item.patronagePaid;
-      return true;
-    });
-  }, [filteredByRole, paymentFilter, search]);
+  // ─── ACTIONS ─────────────────────────────────────────────────────────
 
-  // Open Pricing Modal
-  const openPricingModal = (item: ModelItem) => {
-    setPricingItem(item);
-    setPriceInput(item.patronagePrice > 0 ? String(item.patronagePrice) : '');
-    setEchPriceInput(item.prixEchantillon > 0 ? String(item.prixEchantillon) : '');
-    setNotesInput(item.patronageNotes || '');
-  };
-
-  // Save Modéliste Price (stays 100% synced with EvaluationPatronage)
-  const handleSavePrice = async () => {
-    if (!pricingItem?.lead) return;
-    const patPrice = Number(priceInput);
-    if (!priceInput || isNaN(patPrice) || patPrice <= 0) {
-      showToast(isAr ? 'المرجو إدخال ثمن الباتروناج بشكل صحيح' : 'Veuillez saisir un prix de patronage valide', true);
+  // 1. Submit price proposal
+  const handleSavePrice = async (item: ModelItem, customPrice?: number) => {
+    if (!item.lead) return;
+    const priceToSet = customPrice !== undefined ? customPrice : Number(priceInput);
+    if (!priceToSet || isNaN(priceToSet) || priceToSet <= 0) {
+      showToast(isAr ? 'المرجو إدخال ثمن الباتروناج بشكل صحيح' : 'Veuillez saisir un tarif valide', true);
       return;
     }
-    const echPrice = echPriceInput ? Number(echPriceInput) || 0 : 0;
-    setActionPendingId(pricingItem.id);
+    setActionPendingId(item.id);
     try {
-      const ext = parseLeadDetailsJson(pricingItem.lead.details);
+      const ext = parseLeadDetailsJson(item.lead.details);
       const newDetails = {
         ...ext,
         patronageStatus: 'priced',
-        patronagePrice: patPrice,
-        prixEchantillon: echPrice,
-        patronageNotes: notesInput,
+        patronagePrice: priceToSet,
+        patronageNotes: notesInput || ext.patronageNotes || '',
         modelisteId: ext.modelisteId || (!isAdmin ? currentUser.id : undefined),
         modelisteName: ext.modelisteName || (!isAdmin ? currentUser.nom : undefined),
         patronagePricedAt: new Date().toISOString()
       };
-      const updatedLead: any = {
-        ...pricingItem.lead,
-        patronagePrice: patPrice,
-        prixEchantillon: echPrice,
-        details: JSON.stringify(newDetails)
-      };
-      await saveRecord('leads', updatedLead, true);
+      await saveRecord('leads', { ...item.lead, patronagePrice: priceToSet, details: JSON.stringify(newDetails) }, true);
       setPricingItem(null);
-      showToast(isAr ? 'تم حفظ التسعيرة وإرسالها للمصادقة بنجاح' : 'Tarif enregistré et envoyé pour validation');
+      setPriceInput('');
+      showToast(isAr ? `تم تسجيل الثمن (${priceToSet} درهم) واقتراحه بنجاح` : `Tarif (${priceToSet} MAD) enregistré`);
       await fetchData();
     } catch (e) {
       console.error('Erreur sauvegarde tarif:', e);
@@ -772,275 +646,354 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     }
   };
 
-  // Open Admin Validate + Deadline Date Modal
-  const openValidateModal = (item: ModelItem) => {
-    setValidateModalItem(item);
-    const defaultDate = item.deadlineDate || new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
-    setDeadlineInput(defaultDate);
-    setAssignModelisteInput(item.modelisteId || (!isAdmin ? currentUser.id : modelistes[0]?.id || ''));
-  };
-
-  // Save Admin Validation + Assigned Deadline Date
-  const handleConfirmAdminValidate = async () => {
-    if (!validateModalItem?.lead) return;
-    if (!deadlineInput) {
-      showToast(isAr ? 'المرجو تحديد تاريخ التسليم المطلوب' : 'Veuillez choisir la date limite de réalisation', true);
+  // 2. Propose Counter-Price (Admin to Modéliste)
+  const handleSendCounterPrice = async (item: ModelItem) => {
+    if (!item.lead) return;
+    const cPrice = Number(counterPriceInput[item.id]);
+    if (!cPrice || isNaN(cPrice) || cPrice <= 0) {
+      showToast(isAr ? 'أدخل ثمن العرض المقابل' : 'Saisir un contre-tarif valide', true);
       return;
     }
-    setActionPendingId(validateModalItem.id);
+    setActionPendingId(item.id);
     try {
-      const ext = parseLeadDetailsJson(validateModalItem.lead.details);
-      const assignedUser = users.find(u => u.id === assignModelisteInput);
+      const ext = parseLeadDetailsJson(item.lead.details);
       const newDetails = {
         ...ext,
-        adminValidatedToWork: true,
-        adminValidatedAt: new Date().toISOString(),
-        adminValidatedBy: currentUser.nom || 'Administration',
-        deadlineDate: deadlineInput,
-        workStatus: ext.workStatus || 'a_faire',
-        modelisteId: assignModelisteInput || ext.modelisteId,
-        modelisteName: assignedUser?.nom || ext.modelisteName
+        adminCounterPrice: cPrice,
+        patronageNegotiationStatus: 'counter_offered',
+        patronageNegotiationNotes: `Proposition Admin: ${cPrice} MAD`
       };
-      const updatedLead: Lead = {
-        ...validateModalItem.lead,
-        details: JSON.stringify(newDetails)
-      };
-      await saveRecord('leads', updatedLead, true);
-
-      // Sync work log to payrollEngine if employee matched & price exists
-      if (linkedEmployee && validateModalItem.patronagePrice > 0) {
-        await saveModelisteWorkLog({
-          employeId: linkedEmployee.id,
-          date: new Date().toISOString().slice(0, 10),
-          modeleName: validateModalItem.modele,
-          client: validateModalItem.client,
-          typeTravail: 'patronage_complet',
-          quantite: 1,
-          tarifUnitaire: validateModalItem.patronagePrice,
-          statut: 'valide',
-          sourceLeadId: validateModalItem.id,
-          notes: `Date limite: ${deadlineInput}`
-        });
-      }
-
-      setValidateModalItem(null);
-      showToast(isAr ? 'تمت المصادقة وإضافة الموديل لقائمة العمل مع التاريخ المحدد' : 'Modèle validé et planifié dans Travaux à Faire');
+      await saveRecord('leads', { ...item.lead, details: JSON.stringify(newDetails) }, true);
+      setCounterPriceInput(prev => ({ ...prev, [item.id]: '' }));
+      showToast(isAr ? `تم إرسال العرض المقابل (${cPrice} درهم) للموديليست` : `Contre-offre de ${cPrice} MAD envoyée`);
       await fetchData();
     } catch (e) {
-      console.error('Erreur validation atelier:', e);
-      showToast(isAr ? 'تعذر حفظ المصادقة' : 'Erreur lors de la validation', true);
+      showToast(isAr ? 'حدث خطأ' : 'Erreur', true);
     } finally {
       setActionPendingId(null);
     }
   };
 
-  // Update Work Status (À faire -> En cours -> Terminé)
+  // 3. KEY USER REQUIREMENT: Accept Price & Move DIRECTLY to Tasks (Travaux)
+  const handleAcceptPriceAndMoveToWork = async (item: ModelItem, agreedPrice: number) => {
+    if (!item.lead) return;
+    setActionPendingId(item.id);
+    try {
+      const ext = parseLeadDetailsJson(item.lead.details);
+      const defaultDeadline = item.deadlineDate || new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+      const assignedModUser = users.find(u => u.id === (item.modelisteId || currentUser.id));
+
+      const newDetails = {
+        ...ext,
+        patronageStatus: 'priced',
+        patronagePrice: agreedPrice,
+        adminValidatedToWork: true,
+        adminValidatedAt: new Date().toISOString(),
+        adminValidatedBy: currentUser.nom || 'Administration',
+        workStatus: 'a_faire',
+        deadlineDate: defaultDeadline,
+        modelisteId: item.modelisteId || (!isAdmin ? currentUser.id : undefined),
+        modelisteName: assignedModUser?.nom || ext.modelisteName || currentUser.nom
+      };
+
+      await saveRecord('leads', { ...item.lead, patronagePrice: agreedPrice, details: JSON.stringify(newDetails) }, true);
+
+      // Sync to payrollEngine work log
+      const targetEmp = linkedEmployee || (assignedModUser ? findMatchingEmployeeForUser(assignedModUser, hydratedEmployes) : undefined);
+      if (targetEmp && agreedPrice > 0) {
+        await saveModelisteWorkLog({
+          employeId: targetEmp.id,
+          date: new Date().toISOString().slice(0, 10),
+          modeleName: item.modele,
+          client: item.client,
+          typeTravail: 'patronage_complet',
+          quantite: 1,
+          tarifUnitaire: agreedPrice,
+          statut: 'valide',
+          sourceLeadId: item.id,
+          notes: `Accord de prix: ${agreedPrice} MAD (Délai: ${defaultDeadline})`
+        });
+      }
+
+      showToast(
+        isAr
+          ? `✓ تم اعتماد ثمن ${agreedPrice} درهم ونقل الموديل فوراً إلى قائمة المهام والإنجاز!`
+          : `✓ Tarif de ${agreedPrice} MAD validé ! Modèle transféré directement dans Travaux.`
+      );
+
+      // Auto-switch directly to Tasks tab as requested by user!
+      setActiveTab('travaux');
+      setWorkFilter('pending');
+      await fetchData();
+    } catch (err) {
+      console.error('Erreur validation prix:', err);
+      showToast(isAr ? 'حدث خطأ أثناء اعتماد الثمن' : 'Erreur lors de la validation du tarif', true);
+    } finally {
+      setActionPendingId(null);
+    }
+  };
+
+  // 4. Update Work Progress (À faire -> En cours -> Terminé & Livré)
   const handleUpdateWorkStatus = async (item: ModelItem, nextStatus: ModelisteWorkStatus) => {
     if (!item.lead) return;
     setActionPendingId(item.id);
     try {
       const ext = parseLeadDetailsJson(item.lead.details);
+      const isComplete = nextStatus === 'termine';
+      const nowIso = new Date().toISOString();
+
       const newDetails = {
         ...ext,
         workStatus: nextStatus,
-        workCompletedAt: nextStatus === 'termine' ? new Date().toISOString() : null
+        workCompletedAt: isComplete ? nowIso : null
       };
+
       await saveRecord('leads', { ...item.lead, details: JSON.stringify(newDetails) }, true);
+
+      // If completed, ensure work log is logged in payroll
+      if (isComplete && linkedEmployee && item.patronagePrice > 0) {
+        await saveModelisteWorkLog({
+          employeId: linkedEmployee.id,
+          date: nowIso.slice(0, 10),
+          modeleName: item.modele,
+          client: item.client,
+          typeTravail: 'patronage_complet',
+          quantite: 1,
+          tarifUnitaire: item.patronagePrice,
+          statut: 'valide',
+          sourceLeadId: item.id,
+          notes: `Livré le ${nowIso.slice(0, 10)}`
+        });
+      }
+
       showToast(
-        nextStatus === 'termine'
-          ? isAr ? 'تم تسجيل الموديل كمنجز ومسلّم' : 'Modèle marqué comme terminé & livré'
-          : isAr ? 'تم تحديث حالة العمل' : 'Statut du travail mis à jour'
+        isComplete
+          ? (isAr ? '🎉 تم تسليم الموديل بنجاح واحتسابه في رصيد أرباحك!' : '🎉 Modèle terminé et livré ! Crédité sur votre balance.')
+          : (isAr ? 'تم تحديث حالة العمل' : 'Statut mis à jour')
       );
       await fetchData();
     } catch (e) {
-      console.error('Erreur mise à jour statut travail:', e);
+      showToast(isAr ? 'حدث خطأ' : 'Erreur', true);
     } finally {
       setActionPendingId(null);
     }
   };
 
-  // Toggle Paid / Unpaid with unified RH & Charges sync
-  const handleTogglePatronagePaid = async (item: ModelItem) => {
+  // 5. Upload Pattern Files (PDF, RAR, ZIP, DXF, Images)
+  const handleUploadPatronFile = async (item: ModelItem, file: File) => {
+    if (!item.lead) return;
+    setUploadingModelId(item.id);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target?.result as string;
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+
+        const fileType = fileExt === 'pdf' ? 'pdf'
+          : ['rar', 'zip', '7z', 'tar'].includes(fileExt) ? 'archive'
+          : ['png', 'jpg', 'jpeg', 'webp'].includes(fileExt) ? 'image'
+          : ['dxf', 'hpgl', 'plt', 'ai'].includes(fileExt) ? 'cad'
+          : 'other';
+
+        const newAttachment: PatronFileAttachment = {
+          id: genId(),
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(1)} KB`,
+          type: fileType,
+          url: dataUrl,
+          uploadedAt: new Date().toISOString(),
+          uploadedBy: currentUser.nom || (isAdmin ? 'Admin' : 'Modéliste')
+        };
+
+        const ext = parseLeadDetailsJson(item.lead?.details);
+        const currentFiles = Array.isArray(ext.patronFiles) ? ext.patronFiles : [];
+        const newDetails = {
+          ...ext,
+          patronFiles: [...currentFiles, newAttachment]
+        };
+
+        await saveRecord('leads', { ...item.lead, details: JSON.stringify(newDetails) }, true);
+        showToast(isAr ? `✓ تم رفع الملف "${file.name}" بنجاح وتوفيره للزبون والإدارة` : `Fichier "${file.name}" téléversé et synchronisé`);
+        setUploadingModelId(null);
+        await fetchData();
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Erreur upload:', err);
+      showToast(isAr ? 'تعذر رفع الملف' : 'Erreur de téléversement', true);
+      setUploadingModelId(null);
+    }
+  };
+
+  // 6. Delete Uploaded Pattern File
+  const handleDeletePatronFile = async (item: ModelItem, fileId: string) => {
     if (!item.lead) return;
     setActionPendingId(item.id);
     try {
       const ext = parseLeadDetailsJson(item.lead.details);
-      const newPaid = !ext.patronagePaid;
-      const nowIso = new Date().toISOString();
-      const todayYmd = nowIso.slice(0, 10);
-      const payMois = selectedMois || todayYmd.slice(0, 7);
+      const currentFiles: PatronFileAttachment[] = Array.isArray(ext.patronFiles) ? ext.patronFiles : [];
+      const updatedFiles = currentFiles.filter(f => f.id !== fileId);
+      const newDetails = {
+        ...ext,
+        patronFiles: updatedFiles
+      };
+      await saveRecord('leads', { ...item.lead, details: JSON.stringify(newDetails) }, true);
+      showToast(isAr ? 'تم حذف الملف' : 'Fichier supprimé');
+      await fetchData();
+    } catch (e) {
+      showToast(isAr ? 'تعذر الحذف' : 'Erreur de suppression', true);
+    } finally {
+      setActionPendingId(null);
+    }
+  };
 
-      let salaireId: string | null = ext.patronagePaidSalaireId || null;
-      let chargeId: string | null = ext.patronagePaidChargeId || null;
+  // 7. Send On-Site Message / Note between Admin and Modéliste
+  const handleSendPatronMessage = async (item: ModelItem) => {
+    if (!chatMessageInput.trim() || !item.lead) return;
+    const textToSend = chatMessageInput.trim();
+    setChatMessageInput('');
+    setActionPendingId(item.id);
 
-      if (newPaid) {
-        // Resolve employee to credit in RH Paiements (hydrated with RIB/Bank)
-        const modUser = users.find(u => u.id === item.modelisteId);
-        const empTarget =
-          linkedEmployee ||
-          (modUser ? findMatchingEmployeeForUser(modUser, hydratedEmployes) : undefined) ||
-          hydratedEmployes.find(e => isModelisteEmployee(e) && e.actif);
+    try {
+      const ext = parseLeadDetailsJson(item.lead.details);
+      const currentMsgs: PatronMessage[] = Array.isArray(ext.patronMessages) ? ext.patronMessages : [];
 
-        if (empTarget && item.patronagePrice > 0) {
-          const hasRib = Boolean(empTarget.rib && empTarget.rib.trim());
-          salaireId = genId();
-          const payRec: PaiementSalaire = {
-            id: salaireId,
-            employeId: empTarget.id,
-            montant: item.patronagePrice,
-            date: todayYmd,
-            mois: payMois,
-            methode: hasRib ? 'virement' : 'especes',
-            notes: `Patronage Modèle: ${item.modele} (${item.client})${hasRib ? ` • RIB: ${empTarget.banque ? empTarget.banque + ' ' : ''}${empTarget.rib}` : ''}`
-          };
-          await saveRecord('paiements_salaires', payRec, true);
-
-          chargeId = genId();
-          const chargeRec: Charge = {
-            id: chargeId,
-            designation: `Règlement Patronage - ${item.modele} (${empTarget.prenom} ${empTarget.nom})`,
-            categorie: 'salaires',
-            montant: item.patronagePrice,
-            date: todayYmd,
-            statut: 'payé',
-            recurrence: 'ponctuel',
-            fournisseur: `${empTarget.prenom} ${empTarget.nom}`,
-            notes: `Sync Modéliste (${payMois})`
-          };
-          await saveRecord('charges', chargeRec, true);
-
-          await saveModelisteWorkLog({
-            employeId: empTarget.id,
-            date: toYmd(item.workCompletedAt || item.rawDate) || todayYmd,
-            modeleName: item.modele,
-            client: item.client,
-            typeTravail: 'patronage_complet',
-            quantite: 1,
-            tarifUnitaire: item.patronagePrice,
-            statut: 'valide',
-            sourceLeadId: item.id
-          });
-        }
-      } else {
-        if (salaireId) {
-          await deleteRecord('paiements_salaires', salaireId);
-          salaireId = null;
-        }
-        if (chargeId) {
-          await deleteRecord('charges', chargeId);
-          chargeId = null;
-        }
-      }
+      const newMsg: PatronMessage = {
+        id: genId(),
+        sender: isAdmin ? 'admin' : 'modeliste',
+        senderName: currentUser.nom || (isAdmin ? 'Administration' : 'Modéliste'),
+        text: textToSend,
+        date: new Date().toISOString()
+      };
 
       const newDetails = {
         ...ext,
-        patronagePaid: newPaid,
-        patronagePaidAt: newPaid ? nowIso : null,
-        patronagePaidMois: newPaid ? payMois : null,
-        patronagePaidBy: newPaid ? currentUser.nom || 'Administration' : null,
-        patronagePaidSalaireId: salaireId,
-        patronagePaidChargeId: chargeId
+        patronMessages: [...currentMsgs, newMsg]
       };
+
       await saveRecord('leads', { ...item.lead, details: JSON.stringify(newDetails) }, true);
-      showToast(
-        newPaid
-          ? isAr ? 'تم تأكيد الدفع ومزامنته مع الرصيد المالي' : 'Règlement enregistré et synchronisé avec la balance'
-          : isAr ? 'تم إلغاء حالة الدفع' : 'Règlement annulé'
-      );
+      showToast(isAr ? 'تم إرسال رسالتك مباشرة في الموقع' : 'Message envoyé sur le site');
       await fetchData();
     } catch (e) {
-      console.error('Erreur toggle règlement:', e);
-      showToast(isAr ? 'حدث خطأ أثناء تحديث الدفع' : 'Erreur lors du règlement', true);
+      showToast(isAr ? 'تعذر إرسال الرسالة' : 'Erreur d\'envoi', true);
     } finally {
       setActionPendingId(null);
     }
   };
 
-  // Admin: Quick create & send a new model directly to Modéliste
-  const handleCreateNewModel = async (e: React.FormEvent) => {
+  // 8. Modéliste Profile & RIB Save
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newModelForm.modele.trim() || !newModelForm.client.trim()) {
-      showToast(isAr ? 'اسم الموديل والزبون إجباريان' : 'Le modèle et le client sont obligatoires', true);
+    const cleanRib = profileForm.rib.replace(/\s+/g, '');
+    if (cleanRib && cleanRib.length !== 24) {
+      showToast(
+        isAr ? 'رقم الحساب البنكي RIB يجب أن يتكون من 24 رقماً' : 'Le RIB marocain doit contenir 24 chiffres',
+        true
+      );
       return;
     }
-    setActionPendingId('new-model');
+    setSavingProfile(true);
     try {
-      const assignedMod = users.find(u => u.id === newModelForm.modelisteId);
-      const detailsObj: any = {
-        patronageStatus: 'requested',
-        clientNotes: sanitizeNotesForModeliste(newModelForm.notes.trim()),
-        deadlineDate: newModelForm.deadlineDate || undefined,
-        modelisteId: assignedMod?.id || undefined,
-        modelisteName: assignedMod?.nom || undefined
-      };
-      const newLead: Lead = {
-        id: genId(),
-        name: newModelForm.client.trim(),
-        phone: '',
-        ville: '',
-        type: newModelForm.modele.trim(),
-        quantity: Math.max(1, Number(newModelForm.quantity) || 1),
-        status: 'new',
-        date: new Date().toISOString(),
-        details: JSON.stringify(detailsObj)
-      };
-      await saveRecord('leads', newLead, true);
-      setShowNewModelModal(false);
-      setNewModelForm({ modele: '', client: '', quantity: '1', deadlineDate: '', modelisteId: '', notes: '' });
-      setActiveTab('a_tarifer');
-      setPricingFilter('requested');
-      showToast(isAr ? 'تم إرسال الموديل الجديد للتسعير' : 'Nouveau modèle envoyé au modéliste pour tarification');
-      await fetchData();
+      const targetEmp = profileTargetEmployee;
+      const existingRule = targetEmp ? payrollExtras.rules.find(r => r.employeId === targetEmp.id) : undefined;
+      const res = await syncEmployeeProfileAndBank({
+        user: activeProfileUser,
+        employes: hydratedEmployes,
+        existingRule,
+        profile: {
+          ...profileForm,
+          rib: cleanRib
+        }
+      });
+
+      setEmployes(prev => prev.map(emp => (emp.id === res.employe.id ? res.employe : emp)));
+      setUsers(prev => prev.map(u => (u.id === res.user.id ? res.user : u)));
+      showToast(
+        isAr
+          ? '✓ تم حفظ معلوماتك ورقم الـ RIB ومزامنتها بنجاح مع الـ RH وصفحة الخلاص'
+          : '✓ Profil et RIB enregistrés et synchronisés avec RH et Paie'
+      );
     } catch (err) {
-      console.error('Erreur création modèle:', err);
-      showToast(isAr ? 'تعذر إضافة الموديل' : 'Erreur lors de la création', true);
+      showToast(isAr ? 'تعذر حفظ المعلومات' : 'Erreur lors de la sauvegarde', true);
     } finally {
-      setActionPendingId(null);
+      setSavingProfile(false);
     }
   };
 
-  const openWhatsApp = (phone?: string, clientName?: string, modeleName?: string) => {
-    if (!phone) {
-      showToast(isAr ? 'رقم الهاتف غير متوفر' : 'Numéro de téléphone non disponible', true);
-      return;
-    }
-    let p = phone.replace(/\D/g, '');
-    if (p.startsWith('0')) p = '212' + p.substring(1);
-    const msg = encodeURIComponent(
-      isAr
-        ? `السلام عليكم ${clientName || ''}، بخصوص موديل "${modeleName || ''}"...`
-        : `Bonjour ${clientName || ''}, concernant le modèle "${modeleName || ''}"...`
-    );
-    window.open(`https://wa.me/${p}?text=${msg}`, '_blank');
+  const copyRib = (rib?: string) => {
+    const clean = (rib || '').replace(/\s+/g, '');
+    if (!clean) return;
+    navigator.clipboard?.writeText(clean);
+    setCopiedRib(true);
+    showToast(isAr ? 'تم نسخ الـ RIB بنجاح' : 'RIB copié');
+    setTimeout(() => setCopiedRib(false), 2000);
   };
 
+  // Technical Pack Fiche matching
+  const getMatchingFiche = (mItem: ModelItem | null): FicheTechnique | undefined => {
+    if (!mItem) return undefined;
+    if (mItem.fiche) return mItem.fiche;
+    const normItemModele = normalizeName(mItem.modele);
+    const normItemClient = normalizeName(mItem.client);
+    return fiches.find(f => {
+      const normFicheModele = normalizeName(f.modele);
+      const normFicheClient = normalizeName(f.client);
+      return (
+        (normFicheModele === normItemModele || (normFicheModele && normItemModele && (normFicheModele.includes(normItemModele) || normItemModele.includes(normFicheModele)))) &&
+        (!normItemClient || !normFicheClient || normFicheClient === normItemClient || normFicheClient.includes(normItemClient) || normItemClient.includes(normFicheClient))
+      );
+    });
+  };
+
+  const handleSaveModelisteTechnicalNotes = async (leadId: string, techNotes: string) => {
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead) return;
+    const ext = parseLeadDetailsJson(lead.details);
+    const newDetails = { ...ext, patronageNotes: techNotes };
+    await saveRecord('leads', { ...lead, details: JSON.stringify(newDetails) }, true);
+    showToast(isAr ? 'تم حفظ الملاحظات التقنية' : 'Notes techniques enregistrées');
+    await fetchData();
+  };
+
+  const handleSaveModelisteMeasurements = async (itemId: string, measurements: any, sourceType: 'lead' | 'fiche') => {
+    if (sourceType === 'lead') {
+      const lead = leads.find(l => l.id === itemId);
+      if (!lead) return;
+      const ext = parseLeadDetailsJson(lead.details);
+      const newDetails = { ...ext, modelisteGradation: measurements };
+      await saveRecord('leads', { ...lead, details: JSON.stringify(newDetails) }, true);
+    } else {
+      const fiche = fiches.find(f => f.id === itemId);
+      if (!fiche) return;
+      await saveRecord('fiches_techniques', { ...fiche, modelisteGradation: measurements }, true);
+    }
+    showToast(isAr ? 'تم تحديث جدول المقاسات' : 'Tableau de mesures mis à jour');
+    await fetchData();
+  };
+
+  // 4 Main Tabs definitions
   const tabs: { id: MainTab; label: string; badge?: number; icon: React.ReactNode }[] = [
     {
       id: 'dashboard',
-      label: isAr ? 'الرئيسية والرصيد' : 'Tableau de Bord',
+      label: isAr ? 'لوحة القيادة والتحليلات' : 'Tableau de Bord & Analytics',
       icon: <LayoutDashboard className="w-4 h-4" />
     },
     {
       id: 'a_tarifer',
-      label: isAr ? 'موديلات جديدة للتسعير' : 'Nouveaux à Tarifer',
-      badge: summary.newToPriceCount + summary.pricedAwaitingValidationCount,
+      label: isAr ? 'صفحة التسعير والتفاوض' : 'Tarification des Modèles',
+      badge: summary.totalToPriceCount > 0 ? summary.totalToPriceCount : undefined,
       icon: <Scissors className="w-4 h-4" />
     },
     {
       id: 'travaux',
-      label: isAr ? 'الموديلات المطلوب إنجازها' : 'Travaux à Faire',
-      badge: summary.activeWorkCount,
+      label: isAr ? 'إنجاز الموديلات ورفع الباترونات' : 'Travaux & Livraison Patrons',
+      badge: summary.activeCount > 0 ? summary.activeCount : undefined,
       icon: <FileCheck className="w-4 h-4" />
     },
     {
-      id: 'reglements',
-      label: isAr ? 'المدفوعات والحساب' : 'Règlements & Balance',
-      badge: summary.enAttenteReglementCount,
-      icon: <Wallet className="w-4 h-4" />
-    },
-    {
       id: 'profil',
-      label: isAr ? 'ملفي الشخصي و RIB' : 'Profil & RIB',
+      label: isAr ? 'الملف الشخصي و RIB' : 'Profil & RIB',
       icon: <CreditCard className="w-4 h-4" />
     }
   ];
@@ -1050,220 +1003,95 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed bottom-5 ${isAr ? 'left-5' : 'right-5'} z-[350] px-5 py-3.5 rounded-2xl shadow-2xl font-bold text-sm flex items-center gap-2.5 border ${
-            toast.isError
-              ? 'bg-rose-600 text-white border-rose-500'
-              : 'bg-slate-900 text-white border-slate-700'
+          className={`fixed top-5 z-[350] left-1/2 -translate-x-1/2 px-6 py-3.5 rounded-2xl shadow-2xl text-sm font-black flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 ${
+            toast.isError ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white border border-slate-700'
           }`}
         >
-          {toast.isError ? <AlertTriangle className="w-4 h-4 shrink-0" /> : <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
+          {toast.isError ? <AlertTriangle className="w-5 h-5 text-rose-300" /> : <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
           <span>{toast.text}</span>
         </div>
       )}
 
-      {/* ─── Header & Month Balance Bar ───────────────────────────── */}
-      <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-bold text-indigo-200 border border-white/10">
-              <Scissors className="w-3.5 h-3.5" />
-              <span>{isAr ? 'فضاء الموديليست المنظم' : 'Espace Modéliste Unifié'}</span>
+      {/* ─── Compact Top Banner with Controls ──────────────────────── */}
+      <div className="bg-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg">
+              <Scissors className="w-6 h-6" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight">
-              {isAr ? 'لوحة الموديليست: الخدمات، التسعير والرصيد' : 'Tableau de Bord Modéliste — Travaux & Balance'}
-            </h1>
-            <p className="text-slate-300 text-sm max-w-2xl">
-              {isAr
-                ? 'تسعير الموديلات الجديدة، متابعة الخدمات المصادق عليها حسب تاريخ التسليم، والاطلاع على الرصيد الشهري بدقة.'
-                : 'Tarifez les nouveaux modèles, suivez vos travaux validés avec date limite, et consultez votre balance mensuelle en temps réel.'}
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl md:text-2xl font-black tracking-tight">
+                  {isAr ? 'بوابة الموديليست الموحدة' : 'Portail Modéliste BEYA'}
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  {isAr ? 'تسعير · إنجاز · باترونات' : 'Tarifs · Patrons · Livraison'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-medium mt-0.5">
+                {activeProfileUser.nom} {linkedEmployee ? `· ${isAr ? 'عامل ورشة رسمي' : 'Employé Atelier'}` : ''}
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             {/* Month Filter */}
-            <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3 py-2">
+            <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-3 py-2">
               <Calendar className="w-4 h-4 text-indigo-300" />
               <input
                 type="month"
                 value={selectedMois}
                 onChange={e => setSelectedMois(e.target.value)}
-                className="bg-transparent text-white text-sm font-bold outline-none cursor-pointer [color-scheme:dark]"
+                className="bg-transparent text-white text-xs font-black outline-none cursor-pointer [color-scheme:dark]"
               />
             </div>
 
             {isAdmin && (
-              <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3 py-2">
+              <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-3 py-2">
                 <UserIcon className="w-4 h-4 text-indigo-300" />
                 <select
                   value={selectedModelisteId}
                   onChange={e => setSelectedModelisteId(e.target.value)}
-                  className="bg-transparent text-white text-sm font-bold outline-none cursor-pointer"
+                  className="bg-transparent text-white text-xs font-black outline-none cursor-pointer"
                 >
-                  <option value="all" className="text-slate-900">
-                    {isAr ? 'جميع الموديليست' : 'Tous les Modélistes'}
-                  </option>
+                  <option value="all" className="text-slate-900">{isAr ? 'جميع الموديليست' : 'Tous'}</option>
                   {modelistes.map(m => (
-                    <option key={m.id} value={m.id} className="text-slate-900">
-                      {m.nom}
-                    </option>
+                    <option key={m.id} value={m.id} className="text-slate-900">{m.nom}</option>
                   ))}
                 </select>
               </div>
             )}
 
-            {isAdmin && (
-              <button
-                onClick={() => setShowNewModelModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition shadow-lg cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{isAr ? 'إرسال موديل جديد' : 'Envoyer un Modèle'}</span>
-              </button>
-            )}
-
             <button
               onClick={fetchData}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold text-sm transition shadow-lg disabled:opacity-50 cursor-pointer"
+              className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition cursor-pointer"
+              title={isAr ? 'تحديث البيانات' : 'Actualiser'}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>{isAr ? 'تحديث' : 'Actualiser'}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* ─── Top 4 KPIs ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {/* KPI 1: Monthly Remaining Balance */}
-        <div
-          onClick={() => setActiveTab('reglements')}
-          className="cursor-pointer bg-white rounded-2xl p-5 border-2 border-indigo-100 hover:border-indigo-300 shadow-sm transition-all"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? `الرصيد المتبقي (${selectedMois})` : `Solde Restant (${selectedMois})`}
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Wallet className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="text-3xl font-black text-indigo-700">
-            {summary.monthRemainingMAD.toLocaleString()} <span className="text-base font-bold">MAD</span>
-          </div>
-          <div className="flex items-center gap-3 text-[11px] font-bold mt-2 text-slate-500">
-            <span className="text-emerald-600">
-              {isAr ? `المستحق: ${summary.monthEarnedMAD}` : `Dû: ${summary.monthEarnedMAD}`}
-            </span>
-            <span>•</span>
-            <span className="text-slate-600">
-              {isAr ? `المدفوع: ${summary.monthPaidMAD}` : `Réglé: ${summary.monthPaidMAD}`}
-            </span>
-          </div>
-        </div>
-
-        {/* KPI 2: New Models Awaiting Pricing */}
-        <div
-          onClick={() => {
-            setActiveTab('a_tarifer');
-            setPricingFilter('requested');
-          }}
-          className={`cursor-pointer bg-white rounded-2xl p-5 border-2 shadow-sm transition-all ${
-            summary.newToPriceCount > 0 ? 'border-amber-300 bg-amber-50/30' : 'border-slate-100 hover:border-amber-200'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? 'جديد ينتظر التسعير' : 'Nouveaux à Tarifer'}
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Scissors className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="text-3xl font-black text-amber-600">{summary.newToPriceCount}</div>
-          <p className="text-xs text-slate-500 font-semibold mt-1">
-            {isAr
-              ? `${summary.pricedAwaitingValidationCount} مسعّرة تنتظر المصادقة`
-              : `${summary.pricedAwaitingValidationCount} tarifé(s) en attente validation`}
-          </p>
-        </div>
-
-        {/* KPI 3: Active Work Left to Execute */}
-        <div
-          onClick={() => {
-            setActiveTab('travaux');
-            setWorkFilter('pending');
-          }}
-          className={`cursor-pointer bg-white rounded-2xl p-5 border-2 shadow-sm transition-all ${
-            summary.overdueCount > 0 ? 'border-rose-300' : 'border-slate-100 hover:border-indigo-200'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? 'مطلوب إنجازها الآن' : 'Travaux à Exécuter'}
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Clock className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="text-3xl font-black text-slate-900">{summary.activeWorkCount}</div>
-          <p className={`text-xs font-bold mt-1 ${summary.overdueCount > 0 ? 'text-rose-600' : 'text-slate-500'}`}>
-            {summary.overdueCount > 0
-              ? isAr
-                ? `⚠️ ${summary.overdueCount} متأخرة عن الموعد`
-                : `⚠️ ${summary.overdueCount} en retard`
-              : isAr
-              ? 'مصادق عليها ومبرمجة'
-              : 'Modèles validés en cours'}
-          </p>
-        </div>
-
-        {/* KPI 4: Completed Models */}
-        <div
-          onClick={() => {
-            setActiveTab('travaux');
-            setWorkFilter('termine');
-          }}
-          className="cursor-pointer bg-white rounded-2xl p-5 border-2 border-slate-100 hover:border-emerald-200 shadow-sm transition-all"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {isAr ? 'الموديلات المنجزة' : 'Modèles Réalisés'}
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="text-3xl font-black text-emerald-600">{summary.completedWorkCount}</div>
-          <p className="text-xs text-slate-500 font-semibold mt-1">
-            {isAr
-              ? `إجمالي المدفوع: ${summary.totalRegleAllMAD.toLocaleString()} MAD`
-              : `Total réglé: ${summary.totalRegleAllMAD.toLocaleString()} MAD`}
-          </p>
-        </div>
-      </div>
-
-      {/* ─── Organized 4-Tab Bar + Search ─────────────────────────── */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
+      {/* ─── 4 Clean Modern Tabs Bar ───────────────────────────────── */}
+      <div className="bg-white p-2 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 cursor-pointer ${
+              className={`flex-1 sm:flex-none px-4 py-3 rounded-xl font-black text-xs md:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === tab.id
-                  ? 'bg-slate-900 text-white shadow-md'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
+                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
               {tab.icon}
               <span>{tab.label}</span>
-              {typeof tab.badge === 'number' && tab.badge > 0 && (
+              {typeof tab.badge === 'number' && (
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                     activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
                   }`}
                 >
@@ -1274,278 +1102,184 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           ))}
         </div>
 
-        {activeTab !== 'dashboard' && (
-          <div className="relative w-full lg:w-72">
-            <Search
-              className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`}
-            />
+        {activeTab !== 'dashboard' && activeTab !== 'profil' && (
+          <div className="relative w-full sm:w-64 px-2 sm:px-0">
+            <Search className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3' : 'left-3'}`} />
             <input
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={isAr ? 'بحث بالموديل أو الزبون...' : 'Rechercher modèle ou client...'}
-              className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+              placeholder={isAr ? 'بحث بالموديل أو الزبون...' : 'Recherche modèle ou client...'}
+              className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500`}
             />
           </div>
         )}
       </div>
 
       {/* ════════════════════════════════════════════════════════════ */}
-      {/* TAB 1: DASHBOARD HOME                                       */}
+      {/* 📊 TAB 1: EXECUTIVE ANALYTICS DASHBOARD                      */}
       {/* ════════════════════════════════════════════════════════════ */}
       {activeTab === 'dashboard' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Monthly Financial Balance Card */}
-          <div className="lg:col-span-1 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-indigo-600" />
-                <span>{isAr ? 'ملخص الرصيد الشهري' : 'Balance Mensuelle'}</span>
-              </h2>
-              <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-black">
-                {selectedMois}
-              </span>
-            </div>
-
-            <div className="space-y-3 bg-slate-50 rounded-2xl p-4 border border-slate-100">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600 font-semibold">
-                  {isAr ? `المستحق عن الموديلات (${summary.monthModelsCount})` : `Gains validés (${summary.monthModelsCount})`}
-                </span>
-                <span className="font-black text-slate-900">{summary.monthEarnedMAD.toLocaleString()} MAD</span>
+        <div className="space-y-6">
+          {/* Direct CTA to the new Travaux workspace */}
+          <div className="bg-gradient-to-r from-indigo-900 via-indigo-950 to-purple-950 border border-indigo-500/30 rounded-3xl p-5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/30 border border-indigo-400/40 flex items-center justify-center shrink-0 text-indigo-300">
+                <Scissors className="w-6 h-6" />
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600 font-semibold">
-                  {isAr ? 'المبالغ المدفوعة / التسبيقات' : 'Règlements & Avances reçus'}
-                </span>
-                <span className="font-black text-emerald-600">- {summary.monthPaidMAD.toLocaleString()} MAD</span>
-              </div>
-              <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
-                <span className="font-black text-slate-900 text-sm">
-                  {isAr ? 'الرصيد المتبقي للصرف' : 'Reste à Percevoir'}
-                </span>
-                <span className="text-2xl font-black text-indigo-700">
-                  {summary.monthRemainingMAD.toLocaleString()} MAD
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-100">
-                <p className="text-[11px] font-bold text-emerald-700 uppercase">
-                  {isAr ? 'تم الدفع (الكل)' : 'Total Réglé'}
-                </p>
-                <p className="text-lg font-black text-emerald-800 mt-0.5">
-                  {summary.totalRegleAllMAD.toLocaleString()} MAD
-                </p>
-              </div>
-              <div className="p-3 rounded-2xl bg-amber-50 border border-amber-100">
-                <p className="text-[11px] font-bold text-amber-700 uppercase">
-                  {isAr ? 'بانتظار الدفع' : 'En Attente'}
-                </p>
-                <p className="text-lg font-black text-amber-800 mt-0.5">
-                  {summary.totalResteAllMAD.toLocaleString()} MAD
-                </p>
-              </div>
-            </div>
-
-            {/* Bank / RIB Quick Card on Dashboard */}
-            {(linkedEmployee?.rib || profileTargetEmployee?.rib) ? (
-              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black text-indigo-700 uppercase flex items-center gap-1.5">
-                    <CreditCard className="w-3.5 h-3.5" />
-                    <span>{isAr ? 'معلومات التحويل (RIB)' : 'RIB Virement'}</span>
-                  </span>
-                  {(linkedEmployee || profileTargetEmployee)?.banque && (
-                    <span className="px-2 py-0.5 rounded-md bg-white border border-indigo-200 text-[10px] font-black text-indigo-800">
-                      {(linkedEmployee || profileTargetEmployee)?.banque}
-                    </span>
-                  )}
-                </div>
-                <p className="font-mono font-black text-xs text-slate-800 tracking-wide break-all">
-                  {(linkedEmployee || profileTargetEmployee)?.rib?.replace(/(.{4})/g, '$1 ').trim()}
-                </p>
+              <div>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => copyRibToClipboard((linkedEmployee || profileTargetEmployee)?.rib)}
-                    className="flex-1 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    {copiedRib ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedRib ? (isAr ? 'تم النسخ!' : 'Copié !') : (isAr ? 'نسخ RIB' : 'Copier RIB')}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('profil')}
-                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-bold cursor-pointer"
-                  >
-                    {isAr ? 'تعديل' : 'Éditer'}
-                  </button>
+                  <h3 className="text-base font-black text-white">{isAr ? 'ورشة الباتروناج والمهام (العمل والتسليم)' : 'Atelier & Travaux Patronage'}</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">{isAr ? 'جديد' : 'Nouveau'}</span>
                 </div>
+                <p className="text-xs text-slate-300 font-medium mt-0.5">
+                  {isAr ? 'فضاء التسعير، إنجاز مقاس العينة الأساسي (Taille de base)، رفع الملفات الثلاثة، والتدريج بعد مصادقة الزبون.' : 'Tarification, prototype initial, dépôt des 3 fichiers et gradation après accord client.'}
+                </p>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setActiveTab('profil')}
-                className="w-full p-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100/70 border border-dashed border-amber-300 text-amber-800 text-xs font-bold flex items-center justify-between gap-2 transition cursor-pointer"
-              >
-                <span className="flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>
-                    {isAr
-                      ? 'أضف رقم الحساب البنكي (RIB) ومعلوماتك لتسهيل التحويلات'
-                      : 'Ajouter votre RIB & infos (synchro RH)'}
-                  </span>
-                </span>
-                <span className="font-black underline shrink-0">{isAr ? 'فتح' : 'Ouvrir'}</span>
-              </button>
-            )}
-
-            {isAdmin && (
-              <Link
-                to="/balance-paie"
-                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition"
-              >
-                <DollarSign className="w-4 h-4" />
-                <span>{isAr ? 'فتح صفحة الحساب الشامل (RH)' : 'Ouvrir Balance Paie RH'}</span>
-              </Link>
-            )}
+            </div>
+            <Link
+              to="/modeliste-travaux"
+              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-black transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 shrink-0 cursor-pointer"
+            >
+              <span>{isAr ? 'الدخول إلى ورشة المهام' : 'Ouvrir l’Atelier des Travaux'}</span>
+              <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
+            </Link>
           </div>
 
-          {/* Action Queue: New Models + Urgent Deadlines */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* New Models Awaiting Pricing Alert */}
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+          {/* Top 3 Executive Analytic Cards: شحال خدم · شحال باقي · فلوس المهمات */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* 1. شحال خدم */}
+            <div className="bg-gradient-to-br from-emerald-500 to-teal-700 text-white rounded-3xl p-6 shadow-lg shadow-emerald-500/15 relative overflow-hidden">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                  <Scissors className="w-5 h-5 text-amber-500" />
-                  <span>{isAr ? 'موديلات جديدة في انتظار التسعير' : 'Nouveaux Modèles à Tarifer'}</span>
-                </h3>
-                <button
-                  onClick={() => {
-                    setActiveTab('a_tarifer');
-                    setPricingFilter('requested');
-                  }}
-                  className="text-xs font-black text-indigo-600 hover:underline cursor-pointer"
-                >
-                  {isAr ? 'عرض الكل ←' : 'Voir tout →'}
-                </button>
+                <span className="text-xs font-black uppercase tracking-wider text-emerald-100">
+                  {isAr ? '✓ الموديلات المنجزة والمسلّمة' : 'Modèles Réalisés & Livrés'}
+                </span>
+                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-white" />
+                </div>
               </div>
-
-              {filteredByRole.filter(i => i.patronageStatus === 'requested').length === 0 ? (
-                <div className="text-center py-6 bg-slate-50 rounded-2xl text-sm font-semibold text-slate-400">
-                  {isAr ? 'لا توجد موديلات جديدة تحتاج تسعيراً حالياً' : 'Aucun nouveau modèle en attente de tarif'}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {filteredByRole
-                    .filter(i => i.patronageStatus === 'requested')
-                    .slice(0, 4)
-                    .map(item => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-amber-200 bg-amber-50/40"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-                            {item.photo ? (
-                              <img src={item.photo} alt={item.modele} className="w-full h-full object-cover" />
-                            ) : (
-                              <Scissors className="w-5 h-5 text-slate-300" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-black text-slate-900 text-sm truncate">{item.modele}</p>
-                            <p className="text-xs font-semibold text-slate-500 truncate">{item.client}</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => openPricingModal(item)}
-                          className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shrink-0 cursor-pointer"
-                        >
-                          {isAr ? 'وضع الثمن' : 'Tarifer'}
-                        </button>
-                      </div>
-                    ))}
-                </div>
-              )}
+              <div className="text-4xl font-black tracking-tight">{summary.completedCount}</div>
+              <div className="mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-xs font-bold">
+                <span className="text-emerald-100">{isAr ? 'مجموع ما كسبه منها :' : 'Gagné sur ces modèles :'}</span>
+                <span className="text-base font-black text-white font-mono">{summary.completedMAD.toLocaleString()} MAD</span>
+              </div>
             </div>
 
-            {/* Active Validated Work with Deadlines */}
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+            {/* 2. شحال باقي */}
+            <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-3xl p-6 shadow-lg shadow-amber-500/15 relative overflow-hidden">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-indigo-600" />
-                  <span>{isAr ? 'قائمة الأعمال المطلوب إنجازها (حسب الموعد)' : 'Travaux Validés à Exécuter (Par Échéance)'}</span>
+                <span className="text-xs font-black uppercase tracking-wider text-amber-100">
+                  {isAr ? '⚡ مطلوب إنجازها الآن (قيد العمل)' : 'Travaux en Cours & À Faire'}
+                </span>
+                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
+              </div>
+              <div className="text-4xl font-black tracking-tight">{summary.activeCount}</div>
+              <div className="mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-xs font-bold">
+                <span className="text-amber-100">{isAr ? 'القيمة عند التسليم :' : 'Valeur à la livraison :'}</span>
+                <span className="text-base font-black text-white font-mono">+{summary.activeMAD.toLocaleString()} MAD</span>
+              </div>
+            </div>
+
+            {/* 3. فلوس المهمات والرصيد الصافي */}
+            <div className="bg-gradient-to-br from-indigo-600 to-slate-900 text-white rounded-3xl p-6 shadow-lg shadow-indigo-600/15 relative overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-black uppercase tracking-wider text-indigo-200">
+                  {isAr ? '💰 الرصيد الصافي المتبقي له' : 'Solde Net à Percevoir'}
+                </span>
+                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-white" />
+                </div>
+              </div>
+              <div className="text-4xl font-black tracking-tight font-mono">
+                {summary.totalRemainingAllTime.toLocaleString()} <span className="text-sm font-bold">MAD</span>
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-xs font-bold">
+                <span className="text-indigo-200">{isAr ? 'المدفوع له حتى الآن :' : 'Déjà Réglé :'}</span>
+                <span className="text-white font-mono">{summary.totalPaidAllTime.toLocaleString()} MAD</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Month Financial Card + Performance Breakdown */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1 bg-white rounded-3xl border border-slate-200 p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="font-black text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-indigo-600" />
+                  <span>{isAr ? `كشف حساب شهر (${selectedMois})` : `Bilan Mensuel (${selectedMois})`}</span>
                 </h3>
-                <button
-                  onClick={() => {
-                    setActiveTab('travaux');
-                    setWorkFilter('pending');
-                  }}
-                  className="text-xs font-black text-indigo-600 hover:underline cursor-pointer"
-                >
-                  {isAr ? 'إدارة الأعمال ←' : 'Gérer →'}
-                </button>
               </div>
 
-              {filteredByRole.filter(i => i.isValidatedToWork && i.workStatus !== 'termine').length === 0 ? (
-                <div className="text-center py-6 bg-slate-50 rounded-2xl text-sm font-semibold text-slate-400">
-                  {isAr ? 'لا توجد موديلات قيد الإنجاز حالياً' : 'Aucun travail en attente pour le moment'}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 text-xs font-bold">
+                  <span className="text-slate-600">{isAr ? 'الموديلات المسلمة في الشهر :' : 'Modèles livrés ce mois :'}</span>
+                  <span className="text-slate-900 font-black">{summary.monthCompletedCount}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 text-xs font-bold">
+                  <span className="text-emerald-800">{isAr ? 'الأرباح المكتسبة هذا الشهر :' : 'Gagné ce mois :'}</span>
+                  <span className="text-emerald-900 font-black font-mono">{summary.monthEarnedMAD.toLocaleString()} MAD</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-indigo-50 text-xs font-bold">
+                  <span className="text-indigo-800">{isAr ? 'التسبيقات المستلمة هذا الشهر :' : 'Avances reçues ce mois :'}</span>
+                  <span className="text-indigo-900 font-black font-mono">-{summary.monthPaidMAD.toLocaleString()} MAD</span>
+                </div>
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-900 text-white text-xs font-bold">
+                  <span>{isAr ? 'الرصيد المتبقي لهذا الشهر :' : 'Reste dû pour ce mois :'}</span>
+                  <span className="text-sm font-black text-emerald-400 font-mono">{summary.monthRemainingMAD.toLocaleString()} MAD</span>
+                </div>
+              </div>
+            </div>
+
+            {/* List of models completed with quick view */}
+            <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="font-black text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <FileCheck className="w-4 h-4 text-emerald-600" />
+                  <span>{isAr ? 'تفاصيل الموديلات المنجزة وأرباحها' : 'Détail des Travaux Réalisés'}</span>
+                </h3>
+                <span className="text-xs font-bold text-slate-500">
+                  {summary.completedCount} {isAr ? 'موديل منجز' : 'modèles livrés'}
+                </span>
+              </div>
+
+              {filteredByRole.filter(i => i.workStatus === 'termine').length === 0 ? (
+                <div className="text-center py-10 text-slate-400 text-xs font-bold">
+                  {isAr ? 'لم يتم تسليم أي موديل بعد في هذا الحساب.' : 'Aucun modèle livré pour le moment.'}
                 </div>
               ) : (
-                <div className="space-y-2.5">
+                <div className="divide-y divide-slate-100 max-h-[320px] overflow-y-auto">
                   {filteredByRole
-                    .filter(i => i.isValidatedToWork && i.workStatus !== 'termine')
-                    .sort((a, b) => getDeadlineBadge(a.deadlineDate, a.workStatus, isAr).urgency - getDeadlineBadge(b.deadlineDate, b.workStatus, isAr).urgency)
-                    .slice(0, 5)
-                    .map(item => {
-                      const dl = getDeadlineBadge(item.deadlineDate, item.workStatus, isAr);
-                      return (
-                        <div
-                          key={item.id}
-                          className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200 hover:border-indigo-200 bg-slate-50/50"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-                              {item.photo ? (
-                                <img src={item.photo} alt={item.modele} className="w-full h-full object-cover" />
-                              ) : (
-                                <Scissors className="w-5 h-5 text-slate-300" />
-                              )}
+                    .filter(i => i.workStatus === 'termine')
+                    .map(item => (
+                      <div key={item.id} className="py-3 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {item.photo ? (
+                            <img src={item.photo} alt={item.modele} className="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                              <Scissors className="w-4 h-4" />
                             </div>
-                            <div>
-                              <p className="font-black text-slate-900 text-sm">{item.modele}</p>
-                              <p className="text-xs font-semibold text-slate-500">
-                                {item.client} • {item.patronagePrice} MAD
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <span className={`px-2.5 py-1 rounded-lg border text-xs font-black ${dl.cls}`}>
-                              {item.deadlineDate ? `${item.deadlineDate} (${dl.label})` : dl.label}
-                            </span>
-                            <button
-                              onClick={() => setTechPackItem(item)}
-                              className="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                              title={isAr ? 'البطاقة التقنية' : 'Fiche Tech'}
-                            >
-                              <FileText className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">{isAr ? 'البطاقة' : 'Fiche Tech'}</span>
-                            </button>
-                            <button
-                              onClick={() => handleUpdateWorkStatus(item, 'termine')}
-                              disabled={actionPendingId === item.id}
-                              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer"
-                            >
-                              {isAr ? 'تم الإنجاز' : 'Terminer'}
-                            </button>
+                          )}
+                          <div className="min-w-0">
+                            <p className="font-black text-xs text-slate-900 truncate">{item.modele}</p>
+                            <p className="text-[10px] text-slate-500 font-semibold">{item.client} · {item.date}</p>
                           </div>
                         </div>
-                      );
-                    })}
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="font-black text-xs text-emerald-700 font-mono bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-xl">
+                            +{item.patronagePrice} MAD
+                          </span>
+                          {item.patronFiles.length > 0 && (
+                            <span className="text-[10px] font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg">
+                              📁 {item.patronFiles.length}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
@@ -1554,356 +1288,526 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       )}
 
       {/* ════════════════════════════════════════════════════════════ */}
-      {/* TAB 2: NOUVEAUX MODÈLES À TARIFER (PRICING & VALIDATION)    */}
+      {/* 🏷️ TAB 2: PAGE DIAL TS3IR (Tarification & Négociation)       */}
       {/* ════════════════════════════════════════════════════════════ */}
       {activeTab === 'a_tarifer' && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setPricingFilter('requested')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                pricingFilter === 'requested' ? 'bg-amber-500 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-            >
-              {isAr ? `تنتظر التسعير (${summary.newToPriceCount})` : `En attente de tarif (${summary.newToPriceCount})`}
-            </button>
-            <button
-              onClick={() => setPricingFilter('priced_waiting')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                pricingFilter === 'priced_waiting' ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-            >
-              {isAr
-                ? `مسعّرة تنتظر المصادقة (${summary.pricedAwaitingValidationCount})`
-                : `Tarifés — En attente validation (${summary.pricedAwaitingValidationCount})`}
-            </button>
-            <button
-              onClick={() => setPricingFilter('all')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                pricingFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-            >
-              {isAr ? 'الكل' : 'Tous'}
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPricingSubFilter('all')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                  pricingSubFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {isAr ? 'الكل' : 'Tous'} ({pricingItems.length})
+              </button>
+              <button
+                onClick={() => setPricingSubFilter('unpriced')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                  pricingSubFilter === 'unpriced' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {isAr ? 'جديد ينتظر إدخال التسعيرة' : 'Nouveaux à chiffrer'} ({summary.unpricedCount})
+              </button>
+              <button
+                onClick={() => setPricingSubFilter('priced')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                  pricingSubFilter === 'priced' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {isAr ? 'مسعرة تنتظر الاتفاق والمصادقة' : 'Chiffrés en attente'} ({summary.pricedAwaitingCount})
+              </button>
+            </div>
+
+            {isAdmin && (
+              <button
+                onClick={() => setShowNewModelModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{isAr ? '+ إرسال موديل للتسعير' : '+ Envoyer un modèle'}</span>
+              </button>
+            )}
           </div>
 
-          {loading ? (
-            <div className="py-16 text-center text-slate-400 font-bold">{isAr ? 'جاري التحميل...' : 'Chargement...'}</div>
-          ) : pricingItems.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
-              <Scissors className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <p className="font-black text-slate-800">
-                {isAr ? 'لا توجد موديلات في هذا القسم حالياً' : 'Aucun modèle dans cette section'}
+          {pricingItems.length === 0 ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-2">
+              <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
+              <h3 className="font-black text-base text-slate-900">
+                {isAr ? 'لا يوجد أي موديل ينتظر التسعير حالياً' : 'Aucun modèle en attente de tarification'}
+              </h3>
+              <p className="text-xs text-slate-500">
+                {isAr ? 'جميع الموديلات التي تم الاتفاق عليها تم تحويلها مباشرة إلى صفحة المهام والإنجاز.' : 'Tous les modèles convenus sont transférés dans Travaux.'}
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pricingItems.map(item => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-indigo-300 transition flex flex-col justify-between gap-4"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3.5">
-                      <div
-                        onClick={() => item.photo && setZoomImage(item.photo)}
-                        className={`w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center relative group ${
-                          item.photo ? 'cursor-pointer' : ''
-                        }`}
-                      >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {pricingItems.map(item => {
+                const isPriced = item.patronagePrice > 0;
+                const hasCounter = Boolean(item.adminCounterPrice && item.adminCounterPrice > 0);
+
+                return (
+                  <div key={item.id} className="bg-white rounded-3xl border-2 border-slate-100 hover:border-indigo-200 p-5 shadow-sm space-y-4 transition-all">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         {item.photo ? (
-                          <>
-                            <img src={item.photo} alt={item.modele} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                              <Eye className="w-4 h-4 text-white" />
-                            </div>
-                          </>
+                          <img
+                            src={item.photo}
+                            alt={item.modele}
+                            onClick={() => setZoomImage(item.photo || null)}
+                            className="w-14 h-14 rounded-2xl object-cover border border-slate-200 cursor-zoom-in shrink-0"
+                          />
                         ) : (
-                          <Scissors className="w-6 h-6 text-slate-300" />
+                          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black shrink-0">
+                            <Scissors className="w-6 h-6" />
+                          </div>
                         )}
+                        <div className="min-w-0">
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full inline-block mb-1 ${
+                            isPriced ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {isPriced ? (isAr ? 'تم اقتراح التسعيرة' : 'Tarif proposé') : (isAr ? 'جديد مطلوب تسعيره' : 'Nouveau à chiffrer')}
+                          </span>
+                          <h4 className="font-black text-sm text-slate-900 truncate">{item.modele}</h4>
+                          <p className="text-xs text-slate-500 font-semibold">{item.client} · {item.date}</p>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase mb-1 ${
-                            item.patronageStatus === 'requested'
-                              ? 'bg-amber-100 text-amber-700'
-                              : 'bg-indigo-100 text-indigo-700'
-                          }`}
-                        >
-                          {item.patronageStatus === 'requested'
-                            ? isAr ? 'جديد للتسعير' : 'À Tarifer'
-                            : isAr ? 'مسعّر — ينتظر المصادقة' : 'Tarif proposé'}
-                        </span>
-                        <h3 className="font-black text-slate-900 text-base truncate">{item.modele}</h3>
-                        <p className="text-xs font-semibold text-slate-500 truncate">
-                          {item.client} • {item.quantity || 1} {isAr ? 'قطعة' : 'pcs'}
-                        </p>
-                      </div>
+
+                      <button
+                        onClick={() => setTechPackItem(item)}
+                        className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0"
+                        title={isAr ? 'البطاقة التقنية والمقاسات' : 'Fiche technique'}
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">{isAr ? 'البطاقة' : 'Fiche'}</span>
+                      </button>
                     </div>
 
                     {item.clientNotes && (
-                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600 line-clamp-2">
-                        {item.clientNotes}
+                      <div className="text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 leading-relaxed">
+                        <strong className="text-slate-900">{isAr ? 'ملاحظات الموديل :' : 'Spécifications :'}</strong> {item.clientNotes}
                       </div>
                     )}
 
-                    {item.patronageStatus === 'priced' && (
-                      <div className="p-3 bg-indigo-50/70 rounded-xl border border-indigo-100 flex items-center justify-between">
-                        <div>
-                          <p className="text-[10px] font-bold text-indigo-500 uppercase">
-                            {isAr ? 'ثمن الباترون المقترح' : 'Prix Patronage'}
-                          </p>
-                          <p className="text-lg font-black text-indigo-900">{item.patronagePrice} MAD</p>
+                    {/* PRICING INPUT / STATUS BOX */}
+                    <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200/60 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-indigo-950">
+                          {isAr ? 'ثمن الباترون المقترح :' : 'Tarif proposé :'}
+                        </span>
+                        {isPriced ? (
+                          <span className="text-base font-black text-indigo-700 font-mono bg-white px-3 py-0.5 rounded-xl border border-indigo-200">
+                            {item.patronagePrice} MAD
+                          </span>
+                        ) : (
+                          <span className="text-xs font-black text-amber-700">{isAr ? 'غير مسعر بعد' : 'Non tarifé'}</span>
+                        )}
+                      </div>
+
+                      {/* Fast Price Presets for Modéliste or Pricing edit */}
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'اختصارات سريعة:' : 'Presets:'}</span>
+                          {[80, 100, 150, 200, 250, 300].map(val => (
+                            <button
+                              key={val}
+                              onClick={() => handleSavePrice(item, val)}
+                              disabled={actionPendingId === item.id}
+                              className="px-2 py-1 bg-white hover:bg-indigo-600 hover:text-white border border-indigo-200 rounded-lg text-xs font-black transition cursor-pointer text-indigo-900"
+                            >
+                              {val} DH
+                            </button>
+                          ))}
                         </div>
-                        {item.prixEchantillon > 0 && (
-                          <div className="text-right">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase">
-                              {isAr ? 'ثمن العينة' : 'Échantillon'}
-                            </p>
-                            <p className="text-sm font-black text-slate-700">{item.prixEchantillon} MAD</p>
+
+                        {/* Custom Price Input & Modal trigger */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <input
+                            type="number"
+                            min={1}
+                            placeholder={isAr ? 'أدخل ثمناً مخصصاً (درهم)...' : 'Tarif personnalisé (MAD)...'}
+                            defaultValue={item.patronagePrice > 0 ? item.patronagePrice : ''}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                handleSavePrice(item, Number((e.target as HTMLInputElement).value));
+                              }
+                            }}
+                            id={`price_input_${item.id}`}
+                            className="flex-1 bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs font-black text-slate-900 outline-none focus:border-indigo-500 font-mono"
+                          />
+                          <button
+                            onClick={() => {
+                              const el = document.getElementById(`price_input_${item.id}`) as HTMLInputElement;
+                              if (el) handleSavePrice(item, Number(el.value));
+                            }}
+                            disabled={actionPendingId === item.id}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700 transition cursor-pointer shrink-0"
+                          >
+                            {isAr ? 'حفظ واقتراح' : 'Proposer'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Counter offer section if Admin wants to negotiate */}
+                      {isAdmin && (
+                        <div className="pt-2 border-t border-indigo-100 flex items-center gap-2">
+                          <input
+                            type="number"
+                            placeholder={isAr ? 'عرض الإدارة المقابل (درهم)...' : 'Contre-offre Admin (MAD)...'}
+                            value={counterPriceInput[item.id] || ''}
+                            onChange={e => setCounterPriceInput({ ...counterPriceInput, [item.id]: e.target.value })}
+                            className="flex-1 bg-white border border-amber-200 rounded-xl px-3 py-1.5 text-xs font-black font-mono outline-none"
+                          />
+                          <button
+                            onClick={() => handleSendCounterPrice(item)}
+                            disabled={actionPendingId === item.id}
+                            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black cursor-pointer shrink-0"
+                          >
+                            {isAr ? 'إرسال عرض مقابل' : 'Négocier'}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Display Admin Counter-Offer if present */}
+                      {hasCounter && (
+                        <div className="p-2.5 rounded-xl bg-amber-100/70 border border-amber-300 flex items-center justify-between text-xs">
+                          <div>
+                            <span className="font-black text-amber-950 block">{isAr ? 'عرض الإدارة المقابل :' : 'Contre-offre reçue :'}</span>
+                            <span className="font-mono font-black text-base text-amber-900">{item.adminCounterPrice} MAD</span>
                           </div>
-                        )}
-                      </div>
-                    )}
-
-                    {Boolean(item.adminCounterPrice && item.adminCounterPrice > 0) && (
-                      <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
-                        <div className="flex items-center justify-between">
-                          <p className="text-[10px] font-black text-amber-800 uppercase flex items-center gap-1">
-                            ⚠️ {isAr ? 'عرض مضاد وميزانية الكليان' : 'Contre-offre Atelier / Client'}
-                          </p>
-                          <span className="font-mono font-black text-sm text-amber-900">{item.adminCounterPrice} MAD</span>
+                          {!isAdmin && (
+                            <button
+                              onClick={() => handleAcceptPriceAndMoveToWork(item, item.adminCounterPrice!)}
+                              disabled={actionPendingId === item.id}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs transition cursor-pointer"
+                            >
+                              {isAr ? '✓ قبول العرض والبدء فوراً' : '✓ Accepter & Démarrer'}
+                            </button>
+                          )}
                         </div>
-                        {item.patronageNegotiationNotes && (
-                          <p className="text-xs text-amber-700 mt-1 italic">"{item.patronageNegotiationNotes}"</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setTechPackItem(item)}
-                        className="py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer border border-indigo-200"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>{isAr ? 'البطاقة التقنية' : 'Fiche Tech (Pro)'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => printFicheTechniqueModeliste(item, getMatchingFiche(item))}
-                        className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200"
-                        title={isAr ? 'طباعة' : 'Imprimer'}
-                      >
-                        <Printer className="w-3.5 h-3.5" />
-                        <span>{isAr ? 'طباعة' : 'Imprimer'}</span>
-                      </button>
+                      )}
                     </div>
 
-                    <button
-                      onClick={() => openPricingModal(item)}
-                      disabled={actionPendingId === item.id}
-                      className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer"
-                    >
-                      <DollarSign className="w-4 h-4" />
-                      <span>
-                        {item.patronageStatus === 'priced'
-                          ? isAr ? 'تعديل التسعيرة' : 'Modifier le Tarif'
-                          : isAr ? 'إدخال ثمن الباترون' : 'Fixer le Tarif'}
-                      </span>
-                    </button>
-
-                    {isAdmin && item.patronageStatus === 'priced' && !item.isValidatedToWork && (
-                      <button
-                        onClick={() => openValidateModal(item)}
-                        disabled={actionPendingId === item.id}
-                        className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer"
-                      >
-                        <Send className="w-4 h-4" />
-                        <span>{isAr ? 'المصادقة وتحديد تاريخ التسليم' : 'Valider & Définir Date Limite'}</span>
-                      </button>
+                    {/* 🚀 CRITICAL INSTANT ACTION: Accept Price & Move to Tasks */}
+                    {isPriced && (
+                      <div className="pt-2">
+                        <button
+                          onClick={() => handleAcceptPriceAndMoveToWork(item, item.patronagePrice)}
+                          disabled={actionPendingId === item.id}
+                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs md:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>
+                            {isAr
+                              ? `قبول هذا الثمن (${item.patronagePrice} درهم) والانتقال فوراً للإنجاز والمهام ✓`
+                              : `Valider à ${item.patronagePrice} MAD & Déplacer vers Travaux ✓`}
+                          </span>
+                        </button>
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       )}
 
       {/* ════════════════════════════════════════════════════════════ */}
-      {/* TAB 3: TRAVAUX À FAIRE (VALIDATED BY ADMIN OR CLIENT)       */}
+      {/* ✂️ TAB 3: PAGE DIAL FIN INZL LMODEL (Travaux, Fichiers, Chat)*/}
       {/* ════════════════════════════════════════════════════════════ */}
       {activeTab === 'travaux' && (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setWorkFilter('pending')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                workFilter === 'pending' ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-            >
-              {isAr ? `قيد التنفيذ والمطلوبة (${summary.activeWorkCount})` : `À exécuter (${summary.activeWorkCount})`}
-            </button>
-            <button
-              onClick={() => setWorkFilter('termine')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                workFilter === 'termine' ? 'bg-emerald-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-            >
-              {isAr ? `المكتملة والمسلّمة (${summary.completedWorkCount})` : `Terminés & Livrés (${summary.completedWorkCount})`}
-            </button>
-            <button
-              onClick={() => setWorkFilter('all')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                workFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-            >
-              {isAr ? `الكل (${summary.allValidatedCount})` : `Tous (${summary.allValidatedCount})`}
-            </button>
+        <div className="space-y-5">
+          {/* Work status filter */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setWorkFilter('pending')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-2 ${
+                  workFilter === 'pending' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>{isAr ? 'المطلوب إنجازها الآن' : 'À Faire & En Cours'}</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20">{summary.activeCount}</span>
+              </button>
+              <button
+                onClick={() => setWorkFilter('termine')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-2 ${
+                  workFilter === 'termine' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{isAr ? 'المنجزة والمسلّمة' : 'Terminés & Livrés'}</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20">{summary.completedCount}</span>
+              </button>
+              <button
+                onClick={() => setWorkFilter('all')}
+                className={`px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer ${
+                  workFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {isAr ? 'الكل' : 'Tous'}
+              </button>
+            </div>
+
+            <p className="text-xs font-bold text-slate-500">
+              {isAr ? 'الملفات المرفوعة هنا تتاح تلقائياً للزبون في بوابة BEYA' : 'Les fichiers déposés ici sont accessibles au client sur BEYA Portal'}
+            </p>
           </div>
 
           {workItems.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
-              <FileCheck className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <p className="font-black text-slate-800">
-                {isAr ? 'لا توجد موديلات مصادق عليها للعمل حالياً' : 'Aucun travail validé dans cette catégorie'}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                {isAr
-                  ? 'تظهر هنا الموديلات فور مصادقة الإدارة أو الزبون مع تاريخ التسليم المحدد.'
-                  : 'Les modèles apparaissent ici dès validation par l’atelier ou le client.'}
-              </p>
+            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-2">
+              <Clock className="w-12 h-12 text-slate-300 mx-auto" />
+              <h3 className="font-black text-base text-slate-900">
+                {isAr ? 'لا توجد مهام مطابقة للفلتر المحدد' : 'Aucune tâche trouvée'}
+              </h3>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-5">
               {workItems.map(item => {
-                const dl = getDeadlineBadge(item.deadlineDate, item.workStatus, isAr);
+                const deadlineBadge = getDeadlineBadge(item.deadlineDate, item.workStatus, isAr);
+                const isCompleted = item.workStatus === 'termine';
+                const isChatOpen = activeChatModelId === item.id;
+
                 return (
                   <div
                     key={item.id}
-                    className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-indigo-300 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                    className={`bg-white rounded-3xl border-2 p-6 shadow-sm transition-all space-y-5 ${
+                      isCompleted ? 'border-emerald-100 bg-emerald-50/10' : 'border-slate-200 hover:border-indigo-300'
+                    }`}
                   >
-                    <div className="flex items-start gap-4 flex-1 min-w-0">
-                      <div
-                        onClick={() => item.photo && setZoomImage(item.photo)}
-                        className={`w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center relative group ${
-                          item.photo ? 'cursor-pointer' : ''
-                        }`}
-                      >
+                    {/* Header Row: Model title, Client, Deadline, Price */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                      <div className="flex items-center gap-4 min-w-0">
                         {item.photo ? (
-                          <>
-                            <img src={item.photo} alt={item.modele} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                              <Eye className="w-4 h-4 text-white" />
-                            </div>
-                          </>
+                          <img
+                            src={item.photo}
+                            alt={item.modele}
+                            onClick={() => setZoomImage(item.photo || null)}
+                            className="w-16 h-16 rounded-2xl object-cover border border-slate-200 cursor-zoom-in shrink-0"
+                          />
                         ) : (
-                          <Scissors className="w-6 h-6 text-slate-300" />
+                          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                            <Scissors className="w-7 h-7" />
+                          </div>
                         )}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${deadlineBadge.cls}`}>
+                              {deadlineBadge.label}
+                            </span>
+                            {item.deadlineDate && (
+                              <span className="text-[10px] text-slate-400 font-mono font-bold">
+                                {isAr ? `تاريخ التسليم: ${item.deadlineDate}` : `Échéance: ${item.deadlineDate}`}
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="text-base font-black text-slate-900 truncate">{item.modele}</h3>
+                          <p className="text-xs text-slate-500 font-semibold">{item.client} · {item.date}</p>
+                        </div>
                       </div>
 
-                      <div className="min-w-0 flex-1 space-y-1.5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-black text-slate-900 text-lg">{item.modele}</h3>
-                          <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
-                            {item.isValidatedByClient
-                              ? isAr ? 'مصادق من الزبون' : 'Validé Client'
-                              : isAr ? 'مصادق من الإدارة' : 'Validé Atelier'}
-                          </span>
-                          <span className={`px-2.5 py-0.5 rounded-md border text-[11px] font-black ${dl.cls}`}>
-                            {item.deadlineDate ? `📅 ${item.deadlineDate} — ${dl.label}` : dl.label}
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="text-right">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase block">{isAr ? 'أجر الباترون' : 'Rémunération'}</span>
+                          <span className="text-lg font-black text-indigo-700 font-mono">
+                            {item.patronagePrice} MAD
                           </span>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-500">
-                          <span>👤 {item.client}</span>
-                          <span>• {item.quantity || 1} {isAr ? 'قطعة' : 'pcs'}</span>
-                          <span className="text-indigo-700 font-black">• {item.patronagePrice} MAD</span>
-                          {item.modelisteName && <span>• {isAr ? 'الموديليست:' : 'Modéliste:'} {item.modelisteName}</span>}
+                        {/* Interactive Status Selector */}
+                        <div className="flex items-center bg-slate-100 p-1 rounded-2xl">
+                          <button
+                            onClick={() => handleUpdateWorkStatus(item, 'a_faire')}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                              item.workStatus === 'a_faire' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                          >
+                            {isAr ? 'للإنجاز' : 'À faire'}
+                          </button>
+                          <button
+                            onClick={() => handleUpdateWorkStatus(item, 'en_cours')}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                              item.workStatus === 'en_cours' ? 'bg-amber-500 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                          >
+                            {isAr ? 'قيد العمل' : 'En cours'}
+                          </button>
+                          <button
+                            onClick={() => handleUpdateWorkStatus(item, 'termine')}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                              item.workStatus === 'termine' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                          >
+                            {isAr ? '✓ مسلّم' : '✓ Livré'}
+                          </button>
                         </div>
 
-                        {item.patronageNotes && (
-                          <p className="text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                            {item.patronageNotes}
-                          </p>
-                        )}
+                        <button
+                          onClick={() => setTechPackItem(item)}
+                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>{isAr ? 'البطاقة والمقاسات' : 'Fiche Technique'}</span>
+                        </button>
                       </div>
                     </div>
 
-                    {/* Work Action Controls */}
-                    <div className="flex flex-wrap items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setTechPackItem(item)}
-                        className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-sm transition"
-                        title={isAr ? 'البطاقة التقنية للموديليست (بدون أسعار تجارية)' : 'Fiche Technique Modéliste Pro (Sans prix)'}
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>{isAr ? 'البطاقة التقنية (Pro)' : 'Fiche Tech (Pro)'}</span>
-                      </button>
+                    {/* 📁 FILE UPLOAD ZONE: PDF, RAR, ZIP, DXF, Images */}
+                    <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-4 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <FileArchive className="w-4 h-4 text-indigo-600" />
+                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                            {isAr ? 'ملفات الباترون والتدرج (PDF / RAR / ZIP / DXF)' : 'Dossier Patronage & Fichiers (PDF, RAR, ZIP, DXF)'}
+                          </h4>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-700">
+                            {item.patronFiles.length} {isAr ? 'ملف' : 'fichiers'}
+                          </span>
+                        </div>
 
-                      <button
-                        type="button"
-                        onClick={() => printFicheTechniqueModeliste(item, getMatchingFiche(item))}
-                        className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer transition"
-                        title={isAr ? 'طباعة البطاقة التقنية' : 'Imprimer Fiche Tech'}
-                      >
-                        <Printer className="w-4 h-4" />
-                      </button>
+                        <label className="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-sm">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{isAr ? 'رفع ملف الباترون (PDF أو RAR)' : 'Déposer un Fichier'}</span>
+                          <input
+                            type="file"
+                            accept=".pdf,.rar,.zip,.7z,.tar,.dxf,.hpgl,.plt,.ai,.png,.jpg,.jpeg"
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) handleUploadPatronFile(item, file);
+                              e.target.value = '';
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
 
-                      {isAdmin && (
-                        <button
-                          onClick={() => openValidateModal(item)}
-                          className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-                          title={isAr ? 'تعديل تاريخ التسليم' : 'Modifier date limite'}
-                        >
-                          <Calendar className="w-3.5 h-3.5" />
-                          <span>{isAr ? 'الموعد' : 'Date limite'}</span>
-                        </button>
+                      {uploadingModelId === item.id && (
+                        <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-bold text-indigo-700 flex items-center gap-2">
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>{isAr ? 'جاري رفع الملف وحفظه ومزامنته...' : 'Téléversement du fichier en cours...'}</span>
+                        </div>
                       )}
 
-                      {item.workStatus === 'a_faire' && (
-                        <button
-                          onClick={() => handleUpdateWorkStatus(item, 'en_cours')}
-                          disabled={actionPendingId === item.id}
-                          className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <Play className="w-3.5 h-3.5" />
-                          <span>{isAr ? 'بدء العمل' : 'Démarrer'}</span>
-                        </button>
-                      )}
-
-                      {item.workStatus !== 'termine' ? (
-                        <button
-                          onClick={() => handleUpdateWorkStatus(item, 'termine')}
-                          disabled={actionPendingId === item.id}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <Check className="w-4 h-4" />
-                          <span>{isAr ? 'تأكيد الإنجاز والتسليم' : 'Marquer Terminé'}</span>
-                        </button>
+                      {item.patronFiles.length === 0 ? (
+                        <p className="text-center py-4 text-xs text-slate-400 font-medium">
+                          {isAr
+                            ? 'لم يتم رفع ملف الباترون بعد. يمكنك رفع ملفات PDF للباترون أو أرشيف RAR/ZIP للتدرج لكي يتوصل بها الزبون في بوابته.'
+                            : 'Aucun fichier déposé. Téléversez vos patrons en PDF ou archives RAR/ZIP pour les rendre disponibles au client et à l\'admin.'}
+                        </p>
                       ) : (
-                        <button
-                          onClick={() => handleUpdateWorkStatus(item, 'en_cours')}
-                          disabled={actionPendingId === item.id}
-                          className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>{isAr ? 'منجز ومسلّم' : 'Terminé & Livré'}</span>
-                        </button>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+                          {item.patronFiles.map(file => (
+                            <div key={file.id} className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-2 shadow-2xs">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                                  {file.type === 'pdf' ? <FileText className="w-4 h-4 text-rose-600" /> : <FileArchive className="w-4 h-4 text-indigo-600" />}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-black text-slate-900 truncate" title={file.name}>{file.name}</p>
+                                  <p className="text-[10px] text-slate-400 font-mono">{file.size || ''}</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1 shrink-0">
+                                <a
+                                  href={file.url}
+                                  download={file.name}
+                                  className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition"
+                                  title={isAr ? 'تحميل' : 'Télécharger'}
+                                >
+                                  <Download className="w-4 h-4" />
+                                </a>
+                                <button
+                                  onClick={() => handleDeletePatronFile(item, file.id)}
+                                  className="p-1.5 text-slate-300 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                                  title={isAr ? 'حذف' : 'Supprimer'}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
 
-                      {item.phone && (
-                        <button
-                          onClick={() => openWhatsApp(item.phone, item.client, item.modele)}
-                          className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-pointer"
-                          title="WhatsApp"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                        </button>
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-700 bg-emerald-50/70 border border-emerald-200/60 rounded-xl px-3 py-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>{isAr ? '✓ الملفات المرفوعة هنا متاحة تلقائياً في بوابة الزبون (Portail Client) وللإدارة لتحميلها.' : '✓ Les fichiers déposés ici sont accessibles au client sur BEYA Portal et à la direction.'}</span>
+                      </div>
+                    </div>
+
+                    {/* 💬 ON-SITE MESSAGING & NOTES (Direct Chat between Admin & Modéliste) */}
+                    <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                      <button
+                        onClick={() => setActiveChatModelId(isChatOpen ? null : item.id)}
+                        className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-xs font-black text-slate-700 transition cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4 text-indigo-600" />
+                          <span>{isAr ? 'المحادثة والملاحظات التقنية المباشرة داخل الموقع' : 'Discussion & Notes Techniques en direct'}</span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-200 text-slate-700">
+                            {item.patronMessages.length}
+                          </span>
+                        </div>
+                        <span className="text-slate-400">{isChatOpen ? (isAr ? '▲ إخفاء' : '▲ Masquer') : (isAr ? '▼ فتح المحادثة' : '▼ Ouvrir le fil')}</span>
+                      </button>
+
+                      {isChatOpen && (
+                        <div className="p-4 bg-white border-t border-slate-100 space-y-3">
+                          {/* Messages list */}
+                          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            {item.patronMessages.length === 0 ? (
+                              <p className="text-center py-4 text-slate-400 text-xs italic">
+                                {isAr ? 'لا توجد رسائل سابقة. يمكنك هنا كتابة استفسار للإدارة أو للموديليست مباشرة.' : 'Aucun message pour ce modèle. Échangez vos remarques ici.'}
+                              </p>
+                            ) : (
+                              item.patronMessages.map(msg => {
+                                const isMe = (isAdmin && msg.sender === 'admin') || (!isAdmin && msg.sender === 'modeliste');
+                                return (
+                                  <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                    <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mb-0.5 font-bold">
+                                      <span>{msg.senderName}</span>
+                                      <span>·</span>
+                                      <span>{new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    <div
+                                      className={`px-3.5 py-2 rounded-2xl text-xs font-medium max-w-[85%] ${
+                                        isMe ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-slate-100 text-slate-900 rounded-bl-none'
+                                      }`}
+                                    >
+                                      {msg.text}
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+
+                          {/* Message input */}
+                          <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                            <input
+                              type="text"
+                              value={chatMessageInput}
+                              onChange={e => setChatMessageInput(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') handleSendPatronMessage(item);
+                              }}
+                              placeholder={isAr ? 'اكتب رسالة أو ملاحظة تقنية للإدارة هنا...' : 'Écrire un message ou une note technique...'}
+                              className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-indigo-500"
+                            />
+                            <button
+                              onClick={() => handleSendPatronMessage(item)}
+                              disabled={actionPendingId === item.id}
+                              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                              <span>{isAr ? 'إرسال' : 'Envoyer'}</span>
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1915,709 +1819,248 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       )}
 
       {/* ════════════════════════════════════════════════════════════ */}
-      {/* TAB 4: RÈGLEMENTS & BALANCE (CLEAN FR/AR — NO DARIJA LATIN) */}
-      {/* ════════════════════════════════════════════════════════════ */}
-      {activeTab === 'reglements' && (
-        <div className="space-y-4">
-          {/* Clean Filter Pills */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setPaymentFilter('all')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                paymentFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-            >
-              {isAr ? `جميع المصادق عليها (${summary.allValidatedCount})` : `Tous Validés (${summary.allValidatedCount})`}
-            </button>
-            <button
-              onClick={() => setPaymentFilter('regles')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                paymentFilter === 'regles' ? 'bg-emerald-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-            >
-              <Wallet className="w-3.5 h-3.5" />
-              <span>{isAr ? `تم الدفع (${summary.reglesCount})` : `Réglés (${summary.reglesCount})`}</span>
-            </button>
-            <button
-              onClick={() => setPaymentFilter('en_attente')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                paymentFilter === 'en_attente' ? 'bg-amber-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-            >
-              <DollarSign className="w-3.5 h-3.5" />
-              <span>
-                {isAr
-                  ? `بانتظار الدفع (${summary.enAttenteReglementCount})`
-                  : `En attente de règlement (${summary.enAttenteReglementCount})`}
-              </span>
-            </button>
-          </div>
-
-          {paymentItems.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center text-slate-400 font-bold">
-              {isAr ? 'لا توجد موديلات مطابقة في هذه القائمة' : 'Aucun élément trouvé'}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {paymentItems.map(item => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div
-                      onClick={() => item.photo && setZoomImage(item.photo)}
-                      className={`w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center ${
-                        item.photo ? 'cursor-pointer' : ''
-                      }`}
-                    >
-                      {item.photo ? (
-                        <img src={item.photo} alt={item.modele} className="w-full h-full object-cover" />
-                      ) : (
-                        <Scissors className="w-5 h-5 text-slate-300" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-black text-slate-900 text-base truncate">{item.modele}</h3>
-                      <p className="text-xs font-semibold text-slate-500">
-                        {item.client} • {item.date}
-                        {item.patronagePaidAt && ` • ${isAr ? 'تاريخ الأداء:' : 'Réglé le:'} ${toYmd(item.patronagePaidAt)}`}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-center">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase block">
-                        {isAr ? 'ثمن الباترون' : 'Montant Patronage'}
-                      </span>
-                      <span className="text-lg font-black text-indigo-700">{item.patronagePrice} MAD</span>
-                    </div>
-
-                    {item.patronagePaid ? (
-                      <div className="flex items-center gap-2">
-                        <span className="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black flex items-center gap-1.5">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>{isAr ? 'تم الدفع' : 'Réglé'}</span>
-                        </span>
-                        {isAdmin && item.lead && (
-                          <button
-                            onClick={() => handleTogglePatronagePaid(item)}
-                            disabled={actionPendingId === item.id}
-                            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer"
-                            title={isAr ? 'التراجع عن الدفع' : 'Annuler règlement'}
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-black flex items-center gap-1.5">
-                          <Clock className="w-4 h-4" />
-                          <span>{isAr ? 'بانتظار الدفع' : 'En attente de règlement'}</span>
-                        </span>
-                        {isAdmin && item.lead && (
-                          <button
-                            onClick={() => handleTogglePatronagePaid(item)}
-                            disabled={actionPendingId === item.id}
-                            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm cursor-pointer"
-                          >
-                            <Check className="w-4 h-4" />
-                            <span>{isAr ? 'تأكيد الدفع' : 'Marquer Réglé'}</span>
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Monthly RH Advances / Salary Payments Breakdown */}
-          {summary.rhPaysInMonth.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm mt-4">
-              <h3 className="font-black text-slate-800 text-sm mb-3">
-                {isAr
-                  ? `سجل الدفعات والتسبيقات المسجلة في النظام لشهر ${selectedMois}`
-                  : `Historique des règlements & avances enregistrés (${selectedMois})`}
-              </h3>
-              <div className="space-y-2">
-                {summary.rhPaysInMonth.map(p => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between text-xs p-3 rounded-xl bg-slate-50 border border-slate-100"
-                  >
-                    <div>
-                      <span className="font-black text-slate-800">{p.notes || (isAr ? 'دفعة مالية' : 'Règlement')}</span>
-                      <span className="text-slate-400 mx-2">• {p.date}</span>
-                    </div>
-                    <span className="font-black text-emerald-700">{Number(p.montant).toLocaleString()} MAD</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Bank / Virement Info Card for Admin */}
-          {(linkedEmployee?.rib || profileTargetEmployee?.rib) && (
-            <div className="bg-gradient-to-r from-indigo-50 to-slate-50 rounded-2xl border-2 border-indigo-200 p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-indigo-700 font-black text-xs uppercase tracking-wider">
-                  <CreditCard className="w-4 h-4" />
-                  <span>{isAr ? 'معلومات التحويل البنكي (Virement)' : 'Coordonnées Bancaires pour Virement'}</span>
-                </div>
-                <p className="font-black text-slate-900 text-base">
-                  {(linkedEmployee || profileTargetEmployee)?.prenom} {(linkedEmployee || profileTargetEmployee)?.nom}
-                  {(linkedEmployee || profileTargetEmployee)?.banque && (
-                    <span className="mx-2 px-2.5 py-0.5 bg-indigo-100 text-indigo-800 rounded-lg text-xs">
-                      {(linkedEmployee || profileTargetEmployee)?.banque}
-                    </span>
-                  )}
-                </p>
-                <p className="font-mono font-black text-sm text-slate-700 tracking-wider">
-                  {(linkedEmployee || profileTargetEmployee)?.rib?.replace(/(.{4})/g, '$1 ').trim()}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => copyRibToClipboard((linkedEmployee || profileTargetEmployee)?.rib)}
-                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-2 shrink-0 cursor-pointer shadow-sm"
-              >
-                {copiedRib ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedRib ? (isAr ? 'تم النسخ!' : 'Copié !') : (isAr ? 'نسخ رقم RIB' : 'Copier le RIB')}</span>
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════ */}
-      {/* TAB 5: PROFIL & RIB (AUTO-SYNCED WITH RH)                   */}
+      {/* 👤 TAB 4: PROFIL DIALO & RIB (Profil & Coordonnées)         */}
       {/* ════════════════════════════════════════════════════════════ */}
       {activeTab === 'profil' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Summary / Virement Quick View */}
-          <div className="lg:col-span-1 space-y-4">
-            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 text-white shadow-xl space-y-5">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-2xl font-black text-indigo-300">
-                  {(profileForm.nom || 'M')[0].toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-black text-lg truncate">{profileForm.nom || activeProfileUser.nom}</p>
-                  <p className="text-xs text-indigo-300 font-bold">
-                    {isAr ? 'موديليست — مزامنة تلقائية مع RH' : 'Modéliste — Synchronisé RH'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white/10 border border-white/10 space-y-2">
-                <div className="flex items-center justify-between text-xs text-indigo-200 font-bold">
-                  <span>{isAr ? 'الحساب البنكي (RIB)' : 'Compte Bancaire (RIB)'}</span>
-                  {profileForm.banque && (
-                    <span className="px-2 py-0.5 bg-indigo-500/40 rounded-md text-white">{profileForm.banque}</span>
-                  )}
-                </div>
-                {profileForm.rib ? (
-                  <>
-                    <p className="font-mono font-black text-sm tracking-wider text-white break-all">
-                      {profileForm.rib.replace(/\s+/g, '').replace(/(.{4})/g, '$1 ').trim()}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => copyRibToClipboard(profileForm.rib)}
-                      className="w-full mt-2 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer"
-                    >
-                      {copiedRib ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedRib ? (isAr ? 'تم النسخ!' : 'RIB Copié !') : (isAr ? 'نسخ رقم RIB للتحويل' : 'Copier RIB pour Virement')}</span>
-                    </button>
-                  </>
-                ) : (
-                  <p className="text-xs text-amber-300 font-semibold">
-                    {isAr ? 'لم يتم إدخال RIB بعد — أضفه لتسهيل التحويل البنكي' : 'Aucun RIB enregistré — Ajoutez-le pour vos virements'}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-emerald-300 font-bold bg-emerald-500/15 border border-emerald-400/20 rounded-xl px-3.5 py-2.5">
-                <ShieldCheck className="w-4 h-4 shrink-0" />
-                <span>
-                  {profileTargetEmployee
-                    ? isAr
-                      ? `مربوط بملف الـ RH (${profileTargetEmployee.poste || 'Modéliste'})`
-                      : `Lié au dossier RH (${profileTargetEmployee.poste || 'Modéliste'})`
-                    : isAr
-                    ? 'سيتم ربط الملف تلقائياً بصفحة الـ RH عند الحفظ'
-                    : 'Création & liaison automatique dans RH à l’enregistrement'}
-                </span>
-              </div>
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm max-w-3xl mx-auto space-y-6">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
+              <UserIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-900">{isAr ? 'الملف الشخصي والحساب البنكي (RIB)' : 'Profil Personnel & RIB'}</h2>
+              <p className="text-xs text-slate-500 font-medium">
+                {isAr
+                  ? 'هذه المعلومات متصلة ومزامنة تلقائياً مع نظام الموارد البشرية (RH) والتحويلات البنكية للمستحقات.'
+                  : 'Ces coordonnées sont synchronisées automatiquement avec le module RH et la paie.'}
+              </p>
             </div>
           </div>
 
-          {/* Right Form: Personal + Bank Info */}
-          <form onSubmit={handleSaveProfile} className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+          <form onSubmit={handleSaveProfile} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <h2 className="text-xl font-black text-slate-900">
-                  {isAr ? 'المعلومات الشخصية والحساب البنكي (RIB)' : 'Informations Personnelles & Coordonnées Bancaires'}
-                </h2>
-                <p className="text-xs text-slate-500 font-medium mt-1">
-                  {isAr
-                    ? 'أي تعديل تقوم به هنا يتم تحديثه تلقائياً في صفحة الموارد البشرية (RH) لتسهيل التحويلات البنكية.'
-                    : 'Toute modification enregistrée ici met automatiquement à jour votre fiche dans Suivi RH pour faciliter les virements.'}
-                </p>
+                <label className="block text-xs font-black text-slate-700 mb-1.5">{isAr ? 'الاسم الكامل *' : 'Nom Complet *'}</label>
+                <input
+                  type="text"
+                  required
+                  value={profileForm.nom}
+                  onChange={e => setProfileForm({ ...profileForm, nom: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                />
               </div>
-              {isAdmin && modelistes.length > 0 && (
-                <select
-                  value={activeProfileUser.id}
-                  onChange={e => setSelectedModelisteId(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 outline-none"
-                >
-                  {modelistes.map(m => (
-                    <option key={m.id} value={m.id}>
-                      {m.nom}
-                    </option>
-                  ))}
-                </select>
-              )}
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1.5">{isAr ? 'رقم الهاتف' : 'Téléphone'}</label>
+                <input
+                  type="text"
+                  value={profileForm.telephone}
+                  onChange={e => setProfileForm({ ...profileForm, telephone: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-black text-slate-700 mb-1.5">
-                  {isAr ? 'الاسم الكامل *' : 'Nom Complet *'}
-                </label>
-                <div className="relative">
-                  <UserIcon className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`} />
-                  <input
-                    type="text"
-                    required
-                    value={profileForm.nom}
-                    onChange={e => setProfileForm({ ...profileForm, nom: e.target.value })}
-                    className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none text-sm font-bold`}
-                  />
-                </div>
+                <label className="block text-xs font-black text-slate-700 mb-1.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+                <input
+                  type="email"
+                  value={profileForm.email}
+                  onChange={e => setProfileForm({ ...profileForm, email: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                />
               </div>
-
               <div>
-                <label className="block text-xs font-black text-slate-700 mb-1.5">
-                  {isAr ? 'رقم الهاتف' : 'Téléphone'}
-                </label>
-                <div className="relative">
-                  <Phone className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`} />
-                  <input
-                    type="tel"
-                    value={profileForm.telephone}
-                    onChange={e => setProfileForm({ ...profileForm, telephone: e.target.value })}
-                    placeholder="+212 6..."
-                    className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none text-sm font-bold`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black text-slate-700 mb-1.5">
-                  {isAr ? 'البريد الإلكتروني' : 'Email'}
-                </label>
-                <div className="relative">
-                  <Mail className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`} />
-                  <input
-                    type="email"
-                    value={profileForm.email}
-                    onChange={e => setProfileForm({ ...profileForm, email: e.target.value })}
-                    className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none text-sm font-bold`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black text-slate-700 mb-1.5">
-                  {isAr ? 'رقم البطاقة الوطنية (CIN)' : 'Numéro CIN'}
-                </label>
+                <label className="block text-xs font-black text-slate-700 mb-1.5">{isAr ? 'رقم البطاقة الوطنية (CIN)' : 'N° CNIE'}</label>
                 <input
                   type="text"
                   value={profileForm.cin}
-                  onChange={e => setProfileForm({ ...profileForm, cin: e.target.value.toUpperCase() })}
-                  placeholder="Ex: D123456"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none text-sm font-bold uppercase"
+                  onChange={e => setProfileForm({ ...profileForm, cin: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
                 />
               </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-xs font-black text-slate-700 mb-1.5">
-                  {isAr ? 'العنوان الكامل' : 'Adresse'}
-                </label>
-                <div className="relative">
-                  <MapPin className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3.5' : 'left-3.5'}`} />
-                  <input
-                    type="text"
-                    value={profileForm.adresse}
-                    onChange={e => setProfileForm({ ...profileForm, adresse: e.target.value })}
-                    placeholder={isAr ? 'المدينة، الحي...' : 'Ville, Quartier...'}
-                    className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none text-sm font-bold`}
-                  />
-                </div>
-              </div>
             </div>
 
-            {/* Bank Details Section */}
-            <div className="p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-4">
-              <div className="flex items-center gap-2 text-indigo-800 font-black text-sm">
-                <Building2 className="w-4 h-4" />
-                <span>{isAr ? 'معلومات الحساب البنكي للتحويل (Virement Bancaire)' : 'Informations Bancaires (Virement)'}</span>
+            <div>
+              <label className="block text-xs font-black text-slate-700 mb-1.5">{isAr ? 'العنوان / المدينة' : 'Adresse & Ville'}</label>
+              <input
+                type="text"
+                value={profileForm.adresse}
+                onChange={e => setProfileForm({ ...profileForm, adresse: e.target.value })}
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+              />
+            </div>
+
+            {/* Banking RIB section */}
+            <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
+                  <CreditCard className="w-4 h-4 text-indigo-600" />
+                  <span>{isAr ? 'الحساب البنكي (RIB المغربي)' : 'Coordonnées Bancaires (RIB)'}</span>
+                </span>
+                {profileForm.rib && (
+                  <button
+                    type="button"
+                    onClick={() => copyRib(profileForm.rib)}
+                    className="text-xs font-black text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>{copiedRib ? (isAr ? 'تم النسخ!' : 'Copié!') : (isAr ? 'نسخ RIB' : 'Copier')}</span>
+                  </button>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-black text-slate-700 mb-1.5">
-                    {isAr ? 'البنك' : 'Banque'}
-                  </label>
-                  <select
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-1">
+                  <label className="block text-[10px] font-black text-slate-500 mb-1">{isAr ? 'اسم البنك' : 'Banque'}</label>
+                  <input
+                    type="text"
+                    placeholder="CIH, Attijariwafa..."
                     value={profileForm.banque}
                     onChange={e => setProfileForm({ ...profileForm, banque: e.target.value })}
-                    className="w-full px-3.5 py-3 rounded-xl border border-indigo-200 bg-white focus:border-indigo-500 outline-none text-sm font-bold"
-                  >
-                    <option value="">{isAr ? 'اختر البنك...' : 'Sélectionner banque...'}</option>
-                    {['CIH', 'Attijari', 'BP', 'BMCE', 'Al Barid', 'SG', 'BMCI', 'Crédit Agricole'].map(b => (
-                      <option key={b} value={b}>
-                        {b}
-                      </option>
-                    ))}
-                  </select>
+                    className="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-black outline-none"
+                  />
                 </div>
-
-                <div className="md:col-span-2">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-black text-slate-700">
-                      {isAr ? 'رقم الحساب البنكي RIB (24 رقماً)' : 'RIB Bancaire (24 Chiffres)'}
-                    </label>
-                    <span
-                      className={`text-[11px] font-black ${
-                        profileForm.rib.replace(/\s+/g, '').length === 24 ? 'text-emerald-600' : 'text-slate-400'
-                      }`}
-                    >
-                      {profileForm.rib.replace(/\s+/g, '').length} / 24
-                    </span>
-                  </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-[10px] font-black text-slate-500 mb-1">
+                    {isAr ? 'رقم الحساب (24 رقماً) *' : 'Numéro RIB (24 chiffres) *'}
+                  </label>
                   <input
                     type="text"
+                    maxLength={32}
+                    placeholder="230 425 3473845211020400 80"
                     value={profileForm.rib}
-                    onChange={e => setProfileForm({ ...profileForm, rib: e.target.value.replace(/[^\d\s]/g, '') })}
-                    placeholder="230 780 1234567890123456 78"
-                    dir="ltr"
-                    className="w-full px-4 py-3 rounded-xl border border-indigo-200 bg-white focus:border-indigo-500 outline-none text-sm font-mono font-black tracking-wider text-slate-900"
+                    onChange={e => setProfileForm({ ...profileForm, rib: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-black font-mono tracking-wider outline-none"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="pt-3">
               <button
                 type="submit"
                 disabled={savingProfile}
-                className="px-8 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm flex items-center gap-2 shadow-lg shadow-indigo-500/20 disabled:opacity-50 cursor-pointer"
+                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm shadow-lg shadow-indigo-600/25 transition cursor-pointer flex items-center justify-center gap-2"
               >
-                {savingProfile ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
-                <span>
-                  {isAr ? 'حفظ ومزامنة تلقائية مع الـ RH' : 'Enregistrer & Synchroniser avec RH'}
-                </span>
+                {savingProfile ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                <span>{isAr ? 'حفظ البيانات ومزامنتها ✓' : 'Enregistrer & Synchroniser ✓'}</span>
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════════ */}
-      {/* MODAL: SET / EDIT PATRONAGE PRICE                           */}
-      {/* ════════════════════════════════════════════════════════════ */}
-      {pricingItem && (
-        <div className="fixed inset-0 z-[250] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <h3 className="font-black text-slate-900 flex items-center gap-2">
-                <Scissors className="w-5 h-5 text-amber-500" />
-                <span>{isAr ? 'تسعير الموديل للمصادقة' : 'Tarification du Modèle'}</span>
-              </h3>
-              <button onClick={() => setPricingItem(null)} className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                <div className="flex items-center gap-3 min-w-0">
-                  {pricingItem.photo && (
-                    <img src={pricingItem.photo} alt={pricingItem.modele} className="w-14 h-14 rounded-xl object-cover shrink-0" />
-                  )}
-                  <div className="truncate">
-                    <p className="font-black text-slate-900 truncate">{pricingItem.modele}</p>
-                    <p className="text-xs font-semibold text-slate-500">
-                      {pricingItem.client} • {pricingItem.quantity || 1} {isAr ? 'قطعة' : 'pcs'}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setTechPackItem(pricingItem)}
-                  className="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1.5 border border-indigo-200 cursor-pointer"
-                  title={isAr ? 'معاينة البطاقة التقنية' : 'Fiche Tech'}
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>{isAr ? 'البطاقة التقنية' : 'Fiche Tech'}</span>
-                </button>
-              </div>
-
-              {Boolean(pricingItem.adminCounterPrice && pricingItem.adminCounterPrice > 0) && (
-                <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest flex items-center gap-1">
-                      ⚠️ {isAr ? 'عرض مضاد وميزانية الكليان من الورشة' : 'Contre-proposition Atelier / Budget Client'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setPriceInput(String(pricingItem.adminCounterPrice))}
-                      className="px-2 py-0.5 rounded-lg bg-amber-600 text-white text-[10px] font-black hover:bg-amber-700 transition cursor-pointer"
-                    >
-                      {isAr ? 'تطبيق هذا الثمن' : 'Appliquer ce tarif'}
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs font-bold text-slate-700">{isAr ? 'الثمن المطلوب من طرف الورشة:' : 'Prix proposé par l\'atelier :'}</span>
-                    <span className="text-base font-black text-amber-900 font-mono">{pricingItem.adminCounterPrice} MAD</span>
-                  </div>
-                  {pricingItem.patronageNegotiationNotes && (
-                    <p className="text-xs text-slate-600 mt-1 italic bg-white/70 p-2 rounded-xl border border-amber-200/50">
-                      💬 {pricingItem.patronageNegotiationNotes}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-black text-slate-700 mb-1.5">
-                    {isAr ? 'ثمن الباترون والتدريج (MAD) *' : 'Prix Patronage (MAD) *'}
-                  </label>
-                  <input
-                    type="number"
-                    value={priceInput}
-                    onChange={e => setPriceInput(e.target.value)}
-                    placeholder="250"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-amber-500 outline-none text-lg font-black text-amber-700"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black text-slate-700 mb-1.5">
-                    {isAr ? 'ثمن العينة (MAD)' : 'Prix Échantillon (MAD)'}
-                  </label>
-                  <input
-                    type="number"
-                    value={echPriceInput}
-                    onChange={e => setEchPriceInput(e.target.value)}
-                    placeholder="350"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none text-lg font-black text-indigo-700"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black text-slate-700 mb-1.5">
-                  {isAr ? 'ملاحظات تقنية (اختياري)' : 'Notes techniques (optionnel)'}
-                </label>
-                <textarea
-                  rows={3}
-                  value={notesInput}
-                  onChange={e => setNotesInput(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none text-sm font-medium resize-none"
-                />
-              </div>
-
-              <button
-                onClick={handleSavePrice}
-                disabled={actionPendingId === pricingItem.id}
-                className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm transition cursor-pointer disabled:opacity-50"
-              >
-                {isAr ? 'حفظ التسعيرة وإرسالها' : 'Enregistrer le Tarif'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════ */}
-      {/* MODAL: ADMIN VALIDATE & ASSIGN DEADLINE DATE                */}
-      {/* ════════════════════════════════════════════════════════════ */}
-      {validateModalItem && (
-        <div className="fixed inset-0 z-[250] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <h3 className="font-black text-slate-900 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-emerald-600" />
-                <span>{isAr ? 'المصادقة وتحديد يوم التسليم' : 'Valider & Planifier le Travail'}</span>
-              </h3>
-              <button onClick={() => setValidateModalItem(null)} className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-100">
-                <p className="font-black text-slate-900">{validateModalItem.modele}</p>
-                <p className="text-xs font-semibold text-slate-600 mt-0.5">
-                  {validateModalItem.client} • {validateModalItem.patronagePrice} MAD
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black text-slate-700 mb-1.5">
-                  {isAr ? 'تاريخ التسليم المحدد للموديليست *' : 'Date limite de remise *'}
-                </label>
-                <input
-                  type="date"
-                  value={deadlineInput}
-                  onChange={e => setDeadlineInput(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 outline-none font-bold text-sm"
-                />
-              </div>
-
-              {modelistes.length > 0 && (
-                <div>
-                  <label className="block text-xs font-black text-slate-700 mb-1.5">
-                    {isAr ? 'تعيين الموديليست المسؤول' : 'Modéliste assigné'}
-                  </label>
-                  <select
-                    value={assignModelisteInput}
-                    onChange={e => setAssignModelisteInput(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 outline-none font-bold text-sm bg-white"
-                  >
-                    <option value="">{isAr ? 'تلقائي / متاح للجميع' : 'Automatique'}</option>
-                    {modelistes.map(m => (
-                      <option key={m.id} value={m.id}>
-                        {m.nom}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <button
-                onClick={handleConfirmAdminValidate}
-                disabled={actionPendingId === validateModalItem.id}
-                className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm transition cursor-pointer"
-              >
-                {isAr ? 'تأكيد وإرسال لقائمة الخدمات' : 'Confirmer & Envoyer aux Travaux'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════ */}
-      {/* MODAL: ADMIN SEND NEW MODEL TO MODÉLISTE                    */}
-      {/* ════════════════════════════════════════════════════════════ */}
+      {/* ─── Modal: Admin Send New Model for Pricing ───────────────── */}
       {showNewModelModal && (
-        <div className="fixed inset-0 z-[250] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <h3 className="font-black text-slate-900 flex items-center gap-2">
-                <Plus className="w-5 h-5 text-indigo-600" />
-                <span>{isAr ? 'إرسال موديل جديد للتسعير' : 'Envoyer un Nouveau Modèle'}</span>
-              </h3>
-              <button onClick={() => setShowNewModelModal(false)} className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500">
-                <X className="w-5 h-5" />
+        <div
+          className="fixed inset-0 z-[300] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setShowNewModelModal(false)}
+        >
+          <div className="relative max-w-lg w-full bg-white rounded-3xl p-6 shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-black text-base text-slate-900">{isAr ? 'إرسال موديل جديد للموديليست' : 'Envoyer un Modèle au Modéliste'}</h3>
+              <button onClick={() => setShowNewModelModal(false)} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center cursor-pointer">
+                <X className="w-4 h-4 text-slate-500" />
               </button>
             </div>
-            <form onSubmit={handleCreateNewModel} className="p-6 space-y-4">
+
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                if (!newModelForm.modele.trim() || !newModelForm.client.trim()) return;
+                const assignedMod = users.find(u => u.id === newModelForm.modelisteId);
+                const detailsObj: any = {
+                  patronageStatus: 'requested',
+                  clientNotes: sanitizeNotesForModeliste(newModelForm.notes.trim()),
+                  deadlineDate: newModelForm.deadlineDate || undefined,
+                  modelisteId: assignedMod?.id || undefined,
+                  modelisteName: assignedMod?.nom || undefined
+                };
+                const newLead: Lead = {
+                  id: genId(),
+                  name: newModelForm.client.trim(),
+                  phone: '',
+                  ville: '',
+                  type: newModelForm.modele.trim(),
+                  quantity: Math.max(1, Number(newModelForm.quantity) || 1),
+                  status: 'new',
+                  date: new Date().toISOString(),
+                  details: JSON.stringify(detailsObj)
+                };
+                saveRecord('leads', newLead, true).then(() => {
+                  setShowNewModelModal(false);
+                  setNewModelForm({ modele: '', client: '', quantity: '1', deadlineDate: '', modelisteId: '', notes: '' });
+                  setActiveTab('a_tarifer');
+                  showToast(isAr ? 'تم إرسال الموديل للتسعير بنجاح' : 'Modèle envoyé pour tarification');
+                  fetchData();
+                });
+              }}
+              className="space-y-3.5"
+            >
               <div>
-                <label className="block text-xs font-black text-slate-700 mb-1">
-                  {isAr ? 'اسم الموديل *' : 'Nom du Modèle *'}
-                </label>
+                <label className="block text-xs font-black text-slate-700 mb-1">{isAr ? 'اسم الموديل *' : 'Nom du Modèle *'}</label>
                 <input
                   type="text"
                   required
+                  placeholder="Ex: Robe Chemisier Soirée..."
                   value={newModelForm.modele}
                   onChange={e => setNewModelForm({ ...newModelForm, modele: e.target.value })}
-                  placeholder={isAr ? 'مثال: عباية، جاكيت...' : 'Ex: Robe, Ensemble...'}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-black text-slate-700 mb-1">
-                    {isAr ? 'الزبون *' : 'Client *'}
-                  </label>
+                  <label className="block text-xs font-black text-slate-700 mb-1">{isAr ? 'الزبون *' : 'Client *'}</label>
                   <input
                     type="text"
                     required
                     value={newModelForm.client}
                     onChange={e => setNewModelForm({ ...newModelForm, client: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-indigo-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-slate-700 mb-1">
-                    {isAr ? 'الكمية' : 'Quantité'}
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={newModelForm.quantity}
-                    onChange={e => setNewModelForm({ ...newModelForm, quantity: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-black text-slate-700 mb-1">
-                    {isAr ? 'تاريخ التسليم المقترح' : 'Date limite souhaitée'}
-                  </label>
+                  <label className="block text-xs font-black text-slate-700 mb-1">{isAr ? 'تاريخ التسليم المطلوب' : 'Délai souhaité'}</label>
                   <input
                     type="date"
                     value={newModelForm.deadlineDate}
                     onChange={e => setNewModelForm({ ...newModelForm, deadlineDate: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-indigo-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-black text-slate-700 mb-1">
-                    {isAr ? 'الموديليست' : 'Modéliste'}
-                  </label>
-                  <select
-                    value={newModelForm.modelisteId}
-                    onChange={e => setNewModelForm({ ...newModelForm, modelisteId: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-indigo-500 bg-white"
-                  >
-                    <option value="">{isAr ? 'الكل' : 'Tous'}</option>
-                    {modelistes.map(m => (
-                      <option key={m.id} value={m.id}>
-                        {m.nom}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
+
               <div>
-                <label className="block text-xs font-black text-slate-700 mb-1">
-                  {isAr ? 'ملاحظات' : 'Notes'}
-                </label>
+                <label className="block text-xs font-black text-slate-700 mb-1">{isAr ? 'تعيين الموديليست' : 'Assigner Modéliste'}</label>
+                <select
+                  value={newModelForm.modelisteId}
+                  onChange={e => setNewModelForm({ ...newModelForm, modelisteId: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                >
+                  <option value="">{isAr ? 'متاح للجميع' : 'Tous les modélistes'}</option>
+                  {modelistes.map(m => (
+                    <option key={m.id} value={m.id}>{m.nom}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1">{isAr ? 'ملاحظات وتفاصيل تقنية' : 'Notes & Détails'}</label>
                 <textarea
                   rows={2}
                   value={newModelForm.notes}
                   onChange={e => setNewModelForm({ ...newModelForm, notes: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-500 resize-none"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none resize-none"
                 />
               </div>
+
               <button
                 type="submit"
-                disabled={actionPendingId === 'new-model'}
-                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm transition cursor-pointer"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition cursor-pointer"
               >
-                {isAr ? 'إرسال للتسعير' : 'Envoyer au Modéliste'}
+                {isAr ? 'إرسال الموديل إلى صفحة التسعير ✓' : 'Envoyer au Modéliste ✓'}
               </button>
             </form>
           </div>
@@ -2641,7 +2084,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           </div>
         </div>
       )}
-      {/* ─── Fiche Technique Modéliste Pro Modal (Without Commercial Prices) ─── */}
+
+      {/* ─── Fiche Technique Modéliste Pro Modal ────────────────────── */}
       <FicheTechniqueModelisteModal
         isOpen={Boolean(techPackItem)}
         onClose={() => setTechPackItem(null)}

@@ -344,6 +344,9 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               <NavItem to="/suivi-modeliste" icon={LayoutDashboard} label={isAr ? 'لوحة الموديليست (الرئيسية)' : 'Accueil Modéliste'} />
             )}
             <NavItem to="/profil" icon={UserIcon} label={isAr ? 'حسابي' : 'Mon Profil'} />
+            {(currentUser?.role === 'modeliste' || currentUser?.role === 'admin') && (
+              <NavItem to="/modeliste-travaux" icon={Scissors} label={isAr ? 'ورشة الباتروناج والمهام' : 'Atelier & Travaux Patronage'} />
+            )}
             {can('dashboard') && <NavItem to="/" icon={LayoutDashboard} label={t('dashboard', lang)} end />}
             {can('worker_portal') && <NavItem to="/worker-portal" icon={UserIcon} label={isAr ? 'فضاء العامل' : 'Espace Ouvrier'} />}
             {can('chef_chaine_portal') && <NavItem to="/chef-portal" icon={ShieldCheck} label={isAr ? 'بوابة رئيس السلسلة' : 'Portail Chef Chaîne'} />}
