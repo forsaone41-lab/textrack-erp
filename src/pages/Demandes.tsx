@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, Fragment, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight, UserCheck, ChevronDown, ChevronUp, Layers } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight, UserCheck, ChevronDown, ChevronUp, Layers, Clock, Send, DollarSign, AlertCircle, Sparkles, Check } from 'lucide-react';
 import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, loadLeadPhotosBatch, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, Commande, StockTissu, parseLeadDetailsJson, upsertClientDevis, findMatchingCommandeForLead, loadClientCityResolver, extractClientCityFromLeads } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
@@ -8,6 +8,7 @@ import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
 import { compressImage } from '../utils/image';
 import { PageLoader } from '../components/PageLoader';
 import AISpace from './AISpace';
+import { saveModelisteWorkLog } from '../utils/payrollEngine';
 
 const DEFAULT_TEMPLATES = {
   ar: {
@@ -236,6 +237,15 @@ export default function Demandes() {
   const [visibleCount, setVisibleCount] = useState(10);
   const [expandedDetails, setExpandedDetails] = useState<string[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  const modelistes = useMemo(() => users.filter(u => u.role === 'modeliste'), [users]);
+  const [patronageModalLead, setPatronageModalLead] = useState<Lead | null>(null);
+  const [patronageModelisteId, setPatronageModelisteId] = useState<string>('');
+  const [patronageDeadline, setPatronageDeadline] = useState<string>('');
+  const [patronageCounterPrice, setPatronageCounterPrice] = useState<string>('');
+  const [patronageNegotiationNotes, setPatronageNegotiationNotes] = useState<string>('');
+  const [patronageTab, setPatronageTab] = useState<'validate' | 'negotiate'>('validate');
+  const [patronageSubmitting, setPatronageSubmitting] = useState<boolean>(false);
 
   const toggleGroupExpanded = (key: string) => {
     setExpandedGroups(prev => {
@@ -912,6 +922,166 @@ export default function Demandes() {
       setContactingLead(null);
       setContactingLeadRequests([]);
     }, 800);
+  };
+
+  const openPatronageModal = (lead: Lead) => {
+    setPatronageModalLead(lead);
+    const ext = parseLeadDetailsJson(lead.details);
+    const patPrice = Number(ext.patronagePrice ?? (lead as any).patronagePrice) || 0;
+    
+    const initialModelisteId = ext.modelisteId || (modelistes[0]?.id || '');
+    setPatronageModelisteId(initialModelisteId);
+    
+    const defaultDeadline = ext.deadlineDate || new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+    setPatronageDeadline(defaultDeadline);
+    
+    const clientBudget = ext.clientBudget || ext.budget || (lead.crmPrice && Number(lead.crmPrice) > 0 ? Number(lead.crmPrice) : 0);
+    const suggestedCounter = ext.adminCounterPrice 
+      ? String(ext.adminCounterPrice)
+      : clientBudget > 0 
+        ? String(clientBudget) 
+        : '';
+    setPatronageCounterPrice(suggestedCounter);
+    setPatronageNegotiationNotes(ext.patronageNegotiationNotes || '');
+    
+    if (ext.patronageNegotiationStatus === 'counter_offered') {
+      setPatronageTab('negotiate');
+    } else {
+      setPatronageTab('validate');
+    }
+  };
+
+  const handleValidatePatronageAndLaunch = async () => {
+    if (!patronageModalLead) return;
+    if (!patronageDeadline) {
+      alert(isAr ? 'المرجو تحديد تاريخ التسليم المطلوب' : 'Veuillez choisir la date limite');
+      return;
+    }
+    setPatronageSubmitting(true);
+    try {
+      const ext = parseLeadDetailsJson(patronageModalLead.details);
+      const assignedUser = users.find(u => u.id === patronageModelisteId) || modelistes[0];
+      const patPrice = Number(ext.patronagePrice ?? (patronageModalLead as any).patronagePrice) || 0;
+      const currentUser = JSON.parse(localStorage.getItem('textrack_auth') || '{}');
+      const adminName = currentUser.nom || 'Administration';
+
+      const clientNotesFallback = patronageModalLead.details && !patronageModalLead.details.trim().startsWith('{')
+        ? patronageModalLead.details.split('| AI_NOTES:')[0].split('| ATELIER_DEVIS:')[0].replace('| COM_UNLOCK:true', '').trim()
+        : ext.clientNotes;
+
+      const newDetails = {
+        ...ext,
+        ...(clientNotesFallback ? { clientNotes: clientNotesFallback } : {}),
+        patronageStatus: 'priced',
+        patronagePrice: patPrice,
+        adminValidatedToWork: true,
+        adminValidatedAt: new Date().toISOString(),
+        adminValidatedBy: adminName,
+        deadlineDate: patronageDeadline,
+        workStatus: 'a_faire',
+        patronageNegotiationStatus: 'accepted',
+        modelisteId: patronageModelisteId || ext.modelisteId || assignedUser?.id,
+        modelisteName: assignedUser?.nom || ext.modelisteName || 'Modéliste'
+      };
+
+      const updatedLead: Lead = {
+        ...patronageModalLead,
+        details: JSON.stringify(newDetails)
+      };
+
+      setLeads(prev => prev.map(l => l.id === patronageModalLead.id ? updatedLead : l));
+      await saveRecord('leads', updatedLead, true);
+
+      // Sync to modeliste work log in payroll engine if user exists
+      if (assignedUser && patPrice > 0) {
+        try {
+          await saveModelisteWorkLog({
+            employeId: assignedUser.id,
+            date: new Date().toISOString().slice(0, 10),
+            modeleName: (patronageModalLead.type || 'Modèle').replace(' (CMT - Client Tissu)', '').replace('RECRUTEMENT:', ''),
+            client: patronageModalLead.name || 'Client',
+            typeTravail: 'patronage_complet',
+            quantite: 1,
+            tarifUnitaire: patPrice,
+            statut: 'valide',
+            sourceLeadId: patronageModalLead.id,
+            notes: `Date limite: ${patronageDeadline}`
+          });
+        } catch (e) {
+          console.warn('Payroll log sync info:', e);
+        }
+      }
+
+      const modPhone = (assignedUser?.telephone || '').replace(/\D/g, '');
+      const modeleClean = (patronageModalLead.type || 'Modèle').replace(' (CMT - Client Tissu)', '').replace('RECRUTEMENT:', '');
+      const waMsg = isAr
+        ? `السلام عليكم ${assignedUser?.nom || 'أخي'}، تمت المصادقة رسمياً (VALIDÉ ✓) على إنجاز باترون موديل "${modeleClean}" (الزبون: ${patronageModalLead.name}) بمبلغ ${patPrice} درهم.\nتاريخ التسليم المطلوب هو: ${patronageDeadline}.\nالمرجو بدء العمل والتنفيذ في لوحة الموديليست.`
+        : `Bonjour ${assignedUser?.nom || ''}, le patronage pour "${modeleClean}" (Client: ${patronageModalLead.name}) est VALIDÉ ✓ au tarif de ${patPrice} MAD.\nDate limite : ${patronageDeadline}.\nVous pouvez commencer la réalisation.`;
+      
+      setPatronageModalLead(null);
+      if (modPhone && window.confirm(isAr ? 'تمت المصادقة على الباترون وإطلاق العمل بنجاح! هل تريد إشعار الموديليست عبر واتساب الآن؟' : 'Patronage validé avec succès ! Envoyer la confirmation par WhatsApp au modéliste ?')) {
+        window.open(`https://wa.me/${modPhone}?text=${encodeURIComponent(waMsg)}`, '_blank');
+      }
+    } catch (e) {
+      console.error('Erreur validation modéliste:', e);
+      alert(isAr ? 'حدث خطأ أثناء المصادقة' : 'Erreur lors de la validation');
+    } finally {
+      setPatronageSubmitting(false);
+    }
+  };
+
+  const handleSendCounterProposalToModeliste = async () => {
+    if (!patronageModalLead) return;
+    const counterVal = Number(patronageCounterPrice);
+    if (!counterVal || counterVal <= 0) {
+      alert(isAr ? 'المرجو إدخال الثمن المقترح (ميزانية الكليان)' : 'Veuillez saisir le montant proposé');
+      return;
+    }
+    setPatronageSubmitting(true);
+    try {
+      const ext = parseLeadDetailsJson(patronageModalLead.details);
+      const assignedUser = users.find(u => u.id === patronageModelisteId) || modelistes[0];
+      const originalPrice = Number(ext.patronagePrice ?? (patronageModalLead as any).patronagePrice) || 0;
+
+      const clientNotesFallback = patronageModalLead.details && !patronageModalLead.details.trim().startsWith('{')
+        ? patronageModalLead.details.split('| AI_NOTES:')[0].split('| ATELIER_DEVIS:')[0].replace('| COM_UNLOCK:true', '').trim()
+        : ext.clientNotes;
+
+      const newDetails = {
+        ...ext,
+        ...(clientNotesFallback ? { clientNotes: clientNotesFallback } : {}),
+        patronageNegotiationStatus: 'counter_offered',
+        adminCounterPrice: counterVal,
+        patronageNegotiationNotes: patronageNegotiationNotes.trim(),
+        patronageNegotiationAt: new Date().toISOString(),
+        modelisteId: patronageModelisteId || ext.modelisteId || assignedUser?.id,
+        modelisteName: assignedUser?.nom || ext.modelisteName || 'Modéliste'
+      };
+
+      const updatedLead: Lead = {
+        ...patronageModalLead,
+        details: JSON.stringify(newDetails)
+      };
+
+      setLeads(prev => prev.map(l => l.id === patronageModalLead.id ? updatedLead : l));
+      await saveRecord('leads', updatedLead, true);
+
+      const modPhone = (assignedUser?.telephone || '').replace(/\D/g, '');
+      const modeleClean = (patronageModalLead.type || 'Modèle').replace(' (CMT - Client Tissu)', '').replace('RECRUTEMENT:', '');
+      const waMsg = isAr
+        ? `السلام عليكم ${assignedUser?.nom || 'أخي'}، بخصوص موديل "${modeleClean}" (الزبون: ${patronageModalLead.name}):\nعرضكم الأولي كان: ${originalPrice} درهم.\nبناءً على ميزانية الكليان وتقدير الورشة، نقترح عليكم ثمن: *${counterVal} درهم* للباترون.\n${patronageNegotiationNotes.trim() ? `ملاحظة: ${patronageNegotiationNotes.trim()}\n` : ''}واش مسلكاك باش نڤاليديو العمل وتبدا فيه؟ شكراً!`
+        : `Bonjour ${assignedUser?.nom || ''}, concernant le modèle "${modeleClean}" (Client: ${patronageModalLead.name}) :\nVotre tarif proposé était de ${originalPrice} MAD.\nSuivant le budget client et l'atelier, nous vous proposons un tarif de : *${counterVal} MAD*.\n${patronageNegotiationNotes.trim() ? `Note : ${patronageNegotiationNotes.trim()}\n` : ''}Est-ce convenable pour vous afin de valider et lancer le travail ? Merci !`;
+
+      setPatronageModalLead(null);
+      if (modPhone && window.confirm(isAr ? 'تم حفظ العرض المضاد بنجاح! هل تريد إرساله للموديليست عبر واتساب الآن؟' : 'Contre-proposition enregistrée ! Envoyer au modéliste par WhatsApp ?')) {
+        window.open(`https://wa.me/${modPhone}?text=${encodeURIComponent(waMsg)}`, '_blank');
+      }
+    } catch (e) {
+      console.error('Erreur négociation modéliste:', e);
+      alert(isAr ? 'حدث خطأ أثناء حفظ العرض' : 'Erreur lors de l\'enregistrement');
+    } finally {
+      setPatronageSubmitting(false);
+    }
   };
 
   const openDevisModal = (lead: Lead, mode: 'echantillon' | 'commande' = 'commande') => {

@@ -1144,7 +1144,7 @@ function AppContent() {
         <Route path="validation" element={can('validation') ? <ValidationBoard currentUser={currentUser} /> : <Navigate to="/" replace />} />
         <Route path="tarifs" element={can('tarifs') ? <Tarifs /> : <Navigate to="/" replace />} />
         <Route path="echantillons" element={can('demandes') ? <Echantillons /> : <Navigate to="/" replace />} />
-        <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />
+        <Route path="fiches-techniques" element={(currentUser?.role !== 'modeliste' && can('fiches')) ? <FichesTechniques /> : <Navigate to="/" replace />} />
         <Route path="evaluation-patronage" element={can('evaluation_patronage') ? <EvaluationPatronage currentUser={currentUser} /> : <Navigate to="/" replace />} />
         <Route path="suivi-modeliste" element={(can('suivi_modeliste') || currentUser?.role === 'modeliste' || currentUser?.role === 'admin') ? <ModelisteSuivi currentUser={currentUser} /> : <Navigate to="/" replace />} />
         <Route path="patronage-ai" element={(currentUser?.role !== 'modeliste' && (can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin')) ? <PatronageAIStudio /> : <Navigate to="/" replace />} />

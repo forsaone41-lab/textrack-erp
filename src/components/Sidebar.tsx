@@ -397,7 +397,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('achats') && <NavItem to="/achats" icon={ShoppingCart} label={isAr ? 'المشتريات' : 'Achats'} />}
             {can('stocks') && <NavItem to="/stocks" icon={Package} label={isAr ? 'المخزون' : 'Stocks'} />}
             {can('fournisseurs') && <NavItem to="/fournisseurs" icon={UserCheck} label={isAr ? 'الموردين' : 'Fournisseurs'} />}
-            {can('fiches') && (
+            {currentUser?.role !== 'modeliste' && can('fiches') && (
               <NavItem to="/fiches-techniques" icon={FileText} label={isAr ? 'البطاقات التقنية' : 'Fiches Tech.'} />
             )}
             {can('evaluation_patronage') && (

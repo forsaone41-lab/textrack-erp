@@ -90,7 +90,7 @@ export default function BalancePaie() {
   const [ruleForm, setRuleForm] = useState<{ mode: ExtendedRemunerationType; tauxHoraire: number; tarifParModele: number; salaireMensuel: number }>({
     mode: 'mensuel',
     tauxHoraire: 17.1,
-    tarifParModele: 150,
+    tarifParModele: 0,
     salaireMensuel: 0,
   });
 
@@ -121,9 +121,11 @@ export default function BalancePaie() {
     statut: 'present' | 'absent' | 'retard';
   } | null>(null);
 
-  // New Modeliste Work Log form
+  // New / Edit Modeliste Work Log form
   const [showAddModelModal, setShowAddModelModal] = useState(false);
   const [modelForm, setModelForm] = useState<{
+    id?: string;
+    createdAt?: string;
     employeId: string;
     date: string;
     modeleName: string;
@@ -134,13 +136,15 @@ export default function BalancePaie() {
     statut: 'valide' | 'en_attente';
     notes: string;
   }>({
+    id: undefined,
+    createdAt: undefined,
     employeId: '',
     date: new Date().toISOString().slice(0, 10),
     modeleName: '',
     client: '',
     typeTravail: 'patronage_complet',
     quantite: 1,
-    tarifUnitaire: 150,
+    tarifUnitaire: 0,
     statut: 'valide',
     notes: '',
   });
@@ -370,7 +374,7 @@ export default function BalancePaie() {
         date: leadDate || `${selectedMois}-01`,
         modele: l.type || 'Modèle Patronage',
         client: l.name || 'Client',
-        price: Number(ext.patronagePrice) || 150,
+        price: Number(ext.patronagePrice) || 0,
         validated: Boolean(ext.clientValidated || l.status === 'completed'),
         alreadyImported: importedLeadIds.has(l.id),
       });
@@ -385,7 +389,7 @@ export default function BalancePaie() {
     setRuleForm({
       mode: b?.mode || emp.remunerationType || 'mensuel',
       tauxHoraire: existingRule?.tauxHoraire || b?.tauxHoraire || 17.1,
-      tarifParModele: existingRule?.tarifParModele || b?.tarifParModele || 150,
+      tarifParModele: existingRule ? (Number(existingRule.tarifParModele) || 0) : (b?.tarifParModele ?? 0),
       salaireMensuel: Number(emp.salaireMensuel) || 0,
     });
     setRuleModalEmp(emp);
@@ -517,22 +521,41 @@ export default function BalancePaie() {
     const emp = activeEmployes.find(e => e.id === empId);
     const b = emp ? allBalances[emp.id] : undefined;
     setModelForm({
+      id: undefined,
+      createdAt: undefined,
       employeId: empId,
       date: `${selectedMois}-${String(new Date().getDate()).padStart(2, '0')}`.slice(0, 10),
       modeleName: '',
       client: '',
       typeTravail: 'patronage_complet',
       quantite: 1,
-      tarifUnitaire: b?.tarifParModele || 150,
+      tarifUnitaire: b?.tarifParModele && b.tarifParModele > 0 ? b.tarifParModele : 0,
       statut: 'valide',
       notes: '',
     });
     setShowAddModelModal(true);
   };
 
+  const openEditModelLog = (log: ModelisteWorkLog) => {
+    setModelForm({
+      id: log.id,
+      createdAt: log.createdAt,
+      employeId: log.employeId,
+      date: log.date,
+      modeleName: log.modeleName,
+      client: log.client || '',
+      typeTravail: log.typeTravail,
+      quantite: log.quantite || 1,
+      tarifUnitaire: log.tarifUnitaire || 0,
+      statut: log.statut,
+      notes: log.notes || '',
+    });
+    setShowAddModelModal(true);
+  };
+
   const handleSaveModelLog = async () => {
     if (!modelForm.employeId || !modelForm.modeleName.trim()) return;
-    // Automatically ensure employee rule is set to 'modele' if they aren't yet
+    // Automatically ensure employee rule is set to 'modele' (variable by default so each model has its own price)
     const targetEmp = activeEmployes.find(e => e.id === modelForm.employeId);
     if (targetEmp && allBalances[targetEmp.id]?.mode !== 'modele') {
       const rule = await savePayrollRule({
@@ -540,7 +563,7 @@ export default function BalancePaie() {
         employeId: targetEmp.id,
         mode: 'modele',
         tauxHoraire: allBalances[targetEmp.id]?.tauxHoraire || 17.1,
-        tarifParModele: Number(modelForm.tarifUnitaire) || 150,
+        tarifParModele: 0,
       });
       const updatedEmp = { ...targetEmp, remunerationType: 'modele' as const };
       const nextEmps = employes.map(e => (e.id === updatedEmp.id ? updatedEmp : e));
@@ -554,17 +577,24 @@ export default function BalancePaie() {
     }
 
     const saved = await saveModelisteWorkLog({
+      id: modelForm.id,
+      createdAt: modelForm.createdAt,
       employeId: modelForm.employeId,
       date: modelForm.date,
       modeleName: modelForm.modeleName.trim(),
       client: modelForm.client.trim() || 'Atelier',
       typeTravail: modelForm.typeTravail,
       quantite: Number(modelForm.quantite) || 1,
-      tarifUnitaire: Number(modelForm.tarifUnitaire) || 0,
+      tarifUnitaire: Math.max(0, Number(modelForm.tarifUnitaire) || 0),
       statut: modelForm.statut,
       notes: modelForm.notes.trim(),
     });
-    setExtras(prev => ({ ...prev, modelLogs: [saved, ...prev.modelLogs] }));
+    setExtras(prev => ({
+      ...prev,
+      modelLogs: modelForm.id
+        ? prev.modelLogs.map(m => (m.id === saved.id ? saved : m))
+        : [saved, ...prev.modelLogs],
+    }));
     setShowAddModelModal(false);
   };
 
@@ -577,7 +607,7 @@ export default function BalancePaie() {
         employeId: emp.id,
         mode: 'modele',
         tauxHoraire: allBalances[emp.id]?.tauxHoraire || 17.1,
-        tarifParModele: row.price || 150,
+        tarifParModele: 0,
       });
       const updatedEmp = { ...emp, remunerationType: 'modele' as const };
       const nextEmps = employes.map(e => (e.id === updatedEmp.id ? updatedEmp : e));
@@ -900,7 +930,7 @@ export default function BalancePaie() {
                                     title={isAr ? 'انقر لتغيير طريقة الحساب والسعر' : 'Changer le mode de calcul et tarif'}
                                   >
                                     {b.mode === 'horaire' && `⏱️ ${b.tauxHoraire} MAD/h`}
-                                    {b.mode === 'modele' && `✂️ ${b.tarifParModele} MAD/modèle`}
+                                    {b.mode === 'modele' && (b.tarifParModele > 0 ? `✂️ ${b.tarifParModele} MAD/modèle` : (isAr ? '✂️ متغير حسب الموديل' : '✂️ Prix variable / modèle'))}
                                     {b.mode !== 'horaire' && b.mode !== 'modele' && (isAr ? '📅 قار' : '📅 Mensuel')}
                                     <Edit2 className="w-2.5 h-2.5" />
                                   </button>
@@ -1111,7 +1141,7 @@ export default function BalancePaie() {
                       setRuleForm({
                         mode: 'horaire',
                         tauxHoraire: allBalances[emp.id]?.tauxHoraire || 17.1,
-                        tarifParModele: 150,
+                        tarifParModele: allBalances[emp.id]?.tarifParModele ?? 0,
                         salaireMensuel: emp.salaireMensuel || 0,
                       });
                       setRuleModalEmp(emp);
@@ -1306,7 +1336,7 @@ export default function BalancePaie() {
                         <div className={isAr ? 'text-right' : 'text-left'}>
                           <p className="font-black text-xs">{empName(emp)}</p>
                           <p className={`text-[10px] font-bold ${isSel ? 'text-violet-200' : 'text-slate-400'}`}>
-                            {b.mode === 'modele' ? `${b.tarifParModele} MAD/mod` : emp.poste}
+                            {b.mode === 'modele' ? (b.tarifParModele > 0 ? `${b.tarifParModele} MAD/mod` : (isAr ? 'متغير حسب الموديل' : 'Variable / modèle')) : emp.poste}
                           </p>
                         </div>
                         <div className={isAr ? 'text-left' : 'text-right'}>
@@ -1335,8 +1365,8 @@ export default function BalancePaie() {
                     if (emp) {
                       setRuleForm({
                         mode: 'modele',
-                        tauxHoraire: 17.1,
-                        tarifParModele: 150,
+                        tauxHoraire: allBalances[emp.id]?.tauxHoraire || 17.1,
+                        tarifParModele: 0,
                         salaireMensuel: emp.salaireMensuel || 0,
                       });
                       setRuleModalEmp(emp);
@@ -1370,7 +1400,7 @@ export default function BalancePaie() {
                               setRuleForm({
                                 mode: 'modele',
                                 tauxHoraire: selectedModBal.tauxHoraire,
-                                tarifParModele: 150,
+                                tarifParModele: 0,
                                 salaireMensuel: selectedModEmp.salaireMensuel || 0,
                               });
                               setRuleModalEmp(selectedModEmp);
@@ -1435,7 +1465,8 @@ export default function BalancePaie() {
                           [...selectedModBal.modelLogsValides, ...selectedModBal.modelLogsEnAttente]
                             .sort((a, b) => b.date.localeCompare(a.date))
                             .map(log => {
-                              const total = (log.quantite || 1) * (log.tarifUnitaire || selectedModBal.tarifParModele);
+                              const unitPrice = log.tarifUnitaire > 0 ? log.tarifUnitaire : selectedModBal.tarifParModele;
+                              const total = (log.quantite || 1) * unitPrice;
                               return (
                                 <tr key={log.id} className="hover:bg-slate-50">
                                   <td className="p-3 font-mono font-bold text-slate-600">{log.date}</td>
@@ -1449,7 +1480,18 @@ export default function BalancePaie() {
                                     </span>
                                   </td>
                                   <td className="p-3 text-center font-mono font-bold text-slate-700">
-                                    {log.quantite} × {log.tarifUnitaire} MAD
+                                    <button
+                                      onClick={() => openEditModelLog(log)}
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-violet-50 hover:text-violet-700 transition cursor-pointer"
+                                      title={isAr ? 'اضغط لتعديل ثمن هذا الموديل' : 'Cliquer pour modifier le prix de ce modèle'}
+                                    >
+                                      {unitPrice > 0 ? (
+                                        <span>{log.quantite} × {unitPrice} MAD</span>
+                                      ) : (
+                                        <span className="text-amber-600 font-black">{isAr ? '⚠️ حدد الثمن' : '⚠️ Définir prix'}</span>
+                                      )}
+                                      <Edit2 className="w-3 h-3 opacity-60" />
+                                    </button>
                                   </td>
                                   <td className="p-3 text-center font-black text-violet-700 tabular-nums">
                                     {total.toLocaleString()} MAD
@@ -1470,12 +1512,22 @@ export default function BalancePaie() {
                                     </button>
                                   </td>
                                   <td className="p-3 text-center">
-                                    <button
-                                      onClick={() => handleDeleteModelLog(log.id)}
-                                      className="p-1.5 text-slate-300 hover:text-rose-600 transition cursor-pointer"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    <div className="inline-flex items-center gap-1">
+                                      <button
+                                        onClick={() => openEditModelLog(log)}
+                                        className="p-1.5 text-slate-400 hover:text-violet-600 transition cursor-pointer"
+                                        title={isAr ? 'تعديل الموديل / الثمن' : 'Modifier modèle / prix'}
+                                      >
+                                        <Edit2 className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteModelLog(log.id)}
+                                        className="p-1.5 text-slate-300 hover:text-rose-600 transition cursor-pointer"
+                                        title={isAr ? 'حذف' : 'Supprimer'}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
                                   </td>
                                 </tr>
                               );
@@ -1768,16 +1820,55 @@ export default function BalancePaie() {
               )}
 
               {ruleForm.mode === 'modele' && (
-                <div>
-                  <label className="block text-[10px] font-black text-violet-600 uppercase mb-1.5">
-                    {isAr ? 'ثمن الموديل الافتراضي (درهم/موديل)' : 'Tarif par Modèle par défaut (MAD)'}
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-black text-violet-600 uppercase">
+                    {isAr ? 'تسعيرة الموديلات' : 'Tarification des Modèles'}
                   </label>
-                  <input
-                    type="number"
-                    value={ruleForm.tarifParModele}
-                    onChange={e => setRuleForm(prev => ({ ...prev, tarifParModele: parseFloat(e.target.value) || 0 }))}
-                    className="w-full bg-violet-50/50 border-2 border-violet-200 rounded-2xl p-3.5 text-lg font-black text-slate-900 outline-none focus:border-violet-500"
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRuleForm(prev => ({ ...prev, tarifParModele: 0 }))}
+                      className={`p-3 rounded-2xl border-2 text-xs font-black transition cursor-pointer ${
+                        ruleForm.tarifParModele === 0
+                          ? 'bg-violet-600 text-white border-violet-600 shadow-sm'
+                          : 'bg-slate-50 text-slate-700 border-slate-100 hover:border-violet-200'
+                      }`}
+                    >
+                      {isAr ? '✨ متغير حسب الموديل' : '✨ Variable par modèle'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRuleForm(prev => ({ ...prev, tarifParModele: prev.tarifParModele > 0 ? prev.tarifParModele : 150 }))}
+                      className={`p-3 rounded-2xl border-2 text-xs font-black transition cursor-pointer ${
+                        ruleForm.tarifParModele > 0
+                          ? 'bg-violet-600 text-white border-violet-600 shadow-sm'
+                          : 'bg-slate-50 text-slate-700 border-slate-100 hover:border-violet-200'
+                      }`}
+                    >
+                      {isAr ? '📌 ثمن مرجعي افتراضي' : '📌 Tarif par défaut'}
+                    </button>
+                  </div>
+
+                  {ruleForm.tarifParModele === 0 ? (
+                    <p className="text-[11px] font-bold text-violet-800 bg-violet-50 border border-violet-200 rounded-2xl p-3 leading-relaxed">
+                      {isAr
+                        ? 'كل موديل كيتحسب بالثمن الخاص ديالو (كتحددو ملي كتسجل الموديل أو كتجيبو من الـ ERP وتقدر تبدلو أي وقت).'
+                        : 'Chaque modèle a son propre prix (saisi au moment du pointage ou importé depuis l’ERP, modifiable à tout moment).'}
+                    </p>
+                  ) : (
+                    <div>
+                      <label className="block text-[10px] font-black text-violet-600 uppercase mb-1.5">
+                        {isAr ? 'ثمن مرجعي مبدئي (درهم/موديل — قابل للتعديل لكل موديل)' : 'Tarif indicatif par défaut (MAD — modifiable par modèle)'}
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={ruleForm.tarifParModele}
+                        onChange={e => setRuleForm(prev => ({ ...prev, tarifParModele: Math.max(0, parseFloat(e.target.value) || 0) }))}
+                        className="w-full bg-violet-50/50 border-2 border-violet-200 rounded-2xl p-3.5 text-lg font-black text-slate-900 outline-none focus:border-violet-500"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2039,7 +2130,11 @@ export default function BalancePaie() {
         <div className="fixed inset-0 z-[220] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-black text-base text-slate-900">{isAr ? 'تسجيل موديل في بوانتاج الموديليست' : 'Pointer un Modèle (Modéliste)'}</h3>
+              <h3 className="font-black text-base text-slate-900">
+                {modelForm.id
+                  ? (isAr ? 'تعديل الموديل وثمنه' : 'Modifier le Modèle & son Tarif')
+                  : (isAr ? 'تسجيل موديل في بوانتاج الموديليست' : 'Pointer un Modèle (Modéliste)')}
+              </h3>
               <button onClick={() => setShowAddModelModal(false)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-6 space-y-3.5">
@@ -2098,14 +2193,37 @@ export default function BalancePaie() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-violet-600 uppercase mb-1">{isAr ? 'الثمن للموديل (درهم)' : 'Tarif / Modèle (MAD)'}</label>
+                  <label className="block text-[10px] font-black text-violet-600 uppercase mb-1">{isAr ? 'ثمن هذا الموديل (درهم)' : 'Prix de ce Modèle (MAD)'}</label>
                   <input
                     type="number"
-                    value={modelForm.tarifUnitaire}
-                    onChange={e => setModelForm(prev => ({ ...prev, tarifUnitaire: parseFloat(e.target.value) || 0 }))}
+                    min={0}
+                    value={modelForm.tarifUnitaire || ''}
+                    onChange={e => setModelForm(prev => ({ ...prev, tarifUnitaire: Math.max(0, parseFloat(e.target.value) || 0) }))}
+                    placeholder="0"
                     className="w-full bg-violet-50 border border-violet-200 rounded-xl p-2.5 text-sm font-black text-violet-900"
                   />
                 </div>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1">
+                <div className="flex flex-wrap gap-1.5">
+                  {[80, 100, 150, 200, 250, 300].map(preset => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setModelForm(prev => ({ ...prev, tarifUnitaire: preset }))}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-black cursor-pointer transition ${
+                        modelForm.tarifUnitaire === preset
+                          ? 'bg-violet-600 text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700'
+                      }`}
+                    >
+                      {preset} DH
+                    </button>
+                  ))}
+                </div>
+                <span className="text-xs font-black text-violet-700 tabular-nums">
+                  {isAr ? 'المجموع:' : 'Total:'} {((modelForm.quantite || 1) * (modelForm.tarifUnitaire || 0)).toLocaleString()} MAD
+                </span>
               </div>
             </div>
             <div className="p-6 bg-slate-50 flex gap-3">
@@ -2113,7 +2231,9 @@ export default function BalancePaie() {
                 {isAr ? 'إلغاء' : 'Annuler'}
               </button>
               <button onClick={handleSaveModelLog} className="flex-1 py-3 bg-violet-600 text-white rounded-2xl text-xs font-black shadow-lg cursor-pointer">
-                {isAr ? 'تسجيل الموديل ✓' : 'Enregistrer Modèle ✓'}
+                {modelForm.id
+                  ? (isAr ? 'حفظ التعديل ✓' : 'Mettre à jour ✓')
+                  : (isAr ? 'تسجيل الموديل ✓' : 'Enregistrer Modèle ✓')}
               </button>
             </div>
           </div>

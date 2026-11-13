@@ -28,8 +28,11 @@ import {
   MapPin,
   Phone,
   Mail,
-  ShieldCheck
+  ShieldCheck,
+  Printer,
+  FileText
 } from 'lucide-react';
+import FicheTechniqueModelisteModal, { printFicheTechniqueModeliste } from '../components/FicheTechniqueModelisteModal';
 import { useLang } from '../contexts/LangContext';
 import {
   FicheTechnique,
@@ -224,6 +227,35 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [copiedRib, setCopiedRib] = useState(false);
+  const [techPackItem, setTechPackItem] = useState<ModelItem | null>(null);
+
+  const getMatchingFiche = (mItem: ModelItem | null): FicheTechnique | undefined => {
+    if (!mItem) return undefined;
+    if (mItem.fiche) return mItem.fiche;
+    const normItemModele = normalizeName(mItem.modele);
+    const normItemClient = normalizeName(mItem.client);
+    return fiches.find(f => {
+      const normFicheModele = normalizeName(f.modele);
+      const normFicheClient = normalizeName(f.client);
+      return (
+        (normFicheModele === normItemModele || (normFicheModele && normItemModele && (normFicheModele.includes(normItemModele) || normItemModele.includes(normFicheModele)))) &&
+        (!normItemClient || !normFicheClient || normFicheClient === normItemClient || normFicheClient.includes(normItemClient) || normItemClient.includes(normFicheClient))
+      );
+    });
+  };
+
+  const handleSaveModelisteTechnicalNotes = async (leadId: string, techNotes: string) => {
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead) return;
+    const ext = parseLeadDetailsJson(lead.details);
+    const newDetails = {
+      ...ext,
+      patronageNotes: techNotes
+    };
+    await saveRecord('leads', { ...lead, details: JSON.stringify(newDetails) }, true);
+    showToast(isAr ? 'تم حفظ الملاحظات التقنية بنجاح' : 'Notes techniques enregistrées avec succès');
+    await fetchData();
+  };
 
   const showToast = (text: string, isError = false) => {
     setToast({ text, isError });
@@ -1460,6 +1492,14 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                               {item.deadlineDate ? `${item.deadlineDate} (${dl.label})` : dl.label}
                             </span>
                             <button
+                              onClick={() => setTechPackItem(item)}
+                              className="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                              title={isAr ? 'البطاقة التقنية' : 'Fiche Tech'}
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">{isAr ? 'البطاقة' : 'Fiche Tech'}</span>
+                            </button>
+                            <button
                               onClick={() => handleUpdateWorkStatus(item, 'termine')}
                               disabled={actionPendingId === item.id}
                               className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer"
@@ -1592,6 +1632,26 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                   </div>
 
                   <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTechPackItem(item)}
+                        className="py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer border border-indigo-200"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>{isAr ? 'البطاقة التقنية' : 'Fiche Tech (Pro)'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => printFicheTechniqueModeliste(item, getMatchingFiche(item))}
+                        className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200"
+                        title={isAr ? 'طباعة' : 'Imprimer'}
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        <span>{isAr ? 'طباعة' : 'Imprimer'}</span>
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => openPricingModal(item)}
                       disabled={actionPendingId === item.id}
@@ -1725,6 +1785,25 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
                     {/* Work Action Controls */}
                     <div className="flex flex-wrap items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setTechPackItem(item)}
+                        className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-sm transition"
+                        title={isAr ? 'البطاقة التقنية للموديليست (بدون أسعار تجارية)' : 'Fiche Technique Modéliste Pro (Sans prix)'}
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>{isAr ? 'البطاقة التقنية (Pro)' : 'Fiche Tech (Pro)'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => printFicheTechniqueModeliste(item, getMatchingFiche(item))}
+                        className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer transition"
+                        title={isAr ? 'طباعة البطاقة التقنية' : 'Imprimer Fiche Tech'}
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
+
                       {isAdmin && (
                         <button
                           onClick={() => openValidateModal(item)}
@@ -2220,16 +2299,27 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                {pricingItem.photo && (
-                  <img src={pricingItem.photo} alt={pricingItem.modele} className="w-14 h-14 rounded-xl object-cover" />
-                )}
-                <div>
-                  <p className="font-black text-slate-900">{pricingItem.modele}</p>
-                  <p className="text-xs font-semibold text-slate-500">
-                    {pricingItem.client} • {pricingItem.quantity || 1} {isAr ? 'قطعة' : 'pcs'}
-                  </p>
+              <div className="flex items-center justify-between gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-3 min-w-0">
+                  {pricingItem.photo && (
+                    <img src={pricingItem.photo} alt={pricingItem.modele} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                  )}
+                  <div className="truncate">
+                    <p className="font-black text-slate-900 truncate">{pricingItem.modele}</p>
+                    <p className="text-xs font-semibold text-slate-500">
+                      {pricingItem.client} • {pricingItem.quantity || 1} {isAr ? 'قطعة' : 'pcs'}
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setTechPackItem(pricingItem)}
+                  className="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1.5 border border-indigo-200 cursor-pointer"
+                  title={isAr ? 'معاينة البطاقة التقنية' : 'Fiche Tech'}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{isAr ? 'البطاقة التقنية' : 'Fiche Tech'}</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2475,6 +2565,15 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           </div>
         </div>
       )}
+      {/* ─── Fiche Technique Modéliste Pro Modal (Without Commercial Prices) ─── */}
+      <FicheTechniqueModelisteModal
+        isOpen={Boolean(techPackItem)}
+        onClose={() => setTechPackItem(null)}
+        item={techPackItem}
+        matchingFiche={getMatchingFiche(techPackItem)}
+        onSaveTechnicalNotes={handleSaveModelisteTechnicalNotes}
+        isAr={isAr}
+      />
     </div>
   );
 }

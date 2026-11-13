@@ -530,7 +530,7 @@ export const DEFAULT_PERMISSIONS: RolePermMap = {
   client: ['portail_client'],
   worker: ['worker_portal'],
   coupeur: ['ordres', 'patronage_ai'],
-  modeliste: ['evaluation_patronage', 'fiches', 'ai_space', 'atelier_calculator', 'suivi_modeliste'],
+  modeliste: ['evaluation_patronage', 'suivi_modeliste'],
   controleur: ['scan_production', 'controle_qualite', 'worker_portal'],
   agent_pointage: ['pointage', 'rh', 'balance_paie'],
   partenaire: ['partenaire_portal'],
@@ -538,7 +538,7 @@ export const DEFAULT_PERMISSIONS: RolePermMap = {
   commercial: ['commercial_portal', 'crm', 'demandes', 'agenda', 'visio', 'ai_space', 'devis', 'recus']
 };
 
-const PERMISSIONS_VERSION = 16;
+const PERMISSIONS_VERSION = 17;
 
 export function loadPermissions(): RolePermMap {
   try {
@@ -563,6 +563,12 @@ export function loadPermissions(): RolePermMap {
           if (parsed[k]) (result as any)[k] = parsed[k];
         });
       }
+    }
+
+    // 2b. Strict Role Security: Modéliste must NEVER have access to global fiches techniques or commercial pricing
+    if (result.modeliste) {
+      result.modeliste = result.modeliste.filter(p => p !== 'fiches' && p !== 'atelier_calculator');
+      if (!result.modeliste.includes('suivi_modeliste')) result.modeliste.push('suivi_modeliste');
     }
 
     // 3. Ensure admin always has access to core new portals if they were missing in saved profiles
