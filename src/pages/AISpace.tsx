@@ -406,6 +406,21 @@ function simplifyConsumption(raw?: string): string {
   return s.trim();
 }
 
+// Normalizes cost ranges to always be ordered min – max (e.g., "50 - 30 MAD" -> "30 – 50 MAD")
+function normalizeCostRange(str?: string): string {
+  if (!str) return '—';
+  const match = str.match(/(\d+)\s*[-–—]\s*(\d+)/);
+  if (match) {
+    const n1 = parseInt(match[1], 10);
+    const n2 = parseInt(match[2], 10);
+    const min = Math.min(n1, n2);
+    const max = Math.max(n1, n2);
+    const suffix = str.includes('MAD') ? ' MAD' : '';
+    return `${min} – ${max}${suffix}`;
+  }
+  return str;
+}
+
 // Three-Tier Precise Costing Calculation Engine for Moroccan Garment & Manufacturing Market
 function computeThreeTierCosting(result: any) {
   const pieces = result?.pieces || [];
@@ -2090,12 +2105,13 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     if (!analysisResult) return;
     let formatted = newConso.trim();
     if (!formatted) return;
-    const num = parseFloat(formatted.replace(/[^0-9.]/g, ''));
-    if (!isNaN(num) && num > 0 && !formatted.toLowerCase().includes('m')) {
+    const normalized = formatted.replace(',', '.');
+    const num = parseFloat(normalized.replace(/[^0-9.]/g, ''));
+    if (!isNaN(num) && num > 0) {
       formatted = `${num.toFixed(2)}m`;
     }
 
-    const parseNum = (c: string) => parseFloat((c || '').replace(/[^0-9.]/g, '')) || 0;
+    const parseNum = (c: string) => parseFloat(String(c || '').replace(',', '.').replace(/[^0-9.]/g, '')) || 0;
 
     if (analysisResult.pieces && analysisResult.pieces.length > 0) {
       const updatedPieces = [...analysisResult.pieces];
@@ -5629,13 +5645,14 @@ ${userMessage}
                             <div className="flex items-center gap-2 flex-wrap">
                               {/* Consumption (Métrage) badge with Inline Edit */}
                               {editingPieceConsoIdx === safeIdx ? (
-                                <div className="flex items-center gap-1 bg-white px-2 py-0.5 rounded-xl border-2 border-indigo-500 shadow-sm">
+                                <div className="flex items-center gap-1 bg-white px-2 py-0.5 rounded-xl border-2 border-indigo-600 shadow-md animate-in fade-in">
                                   <span className="text-xs">✂️</span>
                                   <input
                                     type="text"
                                     autoFocus
                                     value={tempPieceConso}
                                     onChange={(e) => setTempPieceConso(e.target.value)}
+                                    onFocus={(e) => e.target.select()}
                                     onKeyDown={(e) => {
                                       if (e.key === 'Enter') {
                                         handleUpdatePieceConsumption(safeIdx, tempPieceConso);
@@ -5644,9 +5661,10 @@ ${userMessage}
                                         setEditingPieceConsoIdx(null);
                                       }
                                     }}
-                                    className="w-20 px-1 py-0.5 text-xs font-black text-indigo-950 font-mono focus:outline-none"
-                                    placeholder="ex: 3.20m"
+                                    className="w-16 px-1.5 py-0.5 text-xs font-black text-indigo-950 font-mono focus:outline-none bg-indigo-50/70 rounded text-center"
+                                    placeholder="2.80"
                                   />
+                                  <span className="text-xs font-black text-indigo-600">m</span>
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -5672,13 +5690,15 @@ ${userMessage}
                                   type="button"
                                   onClick={() => {
                                     setEditingPieceConsoIdx(safeIdx);
-                                    setTempPieceConso(p.consumption || '1.50m');
+                                    setTempPieceConso((p.consumption || '1.50m').replace('m', ''));
                                   }}
-                                  className="px-2.5 py-1 bg-white hover:bg-indigo-50 text-indigo-700 text-xs font-black rounded-xl border border-indigo-200/80 hover:border-indigo-400 shadow-xs flex items-center gap-1 cursor-pointer transition-all active:scale-95 group"
+                                  className="px-2.5 py-1 bg-white hover:bg-indigo-50 text-indigo-700 hover:text-indigo-900 text-xs font-black rounded-xl border-2 border-indigo-200/90 hover:border-indigo-500 shadow-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 group"
                                   title={isAr ? 'انقر لتعديل ميتراج الثوب (Consommation)' : 'Cliquer pour modifier le métrage'}
                                 >
                                   <span>✂️ {p.consumption || '1.50m'}</span>
-                                  <Pencil className="w-3 h-3 text-indigo-400 group-hover:text-indigo-600 transition-colors" />
+                                  <span className="p-0.5 rounded-md bg-indigo-100/80 group-hover:bg-indigo-200 text-indigo-700 transition-colors flex items-center justify-center">
+                                    <Pencil className="w-3 h-3" />
+                                  </span>
                                 </button>
                               )}
 
@@ -5700,7 +5720,7 @@ ${userMessage}
                                       }
                                     }}
                                     className="w-24 px-1 py-0.5 text-xs font-black text-emerald-950 font-mono focus:outline-none"
-                                    placeholder="ex: 40 - 20 MAD"
+                                    placeholder="ex: 30 - 50 MAD"
                                   />
                                   <button
                                     type="button"
@@ -5729,11 +5749,11 @@ ${userMessage}
                                     setEditingPieceCostIdx(safeIdx);
                                     setTempPieceCost(p.costEstimate || (analysisResult.pieces?.length === 1 && customCostOverride) || '');
                                   }}
-                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-xs flex items-center gap-1 cursor-pointer transition-all active:scale-95"
+                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 group"
                                   title={isAr ? 'تعديل ثمن الفصالة والخياطة' : 'Modifier le coût façon'}
                                 >
-                                  <span>💰 {p.costEstimate || (analysisResult.pieces?.length === 1 && customCostOverride) || '—'}</span>
-                                  <Pencil className="w-3 h-3 opacity-75" />
+                                  <span>💰 {normalizeCostRange(p.costEstimate || (analysisResult.pieces?.length === 1 && customCostOverride) || '')}</span>
+                                  <Pencil className="w-3 h-3 opacity-80 group-hover:opacity-100" />
                                 </button>
                               )}
 
