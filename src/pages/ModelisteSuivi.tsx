@@ -99,6 +99,7 @@ export interface ModelItem {
   adminCounterPrice?: number;
   patronageNegotiationNotes?: string;
   patronageNegotiationStatus?: string;
+  modelisteGradation?: Record<string, Record<string, any>>;
   lead?: Lead;
   fiche?: FicheTechnique;
 }
@@ -257,6 +258,33 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     };
     await saveRecord('leads', { ...lead, details: JSON.stringify(newDetails) }, true);
     showToast(isAr ? 'تم حفظ الملاحظات التقنية بنجاح' : 'Notes techniques enregistrées avec succès');
+    await fetchData();
+  };
+
+  const handleSaveModelisteMeasurements = async (
+    itemId: string,
+    measurements: any,
+    sourceType: 'lead' | 'fiche'
+  ) => {
+    if (sourceType === 'lead') {
+      const lead = leads.find(l => l.id === itemId);
+      if (!lead) return;
+      const ext = parseLeadDetailsJson(lead.details);
+      const newDetails = {
+        ...ext,
+        modelisteGradation: measurements
+      };
+      await saveRecord('leads', { ...lead, details: JSON.stringify(newDetails) }, true);
+    } else {
+      const fiche = fiches.find(f => f.id === itemId);
+      if (!fiche) return;
+      const updatedFiche: any = {
+        ...fiche,
+        modelisteGradation: measurements
+      };
+      await saveRecord('fiches_techniques', updatedFiche, true);
+    }
+    showToast(isAr ? 'تم حفظ وتحديث جدول القياسات بنجاح!' : 'Tableau de mesures enregistré avec succès !');
     await fetchData();
   };
 
@@ -501,6 +529,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         patronageNegotiationStatus: ext.patronageNegotiationStatus || '',
         modelisteId: ext.modelisteId,
         modelisteName: ext.modelisteName,
+        modelisteGradation: ext.modelisteGradation || ext.customMesures,
         lead
       });
     });
@@ -548,6 +577,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         workStatus: cmd && ['terminé', 'livré'].includes(cmd.statut) ? 'termine' : 'a_faire',
         modelisteId: fiche.modelisteId,
         modelisteName: modUser?.nom,
+        modelisteGradation: (fiche as any).modelisteGradation,
         fiche
       });
     });
@@ -2618,6 +2648,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         item={techPackItem}
         matchingFiche={getMatchingFiche(techPackItem)}
         onSaveTechnicalNotes={handleSaveModelisteTechnicalNotes}
+        onSaveMeasurements={handleSaveModelisteMeasurements}
         isAr={isAr}
       />
     </div>

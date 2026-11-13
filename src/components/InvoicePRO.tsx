@@ -389,8 +389,6 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
             : 'TVA non applicable — Article 91 du Code Général des Impôts (Régime de l\'Auto-Entrepreneur)'}
         </p>
       </div>
-        </p>
-      </div>
     </div>
   );
 };

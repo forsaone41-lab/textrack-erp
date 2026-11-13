@@ -592,6 +592,7 @@ export default function FicheTechniqueModelisteModal({
   item,
   matchingFiche,
   onSaveTechnicalNotes,
+  onSaveMeasurements,
   isAr = false
 }: FicheTechniqueModelisteModalProps) {
   const [activeTab, setActiveTab] = useState<'visuel' | 'mesures' | 'confection'>('visuel');
@@ -600,10 +601,93 @@ export default function FicheTechniqueModelisteModal({
   const [savedNotesSuccess, setSavedNotesSuccess] = useState(false);
 
   const category = useMemo(() => detectGarmentCategory(item?.modele), [item?.modele]);
-  const catMeasurements = useMemo(
+  const defaultMeasurements = useMemo(
     () => GARMENT_DEFAULT_MEASUREMENTS[category] || GARMENT_DEFAULT_MEASUREMENTS.robe,
     [category]
   );
+
+  const [measurements, setMeasurements] = useState<Record<string, Record<string, any>>>(() => {
+    if (item?.modelisteGradation) return JSON.parse(JSON.stringify(item.modelisteGradation));
+    try {
+      const cached = localStorage.getItem(`textrack_modeliste_meas_${item?.id}`);
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+    return JSON.parse(JSON.stringify(defaultMeasurements));
+  });
+
+  const [isEditingMesures, setIsEditingMesures] = useState(false);
+  const [savingMesures, setSavingMesures] = useState(false);
+  const [savedMesuresSuccess, setSavedMesuresSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!item) return;
+    setNotes(item.patronageNotes || '');
+    if (item.modelisteGradation) {
+      setMeasurements(JSON.parse(JSON.stringify(item.modelisteGradation)));
+      return;
+    }
+    try {
+      const cached = localStorage.getItem(`textrack_modeliste_meas_${item.id}`);
+      if (cached) {
+        setMeasurements(JSON.parse(cached));
+        return;
+      }
+    } catch (e) {}
+    setMeasurements(JSON.parse(JSON.stringify(defaultMeasurements)));
+  }, [item?.id, item?.modelisteGradation, defaultMeasurements]);
+
+  const handleMeasurementChange = (size: string, key: string, val: string) => {
+    const num = parseFloat(val);
+    setMeasurements(prev => ({
+      ...prev,
+      [size]: {
+        ...(prev[size] || {}),
+        [key]: isNaN(num) ? val : num
+      }
+    }));
+  };
+
+  const handleSaveMeasurements = async () => {
+    if (!item) return;
+    setSavingMesures(true);
+    try {
+      try {
+        localStorage.setItem(`textrack_modeliste_meas_${item.id}`, JSON.stringify(measurements));
+      } catch (e) {}
+
+      if (onSaveMeasurements) {
+        await onSaveMeasurements(item.id, measurements, item.sourceType);
+      }
+      setSavedMesuresSuccess(true);
+      setIsEditingMesures(false);
+      setTimeout(() => setSavedMesuresSuccess(false), 2500);
+    } finally {
+      setSavingMesures(false);
+    }
+  };
+
+  const handleResetMeasurements = () => {
+    if (window.confirm(isAr ? 'هل أنت متأكد من استرجاع جدول القياسات المعيارية الافتراضية؟' : 'Rétablir les mesures standards par défaut ?')) {
+      const def = JSON.parse(JSON.stringify(defaultMeasurements));
+      setMeasurements(def);
+      try {
+        localStorage.removeItem(`textrack_modeliste_meas_${item?.id}`);
+      } catch (e) {}
+      if (onSaveMeasurements && item) {
+        onSaveMeasurements(item.id, def, item.sourceType);
+      }
+      setIsEditingMesures(false);
+    }
+  };
+
+  const hasCustomGradation = useMemo(() => {
+    if (item?.modelisteGradation) return true;
+    try {
+      if (localStorage.getItem(`textrack_modeliste_meas_${item?.id}`)) return true;
+    } catch (e) {}
+    return false;
+  }, [item?.id, item?.modelisteGradation, savedMesuresSuccess]);
+
   const safeClientNotes = useMemo(() => sanitizeNotesForModeliste(item?.clientNotes), [item?.clientNotes]);
 
   if (!isOpen || !item) return null;
@@ -667,7 +751,7 @@ export default function FicheTechniqueModelisteModal({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => printFicheTechniqueModeliste(item, matchingFiche)}
+              onClick={() => printFicheTechniqueModeliste(item, matchingFiche, isAr, measurements)}
               className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-md"
               title={isAr ? 'طباعة / تصدير PDF' : 'Imprimer / Exporter PDF'}
             >
@@ -822,18 +906,86 @@ export default function FicheTechniqueModelisteModal({
           {/* TAB 2: TABLEAU DE MESURES */}
           {activeTab === 'mesures' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-3 bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100">
                 <div>
-                  <h3 className="font-black text-slate-900 text-sm">
-                    {isAr ? 'جدول القياسات الصناعية والتدريج (Gradation)' : 'Tableau de Mesures & Gradation Industrielle'}
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-slate-900 text-sm">
+                      {isAr ? 'جدول القياسات الصناعية والتدريج (Gradation)' : 'Tableau de Mesures & Gradation Industrielle'}
+                    </h3>
+                    {hasCustomGradation && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black border border-emerald-300">
+                        {isAr ? '✨ قياسات معدلة ومعتمدة من الموديليست' : '✨ Ajusté & Validé par le modéliste'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
                     {isAr
-                      ? 'القياسات بالسنتيمتر (cm) للموديل من المقاس XS إلى 2XL مع نسبة السماح المعيارية.'
-                      : 'Valeurs standard en cm du XS au 2XL avec tolérance industrielle.'}
+                      ? 'القياسات بالسنتيمتر (cm) للموديل من المقاس XS إلى 2XL مع إمكانية التعديل والحفظ المباشر.'
+                      : 'Valeurs en cm du XS au 2XL. Cliquez sur "Modifier" pour ajuster chaque mesure selon le modèle.'}
                   </p>
                 </div>
+
+                <div className="flex items-center gap-2">
+                  {isEditingMesures ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleSaveMeasurements}
+                        disabled={savingMesures}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer disabled:opacity-50"
+                      >
+                        {savedMesuresSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                        <span>{savingMesures ? (isAr ? 'جاري الحفظ...' : 'Enregistrement...') : (isAr ? 'حفظ القياسات' : 'Enregistrer')}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleResetMeasurements}
+                        className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+                        title={isAr ? 'استرجاع القياسات الافتراضية' : 'Rétablir valeurs par défaut'}
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">{isAr ? 'استرجاع الافتراضي' : 'Rétablir'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingMesures(false)}
+                        className="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer"
+                      >
+                        {isAr ? 'إلغاء' : 'Annuler'}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingMesures(true)}
+                        className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>{isAr ? 'تعديل القياسات والتدريج' : 'Modifier les Mesures'}</span>
+                      </button>
+                      {hasCustomGradation && (
+                        <button
+                          type="button"
+                          onClick={handleResetMeasurements}
+                          className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+                          title={isAr ? 'استرجاع القياسات الافتراضية' : 'Rétablir valeurs par défaut'}
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">{isAr ? 'استرجاع الافتراضي' : 'Rétablir'}</span>
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
+
+              {savedMesuresSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{isAr ? 'تم حفظ القياسات وتثبيتها بنجاح للملف والطباعة PDF!' : 'Mesures enregistrées et appliquées au dossier et au PDF !'}</span>
+                </div>
+              )}
 
               <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                 <table className="w-full text-xs">
@@ -854,10 +1006,37 @@ export default function FicheTechniqueModelisteModal({
                         <td className="py-2.5 px-4 font-bold text-slate-900">{row.label}</td>
                         <td className="py-2.5 px-2 text-center text-slate-400 font-mono text-[11px]">{row.tol}</td>
                         {sizesList.map(sz => {
-                          const val = catMeasurements[sz]?.[row.key as keyof typeof catMeasurements['S']] || '—';
+                          const val = measurements[sz]?.[row.key as keyof typeof defaultMeasurements['S']] ?? '—';
+                          const defaultVal = defaultMeasurements[sz]?.[row.key as keyof typeof defaultMeasurements['S']];
+                          const isModified = defaultVal !== undefined && Number(val) !== Number(defaultVal) && val !== '—';
+
                           return (
-                            <td key={sz} className="py-2.5 px-3 text-center font-black text-slate-800">
-                              {val}
+                            <td key={sz} className={`py-2 px-2 text-center ${isModified ? 'bg-indigo-50/60 font-black text-indigo-900' : 'text-slate-800 font-black'}`}>
+                              {isEditingMesures ? (
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  value={val === '—' ? '' : val}
+                                  placeholder="—"
+                                  onChange={e => handleMeasurementChange(sz, row.key, e.target.value)}
+                                  className={`w-14 sm:w-16 py-1 px-1 text-center font-mono font-black text-xs rounded-lg border focus:outline-none focus:ring-2 transition-all ${
+                                    isModified
+                                      ? 'bg-white border-indigo-500 text-indigo-950 focus:ring-indigo-300'
+                                      : 'bg-white border-slate-300 text-slate-900 focus:border-indigo-500 focus:ring-indigo-200'
+                                  }`}
+                                />
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setIsEditingMesures(true)}
+                                  className={`px-2 py-1 rounded-lg transition-all hover:bg-indigo-100 hover:text-indigo-800 cursor-pointer ${
+                                    isModified ? 'bg-indigo-100 text-indigo-900 font-black' : ''
+                                  }`}
+                                  title={isAr ? 'انقر لتعديل هذا القياس' : 'Cliquer pour modifier'}
+                                >
+                                  {val}
+                                </button>
+                              )}
                             </td>
                           );
                         })}
