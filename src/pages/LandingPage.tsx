@@ -269,6 +269,7 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const heroVideoRef = React.useRef<HTMLVideoElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(true);
+  const [videoMuted, setVideoMuted] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [videoVisible, setVideoVisible] = useState(false);
@@ -362,8 +363,10 @@ export default function LandingPage() {
       const visibleTop = Math.max(0, Math.min(rect.bottom, vh) - Math.max(rect.top, 0));
       const visibleRatio = Math.max(0, Math.min(1, visibleTop / rect.height));
       // Fade volume: full when ≥60% visible, zero when <10% visible
-      const vol = visibleRatio >= 0.6 ? 1 : visibleRatio < 0.1 ? 0 : (visibleRatio - 0.1) / 0.5;
-      video.volume = Math.max(0, Math.min(1, vol));
+      try {
+        const vol = visibleRatio >= 0.6 ? 1 : visibleRatio < 0.1 ? 0 : (visibleRatio - 0.1) / 0.5;
+        video.volume = Math.max(0, Math.min(1, vol));
+      } catch (_) {}
       // Pause video when out of view, resume when back in view
       if (visibleRatio < 0.1 && !video.paused) {
         video.pause();
@@ -462,6 +465,9 @@ export default function LandingPage() {
               )}
             </div>
             
+            <Link to="/portal" className="text-[12px] sm:text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors whitespace-nowrap shrink-0">
+              {isAr ? 'بوابة الزبون 📦' : 'Portail Client 📦'}
+            </Link>
             <Link to="/login" className="text-[12px] sm:text-sm font-medium text-slate-800 hover:text-black transition-colors whitespace-nowrap shrink-0">
               {t.navLogin}
             </Link>
@@ -535,6 +541,7 @@ export default function LandingPage() {
                 ref={heroVideoRef}
                 autoPlay
                 loop
+                muted
                 playsInline
                 controls
                 className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem]"
