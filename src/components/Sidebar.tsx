@@ -638,25 +638,14 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                       <button
                         type="button"
                         onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-all border cursor-pointer ${
+                        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all border cursor-pointer shrink-0 ${
                           workspaceDropdownOpen
-                            ? 'bg-indigo-600/30 border-indigo-500/50 text-white shadow-xs'
-                            : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-300 hover:text-white'
+                            ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-500/25 scale-105'
+                            : 'bg-white/5 hover:bg-white/10 text-indigo-400 hover:text-white border-white/10'
                         }`}
                         title={isAr ? 'مساحة العمل: BEYACREATIVE PRODUCTION' : 'Espace de travail: BEYACREATIVE PRODUCTION'}
                       >
-                        <div className="w-5 h-5 rounded-md bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
-                          <Briefcase className="w-3 h-3" />
-                        </div>
-                        <div className="flex flex-col items-start text-left leading-none">
-                          <span className="text-[7.5px] uppercase font-bold text-slate-400 tracking-wider">
-                            {isAr ? 'مساحة العمل' : 'ESPACE'}
-                          </span>
-                          <span className="text-[10px] font-black text-white truncate max-w-[80px]">
-                            PRODUCTION
-                          </span>
-                        </div>
-                        <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${workspaceDropdownOpen ? 'rotate-180' : ''}`} />
+                        <Briefcase className="w-4 h-4" />
                       </button>
 
                       {/* Dropdown Opening Upwards */}
