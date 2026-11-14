@@ -90,7 +90,8 @@ export function sanitizeNotesForModeliste(rawNotes?: string | null): string {
     if (/^nom\s*:\s*(n\/a|none|null|\s*)$/i.test(trimmed)) continue;
     if (/^budget\s*:\s*[^\r\n]+/i.test(trimmed)) continue;
     if (/^délai\s*:\s*(normal|urgent|standard|\s*)$/i.test(trimmed)) continue;
-    if (/^modèle:\s*[^|]+\|\s*qté:\s*\d+$/i.test(trimmed)) continue;
+    if (/^modèle:\s*[^|]+(\|\s*qté\s*:\s*\d+)?$/i.test(trimmed)) continue;
+    if (/^(?:qt[ée]|quantit[ée]|quantity)\s*:\s*\d+/i.test(trimmed)) continue;
     if (/^tailles:\s*(\{\}|\[\]|\s*)$/i.test(trimmed)) continue;
     if (/^détails:\s*$/i.test(trimmed)) continue;
     if (/^notes:\s*$/i.test(trimmed)) continue;
@@ -104,7 +105,7 @@ export function sanitizeNotesForModeliste(rawNotes?: string | null): string {
           ([_, v]) => v !== '' && v !== null && v !== undefined && v !== 0 && v !== '0'
         );
         if (entries.length > 0) {
-          cleaned.push(`Tailles demandées : ${entries.map(([k, v]) => `${k} (${v} pcs)`).join(', ')}`);
+          cleaned.push(`Tailles demandées : ${entries.map(([k]) => k).join(', ')}`);
         }
       } catch {
         // ignore malformed sizes JSON
@@ -122,6 +123,7 @@ export function sanitizeNotesForModeliste(rawNotes?: string | null): string {
         if (/prix/i.test(p)) return false;
         if (/tarif/i.test(p)) return false;
         if (/devis/i.test(p)) return false;
+        if (/^(?:qt[ée]|quantit[ée]|quantity)\s*:/i.test(p)) return false;
         if (/\b\d+[\s.,\-]*\d*\s*(MAD|DH|Dhs|درهم|EUR|€|\$|USD)\b/i.test(p)) return false;
         return true;
       });
@@ -138,6 +140,9 @@ export function sanitizeNotesForModeliste(rawNotes?: string | null): string {
       .replace(/\btarif\s*[:=\-]?\s*[^\r\n,;]+/gi, '')
       .replace(/\bdevis\s*[:=\-]?\s*[^\r\n,;]+/gi, '')
       .replace(/\b\d+[\s.,\-]*\d*\s*(MAD|DH|Dhs|درهم|EUR|€|\$|USD)\b/gi, '')
+      .replace(/\s*\(\s*\d+\s*(?:pcs?|pi[èe]ces?|قطعة)?\s*\)/gi, '')
+      .replace(/(?:^|[|\s,;])(?:qt[ée]|quantit[ée]|quantity)\s*[:=\-]?\s*\d+\s*(?:pcs?|pi[èe]ces?|قطعة)?/gi, '')
+      .replace(/\b\d+\s*(?:pcs|pi[èe]ces?)\b/gi, '')
       .replace(/\|\s*\|\s*/g, ' | ')
       .trim();
 

@@ -511,7 +511,20 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         prixEchantillon: echPrice,
         patronageStatus: ext.patronageStatus === 'priced' || patPrice > 0 ? 'priced' : 'requested',
         patronageNotes: ext.patronageNotes || '',
-        clientNotes: sanitizeNotesForModeliste(ext.clientNotes || (!lead.details?.trim().startsWith('{') ? lead.details : '')),
+        clientNotes: (() => {
+          const leadTailles = ext.tailles || (lead as any).tailles;
+          let clean = sanitizeNotesForModeliste(ext.clientNotes || (!lead.details?.trim().startsWith('{') ? lead.details : ''));
+          if (leadTailles && typeof leadTailles === 'object' && !clean.toLowerCase().includes('tailles demandées')) {
+            const activeSizes = Object.entries(leadTailles)
+              .filter(([_, v]) => v !== '' && v !== null && v !== undefined && v !== 0 && v !== '0')
+              .map(([k]) => k);
+            if (activeSizes.length > 0) {
+              const taillesStr = `Tailles demandées : ${activeSizes.join(', ')}`;
+              clean = clean ? `${clean}\n${taillesStr}` : taillesStr;
+            }
+          }
+          return clean;
+        })(),
         patronagePaid: Boolean(ext.patronagePaid === true),
         patronagePaidAt: ext.patronagePaidAt || null,
         patronagePaidMois: ext.patronagePaidMois || null,

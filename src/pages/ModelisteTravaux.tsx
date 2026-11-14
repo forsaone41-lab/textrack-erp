@@ -38,7 +38,7 @@ import {
   parseLeadDetailsJson,
   genId
 } from '../types';
-import FicheTechniqueModelisteModal from '../components/FicheTechniqueModelisteModal';
+import FicheTechniqueModelisteModal, { sanitizeNotesForModeliste } from '../components/FicheTechniqueModelisteModal';
 
 interface ModelisteTravauxProps {
   currentUser: User;
@@ -188,7 +188,7 @@ export default function ModelisteTravaux({ currentUser }: ModelisteTravauxProps)
             rawDate: lead.date || new Date().toISOString(),
             quantity: Number(lead.quantity) || 1,
             tailles: ext.tailles || (lead as any).tailles,
-            clientNotes: ext.notes || ext.details || lead.details,
+            clientNotes: sanitizeNotesForModeliste(ext.clientNotes || ext.notes || (!lead.details?.trim().startsWith('{') ? lead.details : '')),
             patronagePrice: rawPrice,
             adminCounterPrice: counterPrice,
             negotiationStatus: negStatus,
