@@ -26,7 +26,9 @@ import {
   FolderHeart,
   Search,
   FolderOpen,
-  Scale
+  Scale,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -42,33 +44,39 @@ interface SidebarProps {
   company: CompanyProfile;
 }
 
-const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
-  const [error, setError] = React.useState(false);
-  if (error || !src) {
-    return (
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <Sparkles className="w-6 h-6 text-white" />
-        </div>
-        <h1 className="text-2xl font-black text-white tracking-tighter italic">
-          {alt.split(' ')[0]}<span className="text-slate-500 font-medium not-italic ml-0.5">.</span>
-        </h1>
+const LogoWithFallback = ({ isDark = true, alt }: { isDark?: boolean; alt: string }) => {
+  return (
+    <Link to="/" className="flex items-center gap-2.5 group">
+      <img
+        src="/logo-blue.png"
+        alt={alt || "Beya Creative"}
+        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-contain shrink-0 shadow-xs transition-transform group-hover:scale-105"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = '/logo.png';
+        }}
+      />
+      <div className="flex flex-col">
+        <span className={`text-[17px] font-black tracking-tight whitespace-nowrap transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          Beya Creative
+        </span>
       </div>
-    );
-  }
-  return <img src={src} className="h-10 object-contain" alt={alt} onError={() => setError(true)} />;
+    </Link>
+  );
 };
 
-const LogoIconOnly = ({ src, alt }: { src: string; alt: string }) => {
-  const [error, setError] = React.useState(false);
-  if (error || !src) {
-    return (
-      <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-        <Sparkles className="w-5 h-5 text-white" />
-      </div>
-    );
-  }
-  return <img src={src} className="w-10 h-10 object-cover object-left rounded-xl" alt={alt} onError={() => setError(true)} />;
+const LogoIconOnly = ({ alt }: { alt: string }) => {
+  return (
+    <Link to="/" className="flex items-center justify-center group" title="Beya Creative">
+      <img
+        src="/logo-blue.png"
+        alt={alt || "Beya Creative"}
+        className="w-8 h-8 rounded-xl object-contain shrink-0 transition-transform group-hover:scale-105"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = '/logo.png';
+        }}
+      />
+    </Link>
+  );
 };
 
 export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOpen, company }: SidebarProps) {
@@ -79,6 +87,29 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
   const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = React.useState(false);
   const [globalEmpCode, setGlobalEmpCode] = React.useState('');
   const [showSearchModal, setShowSearchModal] = React.useState(false);
+  const [theme, setTheme] = React.useState<'dark' | 'light'>(() => {
+    try {
+      const saved = localStorage.getItem('beya_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch {}
+    return 'dark';
+  });
+  const isDark = theme === 'dark';
+
+  React.useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const handleToggleTheme = (newTheme: 'dark' | 'light') => {
+    setTheme(newTheme);
+    try {
+      localStorage.setItem('beya_theme', newTheme);
+    } catch {}
+  };
 
   const searchParams = new URLSearchParams(location.search);
   const currentModelisteTab = location.pathname === '/profil'
@@ -105,10 +136,14 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
   const can = (page: AppPage) => allowedPages.includes(page);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `group flex items-center ${collapsed ? 'justify-center px-0 py-2' : 'justify-between px-3 py-3'} rounded-2xl text-[13px] font-bold transition-all duration-300 relative overflow-visible ${
+    `group flex items-center ${collapsed ? 'justify-center px-0 py-2' : 'justify-between px-3.5 py-3'} rounded-2xl text-[13px] font-bold transition-all duration-300 relative overflow-visible ${
       isActive 
-        ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' 
-        : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+        ? (isDark 
+            ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' 
+            : 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25') 
+        : (isDark
+            ? 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent')
     }`;
 
   const closeMobile = () => setMobileOpen?.(false);
@@ -162,13 +197,11 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
     to,
     tabKey,
     icon: Icon,
-    stepNum,
     label
   }: {
     to: string;
     tabKey: 'dashboard' | 'a_tarifer' | 'travaux' | 'profil';
     icon: any;
-    stepNum: string;
     label: string;
   }) => {
     const isActive = currentModelisteTab === tabKey;
@@ -176,21 +209,25 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
       <Link
         to={to}
         onClick={closeMobile}
-        title={collapsed ? `${stepNum}. ${label}` : undefined}
+        title={collapsed ? label : undefined}
         className={`group flex items-center ${
-          collapsed ? 'justify-center px-0 py-2.5' : 'justify-between px-3 py-2.5'
-        } rounded-2xl text-[12.5px] font-bold transition-all duration-200 relative ${
+          collapsed ? 'justify-center px-0 py-2.5' : 'justify-between px-3.5 py-3'
+        } rounded-2xl text-[13px] font-bold transition-all duration-200 relative ${
           isActive
-            ? 'bg-gradient-to-r from-indigo-500/20 to-purple-500/10 text-white border border-indigo-500/35 shadow-sm shadow-indigo-500/10'
-            : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+            ? (isDark
+                ? 'bg-gradient-to-r from-indigo-500/20 to-purple-500/10 text-white border border-indigo-500/35 shadow-xs'
+                : 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20')
+            : (isDark
+                ? 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent')
         }`}
       >
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} relative`}>
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} relative min-w-0`}>
           <div className={`
             w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200
             ${isActive
-              ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/40 scale-105'
-              : 'bg-white/5 text-slate-400 group-hover:bg-indigo-500/20 group-hover:text-indigo-300'
+              ? (isDark ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/40 scale-105' : 'bg-white/20 text-white scale-105')
+              : (isDark ? 'bg-white/5 text-slate-400 group-hover:bg-indigo-500/20 group-hover:text-indigo-300' : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600')
             }
           `}>
             <Icon className="w-4 h-4" />
@@ -200,25 +237,21 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             <div className={`
               absolute ${isAr ? 'right-full mr-3' : 'left-full ml-3'} top-1/2 -translate-y-1/2
               pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-[300]
-              bg-slate-800 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl
-              whitespace-nowrap shadow-xl border border-white/10
+              ${isDark ? 'bg-slate-800 text-white border-white/10' : 'bg-white text-slate-900 border-slate-200'} text-[11px] font-bold px-3 py-1.5 rounded-xl
+              whitespace-nowrap shadow-xl border
             `}>
-              <span className="text-indigo-400 font-mono mr-1.5">{stepNum}.</span>
               {label}
             </div>
           )}
 
           {!collapsed && (
-            <div className="flex items-center gap-2 min-w-0">
-              <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-mono font-black shrink-0 ${
-                isActive ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700'
-              }`}>
-                {stepNum}
-              </span>
-              <span className={`tracking-tight truncate ${isActive ? 'text-white font-black' : 'group-hover:text-white font-bold'}`}>
-                {label}
-              </span>
-            </div>
+            <span className={`tracking-tight truncate ${
+              isActive 
+                ? 'text-white font-black' 
+                : (isDark ? 'group-hover:text-white font-bold' : 'group-hover:text-slate-900 font-bold')
+            }`}>
+              {label}
+            </span>
           )}
         </div>
         {isActive && (
@@ -242,7 +275,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
 
       <aside className={`
         fixed inset-y-0 ${isAr ? 'right-0' : 'left-0'} z-[200] 
-        ${sidebarWidth} bg-[#0b0f1a] border-r border-white/5
+        ${sidebarWidth} ${isDark ? 'bg-[#0b0f1a] border-white/5 text-white' : 'bg-white border-slate-200/90 text-slate-900 shadow-xl'} border-r
         flex flex-col h-screen transition-all duration-300 ease-in-out
         lg:sticky lg:translate-x-0 print:hidden
         ${mobileOpen ? 'translate-x-0' : (isAr ? 'translate-x-full' : '-translate-x-full')}
@@ -252,12 +285,17 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 overflow-hidden">
               {collapsed
-                ? <LogoIconOnly src={company.logoAppIcon || company.logoAdmin || company.logoUrl} alt={company.name} />
-                : <LogoWithFallback src={company.logoAdmin || company.logoUrl} alt={company.name} />
+                ? <LogoIconOnly alt={company.name} />
+                : <LogoWithFallback isDark={isDark} alt={company.name} />
               }
             </div>
             {!collapsed && (
-              <button onClick={closeMobile} className="lg:hidden shrink-0 w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg text-slate-400 hover:text-white transition-colors">
+              <button
+                onClick={closeMobile}
+                className={`lg:hidden shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
+                  isDark ? 'bg-white/5 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-900'
+                }`}
+              >
                 <X className="w-5 h-5" />
               </button>
             )}
@@ -315,24 +353,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           )}
         </div>
 
-        {/* Collapse Toggle Button */}
-        <div className={`${collapsed ? 'px-3' : 'px-4'} mb-2`}>
-          <button
-            onClick={() => setCollapsed(c => !c)}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 hover:bg-indigo-500/20 text-slate-500 hover:text-indigo-300 transition-all duration-300 border border-transparent hover:border-indigo-500/20 group"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed
-              ? <PanelLeftOpen className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              : (
-                <>
-                  <PanelLeftClose className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'طي' : 'Réduire'}</span>
-                </>
-              )
-            }
-          </button>
-        </div>
+
 
         {/* Global Employee Code Search (Dossier RH Direct Lookup) - Hidden for Modéliste */}
         {currentUser?.role !== 'modeliste' && (
@@ -432,39 +453,35 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                 </div>
               )}
 
-              {/* 1. لوحة الموديليست (الرئيسية) */}
+              {/* لوحة الموديليست (الرئيسية) */}
               <ModelisteNavItem
                 to="/suivi-modeliste?tab=dashboard"
                 tabKey="dashboard"
                 icon={LayoutDashboard}
-                stepNum="1"
                 label={isAr ? 'لوحة الموديليست (الرئيسية)' : 'Tableau de bord'}
               />
 
-              {/* 2. صفحة التسعير والتفاوض */}
+              {/* صفحة التسعير والتفاوض */}
               <ModelisteNavItem
                 to="/suivi-modeliste?tab=a_tarifer"
                 tabKey="a_tarifer"
                 icon={Tag}
-                stepNum="2"
                 label={isAr ? 'صفحة التسعير والتفاوض' : 'Tarification & Devis'}
               />
 
-              {/* 3. إنجاز الموديلات ورفع الباترونات (ورشة الباتروناج والمهام) */}
+              {/* إنجاز الموديلات ورفع الباترونات */}
               <ModelisteNavItem
                 to="/suivi-modeliste?tab=travaux"
                 tabKey="travaux"
                 icon={Scissors}
-                stepNum="3"
                 label={isAr ? 'إنجاز الموديلات ورفع الباترونات' : 'Travaux & Patrons'}
               />
 
-              {/* 4. الملف الشخصي و RIB (حسابي) */}
+              {/* الملف الشخصي و RIB */}
               <ModelisteNavItem
                 to="/suivi-modeliste?tab=profil"
                 tabKey="profil"
                 icon={UserIcon}
-                stepNum="4"
                 label={isAr ? 'الملف الشخصي و RIB' : 'Mon Profil & RIB'}
               />
             </div>
@@ -632,30 +649,67 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             </div>
           ) : (
             <>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <button 
                   onClick={toggle}
-                  className="flex-1 flex items-center gap-3 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5 group"
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl transition-all border cursor-pointer ${
+                    isDark
+                      ? 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/5'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-black text-white group-hover:scale-110 transition-transform">
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${
+                    isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-900 shadow-xs'
+                  }`}>
                     {isAr ? 'ع' : 'FR'}
                   </div>
-                  <span className="text-xs font-bold text-slate-300">{isAr ? 'العربية' : 'Français'}</span>
+                  <span className="text-xs font-bold">{isAr ? 'العربية' : 'Français'}</span>
                 </button>
+
+                {/* Theme Toggle (نهار / ليل - Light / Dark Mode) */}
+                <button
+                  type="button"
+                  onClick={() => handleToggleTheme(isDark ? 'light' : 'dark')}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl transition-all border cursor-pointer ${
+                    isDark
+                      ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20'
+                      : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
+                  }`}
+                  title={isDark ? (isAr ? 'الوضع النهاري (فاتح)' : 'Mode Jour (Clair)') : (isAr ? 'الوضع الليلي (داكن)' : 'Mode Nuit (Sombre)')}
+                >
+                  {isDark ? (
+                    <>
+                      <Sun className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span className="text-xs font-black">{isAr ? 'نهار' : 'Jour'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span className="text-xs font-black">{isAr ? 'ليل' : 'Nuit'}</span>
+                    </>
+                  )}
+                </button>
+
                 <button 
                   onClick={async () => {
                     localStorage.removeItem('textrack_permissions');
                     await syncCompanyProfile();
                     window.location.reload();
                   }}
-                  className="w-12 h-12 flex items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all border border-indigo-500/20 group"
+                  className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all border shrink-0 cursor-pointer ${
+                    isDark
+                      ? 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white border-indigo-500/20'
+                      : 'bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white border-slate-200'
+                  }`}
                   title={isAr ? 'تحديث النظام' : 'Mise à jour'}
                 >
-                  <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-700" />
+                  <RefreshCw className="w-4 h-4 hover:rotate-180 transition-transform duration-700" />
                 </button>
               </div>
 
-              <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-4 border border-white/5 shadow-xl">
+              <div className={`rounded-3xl p-4 transition-colors ${
+                isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border border-white/5 shadow-xl' : 'bg-slate-50 border border-slate-200 shadow-sm'
+              }`}>
                 <NavLink to="/profil" onClick={closeMobile} className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity cursor-pointer">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 overflow-hidden border-2 border-indigo-500/30">
                     {currentUser.photo ? (
@@ -665,8 +719,8 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                     )}
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-white truncate">{currentUser.nom || 'Admin'}</span>
-                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">
+                    <span className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{currentUser.nom || 'Admin'}</span>
+                    <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">
                       {currentUser.role}
                     </span>
                   </div>
@@ -674,7 +728,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                 
                 <button 
                   onClick={onLogout}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all text-[11px] font-bold border border-rose-500/20"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all text-[11px] font-bold border border-rose-500/20 cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>{isAr ? 'تسجيل الخروج' : 'Quitter la session'}</span>

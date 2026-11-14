@@ -40,7 +40,10 @@ import {
   MessageSquare,
   ArrowRight,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Sun,
+  Moon,
+  Coffee
 } from 'lucide-react';
 import FicheTechniqueModelisteModal, { printFicheTechniqueModeliste, sanitizeNotesForModeliste } from '../components/FicheTechniqueModelisteModal';
 import { useLang } from '../contexts/LangContext';
@@ -1105,8 +1108,55 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     }
   ];
 
+  // Dynamic Greeting based on time of day (Craft & Effort Appreciation)
+  const greetingData = useMemo(() => {
+    const hour = new Date().getHours();
+    const firstName = (activeProfileUser.nom || '').trim().split(' ')[0] || (isAr ? 'أخي المبدع' : 'Cher Partenaire');
+
+    if (hour >= 5 && hour < 12) {
+      return {
+        icon: Sun,
+        iconColor: 'text-amber-400',
+        badgeBg: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+        badgeText: isAr ? 'صباح الإبداع والنشاط ☀️' : 'Matinée Créative ☀️',
+        title: isAr ? `صباح الخير والإبداع سي ${firstName}` : `Bonjour et excellente journée ${firstName}`,
+        message: isAr
+          ? 'شكراً جزيلاً على مجهوداتك وإتقانك المستمر فكل باترون وموديل. لمستك الفنية واحترافيتك هي سر نجاح وتألق كل قطعة ننتجها في BEYA.'
+          : 'Merci infiniment pour vos efforts et la rigueur que vous apportez à chaque patronage. Votre expertise fait la différence chez BEYA.',
+        border: 'border-amber-500/30',
+        glow: 'bg-amber-500/15'
+      };
+    } else if (hour >= 12 && hour < 18) {
+      return {
+        icon: Coffee,
+        iconColor: 'text-indigo-400',
+        badgeBg: 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30',
+        badgeText: isAr ? 'طاب يومك بكل خير ☕' : 'Bon après-midi ☕',
+        title: isAr ? `طاب يومك بكل خير وتألق سي ${firstName}` : `Bon بعد الزوال والعمل المتقن ${firstName}`,
+        message: isAr
+          ? 'شكراً على تفانيك ودقتك العالية في ضبط كل تفصيلة ومقاس. مجهوداتك وعملك المتقن دائماً محل تقدير واعتزاز كبيرين.'
+          : 'Merci pour votre dévouement et la précision de votre travail sur chaque modèle. Votre savoir-faire est précieux.',
+        border: 'border-indigo-500/30',
+        glow: 'bg-indigo-500/15'
+      };
+    } else {
+      return {
+        icon: Moon,
+        iconColor: 'text-violet-400',
+        badgeBg: 'bg-violet-500/10 text-violet-300 border-violet-500/30',
+        badgeText: isAr ? 'مساء الخير والتميز ✨' : 'Soirée Sérénité ✨',
+        title: isAr ? `مساء النور والتميز سي ${firstName}` : `Bonsoir et merci pour votre journée ${firstName}`,
+        message: isAr
+          ? 'شكراً جزيلاً على مجهوداتك وعملك المتقن طيلة اليوم. نقدر عالياً التزامك وإبداعك المستمر معنا في BEYA.'
+          : 'Merci chaleureusement pour vos efforts continus et la qualité remarquable de vos réalisations aujourd\'hui.',
+        border: 'border-violet-500/30',
+        glow: 'bg-violet-500/15'
+      };
+    }
+  }, [activeProfileUser.nom, isAr]);
+
   return (
-    <div className={`space-y-6 pb-28 md:pb-8 ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
+    <div className={`space-y-6 pb-28 md:pb-8 bg-[#090B10] min-h-screen text-slate-100 p-3 sm:p-5 md:p-8 rounded-3xl border border-white/[0.05] shadow-2xl ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Toast Notification */}
       {toast && (
         <div
@@ -1119,23 +1169,23 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         </div>
       )}
 
-      {/* ─── Responsive Header: Native App Header on Mobile, Full on Desktop ────────── */}
-      <div className="bg-slate-900 rounded-3xl p-4 md:p-6 text-white shadow-xl relative overflow-hidden">
-        {/* Glow */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* ─── Apple-Inspired Responsive Header ────────── */}
+      <div className="bg-[#12151E]/90 border border-white/[0.08] backdrop-blur-2xl rounded-3xl p-4 md:p-6 text-white shadow-2xl relative overflow-hidden">
+        {/* Subtle Ambient Radial Glow */}
+        <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Desktop Header */}
         <div className="hidden md:flex relative z-10 items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
               <Scissors className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-black tracking-tight">
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white">
                   {isAr ? 'بوابة الموديليست الموحدة' : 'Portail Modéliste BEYA'}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/[0.06] text-indigo-300 border border-white/[0.08]">
                   {isAr ? 'تسعير · إنجاز · باترونات' : 'Tarifs · Patrons · Livraison'}
                 </span>
               </div>
@@ -1147,23 +1197,23 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Month Filter */}
-            <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-3 py-2">
+            <div className="flex items-center gap-2 bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-2">
               <Calendar className="w-4 h-4 text-indigo-300" />
               <input
                 type="month"
                 value={selectedMois}
                 onChange={e => setSelectedMois(e.target.value)}
-                className="bg-transparent text-white text-xs font-black outline-none cursor-pointer [color-scheme:dark]"
+                className="bg-transparent text-white text-xs font-semibold outline-none cursor-pointer [color-scheme:dark]"
               />
             </div>
 
             {isAdmin && (
-              <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-3 py-2">
+              <div className="flex items-center gap-2 bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-2">
                 <UserIcon className="w-4 h-4 text-indigo-300" />
                 <select
                   value={selectedModelisteId}
                   onChange={e => setSelectedModelisteId(e.target.value)}
-                  className="bg-transparent text-white text-xs font-black outline-none cursor-pointer"
+                  className="bg-transparent text-white text-xs font-semibold outline-none cursor-pointer"
                 >
                   <option value="all" className="text-slate-900">{isAr ? 'جميع الموديليست' : 'Tous'}</option>
                   {modelistes.map(m => (
@@ -1176,7 +1226,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             <button
               onClick={fetchData}
               disabled={loading}
-              className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition cursor-pointer"
+              className="p-2.5 bg-white/[0.05] hover:bg-white/[0.1] text-white rounded-xl transition cursor-pointer border border-white/[0.08]"
               title={isAr ? 'تحديث البيانات' : 'Actualiser'}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -1184,19 +1234,19 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           </div>
         </div>
 
-        {/* Mobile Native App Bar (Look & Feel 100% App Smartphone) */}
+        {/* Mobile Native App Bar (100% Smartphone App Feel) */}
         <div className="md:hidden relative z-10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="relative">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-black text-sm shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black text-sm shadow-md">
                   {(activeProfileUser.nom || 'MD').slice(0, 2).toUpperCase()}
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-[#12151E] rounded-full" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h2 className="text-sm font-black text-white leading-tight">
+                  <h2 className="text-sm font-bold text-white leading-tight">
                     {activeProfileUser.nom}
                   </h2>
                   <span className="px-1.5 py-0.2 rounded-md text-[9px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">PRO</span>
@@ -1208,20 +1258,20 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             </div>
 
             <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-1 bg-white/10 border border-white/10 rounded-xl px-2 py-1.5">
+              <div className="flex items-center gap-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-2 py-1.5">
                 <Calendar className="w-3.5 h-3.5 text-indigo-300" />
                 <input
                   type="month"
                   value={selectedMois}
                   onChange={e => setSelectedMois(e.target.value)}
-                  className="bg-transparent text-white text-[11px] font-black outline-none cursor-pointer [color-scheme:dark] max-w-[90px]"
+                  className="bg-transparent text-white text-[11px] font-bold outline-none cursor-pointer [color-scheme:dark] max-w-[90px]"
                 />
               </div>
 
               <button
                 onClick={fetchData}
                 disabled={loading}
-                className="p-2 bg-white/10 active:bg-white/20 text-white rounded-xl transition"
+                className="p-2 bg-white/[0.06] active:bg-white/[0.12] text-white rounded-xl transition border border-white/[0.08]"
                 title={isAr ? 'تحديث' : 'Actualiser'}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -1229,59 +1279,112 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             </div>
           </div>
 
-          {/* Quick Mini Metrics Strip on Mobile */}
-          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10">
+          {/* Quick Mini Metrics Strip on Mobile (Apple Wallet Style) */}
+          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/[0.08]">
             <button
               onClick={() => handleTabChange('travaux')}
-              className="bg-white/5 active:bg-white/15 active:scale-95 transition p-2 rounded-xl text-center"
+              className="bg-white/[0.04] active:bg-white/[0.08] active:scale-95 transition p-2 rounded-xl text-center border border-white/[0.05]"
             >
               <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'منجز ومسلّم' : 'Livrés'}</div>
               <div className="text-sm font-black text-emerald-400 font-mono mt-0.5">{summary.completedCount}</div>
             </button>
             <button
               onClick={() => handleTabChange('travaux')}
-              className="bg-white/5 active:bg-white/15 active:scale-95 transition p-2 rounded-xl text-center"
+              className="bg-white/[0.04] active:bg-white/[0.08] active:scale-95 transition p-2 rounded-xl text-center border border-white/[0.05]"
             >
               <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'قيد العمل' : 'En cours'}</div>
               <div className="text-sm font-black text-amber-400 font-mono mt-0.5">{summary.activeCount}</div>
             </button>
             <button
               onClick={() => handleTabChange('profil')}
-              className="bg-white/5 active:bg-white/15 active:scale-95 transition p-2 rounded-xl text-center"
+              className="bg-white/[0.04] active:bg-white/[0.08] active:scale-95 transition p-2 rounded-xl text-center border border-white/[0.05]"
             >
-              <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'الرصيد' : 'Solde'}</div>
-              <div className="text-sm font-black text-indigo-300 font-mono mt-0.5">{summary.balanceDue} DH</div>
+              <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'الرصيد الصافي' : 'Solde'}</div>
+              <div className="text-sm font-black text-indigo-300 font-mono mt-0.5">{summary.totalRemainingAllTime.toLocaleString()} DH</div>
             </button>
           </div>
         </div>
       </div>
 
-      {/* ─── 4 Clean Modern Tabs Bar (Desktop Navigation) ──────────── */}
-      <div className="hidden md:flex bg-white p-2 rounded-2xl border border-slate-200/80 shadow-xs items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 w-auto">
-          {tabs.map(tab => (
+      {/* ─── Apple Daily Welcoming & Craft Appreciation Banner ──────────── */}
+      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r from-white/[0.04] via-white/[0.02] to-transparent border ${greetingData.border} backdrop-blur-2xl p-4 md:p-5 shadow-xl`}>
+        {/* Subtle Ambient Radial Glow */}
+        <div className={`absolute -top-10 -right-10 w-36 h-36 ${greetingData.glow} rounded-full blur-3xl pointer-events-none`} />
+
+        <div className={`relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3.5 ${isAr ? 'text-right' : 'text-left'}`}>
+          <div className="space-y-1.5 max-w-3xl">
+            <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse justify-end' : ''}`}>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${greetingData.badgeBg}`}>
+                {greetingData.badgeText}
+              </span>
+              <span className="text-[11px] text-slate-400 font-medium">
+                {new Date().toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </span>
+            </div>
+
+            <h3 className="text-base md:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+              <greetingData.icon className={`w-5 h-5 ${greetingData.iconColor} shrink-0`} />
+              <span>{greetingData.title}</span>
+            </h3>
+
+            <p className="text-xs md:text-[13px] text-slate-300/90 leading-relaxed font-normal">
+              {greetingData.message}
+            </p>
+          </div>
+
+          <div className={`flex items-center gap-2 shrink-0 pt-1 md:pt-0 ${isAr ? 'flex-row-reverse' : ''}`}>
             <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`px-4 py-3 rounded-xl font-black text-xs md:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                activeTab === tab.id
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
+              onClick={() => handleTabChange('travaux')}
+              className="px-3.5 py-2 bg-white/[0.07] hover:bg-white/[0.14] active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-white/[0.1]"
             >
-              {tab.icon}
-              <span>{tab.label}</span>
-              {typeof tab.badge === 'number' && (
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                    activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
-                  }`}
-                >
-                  {tab.badge}
-                </span>
-              )}
+              <Scissors className="w-3.5 h-3.5 text-indigo-400" />
+              <span>{isAr ? 'متابعة مهام اليوم' : 'Travaux du jour'}</span>
             </button>
-          ))}
+            <button
+              onClick={() => handleTabChange('profil')}
+              className="px-3.5 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 active:scale-95 text-indigo-300 hover:text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-indigo-500/30"
+            >
+              <Wallet className="w-3.5 h-3.5 text-indigo-300" />
+              <span>{summary.totalRemainingAllTime.toLocaleString()} MAD</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Apple Segmented Tabs Bar (Desktop Navigation 1, 2, 3, 4) ──────────── */}
+      <div className="hidden md:flex bg-[#12151E]/90 backdrop-blur-2xl p-1.5 rounded-2xl border border-white/[0.08] shadow-lg items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 w-auto">
+          {tabs.map((tab, idx) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs md:text-[13px] transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer ${
+                  isActive
+                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-500/25'
+                    : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
+                }`}
+              >
+                <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-mono font-black ${
+                  isActive ? 'bg-white/20 text-white' : 'bg-white/[0.08] text-slate-400'
+                }`}>
+                  {idx + 1}
+                </span>
+                <span className="scale-90">{tab.icon}</span>
+                <span className="tracking-tight">{tab.label}</span>
+                {typeof tab.badge === 'number' && (
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      isActive ? 'bg-white/20 text-white' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                    }`}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {activeTab !== 'dashboard' && activeTab !== 'profil' && (
@@ -1291,8 +1394,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={isAr ? 'بحث بالموديل أو الزبون...' : 'Recherche modèle ou client...'}
-              className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500`}
+              placeholder={isAr ? 'بحث سريع بالموديل أو الزبون...' : 'Recherche modèle ou client...'}
+              className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-xs font-medium text-white placeholder-slate-500 outline-none focus:border-indigo-500/60 transition`}
             />
           </div>
         )}
@@ -1306,8 +1409,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={isAr ? 'بحث بالموديل أو الزبون...' : 'Recherche modèle ou client...'}
-            className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2.5 bg-white border border-slate-200/90 rounded-2xl text-xs font-bold outline-none shadow-xs focus:border-indigo-500`}
+            placeholder={isAr ? 'بحث سريع بالموديل أو الزبون...' : 'Recherche modèle ou client...'}
+            className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2.5 bg-[#12151E] border border-white/[0.1] rounded-2xl text-xs font-bold text-white placeholder-slate-500 outline-none shadow-md focus:border-indigo-500`}
           />
         </div>
       )}
@@ -1317,142 +1420,178 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       {/* ════════════════════════════════════════════════════════════ */}
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
-
-
-          {/* Top 3 Executive Analytic Cards: شحال خدم · شحال باقي · فلوس المهمات */}
+          {/* Top 3 Executive Analytic Cards: 1. الرصيد الصافي المتبقي  2. قيد العمل  3. المنجزة */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* 1. شحال خدم */}
-            <div onClick={() => handleTabChange('travaux')} className="bg-gradient-to-br from-emerald-500 to-teal-700 text-white rounded-3xl p-6 shadow-lg shadow-emerald-500/15 relative overflow-hidden cursor-pointer hover:opacity-95 active:scale-[0.99] transition">
+            {/* 1. الرصيد الصافي المتبقي له (Primary Financial Focus) */}
+            <div
+              onClick={() => handleTabChange('profil')}
+              className="bg-gradient-to-b from-[#181C2B] to-[#11131C] border border-indigo-500/35 hover:border-indigo-500/60 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
+            >
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-black uppercase tracking-wider text-emerald-100">
-                  {isAr ? '✓ الموديلات المنجزة والمسلّمة' : 'Modèles Réalisés & Livrés'}
+                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                  {isAr ? 'الرصيد الصافي المتبقي له' : 'Solde Net à Percevoir'}
                 </span>
-                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-2xl bg-white/[0.08] flex items-center justify-center text-indigo-300 group-hover:scale-110 transition-transform">
+                  <Wallet className="w-5 h-5" />
                 </div>
               </div>
-              <div className="text-4xl font-black tracking-tight">{summary.completedCount}</div>
-              <div className="mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-xs font-bold">
-                <span className="text-emerald-100">{isAr ? 'مجموع ما كسبه منها :' : 'Gagné sur ces modèles :'}</span>
-                <span className="text-base font-black text-white font-mono">{summary.completedMAD.toLocaleString()} MAD</span>
+              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white">
+                {summary.totalRemainingAllTime.toLocaleString()} <span className="text-sm font-semibold text-slate-400">MAD</span>
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-medium">{isAr ? 'المدفوع له حتى الآن :' : 'Déjà Réglé :'}</span>
+                <span className="text-emerald-400 font-mono font-bold">{summary.totalPaidAllTime.toLocaleString()} MAD</span>
               </div>
             </div>
 
-            {/* 2. شحال باقي */}
-            <div onClick={() => handleTabChange('travaux')} className="bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-3xl p-6 shadow-lg shadow-amber-500/15 relative overflow-hidden cursor-pointer hover:opacity-95 active:scale-[0.99] transition">
+            {/* 2. شحال باقي (مطلوب إنجازها الآن) */}
+            <div
+              onClick={() => handleTabChange('travaux')}
+              className="bg-gradient-to-b from-[#1E1A16] to-[#121319] border border-amber-500/30 hover:border-amber-500/50 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
+            >
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-black uppercase tracking-wider text-amber-100">
-                  {isAr ? '⚡ مطلوب إنجازها الآن (قيد العمل)' : 'Travaux en Cours & À Faire'}
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  {isAr ? 'مطلوب إنجازها الآن (قيد العمل)' : 'Travaux en Cours'}
                 </span>
-                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-2xl bg-white/[0.08] flex items-center justify-center text-amber-300 group-hover:scale-110 transition-transform">
+                  <Clock className="w-5 h-5" />
                 </div>
               </div>
-              <div className="text-4xl font-black tracking-tight">{summary.activeCount}</div>
-              <div className="mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-xs font-bold">
-                <span className="text-amber-100">{isAr ? 'القيمة عند التسليم :' : 'Valeur à la livraison :'}</span>
-                <span className="text-base font-black text-white font-mono">+{summary.activeMAD.toLocaleString()} MAD</span>
+              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white">{summary.activeCount}</div>
+              <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-medium">{isAr ? 'القيمة عند التسليم :' : 'Valeur à la livraison :'}</span>
+                <span className="text-amber-300 font-mono font-bold">+{summary.activeMAD.toLocaleString()} MAD</span>
               </div>
             </div>
 
-            {/* 3. فلوس المهمات والرصيد الصافي */}
-            <div onClick={() => handleTabChange('profil')} className="bg-gradient-to-br from-indigo-600 to-slate-900 text-white rounded-3xl p-6 shadow-lg shadow-indigo-600/15 relative overflow-hidden cursor-pointer hover:opacity-95 active:scale-[0.99] transition">
+            {/* 3. شحال خدم (الموديلات المنجزة والمسلّمة) */}
+            <div
+              onClick={() => handleTabChange('travaux')}
+              className="bg-gradient-to-b from-[#131E1B] to-[#10131A] border border-emerald-500/30 hover:border-emerald-500/50 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
+            >
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-black uppercase tracking-wider text-indigo-200">
-                  {isAr ? '💰 الرصيد الصافي المتبقي له' : 'Solde Net à Percevoir'}
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  {isAr ? 'الموديلات المنجزة والمسلّمة' : 'Modèles Réalisés & Livrés'}
                 </span>
-                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-2xl bg-white/[0.08] flex items-center justify-center text-emerald-300 group-hover:scale-110 transition-transform">
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
               </div>
-              <div className="text-4xl font-black tracking-tight font-mono">
-                {summary.totalRemainingAllTime.toLocaleString()} <span className="text-sm font-bold">MAD</span>
-              </div>
-              <div className="mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-xs font-bold">
-                <span className="text-indigo-200">{isAr ? 'المدفوع له حتى الآن :' : 'Déjà Réglé :'}</span>
-                <span className="text-white font-mono">{summary.totalPaidAllTime.toLocaleString()} MAD</span>
+              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white">{summary.completedCount}</div>
+              <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-medium">{isAr ? 'مجموع ما كسبه منها :' : 'Gagné sur ces modèles :'}</span>
+                <span className="text-emerald-300 font-mono font-bold">{summary.completedMAD.toLocaleString()} MAD</span>
               </div>
             </div>
           </div>
 
+          {/* Quick Notice if there are unpriced items */}
+          {summary.totalToPriceCount > 0 && (
+            <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/5 border border-indigo-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+                  <Scissors className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white">
+                    {isAr ? `لديك ${summary.totalToPriceCount} موديلات جديدة تنتظر التسعير والتفاوض` : `${summary.totalToPriceCount} nouveaux modèles en attente de chiffrage`}
+                  </h4>
+                  <p className="text-[11px] text-slate-400">
+                    {isAr ? 'ادخل الأسعار المقترحة للبدء في إنجاز الباترونات فور تأكيد الإدارة والزبون' : 'Proposez vos tarifs pour démarrer les travaux dès validation'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleTabChange('a_tarifer')}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-md shadow-indigo-600/25"
+              >
+                <span>{isAr ? 'الانتقال لصفحة التسعير (2)' : 'Voir la page de tarification'}</span>
+                <ArrowRight className={`w-3.5 h-3.5 ${isAr ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+          )}
+
           {/* Month Financial Card + Performance Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 bg-white rounded-3xl border border-slate-200 p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="font-black text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-indigo-600" />
+            <div className="lg:col-span-1 bg-[#12151E] rounded-3xl border border-white/[0.08] p-6 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-indigo-400" />
                   <span>{isAr ? `كشف حساب شهر (${selectedMois})` : `Bilan Mensuel (${selectedMois})`}</span>
                 </h3>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 text-xs font-bold">
-                  <span className="text-slate-600">{isAr ? 'الموديلات المسلمة في الشهر :' : 'Modèles livrés ce mois :'}</span>
-                  <span className="text-slate-900 font-black">{summary.monthCompletedCount}</span>
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.03] border border-white/[0.05] text-xs">
+                  <span className="text-slate-400 font-medium">{isAr ? 'الموديلات المسلمة في الشهر :' : 'Modèles livrés ce mois :'}</span>
+                  <span className="text-white font-bold">{summary.monthCompletedCount}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 text-xs font-bold">
-                  <span className="text-emerald-800">{isAr ? 'الأرباح المكتسبة هذا الشهر :' : 'Gagné ce mois :'}</span>
-                  <span className="text-emerald-900 font-black font-mono">{summary.monthEarnedMAD.toLocaleString()} MAD</span>
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
+                  <span className="text-emerald-300 font-medium">{isAr ? 'الأرباح المكتسبة هذا الشهر :' : 'Gagné ce mois :'}</span>
+                  <span className="text-emerald-400 font-bold font-mono">{summary.monthEarnedMAD.toLocaleString()} MAD</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-indigo-50 text-xs font-bold">
-                  <span className="text-indigo-800">{isAr ? 'التسبيقات المستلمة هذا الشهر :' : 'Avances reçues ce mois :'}</span>
-                  <span className="text-indigo-900 font-black font-mono">-{summary.monthPaidMAD.toLocaleString()} MAD</span>
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs">
+                  <span className="text-indigo-300 font-medium">{isAr ? 'التسبيقات المستلمة هذا الشهر :' : 'Avances reçues ce mois :'}</span>
+                  <span className="text-indigo-400 font-bold font-mono">-{summary.monthPaidMAD.toLocaleString()} MAD</span>
                 </div>
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-900 text-white text-xs font-bold">
-                  <span>{isAr ? 'الرصيد المتبقي لهذا الشهر :' : 'Reste dû pour ce mois :'}</span>
-                  <span className="text-sm font-black text-emerald-400 font-mono">{summary.monthRemainingMAD.toLocaleString()} MAD</span>
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.06] border border-white/[0.1] text-xs font-semibold">
+                  <span className="text-slate-300">{isAr ? 'الرصيد المتبقي لهذا الشهر :' : 'Reste dû pour ce mois :'}</span>
+                  <span className="text-sm font-bold text-emerald-400 font-mono">{summary.monthRemainingMAD.toLocaleString()} MAD</span>
                 </div>
               </div>
             </div>
 
             {/* List of models completed with quick view */}
-            <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="font-black text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <FileCheck className="w-4 h-4 text-emerald-600" />
+            <div className="lg:col-span-2 bg-[#12151E] rounded-3xl border border-white/[0.08] p-6 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                  <FileCheck className="w-4 h-4 text-emerald-400" />
                   <span>{isAr ? 'تفاصيل الموديلات المنجزة وأرباحها' : 'Détail des Travaux Réalisés'}</span>
                 </h3>
-                <span className="text-xs font-bold text-slate-500">
+                <span className="text-xs font-medium text-slate-400">
                   {summary.completedCount} {isAr ? 'موديل منجز' : 'modèles livrés'}
                 </span>
               </div>
 
               {filteredByRole.filter(i => i.workStatus === 'termine').length === 0 ? (
-                <div className="text-center py-10 text-slate-400 text-xs font-bold">
+                <div className="text-center py-10 text-slate-400 text-xs font-medium">
                   {isAr ? 'لم يتم تسليم أي موديل بعد في هذا الحساب.' : 'Aucun modèle livré pour le moment.'}
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100 max-h-[320px] overflow-y-auto">
+                <div className="divide-y divide-white/[0.05] max-h-[320px] overflow-y-auto">
                   {filteredByRole
                     .filter(i => i.workStatus === 'termine')
                     .map(item => (
                       <div key={item.id} className="py-3 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3 min-w-0">
                           {item.photo ? (
-                            <img src={item.photo} alt={item.modele} className="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0" />
+                            <img src={item.photo} alt={item.modele} className="w-10 h-10 rounded-xl object-cover border border-white/[0.08] shrink-0" />
                           ) : (
-                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                            <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center text-slate-400 shrink-0">
                               <Scissors className="w-4 h-4" />
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="font-black text-xs text-slate-900 truncate">{item.modele}</p>
-                            <p className="text-[10px] text-slate-500 font-semibold">{item.client} · {item.date}</p>
+                            <p className="font-bold text-xs text-white truncate">{item.modele}</p>
+                            <p className="text-[10px] text-slate-400 font-medium">{item.client} · {item.date}</p>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0">
                           {item.isFree || item.patronagePrice === 0 ? (
-                            <span className="font-black text-xs text-purple-700 bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-xl">
+                            <span className="font-bold text-xs text-purple-300 bg-purple-500/15 border border-purple-500/30 px-2.5 py-1 rounded-xl">
                               {isAr ? 'مجاني (FREE)' : 'Gratuit (FREE)'}
                             </span>
                           ) : (
-                            <span className="font-black text-xs text-emerald-700 font-mono bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-xl">
+                            <span className="font-bold text-xs text-emerald-400 font-mono bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-xl">
                               +{item.patronagePrice} MAD
                             </span>
                           )}
                           {item.patronFiles.length > 0 && (
-                            <span className="text-[10px] font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg">
+                            <span className="text-[10px] font-bold text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 rounded-lg">
                               📁 {item.patronFiles.length}
                             </span>
                           )}
@@ -1471,28 +1610,28 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       {/* ════════════════════════════════════════════════════════════ */}
       {activeTab === 'a_tarifer' && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#12151E] p-3 rounded-2xl border border-white/[0.08] shadow-lg">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPricingSubFilter('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
-                  pricingSubFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  pricingSubFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'bg-white/[0.05] text-slate-400 hover:text-white'
                 }`}
               >
                 {isAr ? 'الكل' : 'Tous'} ({pricingItems.length})
               </button>
               <button
                 onClick={() => setPricingSubFilter('unpriced')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
-                  pricingSubFilter === 'unpriced' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-600'
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  pricingSubFilter === 'unpriced' ? 'bg-amber-500 text-white shadow-sm' : 'bg-white/[0.05] text-slate-400 hover:text-white'
                 }`}
               >
                 {isAr ? 'جديد ينتظر إدخال التسعيرة' : 'Nouveaux à chiffrer'} ({summary.unpricedCount})
               </button>
               <button
                 onClick={() => setPricingSubFilter('priced')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
-                  pricingSubFilter === 'priced' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  pricingSubFilter === 'priced' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white/[0.05] text-slate-400 hover:text-white'
                 }`}
               >
                 {isAr ? 'مسعرة تنتظر الاتفاق والمصادقة' : 'Chiffrés en attente'} ({summary.pricedAwaitingCount})
@@ -1502,7 +1641,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             {isAdmin && (
               <button
                 onClick={() => setShowNewModelModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-md shadow-emerald-600/20"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>{isAr ? '+ إرسال موديل للتسعير' : '+ Envoyer un modèle'}</span>
@@ -1511,12 +1650,12 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           </div>
 
           {pricingItems.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-2">
-              <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
-              <h3 className="font-black text-base text-slate-900">
+            <div className="bg-[#12151E] rounded-3xl p-12 text-center border border-white/[0.08] space-y-2 shadow-xl">
+              <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
+              <h3 className="font-bold text-base text-white">
                 {isAr ? 'لا يوجد أي موديل ينتظر التسعير حالياً' : 'Aucun modèle en attente de tarification'}
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 {isAr ? 'جميع الموديلات التي تم الاتفاق عليها تم تحويلها مباشرة إلى صفحة المهام والإنجاز.' : 'Tous les modèles convenus sont transférés dans Travaux.'}
               </p>
             </div>
@@ -1527,7 +1666,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 const hasCounter = Boolean(item.adminCounterPrice && item.adminCounterPrice > 0);
 
                 return (
-                  <div key={item.id} className="bg-white rounded-3xl border-2 border-slate-100 hover:border-indigo-200 p-5 shadow-sm space-y-4 transition-all">
+                  <div key={item.id} className="bg-[#12151E] rounded-3xl border border-white/[0.08] hover:border-indigo-500/40 p-5 shadow-xl space-y-4 transition-all text-white">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         {item.photo ? (
@@ -1535,27 +1674,27 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                             src={item.photo}
                             alt={item.modele}
                             onClick={() => setZoomImage(item.photo || null)}
-                            className="w-14 h-14 rounded-2xl object-cover border border-slate-200 cursor-zoom-in shrink-0"
+                            className="w-14 h-14 rounded-2xl object-cover border border-white/[0.08] cursor-zoom-in shrink-0"
                           />
                         ) : (
-                          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black shrink-0">
+                          <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-black shrink-0 border border-indigo-500/30">
                             <Scissors className="w-6 h-6" />
                           </div>
                         )}
                         <div className="min-w-0">
                           <span className={`text-[10px] font-black px-2 py-0.5 rounded-full inline-block mb-1 ${
-                            isPriced ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-800'
+                            isPriced ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                           }`}>
                             {isPriced ? (isAr ? 'تم اقتراح التسعيرة' : 'Tarif proposé') : (isAr ? 'جديد مطلوب تسعيره' : 'Nouveau à chiffrer')}
                           </span>
-                          <h4 className="font-black text-sm text-slate-900 truncate">{item.modele}</h4>
-                          <p className="text-xs text-slate-500 font-semibold">{item.client} · {item.date}</p>
+                          <h4 className="font-bold text-sm text-white truncate">{item.modele}</h4>
+                          <p className="text-xs text-slate-400 font-medium">{item.client} · {item.date}</p>
                         </div>
                       </div>
 
                       <button
                         onClick={() => setTechPackItem(item)}
-                        className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0"
+                        className="px-2.5 py-1.5 bg-white/[0.06] hover:bg-white/[0.12] text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0 border border-white/[0.08]"
                         title={isAr ? 'البطاقة التقنية والمقاسات' : 'Fiche technique'}
                       >
                         <FileText className="w-3.5 h-3.5" />
@@ -1564,23 +1703,23 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                     </div>
 
                     {item.clientNotes && (
-                      <div className="text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 leading-relaxed">
-                        <strong className="text-slate-900">{isAr ? 'ملاحظات الموديل :' : 'Spécifications :'}</strong> {item.clientNotes}
+                      <div className="text-[11px] text-slate-300 bg-white/[0.04] p-2.5 rounded-xl border border-white/[0.06] leading-relaxed">
+                        <strong className="text-white">{isAr ? 'ملاحظات الموديل :' : 'Spécifications :'}</strong> {item.clientNotes}
                       </div>
                     )}
 
                     {/* PRICING INPUT / STATUS BOX */}
-                    <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200/60 space-y-3">
+                    <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-indigo-950">
+                        <span className="text-xs font-bold text-indigo-300">
                           {isAr ? 'ثمن الباترون المقترح :' : 'Tarif proposé :'}
                         </span>
                         {isPriced ? (
-                          <span className="text-base font-black text-indigo-700 font-mono bg-white px-3 py-0.5 rounded-xl border border-indigo-200">
+                          <span className="text-base font-bold text-emerald-400 font-mono bg-white/[0.06] px-3 py-0.5 rounded-xl border border-white/[0.1]">
                             {item.patronagePrice} MAD
                           </span>
                         ) : (
-                          <span className="text-xs font-black text-amber-700">{isAr ? 'غير مسعر بعد' : 'Non tarifé'}</span>
+                          <span className="text-xs font-bold text-amber-400">{isAr ? 'غير مسعر بعد' : 'Non tarifé'}</span>
                         )}
                       </div>
 
@@ -1597,7 +1736,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                             }
                           }}
                           id={`price_input_${item.id}`}
-                          className="flex-1 bg-white border border-indigo-200 rounded-xl px-3.5 py-2.5 text-xs font-black text-slate-900 outline-none focus:border-indigo-500 font-mono shadow-xs"
+                          className="flex-1 bg-white/[0.06] border border-white/[0.12] rounded-xl px-3.5 py-2.5 text-xs font-bold text-white outline-none focus:border-indigo-400 font-mono"
                         />
                         <button
                           onClick={() => {
@@ -1605,7 +1744,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                             if (el) handleSavePrice(item, Number(el.value));
                           }}
                           disabled={actionPendingId === item.id}
-                          className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700 transition cursor-pointer shrink-0 shadow-sm"
+                          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition cursor-pointer shrink-0 shadow-md shadow-indigo-600/25"
                         >
                           {isAr ? 'حفظ واقتراح' : 'Proposer'}
                         </button>
@@ -1682,47 +1821,47 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       {activeTab === 'travaux' && (
         <div className="space-y-5">
           {/* Work status filter */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#12151E] p-3 rounded-2xl border border-white/[0.08] shadow-lg">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setWorkFilter('pending')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-2 ${
-                  workFilter === 'pending' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                  workFilter === 'pending' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25' : 'bg-white/[0.05] text-slate-400 hover:text-white'
                 }`}
               >
                 <Clock className="w-3.5 h-3.5" />
                 <span>{isAr ? 'المطلوب إنجازها الآن' : 'À Faire & En Cours'}</span>
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20">{summary.activeCount}</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 font-mono">{summary.activeCount}</span>
               </button>
               <button
                 onClick={() => setWorkFilter('termine')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-2 ${
-                  workFilter === 'termine' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                  workFilter === 'termine' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25' : 'bg-white/[0.05] text-slate-400 hover:text-white'
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>{isAr ? 'المنجزة والمسلّمة' : 'Terminés & Livrés'}</span>
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20">{summary.completedCount}</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 font-mono">{summary.completedCount}</span>
               </button>
               <button
                 onClick={() => setWorkFilter('all')}
-                className={`px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer ${
-                  workFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  workFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'bg-white/[0.05] text-slate-400 hover:text-white'
                 }`}
               >
                 {isAr ? 'الكل' : 'Tous'}
               </button>
             </div>
 
-            <p className="text-xs font-bold text-slate-500">
+            <p className="text-xs font-medium text-slate-400">
               {isAr ? 'الملفات المرفوعة هنا تتاح تلقائياً للزبون في بوابة BEYA' : 'Les fichiers déposés ici sont accessibles au client sur BEYA Portal'}
             </p>
           </div>
 
           {workItems.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-2">
-              <Clock className="w-12 h-12 text-slate-300 mx-auto" />
-              <h3 className="font-black text-base text-slate-900">
+            <div className="bg-[#12151E] rounded-3xl p-12 text-center border border-white/[0.08] space-y-2 shadow-xl">
+              <Clock className="w-12 h-12 text-slate-500 mx-auto" />
+              <h3 className="font-bold text-base text-white">
                 {isAr ? 'لا توجد مهام مطابقة للفلتر المحدد' : 'Aucune tâche trouvée'}
               </h3>
             </div>
@@ -1736,12 +1875,12 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 return (
                   <div
                     key={item.id}
-                    className={`bg-white rounded-3xl border-2 p-6 shadow-sm transition-all space-y-5 ${
-                      isCompleted ? 'border-emerald-100 bg-emerald-50/10' : 'border-slate-200 hover:border-indigo-300'
+                    className={`bg-[#12151E] rounded-3xl border p-5 md:p-6 shadow-xl transition-all space-y-5 text-white ${
+                      isCompleted ? 'border-emerald-500/30' : 'border-white/[0.08] hover:border-indigo-500/40'
                     }`}
                   >
                     {/* Header Row: Model title, Client, Deadline, Price */}
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
                       <div className="flex items-center gap-4 min-w-0">
                         {item.photo ? (
                           <img
@@ -2101,14 +2240,14 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       {/* 👤 TAB 4: PROFIL DIALO & RIB (Profil & Coordonnées)         */}
       {/* ════════════════════════════════════════════════════════════ */}
       {activeTab === 'profil' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm max-w-3xl mx-auto space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
+        <div className="bg-[#12151E] rounded-3xl border border-white/[0.08] p-6 md:p-8 shadow-2xl max-w-3xl mx-auto space-y-6 text-white">
+          <div className="flex items-center gap-3 border-b border-white/[0.08] pb-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold border border-indigo-500/30">
               <UserIcon className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900">{isAr ? 'الملف الشخصي والحساب البنكي (RIB)' : 'Profil Personnel & RIB'}</h2>
-              <p className="text-xs text-slate-500 font-medium">
+              <h2 className="text-lg font-bold text-white">{isAr ? 'الملف الشخصي والحساب البنكي (RIB)' : 'Profil Personnel & RIB'}</h2>
+              <p className="text-xs text-slate-400 font-medium">
                 {isAr
                   ? 'هذه المعلومات متصلة ومزامنة تلقائياً مع نظام الموارد البشرية (RH) والتحويلات البنكية للمستحقات.'
                   : 'Ces coordonnées sont synchronisées automatiquement avec le module RH et la paie.'}
@@ -2119,69 +2258,69 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-black text-slate-700 mb-1.5">{isAr ? 'الاسم الكامل *' : 'Nom Complet *'}</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">{isAr ? 'الاسم الكامل *' : 'Nom Complet *'}</label>
                 <input
                   type="text"
                   required
                   value={profileForm.nom}
                   onChange={e => setProfileForm({ ...profileForm, nom: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-sm font-bold text-white outline-none focus:border-indigo-400"
                 />
               </div>
               <div>
-                <label className="block text-xs font-black text-slate-700 mb-1.5">{isAr ? 'رقم الهاتف' : 'Téléphone'}</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">{isAr ? 'رقم الهاتف' : 'Téléphone'}</label>
                 <input
                   type="text"
                   value={profileForm.telephone}
                   onChange={e => setProfileForm({ ...profileForm, telephone: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-sm font-bold text-white outline-none focus:border-indigo-400"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-black text-slate-700 mb-1.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
                 <input
                   type="email"
                   value={profileForm.email}
                   onChange={e => setProfileForm({ ...profileForm, email: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-sm font-bold text-white outline-none focus:border-indigo-400"
                 />
               </div>
               <div>
-                <label className="block text-xs font-black text-slate-700 mb-1.5">{isAr ? 'رقم البطاقة الوطنية (CIN)' : 'N° CNIE'}</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">{isAr ? 'رقم البطاقة الوطنية (CIN)' : 'N° CNIE'}</label>
                 <input
                   type="text"
                   value={profileForm.cin}
                   onChange={e => setProfileForm({ ...profileForm, cin: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-sm font-bold text-white outline-none focus:border-indigo-400"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-black text-slate-700 mb-1.5">{isAr ? 'العنوان / المدينة' : 'Adresse & Ville'}</label>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5">{isAr ? 'العنوان / المدينة' : 'Adresse & Ville'}</label>
               <input
                 type="text"
                 value={profileForm.adresse}
                 onChange={e => setProfileForm({ ...profileForm, adresse: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-sm font-bold text-white outline-none focus:border-indigo-400"
               />
             </div>
 
-            {/* Banking RIB section */}
-            <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-3">
+            {/* Banking RIB section (Apple Wallet Style Card) */}
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-slate-900 border border-indigo-500/30 space-y-3.5 shadow-xl">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
-                  <CreditCard className="w-4 h-4 text-indigo-600" />
+                <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <CreditCard className="w-4 h-4 text-indigo-400" />
                   <span>{isAr ? 'الحساب البنكي (RIB المغربي)' : 'Coordonnées Bancaires (RIB)'}</span>
                 </span>
                 {profileForm.rib && (
                   <button
                     type="button"
                     onClick={() => copyRib(profileForm.rib)}
-                    className="text-xs font-black text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-xs font-bold text-indigo-400 hover:text-white flex items-center gap-1 cursor-pointer transition"
                   >
                     <Copy className="w-3.5 h-3.5" />
                     <span>{copiedRib ? (isAr ? 'تم النسخ!' : 'Copié!') : (isAr ? 'نسخ RIB' : 'Copier')}</span>
@@ -2191,17 +2330,17 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-1">
-                  <label className="block text-[10px] font-black text-slate-500 mb-1">{isAr ? 'اسم البنك' : 'Banque'}</label>
+                  <label className="block text-[10px] font-bold text-slate-400 mb-1">{isAr ? 'اسم البنك' : 'Banque'}</label>
                   <input
                     type="text"
                     placeholder="CIH, Attijariwafa..."
                     value={profileForm.banque}
                     onChange={e => setProfileForm({ ...profileForm, banque: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-black outline-none"
+                    className="w-full px-3 py-2 bg-white/[0.06] border border-white/[0.12] rounded-xl text-xs font-bold text-white outline-none focus:border-indigo-400"
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-[10px] font-black text-slate-500 mb-1">
+                  <label className="block text-[10px] font-bold text-slate-400 mb-1">
                     {isAr ? 'رقم الحساب (24 رقماً) *' : 'Numéro RIB (24 chiffres) *'}
                   </label>
                   <input
@@ -2210,7 +2349,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                     placeholder="230 425 3473845211020400 80"
                     value={profileForm.rib}
                     onChange={e => setProfileForm({ ...profileForm, rib: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-black font-mono tracking-wider outline-none"
+                    className="w-full px-3 py-2 bg-white/[0.06] border border-white/[0.12] rounded-xl text-xs font-bold text-emerald-400 font-mono tracking-wider outline-none focus:border-indigo-400"
                   />
                 </div>
               </div>
@@ -2220,7 +2359,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               <button
                 type="submit"
                 disabled={savingProfile}
-                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm shadow-lg shadow-indigo-600/25 transition cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-indigo-600/25 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95"
               >
                 {savingProfile ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 <span>{isAr ? 'حفظ البيانات ومزامنتها ✓' : 'Enregistrer & Synchroniser ✓'}</span>
@@ -2374,16 +2513,16 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         onSaveMeasurements={handleSaveModelisteMeasurements}
         isAr={isAr}
       />
-      {/* ─── Mobile App Fixed Bottom Navigation Bar (iOS / Android Native App Experience) ─── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[120] bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/80 px-2 py-1.5 flex items-center justify-around shadow-[0_-10px_30px_rgba(0,0,0,0.6)]">
-        {tabs.map(tab => {
+      {/* ─── Mobile App Fixed Bottom Navigation Bar (iOS Native App Bar) ─── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[120] bg-[#090B10]/95 backdrop-blur-2xl border-t border-white/[0.08] px-2 py-1.5 flex items-center justify-around shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
+        {tabs.map((tab, idx) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-2xl transition-all duration-200 active:scale-95 cursor-pointer ${
-                isActive ? 'text-indigo-400 font-black' : 'text-slate-400 hover:text-slate-200 font-medium'
+                isActive ? 'text-indigo-400 font-bold' : 'text-slate-400 hover:text-slate-200 font-medium'
               }`}
             >
               {/* Active Indicator Glow */}
@@ -2393,11 +2532,12 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-indigo-600/20 text-indigo-400 scale-110 shadow-xs' : ''}`}>
                 {tab.icon}
               </div>
-              <span className={`text-[10px] tracking-tight mt-0.5 ${isActive ? 'font-black text-white' : 'font-semibold text-slate-400'}`}>
+              <span className={`text-[10px] tracking-tight mt-0.5 ${isActive ? 'font-bold text-white' : 'font-medium text-slate-400'}`}>
+                <span className="opacity-70 mr-0.5">{idx + 1}.</span>
                 {tab.shortLabel}
               </span>
               {typeof tab.badge === 'number' && tab.badge > 0 && (
-                <span className="absolute top-0.5 right-1/4 translate-x-2 min-w-[17px] h-[17px] px-1 bg-rose-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-slate-950 shadow-md">
+                <span className="absolute top-0.5 right-1/4 translate-x-2 min-w-[17px] h-[17px] px-1 bg-rose-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#090B10] shadow-md">
                   {tab.badge}
                 </span>
               )}

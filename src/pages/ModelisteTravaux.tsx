@@ -143,6 +143,15 @@ export default function ModelisteTravaux({ currentUser }: ModelisteTravauxProps)
         .filter(lead => {
           // Keep active production leads
           if (lead.statut === 'annulée' || lead.statut === 'archive') return false;
+          const ext = parseLeadDetailsJson(lead.details);
+          if (ext.hiddenFromModeliste === true || ext.patronageCancelled === true || ext.patronageStatus === 'cancelled') return false;
+          const patPrice = Number(ext.patronagePrice ?? (lead as any).patronagePrice) || 0;
+          const isPatronageLead =
+            ext.patronageStatus === 'requested' ||
+            ext.patronageStatus === 'priced' ||
+            patPrice > 0 ||
+            Boolean(ext.adminValidatedToWork);
+          if (!isPatronageLead) return false;
           return true;
         })
         .map(lead => {

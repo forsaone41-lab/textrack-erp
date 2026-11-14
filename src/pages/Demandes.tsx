@@ -8,7 +8,8 @@ import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
 import { compressImage } from '../utils/image';
 import { PageLoader } from '../components/PageLoader';
 import AISpace from './AISpace';
-import { saveModelisteWorkLog } from '../utils/payrollEngine';
+import { saveModelisteWorkLog, deleteModelisteWorkLog } from '../utils/payrollEngine';
+import { supabase } from '../supabase';
 
 const DEFAULT_TEMPLATES = {
   ar: {
@@ -1080,6 +1081,69 @@ export default function Demandes() {
       alert(isAr ? 'حدث خطأ أثناء حفظ العرض' : 'Erreur lors de l\'enregistrement');
     } finally {
       setPatronageSubmitting(false);
+    }
+  };
+
+  const handleCancelPatronage = async (lead: Lead) => {
+    const confirmMsg = isAr
+      ? `هل أنت متأكد من إلغاء الباترون وسحب هذا الموديل (${lead.type || 'الموديل'}) نهائياً من عند الموديليست؟`
+      : `Voulez-vous vraiment annuler le patronage et retirer ce modèle (${lead.type || 'Modèle'}) du modéliste ?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const ext = parseLeadDetailsJson(lead.details);
+      const newDetails = {
+        ...ext,
+        patronageStatus: 'cancelled',
+        patronageCancelled: true,
+        patronageCancelledAt: new Date().toISOString(),
+        adminValidatedToWork: false,
+        clientValidated: false,
+        hiddenFromModeliste: true,
+      };
+      delete newDetails.patronagePrice;
+      delete newDetails.prixEchantillon;
+      delete newDetails.workStatus;
+      delete newDetails.patronageNegotiationStatus;
+      delete newDetails.patronageNegotiationNotes;
+      delete newDetails.adminCounterPrice;
+      delete newDetails.isFree;
+      delete newDetails.modelisteId;
+      delete newDetails.modelisteName;
+
+      const updatedLead: Lead = {
+        ...lead,
+        crmPriceConfirmed: false,
+        details: JSON.stringify(newDetails)
+      };
+      delete (updatedLead as any).patronagePrice;
+
+      setLeads(prev => prev.map(l => l.id === lead.id ? updatedLead : l));
+      if (patronageModalLead?.id === lead.id) {
+        setPatronageModalLead(null);
+      }
+
+      await saveRecord('leads', updatedLead, true);
+
+      // Clean up any linked work logs in payroll
+      try {
+        const { data: logs } = await supabase.from('leads').select('id, details').eq('name', '__RH_MODEL_LOG__');
+        if (logs) {
+          for (const lg of logs) {
+            if (lg.details && lg.details.includes(lead.id)) {
+              await supabase.from('leads').delete().eq('id', lg.id);
+              await deleteModelisteWorkLog(lg.id);
+            }
+          }
+        }
+      } catch (logErr) {
+        console.warn('Payroll log cleanup:', logErr);
+      }
+
+      alert(isAr ? 'تم إلغاء الباترون وسحب الموديل نهائياً من عند الموديليست بنجاح.' : 'Patronage annulé et modèle retiré du modéliste avec succès.');
+    } catch (err: any) {
+      console.error('Erreur annulation patronage:', err);
+      alert(isAr ? 'حدث خطأ أثناء إلغاء الباترون: ' + (err?.message || '') : 'Erreur lors de l\'annulation');
     }
   };
 
@@ -2353,6 +2417,20 @@ export default function Demandes() {
                 </div>
               )}
 
+              {/* Bottom Option: Revoke / Cancel Patronage completely */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (patronageModalLead) {
+                    handleCancelPatronage(patronageModalLead);
+                  }
+                }}
+                className="w-full mt-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <X className="w-4 h-4" />
+                <span>{isAr ? 'إلغاء إرسال الموديل وسحبه نهائياً من عند الموديليست' : 'Annuler et retirer définitivement du modéliste'}</span>
+              </button>
+
             </div>
           </div>
         );
@@ -3300,12 +3378,12 @@ export default function Demandes() {
                                         💬 {isAr ? `عرض مضاد: ${ext.adminCounterPrice} د.م` : `Contre-offre: ${ext.adminCounterPrice} MAD`}
                                       </span>
                                     );
-                                    if (ext.patronageStatus === 'priced' || patPrice > 0) return (
+                                    if (!ext.patronageCancelled && (ext.patronageStatus === 'priced' || patPrice > 0)) return (
                                       <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 border border-indigo-300 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm animate-pulse">
                                         ✂️ {isAr ? `ثمن الموديليست: ${patPrice} د.م` : `Tarif Modéliste: ${patPrice} MAD`}
                                       </span>
                                     );
-                                    if (ext.patronageStatus === 'requested') return (
+                                    if (!ext.patronageCancelled && ext.patronageStatus === 'requested') return (
                                       <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 border border-indigo-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
                                         ⏳ {isAr ? 'في انتظار تسعير الباترون...' : 'Patronage en attente...'}
                                       </span>
@@ -3462,60 +3540,87 @@ export default function Demandes() {
                                 {!lead.type.startsWith('RECRUTEMENT:') && (() => {
                                   const ext = parseLeadDetailsJson(lead.details);
                                   const patPrice = Number(ext.patronagePrice ?? (lead as any).patronagePrice) || 0;
-                                  const isValidated = Boolean(ext.adminValidatedToWork || ext.clientValidated || lead.crmPriceConfirmed);
-                                  const isNegotiating = ext.patronageNegotiationStatus === 'counter_offered';
-                                  const isPriced = ext.patronageStatus === 'priced' || patPrice > 0;
-                                  const isRequested = ext.patronageStatus === 'requested';
+                                  const isValidated = !ext.patronageCancelled && Boolean(ext.adminValidatedToWork || ext.clientValidated || lead.crmPriceConfirmed);
+                                  const isNegotiating = !ext.patronageCancelled && ext.patronageNegotiationStatus === 'counter_offered';
+                                  const isPriced = !ext.patronageCancelled && (ext.patronageStatus === 'priced' || patPrice > 0);
+                                  const isRequested = !ext.patronageCancelled && ext.patronageStatus === 'requested';
+
+                                  const renderCancelBtn = () => (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCancelPatronage(lead);
+                                      }}
+                                      title={isAr ? 'إلغاء الباترون وسحبه نهائياً من عند الموديليست' : 'Annuler et retirer du modéliste'}
+                                      className="h-9 px-2 rounded-xl text-[11px] font-black border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                      <span>{isAr ? 'إلغاء' : 'Annuler'}</span>
+                                    </button>
+                                  );
 
                                   if (isPriced && !isValidated) {
                                     return (
-                                      <button 
-                                        onClick={() => openPatronageModal(lead)}
-                                        title={isAr ? 'الرد على الموديليست وتحديد القرار (قبول أو تفاوض)' : 'Répondre au modéliste (Valider ou négocier)'}
-                                        className="h-9 px-3 rounded-xl text-xs font-black border bg-gradient-to-r from-amber-500 via-indigo-600 to-indigo-700 text-white hover:brightness-110 transition-all shadow-md flex items-center gap-1.5 cursor-pointer animate-pulse"
-                                      >
-                                        <Scissors className="w-3.5 h-3.5" />
-                                        <span>{isAr ? `قرار الباترون (${patPrice} د.م)` : `Décision (${patPrice} MAD)`}</span>
-                                      </button>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <button 
+                                          onClick={() => openPatronageModal(lead)}
+                                          title={isAr ? 'الرد على الموديليست وتحديد القرار (قبول أو تفاوض)' : 'Répondre au modéliste (Valider ou négocier)'}
+                                          className="h-9 px-3 rounded-xl text-xs font-black border bg-gradient-to-r from-amber-500 via-indigo-600 to-indigo-700 text-white hover:brightness-110 transition-all shadow-md flex items-center gap-1.5 cursor-pointer animate-pulse"
+                                        >
+                                          <Scissors className="w-3.5 h-3.5" />
+                                          <span>{isAr ? `قرار الباترون (${patPrice} د.م)` : `Décision (${patPrice} MAD)`}</span>
+                                        </button>
+                                        {renderCancelBtn()}
+                                      </div>
                                     );
                                   }
 
                                   if (isValidated) {
                                     return (
-                                      <button 
-                                        onClick={() => openPatronageModal(lead)}
-                                        title={isAr ? 'الباترون مصادق عليه — عرض التفاصيل والمتابعة' : 'Patronage Validé — Voir détails'}
-                                        className="h-9 px-2.5 rounded-xl text-xs font-black border bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
-                                      >
-                                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                                        <span>{isAr ? `✓ باترون مصادق (${patPrice} د.م)` : `✓ Validé (${patPrice} MAD)`}</span>
-                                      </button>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <button 
+                                          onClick={() => openPatronageModal(lead)}
+                                          title={isAr ? 'الباترون مصادق عليه — عرض التفاصيل والمتابعة' : 'Patronage Validé — Voir détails'}
+                                          className="h-9 px-2.5 rounded-xl text-xs font-black border bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                        >
+                                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                                          <span>{isAr ? `✓ باترون مصادق (${patPrice} د.م)` : `✓ Validé (${patPrice} MAD)`}</span>
+                                        </button>
+                                        {renderCancelBtn()}
+                                      </div>
                                     );
                                   }
 
                                   if (isNegotiating) {
                                     return (
-                                      <button 
-                                        onClick={() => openPatronageModal(lead)}
-                                        title={isAr ? 'عرض مضاد قيد التفاوض — اضغط للتعديل أو المتابعة' : 'Négociation en cours'}
-                                        className="h-9 px-2.5 rounded-xl text-xs font-black border bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
-                                      >
-                                        <Clock className="w-3.5 h-3.5 text-amber-600" />
-                                        <span>{isAr ? `تفاوض (${ext.adminCounterPrice || patPrice} د.م)` : `Négociation (${ext.adminCounterPrice || patPrice} MAD)`}</span>
-                                      </button>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <button 
+                                          onClick={() => openPatronageModal(lead)}
+                                          title={isAr ? 'عرض مضاد قيد التفاوض — اضغط للتعديل أو المتابعة' : 'Négociation en cours'}
+                                          className="h-9 px-2.5 rounded-xl text-xs font-black border bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                        >
+                                          <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                          <span>{isAr ? `تفاوض (${ext.adminCounterPrice || patPrice} د.م)` : `Négociation (${ext.adminCounterPrice || patPrice} MAD)`}</span>
+                                        </button>
+                                        {renderCancelBtn()}
+                                      </div>
                                     );
                                   }
 
                                   if (isRequested) {
                                     return (
-                                      <button 
-                                        onClick={() => openPatronageModal(lead)}
-                                        title={isAr ? 'طلب الباترون مرسل — في انتظار تسعير الموديليست' : 'En attente de tarif modéliste'}
-                                        className="h-9 px-2.5 rounded-xl text-xs font-black border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
-                                      >
-                                        <Clock className="w-3.5 h-3.5 text-indigo-600" />
-                                        <span>{isAr ? 'بانتظار الموديليست ⏳' : 'Attente Modéliste ⏳'}</span>
-                                      </button>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <button 
+                                          onClick={() => openPatronageModal(lead)}
+                                          title={isAr ? 'طلب الباترون مرسل — في انتظار تسعير الموديليست' : 'En attente de tarif modéliste'}
+                                          className="h-9 px-2.5 rounded-xl text-xs font-black border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                        >
+                                          <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                                          <span>{isAr ? 'بانتظار الموديليست ⏳' : 'Attente Modéliste ⏳'}</span>
+                                        </button>
+                                        {renderCancelBtn()}
+                                      </div>
                                     );
                                   }
 
