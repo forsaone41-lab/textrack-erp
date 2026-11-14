@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { CoutureLoader } from '../components/CoutureLoader';
 import {
   CheckCircle2,
   Clock,
@@ -133,6 +134,7 @@ export interface ModelItem {
   patronMessages: PatronMessage[];
   lead?: Lead;
   fiche?: FicheTechnique;
+  sampleFeedback?: SampleFeedbackData;
 }
 
 function normalizeName(str?: string): string {
@@ -365,6 +367,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       console.error('Erreur chargement données Modéliste:', e);
       showToast(isAr ? 'حدث خطأ أثناء تحميل البيانات' : 'Erreur de chargement des données', true);
     } finally {
+      // Smooth luxury timing so the preloader renders cleanly and data is 100% computed
+      await new Promise(r => setTimeout(r, 650));
       setLoading(false);
     }
   };
@@ -481,6 +485,16 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
       const rawDate = toYmd(ext.patronagePricedAt || ext.clientValidatedAt || ext.adminValidatedAt || lead.date) || new Date().toISOString().slice(0, 10);
 
+      let sampleFeedback: SampleFeedbackData | undefined = (cmd?.sampleFeedback as SampleFeedbackData) || (lead as any).sampleFeedback;
+      if (!sampleFeedback && cmd?.suivi) {
+        const fbSuivi = cmd.suivi.slice().reverse().find(s => s.note?.includes('[FEEDBACK_JSON]'));
+        if (fbSuivi) {
+          try {
+            sampleFeedback = JSON.parse(fbSuivi.note.replace('[FEEDBACK_JSON]', ''));
+          } catch (e) {}
+        }
+      }
+
       const patronFiles: PatronFileAttachment[] = Array.isArray(ext.patronFiles) ? ext.patronFiles : [];
       const patronMessages: PatronMessage[] = Array.isArray(ext.patronMessages) ? ext.patronMessages : [];
 
@@ -518,7 +532,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         modelisteGradation: ext.modelisteGradation || ext.customMesures,
         patronFiles,
         patronMessages,
-        lead
+        lead,
+        sampleFeedback
       });
     });
 
@@ -542,6 +557,16 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       const isValidatedByClient = Boolean(
         cmd && ['echantillon_valide', 'en_cours', 'terminé', 'livré'].includes(cmd.statut)
       );
+      let sampleFeedback: SampleFeedbackData | undefined = (cmd?.sampleFeedback as SampleFeedbackData);
+      if (!sampleFeedback && cmd?.suivi) {
+        const fbSuivi = cmd.suivi.slice().reverse().find(s => s.note?.includes('[FEEDBACK_JSON]'));
+        if (fbSuivi) {
+          try {
+            sampleFeedback = JSON.parse(fbSuivi.note.replace('[FEEDBACK_JSON]', ''));
+          } catch (e) {}
+        }
+      }
+
       const modUser = users.find(u => u.id === fiche.modelisteId);
 
       items.push({
@@ -567,7 +592,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         modelisteGradation: (fiche as any).modelisteGradation,
         patronFiles: [],
         patronMessages: [],
-        fiche
+        fiche,
+        sampleFeedback
       });
     });
 
@@ -1105,6 +1131,14 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     }
   ];
 
+  if (loading) {
+    return (
+      <div className={`space-y-6 pb-28 md:pb-8 bg-[#090B10] min-h-screen text-slate-100 p-3 sm:p-5 md:p-8 rounded-3xl border border-white/[0.05] shadow-2xl flex items-center justify-center ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
+        <CoutureLoader minHeight="min-h-[75vh]" />
+      </div>
+    );
+  }
+
   return (
     <div className={`space-y-6 pb-28 md:pb-8 bg-[#090B10] min-h-screen text-slate-100 p-3 sm:p-5 md:p-8 rounded-3xl border border-white/[0.05] shadow-2xl ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Toast Notification */}
@@ -1256,44 +1290,45 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         </div>
       </div>
 
-      {/* ─── Apple Segmented Tabs Bar (Desktop Navigation 1, 2, 3, 4) ──────────── */}
-      <div className="hidden md:flex bg-[#12151E]/90 backdrop-blur-2xl p-1.5 rounded-2xl border border-white/[0.08] shadow-lg items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 w-auto">
-          {tabs.map((tab, idx) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`px-4 py-2.5 rounded-xl font-bold text-xs md:text-[13px] transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer ${
-                  isActive
-                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-500/25'
-                    : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
-                }`}
-              >
-                <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-mono font-black ${
-                  isActive ? 'bg-white/20 text-white' : 'bg-white/[0.08] text-slate-400'
-                }`}>
-                  {idx + 1}
+      {/* ─── Tabs Bar (Mobile Phone Only — Hidden on PC to avoid duplication with Sidebar) ──────────── */}
+      <div className="md:hidden flex overflow-x-auto scrollbar-hide bg-[#12151E]/90 backdrop-blur-2xl p-1.5 rounded-2xl border border-white/[0.08] shadow-lg items-center gap-1.5">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`px-3 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
+                isActive
+                  ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-500/25'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
+              }`}
+            >
+              <span className="scale-90">{tab.icon}</span>
+              <span className="tracking-tight">{tab.shortLabel || tab.label}</span>
+              {typeof tab.badge === 'number' && (
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                  }`}
+                >
+                  {tab.badge}
                 </span>
-                <span className="scale-90">{tab.icon}</span>
-                <span className="tracking-tight">{tab.label}</span>
-                {typeof tab.badge === 'number' && (
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                    }`}
-                  >
-                    {tab.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-        {activeTab !== 'dashboard' && activeTab !== 'profil' && (
-          <div className="relative w-64">
+      {/* Desktop Search Bar (PC Only — when in Tarifs or Travaux) */}
+      {activeTab !== 'dashboard' && activeTab !== 'profil' && (
+        <div className="hidden md:flex items-center justify-between gap-3 bg-[#12151E] p-2.5 rounded-2xl border border-white/[0.08] shadow-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-400">
+              {activeTab === 'a_tarifer' ? (isAr ? '🔍 تصفية وبحث في موديلات التسعير' : '🔍 Recherche modèles à tarifer') : (isAr ? '🔍 تصفية وبحث في ورشة المهام' : '🔍 Recherche dans les travaux')}
+            </span>
+          </div>
+          <div className="relative w-80">
             <Search className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3' : 'left-3'}`} />
             <input
               type="text"
@@ -1303,8 +1338,8 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-xs font-medium text-white placeholder-slate-500 outline-none focus:border-indigo-500/60 transition`}
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Mobile Search Bar (Only shown on phone when in Tarifs or Travaux) */}
       {(activeTab === 'a_tarifer' || activeTab === 'travaux') && (
@@ -1335,7 +1370,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-                  {isAr ? 'الرصيد الصافي المتبقي له' : 'Solde Net à Percevoir'}
+                  {isAr ? (isAdmin ? 'الرصيد الصافي المتبقي للموديليست' : 'الرصيد الصافي المتبقي') : 'Solde Net à Percevoir'}
                 </span>
                 <div className="w-10 h-10 rounded-2xl bg-white/[0.08] flex items-center justify-center text-indigo-300 group-hover:scale-110 transition-transform">
                   <Wallet className="w-5 h-5" />
@@ -1345,7 +1380,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 {summary.totalRemainingAllTime.toLocaleString()} <span className="text-sm font-semibold text-slate-400">MAD</span>
               </div>
               <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">{isAr ? 'المدفوع له حتى الآن :' : 'Déjà Réglé :'}</span>
+                <span className="text-slate-400 font-medium">{isAr ? (isAdmin ? 'المدفوع له حتى الآن :' : 'المدفوع حتى الآن :') : 'Déjà Réglé :'}</span>
                 <span className="text-emerald-400 font-mono font-bold">{summary.totalPaidAllTime.toLocaleString()} MAD</span>
               </div>
             </div>
@@ -1358,7 +1393,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-amber-400" />
-                  {isAr ? 'مطلوب إنجازها الآن (قيد العمل)' : 'Travaux en Cours'}
+                  {isAr ? 'مطلوب للإنجاز (قيد العمل)' : 'Travaux en Cours'}
                 </span>
                 <div className="w-10 h-10 rounded-2xl bg-white/[0.08] flex items-center justify-center text-amber-300 group-hover:scale-110 transition-transform">
                   <Clock className="w-5 h-5" />
@@ -1387,7 +1422,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               </div>
               <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white">{summary.completedCount}</div>
               <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">{isAr ? 'مجموع ما كسبه منها :' : 'Gagné sur ces modèles :'}</span>
+                <span className="text-slate-400 font-medium">{isAr ? (isAdmin ? 'مجموع أرباح الموديليست :' : 'مجموع الأرباح المكتسبة :') : 'Gagné sur ces modèles :'}</span>
                 <span className="text-emerald-300 font-mono font-bold">{summary.completedMAD.toLocaleString()} MAD</span>
               </div>
             </div>
@@ -1875,6 +1910,116 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                         </button>
                       </div>
                     </div>
+
+                    {/* ✂️ ملاحظات وتعديلات الزبون على العينة (Fitting & Retouches) */}
+                    {item.sampleFeedback && (item.sampleFeedback.alterations?.length || item.sampleFeedback.photos?.length || item.sampleFeedback.sizeNotes || item.sampleFeedback.generalNotes || item.sampleFeedback.fabricNotes) && (
+                      <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-purple-500/10 border-2 border-amber-400/60 rounded-2xl p-4 space-y-3 shadow-sm animate-in fade-in duration-200">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/50 pb-2.5">
+                          <div className="flex items-center gap-2">
+                            <span className="relative flex h-2.5 w-2.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                            </span>
+                            <Scissors className="w-4 h-4 text-amber-600" />
+                            <h4 className="text-xs font-black text-amber-950 uppercase tracking-wider">
+                              {isAr ? 'ملاحظات وتعديلات الزبون على العينة (Fitting & Retouches)' : 'Ajustements & Retouches Client sur l\'Échantillon'}
+                            </h4>
+                            {Number(item.sampleFeedback.rating) > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-900 flex items-center gap-1 shadow-xs">
+                                ⭐ {item.sampleFeedback.rating}/5
+                              </span>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setTechPackItem(item)}
+                            className="px-3 py-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                          >
+                            <Ruler className="w-3.5 h-3.5" />
+                            <span>{isAr ? 'عرض جدول القياسات والتعديل' : 'Ajuster les Mesures'}</span>
+                          </button>
+                        </div>
+
+                        {/* Technical Alert for Modéliste */}
+                        <div className="bg-amber-500/15 border border-amber-500/30 rounded-xl p-2.5 text-xs text-amber-900 font-bold flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                          <span>
+                            {isAr
+                              ? 'تنبيه للموديليست: يرجى تطبيق هذه التعديلات على الباترون الأساسي (Taille de Base) أولاً، ثم استخراج التدرج (Gradation) لجميع المقاسات.'
+                              : 'Avis modéliste : Veuillez ajuster le patronage de base (taille testée) avant de lancer la gradation complète.'}
+                          </span>
+                        </div>
+
+                        {/* Alteration points chips/cards */}
+                        {Array.isArray(item.sampleFeedback.alterations) && item.sampleFeedback.alterations.length > 0 && (
+                          <div className="space-y-1.5">
+                            <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider block">
+                              {isAr ? 'نقاط التعديل المحددة من طرف الزبون :' : 'Points de retouches demandés :'}
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                              {item.sampleFeedback.alterations.map((alt, aIdx) => (
+                                <div key={aIdx} className="bg-white/90 border border-amber-300/80 rounded-xl p-2.5 text-xs shadow-2xs">
+                                  <div className="flex items-center justify-between gap-1 mb-1">
+                                    <span className="font-black text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">
+                                      {alt.point}
+                                    </span>
+                                    {alt.type && (
+                                      <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                                        alt.type === 'increase' ? 'bg-emerald-100 text-emerald-800' :
+                                        alt.type === 'decrease' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                                      }`}>
+                                        {alt.type === 'increase' ? '+ زيادة' : alt.type === 'decrease' ? '- إنقاص' : 'تعديل'}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-slate-800 font-medium text-[11px] leading-relaxed">{alt.note}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Photos of fitting uploaded by client */}
+                        {Array.isArray(item.sampleFeedback.photos) && item.sampleFeedback.photos.length > 0 && (
+                          <div className="space-y-1.5">
+                            <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider block">
+                              {isAr ? 'صور القياس والتجربة من الزبون (انقر للتكبير) :' : 'Photos d\'essayage client (cliquer pour agrandir) :'}
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {item.sampleFeedback.photos.map((ph, pIdx) => (
+                                <button
+                                  key={pIdx}
+                                  type="button"
+                                  onClick={() => setZoomImage(ph)}
+                                  className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-white shadow-md hover:scale-105 transition-transform group cursor-pointer"
+                                >
+                                  <img src={ph} alt={`Fitting ${pIdx + 1}`} className="w-full h-full object-cover" />
+                                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <Maximize2 className="w-4 h-4 text-white" />
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Notes general or sizing */}
+                        {(item.sampleFeedback.sizeNotes || item.sampleFeedback.generalNotes || item.sampleFeedback.fabricNotes) && (
+                          <div className="bg-white/80 rounded-xl p-2.5 text-xs space-y-1 text-slate-700 font-medium border border-amber-200/50">
+                            {item.sampleFeedback.sizeNotes && (
+                              <div><strong className="text-slate-900">{isAr ? 'ملاحظات القياس:' : 'Notes mesures:'}</strong> {item.sampleFeedback.sizeNotes}</div>
+                            )}
+                            {item.sampleFeedback.generalNotes && (
+                              <div><strong className="text-slate-900">{isAr ? 'ملاحظات عامة:' : 'Notes générales:'}</strong> {item.sampleFeedback.generalNotes}</div>
+                            )}
+                            {item.sampleFeedback.fabricNotes && (
+                              <div><strong className="text-slate-900">{isAr ? 'ملاحظات الثوب:' : 'Notes tissu:'}</strong> {item.sampleFeedback.fabricNotes}</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* 📁 FILE UPLOAD ZONE: PDF, RAR, ZIP, DXF, Images */}
                     <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-4 space-y-3">

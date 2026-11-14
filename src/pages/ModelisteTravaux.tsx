@@ -29,6 +29,7 @@ import {
   Info
 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
+import { CoutureLoader } from '../components/CoutureLoader';
 import {
   User,
   Lead,

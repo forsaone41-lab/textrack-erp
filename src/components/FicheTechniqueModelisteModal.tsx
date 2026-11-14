@@ -595,7 +595,13 @@ export default function FicheTechniqueModelisteModal({
   onSaveMeasurements,
   isAr = false
 }: FicheTechniqueModelisteModalProps) {
-  const [activeTab, setActiveTab] = useState<'visuel' | 'mesures' | 'confection'>('visuel');
+  const [activeTab, setActiveTab] = useState<'visuel' | 'mesures' | 'confection' | 'retouches'>(() => {
+    if (item?.sampleFeedback && ((item.sampleFeedback.alterations && item.sampleFeedback.alterations.length > 0) || (item.sampleFeedback.photos && item.sampleFeedback.photos.length > 0))) {
+      return 'retouches';
+    }
+    return 'visuel';
+  });
+  const [retouchePhotoZoom, setRetouchePhotoZoom] = useState<string | null>(null);
   const [notes, setNotes] = useState<string>(item?.patronageNotes || '');
   const [savingNotes, setSavingNotes] = useState(false);
   const [savedNotesSuccess, setSavedNotesSuccess] = useState(false);
@@ -801,6 +807,21 @@ export default function FicheTechniqueModelisteModal({
           >
             <FileText className="w-3.5 h-3.5" />
             <span>{isAr ? 'تعليمات الخياطة وملاحظاتي' : 'Montage & Notes'}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('retouches')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer relative ${
+              activeTab === 'retouches'
+                ? 'bg-amber-500 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-white/60'
+            }`}
+          >
+            <Scissors className="w-3.5 h-3.5" />
+            <span>{isAr ? 'تعديلات العينة (Fitting)' : 'Retouches & Fitting'}</span>
+            {item?.sampleFeedback && ((item.sampleFeedback.alterations && item.sampleFeedback.alterations.length > 0) || (item.sampleFeedback.photos && item.sampleFeedback.photos.length > 0)) && (
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping absolute -top-0.5 -right-0.5" />
+            )}
           </button>
         </div>
 
@@ -1044,6 +1065,161 @@ export default function FicheTechniqueModelisteModal({
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          
+
+          {/* TAB 4: RETOUCHES & FITTING */}
+          {activeTab === 'retouches' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              {/* Technical Alert for Modéliste */}
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-xs text-amber-950 font-bold flex items-start gap-3 shadow-xs">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h4 className="font-black text-sm uppercase tracking-wider text-amber-900">
+                    {isAr ? 'تنبيه تقني هام للموديليست قبل بدء التدرج (Gradation)' : 'Avis Modéliste : Ajuster le Patronage de Base avant Gradation'}
+                  </h4>
+                  <p className="font-medium leading-relaxed text-amber-800">
+                    {isAr
+                      ? 'قام الزبون بتجربة العينة (Fitting) وطلب التعديلات الموضحة أدناه. يرجى تعديل الباترون الأساسي (Taille de Base) أولاً، ثم الانتقال لتبويب "جدول القياسات والتدريج" لإنجاز التدرج لجميع المقاسات المطلوبة.'
+                      : 'Le client a essayé l\'échantillon et a spécifié les retouches ci-dessous. Veuillez ajuster le patronage de base (taille testée) avant d\'appliquer la gradation sur les autres tailles.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Client Evaluation Overview */}
+              {item.sampleFeedback && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-slate-500 uppercase tracking-wider">
+                        {isAr ? 'تقييم الزبون للعينة :' : 'Note globale du client :'}
+                      </span>
+                      {Number(item.sampleFeedback.rating) > 0 && (
+                        <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 px-3 py-1 rounded-xl">
+                          <span className="text-amber-500 text-sm font-black">★</span>
+                          <span className="font-mono font-black text-xs text-amber-950">{item.sampleFeedback.rating}/5</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('mesures')}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer shadow-sm"
+                    >
+                      <Ruler className="w-4 h-4" />
+                      <span>{isAr ? 'الانتقال لجدول القياسات للتعديل' : 'Modifier les Mesures'}</span>
+                    </button>
+                  </div>
+
+                  {/* Alteration Points Table */}
+                  {Array.isArray(item.sampleFeedback.alterations) && item.sampleFeedback.alterations.length > 0 ? (
+                    <div className="space-y-2">
+                      <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">
+                        {isAr ? 'نقاط التعديل المطلوبة بالتفصيل :' : 'Points de retouches & ajustements demandés :'}
+                      </span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {item.sampleFeedback.alterations.map((alt, aIdx) => (
+                          <div key={aIdx} className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-black text-indigo-900 bg-indigo-100/70 px-2.5 py-1 rounded-lg text-xs">
+                                {alt.point}
+                              </span>
+                              {alt.type && (
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                  alt.type === 'increase' ? 'bg-emerald-100 text-emerald-800' :
+                                  alt.type === 'decrease' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                                }`}>
+                                  {alt.type === 'increase' ? '+ زيادة' : alt.type === 'decrease' ? '- إنقاص' : 'تعديل في القصة'}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-slate-800 font-bold text-xs leading-relaxed bg-white p-2.5 rounded-xl border border-slate-200/60">
+                              {alt.note}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500 font-medium italic">
+                      {isAr ? 'لم يحدد الزبون نقاط تعديل خاصة.' : 'Aucun point spécifique renseigné.'}
+                    </p>
+                  )}
+
+                  {/* Photos of fitting */}
+                  {Array.isArray(item.sampleFeedback.photos) && item.sampleFeedback.photos.length > 0 && (
+                    <div className="space-y-2 pt-3 border-t border-slate-100">
+                      <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">
+                        {isAr ? 'صور تجربة العينة المرفقة من الزبون (انقر لتكبير الصورة) :' : 'Photos d\'essayage client (cliquer pour zoomer) :'}
+                      </span>
+                      <div className="flex flex-wrap gap-3">
+                        {item.sampleFeedback.photos.map((ph, pIdx) => (
+                          <button
+                            key={pIdx}
+                            type="button"
+                            onClick={() => setRetouchePhotoZoom(ph)}
+                            className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-sm hover:scale-105 transition-transform group cursor-pointer"
+                          >
+                            <img src={ph} alt={`Fitting ${pIdx + 1}`} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <Maximize2 className="w-5 h-5 text-white" />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* General notes / fabric notes */}
+                  {(item.sampleFeedback.sizeNotes || item.sampleFeedback.generalNotes || item.sampleFeedback.fabricNotes) && (
+                    <div className="space-y-2 pt-3 border-t border-slate-100 text-xs">
+                      {item.sampleFeedback.sizeNotes && (
+                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                          <strong className="text-slate-900 block mb-0.5">{isAr ? 'ملاحظات حول القياسات:' : 'Notes sur les mesures:'}</strong>
+                          <span className="text-slate-700 font-medium">{item.sampleFeedback.sizeNotes}</span>
+                        </div>
+                      )}
+                      {item.sampleFeedback.fabricNotes && (
+                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                          <strong className="text-slate-900 block mb-0.5">{isAr ? 'ملاحظات حول الثوب:' : 'Notes sur le tissu:'}</strong>
+                          <span className="text-slate-700 font-medium">{item.sampleFeedback.fabricNotes}</span>
+                        </div>
+                      )}
+                      {item.sampleFeedback.generalNotes && (
+                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                          <strong className="text-slate-900 block mb-0.5">{isAr ? 'ملاحظات عامة:' : 'Notes générales:'}</strong>
+                          <span className="text-slate-700 font-medium">{item.sampleFeedback.generalNotes}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Zoom Lightbox for Retouche Photos */}
+          {retouchePhotoZoom && (
+            <div
+              className="fixed inset-0 bg-black/85 z-[200] flex items-center justify-center p-4 cursor-pointer animate-in fade-in duration-200"
+              onClick={() => setRetouchePhotoZoom(null)}
+            >
+              <div className="relative max-w-4xl max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => setRetouchePhotoZoom(null)}
+                  className="absolute -top-3 -right-3 p-2 rounded-full bg-white text-slate-900 shadow-xl hover:bg-slate-100 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <img
+                  src={retouchePhotoZoom}
+                  alt="Zoom Essayage"
+                  className="w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+                />
               </div>
             </div>
           )}

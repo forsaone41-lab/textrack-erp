@@ -246,7 +246,10 @@ export default function Demandes() {
   const [patronageDeadline, setPatronageDeadline] = useState<string>('');
   const [patronageCounterPrice, setPatronageCounterPrice] = useState<string>('');
   const [patronageNegotiationNotes, setPatronageNegotiationNotes] = useState<string>('');
-  const [patronageTab, setPatronageTab] = useState<'validate' | 'negotiate'>('validate');
+  const [patronageTab, setPatronageTab] = useState<'validate' | 'negotiate' | 'request'>('validate');
+  const [patronageDirectPrice, setPatronageDirectPrice] = useState<string>('');
+  const [filterModeliste, setFilterModeliste] = useState<boolean>(false);
+  const [filterModelisteStatus, setFilterModelisteStatus] = useState<'all' | 'requested' | 'priced' | 'negotiating' | 'validated'>('all');
   const [patronageSubmitting, setPatronageSubmitting] = useState<boolean>(false);
 
   const toggleGroupExpanded = (key: string) => {
@@ -924,6 +927,54 @@ export default function Demandes() {
     }, 800);
   };
 
+
+// Helper to inspect modéliste / patronage status for any lead
+const getLeadModelisteInfo = (lead: Lead) => {
+  if (!lead || !lead.details || lead.type?.startsWith('RECRUTEMENT:')) {
+    return { hasModeliste: false, status: 'none' as const, patPrice: 0, modelisteName: '', counterPrice: 0, deadlineDate: '', isValidated: false, isNegotiating: false, isPriced: false, isRequested: false };
+  }
+  const ext = parseLeadDetailsJson(lead.details);
+  if (ext.patronageCancelled === true || ext.patronageStatus === 'cancelled') {
+    return { hasModeliste: false, status: 'cancelled' as const, patPrice: 0, modelisteName: '', counterPrice: 0, deadlineDate: '', isValidated: false, isNegotiating: false, isPriced: false, isRequested: false };
+  }
+  const patPrice = Number(ext.patronagePrice ?? (lead as any).patronagePrice) || 0;
+  const isValidated = Boolean(ext.adminValidatedToWork || ext.clientValidated || lead.crmPriceConfirmed);
+  const isNegotiating = !ext.patronageCancelled && ext.patronageNegotiationStatus === 'counter_offered';
+  const isPriced = !ext.patronageCancelled && (ext.patronageStatus === 'priced' || patPrice > 0);
+  const isRequested = !ext.patronageCancelled && ext.patronageStatus === 'requested';
+
+  const hasModeliste = Boolean(
+    isRequested ||
+    isPriced ||
+    isValidated ||
+    isNegotiating ||
+    ext.modelisteId ||
+    ext.modelisteName ||
+    ext.workStatus
+  );
+
+  let status: 'requested' | 'priced' | 'negotiating' | 'validated' | 'none' = 'none';
+  if (isValidated) status = 'validated';
+  else if (isNegotiating) status = 'negotiating';
+  else if (isPriced) status = 'priced';
+  else if (isRequested) status = 'requested';
+  else if (hasModeliste) status = 'requested';
+
+  return {
+    hasModeliste,
+    status,
+    patPrice,
+    modelisteName: ext.modelisteName || '',
+    modelisteId: ext.modelisteId || '',
+    counterPrice: Number(ext.adminCounterPrice) || 0,
+    deadlineDate: ext.deadlineDate || '',
+    isValidated,
+    isNegotiating,
+    isPriced,
+    isRequested
+  };
+};
+
   const openPatronageModal = (lead: Lead) => {
     setPatronageModalLead(lead);
     const ext = parseLeadDetailsJson(lead.details);
@@ -944,10 +995,60 @@ export default function Demandes() {
     setPatronageCounterPrice(suggestedCounter);
     setPatronageNegotiationNotes(ext.patronageNegotiationNotes || '');
     
+    setPatronageDirectPrice(patPrice > 0 ? String(patPrice) : '');
     if (ext.patronageNegotiationStatus === 'counter_offered') {
       setPatronageTab('negotiate');
-    } else {
+    } else if (!ext.patronageCancelled && (ext.patronageStatus === 'priced' || patPrice > 0 || ext.adminValidatedToWork)) {
       setPatronageTab('validate');
+    } else {
+      setPatronageTab('request');
+    }
+  };
+
+  const handleRequestPriceFromModeliste = async () => {
+    if (!patronageModalLead) return;
+    setPatronageSubmitting(true);
+    try {
+      const ext = parseLeadDetailsJson(patronageModalLead.details);
+      const assignedUser = users.find(u => u.id === patronageModelisteId) || modelistes[0];
+
+      const clientNotesFallback = patronageModalLead.details && !patronageModalLead.details.trim().startsWith('{')
+        ? patronageModalLead.details.split('| AI_NOTES:')[0].split('| ATELIER_DEVIS:')[0].replace('| COM_UNLOCK:true', '').trim()
+        : ext.clientNotes;
+
+      const newDetails = {
+        ...ext,
+        ...(clientNotesFallback ? { clientNotes: clientNotesFallback } : {}),
+        patronageStatus: 'requested',
+        patronageRequestedAt: new Date().toISOString(),
+        modelisteId: patronageModelisteId || ext.modelisteId || assignedUser?.id,
+        modelisteName: assignedUser?.nom || ext.modelisteName || 'Modéliste',
+        deadlineDate: patronageDeadline || ext.deadlineDate
+      };
+
+      const updatedLead: Lead = {
+        ...patronageModalLead,
+        details: JSON.stringify(newDetails)
+      };
+
+      setLeads(prev => prev.map(l => l.id === patronageModalLead.id ? updatedLead : l));
+      await saveRecord('leads', updatedLead, true);
+
+      const modPhone = (assignedUser?.telephone || '').replace(/\D/g, '');
+      const modeleClean = (patronageModalLead.type || 'Modèle').replace(' (CMT - Client Tissu)', '').replace('RECRUTEMENT:', '');
+      const waMsg = isAr
+        ? `السلام عليكم ${assignedUser?.nom || 'أخي'}، كاين موديل جديد "${modeleClean}" (الزبون: ${patronageModalLead.name}) مطلوب التسعير ديال الباترون ديالو.\nالمرجو الدخول إلى صفحة التسعير فلوحة الموديليست وتحديد الثمن المناسب. شكراً!`
+        : `Bonjour ${assignedUser?.nom || ''}, un nouveau modèle "${modeleClean}" (Client: ${patronageModalLead.name}) nécessite votre chiffrage de patronage.\nMerci de fixer le tarif sur votre espace modéliste.`;
+
+      setPatronageModalLead(null);
+      if (modPhone && window.confirm(isAr ? 'تم إرسال الطلب للموديليست بنجاح! هل تريد إشعاره عبر واتساب الآن؟' : 'Demande transmise au modéliste ! Prévenir par WhatsApp ?')) {
+        window.open(`https://wa.me/${modPhone}?text=${encodeURIComponent(waMsg)}`, '_blank');
+      }
+    } catch (e) {
+      console.error('Erreur demande modéliste:', e);
+      alert(isAr ? 'حدث خطأ أثناء إرسال الطلب للموديليست' : 'Erreur lors de l\'envoi');
+    } finally {
+      setPatronageSubmitting(false);
     }
   };
 
@@ -961,7 +1062,9 @@ export default function Demandes() {
     try {
       const ext = parseLeadDetailsJson(patronageModalLead.details);
       const assignedUser = users.find(u => u.id === patronageModelisteId) || modelistes[0];
-      const patPrice = Number(ext.patronagePrice ?? (patronageModalLead as any).patronagePrice) || 0;
+      const basePrice = Number(ext.patronagePrice ?? (patronageModalLead as any).patronagePrice) || 0;
+      const customPrice = Number(patronageDirectPrice) || 0;
+      const patPrice = basePrice > 0 ? basePrice : customPrice;
       const currentUser = JSON.parse(localStorage.getItem('textrack_auth') || '{}');
       const adminName = currentUser.nom || 'Administration';
 
@@ -1378,6 +1481,29 @@ export default function Demandes() {
     }
   };
 
+  // Modéliste Stats computation
+  const modelisteStats = useMemo(() => {
+    const clientLeads = leads.filter(l => !l.type.startsWith('RECRUTEMENT:'));
+    let total = 0;
+    let requested = 0;
+    let priced = 0;
+    let negotiating = 0;
+    let validated = 0;
+
+    clientLeads.forEach(l => {
+      const info = getLeadModelisteInfo(l);
+      if (info.hasModeliste) {
+        total++;
+        if (info.status === 'requested') requested++;
+        else if (info.status === 'priced') priced++;
+        else if (info.status === 'negotiating') negotiating++;
+        else if (info.status === 'validated') validated++;
+      }
+    });
+
+    return { total, requested, priced, negotiating, validated };
+  }, [leads]);
+
   const filteredLeads = useMemo(() => leads.filter(l => {
     const isRecrutement = l.type.startsWith('RECRUTEMENT:');
     const matchCategory = category === 'recrutement' ? isRecrutement : !isRecrutement;
@@ -1401,14 +1527,24 @@ export default function Demandes() {
 
     const matchStarred = filterStarred ? !!l.crmPriority : true;
 
-    return matchCategory && matchFilter && matchSearch && matchType && matchExperience && matchStarred;
+    let matchModeliste = true;
+    if (filterModeliste) {
+      const modInfo = getLeadModelisteInfo(l);
+      if (!modInfo.hasModeliste) {
+        matchModeliste = false;
+      } else if (filterModelisteStatus !== 'all' && modInfo.status !== filterModelisteStatus) {
+        matchModeliste = false;
+      }
+    }
+
+    return matchCategory && matchFilter && matchSearch && matchType && matchExperience && matchStarred && matchModeliste;
   }).sort((a, b) => {
     if (sortBy === 'date_desc') return new Date(b.date).getTime() - new Date(a.date).getTime();
     if (sortBy === 'date_asc') return new Date(a.date).getTime() - new Date(b.date).getTime();
     if (sortBy === 'qty_desc') return b.quantity - a.quantity;
     if (sortBy === 'qty_asc') return a.quantity - b.quantity;
     return 0;
-  }), [leads, category, filter, searchQuery, sortBy, filterType, filterExperience, filterStarred]);
+  }), [leads, category, filter, searchQuery, sortBy, filterType, filterExperience, filterStarred, filterModeliste, filterModelisteStatus]);
 
   // Reset visible count + filterType when category changes
   useEffect(() => { setVisibleCount(10); setFilterType('all'); setFilterExperience('all'); setSearchQuery(''); }, [category]);
@@ -2235,33 +2371,105 @@ export default function Demandes() {
                 )}
               </div>
 
-              {/* Action Tabs: 1. Valider / 2. Négocier */}
-              <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl mb-5">
+              {/* Action Tabs: 1. Demande Modéliste / 2. Valider / 3. Négocier */}
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl mb-5">
+                <button
+                  type="button"
+                  onClick={() => setPatronageTab('request')}
+                  className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    patronageTab === 'request'
+                      ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{isAr ? '1. طلب تسعير (Demande)' : '1. Demander Tarif'}</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setPatronageTab('validate')}
-                  className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition cursor-pointer ${
+                  className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer ${
                     patronageTab === 'validate'
                       ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{isAr ? '1. قبول ومصادقة على العمل (VALIDÉ)' : '1. Valider & Lancer (VALIDÉ)'}</span>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{isAr ? '2. قبول ومصادقة (VALIDÉ)' : '2. Valider & Lancer'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setPatronageTab('negotiate')}
-                  className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition cursor-pointer ${
+                  className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer ${
                     patronageTab === 'negotiate'
                       ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
-                  <DollarSign className="w-4 h-4" />
-                  <span>{isAr ? '2. خفض الثمن بميزانية الكليان (Négocier)' : '2. Proposer Budget Client (Négocier)'}</span>
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span>{isAr ? '3. تفاوض (Négocier)' : '3. Négocier'}</span>
                 </button>
               </div>
+
+              {/* TAB 0: REQUEST PRICE FROM MODELISTE */}
+              {patronageTab === 'request' && (
+                <div className="space-y-4">
+                  <div className="p-3 bg-purple-50 rounded-2xl border border-purple-200 text-xs font-bold text-purple-900 flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                    <span>
+                      {isAr
+                        ? 'إرسال الموديل إلى الموديليست ليقوم بدراسته وإدخال ثمن الباترون المناسب في لوحة الموديليست الخاصة به.'
+                        : 'Transmettre ce modèle au modéliste afin qu\'il l\'étudie et saisisse son tarif de patronage.'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                        {isAr ? 'الموديليست المطلوب' : 'Modéliste Cible'} *
+                      </label>
+                      <select
+                        value={patronageModelisteId}
+                        onChange={e => setPatronageModelisteId(e.target.value)}
+                        className="w-full bg-white border-2 border-slate-200 rounded-xl py-2.5 px-3 text-sm font-bold text-slate-900 outline-none focus:border-purple-600 transition"
+                      >
+                        {modelistes.length > 0 ? (
+                          modelistes.map(m => (
+                            <option key={m.id} value={m.id}>{m.nom} {m.telephone ? `(${m.telephone})` : ''}</option>
+                          ))
+                        ) : (
+                          <option value="">{modelisteName || (isAr ? 'موديليست معتمد' : 'Modéliste Principal')}</option>
+                        )}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                        {isAr ? 'تاريخ التسليم المطلوب' : 'Date Limite Souhaitée'}
+                      </label>
+                      <input
+                        type="date"
+                        value={patronageDeadline}
+                        onChange={e => setPatronageDeadline(e.target.value)}
+                        className="w-full bg-white border-2 border-slate-200 rounded-xl py-2.5 px-3 text-sm font-bold text-slate-900 outline-none focus:border-purple-600 transition"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={patronageSubmitting}
+                    onClick={handleRequestPriceFromModeliste}
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition cursor-pointer"
+                  >
+                    <Send className="w-5 h-5" />
+                    <span>
+                      {patronageSubmitting
+                        ? (isAr ? 'جاري إرسال الطلب...' : 'Envoi en cours...')
+                        : (isAr ? '📩 إرسال الطلب للموديليست لتحديد الثمن والتفاوض' : '📩 Envoyer au modéliste pour chiffrage')}
+                    </span>
+                  </button>
+                </div>
+              )}
 
               {/* TAB 1: VALIDATION & LAUNCH */}
               {patronageTab === 'validate' && (
@@ -2274,6 +2482,21 @@ export default function Demandes() {
                         : `En validant, le montant de ${patPrice} MAD sera approuvé et le modèle sera planifié dans les travaux à exécuter du modéliste.`}
                     </span>
                   </div>
+
+                  {patPrice === 0 && (
+                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                      <label className="block text-[11px] font-black text-amber-900 uppercase tracking-wider mb-1">
+                        {isAr ? 'تحديد ثمن الباترون للمصادقة المباشرة (MAD)' : 'Fixer le tarif patronage (MAD)'} *
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 250"
+                        value={patronageDirectPrice}
+                        onChange={e => setPatronageDirectPrice(e.target.value)}
+                        className="w-full bg-white border-2 border-amber-300 rounded-xl py-2 px-3 text-sm font-black text-amber-900 outline-none focus:border-emerald-600 transition"
+                      />
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -2954,12 +3177,12 @@ export default function Demandes() {
       {category === 'clients' && (() => {
         const clientLeads = leads.filter(l => !l.type.startsWith('RECRUTEMENT:'));
         const stats = [
-          { label: isAr ? 'المجموع' : 'Total', value: clientLeads.length, color: 'bg-slate-800 text-white', onClick: () => setFilter('all') },
-          { label: isAr ? 'جدد' : 'Nouveaux', value: clientLeads.filter(l => !l.contactedAt).length, color: 'bg-indigo-500 text-white', onClick: () => setFilter('new') },
-          { label: isAr ? 'تم التواصل' : 'Contactés', value: clientLeads.filter(l => !!l.contactedAt).length, color: 'bg-emerald-500 text-white', onClick: () => setFilter('all') },
-          { label: isAr ? 'ديفيز أُرسل' : 'Devis envoyé', value: clientLeads.filter(l => (l.crmPrice || 0) > 0).length, color: 'bg-amber-500 text-white', onClick: () => setFilter('all') },
-          { label: isAr ? 'مؤكدون' : 'Confirmés', value: clientLeads.filter(l => l.crmStage === 'confirme').length, color: 'bg-teal-500 text-white', onClick: () => setFilter('completed') },
-          { label: isAr ? 'قيد الانتظار' : 'En attente', value: clientLeads.filter(l => l.crmStage === 'attente_confirmation').length, color: 'bg-orange-400 text-white', onClick: () => setFilter('all') },
+          { label: isAr ? 'المجموع' : 'Total', value: clientLeads.length, color: 'bg-slate-800 text-white', onClick: () => { setFilter('all'); setFilterModeliste(false); } },
+          { label: isAr ? 'جدد' : 'Nouveaux', value: clientLeads.filter(l => !l.contactedAt).length, color: 'bg-indigo-500 text-white', onClick: () => { setFilter('new'); setFilterModeliste(false); } },
+          { label: isAr ? 'تم التواصل' : 'Contactés', value: clientLeads.filter(l => !!l.contactedAt).length, color: 'bg-emerald-500 text-white', onClick: () => { setFilter('all'); setFilterModeliste(false); } },
+          { label: isAr ? 'ديفيز أُرسل' : 'Devis envoyé', value: clientLeads.filter(l => (l.crmPrice || 0) > 0).length, color: 'bg-amber-500 text-white', onClick: () => { setFilter('all'); setFilterModeliste(false); } },
+          { label: isAr ? 'مؤكدون' : 'Confirmés', value: clientLeads.filter(l => l.crmStage === 'confirme').length, color: 'bg-teal-500 text-white', onClick: () => { setFilter('completed'); setFilterModeliste(false); } },
+          { label: isAr ? 'طلب موديليست' : 'Modéliste', value: modelisteStats.total, color: 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white ring-2 ring-purple-300', onClick: () => { setFilter('all'); setFilterModeliste(prev => !prev); setFilterModelisteStatus('all'); } },
         ];
         return (
           <div className="space-y-3">
@@ -3022,6 +3245,48 @@ export default function Demandes() {
               >
                 ⭐ {isAr ? 'المفضلين' : 'Favoris'}
               </button>
+
+              {/* ─── MODÉLISTE FILTER TOGGLE BUTTON ─── */}
+              <button
+                onClick={() => {
+                  setFilterModeliste(!filterModeliste);
+                  if (filterModeliste) setFilterModelisteStatus('all');
+                }}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 border transition-all cursor-pointer ${
+                  filterModeliste
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-md ring-2 ring-purple-300'
+                    : 'bg-white text-purple-700 border-purple-200 hover:bg-purple-50 shadow-2xs'
+                }`}
+                title={isAr ? 'تصفية الموديلات التي تم طلب موديليست لها' : 'Filtrer les modèles avec modéliste'}
+              >
+                <Scissors className="w-3.5 h-3.5" />
+                <span>{isAr ? 'طلب موديليست' : 'Modéliste'}</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono font-black ${
+                  filterModeliste ? 'bg-white text-purple-700' : 'bg-purple-100 text-purple-800'
+                }`}>
+                  {modelisteStats.total}
+                </span>
+              </button>
+
+              {/* Status sub-filter when Modéliste filter is active */}
+              {filterModeliste && (
+                <div className="flex items-center gap-1 bg-purple-50/90 p-1 rounded-xl border border-purple-200 animate-in fade-in zoom-in-95 duration-200">
+                  <span className="text-[9px] font-bold text-purple-800 px-1">
+                    {isAr ? 'الحالة:' : 'Statut:'}
+                  </span>
+                  <select
+                    value={filterModelisteStatus}
+                    onChange={e => setFilterModelisteStatus(e.target.value as any)}
+                    className="px-2 py-1 rounded-lg text-[10px] font-black border border-purple-200 bg-white text-purple-900 outline-none focus:border-purple-500 cursor-pointer"
+                  >
+                    <option value="all">{isAr ? `الكل (${modelisteStats.total})` : `Tous (${modelisteStats.total})`}</option>
+                    <option value="requested">{isAr ? `⏳ بانتظار التسعير (${modelisteStats.requested})` : `⏳ Attente tarif (${modelisteStats.requested})`}</option>
+                    <option value="priced">{isAr ? `📐 تم التسعير / قرار الورشة (${modelisteStats.priced})` : `📐 Chiffré (${modelisteStats.priced})`}</option>
+                    <option value="negotiating">{isAr ? `💬 في التفاوض (${modelisteStats.negotiating})` : `💬 Négociation (${modelisteStats.negotiating})`}</option>
+                    <option value="validated">{isAr ? `✓ باترون مصادق (${modelisteStats.validated})` : `✓ Validé (${modelisteStats.validated})`}</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -3144,6 +3409,12 @@ export default function Demandes() {
                           {hasNew && (
                             <span className="px-2 py-0.5 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full">
                               {isAr ? 'جديد' : 'New'}
+                            </span>
+                          )}
+                          {requests.some(r => getLeadModelisteInfo(r).hasModeliste) && (
+                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[9px] font-black uppercase tracking-wider rounded-full border border-purple-200 flex items-center gap-1 shadow-2xs">
+                              <Scissors className="w-2.5 h-2.5 text-purple-600" />
+                              <span>{isAr ? 'طلب موديليست' : 'Modéliste'}</span>
                             </span>
                           )}
                           {requests.length > 1 && (
@@ -3312,8 +3583,12 @@ export default function Demandes() {
 
                   {/* REQUESTS LIST */}
                   <div className="space-y-2">
-                    {displayedRequests.map(lead => (
-                      <div key={lead.id} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-3 rounded-xl border gap-4 transition-colors ${lead.crmStage === 'confirme' ? 'bg-emerald-50/30 border-emerald-100' : 'bg-slate-50/50 hover:bg-slate-50 border-slate-100'}`}>
+                    {displayedRequests.map(lead => {
+                      const modInfo = getLeadModelisteInfo(lead);
+                      return (
+                      <div key={lead.id} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-3 rounded-xl border gap-4 transition-colors ${
+                        modInfo.hasModeliste ? 'border-r-4 border-r-purple-500 bg-purple-50/25 border-purple-200 shadow-2xs' : lead.crmStage === 'confirme' ? 'bg-emerald-50/30 border-emerald-100' : 'bg-slate-50/50 hover:bg-slate-50 border-slate-100'
+                      }`}>
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {/* Photo */}
                           {category !== 'recrutement' && (
@@ -3364,28 +3639,30 @@ export default function Demandes() {
                                     </span>
                                   )}
                                   {(() => {
-                                    let ext = {} as any;
-                                    try { ext = JSON.parse(lead.details || '{}'); } catch(e){}
-                                    const patPrice = Number(ext.patronagePrice ?? (lead as any).patronagePrice) || 0;
-                                    const isValidated = Boolean(ext.adminValidatedToWork || ext.clientValidated || lead.crmPriceConfirmed);
-                                    if (isValidated && patPrice > 0) return (
-                                      <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-300 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
-                                        ✓ {isAr ? `باترون مصادق: ${patPrice} د.م` : `Patronage Validé: ${patPrice} MAD`}
+                                    const modInfo = getLeadModelisteInfo(lead);
+                                    if (!modInfo.hasModeliste) return null;
+
+                                    if (modInfo.status === 'validated') return (
+                                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1 shadow-2xs">
+                                        ✓ {isAr ? `باترون مصادق: ${modInfo.patPrice} د.م` : `Patronage Validé: ${modInfo.patPrice} MAD`}
+                                        {modInfo.modelisteName ? <span className="opacity-75 text-[9px]">(${modInfo.modelisteName})</span> : null}
                                       </span>
                                     );
-                                    if (ext.patronageNegotiationStatus === 'counter_offered') return (
-                                      <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
-                                        💬 {isAr ? `عرض مضاد: ${ext.adminCounterPrice} د.م` : `Contre-offre: ${ext.adminCounterPrice} MAD`}
+                                    if (modInfo.status === 'negotiating') return (
+                                      <span className="px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1 shadow-2xs">
+                                        💬 {isAr ? `تفاوض مع الموديليست: ${modInfo.counterPrice || modInfo.patPrice} د.م` : `Négociation: ${modInfo.counterPrice || modInfo.patPrice} MAD`}
                                       </span>
                                     );
-                                    if (!ext.patronageCancelled && (ext.patronageStatus === 'priced' || patPrice > 0)) return (
-                                      <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 border border-indigo-300 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm animate-pulse">
-                                        ✂️ {isAr ? `ثمن الموديليست: ${patPrice} د.م` : `Tarif Modéliste: ${patPrice} MAD`}
+                                    if (modInfo.status === 'priced') return (
+                                      <span className="px-2 py-0.5 bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-900 border border-purple-300 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1 shadow-2xs animate-pulse">
+                                        ✂️ {isAr ? `ثمن الموديليست: ${modInfo.patPrice} د.م` : `Tarif Modéliste: ${modInfo.patPrice} MAD`}
+                                        {modInfo.modelisteName ? <span className="opacity-75 text-[9px]">(${modInfo.modelisteName})</span> : null}
                                       </span>
                                     );
-                                    if (!ext.patronageCancelled && ext.patronageStatus === 'requested') return (
-                                      <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 border border-indigo-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
-                                        ⏳ {isAr ? 'في انتظار تسعير الباترون...' : 'Patronage en attente...'}
+                                    if (modInfo.status === 'requested') return (
+                                      <span className="px-2 py-0.5 bg-purple-50 text-purple-800 border border-purple-200 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1 shadow-2xs">
+                                        ⏳ {isAr ? 'طلب موديليست (بانتظار التسعير)' : 'Modéliste demandé (attente tarif)'}
+                                        {modInfo.modelisteName ? <span className="opacity-75 text-[9px]">(${modInfo.modelisteName})</span> : null}
                                       </span>
                                     );
                                     return null;
@@ -3674,7 +3951,8 @@ export default function Demandes() {
                           )}
                         </div>
                       </div>
-                    ))}
+                    );
+                    })}
 
                     {/* SEE MORE / SEE LESS TOGGLE BUTTON */}
                     {requests.length > 1 && (

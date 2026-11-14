@@ -134,15 +134,28 @@ export interface Commande {
   tissus?: { id: string; type: string; couleur: string; conso: number; prix: number; sourcing: string }[];
   tissuConsommation?: number;
   typeDossier?: 'creations' | 'sous_traitance' | 'uniformes' | 'production' | 'service';
-  sampleFeedback?: {
-    rating: number;
-    fabricNotes?: string;
-    sizeNotes?: string;
-    useSizeTable?: boolean;
-    sizeTableNotes?: Record<string, string>;
-    generalNotes?: string;
-    approved: boolean;
-  };
+  sampleFeedback?: SampleFeedbackData;
+}
+
+export interface SampleAlterationPoint {
+  id: string;
+  point: string;
+  note: string;
+  type?: 'increase' | 'decrease' | 'adjust' | 'other';
+  photoUrl?: string;
+}
+
+export interface SampleFeedbackData {
+  rating: number;
+  fabricNotes?: string;
+  sizeNotes?: string;
+  useSizeTable?: boolean;
+  sizeTableNotes?: Record<string, string>;
+  generalNotes?: string;
+  approved: boolean;
+  photos?: string[];
+  alterations?: SampleAlterationPoint[];
+  mesuresFeedback?: { nom: string; valeurs: Record<string, string> }[];
 }
 
 export interface Stock {

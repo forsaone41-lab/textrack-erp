@@ -638,6 +638,71 @@ export default function Echantillons() {
                         </div>
                       </div>
                     )}
+
+                    {/* Alterations Points (Retouches) */}
+                    {Array.isArray(feedbackData.alterations) && feedbackData.alterations.length > 0 && (
+                      <div className={`pt-3 border-t border-indigo-100/80 space-y-2 ${isAr ? 'text-right' : 'text-left'}`}>
+                        <div className={`flex items-center gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
+                          <Scissors className="w-3.5 h-3.5 text-amber-600" />
+                          <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider">
+                            {isAr ? 'نقاط التعديل المطلوبة (Retouches)' : 'Points de retouches demandés'}
+                          </span>
+                          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-100 text-amber-800">
+                            {feedbackData.alterations.length}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {feedbackData.alterations.map((alt: any, aIdx: number) => (
+                            <div key={aIdx} className="bg-white/90 border border-amber-200/90 rounded-xl p-2.5 text-xs shadow-2xs">
+                              <div className={`flex items-center justify-between gap-1 mb-1 ${isAr ? 'flex-row-reverse' : ''}`}>
+                                <span className="font-black text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded-md text-[10px]">
+                                  {alt.point}
+                                </span>
+                                {alt.type && (
+                                  <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                                    alt.type === 'increase' ? 'bg-emerald-100 text-emerald-800' :
+                                    alt.type === 'decrease' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                                  }`}>
+                                    {alt.type === 'increase' ? '+ زيادة' : alt.type === 'decrease' ? '- إنقاص' : 'تعديل'}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="font-semibold text-slate-700 text-[11px] leading-relaxed">{alt.note}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Photos of Fitting */}
+                    {Array.isArray(feedbackData.photos) && feedbackData.photos.length > 0 && (
+                      <div className={`pt-3 border-t border-indigo-100/80 space-y-2 ${isAr ? 'text-right' : 'text-left'}`}>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                          {isAr ? 'صور القياس والتجربة من الزبون (Fitting)' : 'Photos de l\'essayage client (Fitting)'}
+                        </span>
+                        <div className={`flex flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                          {feedbackData.photos.map((ph: string, pIdx: number) => (
+                            <button
+                              key={pIdx}
+                              type="button"
+                              onClick={() => setZoomImage(ph)}
+                              className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-white shadow-md hover:scale-105 transition-transform group cursor-pointer"
+                            >
+                              <img src={ph} alt={`Essayage ${pIdx + 1}`} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <ImageIcon className="w-4 h-4 text-white" />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notice for Modéliste sync */}
+                    <div className={`mt-2.5 text-[10px] font-bold text-emerald-800 bg-emerald-50/80 border border-emerald-200/60 rounded-xl px-2.5 py-2 flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>{isAr ? 'تمت مشاركة هذه التعديلات والصور تلقائياً مع الموديليست لتعديل الباترون الأساسي قبل التدرج.' : 'Partagé automatiquement avec le modéliste pour adapter le patronage de base avant gradation.'}</span>
+                    </div>
                   </div>
                 </div>
               )}
