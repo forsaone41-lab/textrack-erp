@@ -476,7 +476,7 @@ export default function ModelisteTravaux({ currentUser }: ModelisteTravauxProps)
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 md:space-y-6 pb-24 md:pb-8" dir={isAr ? 'rtl' : 'ltr'}>
       
       {/* Hidden file input */}
       <input
@@ -487,8 +487,8 @@ export default function ModelisteTravaux({ currentUser }: ModelisteTravauxProps)
         accept=".pdf,.dxf,.plt,.hpgl,.rul,.zip,.rar"
       />
 
-      {/* Top Header Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 shadow-2xl border border-white/10">
+      {/* ─── Desktop Header (Visible ONLY on Desktop: hidden md:block) ─── */}
+      <div className="hidden md:block relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 shadow-2xl border border-white/10">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-black uppercase tracking-wider border border-indigo-500/30">
@@ -522,8 +522,112 @@ export default function ModelisteTravaux({ currentUser }: ModelisteTravauxProps)
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      {/* ─── Mobile Native App Header (Visible ONLY on Phone: md:hidden) ─── */}
+      <div className="md:hidden bg-slate-900 text-white p-3.5 rounded-3xl shadow-xl border border-white/10 relative overflow-hidden">
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shrink-0">
+              <Scissors className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-sm font-black text-white">{isAr ? 'ورشة الباتروناج والمهام' : 'Atelier Patronage'}</h1>
+                <span className="px-1.5 py-0.2 rounded-md text-[9px] font-black bg-indigo-500/25 text-indigo-300 border border-indigo-500/30">PRO</span>
+              </div>
+              <p className="text-[10px] text-slate-400 font-medium">
+                {currentUser.nom || 'Aboulfateh Mohammed'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="p-2 rounded-xl bg-white/10 active:bg-white/20 text-white transition border border-white/10"
+            title={isAr ? 'تحديث' : 'Rafraîchir'}
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* ─── Mobile Native App Icon Buttons Navigation (Visible ONLY on Phone: md:hidden) ─── */}
+      <div className="md:hidden grid grid-cols-4 gap-1.5 bg-slate-900/95 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800 shadow-xl">
+        {/* 1. التسعير */}
+        <button
+          onClick={() => setActiveTab('negociation')}
+          className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all cursor-pointer active:scale-95 ${
+            activeTab === 'negociation'
+              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30'
+              : 'text-slate-400 hover:text-white bg-slate-800/40'
+          }`}
+        >
+          <DollarSign className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] font-black tracking-tight">{isAr ? 'التسعير' : 'Tarifs'}</span>
+          {counts.negociation > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-rose-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-slate-900 shadow-sm animate-pulse">
+              {counts.negociation}
+            </span>
+          )}
+        </button>
+
+        {/* 2. قيد الإنجاز */}
+        <button
+          onClick={() => setActiveTab('en_cours')}
+          className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all cursor-pointer active:scale-95 ${
+            activeTab === 'en_cours'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+              : 'text-slate-400 hover:text-white bg-slate-800/40'
+          }`}
+        >
+          <Clock className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] font-black tracking-tight">{isAr ? 'قيد الإنجاز' : 'En cours'}</span>
+          {counts.en_cours > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-indigo-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-slate-900 shadow-sm">
+              {counts.en_cours}
+            </span>
+          )}
+        </button>
+
+        {/* 3. التدريج */}
+        <button
+          onClick={() => setActiveTab('gradation')}
+          className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all cursor-pointer active:scale-95 ${
+            activeTab === 'gradation'
+              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+              : 'text-slate-400 hover:text-white bg-slate-800/40'
+          }`}
+        >
+          <Ruler className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] font-black tracking-tight">{isAr ? 'التدريج' : 'Gradation'}</span>
+          {counts.gradation > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-purple-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-slate-900 shadow-sm">
+              {counts.gradation}
+            </span>
+          )}
+        </button>
+
+        {/* 4. المكتملة */}
+        <button
+          onClick={() => setActiveTab('termines')}
+          className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all cursor-pointer active:scale-95 ${
+            activeTab === 'termines'
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+              : 'text-slate-400 hover:text-white bg-slate-800/40'
+          }`}
+        >
+          <CheckCircle2 className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] font-black tracking-tight">{isAr ? 'المكتملة' : 'Terminés'}</span>
+          {counts.termines > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-slate-900 shadow-sm">
+              {counts.termines}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ─── Desktop Full Tabs (Visible ONLY on Desktop: hidden md:flex) ─── */}
+      <div className="hidden md:flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
         <button
           onClick={() => setActiveTab('negociation')}
           className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap shadow-sm ${
@@ -1114,6 +1218,68 @@ export default function ModelisteTravaux({ currentUser }: ModelisteTravauxProps)
         </div>
       )}
 
+      {/* ─── Mobile Fixed Bottom Navigation Bar (iOS / Android Style) ─── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/80 px-2 py-1.5 flex items-center justify-around shadow-[0_-10px_30px_rgba(0,0,0,0.6)]">
+        <button
+          onClick={() => setActiveTab('negociation')}
+          className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-2xl transition-all ${
+            activeTab === 'negociation' ? 'text-amber-400 font-black' : 'text-slate-400 font-medium'
+          }`}
+        >
+          <DollarSign className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">{isAr ? 'التسعير' : 'Tarifs'}</span>
+          {counts.negociation > 0 && (
+            <span className="absolute top-0.5 right-1/4 translate-x-2 min-w-[17px] h-[17px] px-1 bg-rose-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-slate-950 shadow-sm animate-pulse">
+              {counts.negociation}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('en_cours')}
+          className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-2xl transition-all ${
+            activeTab === 'en_cours' ? 'text-indigo-400 font-black' : 'text-slate-400 font-medium'
+          }`}
+        >
+          <Clock className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">{isAr ? 'قيد الإنجاز' : 'En cours'}</span>
+          {counts.en_cours > 0 && (
+            <span className="absolute top-0.5 right-1/4 translate-x-2 min-w-[17px] h-[17px] px-1 bg-indigo-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-slate-950 shadow-sm">
+              {counts.en_cours}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('gradation')}
+          className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-2xl transition-all ${
+            activeTab === 'gradation' ? 'text-purple-400 font-black' : 'text-slate-400 font-medium'
+          }`}
+        >
+          <Ruler className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">{isAr ? 'التدريج' : 'Gradation'}</span>
+          {counts.gradation > 0 && (
+            <span className="absolute top-0.5 right-1/4 translate-x-2 min-w-[17px] h-[17px] px-1 bg-purple-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-slate-950 shadow-sm">
+              {counts.gradation}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('termines')}
+          className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-2xl transition-all ${
+            activeTab === 'termines' ? 'text-emerald-400 font-black' : 'text-slate-400 font-medium'
+          }`}
+        >
+          <CheckCircle2 className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">{isAr ? 'المكتملة' : 'Terminés'}</span>
+          {counts.termines > 0 && (
+            <span className="absolute top-0.5 right-1/4 translate-x-2 min-w-[17px] h-[17px] px-1 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-slate-950 shadow-sm">
+              {counts.termines}
+            </span>
+          )}
+        </button>
+      </nav>
     </div>
   );
 }

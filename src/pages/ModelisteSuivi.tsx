@@ -1820,6 +1820,15 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                           <FileText className="w-3.5 h-3.5" />
                           <span>{isAr ? 'البطاقة والمقاسات' : 'Fiche Technique'}</span>
                         </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTaskFromModeliste(item)}
+                          className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition cursor-pointer border border-rose-200"
+                          title={isAr ? 'إزالة هذه المهمة من الورشة' : 'Retirer cette tâche de l\'atelier'}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
 

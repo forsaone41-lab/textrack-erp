@@ -1148,7 +1148,7 @@ function AppContent() {
         <Route path="fiches-techniques" element={(currentUser?.role !== 'modeliste' && can('fiches')) ? <FichesTechniques /> : <Navigate to="/" replace />} />
         <Route path="evaluation-patronage" element={can('evaluation_patronage') ? <EvaluationPatronage currentUser={currentUser} /> : <Navigate to="/" replace />} />
         <Route path="suivi-modeliste" element={(can('suivi_modeliste') || currentUser?.role === 'modeliste' || currentUser?.role === 'admin') ? <ModelisteSuivi currentUser={currentUser} /> : <Navigate to="/" replace />} />
-        <Route path="modeliste-travaux" element={(can('suivi_modeliste') || currentUser?.role === 'modeliste' || currentUser?.role === 'admin') ? <ModelisteTravaux currentUser={currentUser} /> : <Navigate to="/" replace />} />
+        <Route path="modeliste-travaux" element={currentUser?.role === 'modeliste' ? <Navigate to="/suivi-modeliste?tab=travaux" replace /> : ((can('suivi_modeliste') || currentUser?.role === 'admin') ? <ModelisteTravaux currentUser={currentUser} /> : <Navigate to="/" replace />)} />
         <Route path="patronage-ai" element={(currentUser?.role !== 'modeliste' && (can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin')) ? <PatronageAIStudio /> : <Navigate to="/" replace />} />
         <Route path="ordres-de-coupe" element={can('ordres') ? <OrdresDeCoupe /> : <Navigate to="/" replace />} />
         <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />

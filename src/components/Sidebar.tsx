@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, FileText, Settings, LogOut, ShoppingCart,
   Package, Scissors, Activity, Receipt, PieChart, TrendingUp, UserCheck, Globe, X, ClipboardCheck, Trophy, ShieldCheck, QrCode, User as UserIcon, CheckCircle,
@@ -74,10 +74,18 @@ const LogoIconOnly = ({ src, alt }: { src: string; alt: string }) => {
 export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOpen, company }: SidebarProps) {
   const { lang, isAr, toggle } = useLang();
   const navigate = useNavigate();
+  const location = useLocation();
   const [collapsed, setCollapsed] = React.useState(false);
   const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = React.useState(false);
   const [globalEmpCode, setGlobalEmpCode] = React.useState('');
   const [showSearchModal, setShowSearchModal] = React.useState(false);
+
+  const searchParams = new URLSearchParams(location.search);
+  const currentModelisteTab = location.pathname === '/profil'
+    ? 'profil'
+    : (location.pathname.startsWith('/suivi-modeliste')
+        ? (searchParams.get('tab') || 'dashboard')
+        : '');
 
   const handleGlobalCodeSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -149,6 +157,76 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
       )}
     </NavLink>
   );
+
+  const ModelisteNavItem = ({
+    to,
+    tabKey,
+    icon: Icon,
+    stepNum,
+    label
+  }: {
+    to: string;
+    tabKey: 'dashboard' | 'a_tarifer' | 'travaux' | 'profil';
+    icon: any;
+    stepNum: string;
+    label: string;
+  }) => {
+    const isActive = currentModelisteTab === tabKey;
+    return (
+      <Link
+        to={to}
+        onClick={closeMobile}
+        title={collapsed ? `${stepNum}. ${label}` : undefined}
+        className={`group flex items-center ${
+          collapsed ? 'justify-center px-0 py-2.5' : 'justify-between px-3 py-2.5'
+        } rounded-2xl text-[12.5px] font-bold transition-all duration-200 relative ${
+          isActive
+            ? 'bg-gradient-to-r from-indigo-500/20 to-purple-500/10 text-white border border-indigo-500/35 shadow-sm shadow-indigo-500/10'
+            : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+        }`}
+      >
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} relative`}>
+          <div className={`
+            w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200
+            ${isActive
+              ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/40 scale-105'
+              : 'bg-white/5 text-slate-400 group-hover:bg-indigo-500/20 group-hover:text-indigo-300'
+            }
+          `}>
+            <Icon className="w-4 h-4" />
+          </div>
+
+          {collapsed && (
+            <div className={`
+              absolute ${isAr ? 'right-full mr-3' : 'left-full ml-3'} top-1/2 -translate-y-1/2
+              pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-[300]
+              bg-slate-800 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl
+              whitespace-nowrap shadow-xl border border-white/10
+            `}>
+              <span className="text-indigo-400 font-mono mr-1.5">{stepNum}.</span>
+              {label}
+            </div>
+          )}
+
+          {!collapsed && (
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-mono font-black shrink-0 ${
+                isActive ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700'
+              }`}>
+                {stepNum}
+              </span>
+              <span className={`tracking-tight truncate ${isActive ? 'text-white font-black' : 'group-hover:text-white font-bold'}`}>
+                {label}
+              </span>
+            </div>
+          )}
+        </div>
+        {isActive && (
+          <div className={`absolute ${isAr ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-1 h-5 bg-indigo-500 rounded-${isAr ? 'l' : 'r'}-full shadow-[0_0_10px_#4f46e5]`} />
+        )}
+      </Link>
+    );
+  };
 
   const sidebarWidth = collapsed ? 'w-[72px]' : 'w-[280px]';
 
@@ -256,41 +334,43 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           </button>
         </div>
 
-        {/* Global Employee Code Search (Dossier RH Direct Lookup) */}
-        {!collapsed ? (
-          <div className="px-4 mb-3">
-            <form onSubmit={handleGlobalCodeSearch} className="relative">
-              <input
-                type="text"
-                value={globalEmpCode}
-                onChange={e => setGlobalEmpCode(e.target.value)}
-                placeholder={isAr ? '⚡ كود الموظف (Dossier RH)...' : '⚡ Code employé (Dossier)...'}
-                className={`w-full bg-slate-900/90 border border-indigo-500/30 hover:border-indigo-500/60 rounded-xl py-2.5 text-xs font-mono font-bold text-white placeholder-slate-500 outline-none focus:border-indigo-500 shadow-inner transition ${
-                  isAr ? 'pr-8 pl-8 text-right' : 'pl-8 pr-8 text-left'
-                }`}
-              />
-              <Search className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-indigo-400 pointer-events-none ${isAr ? 'right-2.5' : 'left-2.5'}`} />
-              {globalEmpCode && (
-                <button
-                  type="submit"
-                  className={`absolute top-1/2 -translate-y-1/2 p-1 text-indigo-400 hover:text-white transition ${isAr ? 'left-2' : 'right-2'}`}
-                  title={isAr ? 'فتح الملف' : 'Ouvrir'}
-                >
-                  <FolderOpen className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </form>
-          </div>
-        ) : (
-          <div className="px-3 mb-2">
-            <button
-              onClick={() => setShowSearchModal(true)}
-              className="w-full h-9 rounded-xl bg-white/5 hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center transition border border-transparent hover:border-indigo-500/30 group"
-              title={isAr ? '⚡ بحث سريع بكود الموظف (Dossier RH)' : '⚡ Code Employé (Dossier RH)'}
-            >
-              <FolderOpen className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            </button>
-          </div>
+        {/* Global Employee Code Search (Dossier RH Direct Lookup) - Hidden for Modéliste */}
+        {currentUser?.role !== 'modeliste' && (
+          !collapsed ? (
+            <div className="px-4 mb-3">
+              <form onSubmit={handleGlobalCodeSearch} className="relative">
+                <input
+                  type="text"
+                  value={globalEmpCode}
+                  onChange={e => setGlobalEmpCode(e.target.value)}
+                  placeholder={isAr ? '⚡ كود الموظف (Dossier RH)...' : '⚡ Code employé (Dossier)...'}
+                  className={`w-full bg-slate-900/90 border border-indigo-500/30 hover:border-indigo-500/60 rounded-xl py-2.5 text-xs font-mono font-bold text-white placeholder-slate-500 outline-none focus:border-indigo-500 shadow-inner transition ${
+                    isAr ? 'pr-8 pl-8 text-right' : 'pl-8 pr-8 text-left'
+                  }`}
+                />
+                <Search className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-indigo-400 pointer-events-none ${isAr ? 'right-2.5' : 'left-2.5'}`} />
+                {globalEmpCode && (
+                  <button
+                    type="submit"
+                    className={`absolute top-1/2 -translate-y-1/2 p-1 text-indigo-400 hover:text-white transition ${isAr ? 'left-2' : 'right-2'}`}
+                    title={isAr ? 'فتح الملف' : 'Ouvrir'}
+                  >
+                    <FolderOpen className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </form>
+            </div>
+          ) : (
+            <div className="px-3 mb-2">
+              <button
+                onClick={() => setShowSearchModal(true)}
+                className="w-full h-9 rounded-xl bg-white/5 hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center transition border border-transparent hover:border-indigo-500/30 group"
+                title={isAr ? '⚡ بحث سريع بكود الموظف (Dossier RH)' : '⚡ Code Employé (Dossier RH)'}
+              >
+                <FolderOpen className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              </button>
+            </div>
+          )
         )}
 
         {/* Modal for Collapsed Search */}
@@ -337,16 +417,65 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
 
         {/* Navigation Links */}
         <nav className={`flex-1 ${collapsed ? 'px-2' : 'px-4'} space-y-6 overflow-y-auto scrollbar-hide py-4 transition-all duration-300`}>
-          
-          {/* Group 1: Access */}
-          <div className="space-y-1">
-            {currentUser?.role === 'modeliste' && (
-              <NavItem to="/suivi-modeliste" icon={LayoutDashboard} label={isAr ? 'لوحة الموديليست (الرئيسية)' : 'Accueil Modéliste'} />
-            )}
-            <NavItem to="/profil" icon={UserIcon} label={isAr ? 'حسابي' : 'Mon Profil'} />
-            {(currentUser?.role === 'modeliste' || currentUser?.role === 'admin') && (
-              <NavItem to="/modeliste-travaux" icon={Scissors} label={isAr ? 'ورشة الباتروناج والمهام' : 'Atelier & Travaux Patronage'} />
-            )}
+          {currentUser?.role === 'modeliste' ? (
+            /* ─── Modeliste Dedicated 4-Section Menu (Strict 1, 2, 3, 4 Order) ─── */
+            <div className="space-y-1.5">
+              {!collapsed && (
+                <div className={`px-2 pb-2 pt-1 flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <span className="text-[10.5px] font-black uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                    <Scissors className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{isAr ? 'فضاء الموديليست' : 'Espace Modéliste'}</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    BEYA PRO
+                  </span>
+                </div>
+              )}
+
+              {/* 1. لوحة الموديليست (الرئيسية) */}
+              <ModelisteNavItem
+                to="/suivi-modeliste?tab=dashboard"
+                tabKey="dashboard"
+                icon={LayoutDashboard}
+                stepNum="1"
+                label={isAr ? 'لوحة الموديليست (الرئيسية)' : 'Tableau de bord'}
+              />
+
+              {/* 2. صفحة التسعير والتفاوض */}
+              <ModelisteNavItem
+                to="/suivi-modeliste?tab=a_tarifer"
+                tabKey="a_tarifer"
+                icon={Tag}
+                stepNum="2"
+                label={isAr ? 'صفحة التسعير والتفاوض' : 'Tarification & Devis'}
+              />
+
+              {/* 3. إنجاز الموديلات ورفع الباترونات (ورشة الباتروناج والمهام) */}
+              <ModelisteNavItem
+                to="/suivi-modeliste?tab=travaux"
+                tabKey="travaux"
+                icon={Scissors}
+                stepNum="3"
+                label={isAr ? 'إنجاز الموديلات ورفع الباترونات' : 'Travaux & Patrons'}
+              />
+
+              {/* 4. الملف الشخصي و RIB (حسابي) */}
+              <ModelisteNavItem
+                to="/suivi-modeliste?tab=profil"
+                tabKey="profil"
+                icon={UserIcon}
+                stepNum="4"
+                label={isAr ? 'الملف الشخصي و RIB' : 'Mon Profil & RIB'}
+              />
+            </div>
+          ) : (
+            <>
+              {/* Group 1: Access */}
+              <div className="space-y-1">
+                <NavItem to="/profil" icon={UserIcon} label={isAr ? 'حسابي' : 'Mon Profil'} />
+                {currentUser?.role === 'admin' && (
+                  <NavItem to="/modeliste-travaux" icon={Scissors} label={isAr ? 'ورشة الباتروناج والمهام' : 'Atelier & Travaux Patronage'} />
+                )}
             {can('dashboard') && <NavItem to="/" icon={LayoutDashboard} label={t('dashboard', lang)} end />}
             {can('worker_portal') && <NavItem to="/worker-portal" icon={UserIcon} label={isAr ? 'فضاء العامل' : 'Espace Ouvrier'} />}
             {can('chef_chaine_portal') && <NavItem to="/chef-portal" icon={ShieldCheck} label={isAr ? 'بوابة رئيس السلسلة' : 'Portail Chef Chaîne'} />}
@@ -400,16 +529,16 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('achats') && <NavItem to="/achats" icon={ShoppingCart} label={isAr ? 'المشتريات' : 'Achats'} />}
             {can('stocks') && <NavItem to="/stocks" icon={Package} label={isAr ? 'المخزون' : 'Stocks'} />}
             {can('fournisseurs') && <NavItem to="/fournisseurs" icon={UserCheck} label={isAr ? 'الموردين' : 'Fournisseurs'} />}
-            {currentUser?.role !== 'modeliste' && can('fiches') && (
+            {can('fiches') && (
               <NavItem to="/fiches-techniques" icon={FileText} label={isAr ? 'البطاقات التقنية' : 'Fiches Tech.'} />
             )}
             {can('evaluation_patronage') && (
               <NavItem to="/evaluation-patronage" icon={Scissors} label={isAr ? 'تسعير الباترون' : 'Tarification Patronage'} />
             )}
-            {currentUser?.role !== 'modeliste' && (can('suivi_modeliste') || currentUser?.role === 'admin') && (
+            {(can('suivi_modeliste') || currentUser?.role === 'admin') && (
               <NavItem to="/suivi-modeliste" icon={CheckCircle} label={isAr ? 'متابعة الموديليست والمدفوعات' : 'Suivi Modéliste & Règlements'} />
             )}
-            {currentUser?.role !== 'modeliste' && (can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin') && (
+            {(can('patronage_ai') || can('evaluation_patronage') || can('fiches') || currentUser?.role === 'admin') && (
               <NavItem to="/patronage-ai" icon={Sparkles} label={isAr ? 'استوديو الباترون (AI)' : 'Patronage Studio (AI)'} pro />
             )}
             {can('ai_space') && (
@@ -423,7 +552,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             )}
             {can('ordres') && <NavItem to="/ordres-de-coupe" icon={Scissors} label={isAr ? 'أوامر القص' : 'Ordres de Coupe'} />}
             {(can('ordres') || can('fiches')) && <NavItem to="/hpgl-viewer" icon={Scissors} label={isAr ? 'قارئ الباتروناج' : 'Visionneuse HPGL'} />}
-            {currentUser?.role !== 'modeliste' && (can('ordres') || can('fiches')) && <NavItem to="/kml-viewer" icon={Globe} label={isAr ? 'قارئ الخرائط (KML)' : 'Visionneuse KML / Géo'} />}
+            {(can('ordres') || can('fiches')) && <NavItem to="/kml-viewer" icon={Globe} label={isAr ? 'قارئ الخرائط (KML)' : 'Visionneuse KML / Géo'} />}
             {can('chaine') && (
               <>
                 <NavItem to="/chaine-montage" icon={Activity} label={isAr ? 'تتبع التركيب' : 'Suivi Montage'} />
@@ -463,6 +592,8 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('affiliate_admin') && <NavItem to="/affiliate-admin" icon={Handshake} label={isAr ? 'الشركاء والعمولات' : 'Partenaires & Commissions'} />}
             {can('parametres') && <NavItem to="/parametres" icon={Settings} label={isAr ? 'الإعدادات' : 'Paramètres'} />}
             </div>
+          )}
+            </>
           )}
         </nav>
 
