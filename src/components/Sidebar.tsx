@@ -83,6 +83,18 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
   const location = useLocation();
   const [collapsed, setCollapsed] = React.useState(false);
   const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = React.useState(false);
+  const workspaceDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!workspaceDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (workspaceDropdownRef.current && !workspaceDropdownRef.current.contains(e.target as Node)) {
+        setWorkspaceDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [workspaceDropdownOpen]);
   const [globalEmpCode, setGlobalEmpCode] = React.useState('');
   const [showSearchModal, setShowSearchModal] = React.useState(false);
   const isDark = true;
@@ -283,60 +295,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               </button>
             )}
           </div>
-          {!collapsed && currentUser?.role === 'admin' && (
-            <div className="relative mt-4">
-              <button 
-                onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}
-                className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 transition-all group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-6 h-6 rounded-md bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                    <Briefcase className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="flex flex-col items-start min-w-0">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">Espace de travail</span>
-                    <span className="text-[11px] font-black text-white leading-none truncate w-full text-left">BEYACREATIVE PRODUCTION</span>
-                  </div>
-                </div>
-                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${workspaceDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {workspaceDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[300] animate-in fade-in slide-in-from-top-2">
-                   <NavLink to="/" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
-                     <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors shrink-0">
-                       <Briefcase className="w-4 h-4" />
-                     </div>
-                     <span className="text-[10px] font-bold text-white leading-tight">BEYACREATIVE PRODUCTION</span>
-                   </NavLink>
-                   <div className="h-px bg-white/5" />
-                   <NavLink to="/store-builder" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
-                     <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors shrink-0">
-                       <Store className="w-4 h-4" />
-                     </div>
-                     <span className="text-[10px] font-bold text-white leading-tight">BEYA STORE</span>
-                   </NavLink>
-                   <div className="h-px bg-white/5" />
-                   <NavLink to="/partenaire-portal" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
-                     <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0">
-                       <Globe className="w-4 h-4" />
-                     </div>
-                     <span className="text-[10px] font-bold text-white leading-tight">BEYA PORTAL</span>
-                   </NavLink>
-                   <div className="h-px bg-white/5" />
-                   <NavLink to="/saas-admin" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
-                     <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors shrink-0">
-                       <Crown className="w-4 h-4" />
-                     </div>
-                     <span className="text-[10px] font-bold text-white leading-tight">SAAS APP</span>
-                   </NavLink>
-                </div>
-              )}
-            </div>
-          )}
         </div>
-
-
 
         {/* Global Employee Code Search (Dossier RH Direct Lookup) - Hidden for Modéliste */}
         {currentUser?.role !== 'modeliste' && (
@@ -653,24 +612,93 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                 </button>
               </div>
 
-              <div className={`rounded-3xl p-4 transition-colors ${
+              <div className={`rounded-3xl p-3.5 transition-colors relative ${
                 isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border border-white/5 shadow-xl' : 'bg-slate-50 border border-slate-200 shadow-sm'
               }`}>
-                <NavLink to="/profil" onClick={closeMobile} className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity cursor-pointer">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 overflow-hidden border-2 border-indigo-500/30">
-                    {currentUser.photo ? (
-                      <img src={currentUser.photo} className="w-full h-full object-cover" />
-                    ) : (
-                      <ShieldCheck className="w-5 h-5 text-white" />
-                    )}
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{currentUser.nom || 'Admin'}</span>
-                    <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">
-                      {currentUser.role}
-                    </span>
-                  </div>
-                </NavLink>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <NavLink to="/profil" onClick={closeMobile} className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 overflow-hidden border-2 border-indigo-500/30 shrink-0">
+                      {currentUser.photo ? (
+                        <img src={currentUser.photo} className="w-full h-full object-cover" />
+                      ) : (
+                        <ShieldCheck className="w-5 h-5 text-white" />
+                      )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{currentUser.nom || 'Admin'}</span>
+                      <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">
+                        {currentUser.role}
+                      </span>
+                    </div>
+                  </NavLink>
+
+                  {/* Espace de travail Selector (Relocated into profile row as requested) */}
+                  {currentUser?.role === 'admin' && (
+                    <div ref={workspaceDropdownRef} className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-all border cursor-pointer ${
+                          workspaceDropdownOpen
+                            ? 'bg-indigo-600/30 border-indigo-500/50 text-white shadow-xs'
+                            : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-300 hover:text-white'
+                        }`}
+                        title={isAr ? 'مساحة العمل: BEYACREATIVE PRODUCTION' : 'Espace de travail: BEYACREATIVE PRODUCTION'}
+                      >
+                        <div className="w-5 h-5 rounded-md bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                          <Briefcase className="w-3 h-3" />
+                        </div>
+                        <div className="flex flex-col items-start text-left leading-none">
+                          <span className="text-[7.5px] uppercase font-bold text-slate-400 tracking-wider">
+                            {isAr ? 'مساحة العمل' : 'ESPACE'}
+                          </span>
+                          <span className="text-[10px] font-black text-white truncate max-w-[80px]">
+                            PRODUCTION
+                          </span>
+                        </div>
+                        <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${workspaceDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* Dropdown Opening Upwards */}
+                      {workspaceDropdownOpen && (
+                        <div className={`absolute bottom-full ${isAr ? 'left-0' : 'right-0'} mb-2 w-56 bg-slate-800 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[400] animate-in fade-in slide-in-from-bottom-2`}>
+                          <div className="p-2 border-b border-white/5 bg-slate-900/60">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider px-2">
+                              {isAr ? 'التبديل بين مساحات العمل' : 'Changer d\'espace de travail'}
+                            </span>
+                          </div>
+                          <NavLink to="/" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors group">
+                            <div className="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors shrink-0">
+                              <Briefcase className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-[10px] font-bold text-white leading-tight">BEYACREATIVE PRODUCTION</span>
+                          </NavLink>
+                          <div className="h-px bg-white/5" />
+                          <NavLink to="/store-builder" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors group">
+                            <div className="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors shrink-0">
+                              <Store className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-[10px] font-bold text-white leading-tight">BEYA STORE</span>
+                          </NavLink>
+                          <div className="h-px bg-white/5" />
+                          <NavLink to="/partenaire-portal" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors group">
+                            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0">
+                              <Globe className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-[10px] font-bold text-white leading-tight">BEYA PORTAL</span>
+                          </NavLink>
+                          <div className="h-px bg-white/5" />
+                          <NavLink to="/saas-admin" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors group">
+                            <div className="w-7 h-7 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors shrink-0">
+                              <Crown className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-[10px] font-bold text-white leading-tight">SAAS APP</span>
+                          </NavLink>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 
                 <button 
                   onClick={onLogout}
