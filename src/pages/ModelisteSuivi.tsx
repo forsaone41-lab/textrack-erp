@@ -40,10 +40,7 @@ import {
   MessageSquare,
   ArrowRight,
   ChevronRight,
-  Sparkles,
-  Sun,
-  Moon,
-  Coffee
+  Sparkles
 } from 'lucide-react';
 import FicheTechniqueModelisteModal, { printFicheTechniqueModeliste, sanitizeNotesForModeliste } from '../components/FicheTechniqueModelisteModal';
 import { useLang } from '../contexts/LangContext';
@@ -1108,53 +1105,6 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     }
   ];
 
-  // Dynamic Greeting based on time of day (Craft & Effort Appreciation)
-  const greetingData = useMemo(() => {
-    const hour = new Date().getHours();
-    const firstName = (activeProfileUser.nom || '').trim().split(' ')[0] || (isAr ? 'أخي المبدع' : 'Cher Partenaire');
-
-    if (hour >= 5 && hour < 12) {
-      return {
-        icon: Sun,
-        iconColor: 'text-amber-400',
-        badgeBg: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
-        badgeText: isAr ? 'صباح الإبداع والنشاط ☀️' : 'Matinée Créative ☀️',
-        title: isAr ? `صباح الخير والإبداع سي ${firstName}` : `Bonjour et excellente journée ${firstName}`,
-        message: isAr
-          ? 'شكراً جزيلاً على مجهوداتك وإتقانك المستمر فكل باترون وموديل. لمستك الفنية واحترافيتك هي سر نجاح وتألق كل قطعة ننتجها في BEYA.'
-          : 'Merci infiniment pour vos efforts et la rigueur que vous apportez à chaque patronage. Votre expertise fait la différence chez BEYA.',
-        border: 'border-amber-500/30',
-        glow: 'bg-amber-500/15'
-      };
-    } else if (hour >= 12 && hour < 18) {
-      return {
-        icon: Coffee,
-        iconColor: 'text-indigo-400',
-        badgeBg: 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30',
-        badgeText: isAr ? 'طاب يومك بكل خير ☕' : 'Bon après-midi ☕',
-        title: isAr ? `طاب يومك بكل خير وتألق سي ${firstName}` : `Bon بعد الزوال والعمل المتقن ${firstName}`,
-        message: isAr
-          ? 'شكراً على تفانيك ودقتك العالية في ضبط كل تفصيلة ومقاس. مجهوداتك وعملك المتقن دائماً محل تقدير واعتزاز كبيرين.'
-          : 'Merci pour votre dévouement et la précision de votre travail sur chaque modèle. Votre savoir-faire est précieux.',
-        border: 'border-indigo-500/30',
-        glow: 'bg-indigo-500/15'
-      };
-    } else {
-      return {
-        icon: Moon,
-        iconColor: 'text-violet-400',
-        badgeBg: 'bg-violet-500/10 text-violet-300 border-violet-500/30',
-        badgeText: isAr ? 'مساء الخير والتميز ✨' : 'Soirée Sérénité ✨',
-        title: isAr ? `مساء النور والتميز سي ${firstName}` : `Bonsoir et merci pour votre journée ${firstName}`,
-        message: isAr
-          ? 'شكراً جزيلاً على مجهوداتك وعملك المتقن طيلة اليوم. نقدر عالياً التزامك وإبداعك المستمر معنا في BEYA.'
-          : 'Merci chaleureusement pour vos efforts continus et la qualité remarquable de vos réalisations aujourd\'hui.',
-        border: 'border-violet-500/30',
-        glow: 'bg-violet-500/15'
-      };
-    }
-  }, [activeProfileUser.nom, isAr]);
-
   return (
     <div className={`space-y-6 pb-28 md:pb-8 bg-[#090B10] min-h-screen text-slate-100 p-3 sm:p-5 md:p-8 rounded-3xl border border-white/[0.05] shadow-2xl ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Toast Notification */}
@@ -1301,51 +1251,6 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             >
               <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'الرصيد الصافي' : 'Solde'}</div>
               <div className="text-sm font-black text-indigo-300 font-mono mt-0.5">{summary.totalRemainingAllTime.toLocaleString()} DH</div>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Apple Daily Welcoming & Craft Appreciation Banner ──────────── */}
-      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r from-white/[0.04] via-white/[0.02] to-transparent border ${greetingData.border} backdrop-blur-2xl p-4 md:p-5 shadow-xl`}>
-        {/* Subtle Ambient Radial Glow */}
-        <div className={`absolute -top-10 -right-10 w-36 h-36 ${greetingData.glow} rounded-full blur-3xl pointer-events-none`} />
-
-        <div className={`relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3.5 ${isAr ? 'text-right' : 'text-left'}`}>
-          <div className="space-y-1.5 max-w-3xl">
-            <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse justify-end' : ''}`}>
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${greetingData.badgeBg}`}>
-                {greetingData.badgeText}
-              </span>
-              <span className="text-[11px] text-slate-400 font-medium">
-                {new Date().toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </span>
-            </div>
-
-            <h3 className="text-base md:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              <greetingData.icon className={`w-5 h-5 ${greetingData.iconColor} shrink-0`} />
-              <span>{greetingData.title}</span>
-            </h3>
-
-            <p className="text-xs md:text-[13px] text-slate-300/90 leading-relaxed font-normal">
-              {greetingData.message}
-            </p>
-          </div>
-
-          <div className={`flex items-center gap-2 shrink-0 pt-1 md:pt-0 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <button
-              onClick={() => handleTabChange('travaux')}
-              className="px-3.5 py-2 bg-white/[0.07] hover:bg-white/[0.14] active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-white/[0.1]"
-            >
-              <Scissors className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{isAr ? 'متابعة مهام اليوم' : 'Travaux du jour'}</span>
-            </button>
-            <button
-              onClick={() => handleTabChange('profil')}
-              className="px-3.5 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 active:scale-95 text-indigo-300 hover:text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-indigo-500/30"
-            >
-              <Wallet className="w-3.5 h-3.5 text-indigo-300" />
-              <span>{summary.totalRemainingAllTime.toLocaleString()} MAD</span>
             </button>
           </div>
         </div>
