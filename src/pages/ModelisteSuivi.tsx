@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CoutureLoader } from '../components/CoutureLoader';
 import {
   CheckCircle2,
   Clock,
@@ -367,8 +366,6 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       console.error('Erreur chargement données Modéliste:', e);
       showToast(isAr ? 'حدث خطأ أثناء تحميل البيانات' : 'Erreur de chargement des données', true);
     } finally {
-      // Smooth luxury timing so the preloader renders cleanly and data is 100% computed
-      await new Promise(r => setTimeout(r, 650));
       setLoading(false);
     }
   };
@@ -1131,16 +1128,25 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     }
   ];
 
-  if (loading) {
-    return (
-      <div className={`space-y-6 pb-28 md:pb-8 bg-[#090B10] min-h-screen text-slate-100 p-3 sm:p-5 md:p-8 rounded-3xl border border-white/[0.05] shadow-2xl flex items-center justify-center ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
-        <CoutureLoader minHeight="min-h-[75vh]" />
-      </div>
-    );
-  }
-
   return (
-    <div className={`space-y-6 pb-28 md:pb-8 bg-[#090B10] min-h-screen text-slate-100 p-3 sm:p-5 md:p-8 rounded-3xl border border-white/[0.05] shadow-2xl ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
+    <div className={`space-y-6 pb-28 md:pb-8 bg-[#090B10] min-h-screen text-slate-100 p-3 sm:p-5 md:p-8 rounded-3xl border border-white/[0.05] shadow-2xl relative ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
+      {/* Sleek Top Loading Strip (Charit / شريط تحميل علوي رفيع) */}
+      {loading && (
+        <div className="fixed top-0 left-0 right-0 z-[500] h-[3px] bg-slate-900/60 backdrop-blur-xs overflow-hidden pointer-events-none">
+          <div 
+            className="h-full bg-gradient-to-r from-indigo-500 via-sky-400 to-indigo-500 w-full"
+            style={{
+              animation: 'modelisteScan 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite'
+            }}
+          />
+          <style>{`
+            @keyframes modelisteScan {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(100%); }
+            }
+          `}</style>
+        </div>
+      )}
       {/* Toast Notification */}
       {toast && (
         <div
@@ -1270,21 +1276,27 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               className="bg-white/[0.04] active:bg-white/[0.08] active:scale-95 transition p-2 rounded-xl text-center border border-white/[0.05]"
             >
               <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'منجز ومسلّم' : 'Livrés'}</div>
-              <div className="text-sm font-black text-emerald-400 font-mono mt-0.5">{summary.completedCount}</div>
+              <div className="text-sm font-black text-emerald-400 font-mono mt-0.5">
+                {loading ? <span className="inline-block w-8 h-4 bg-white/10 rounded animate-pulse" /> : summary.completedCount}
+              </div>
             </button>
             <button
               onClick={() => handleTabChange('travaux')}
               className="bg-white/[0.04] active:bg-white/[0.08] active:scale-95 transition p-2 rounded-xl text-center border border-white/[0.05]"
             >
               <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'قيد العمل' : 'En cours'}</div>
-              <div className="text-sm font-black text-amber-400 font-mono mt-0.5">{summary.activeCount}</div>
+              <div className="text-sm font-black text-amber-400 font-mono mt-0.5">
+                {loading ? <span className="inline-block w-8 h-4 bg-white/10 rounded animate-pulse" /> : summary.activeCount}
+              </div>
             </button>
             <button
               onClick={() => handleTabChange('profil')}
               className="bg-white/[0.04] active:bg-white/[0.08] active:scale-95 transition p-2 rounded-xl text-center border border-white/[0.05]"
             >
               <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'الرصيد الصافي' : 'Solde'}</div>
-              <div className="text-sm font-black text-indigo-300 font-mono mt-0.5">{summary.totalRemainingAllTime.toLocaleString()} DH</div>
+              <div className="text-sm font-black text-indigo-300 font-mono mt-0.5">
+                {loading ? <span className="inline-block w-12 h-4 bg-white/10 rounded animate-pulse" /> : `${summary.totalRemainingAllTime.toLocaleString()} DH`}
+              </div>
             </button>
           </div>
         </div>
@@ -1376,12 +1388,20 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                   <Wallet className="w-5 h-5" />
                 </div>
               </div>
-              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white">
-                {summary.totalRemainingAllTime.toLocaleString()} <span className="text-sm font-semibold text-slate-400">MAD</span>
+              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white min-h-[40px] flex items-center">
+                {loading ? (
+                  <span className="inline-block w-36 h-9 bg-white/10 rounded-xl animate-pulse" />
+                ) : (
+                  <>{summary.totalRemainingAllTime.toLocaleString()} <span className="text-sm font-semibold text-slate-400">MAD</span></>
+                )}
               </div>
               <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
                 <span className="text-slate-400 font-medium">{isAr ? (isAdmin ? 'المدفوع له حتى الآن :' : 'المدفوع حتى الآن :') : 'Déjà Réglé :'}</span>
-                <span className="text-emerald-400 font-mono font-bold">{summary.totalPaidAllTime.toLocaleString()} MAD</span>
+                {loading ? (
+                  <span className="inline-block w-20 h-4 bg-white/10 rounded animate-pulse" />
+                ) : (
+                  <span className="text-emerald-400 font-mono font-bold">{summary.totalPaidAllTime.toLocaleString()} MAD</span>
+                )}
               </div>
             </div>
 
@@ -1399,10 +1419,20 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                   <Clock className="w-5 h-5" />
                 </div>
               </div>
-              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white">{summary.activeCount}</div>
+              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white min-h-[40px] flex items-center">
+                {loading ? (
+                  <span className="inline-block w-16 h-9 bg-white/10 rounded-xl animate-pulse" />
+                ) : (
+                  summary.activeCount
+                )}
+              </div>
               <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
                 <span className="text-slate-400 font-medium">{isAr ? 'القيمة عند التسليم :' : 'Valeur à la livraison :'}</span>
-                <span className="text-amber-300 font-mono font-bold">+{summary.activeMAD.toLocaleString()} MAD</span>
+                {loading ? (
+                  <span className="inline-block w-20 h-4 bg-white/10 rounded animate-pulse" />
+                ) : (
+                  <span className="text-amber-300 font-mono font-bold">+{summary.activeMAD.toLocaleString()} MAD</span>
+                )}
               </div>
             </div>
 
@@ -1420,10 +1450,20 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
               </div>
-              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white">{summary.completedCount}</div>
+              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white min-h-[40px] flex items-center">
+                {loading ? (
+                  <span className="inline-block w-16 h-9 bg-white/10 rounded-xl animate-pulse" />
+                ) : (
+                  summary.completedCount
+                )}
+              </div>
               <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
                 <span className="text-slate-400 font-medium">{isAr ? (isAdmin ? 'مجموع أرباح الموديليست :' : 'مجموع الأرباح المكتسبة :') : 'Gagné sur ces modèles :'}</span>
-                <span className="text-emerald-300 font-mono font-bold">{summary.completedMAD.toLocaleString()} MAD</span>
+                {loading ? (
+                  <span className="inline-block w-20 h-4 bg-white/10 rounded animate-pulse" />
+                ) : (
+                  <span className="text-emerald-300 font-mono font-bold">{summary.completedMAD.toLocaleString()} MAD</span>
+                )}
               </div>
             </div>
           </div>
