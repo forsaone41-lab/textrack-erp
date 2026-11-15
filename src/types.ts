@@ -1086,8 +1086,13 @@ export function getSupabaseConnectionStatus(): SupabaseConnectionStatus {
   return supabaseConnectionStatus;
 }
 
-export async function loadLeads(): Promise<Lead[]> {
+export async function loadLeads(forceRefresh: boolean = false): Promise<Lead[]> {
   try {
+    const cachedLeads = _cache['leads'];
+    if (!forceRefresh && cachedLeads && Date.now() - cachedLeads.ts < 15_000) {
+      return cachedLeads.data as Lead[];
+    }
+
     // Get deleted IDs to exclude
     let deletedIds: string[] = [];
     try {

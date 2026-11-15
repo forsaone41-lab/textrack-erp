@@ -111,8 +111,22 @@ export default function Inbox() {
       Notification.requestPermission();
     }
     fetchData();
-    const interval = setInterval(fetchData, 4000); // Auto refresh every 4s
-    return () => clearInterval(interval);
+    // Optimized: Poll every 20s only when tab is visible to prevent burning Supabase Egress quota
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        fetchData();
+      }
+    }, 20000);
+
+    const onFocus = () => {
+      fetchData();
+    };
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   // Aggregate all contacts (Registered Users + Leads + Messages)

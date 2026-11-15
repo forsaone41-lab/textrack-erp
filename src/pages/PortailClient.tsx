@@ -2144,6 +2144,7 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
     }
 
     const interval = setInterval(async () => {
+      if (document.hidden) return; // Skip in background tabs
       const myLeads = (currentUser && (currentUser.nom || currentUser.email || currentUser.telephone))
         ? await loadClientLeads(currentUser, Array.from(clientIdentity.nameKeys))
         : await loadLeads();
@@ -2189,7 +2190,7 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
           }
         }
       });
-    }, 12000);
+    }, 35000);
     return () => clearInterval(interval);
   }, [activeTab, currentUser]);
 
