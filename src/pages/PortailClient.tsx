@@ -21,21 +21,34 @@ interface PortailClientProps {
   onLogout?: () => void;
 }
 
-const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
+const LogoWithFallback = ({ src, alt, onClick }: { src?: string; alt?: string; onClick?: () => void }) => {
   const [error, setError] = useState(false);
-  if (error || !src) {
-    return (
-      <div className="flex items-center gap-3.5">
-        <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-indigo-500 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/25">
-          <Package className="w-7 h-7 text-white" />
+  const brandWord = ((alt || 'BEYA').split(' ')[0] || 'BEYA').toUpperCase();
+
+  return (
+    <div onClick={onClick} className="flex items-center gap-3 cursor-pointer select-none group">
+      {!error && src ? (
+        <img
+          src={src}
+          className="w-11 h-11 rounded-2xl object-contain shrink-0 shadow-lg shadow-indigo-500/25 transition-transform group-hover:scale-105"
+          alt={alt || "BEYA PORTAL"}
+          onError={() => setError(true)}
+        />
+      ) : (
+        <div className="w-11 h-11 bg-gradient-to-tr from-indigo-600 to-indigo-500 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/25 shrink-0 transition-transform group-hover:scale-105">
+          <Package className="w-6 h-6 text-white" />
         </div>
-        <span className="text-2xl font-black uppercase tracking-tighter italic flex-1">
-          {alt.split(' ')[0]}<span className="text-indigo-400">PORTAL</span>
+      )}
+      <div className="flex flex-col min-w-0">
+        <span dir="ltr" className="text-2xl font-black uppercase tracking-tighter italic text-white inline-flex items-center leading-none">
+          {brandWord}<span className="text-indigo-400">PORTAL</span>
+        </span>
+        <span dir="ltr" className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">
+          Manufacturing Excellence
         </span>
       </div>
-    );
-  }
-  return <img src={src} className="h-12 object-contain" alt={alt} onError={() => setError(true)} />;
+    </div>
+  );
 };
 
 
@@ -3587,7 +3600,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           <div className="p-4 lg:p-5">
             {/* Logo Row */}
             <div className="flex items-center justify-between mb-6 px-1 pt-2">
-              <LogoWithFallback src={company.logoClient || company.logoUrl} alt={company.name} />
+              <LogoWithFallback src={company.logoClient || company.logoUrl} alt={company.name} onClick={() => setActiveTab('overview')} />
               <button 
                 onClick={() => setMobileOpen(false)}
                 className="lg:hidden p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10"

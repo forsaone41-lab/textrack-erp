@@ -753,9 +753,9 @@ export interface Lead {
 
 export const DEFAULT_COMPANY: CompanyProfile = {
   name: 'BEYA CREATIVE',
-  subtitle: 'Confection de vêtement',
-  dirigeant: 'Abdelaziz ELHACHAMI',
-  regimeFiscal: 'Auto-Entrepreneur (Loi 114-13)',
+  subtitle: 'Confection & Production Textile',
+  dirigeant: '',
+  regimeFiscal: 'Atelier de Confection Textile',
   logoUrl: '/logo.png',
   logoLanding: '/logo.png',
   logoAdmin: '/logo.png',
@@ -764,14 +764,14 @@ export const DEFAULT_COMPANY: CompanyProfile = {
   logoLogin: '/logo.png',
   logoMobileHeader: '/logo.png',
   cachetUrl: '',
-  address: 'N 808 Lot Ain Aghbal Ahadaf, 53105 Azrou',
-  ice: '003457558000092',
+  address: 'Casablanca, Maroc',
+  ice: '',
   rc: '',
-  if_tax: '26008252',
-  patente: '18604042',
-  cnie: 'DA13860',
-  phone: '0661-50-28-86',
-  email: 'elhachami.abdelaziz@outlook.com',
+  if_tax: '',
+  patente: '',
+  cnie: '',
+  phone: '0624-465962',
+  email: 'contact@beya.ma',
   bankName: 'CIH BANK',
   rib: '230 425 3473845211020400 80',
   bankBeneficiary: 'YASSINE BELBACHIR / BEYA CREATIVE',
@@ -783,21 +783,72 @@ export function loadCompanyProfile(): CompanyProfile {
   try {
     const data = safeStorage.getItem('textrack_profile');
     const parsed = data ? JSON.parse(data) : {};
+    
+    // STRICT PURGE: Never allow Abdelaziz ELHACHAMI or his personal tax numbers to leak
+    if (parsed.dirigeant && parsed.dirigeant.toLowerCase().includes('hachami')) {
+      delete parsed.dirigeant;
+    }
+    if (parsed.email && parsed.email.toLowerCase().includes('hachami')) {
+      parsed.email = 'contact@beya.ma';
+    }
+    if (parsed.ice === '003457558000092') {
+      parsed.ice = '';
+    }
+    if (parsed.if_tax === '26008252') {
+      parsed.if_tax = '';
+    }
+    if (parsed.patente === '18604042') {
+      parsed.patente = '';
+    }
+    if (parsed.cnie === 'DA13860') {
+      parsed.cnie = '';
+    }
+    if (parsed.address && (parsed.address.includes('Ain Aghbal') || parsed.address.includes('Azrou'))) {
+      parsed.address = 'Casablanca, Maroc';
+    }
+    if (parsed.phone === '0661-50-28-86') {
+      parsed.phone = '0624-465962';
+    }
+    if (parsed.regimeFiscal && parsed.regimeFiscal.includes('Auto-Entrepreneur')) {
+      parsed.regimeFiscal = 'Atelier de Confection Textile';
+    }
+
     const merged = { ...DEFAULT_COMPANY, ...parsed };
     
-    // Strong protection against empty/dummy legal fields wiping out real business info
-    if (!merged.ice || merged.ice === '000000000000000' || /^0+$/.test(merged.ice)) {
-      merged.ice = DEFAULT_COMPANY.ice;
+    // Clean merged fields as well
+    if (merged.dirigeant && merged.dirigeant.toLowerCase().includes('hachami')) {
+      merged.dirigeant = '';
     }
-    if (!merged.if_tax || merged.if_tax === '0000000' || /^0+$/.test(merged.if_tax)) {
-      merged.if_tax = DEFAULT_COMPANY.if_tax;
+    if (merged.email && merged.email.toLowerCase().includes('hachami')) {
+      merged.email = 'contact@beya.ma';
     }
-    if (!merged.patente || merged.patente === '00000000' || /^0+$/.test(merged.patente)) {
-      merged.patente = DEFAULT_COMPANY.patente;
+    if (merged.ice === '003457558000092') {
+      merged.ice = '';
     }
-    if (!merged.cnie || merged.cnie === '') {
-      merged.cnie = DEFAULT_COMPANY.cnie;
+    if (merged.if_tax === '26008252') {
+      merged.if_tax = '';
     }
+    if (merged.patente === '18604042') {
+      merged.patente = '';
+    }
+    if (merged.cnie === 'DA13860') {
+      merged.cnie = '';
+    }
+    if (merged.address && (merged.address.includes('Ain Aghbal') || merged.address.includes('Azrou'))) {
+      merged.address = 'Casablanca, Maroc';
+    }
+    if (merged.phone === '0661-50-28-86') {
+      merged.phone = '0624-465962';
+    }
+    if (merged.regimeFiscal && merged.regimeFiscal.includes('Auto-Entrepreneur')) {
+      merged.regimeFiscal = 'Atelier de Confection Textile';
+    }
+
+    // Persist cleaned profile to remove any stored old profile from localStorage
+    try {
+      safeStorage.setItem('textrack_profile', JSON.stringify(merged));
+    } catch {}
+
     if (!merged.address || merged.address.trim() === '' || merged.address.includes('Zone Industrielle, Meknès')) {
       merged.address = DEFAULT_COMPANY.address;
     }

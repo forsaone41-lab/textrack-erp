@@ -171,19 +171,21 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
           <p className="text-[9px] font-black text-indigo-600 uppercase tracking-[0.18em] mb-2">{isAr ? 'المرسل / الورشة' : 'Émetteur / Prestataire'}</p>
-          <p className="text-sm font-black text-slate-900 uppercase mb-1">{company.dirigeant ? `${company.dirigeant} (${company.name})` : company.name}</p>
+          <p className="text-sm font-black text-slate-900 uppercase mb-1">{company.name}</p>
           <div className="text-[11px] font-medium text-slate-600 leading-relaxed space-y-0.5">
-            {company.regimeFiscal && <p className="font-bold text-indigo-700">{company.regimeFiscal}</p>}
-            {company.address && <p>{company.address}</p>}
-            {company.phone && <p>{isAr ? 'الهاتف:' : 'Tél:'} {company.phone}</p>}
-            {company.email && <p>{company.email}</p>}
+            {company.regimeFiscal && !company.regimeFiscal.includes('Auto-Entrepreneur') && (
+              <p className="font-bold text-indigo-700">{company.regimeFiscal}</p>
+            )}
+            {company.address && !company.address.includes('Ain Aghbal') && <p>{company.address}</p>}
+            {company.phone && company.phone !== '0661-50-28-86' && <p>{isAr ? 'الهاتف:' : 'Tél:'} {company.phone}</p>}
+            {company.email && !company.email.includes('hachami') && <p>{company.email}</p>}
           </div>
-          {(company.ice && company.ice !== '000000000000000') && (
+          {(company.ice && company.ice !== '000000000000000' && !company.ice.includes('003457558000092')) && (
             <div className="flex flex-wrap gap-1.5 pt-2 mt-2 border-t border-slate-200 font-mono text-[10px]">
               <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">ICE: <strong className="text-indigo-600">{company.ice}</strong></span>
-              {company.if_tax && company.if_tax !== '0000000' && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">IF: {company.if_tax}</span>}
-              {company.patente && company.patente !== '00000000' && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">TP: {company.patente}</span>}
-              {company.cnie && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">CNIE: {company.cnie}</span>}
+              {company.if_tax && company.if_tax !== '0000000' && !company.if_tax.includes('26008252') && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">IF: {company.if_tax}</span>}
+              {company.patente && company.patente !== '00000000' && !company.patente.includes('18604042') && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">TP: {company.patente}</span>}
+              {company.cnie && !company.cnie.includes('DA13860') && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">CNIE: {company.cnie}</span>}
             </div>
           )}
         </div>
@@ -353,15 +355,16 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
           {company.cachetUrl ? (
             <img src={company.cachetUrl} className="max-h-24 w-auto object-contain opacity-95 mix-blend-multiply mt-4" alt="Cachet" />
           ) : (
-            <div className="border-2 border-dashed border-indigo-300 rounded-xl p-2.5 text-center mt-3 bg-white w-full shadow-2xs">
-              <p className="text-[10px] font-black text-indigo-900 uppercase">ROYAUME DU MAROC</p>
-              <p className="text-[11px] font-black text-indigo-700 leading-tight">{company.dirigeant || company.name}</p>
-              <p className="text-[8.5px] font-bold text-slate-500 uppercase mt-0.5">{company.name} · Auto-Entrepreneur</p>
-              <div className="font-mono text-[7.5px] text-slate-600 leading-tight mt-1 border-t border-slate-100 pt-1">
-                ICE: {company.ice && company.ice !== '000000000000000' ? company.ice : '003457558000092'}<br />
-                IF: {company.if_tax && company.if_tax !== '0000000' ? company.if_tax : '26008252'} · TP: {company.patente && company.patente !== '00000000' ? company.patente : '18604042'}
-              </div>
-              <span className="inline-block bg-indigo-600 text-white text-[7.5px] font-black px-1.5 py-0.5 rounded mt-1">
+            <div className="border-2 border-dashed border-indigo-300 rounded-xl p-3 text-center mt-3 bg-white w-full shadow-2xs">
+              <p className="text-[11px] font-black text-indigo-900 uppercase tracking-wider">{company.name || 'BEYA CREATIVE'}</p>
+              <p className="text-[8.5px] font-bold text-slate-500 uppercase mt-0.5">Atelier de Confection Textile</p>
+              {company.ice && company.ice !== '000000000000000' && !company.ice.includes('003457558000092') && (
+                <div className="font-mono text-[7.5px] text-slate-600 leading-tight mt-1 border-t border-slate-100 pt-1">
+                  ICE: {company.ice}
+                  {company.if_tax && company.if_tax !== '0000000' && !company.if_tax.includes('26008252') && ` · IF: ${company.if_tax}`}
+                </div>
+              )}
+              <span className="inline-block bg-indigo-600 text-white text-[7.5px] font-black px-2 py-0.5 rounded-full mt-2 tracking-wide uppercase">
                 {avance > 0 ? (isAr ? 'تم استلام التسبيق 50%' : 'ACOMPTE 50% REÇU') : (isAr ? 'توقيع مصادق عليه' : 'SIGNATURE VALIDÉE')}
               </span>
             </div>
@@ -376,17 +379,17 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
         </p>
         <p className="text-[9px] font-bold text-slate-500 mb-1">
           {[
-            company.address,
-            company.phone,
-            company.email,
-            company.ice && company.ice !== '000000000000000' ? `ICE: ${company.ice}` : null,
-            company.if_tax && company.if_tax !== '0000000' ? `IF: ${company.if_tax}` : null,
+            company.address && !company.address.includes('Ain Aghbal') ? company.address : null,
+            company.phone && company.phone !== '0661-50-28-86' ? company.phone : '0624-465962',
+            company.email && !company.email.includes('hachami') ? company.email : 'contact@beya.ma',
+            company.ice && company.ice !== '000000000000000' && !company.ice.includes('003457558000092') ? `ICE: ${company.ice}` : null,
+            company.if_tax && company.if_tax !== '0000000' && !company.if_tax.includes('26008252') ? `IF: ${company.if_tax}` : null,
           ].filter(Boolean).join(' | ')}
         </p>
         <p className="text-[8.5px] font-medium text-slate-400">
           {isAr
-            ? 'الإعفاء من الضريبة على القيمة المضافة (TVA) بموجب المادة 91 من المدونة العامة للضرائب (نظام المقاول الذاتي)'
-            : 'TVA non applicable — Article 91 du Code Général des Impôts (Régime de l\'Auto-Entrepreneur)'}
+            ? 'وثيقة تجارية مهنية صادرة عن ورشة BEYA CREATIVE للإنتاج والتصنيع النسيجي'
+            : 'Document commercial professionnel émis par l\'atelier BEYA CREATIVE — Confection & Production Textile'}
         </p>
       </div>
     </div>
