@@ -6,6 +6,7 @@ import { supabase } from './supabase';
 import Sidebar from './components/Sidebar';
 import Calculator from './components/Tools/Calculator';
 import NotificationCenter from './components/Tools/NotificationCenter';
+import AdminLivePresenceBar from './components/AdminLivePresenceBar';
 import { CompanyProfile } from './types';
 
 // ? Lazy load all pages - each page loads only when visited
@@ -254,6 +255,9 @@ function AdminLayout({
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-purple-500/5 blur-[120px] pointer-events-none print:hidden" />
         
         <div className="p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative print:p-0 print:max-w-none">
+          {currentUser.role === 'admin' && (
+            <AdminLivePresenceBar currentUser={currentUser} />
+          )}
           <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>
@@ -620,6 +624,60 @@ function AppContent() {
 
     return () => clearInterval(interval);
   }, [currentUser]);
+
+  // Broadcast live presence to Supabase Realtime channel for live Admin monitoring
+  useEffect(() => {
+    if (!currentUser || !currentUser.id || currentUser.id === 'master-admin' || currentUser.id.startsWith('default-')) return;
+
+    const channel = supabase.channel('beya-live-presence', {
+      config: {
+        presence: { key: currentUser.id }
+      }
+    });
+
+    const getPageLabel = () => {
+      const h = (window.location.hash || '').toLowerCase();
+      if (h.includes('suivi-modeliste') || h.includes('modeliste')) return 'ورشة الباتروناج';
+      if (h.includes('demandes')) return 'طلبات الزبائن';
+      if (h.includes('commandes')) return 'الطلبيات والتنفيذ';
+      if (h.includes('worker') || h.includes('atelier')) return 'فضاء الورشة';
+      if (h.includes('portal') || h.includes('client')) return 'بوابة الزبون';
+      if (h.includes('chef')) return 'رئيس السلسلة';
+      if (h.includes('commercial')) return 'فضاء التجاري';
+      if (h.includes('rh') || h.includes('employes')) return 'الموارد البشرية';
+      if (h.includes('factures') || h.includes('devis')) return 'الفواتير والمالية';
+      if (h.includes('profil')) return 'الملف الشخصي';
+      if (h.includes('dashboard') || h === '#/' || !h) return 'لوحة التحكم';
+      return 'تصفح المنصة';
+    };
+
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        try {
+          await channel.track({
+            id: currentUser.id,
+            nom: currentUser.nom || 'Utilisateur',
+            role: currentUser.role || 'client',
+            photo: currentUser.photo || null,
+            telephone: currentUser.telephone || null,
+            email: currentUser.email || null,
+            brandName: (currentUser as any).brandName || null,
+            page: getPageLabel(),
+            path: window.location.hash || window.location.pathname,
+            onlineAt: new Date().toISOString()
+          });
+        } catch (e) {
+          // ignore tracking error
+        }
+      }
+    });
+
+    return () => {
+      try {
+        channel.unsubscribe();
+      } catch {}
+    };
+  }, [currentUser?.id, currentUser?.nom, currentUser?.role]);
 
   useEffect(() => {
     const onUserUpdated = (e: any) => {
