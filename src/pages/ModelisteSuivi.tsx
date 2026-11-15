@@ -1448,7 +1448,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     isWhite ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-lg text-white'
   }`}>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-400">
+            <span className={`text-xs font-bold ${isWhite ? "text-slate-700" : "text-slate-400"}`}>
               {activeTab === 'a_tarifer' ? (isAr ? '🔍 تصفية وبحث في موديلات التسعير' : '🔍 Recherche modèles à tarifer') : (isAr ? '🔍 تصفية وبحث في ورشة المهام' : '🔍 Recherche dans les travaux')}
             </span>
           </div>
@@ -1783,24 +1783,30 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPricingSubFilter('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  pricingSubFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'bg-white/[0.05] text-slate-400 hover:text-white'
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                  pricingSubFilter === 'all'
+                    ? (isWhite ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-white text-slate-900 border-white shadow-sm')
+                    : (isWhite ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200' : 'bg-white/[0.05] text-slate-400 hover:text-white border-transparent')
                 }`}
               >
                 {isAr ? 'الكل' : 'Tous'} ({pricingItems.length})
               </button>
               <button
                 onClick={() => setPricingSubFilter('unpriced')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  pricingSubFilter === 'unpriced' ? 'bg-amber-500 text-white shadow-sm' : 'bg-white/[0.05] text-slate-400 hover:text-white'
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                  pricingSubFilter === 'unpriced'
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                    : (isWhite ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200' : 'bg-white/[0.05] text-slate-400 hover:text-white border-transparent')
                 }`}
               >
                 {isAr ? 'جديد ينتظر إدخال التسعيرة' : 'Nouveaux à chiffrer'} ({summary.unpricedCount})
               </button>
               <button
                 onClick={() => setPricingSubFilter('priced')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  pricingSubFilter === 'priced' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white/[0.05] text-slate-400 hover:text-white'
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                  pricingSubFilter === 'priced'
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                    : (isWhite ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200' : 'bg-white/[0.05] text-slate-400 hover:text-white border-transparent')
                 }`}
               >
                 {isAr ? 'مسعرة تنتظر الاتفاق والمصادقة' : 'Chiffrés en attente'} ({summary.pricedAwaitingCount})
@@ -1860,14 +1866,16 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                           }`}>
                             {isPriced ? (isAr ? 'تم اقتراح التسعيرة' : 'Tarif proposé') : (isAr ? 'جديد مطلوب تسعيره' : 'Nouveau à chiffrer')}
                           </span>
-                          <h4 className="font-bold text-sm text-white truncate">{item.modele}</h4>
-                          <p className="text-xs text-slate-400 font-medium">{item.client} · {item.date}</p>
+                          <h4 className={`font-bold text-sm truncate ${isWhite ? "text-slate-900" : "text-white"}`}>{item.modele}</h4>
+                          <p className={`text-xs font-semibold ${isWhite ? "text-slate-600" : "text-slate-400"}`}>{item.client} · {item.date}</p>
                         </div>
                       </div>
 
                       <button
                         onClick={() => setTechPackItem(item)}
-                        className="px-2.5 py-1.5 bg-white/[0.06] hover:bg-white/[0.12] text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0 border border-white/[0.08]"
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0 border transition ${
+    isWhite ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs' : 'bg-white/[0.06] hover:bg-white/[0.12] text-white border-white/[0.08]'
+  }`}
                         title={isAr ? 'البطاقة التقنية والمقاسات' : 'Fiche technique'}
                       >
                         <FileText className="w-3.5 h-3.5" />
@@ -1876,23 +1884,31 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                     </div>
 
                     {item.clientNotes && (
-                      <div className="text-[11px] text-slate-300 bg-white/[0.04] p-2.5 rounded-xl border border-white/[0.06] leading-relaxed">
-                        <strong className="text-white">{isAr ? 'ملاحظات الموديل :' : 'Spécifications :'}</strong> {item.clientNotes}
+                      <div className={`text-[11px] p-2.5 rounded-xl border leading-relaxed ${
+                        isWhite ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-white/[0.04] border-white/[0.06] text-slate-300'
+                      }`}>
+                        <strong className={`font-bold ${isWhite ? 'text-slate-900' : 'text-white'}`}>{isAr ? 'ملاحظات الموديل :' : 'Spécifications :'}</strong> {item.clientNotes}
                       </div>
                     )}
 
                     {/* PRICING INPUT / STATUS BOX */}
-                    <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 space-y-3">
+                    <div className={`p-3.5 rounded-2xl border space-y-3 transition-all ${
+                      isWhite ? 'bg-indigo-50/70 border-indigo-200 text-slate-900' : 'bg-indigo-500/10 border-indigo-500/25 text-white'
+                    }`}>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-indigo-300">
+                        <span className={`text-xs font-bold ${isWhite ? 'text-indigo-900' : 'text-indigo-300'}`}>
                           {isAr ? 'ثمن الباترون المقترح :' : 'Tarif proposé :'}
                         </span>
                         {isPriced ? (
-                          <span className="text-base font-bold text-emerald-400 font-mono bg-white/[0.06] px-3 py-0.5 rounded-xl border border-white/[0.1]">
+                          <span className={`text-base font-bold font-mono px-3 py-0.5 rounded-xl border ${
+                            isWhite ? 'bg-white text-emerald-800 border-emerald-300 shadow-xs' : 'bg-white/[0.06] text-emerald-400 border-white/[0.1]'
+                          }`}>
                             {item.patronagePrice} MAD
                           </span>
                         ) : (
-                          <span className="text-xs font-bold text-amber-400">{isAr ? 'غير مسعر بعد' : 'Non tarifé'}</span>
+                          <span className={`text-xs font-bold ${isWhite ? 'text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-lg' : 'text-amber-400'}`}>
+                            {isAr ? 'غير مسعر بعد' : 'Non tarifé'}
+                          </span>
                         )}
                       </div>
 
@@ -2002,8 +2018,10 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setWorkFilter('pending')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
-                  workFilter === 'pending' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25' : 'bg-white/[0.05] text-slate-400 hover:text-white'
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 border ${
+                  workFilter === 'pending'
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/25'
+                    : (isWhite ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200' : 'bg-white/[0.05] text-slate-400 hover:text-white border-transparent')
                 }`}
               >
                 <Clock className="w-3.5 h-3.5" />
@@ -2012,8 +2030,10 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               </button>
               <button
                 onClick={() => setWorkFilter('termine')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
-                  workFilter === 'termine' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25' : 'bg-white/[0.05] text-slate-400 hover:text-white'
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 border ${
+                  workFilter === 'termine'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/25'
+                    : (isWhite ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200' : 'bg-white/[0.05] text-slate-400 hover:text-white border-transparent')
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -2022,15 +2042,17 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               </button>
               <button
                 onClick={() => setWorkFilter('all')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  workFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'bg-white/[0.05] text-slate-400 hover:text-white'
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                  workFilter === 'all'
+                    ? (isWhite ? 'bg-slate-900 text-white border-slate-900 shadow-xs' : 'bg-white text-slate-900 border-white shadow-sm')
+                    : (isWhite ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200' : 'bg-white/[0.05] text-slate-400 hover:text-white border-transparent')
                 }`}
               >
                 {isAr ? 'الكل' : 'Tous'}
               </button>
             </div>
 
-            <p className="text-xs font-medium text-slate-400">
+            <p className={`text-xs font-semibold ${isWhite ? 'text-slate-600' : 'text-slate-400'}`}>
               {isAr ? 'الملفات المرفوعة هنا تتاح تلقائياً للزبون في بوابة BEYA' : 'Les fichiers déposés ici sont accessibles au client sur BEYA Portal'}
             </p>
           </div>
@@ -2040,7 +2062,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     isWhite ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-xl text-white'
   }`}>
               <Clock className="w-12 h-12 text-slate-500 mx-auto" />
-              <h3 className="font-bold text-base text-white">
+              <h3 className={`font-bold text-base ${isWhite ? "text-slate-900" : "text-white"}`}>
                 {isAr ? 'لا توجد مهام مطابقة للفلتر المحدد' : 'Aucune tâche trouvée'}
               </h3>
             </div>
