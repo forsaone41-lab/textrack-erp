@@ -1909,7 +1909,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                             }
                           }}
                           id={`price_input_${item.id}`}
-                          className="flex-1 bg-white/[0.06] border border-white/[0.12] rounded-xl px-3.5 py-2.5 text-xs font-bold text-white outline-none focus:border-indigo-400 font-mono"
+                          className={`flex-1 rounded-xl px-3.5 py-2.5 text-xs font-bold outline-none font-mono transition ${
+    isWhite ? 'bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:border-indigo-500' : 'bg-white/[0.06] border border-white/[0.12] text-white focus:border-indigo-400'
+  }`}
                         />
                         <button
                           onClick={() => {
@@ -2549,69 +2551,107 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">{isAr ? 'الاسم الكامل *' : 'Nom Complet *'}</label>
+                <label className={`block text-xs font-bold mb-1.5 ${isWhite ? 'text-slate-700' : 'text-slate-300'}`}>
+                  {isAr ? 'الاسم الكامل *' : 'Nom Complet *'}
+                </label>
                 <input
                   type="text"
                   required
                   value={profileForm.nom}
                   onChange={e => setProfileForm({ ...profileForm, nom: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-sm font-bold text-white outline-none focus:border-indigo-400"
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-bold outline-none transition ${
+                    isWhite
+                      ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-indigo-500 focus:bg-white shadow-xs'
+                      : 'bg-white/[0.04] border border-white/[0.1] text-white focus:border-indigo-400'
+                  }`}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">{isAr ? 'رقم الهاتف' : 'Téléphone'}</label>
+                <label className={`block text-xs font-bold mb-1.5 ${isWhite ? 'text-slate-700' : 'text-slate-300'}`}>
+                  {isAr ? 'رقم الهاتف' : 'Téléphone'}
+                </label>
                 <input
                   type="text"
                   value={profileForm.telephone}
                   onChange={e => setProfileForm({ ...profileForm, telephone: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-sm font-bold text-white outline-none focus:border-indigo-400"
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-bold outline-none transition ${
+                    isWhite
+                      ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-indigo-500 focus:bg-white shadow-xs'
+                      : 'bg-white/[0.04] border border-white/[0.1] text-white focus:border-indigo-400'
+                  }`}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+                <label className={`block text-xs font-bold mb-1.5 ${isWhite ? 'text-slate-700' : 'text-slate-300'}`}>
+                  {isAr ? 'البريد الإلكتروني' : 'Email'}
+                </label>
                 <input
                   type="email"
                   value={profileForm.email}
                   onChange={e => setProfileForm({ ...profileForm, email: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-sm font-bold text-white outline-none focus:border-indigo-400"
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-bold outline-none transition ${
+                    isWhite
+                      ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-indigo-500 focus:bg-white shadow-xs'
+                      : 'bg-white/[0.04] border border-white/[0.1] text-white focus:border-indigo-400'
+                  }`}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">{isAr ? 'رقم البطاقة الوطنية (CIN)' : 'N° CNIE'}</label>
+                <label className={`block text-xs font-bold mb-1.5 ${isWhite ? 'text-slate-700' : 'text-slate-300'}`}>
+                  {isAr ? 'رقم البطاقة الوطنية (CIN)' : 'N° CNIE'}
+                </label>
                 <input
                   type="text"
                   value={profileForm.cin}
                   onChange={e => setProfileForm({ ...profileForm, cin: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-sm font-bold text-white outline-none focus:border-indigo-400"
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-bold outline-none transition ${
+                    isWhite
+                      ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-indigo-500 focus:bg-white shadow-xs'
+                      : 'bg-white/[0.04] border border-white/[0.1] text-white focus:border-indigo-400'
+                  }`}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1.5">{isAr ? 'العنوان / المدينة' : 'Adresse & Ville'}</label>
+              <label className={`block text-xs font-bold mb-1.5 ${isWhite ? 'text-slate-700' : 'text-slate-300'}`}>
+                {isAr ? 'العنوان / المدينة' : 'Adresse & Ville'}
+              </label>
               <input
                 type="text"
                 value={profileForm.adresse}
                 onChange={e => setProfileForm({ ...profileForm, adresse: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-sm font-bold text-white outline-none focus:border-indigo-400"
+                className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-bold outline-none transition ${
+                  isWhite
+                    ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-indigo-500 focus:bg-white shadow-xs'
+                    : 'bg-white/[0.04] border border-white/[0.1] text-white focus:border-indigo-400'
+                }`}
               />
             </div>
 
             {/* Banking RIB section (Apple Wallet Style Card) */}
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-slate-900 border border-indigo-500/30 space-y-3.5 shadow-xl">
+            <div className={`p-5 rounded-2xl border space-y-3.5 shadow-xs transition-all ${
+              isWhite
+                ? 'bg-indigo-50/70 border-indigo-200 text-slate-900'
+                : 'bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-slate-900 border-indigo-500/30 text-white shadow-xl'
+            }`}>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <CreditCard className="w-4 h-4 text-indigo-400" />
+                <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                  isWhite ? 'text-indigo-800' : 'text-indigo-300'
+                }`}>
+                  <CreditCard className={`w-4 h-4 ${isWhite ? 'text-indigo-600' : 'text-indigo-400'}`} />
                   <span>{isAr ? 'الحساب البنكي (RIB المغربي)' : 'Coordonnées Bancaires (RIB)'}</span>
                 </span>
                 {profileForm.rib && (
                   <button
                     type="button"
                     onClick={() => copyRib(profileForm.rib)}
-                    className="text-xs font-bold text-indigo-400 hover:text-white flex items-center gap-1 cursor-pointer transition"
+                    className={`text-xs font-bold flex items-center gap-1 cursor-pointer transition ${
+                      isWhite ? 'text-indigo-600 hover:text-indigo-800' : 'text-indigo-400 hover:text-white'
+                    }`}
                   >
                     <Copy className="w-3.5 h-3.5" />
                     <span>{copiedRib ? (isAr ? 'تم النسخ!' : 'Copié!') : (isAr ? 'نسخ RIB' : 'Copier')}</span>
@@ -2621,17 +2661,23 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-1">
-                  <label className="block text-[10px] font-bold text-slate-400 mb-1">{isAr ? 'اسم البنك' : 'Banque'}</label>
+                  <label className={`block text-[10px] font-bold mb-1 ${isWhite ? 'text-slate-600' : 'text-slate-400'}`}>
+                    {isAr ? 'اسم البنك' : 'Banque'}
+                  </label>
                   <input
                     type="text"
                     placeholder="CIH, Attijariwafa..."
                     value={profileForm.banque}
                     onChange={e => setProfileForm({ ...profileForm, banque: e.target.value })}
-                    className="w-full px-3 py-2 bg-white/[0.06] border border-white/[0.12] rounded-xl text-xs font-bold text-white outline-none focus:border-indigo-400"
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-bold outline-none transition ${
+                      isWhite
+                        ? 'bg-white border border-slate-300 text-slate-900 placeholder-slate-400 focus:border-indigo-500 shadow-xs'
+                        : 'bg-white/[0.06] border border-white/[0.12] text-white focus:border-indigo-400'
+                    }`}
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-[10px] font-bold text-slate-400 mb-1">
+                  <label className={`block text-[10px] font-bold mb-1 ${isWhite ? 'text-slate-600' : 'text-slate-400'}`}>
                     {isAr ? 'رقم الحساب (24 رقماً) *' : 'Numéro RIB (24 chiffres) *'}
                   </label>
                   <input
@@ -2640,7 +2686,11 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                     placeholder="230 425 3473845211020400 80"
                     value={profileForm.rib}
                     onChange={e => setProfileForm({ ...profileForm, rib: e.target.value })}
-                    className="w-full px-3 py-2 bg-white/[0.06] border border-white/[0.12] rounded-xl text-xs font-bold text-emerald-400 font-mono tracking-wider outline-none focus:border-indigo-400"
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-bold font-mono tracking-wider outline-none transition ${
+                      isWhite
+                        ? 'bg-white border border-emerald-400 text-emerald-800 font-bold focus:border-emerald-500 shadow-xs'
+                        : 'bg-white/[0.06] border border-white/[0.12] text-emerald-400 focus:border-indigo-400'
+                    }`}
                   />
                 </div>
               </div>
