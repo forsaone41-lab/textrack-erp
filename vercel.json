@@ -1,4 +1,17 @@
 {
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.beyacreative.com"
+        }
+      ],
+      "destination": "https://beyacreative.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!api/)(?!.*\\.[a-zA-Z0-9]+$).*)", "destination": "/" }

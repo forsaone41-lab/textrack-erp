@@ -146,10 +146,10 @@ const __IS_SIGNUP_CONFIRM__ = __INITIAL_HASH__.includes('type=signup') || __INIT
 // BEFORE we clean the URL. Supabase's createClient auto-detects hash tokens on init.
 // After a brief delay, we'll clean the URL in the useEffect below.
 
-// Auto-correct missing hash for direct language/funnel links
+// Auto-correct missing hash for ANY direct link (e.g. /login, /portal, /suivi-modeliste, /ar, /fr, etc.)
 if (window.location.pathname && window.location.pathname !== '/' && !window.location.hash) {
   const p = window.location.pathname.toLowerCase();
-  if (p === '/ar' || p === '/fr' || p === '/en' || p.startsWith('/funnel')) {
+  if (!p.startsWith('/api') && !p.startsWith('/assets') && !p.includes('.')) {
     window.history.replaceState({}, '', '/#' + window.location.pathname + window.location.search);
   }
 }
