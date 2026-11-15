@@ -1,7 +1,7 @@
 import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import * as React from 'react';
 import { useState, useEffect, Component, ReactNode, lazy, Suspense } from 'react';
-import { Menu, Package, Lock, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Menu, Package, Lock, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, Sun, Moon } from 'lucide-react';
 import { supabase } from './supabase';
 import Sidebar from './components/Sidebar';
 import Calculator from './components/Tools/Calculator';
@@ -192,14 +192,41 @@ function AdminLayout({
     setMobileOpen(false);
   }, [location.pathname]);
 
+  const [modelisteTheme, setModelisteTheme] = useState<'dark' | 'light'>(() => {
+    try {
+      return (localStorage.getItem('modeliste_theme_mode') as 'dark' | 'light') || 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  useEffect(() => {
+    const handleThemeChange = (e: any) => {
+      if (e?.detail) setModelisteTheme(e.detail);
+    };
+    window.addEventListener('modeliste_theme_change', handleThemeChange);
+    return () => window.removeEventListener('modeliste_theme_change', handleThemeChange);
+  }, []);
+
+  const toggleModelisteTheme = () => {
+    const next = modelisteTheme === 'dark' ? 'light' : 'dark';
+    setModelisteTheme(next);
+    try {
+      localStorage.setItem('modeliste_theme_mode', next);
+    } catch {}
+    window.dispatchEvent(new CustomEvent('modeliste_theme_change', { detail: next }));
+  };
+
   const isDarkSection = 
     currentUser?.role === 'modeliste' ||
     location.pathname.startsWith('/suivi-modeliste') ||
     location.pathname.startsWith('/modeliste') ||
     location.pathname.startsWith('/patronage-ai');
 
+  const isDarkActive = isDarkSection && modelisteTheme === 'dark';
+
   useEffect(() => {
-    if (isDarkSection) {
+    if (isDarkActive) {
       document.body.style.backgroundColor = '#07090e';
     } else {
       document.body.style.backgroundColor = '';
@@ -207,22 +234,36 @@ function AdminLayout({
     return () => {
       document.body.style.backgroundColor = '';
     };
-  }, [isDarkSection]);
+  }, [isDarkActive]);
 
   return (
-    <div className={`flex min-h-screen transition-colors duration-200 ${isDarkSection ? 'bg-[#07090e] text-slate-100' : 'bg-slate-50/50'}`} dir={isAr ? 'rtl' : 'ltr'}>
+    <div className={`flex min-h-screen transition-colors duration-200 ${isDarkActive ? 'bg-[#07090e] text-slate-100' : 'bg-slate-50/50 text-slate-900'}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Mobile Header - Premium Glassy "Zaji" Design */}
       {currentUser.role !== 'worker' && (
         <div className={`md:hidden fixed top-0 left-0 right-0 h-16 backdrop-blur-xl z-[140] flex items-center justify-between px-5 shadow-sm print:hidden transition-colors duration-200 ${
-          isDarkSection 
+          isDarkActive 
             ? 'bg-[#0c0f17]/95 border-b border-white/10 text-white' 
             : 'bg-white/70 border-b border-slate-200/50 text-slate-900'
         }`}>
           <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
-            <MobileLogoWithFallback src={company.logoMobileHeader || company.logoUrl} alt={company.name} isDark={isDarkSection} />
+            <MobileLogoWithFallback src={company.logoMobileHeader || company.logoUrl} alt={company.name} isDark={isDarkActive} />
           </div>
 
         <div className="flex items-center gap-2">
+          {isDarkSection && (
+            <button
+              onClick={toggleModelisteTheme}
+              className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 cursor-pointer ${
+                modelisteTheme === 'light'
+                  ? 'bg-slate-900 text-white border-slate-700'
+                  : 'bg-white/10 text-white border-white/20'
+              }`}
+              title={modelisteTheme === 'light' ? (isAr ? 'التبديل إلى الوضع الأسود' : 'Mode sombre') : (isAr ? 'التبديل إلى الأبيض العادي' : 'Mode blanc normal')}
+            >
+              {modelisteTheme === 'light' ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+              <span className="text-[11px] font-bold">{modelisteTheme === 'light' ? (isAr ? 'أسود' : 'Sombre') : (isAr ? 'أبيض' : 'Blanc')}</span>
+            </button>
+          )}
           {currentUser.role === 'admin' && location.pathname === '/' && (
             <div className="scale-75 origin-right">
               <NotificationCenter />
@@ -231,7 +272,7 @@ function AdminLayout({
           <button
             onClick={() => setMobileOpen(true)}
             className={`w-10 h-10 flex items-center justify-center transition-all rounded-xl border active:scale-90 ${
-              isDarkSection 
+              isDarkActive 
                 ? 'text-slate-200 hover:text-white bg-white/10 border-white/15' 
                 : 'text-slate-600 hover:text-indigo-600 bg-slate-100/50 border-slate-200'
             }`}
@@ -261,12 +302,33 @@ function AdminLayout({
       </div>
       
       <main className={`flex-1 overflow-y-auto w-full relative ${currentUser.role === 'worker' ? 'mt-0' : 'mt-16 md:mt-0'} print:mt-0 print:overflow-visible`}>
-        {/* Global Tools Bar - Notification only on Dashboard Page for Admin */}
-        {currentUser.role === 'admin' && (
-          <div className={`fixed top-8 ${isAr ? 'right-12' : 'right-12'} z-[130] hidden md:flex items-center gap-4 print:hidden`}>
-            {location.pathname === '/' && <NotificationCenter />}
-          </div>
-        )}
+        {/* Global Tools Bar - Theme Switcher & Notifications */}
+        <div className={`fixed top-8 ${isAr ? 'right-12' : 'right-12'} z-[130] hidden md:flex items-center gap-3 print:hidden`}>
+          {isDarkSection && (
+            <button
+              onClick={toggleModelisteTheme}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border shadow-xs active:scale-95 cursor-pointer backdrop-blur-md ${
+                modelisteTheme === 'light'
+                  ? 'bg-white/95 hover:bg-white text-slate-800 border-slate-300 shadow-sm'
+                  : 'bg-[#12151E]/90 hover:bg-[#12151E] text-white border-white/15'
+              }`}
+              title={modelisteTheme === 'light' ? (isAr ? 'التبديل إلى الوضع الأسود' : 'Passer au mode sombre') : (isAr ? 'التبديل إلى الأبيض العادي' : 'Passer au blanc normal')}
+            >
+              {modelisteTheme === 'light' ? (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>{isAr ? 'الوضع الأسود' : 'Mode Sombre'}</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{isAr ? 'الأبيض العادي' : 'Blanc Normal'}</span>
+                </>
+              )}
+            </button>
+          )}
+          {currentUser.role === 'admin' && location.pathname === '/' && <NotificationCenter />}
+        </div>
 
         {/* Floating Calculator - Admin Only */}
         {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && location.pathname !== '/portal' && (
@@ -276,7 +338,7 @@ function AdminLayout({
         )}
 
         {/* Decorative background element */}
-        {!isDarkSection ? (
+        {!isDarkActive ? (
           <>
             <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-500/5 blur-[120px] pointer-events-none print:hidden" />
             <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-purple-500/5 blur-[120px] pointer-events-none print:hidden" />

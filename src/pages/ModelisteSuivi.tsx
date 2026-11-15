@@ -40,7 +40,9 @@ import {
   MessageSquare,
   ArrowRight,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Sun,
+  Moon
 } from 'lucide-react';
 import FicheTechniqueModelisteModal, { printFicheTechniqueModeliste, sanitizeNotesForModeliste } from '../components/FicheTechniqueModelisteModal';
 import { useLang } from '../contexts/LangContext';
@@ -1141,8 +1143,101 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
     }
   ];
 
+  const [themeMode, setThemeMode] = useState<'dark' | 'light'>(() => {
+    try {
+      return (localStorage.getItem('modeliste_theme_mode') as 'dark' | 'light') || 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  useEffect(() => {
+    const handleThemeChange = (e: any) => {
+      if (e?.detail) setThemeMode(e.detail);
+    };
+    window.addEventListener('modeliste_theme_change', handleThemeChange);
+    return () => window.removeEventListener('modeliste_theme_change', handleThemeChange);
+  }, []);
+
+  const toggleTheme = () => {
+    const next = themeMode === 'dark' ? 'light' : 'dark';
+    setThemeMode(next);
+    try {
+      localStorage.setItem('modeliste_theme_mode', next);
+    } catch {}
+    window.dispatchEvent(new CustomEvent('modeliste_theme_change', { detail: next }));
+  };
+
+  const isWhite = themeMode === 'light';
+
   return (
-    <div className={`space-y-6 pb-28 md:pb-8 w-full min-h-screen text-slate-100 relative ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
+    <div className={`space-y-6 pb-28 md:pb-8 w-full min-h-screen relative transition-colors duration-200 ${isAr ? 'rtl font-sans' : 'ltr'} ${isWhite ? 'modeliste-white-mode text-slate-800' : 'text-slate-100'}`} dir={isAr ? 'rtl' : 'ltr'}>
+      {/* Scoped CSS for Normal White Theme (الأبيض العادي) */}
+      {isWhite && (
+        <style>{`
+          .modeliste-white-mode .bg-\[\#12151E\] {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            color: #0f172a !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
+          }
+          .modeliste-white-mode .bg-\[\#12151E\]\/90 {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: #e2e8f0 !important;
+            color: #0f172a !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05) !important;
+          }
+          .modeliste-white-mode .kpi-card {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            color: #0f172a !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
+          }
+          .modeliste-white-mode .kpi-card .text-white {
+            color: #0f172a !important;
+          }
+          .modeliste-white-mode .kpi-card .border-white\/\[0\.08\] {
+            border-color: #f1f5f9 !important;
+          }
+          .modeliste-white-mode .text-white:not(.bg-indigo-600 *):not(.bg-emerald-600 *):not(.bg-rose-600 *):not(.bg-slate-900 *):not(.bg-gradient-to-r *):not(.bg-gradient-to-tr *) {
+            color: #0f172a !important;
+          }
+          .modeliste-white-mode .text-slate-400 {
+            color: #64748b !important;
+          }
+          .modeliste-white-mode .text-slate-300 {
+            color: #475569 !important;
+          }
+          .modeliste-white-mode .text-slate-200 {
+            color: #1e293b !important;
+          }
+          .modeliste-white-mode .border-white\/\[0\.08\],
+          .modeliste-white-mode .border-white\/\[0\.05\],
+          .modeliste-white-mode .border-white\/\[0\.06\],
+          .modeliste-white-mode .border-white\/\[0\.1\] {
+            border-color: #e2e8f0 !important;
+          }
+          .modeliste-white-mode .bg-white\/\[0\.03\],
+          .modeliste-white-mode .bg-white\/\[0\.04\],
+          .modeliste-white-mode .bg-white\/\[0\.05\],
+          .modeliste-white-mode .bg-white\/\[0\.06\],
+          .modeliste-white-mode .bg-white\/\[0\.08\] {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            color: #1e293b !important;
+          }
+          .modeliste-white-mode input:not([type="checkbox"]):not([type="radio"]),
+          .modeliste-white-mode select,
+          .modeliste-white-mode textarea {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+          }
+          .modeliste-white-mode [color-scheme="dark"] {
+            color-scheme: light !important;
+          }
+        `}</style>
+      )}
       {/* Sleek Top Loading Strip (Charit / شريط تحميل علوي رفيع) */}
       {loading && (
         <div className="fixed top-0 left-0 right-0 z-[500] h-[3px] bg-slate-900/60 backdrop-blur-xs overflow-hidden pointer-events-none">
@@ -1234,6 +1329,29 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
+
+            {/* ☀️ / 🌙 Theme Toggle Button (الأبيض العادي / الوضع الأسود) */}
+            <button
+              onClick={toggleTheme}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-xs border ${
+                isWhite
+                  ? 'bg-slate-900 hover:bg-slate-800 text-white border-slate-700'
+                  : 'bg-white/10 hover:bg-white/20 text-white border-white/15'
+              }`}
+              title={isWhite ? (isAr ? 'التبديل إلى الوضع الأسود الفخم' : 'Passer au mode sombre') : (isAr ? 'التبديل إلى الوضع الأبيض العادي' : 'Passer au blanc normal')}
+            >
+              {isWhite ? (
+                <>
+                  <Moon className="w-4 h-4 text-indigo-400" />
+                  <span>{isAr ? 'الوضع الأسود' : 'Mode Sombre'}</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-4 h-4 text-amber-400" />
+                  <span>{isAr ? 'الأبيض العادي' : 'Blanc Normal'}</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -1278,6 +1396,18 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 title={isAr ? 'تحديث' : 'Actualiser'}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-xl transition border cursor-pointer active:scale-95 ${
+                  isWhite
+                    ? 'bg-slate-900 text-white border-slate-700'
+                    : 'bg-white/[0.08] text-white border-white/[0.12]'
+                }`}
+                title={isWhite ? (isAr ? 'الوضع الأسود' : 'Mode sombre') : (isAr ? 'الأبيض العادي' : 'Blanc normal')}
+              >
+                {isWhite ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
               </button>
             </div>
           </div>
@@ -1390,7 +1520,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             {/* 1. الرصيد الصافي المتبقي له (Primary Financial Focus) */}
             <div
               onClick={() => handleTabChange('profil')}
-              className="bg-gradient-to-b from-[#181C2B] to-[#11131C] border border-indigo-500/35 hover:border-indigo-500/60 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
+              className="kpi-card bg-gradient-to-b from-[#181C2B] to-[#11131C] border border-indigo-500/35 hover:border-indigo-500/60 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
@@ -1421,7 +1551,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             {/* 2. شحال باقي (مطلوب إنجازها الآن) */}
             <div
               onClick={() => handleTabChange('travaux')}
-              className="bg-gradient-to-b from-[#1E1A16] to-[#121319] border border-amber-500/30 hover:border-amber-500/50 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
+              className="kpi-card bg-gradient-to-b from-[#1E1A16] to-[#121319] border border-amber-500/30 hover:border-amber-500/50 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
@@ -1452,7 +1582,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             {/* 3. شحال خدم (الموديلات المنجزة والمسلّمة) */}
             <div
               onClick={() => handleTabChange('travaux')}
-              className="bg-gradient-to-b from-[#131E1B] to-[#10131A] border border-emerald-500/30 hover:border-emerald-500/50 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
+              className="kpi-card bg-gradient-to-b from-[#131E1B] to-[#10131A] border border-emerald-500/30 hover:border-emerald-500/50 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
