@@ -464,10 +464,6 @@ export default function LandingPage() {
                 </>
               )}
             </div>
-            
-            <Link to="/portal" className="text-[12px] sm:text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors whitespace-nowrap shrink-0">
-              {isAr ? 'بوابة الزبون 📦' : 'Portail Client 📦'}
-            </Link>
             <Link to="/login" className="text-[12px] sm:text-sm font-medium text-slate-800 hover:text-black transition-colors whitespace-nowrap shrink-0">
               {t.navLogin}
             </Link>
