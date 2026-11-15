@@ -2876,31 +2876,47 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         onSaveMeasurements={handleSaveModelisteMeasurements}
         isAr={isAr}
       />
-      {/* ─── Mobile App Fixed Bottom Navigation Bar (iOS Native App Bar) ─── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[120] bg-[#090B10]/95 backdrop-blur-2xl border-t border-white/[0.08] px-2 py-1.5 flex items-center justify-around shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
+      {/* ─── Mobile App Fixed Bottom Navigation Bar (iOS Native Tab Bar) ─── */}
+      <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-[120] transition-all duration-300 ${
+        isWhite
+          ? 'bg-white/95 backdrop-blur-2xl border-t border-slate-200/90 shadow-[0_-4px_25px_rgba(0,0,0,0.08)]'
+          : 'bg-[#090B10]/95 backdrop-blur-2xl border-t border-white/[0.08] shadow-[0_-10px_30px_rgba(0,0,0,0.8)]'
+      } px-2 py-2 flex items-center justify-around`}>
         {tabs.map((tab, idx) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-2xl transition-all duration-200 active:scale-95 cursor-pointer ${
-                isActive ? 'text-indigo-400 font-bold' : 'text-slate-400 hover:text-slate-200 font-medium'
-              }`}
+              className="relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-2xl transition-all duration-200 active:scale-95 cursor-pointer"
             >
-              {/* Active Indicator Glow */}
+              {/* Active Indicator Top Glow / Pill */}
               {isActive && (
-                <span className="absolute -top-1.5 w-8 h-1 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.9)]" />
+                <span className={`absolute -top-2 w-10 h-1 rounded-full ${
+                  isWhite
+                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 shadow-[0_2px_8px_rgba(79,70,229,0.5)]'
+                    : 'bg-gradient-to-r from-indigo-500 to-violet-500 shadow-[0_0_10px_rgba(99,102,241,0.9)]'
+                }`} />
               )}
-              <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-indigo-600/20 text-indigo-400 scale-110 shadow-xs' : ''}`}>
+              <div className={`p-1.5 rounded-xl transition-all ${
+                isActive
+                  ? (isWhite ? 'bg-indigo-50 text-indigo-600 scale-110 shadow-xs border border-indigo-100' : 'bg-indigo-600/20 text-indigo-400 scale-110 shadow-xs')
+                  : (isWhite ? 'text-slate-400 hover:text-slate-600' : 'text-slate-400 hover:text-slate-200')
+              }`}>
                 {tab.icon}
               </div>
-              <span className={`text-[10px] tracking-tight mt-0.5 ${isActive ? 'font-bold text-white' : 'font-medium text-slate-400'}`}>
+              <span className={`text-[10px] tracking-tight mt-0.5 ${
+                isActive
+                  ? (isWhite ? 'font-black text-indigo-700' : 'font-bold text-white')
+                  : (isWhite ? 'font-semibold text-slate-500' : 'font-medium text-slate-400')
+              }`}>
                 <span className="opacity-70 mr-0.5">{idx + 1}.</span>
                 {tab.shortLabel}
               </span>
               {typeof tab.badge === 'number' && tab.badge > 0 && (
-                <span className="absolute top-0.5 right-1/4 translate-x-2 min-w-[17px] h-[17px] px-1 bg-rose-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#090B10] shadow-md">
+                <span className={`absolute top-0 right-1/4 translate-x-2 min-w-[17px] h-[17px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 ${
+                  isWhite ? 'border-white shadow-xs' : 'border-[#090B10] shadow-md'
+                }`}>
                   {tab.badge}
                 </span>
               )}
