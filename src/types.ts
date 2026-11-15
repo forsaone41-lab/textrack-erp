@@ -920,18 +920,16 @@ export async function syncCompanyProfile(): Promise<CompanyProfile> {
       try {
         const remoteProfile = JSON.parse(mainRec.details) as CompanyProfile;
         const merged = { ...DEFAULT_COMPANY, ...remoteProfile };
-        if (!merged.ice || merged.ice === '000000000000000' || /^0+$/.test(merged.ice)) {
-          merged.ice = DEFAULT_COMPANY.ice;
-        }
-        if (!merged.if_tax || merged.if_tax === '0000000' || /^0+$/.test(merged.if_tax)) {
-          merged.if_tax = DEFAULT_COMPANY.if_tax;
-        }
-        if (!merged.patente || merged.patente === '00000000' || /^0+$/.test(merged.patente)) {
-          merged.patente = DEFAULT_COMPANY.patente;
-        }
-        if (!merged.address || merged.address.trim() === '' || merged.address.includes('Zone Industrielle, Meknès')) {
-          merged.address = DEFAULT_COMPANY.address;
-        }
+        // Purge leaked numbers
+        if (merged.ice && (merged.ice.includes('003457558') || merged.ice.includes('000092'))) merged.ice = '';
+        if (merged.if_tax && (merged.if_tax.includes('26008') || merged.if_tax.includes('26008252'))) merged.if_tax = '';
+        if (merged.patente && (merged.patente.includes('18604042') || merged.patente.includes('18604'))) merged.patente = '';
+        if (merged.cnie && (merged.cnie.includes('DA13860') || merged.cnie.includes('DA13'))) merged.cnie = '';
+        if (merged.address && (merged.address.includes('Ain Aghbal') || merged.address.includes('Azrou'))) merged.address = 'Casablanca, Maroc';
+        if (merged.dirigeant && merged.dirigeant.toLowerCase().includes('hachami')) merged.dirigeant = '';
+        if (merged.email && merged.email.includes('hachami')) merged.email = 'contact@beya.ma';
+        if (merged.phone === '0661-50-28-86') merged.phone = '0624-465962';
+        if (merged.regimeFiscal && merged.regimeFiscal.includes('Auto-Entrepreneur')) merged.regimeFiscal = 'Atelier de Confection Textile';
         safeStorage.setItem('textrack_profile', JSON.stringify(merged));
         return merged;
       } catch { /* ignore parse error */ }
@@ -2038,21 +2036,17 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'> & { id
 
 export async function saveCompanyProfile(profile: CompanyProfile): Promise<void> {
   const merged = { ...DEFAULT_COMPANY, ...profile };
-  if (!merged.ice || merged.ice === '000000000000000' || /^0+$/.test(merged.ice)) {
-    merged.ice = DEFAULT_COMPANY.ice;
-  }
-  if (!merged.if_tax || merged.if_tax === '0000000' || /^0+$/.test(merged.if_tax)) {
-    merged.if_tax = DEFAULT_COMPANY.if_tax;
-  }
-  if (!merged.patente || merged.patente === '00000000' || /^0+$/.test(merged.patente)) {
-    merged.patente = DEFAULT_COMPANY.patente;
-  }
-  if (!merged.cnie || merged.cnie === '') {
-    merged.cnie = DEFAULT_COMPANY.cnie;
-  }
-  if (!merged.address || merged.address.trim() === '' || merged.address.includes('Zone Industrielle, Meknès')) {
-    merged.address = DEFAULT_COMPANY.address;
-  }
+  
+  // Explicitly purge leaked / unwanted numbers
+  if (merged.dirigeant && merged.dirigeant.toLowerCase().includes('hachami')) merged.dirigeant = '';
+  if (merged.ice && (merged.ice.includes('003457558') || merged.ice.includes('000092'))) merged.ice = '';
+  if (merged.if_tax && (merged.if_tax.includes('26008') || merged.if_tax.includes('26008252'))) merged.if_tax = '';
+  if (merged.patente && (merged.patente.includes('18604042') || merged.patente.includes('18604'))) merged.patente = '';
+  if (merged.cnie && (merged.cnie.includes('DA13860') || merged.cnie.includes('DA13'))) merged.cnie = '';
+  if (merged.address && (merged.address.includes('Ain Aghbal') || merged.address.includes('Azrou'))) merged.address = 'Casablanca, Maroc';
+  if (merged.email && merged.email.includes('hachami')) merged.email = 'contact@beya.ma';
+  if (merged.phone === '0661-50-28-86') merged.phone = '0624-465962';
+  if (merged.regimeFiscal && merged.regimeFiscal.includes('Auto-Entrepreneur')) merged.regimeFiscal = 'Atelier de Confection Textile';
 
   safeStorage.setItem('textrack_profile', JSON.stringify(merged));
   
