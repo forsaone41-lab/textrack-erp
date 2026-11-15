@@ -1172,72 +1172,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
   return (
     <div className={`space-y-6 pb-28 md:pb-8 w-full min-h-screen relative transition-colors duration-200 ${isAr ? 'rtl font-sans' : 'ltr'} ${isWhite ? 'modeliste-white-mode text-slate-800' : 'text-slate-100'}`} dir={isAr ? 'rtl' : 'ltr'}>
-      {/* Scoped CSS for Normal White Theme (الأبيض العادي) */}
-      {isWhite && (
-        <style>{`
-          .modeliste-white-mode .bg-\[\#12151E\] {
-            background-color: #ffffff !important;
-            border-color: #e2e8f0 !important;
-            color: #0f172a !important;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
-          }
-          .modeliste-white-mode .bg-\[\#12151E\]\/90 {
-            background-color: rgba(255, 255, 255, 0.95) !important;
-            border-color: #e2e8f0 !important;
-            color: #0f172a !important;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05) !important;
-          }
-          .modeliste-white-mode .kpi-card {
-            background: #ffffff !important;
-            border-color: #e2e8f0 !important;
-            color: #0f172a !important;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
-          }
-          .modeliste-white-mode .kpi-card .text-white {
-            color: #0f172a !important;
-          }
-          .modeliste-white-mode .kpi-card .border-white\/\[0\.08\] {
-            border-color: #f1f5f9 !important;
-          }
-          .modeliste-white-mode .text-white:not(.bg-indigo-600 *):not(.bg-emerald-600 *):not(.bg-rose-600 *):not(.bg-slate-900 *):not(.bg-gradient-to-r *):not(.bg-gradient-to-tr *) {
-            color: #0f172a !important;
-          }
-          .modeliste-white-mode .text-slate-400 {
-            color: #64748b !important;
-          }
-          .modeliste-white-mode .text-slate-300 {
-            color: #475569 !important;
-          }
-          .modeliste-white-mode .text-slate-200 {
-            color: #1e293b !important;
-          }
-          .modeliste-white-mode .border-white\/\[0\.08\],
-          .modeliste-white-mode .border-white\/\[0\.05\],
-          .modeliste-white-mode .border-white\/\[0\.06\],
-          .modeliste-white-mode .border-white\/\[0\.1\] {
-            border-color: #e2e8f0 !important;
-          }
-          .modeliste-white-mode .bg-white\/\[0\.03\],
-          .modeliste-white-mode .bg-white\/\[0\.04\],
-          .modeliste-white-mode .bg-white\/\[0\.05\],
-          .modeliste-white-mode .bg-white\/\[0\.06\],
-          .modeliste-white-mode .bg-white\/\[0\.08\] {
-            background-color: #f8fafc !important;
-            border-color: #e2e8f0 !important;
-            color: #1e293b !important;
-          }
-          .modeliste-white-mode input:not([type="checkbox"]):not([type="radio"]),
-          .modeliste-white-mode select,
-          .modeliste-white-mode textarea {
-            background-color: #ffffff !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
-          }
-          .modeliste-white-mode [color-scheme="dark"] {
-            color-scheme: light !important;
-          }
-        `}</style>
-      )}
+      {/* Scoped light theme styles managed via inline conditional classes */}
       {/* Sleek Top Loading Strip (Charit / شريط تحميل علوي رفيع) */}
       {loading && (
         <div className="fixed top-0 left-0 right-0 z-[500] h-[3px] bg-slate-900/60 backdrop-blur-xs overflow-hidden pointer-events-none">
@@ -1268,7 +1203,11 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       )}
 
       {/* ─── Apple-Inspired Responsive Header ────────── */}
-      <div className="bg-[#12151E]/90 border border-white/[0.08] backdrop-blur-2xl rounded-3xl p-4 md:p-6 text-white shadow-2xl relative overflow-hidden">
+      <div className={`${
+        isWhite
+          ? 'bg-white border border-slate-200/90 text-slate-900 shadow-sm'
+          : 'bg-[#12151E]/90 border border-white/[0.08] backdrop-blur-2xl text-white shadow-2xl'
+      } rounded-3xl p-4 md:p-6 relative overflow-hidden transition-all duration-300`}>
         {/* Subtle Ambient Radial Glow */}
         <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -1280,14 +1219,16 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white">
+                <h1 className={`text-xl md:text-2xl font-bold tracking-tight ${isWhite ? 'text-slate-900' : 'text-white'}`}>
                   {isAr ? 'بوابة الموديليست الموحدة' : 'Portail Modéliste BEYA'}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/[0.06] text-indigo-300 border border-white/[0.08]">
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  isWhite ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-white/[0.06] text-indigo-300 border border-white/[0.08]'
+                }`}>
                   {isAr ? 'تسعير · إنجاز · باترونات' : 'Tarifs · Patrons · Livraison'}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-medium mt-0.5">
+              <p className={`text-xs font-medium mt-0.5 ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>
                 {activeProfileUser.nom} {linkedEmployee ? `· ${isAr ? 'عامل ورشة رسمي' : 'Employé Atelier'}` : ''}
               </p>
             </div>
@@ -1295,23 +1236,31 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Month Filter */}
-            <div className="flex items-center gap-2 bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-2">
-              <Calendar className="w-4 h-4 text-indigo-300" />
+            <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${
+              isWhite ? 'bg-slate-100/90 border-slate-200 text-slate-800' : 'bg-white/[0.05] border-white/[0.08] text-white'
+            }`}>
+              <Calendar className={`w-4 h-4 ${isWhite ? 'text-indigo-600' : 'text-indigo-300'}`} />
               <input
                 type="month"
                 value={selectedMois}
                 onChange={e => setSelectedMois(e.target.value)}
-                className="bg-transparent text-white text-xs font-semibold outline-none cursor-pointer [color-scheme:dark]"
+                className={`bg-transparent text-xs font-semibold outline-none cursor-pointer ${
+                  isWhite ? 'text-slate-900 [color-scheme:light]' : 'text-white [color-scheme:dark]'
+                }`}
               />
             </div>
 
             {isAdmin && (
-              <div className="flex items-center gap-2 bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-2">
-                <UserIcon className="w-4 h-4 text-indigo-300" />
+              <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${
+                isWhite ? 'bg-slate-100/90 border-slate-200 text-slate-800' : 'bg-white/[0.05] border-white/[0.08] text-white'
+              }`}>
+                <UserIcon className={`w-4 h-4 ${isWhite ? 'text-indigo-600' : 'text-indigo-300'}`} />
                 <select
                   value={selectedModelisteId}
                   onChange={e => setSelectedModelisteId(e.target.value)}
-                  className="bg-transparent text-white text-xs font-semibold outline-none cursor-pointer"
+                  className={`bg-transparent text-xs font-semibold outline-none cursor-pointer ${
+                    isWhite ? 'text-slate-900' : 'text-white'
+                  }`}
                 >
                   <option value="all" className="text-slate-900">{isAr ? 'جميع الموديليست' : 'Tous'}</option>
                   {modelistes.map(m => (
@@ -1324,7 +1273,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             <button
               onClick={fetchData}
               disabled={loading}
-              className="p-2.5 bg-white/[0.05] hover:bg-white/[0.1] text-white rounded-xl transition cursor-pointer border border-white/[0.08]"
+              className={`p-2.5 rounded-xl transition cursor-pointer border ${
+                isWhite ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200' : 'bg-white/[0.05] hover:bg-white/[0.1] text-white border-white/[0.08]'
+              }`}
               title={isAr ? 'تحديث البيانات' : 'Actualiser'}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -1363,36 +1314,44 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black text-sm shadow-md">
                   {(activeProfileUser.nom || 'MD').slice(0, 2).toUpperCase()}
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-[#12151E] rounded-full" />
+                <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 ${isWhite ? 'border-white' : 'border-[#12151E]'} rounded-full`} />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h2 className="text-sm font-bold text-white leading-tight">
+                  <h2 className={`text-sm font-bold leading-tight ${isWhite ? 'text-slate-900' : 'text-white'}`}>
                     {activeProfileUser.nom}
                   </h2>
-                  <span className="px-1.5 py-0.2 rounded-md text-[9px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">PRO</span>
+                  <span className={`px-1.5 py-0.2 rounded-md text-[9px] font-black ${
+                    isWhite ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                  }`}>PRO</span>
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium">
+                <p className={`text-[10px] font-medium ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>
                   {isAr ? 'موديليست معتمد لدى BEYA' : 'Modéliste Certifié'}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-2 py-1.5">
-                <Calendar className="w-3.5 h-3.5 text-indigo-300" />
+              <div className={`flex items-center gap-1 rounded-xl px-2 py-1.5 border ${
+                isWhite ? 'bg-slate-100 border-slate-200 text-slate-900' : 'bg-white/[0.06] border-white/[0.08] text-white'
+              }`}>
+                <Calendar className={`w-3.5 h-3.5 ${isWhite ? 'text-indigo-600' : 'text-indigo-300'}`} />
                 <input
                   type="month"
                   value={selectedMois}
                   onChange={e => setSelectedMois(e.target.value)}
-                  className="bg-transparent text-white text-[11px] font-bold outline-none cursor-pointer [color-scheme:dark] max-w-[90px]"
+                  className={`bg-transparent text-[11px] font-bold outline-none cursor-pointer max-w-[90px] ${
+                    isWhite ? 'text-slate-900 [color-scheme:light]' : 'text-white [color-scheme:dark]'
+                  }`}
                 />
               </div>
 
               <button
                 onClick={fetchData}
                 disabled={loading}
-                className="p-2 bg-white/[0.06] active:bg-white/[0.12] text-white rounded-xl transition border border-white/[0.08]"
+                className={`p-2 rounded-xl transition border ${
+                  isWhite ? 'bg-slate-100 active:bg-slate-200 text-slate-700 border-slate-200' : 'bg-white/[0.06] active:bg-white/[0.12] text-white border-white/[0.08]'
+                }`}
                 title={isAr ? 'تحديث' : 'Actualiser'}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -1413,32 +1372,38 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           </div>
 
           {/* Quick Mini Metrics Strip on Mobile (Apple Wallet Style) */}
-          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/[0.08]">
+          <div className={`grid grid-cols-3 gap-2 pt-2 border-t ${isWhite ? 'border-slate-100' : 'border-white/[0.08]'}`}>
             <button
               onClick={() => handleTabChange('travaux')}
-              className="bg-white/[0.04] active:bg-white/[0.08] active:scale-95 transition p-2 rounded-xl text-center border border-white/[0.05]"
+              className={`active:scale-95 transition p-2 rounded-xl text-center border ${
+                isWhite ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-white/[0.04] border-white/[0.05]'
+              }`}
             >
-              <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'منجز ومسلّم' : 'Livrés'}</div>
-              <div className="text-sm font-black text-emerald-400 font-mono mt-0.5">
-                {loading ? <span className="inline-block w-8 h-4 bg-white/10 rounded animate-pulse" /> : summary.completedCount}
+              <div className={`text-[9.5px] font-bold ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>{isAr ? 'منجز ومسلّم' : 'Livrés'}</div>
+              <div className={`text-sm font-black font-mono mt-0.5 ${isWhite ? 'text-emerald-700' : 'text-emerald-400'}`}>
+                {loading ? <span className="inline-block w-8 h-4 bg-slate-200 rounded animate-pulse" /> : summary.completedCount}
               </div>
             </button>
             <button
               onClick={() => handleTabChange('travaux')}
-              className="bg-white/[0.04] active:bg-white/[0.08] active:scale-95 transition p-2 rounded-xl text-center border border-white/[0.05]"
+              className={`active:scale-95 transition p-2 rounded-xl text-center border ${
+                isWhite ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-white/[0.04] border-white/[0.05]'
+              }`}
             >
-              <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'قيد العمل' : 'En cours'}</div>
-              <div className="text-sm font-black text-amber-400 font-mono mt-0.5">
-                {loading ? <span className="inline-block w-8 h-4 bg-white/10 rounded animate-pulse" /> : summary.activeCount}
+              <div className={`text-[9.5px] font-bold ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>{isAr ? 'قيد العمل' : 'En cours'}</div>
+              <div className={`text-sm font-black font-mono mt-0.5 ${isWhite ? 'text-amber-700' : 'text-amber-400'}`}>
+                {loading ? <span className="inline-block w-8 h-4 bg-slate-200 rounded animate-pulse" /> : summary.activeCount}
               </div>
             </button>
             <button
               onClick={() => handleTabChange('profil')}
-              className="bg-white/[0.04] active:bg-white/[0.08] active:scale-95 transition p-2 rounded-xl text-center border border-white/[0.05]"
+              className={`active:scale-95 transition p-2 rounded-xl text-center border ${
+                isWhite ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-white/[0.04] border-white/[0.05]'
+              }`}
             >
-              <div className="text-[9.5px] text-slate-400 font-bold">{isAr ? 'الرصيد الصافي' : 'Solde'}</div>
-              <div className="text-sm font-black text-indigo-300 font-mono mt-0.5">
-                {loading ? <span className="inline-block w-12 h-4 bg-white/10 rounded animate-pulse" /> : `${summary.totalRemainingAllTime.toLocaleString()} DH`}
+              <div className={`text-[9.5px] font-bold ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>{isAr ? 'الرصيد الصافي' : 'Solde'}</div>
+              <div className={`text-sm font-black font-mono mt-0.5 ${isWhite ? 'text-indigo-700' : 'text-indigo-300'}`}>
+                {loading ? <span className="inline-block w-12 h-4 bg-slate-200 rounded animate-pulse" /> : `${summary.totalRemainingAllTime.toLocaleString()} DH`}
               </div>
             </button>
           </div>
@@ -1446,7 +1411,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       </div>
 
       {/* ─── Tabs Bar (Mobile Phone Only — Hidden on PC to avoid duplication with Sidebar) ──────────── */}
-      <div className="md:hidden flex overflow-x-auto scrollbar-hide bg-[#12151E]/90 backdrop-blur-2xl p-1.5 rounded-2xl border border-white/[0.08] shadow-lg items-center gap-1.5">
+      <div className={`md:hidden flex overflow-x-auto scrollbar-hide p-1.5 rounded-2xl border items-center gap-1.5 transition-all ${
+    isWhite ? 'bg-white border-slate-200/90 shadow-sm' : 'bg-[#12151E]/90 backdrop-blur-2xl border-white/[0.08] shadow-lg'
+  }`}>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -1456,7 +1423,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               className={`px-3 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
                 isActive
                   ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-500/25'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
+                  : (isWhite ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/[0.05]')
               }`}
             >
               <span className="scale-90">{tab.icon}</span>
@@ -1477,7 +1444,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
       {/* Desktop Search Bar (PC Only — when in Tarifs or Travaux) */}
       {activeTab !== 'dashboard' && activeTab !== 'profil' && (
-        <div className="hidden md:flex items-center justify-between gap-3 bg-[#12151E] p-2.5 rounded-2xl border border-white/[0.08] shadow-lg">
+        <div className={`hidden md:flex items-center justify-between gap-3 p-2.5 rounded-2xl border transition-all ${
+    isWhite ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-lg text-white'
+  }`}>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-400">
               {activeTab === 'a_tarifer' ? (isAr ? '🔍 تصفية وبحث في موديلات التسعير' : '🔍 Recherche modèles à tarifer') : (isAr ? '🔍 تصفية وبحث في ورشة المهام' : '🔍 Recherche dans les travaux')}
@@ -1490,7 +1459,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={isAr ? 'بحث سريع بالموديل أو الزبون...' : 'Recherche modèle ou client...'}
-              className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-xs font-medium text-white placeholder-slate-500 outline-none focus:border-indigo-500/60 transition`}
+              className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2 rounded-xl text-xs font-medium outline-none transition ${isWhite ? 'bg-slate-100/80 border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-500' : 'bg-white/[0.05] border border-white/[0.08] text-white placeholder-slate-500 focus:border-indigo-500/60'}`}
             />
           </div>
         </div>
@@ -1505,7 +1474,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={isAr ? 'بحث سريع بالموديل أو الزبون...' : 'Recherche modèle ou client...'}
-            className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2.5 bg-[#12151E] border border-white/[0.1] rounded-2xl text-xs font-bold text-white placeholder-slate-500 outline-none shadow-md focus:border-indigo-500`}
+            className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2.5 rounded-2xl text-xs font-bold outline-none shadow-md transition ${isWhite ? 'bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-500' : 'bg-[#12151E] border border-white/[0.1] text-white placeholder-slate-500 focus:border-indigo-500'}`}
           />
         </div>
       )}
@@ -1520,30 +1489,49 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             {/* 1. الرصيد الصافي المتبقي له (Primary Financial Focus) */}
             <div
               onClick={() => handleTabChange('profil')}
-              className="kpi-card bg-gradient-to-b from-[#181C2B] to-[#11131C] border border-indigo-500/35 hover:border-indigo-500/60 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
+              className={`kpi-card rounded-3xl p-6 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group ${
+                isWhite
+                  ? 'bg-white border-2 border-indigo-200 text-slate-900 shadow-md hover:border-indigo-400 hover:shadow-lg'
+                  : 'bg-gradient-to-b from-[#181C2B] to-[#11131C] border border-indigo-500/35 hover:border-indigo-500/60 text-white shadow-xl'
+              }`}
             >
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                  isWhite ? 'text-indigo-700' : 'text-indigo-300'
+                }`}>
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
                   {isAr ? (isAdmin ? 'الرصيد الصافي المتبقي للموديليست' : 'الرصيد الصافي المتبقي') : 'Solde Net à Percevoir'}
                 </span>
-                <div className="w-10 h-10 rounded-2xl bg-white/[0.08] flex items-center justify-center text-indigo-300 group-hover:scale-110 transition-transform">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                  isWhite ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-white/[0.08] text-indigo-300'
+                }`}>
                   <Wallet className="w-5 h-5" />
                 </div>
               </div>
-              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white min-h-[40px] flex items-center">
+              <div className="min-h-[40px] flex items-baseline gap-2">
                 {loading ? (
-                  <span className="inline-block w-36 h-9 bg-white/10 rounded-xl animate-pulse" />
+                  <span className={`inline-block w-36 h-9 rounded-xl animate-pulse ${isWhite ? 'bg-slate-200' : 'bg-white/10'}`} />
                 ) : (
-                  <>{summary.totalRemainingAllTime.toLocaleString()} <span className="text-sm font-semibold text-slate-400">MAD</span></>
+                  <>
+                    <span className={`text-3xl md:text-4xl font-extrabold font-mono tracking-tight ${isWhite ? 'text-slate-900' : 'text-white'}`}>
+                      {summary.totalRemainingAllTime.toLocaleString()}
+                    </span>
+                    <span className={`text-sm font-bold ${isWhite ? 'text-indigo-600' : 'text-slate-400'}`}>MAD</span>
+                  </>
                 )}
               </div>
-              <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">{isAr ? (isAdmin ? 'المدفوع له حتى الآن :' : 'المدفوع حتى الآن :') : 'Déjà Réglé :'}</span>
+              <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs ${
+                isWhite ? 'border-slate-100' : 'border-white/[0.08]'
+              }`}>
+                <span className={`font-medium ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {isAr ? (isAdmin ? 'المدفوع له حتى الآن :' : 'المدفوع حتى الآن :') : 'Déjà Réglé :'}
+                </span>
                 {loading ? (
-                  <span className="inline-block w-20 h-4 bg-white/10 rounded animate-pulse" />
+                  <span className={`inline-block w-20 h-4 rounded animate-pulse ${isWhite ? 'bg-slate-200' : 'bg-white/10'}`} />
                 ) : (
-                  <span className="text-emerald-400 font-mono font-bold">{summary.totalPaidAllTime.toLocaleString()} MAD</span>
+                  <span className={`font-mono font-bold ${isWhite ? 'text-emerald-700' : 'text-emerald-400'}`}>
+                    {summary.totalPaidAllTime.toLocaleString()} MAD
+                  </span>
                 )}
               </div>
             </div>
@@ -1551,30 +1539,46 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             {/* 2. شحال باقي (مطلوب إنجازها الآن) */}
             <div
               onClick={() => handleTabChange('travaux')}
-              className="kpi-card bg-gradient-to-b from-[#1E1A16] to-[#121319] border border-amber-500/30 hover:border-amber-500/50 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
+              className={`kpi-card rounded-3xl p-6 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group ${
+                isWhite
+                  ? 'bg-white border-2 border-amber-200 text-slate-900 shadow-md hover:border-amber-400 hover:shadow-lg'
+                  : 'bg-gradient-to-b from-[#1E1A16] to-[#121319] border border-amber-500/30 hover:border-amber-500/50 text-white shadow-xl'
+              }`}
             >
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                  isWhite ? 'text-amber-800' : 'text-amber-300'
+                }`}>
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
                   {isAr ? 'مطلوب للإنجاز (قيد العمل)' : 'Travaux en Cours'}
                 </span>
-                <div className="w-10 h-10 rounded-2xl bg-white/[0.08] flex items-center justify-center text-amber-300 group-hover:scale-110 transition-transform">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                  isWhite ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-white/[0.08] text-amber-300'
+                }`}>
                   <Clock className="w-5 h-5" />
                 </div>
               </div>
-              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white min-h-[40px] flex items-center">
+              <div className="min-h-[40px] flex items-center">
                 {loading ? (
-                  <span className="inline-block w-16 h-9 bg-white/10 rounded-xl animate-pulse" />
+                  <span className={`inline-block w-16 h-9 rounded-xl animate-pulse ${isWhite ? 'bg-slate-200' : 'bg-white/10'}`} />
                 ) : (
-                  summary.activeCount
+                  <span className={`text-3xl md:text-4xl font-extrabold font-mono tracking-tight ${isWhite ? 'text-slate-900' : 'text-white'}`}>
+                    {summary.activeCount}
+                  </span>
                 )}
               </div>
-              <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">{isAr ? 'القيمة عند التسليم :' : 'Valeur à la livraison :'}</span>
+              <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs ${
+                isWhite ? 'border-slate-100' : 'border-white/[0.08]'
+              }`}>
+                <span className={`font-medium ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {isAr ? 'القيمة عند التسليم :' : 'Valeur à la livraison :'}
+                </span>
                 {loading ? (
-                  <span className="inline-block w-20 h-4 bg-white/10 rounded animate-pulse" />
+                  <span className={`inline-block w-20 h-4 rounded animate-pulse ${isWhite ? 'bg-slate-200' : 'bg-white/10'}`} />
                 ) : (
-                  <span className="text-amber-300 font-mono font-bold">+{summary.activeMAD.toLocaleString()} MAD</span>
+                  <span className={`font-mono font-bold ${isWhite ? 'text-amber-700' : 'text-amber-300'}`}>
+                    +{summary.activeMAD.toLocaleString()} MAD
+                  </span>
                 )}
               </div>
             </div>
@@ -1582,30 +1586,46 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
             {/* 3. شحال خدم (الموديلات المنجزة والمسلّمة) */}
             <div
               onClick={() => handleTabChange('travaux')}
-              className="kpi-card bg-gradient-to-b from-[#131E1B] to-[#10131A] border border-emerald-500/30 hover:border-emerald-500/50 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group"
+              className={`kpi-card rounded-3xl p-6 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group ${
+                isWhite
+                  ? 'bg-white border-2 border-emerald-200 text-slate-900 shadow-md hover:border-emerald-400 hover:shadow-lg'
+                  : 'bg-gradient-to-b from-[#131E1B] to-[#10131A] border border-emerald-500/30 hover:border-emerald-500/50 text-white shadow-xl'
+              }`}
             >
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                  isWhite ? 'text-emerald-800' : 'text-emerald-300'
+                }`}>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   {isAr ? 'الموديلات المنجزة والمسلّمة' : 'Modèles Réalisés & Livrés'}
                 </span>
-                <div className="w-10 h-10 rounded-2xl bg-white/[0.08] flex items-center justify-center text-emerald-300 group-hover:scale-110 transition-transform">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                  isWhite ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-white/[0.08] text-emerald-300'
+                }`}>
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
               </div>
-              <div className="text-3xl md:text-4xl font-bold tracking-tight font-mono text-white min-h-[40px] flex items-center">
+              <div className="min-h-[40px] flex items-center">
                 {loading ? (
-                  <span className="inline-block w-16 h-9 bg-white/10 rounded-xl animate-pulse" />
+                  <span className={`inline-block w-16 h-9 rounded-xl animate-pulse ${isWhite ? 'bg-slate-200' : 'bg-white/10'}`} />
                 ) : (
-                  summary.completedCount
+                  <span className={`text-3xl md:text-4xl font-extrabold font-mono tracking-tight ${isWhite ? 'text-slate-900' : 'text-white'}`}>
+                    {summary.completedCount}
+                  </span>
                 )}
               </div>
-              <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">{isAr ? (isAdmin ? 'مجموع أرباح الموديليست :' : 'مجموع الأرباح المكتسبة :') : 'Gagné sur ces modèles :'}</span>
+              <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs ${
+                isWhite ? 'border-slate-100' : 'border-white/[0.08]'
+              }`}>
+                <span className={`font-medium ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {isAr ? (isAdmin ? 'مجموع أرباح الموديليست :' : 'مجموع الأرباح المكتسبة :') : 'Gagné sur ces modèles :'}
+                </span>
                 {loading ? (
-                  <span className="inline-block w-20 h-4 bg-white/10 rounded animate-pulse" />
+                  <span className={`inline-block w-20 h-4 rounded animate-pulse ${isWhite ? 'bg-slate-200' : 'bg-white/10'}`} />
                 ) : (
-                  <span className="text-emerald-300 font-mono font-bold">{summary.completedMAD.toLocaleString()} MAD</span>
+                  <span className={`font-mono font-bold ${isWhite ? 'text-emerald-700' : 'text-emerald-300'}`}>
+                    {summary.completedMAD.toLocaleString()} MAD
+                  </span>
                 )}
               </div>
             </div>
@@ -1613,13 +1633,15 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
           {/* Quick Notice if there are unpriced items */}
           {summary.totalToPriceCount > 0 && (
-            <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/5 border border-indigo-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border transition-all ${
+    isWhite ? 'bg-indigo-50/80 border-indigo-200 text-slate-900' : 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/5 border-indigo-500/30 text-white'
+  }">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
                   <Scissors className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white">
+                  <h4 className={`text-xs font-bold ${isWhite ? "text-slate-900" : "text-white"}`}>
                     {isAr ? `لديك ${summary.totalToPriceCount} موديلات جديدة تنتظر التسعير والتفاوض` : `${summary.totalToPriceCount} nouveaux modèles en attente de chiffrage`}
                   </h4>
                   <p className="text-[11px] text-slate-400">
@@ -1639,82 +1661,104 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
           {/* Month Financial Card + Performance Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 bg-[#12151E] rounded-3xl border border-white/[0.08] p-6 space-y-4 shadow-xl">
-              <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-indigo-400" />
+            <div className={`lg:col-span-1 rounded-3xl p-6 space-y-4 border transition-all ${
+              isWhite ? 'bg-white border-slate-200/90 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-xl text-white'
+            }`}>
+              <div className={`flex items-center justify-between border-b pb-3 ${isWhite ? 'border-slate-100' : 'border-white/[0.08]'}`}>
+                <h3 className={`font-bold text-xs uppercase tracking-wider flex items-center gap-2 ${isWhite ? 'text-slate-800' : 'text-slate-200'}`}>
+                  <TrendingUp className={`w-4 h-4 ${isWhite ? 'text-indigo-600' : 'text-indigo-400'}`} />
                   <span>{isAr ? `كشف حساب شهر (${selectedMois})` : `Bilan Mensuel (${selectedMois})`}</span>
                 </h3>
               </div>
 
               <div className="space-y-2.5">
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.03] border border-white/[0.05] text-xs">
-                  <span className="text-slate-400 font-medium">{isAr ? 'الموديلات المسلمة في الشهر :' : 'Modèles livrés ce mois :'}</span>
-                  <span className="text-white font-bold">{summary.monthCompletedCount}</span>
+                <div className={`flex items-center justify-between p-3 rounded-2xl border text-xs ${
+                  isWhite ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-white/[0.03] border-white/[0.05] text-white'
+                }`}>
+                  <span className={`font-medium ${isWhite ? 'text-slate-600' : 'text-slate-400'}`}>{isAr ? 'الموديلات المسلمة في الشهر :' : 'Modèles livrés ce mois :'}</span>
+                  <span className={`font-bold ${isWhite ? 'text-slate-900' : 'text-white'}`}>{summary.monthCompletedCount}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
-                  <span className="text-emerald-300 font-medium">{isAr ? 'الأرباح المكتسبة هذا الشهر :' : 'Gagné ce mois :'}</span>
-                  <span className="text-emerald-400 font-bold font-mono">{summary.monthEarnedMAD.toLocaleString()} MAD</span>
+                <div className={`flex items-center justify-between p-3 rounded-2xl border text-xs ${
+                  isWhite ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                }`}>
+                  <span className="font-medium">{isAr ? 'الأرباح المكتسبة هذا الشهر :' : 'Gagné ce mois :'}</span>
+                  <span className={`font-bold font-mono ${isWhite ? 'text-emerald-700' : 'text-emerald-400'}`}>{summary.monthEarnedMAD.toLocaleString()} MAD</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs">
-                  <span className="text-indigo-300 font-medium">{isAr ? 'التسبيقات المستلمة هذا الشهر :' : 'Avances reçues ce mois :'}</span>
-                  <span className="text-indigo-400 font-bold font-mono">-{summary.monthPaidMAD.toLocaleString()} MAD</span>
+                <div className={`flex items-center justify-between p-3 rounded-2xl border text-xs ${
+                  isWhite ? 'bg-indigo-50 border-indigo-200 text-indigo-900' : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300'
+                }`}>
+                  <span className="font-medium">{isAr ? 'التسبيقات المستلمة هذا الشهر :' : 'Avances reçues ce mois :'}</span>
+                  <span className={`font-bold font-mono ${isWhite ? 'text-indigo-700' : 'text-indigo-400'}`}>-{summary.monthPaidMAD.toLocaleString()} MAD</span>
                 </div>
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.06] border border-white/[0.1] text-xs font-semibold">
-                  <span className="text-slate-300">{isAr ? 'الرصيد المتبقي لهذا الشهر :' : 'Reste dû pour ce mois :'}</span>
-                  <span className="text-sm font-bold text-emerald-400 font-mono">{summary.monthRemainingMAD.toLocaleString()} MAD</span>
+                <div className={`flex items-center justify-between p-3.5 rounded-2xl border text-xs font-semibold ${
+                  isWhite ? 'bg-slate-100 border-slate-300 text-slate-900' : 'bg-white/[0.06] border-white/[0.1] text-slate-300'
+                }`}>
+                  <span className={isWhite ? 'text-slate-700' : 'text-slate-300'}>{isAr ? 'الرصيد المتبقي لهذا الشهر :' : 'Reste dû pour ce mois :'}</span>
+                  <span className={`text-sm font-bold font-mono ${isWhite ? 'text-emerald-700' : 'text-emerald-400'}`}>{summary.monthRemainingMAD.toLocaleString()} MAD</span>
                 </div>
               </div>
             </div>
 
             {/* List of models completed with quick view */}
-            <div className="lg:col-span-2 bg-[#12151E] rounded-3xl border border-white/[0.08] p-6 space-y-4 shadow-xl">
-              <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                  <FileCheck className="w-4 h-4 text-emerald-400" />
+            <div className={`lg:col-span-2 rounded-3xl p-6 space-y-4 border transition-all ${
+              isWhite ? 'bg-white border-slate-200/90 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-xl text-white'
+            }`}>
+              <div className={`flex items-center justify-between border-b pb-3 ${isWhite ? 'border-slate-100' : 'border-white/[0.08]'}`}>
+                <h3 className={`font-bold text-xs uppercase tracking-wider flex items-center gap-2 ${isWhite ? 'text-slate-800' : 'text-slate-200'}`}>
+                  <FileCheck className={`w-4 h-4 ${isWhite ? 'text-emerald-600' : 'text-emerald-400'}`} />
                   <span>{isAr ? 'تفاصيل الموديلات المنجزة وأرباحها' : 'Détail des Travaux Réalisés'}</span>
                 </h3>
-                <span className="text-xs font-medium text-slate-400">
+                <span className={`text-xs font-medium ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>
                   {summary.completedCount} {isAr ? 'موديل منجز' : 'modèles livrés'}
                 </span>
               </div>
 
               {filteredByRole.filter(i => i.workStatus === 'termine').length === 0 ? (
-                <div className="text-center py-10 text-slate-400 text-xs font-medium">
+                <div className={`text-center py-10 text-xs font-medium ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>
                   {isAr ? 'لم يتم تسليم أي موديل بعد في هذا الحساب.' : 'Aucun modèle livré pour le moment.'}
                 </div>
               ) : (
-                <div className="divide-y divide-white/[0.05] max-h-[320px] overflow-y-auto">
+                <div className={`divide-y max-h-[320px] overflow-y-auto ${isWhite ? 'divide-slate-100' : 'divide-white/[0.05]'}`}>
                   {filteredByRole
                     .filter(i => i.workStatus === 'termine')
                     .map(item => (
                       <div key={item.id} className="py-3 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3 min-w-0">
                           {item.photo ? (
-                            <img src={item.photo} alt={item.modele} className="w-10 h-10 rounded-xl object-cover border border-white/[0.08] shrink-0" />
+                            <img src={item.photo} alt={item.modele} className={`w-10 h-10 rounded-xl object-cover shrink-0 border ${
+                              isWhite ? 'border-slate-200' : 'border-white/[0.08]'
+                            }`} />
                           ) : (
-                            <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center text-slate-400 shrink-0">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                              isWhite ? 'bg-slate-100 text-slate-500' : 'bg-white/[0.05] text-slate-400'
+                            }`}>
                               <Scissors className="w-4 h-4" />
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="font-bold text-xs text-white truncate">{item.modele}</p>
-                            <p className="text-[10px] text-slate-400 font-medium">{item.client} · {item.date}</p>
+                            <p className={`font-bold text-xs truncate ${isWhite ? 'text-slate-900' : 'text-white'}`}>{item.modele}</p>
+                            <p className={`text-[10px] font-medium ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>{item.client} · {item.date}</p>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0">
                           {item.isFree || item.patronagePrice === 0 ? (
-                            <span className="font-bold text-xs text-purple-300 bg-purple-500/15 border border-purple-500/30 px-2.5 py-1 rounded-xl">
+                            <span className={`font-bold text-xs px-2.5 py-1 rounded-xl border ${
+                              isWhite ? 'text-purple-700 bg-purple-50 border-purple-200' : 'text-purple-300 bg-purple-500/15 border-purple-500/30'
+                            }`}>
                               {isAr ? 'مجاني (FREE)' : 'Gratuit (FREE)'}
                             </span>
                           ) : (
-                            <span className="font-bold text-xs text-emerald-400 font-mono bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-xl">
+                            <span className={`font-bold text-xs font-mono px-2.5 py-1 rounded-xl border ${
+                              isWhite ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30'
+                            }`}>
                               +{item.patronagePrice} MAD
                             </span>
                           )}
                           {item.patronFiles.length > 0 && (
-                            <span className="text-[10px] font-bold text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 rounded-lg">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
+                              isWhite ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-indigo-300 bg-indigo-500/15 border-indigo-500/30'
+                            }`}>
                               📁 {item.patronFiles.length}
                             </span>
                           )}
@@ -1733,7 +1777,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       {/* ════════════════════════════════════════════════════════════ */}
       {activeTab === 'a_tarifer' && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#12151E] p-3 rounded-2xl border border-white/[0.08] shadow-lg">
+          <div className={`flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl border transition-all ${
+    isWhite ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-lg text-white'
+  }`}>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPricingSubFilter('all')}
@@ -1773,9 +1819,11 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           </div>
 
           {pricingItems.length === 0 ? (
-            <div className="bg-[#12151E] rounded-3xl p-12 text-center border border-white/[0.08] space-y-2 shadow-xl">
+            <div className={`rounded-3xl p-12 text-center border space-y-2 transition-all ${
+    isWhite ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-xl text-white'
+  }`}>
               <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
-              <h3 className="font-bold text-base text-white">
+              <h3 className={`font-bold text-base ${isWhite ? "text-slate-900" : "text-white"}`}>
                 {isAr ? 'لا يوجد أي موديل ينتظر التسعير حالياً' : 'Aucun modèle en attente de tarification'}
               </h3>
               <p className="text-xs text-slate-400">
@@ -1789,7 +1837,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 const hasCounter = Boolean(item.adminCounterPrice && item.adminCounterPrice > 0);
 
                 return (
-                  <div key={item.id} className="bg-[#12151E] rounded-3xl border border-white/[0.08] hover:border-indigo-500/40 p-5 shadow-xl space-y-4 transition-all text-white">
+                  <div key={item.id} className={`rounded-3xl border p-5 shadow-sm space-y-4 transition-all ${
+    isWhite ? 'bg-white border-slate-200 hover:border-indigo-300 text-slate-900' : 'bg-[#12151E] border-white/[0.08] hover:border-indigo-500/40 text-white shadow-xl'
+  }`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         {item.photo ? (
@@ -1944,7 +1994,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       {activeTab === 'travaux' && (
         <div className="space-y-5">
           {/* Work status filter */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#12151E] p-3 rounded-2xl border border-white/[0.08] shadow-lg">
+          <div className={`flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl border transition-all ${
+    isWhite ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-lg text-white'
+  }`}>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setWorkFilter('pending')}
@@ -1982,7 +2034,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           </div>
 
           {workItems.length === 0 ? (
-            <div className="bg-[#12151E] rounded-3xl p-12 text-center border border-white/[0.08] space-y-2 shadow-xl">
+            <div className={`rounded-3xl p-12 text-center border space-y-2 transition-all ${
+    isWhite ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-xl text-white'
+  }`}>
               <Clock className="w-12 h-12 text-slate-500 mx-auto" />
               <h3 className="font-bold text-base text-white">
                 {isAr ? 'لا توجد مهام مطابقة للفلتر المحدد' : 'Aucune tâche trouvée'}
@@ -1998,8 +2052,10 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 return (
                   <div
                     key={item.id}
-                    className={`bg-[#12151E] rounded-3xl border p-5 md:p-6 shadow-xl transition-all space-y-5 text-white ${
-                      isCompleted ? 'border-emerald-500/30' : 'border-white/[0.08] hover:border-indigo-500/40'
+                    className={`rounded-3xl border p-5 md:p-6 shadow-sm transition-all space-y-5 ${
+                      isWhite
+                        ? (isCompleted ? 'bg-white border-emerald-300 text-slate-900' : 'bg-white border-slate-200 hover:border-indigo-300 text-slate-900')
+                        : (isCompleted ? 'bg-[#12151E] border-emerald-500/30 text-white shadow-xl' : 'bg-[#12151E] border-white/[0.08] hover:border-indigo-500/40 text-white shadow-xl')
                     }`}
                   >
                     {/* Header Row: Model title, Client, Deadline, Price */}
@@ -2473,13 +2529,15 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       {/* 👤 TAB 4: PROFIL DIALO & RIB (Profil & Coordonnées)         */}
       {/* ════════════════════════════════════════════════════════════ */}
       {activeTab === 'profil' && (
-        <div className="bg-[#12151E] rounded-3xl border border-white/[0.08] p-6 md:p-8 shadow-2xl max-w-3xl mx-auto space-y-6 text-white">
-          <div className="flex items-center gap-3 border-b border-white/[0.08] pb-4">
+        <div className={`rounded-3xl border p-6 md:p-8 shadow-sm max-w-3xl mx-auto space-y-6 transition-all ${
+    isWhite ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-2xl text-white'
+  }`}>
+          <div className={`flex items-center gap-3 border-b pb-4 ${isWhite ? 'border-slate-100' : 'border-white/[0.08]'}`}>
             <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold border border-indigo-500/30">
               <UserIcon className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">{isAr ? 'الملف الشخصي والحساب البنكي (RIB)' : 'Profil Personnel & RIB'}</h2>
+              <h2 className={`text-lg font-bold ${isWhite ? 'text-slate-900' : 'text-white'}`}>{isAr ? 'الملف الشخصي والحساب البنكي (RIB)' : 'Profil Personnel & RIB'}</h2>
               <p className="text-xs text-slate-400 font-medium">
                 {isAr
                   ? 'هذه المعلومات متصلة ومزامنة تلقائياً مع نظام الموارد البشرية (RH) والتحويلات البنكية للمستحقات.'

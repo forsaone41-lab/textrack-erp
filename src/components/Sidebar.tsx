@@ -97,14 +97,43 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
   }, [workspaceDropdownOpen]);
   const [globalEmpCode, setGlobalEmpCode] = React.useState('');
   const [showSearchModal, setShowSearchModal] = React.useState(false);
-  const isDark = true;
+
+  const [modelisteTheme, setModelisteTheme] = React.useState<'dark' | 'light'>(() => {
+    try {
+      return (localStorage.getItem('modeliste_theme_mode') as 'dark' | 'light') || 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
 
   React.useEffect(() => {
-    document.documentElement.classList.add('dark');
-    try {
-      localStorage.setItem('beya_theme', 'dark');
-    } catch {}
+    const handleThemeChange = (e: any) => {
+      if (e?.detail) setModelisteTheme(e.detail);
+    };
+    window.addEventListener('modeliste_theme_change', handleThemeChange);
+    return () => window.removeEventListener('modeliste_theme_change', handleThemeChange);
   }, []);
+
+  const isModelisteSection = 
+    currentUser?.role === 'modeliste' ||
+    location.pathname.startsWith('/suivi-modeliste') ||
+    location.pathname.startsWith('/modeliste');
+
+  const isDark = isModelisteSection ? (modelisteTheme === 'dark') : true;
+
+  React.useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      try {
+        localStorage.setItem('beya_theme', 'dark');
+      } catch {}
+    } else {
+      document.documentElement.classList.remove('dark');
+      try {
+        localStorage.setItem('beya_theme', 'light');
+      } catch {}
+    }
+  }, [isDark]);
 
   const searchParams = new URLSearchParams(location.search);
   const currentModelisteTab = location.pathname === '/profil'
