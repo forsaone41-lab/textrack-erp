@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 
 export default function AboutStory() {
   const { isAr, toggle } = useLang();
-  const whatsappUrl = `https://wa.me/212675239885?text=${encodeURIComponent(
+  const whatsappUrl = `https://wa.me/212624465962?text=${encodeURIComponent(
     isAr
       ? 'مرحباً BEYA CREATIVE، قريت الصفحة ديالكم وبغيت نتواصل معاكم.'
       : 'Bonjour BEYA CREATIVE, j\'ai lu votre page et je souhaite vous contacter.'

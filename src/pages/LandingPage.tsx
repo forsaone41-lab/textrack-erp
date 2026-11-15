@@ -519,7 +519,7 @@ export default function LandingPage() {
                 {t.heroDetails} <ChevronRight className={`w-3.5 h-3.5 ${isAr ? 'rotate-180' : ''}`} />
               </Link>
               <a
-                href="https://wa.me/212675239885"
+                href="https://wa.me/212624465962"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden sm:flex items-center gap-1.5 text-slate-800 hover:text-black font-semibold text-base cursor-pointer transition-colors ml-2"
@@ -549,7 +549,7 @@ export default function LandingPage() {
             {/* Mobile-only CTA below video (in page flow, not fixed) */}
             <div className="lg:hidden flex flex-col items-center w-full mt-4 gap-3 px-1">
               <a
-                href="https://wa.me/212675239885"
+                href="https://wa.me/212624465962"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-[95%] py-3 rounded-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-[0_8px_30px_rgba(37,211,102,0.35)] cursor-pointer transition-all animate-pop"

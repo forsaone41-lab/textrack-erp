@@ -209,8 +209,8 @@ export default function NetworkRegisterPro() {
 
     setIsSubmitting(true);
 
-    const cleanWhatsapp = (whatsapp || phone || '0675239885').replace(/\D/g, '');
-    const cleanPhone = phone || whatsapp || '0675239885';
+    const cleanWhatsapp = (whatsapp || phone || '0624465962').replace(/\D/g, '');
+    const cleanPhone = phone || whatsapp || '0624465962';
     const randCode = Math.floor(1000 + Math.random() * 9000);
     const proCode = `BEYA-${pillar.toUpperCase().slice(0, 3)}-${randCode}`;
     const newId = `pro-custom-${Date.now()}`;
@@ -310,7 +310,7 @@ export default function NetworkRegisterPro() {
   };
 
   const whatsappVerificationUrl = createdProfile
-    ? `https://wa.me/212675239885?text=${encodeURIComponent(
+    ? `https://wa.me/212624465962?text=${encodeURIComponent(
         `السلام عليكم إدارة BEYA Creative، قمت بإنشاء حساب مهني جديد في شبكة BEYA NETWORK:\n\n• الاسم: ${createdProfile.name}\n• التخصص: ${createdProfile.pillarLabelAr} (${createdProfile.specialty})\n• المدينة: ${createdProfile.city}\n• كود المهني: ${createdProfile.proCode}\n• رقم الواتساب: ${createdProfile.whatsapp}\n\nأرغب في تفعيل شارة التوثيق الذهبية (Badge Vérifié) في دليل المهنيين والموردين.`
       )}`
     : '#';

@@ -465,7 +465,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         proposalsCount: 3,
         postedAt: 'منذ ساعتين',
         urgent: true,
-        contactWhatsapp: '212675239885',
+        contactWhatsapp: '212624465962',
         workMode: 'remote'
       },
       {
@@ -481,7 +481,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         proposalsCount: 2,
         postedAt: 'منذ 4 ساعات',
         urgent: false,
-        contactWhatsapp: '212675239885',
+        contactWhatsapp: '212624465962',
         workMode: 'remote'
       },
       {
@@ -497,7 +497,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         proposalsCount: 5,
         postedAt: 'منذ 6 ساعات',
         urgent: true,
-        contactWhatsapp: '212675239885',
+        contactWhatsapp: '212624465962',
         workMode: 'remote'
       },
       {
@@ -513,7 +513,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         proposalsCount: 1,
         postedAt: 'منذ يوم',
         urgent: false,
-        contactWhatsapp: '212675239885',
+        contactWhatsapp: '212624465962',
         workMode: 'remote'
       },
       {
@@ -529,7 +529,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         proposalsCount: 2,
         postedAt: 'منذ يوم',
         urgent: false,
-        contactWhatsapp: '212675239885',
+        contactWhatsapp: '212624465962',
         workMode: 'remote'
       },
       {
@@ -545,7 +545,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         proposalsCount: 4,
         postedAt: 'منذ يومين',
         urgent: false,
-        contactWhatsapp: '212675239885',
+        contactWhatsapp: '212624465962',
         workMode: 'office'
       }
     ];
@@ -863,7 +863,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       minQty: Number(supplierReplyForm.minQty) || 25,
       deliveryTime: supplierReplyForm.deliveryTime.trim() || '24 إلى 48 ساعة',
       message: supplierReplyForm.message.trim() || 'مرحباً، طلبكم متوفر بالكامل فـ مستودعنا مع إمكانية إرسال العينات مجاناً.',
-      whatsapp: supplierReplyForm.whatsapp.trim() || '212675239885',
+      whatsapp: supplierReplyForm.whatsapp.trim() || '212624465962',
       date: 'الآن (مباشر)'
     };
 
@@ -918,7 +918,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
     return {
       brandName: (saved?.brandName && String(saved.brandName).trim()) || currentUser?.brandName || (currentUser as any)?.store_name || (currentUser as any)?.nom || 'FAS Wear',
       city: (saved?.city && String(saved.city).trim()) || currentUser?.ville || 'الدار البيضاء',
-      phone: (saved?.phone && String(saved.phone).trim()) || currentUser?.telephone || '0675239885',
+      phone: (saved?.phone && String(saved.phone).trim()) || currentUser?.telephone || '0624465962',
       activity: (saved?.activity && String(saved.activity).trim()) || 'ملابس ستريتوير وهوديات أوفرسايز'
     };
   });
@@ -1032,7 +1032,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       content: 'السلام عليكم الإخوان أصحاب البراندات والمصممين، دخلات اليوم دفعة جديدة من قماش الملتون الشتوي السميك (Molleton Gratté 340 GSM) قطن 100% ممشط فاخر، مخصص للهوديات الأوفرسايز وسراويل السويت بانتس.\n\n🎨 الألوان المتوفرة حالياً بالستوك: الأسود الفاحم، أبيض ناصع، بيج أوف وايت، أخضر زيتي، بني شوكولا، كحلي داكن.\n\n📦 الكميات متوفرة ابتداءً من رولو واحد (25 كلغ) مع تسليم في 24 ساعة لكازا و48 ساعة لجميع مدن المغرب.',
       reactions: { '🔥': 28, '🧵': 34, '👏': 12 },
       userReactions: [],
-      whatsappContact: '212675239885',
+      whatsappContact: '212624465962',
       whatsappMessage: 'السلام عليكم سي سفيان، شفت رسالتك فـ BEYA NETWORK وبغيت نسولك على ثوب الملتون 340g والألوان المتوفرة.',
       replies: [
         {
@@ -1067,7 +1067,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       content: 'تنبيه للإخوان لي كيخدمو سراويل الكارجو والسترات التقنية (Worker Jackets / Cargo Pants): وصلات كمية ممتازة من قماش الجاباردين ستريتش 280g (Gabardine Coton Stretch) والكانفاس 320g.\nالميزة: متانة فائقة ضد التمزق ومرونة مريحة فالحركة. الأسعار خاصة بزبناء ورشة BEYA ابتداءً من 34 درهم للمتر.',
       reactions: { '🔥': 19, '🧵': 22, '💡': 8 },
       userReactions: [],
-      whatsappContact: '212675239885',
+      whatsappContact: '212624465962',
       whatsappMessage: 'السلام عليكم، تواصلت معكم من BEYA NETWORK بخصوص أقمشة الكاباردين والكانفاس بطنجة.'
     },
 
@@ -1132,7 +1132,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       content: '📦 متوفر الآن لجميع أصحاب البراندات: تشكيلة مستلزمات الفينيسيون الفاخر للهوديات والملابس:\n\n🔹 سحابات معدنية YKK أصلية نمرة 5 و 8 (نحاسي، فضي، وأسود مطفي).\n🔹 حبال هودي قطنية سميكة 12mm مع أطراف حديدية فاخرة (Embout Métal gravé).\n🔹 أكياس التغليف الفاخرة المات بزبلايد (Polybags Ziplock Mat) مع إمكانية طبع لوغو البراند ابتداءً من 300 كيس فقط!\n🔹 بطاقات الهانج تاج (Hangtags) كرتون سميك 600g مع حبل شمعي.',
       reactions: { '🔥': 33, '📦': 29, '👏': 15 },
       userReactions: [],
-      whatsappContact: '212675239885',
+      whatsappContact: '212624465962',
       whatsappMessage: 'السلام عليكم، تواصلت معكم من BEYA NETWORK بخصوص سحابات YKK وأكياس البولي باغ.'
     },
 
@@ -1149,7 +1149,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       content: '💡 نصيحة تقنية مهمة: كيفاش تخلي طبعة الـ DTF على الهودي تصبر لأكثر من 50 غسلة بلا ما تتقشر ولا تتشقق؟\n\n1. حرارة البريسة: 160°C بضغط متوسط-قوي لمدة 15 ثانية.\n2. التبريد التام (Cold Peel): ما تحيدش البلاستيك حتى يبرد الثوب 100%.\n3. الكبسة الثانية الضرورية: حط ورق زبدة (Papier sulfurisé) واضغط 6 ثواني إضافية باش الحبر يتغلغل وسط مسام القطن ويعطي ملمس ناعم كالسيريغرافي.\n\nنوفر طباعة رولات DTF HD يومياً مع تسليم فوري في 24 ساعة.',
       reactions: { '🔥': 52, '🎨': 44, '💡': 39 },
       userReactions: [],
-      whatsappContact: '212675239885',
+      whatsappContact: '212624465962',
       whatsappMessage: 'السلام عليكم، تواصلت معكم من BEYA NETWORK بخصوص خدمات طباعة الـ DTF والسيريغرافي.'
     },
 
@@ -1166,7 +1166,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
       content: '🪡 الإخوان المهتمين بالتطريز البارز ثلاثي الأبعاد (Broderie 3D avec Mousse EVA):\n\nللحصول على تطريز بارز نقي على الهودي والقبوع:\n- كنستعملو فوم خاص بكثافة 3mm وخيوط بوليستر ألمانية Madeira مقاومة للشد السريع.\n- كثافة الغرز (Densité de points) كتكون مضاعفة بـ 1.8x مقارنة مع الطرز المسطح العادي لتغطية جوانب الفوم بالكامل.\n\nالبرامج (Piquage Broderie DST) كنصاوبوها فـ 24 ساعة ومجاناً للطلبيات فوق 50 قطعة.',
       reactions: { '🪡': 41, '🔥': 26, '👏': 19 },
       userReactions: [],
-      whatsappContact: '212675239885',
+      whatsappContact: '212624465962',
       whatsappMessage: 'السلام عليكم، تواصلت معكم من BEYA NETWORK بخصوص التطريز البارز 3D.'
     },
 
@@ -1328,8 +1328,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         badgeGradient: 'from-indigo-600 to-purple-600',
         specialty: specialtyText,
         city: m.city || 'الدار البيضاء',
-        whatsapp: (m.whatsapp || m.phone || '0675239885').replace(/\D/g, ''),
-        phone: m.phone || '0675239885',
+        whatsapp: (m.whatsapp || m.phone || '0624465962').replace(/\D/g, ''),
+        phone: m.phone || '0624465962',
         experience: String(m.experienceYears || '5 سنوات').includes('سنوات') ? m.experienceYears : `${m.experienceYears} سنوات خبرة`,
         rating: m.rating || 4.9,
         reviewsCount: m.reviewsCount || 40,
@@ -1401,8 +1401,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
         badgeGradient,
         specialty: s.categoryLabel,
         city: s.city,
-        whatsapp: s.whatsapp ? s.whatsapp.replace(/\D/g, '') : '212675239885',
-        phone: s.phone || '0675239885',
+        whatsapp: s.whatsapp ? s.whatsapp.replace(/\D/g, '') : '212624465962',
+        phone: s.phone || '0624465962',
         experience: 'مورد معتمد BEYA',
         rating: s.rating,
         reviewsCount: s.reviewsCount,
@@ -2787,7 +2787,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
 
                                 <div className="flex items-center gap-2.5 w-full sm:w-auto">
                                   <a
-                                    href={`https://wa.me/${job.contactWhatsapp || '212675239885'}?text=${encodeURIComponent(
+                                    href={`https://wa.me/${job.contactWhatsapp || '212624465962'}?text=${encodeURIComponent(
                                       `السلام عليكم أخي بخصوص طلبك في BEYA NETWORK:\n"${job.title}"\nأنا موديليست معتمد ومستعد لتنفيذ العمل بميزانية ${job.budgetMAD} درهم.`
                                     )}`}
                                     target="_blank"
@@ -3940,8 +3940,8 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                               roleBadge: msg.authorRole,
                               city: msg.city,
                               bio: String(msg.content || '').slice(0, 150),
-                              phone: msg.whatsappContact || '0675239885',
-                              whatsapp: msg.whatsappContact || '212675239885',
+                              phone: msg.whatsappContact || '0624465962',
+                              whatsapp: msg.whatsappContact || '212624465962',
                               rating: 4.9,
                               reviewsCount: 12
                             };
@@ -5887,7 +5887,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     ref: `BYA-PROP-2026-${Math.floor(1000 + Math.random() * 9000)}`,
                     jobTitle: selectedJobForProposal.title,
                     brandName: selectedJobForProposal.brand,
-                    clientWhatsapp: selectedJobForProposal.contactWhatsapp || '212675239885',
+                    clientWhatsapp: selectedJobForProposal.contactWhatsapp || '212624465962',
                     authorName: proposalAuthorName || userProfile.name || 'موديليست محترف',
                     authorPhone: proposalAuthorPhone || '0600000000',
                     proposedPrice: proposalPrice,
@@ -6126,7 +6126,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                     proposalsCount: 0,
                     postedAt: 'الآن',
                     urgent: true,
-                    contactWhatsapp: newJobWhatsapp.replace(/\D/g, '') || '212675239885',
+                    contactWhatsapp: newJobWhatsapp.replace(/\D/g, '') || '212624465962',
                     workMode: newJobWorkMode
                   };
 
@@ -7763,7 +7763,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
                 </div>
 
                 <a
-                  href={`https://wa.me/212675239885?text=${encodeURIComponent(
+                  href={`https://wa.me/212624465962?text=${encodeURIComponent(
                     `السلام عليكم ورشة BEYA NETWORK، أرغب في حجز كمية من عرض: ${selectedDealForDetail.title}\n• اللون المفضل: ${selectedDealColor[selectedDealForDetail.id] || selectedDealForDetail.colors[0]?.name}\n• الكمية المبدئية: ${dealQuantities[selectedDealForDetail.id] || selectedDealForDetail.minCommitment} ${selectedDealForDetail.primaryUnitLabelAr}\n• براند: ${userProfile.brandName || 'علامتي التجارية'}`
                   )}`}
                   target="_blank"
@@ -8013,7 +8013,7 @@ export default function BeyaNetwork({ currentUser, onLogout }: BeyaNetworkProps)
             {/* Actions */}
             <div className="space-y-2 pt-1">
               <a
-                href={`https://wa.me/212675239885?text=${encodeURIComponent(
+                href={`https://wa.me/212624465962?text=${encodeURIComponent(
                   `السلام عليكم ورشة BEYA والموردين، قمت للتو بتأكيد حجز كمية في الشراء المشترك:
 
 • رقم الوصل: ${bookingSuccessSlip.id}

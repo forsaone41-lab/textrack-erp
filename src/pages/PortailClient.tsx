@@ -841,7 +841,7 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
       category: 'tissu',
       categoryLabel: 'أقمشة وتوريد قطن',
       city: 'الدار البيضاء (درب عمر)',
-      whatsapp: '212675239885',
+      whatsapp: '212624465962',
       products: ['مولتون شتوي 320g مبطن', 'إنترلوك أصلي 100% قطن', 'جيرسي ليكرا صيفي', 'كوتون كوردوروي'],
       minQty: 'ابتداءً من 25 متر (رولو واحد)',
       rating: 4.9,
@@ -2734,7 +2734,7 @@ const extractCleanUserNotes = (rawDetails?: string | null): string => {
 };
 
 const cleanPhoneForWa = (phone: string | undefined | null): string => {
-  const DEFAULT_WA = '212675239885'; // Official BEYA Creative Atelier Sourcing WhatsApp
+  const DEFAULT_WA = '212624465962'; // Official BEYA Creative Atelier Sourcing WhatsApp
   if (!phone) return DEFAULT_WA;
   let cleaned = phone.replace(/\D/g, '');
   if (cleaned.startsWith('0')) {
@@ -3163,7 +3163,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const savedFournisseurColors = extDetails.supplierColors || (d as any).fournisseurCouleurs || null;
     const savedFournisseurNotes = extDetails.supplierNotes || (d as any).fournisseurNote || null;
 
-    const officialBeyaPhone = (company.phone && !company.phone.includes('00 00') && !company.phone.includes('000000')) ? company.phone : '0675239885';
+    const officialBeyaPhone = (company.phone && !company.phone.includes('00 00') && !company.phone.includes('000000')) ? company.phone : '0624465962';
     const cleanFournisseurTel = (savedFournisseurTel && savedFournisseurTel !== '0661849201' && savedFournisseurTel !== '212661849201' && savedFournisseurTel.length >= 8)
       ? savedFournisseurTel
       : officialBeyaPhone;
