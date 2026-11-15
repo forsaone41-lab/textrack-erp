@@ -746,6 +746,7 @@ export interface Lead {
   tissuSuggere?: string;
   techDetails?: string;
   delaiEstime?: string;
+  intentType?: 'production' | 'consultation';
   reponseAtelier?: string;
   reponseAtelierDate?: string;
   statusProgression?: 'reception' | 'etude' | 'echantillon' | 'production' | 'pret';

@@ -168,6 +168,48 @@ const LeadThumbnail = ({
   );
 };
 
+// Helper to detect if a lead is intended for real production/manufacturing vs simple consultation/discussion
+export function getLeadIntentType(lead: Lead): 'production' | 'consultation' {
+  if (lead.intentType === 'production' || lead.intentType === 'consultation') {
+    return lead.intentType;
+  }
+  const typeLower = (lead.type || '').toLowerCase();
+  const detailsLower = (lead.details || '').toLowerCase();
+
+  // Explicit discussion / consultation keywords
+  if (
+    typeLower.includes('(discussion)') ||
+    typeLower.includes('consultation') ||
+    typeLower.includes('استشارة') ||
+    typeLower.includes('استفسار') ||
+    typeLower.includes('discussion') ||
+    detailsLower.includes('استشارة') ||
+    detailsLower.includes('استفسار')
+  ) {
+    return 'consultation';
+  }
+
+  // Explicit production indicators or presence of model/quantity/fabric/photo
+  if (
+    typeLower.includes('(production)') ||
+    typeLower.includes('production') ||
+    typeLower.includes('cmt') ||
+    (lead.quantity && Number(lead.quantity) > 0) ||
+    Boolean(lead.photo) ||
+    (Array.isArray(lead.photos) && lead.photos.length > 0) ||
+    detailsLower.includes('modèle:') ||
+    detailsLower.includes('modele:') ||
+    detailsLower.includes('qté:') ||
+    detailsLower.includes('qte:') ||
+    detailsLower.includes('tailles:') ||
+    detailsLower.includes('confection')
+  ) {
+    return 'production';
+  }
+
+  return 'consultation';
+}
+
 export default function Demandes() {
   const { isAr } = useLang();
   const navigate = useNavigate();
@@ -180,7 +222,16 @@ export default function Demandes() {
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'qty_desc' | 'qty_asc'>('date_desc');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterExperience, setFilterExperience] = useState<string>('all');
+  const [filterIntent, setFilterIntent] = useState<'all' | 'production' | 'consultation'>('all');
   const [loading, setLoading] = useState(true);
+
+  const toggleLeadIntent = async (lead: Lead) => {
+    const current = getLeadIntentType(lead);
+    const next: 'production' | 'consultation' = current === 'production' ? 'consultation' : 'production';
+    const updated = { ...lead, intentType: next };
+    setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
+    await saveRecord('leads', updated, true);
+  };
 
   const [confirmLead, setConfirmLead] = useState<Lead | null>(null);
   const [confirmMode, setConfirmMode] = useState<'echantillon' | 'commande'>('echantillon');
@@ -1527,6 +1578,8 @@ const getLeadModelisteInfo = (lead: Lead) => {
 
     const matchStarred = filterStarred ? !!l.crmPriority : true;
 
+    const matchIntent = filterIntent === 'all' || getLeadIntentType(l) === filterIntent;
+
     let matchModeliste = true;
     if (filterModeliste) {
       const modInfo = getLeadModelisteInfo(l);
@@ -1537,14 +1590,14 @@ const getLeadModelisteInfo = (lead: Lead) => {
       }
     }
 
-    return matchCategory && matchFilter && matchSearch && matchType && matchExperience && matchStarred && matchModeliste;
+    return matchCategory && matchFilter && matchSearch && matchType && matchExperience && matchStarred && matchModeliste && matchIntent;
   }).sort((a, b) => {
     if (sortBy === 'date_desc') return new Date(b.date).getTime() - new Date(a.date).getTime();
     if (sortBy === 'date_asc') return new Date(a.date).getTime() - new Date(b.date).getTime();
     if (sortBy === 'qty_desc') return b.quantity - a.quantity;
     if (sortBy === 'qty_asc') return a.quantity - b.quantity;
     return 0;
-  }), [leads, category, filter, searchQuery, sortBy, filterType, filterExperience, filterStarred, filterModeliste, filterModelisteStatus]);
+  }), [leads, category, filter, searchQuery, sortBy, filterType, filterExperience, filterStarred, filterModeliste, filterModelisteStatus, filterIntent]);
 
   // Reset visible count + filterType when category changes
   useEffect(() => { setVisibleCount(10); setFilterType('all'); setFilterExperience('all'); setSearchQuery(''); }, [category]);
@@ -3268,6 +3321,57 @@ const getLeadModelisteInfo = (lead: Lead) => {
                 </span>
               </button>
 
+              {/* ─── INTENT FILTER TOGGLE BUTTONS (باغي يخدم VS باغي غير يستاشر) ─── */}
+              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setFilterIntent('all')}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${
+                    filterIntent === 'all'
+                      ? 'bg-slate-900 text-white shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  {isAr ? 'الكل' : 'Tous'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterIntent('production')}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
+                    filterIntent === 'production'
+                      ? 'bg-emerald-600 text-white shadow-2xs'
+                      : 'text-emerald-700 hover:bg-emerald-50'
+                  }`}
+                  title={isAr ? 'الزبناء الذين يريدون الإنتاج والتصنيع الفعلي' : 'Clients prêts à produire (confection)'}
+                >
+                  <span>🎯</span>
+                  <span>{isAr ? 'باغي يخدم (إنتاج)' : 'Production'}</span>
+                  <span className={`px-1 rounded text-[9px] font-mono ${
+                    filterIntent === 'production' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {clientLeads.filter(l => getLeadIntentType(l) === 'production').length}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterIntent('consultation')}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
+                    filterIntent === 'consultation'
+                      ? 'bg-amber-500 text-white shadow-2xs'
+                      : 'text-amber-800 hover:bg-amber-50'
+                  }`}
+                  title={isAr ? 'الزبناء الذين يريدون فقط الاستشارة والاستفسار' : 'Clients demandant une simple consultation'}
+                >
+                  <span>💬</span>
+                  <span>{isAr ? 'باغي غير يستاشر' : 'Consultation'}</span>
+                  <span className={`px-1 rounded text-[9px] font-mono ${
+                    filterIntent === 'consultation' ? 'bg-amber-600 text-white' : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {clientLeads.filter(l => getLeadIntentType(l) === 'consultation').length}
+                  </span>
+                </button>
+              </div>
+
               {/* Status sub-filter when Modéliste filter is active */}
               {filterModeliste && (
                 <div className="flex items-center gap-1 bg-purple-50/90 p-1 rounded-xl border border-purple-200 animate-in fade-in zoom-in-95 duration-200">
@@ -3638,6 +3742,40 @@ const getLeadModelisteInfo = (lead: Lead) => {
                                       ✂️ CMT (Tissu Client)
                                     </span>
                                   )}
+                                  {/* 🎯 INTENT BADGE: باغي يخدم (إنتاج) VS باغي غير يستاشر (استشارة) */}
+                                  {(() => {
+                                    const intent = getLeadIntentType(lead);
+                                    const isProd = intent === 'production';
+                                    return (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleLeadIntent(lead);
+                                        }}
+                                        title={isAr 
+                                          ? (isProd ? 'الزبون باغي يخدم (طلب إنتاج وتصنيع) - انقر للتبديل إذا أراد استشارة فقط' : 'الزبون باغي غير يستاشر ويسول - انقر للتبديل إذا أراد طلب إنتاج')
+                                          : (isProd ? 'Projet Confection / Production - Cliquer pour basculer' : 'Simple Consultation / Devis - Cliquer pour basculer')}
+                                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer border ${
+                                          isProd
+                                            ? 'bg-emerald-600 text-white border-emerald-700 shadow-emerald-600/20'
+                                            : 'bg-amber-500 text-white border-amber-600 shadow-amber-500/20'
+                                        }`}
+                                      >
+                                        {isProd ? (
+                                          <>
+                                            <span className="text-xs">🎯</span>
+                                            <span>{isAr ? 'باغي يخدم (إنتاج وتصنيع)' : 'Prêt à Produire (Confection)'}</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <span className="text-xs">💬</span>
+                                            <span>{isAr ? 'باغي غير يستاشر (استشارة)' : 'Consultation & Devis'}</span>
+                                          </>
+                                        )}
+                                      </button>
+                                    );
+                                  })()}
                                   {(() => {
                                     const modInfo = getLeadModelisteInfo(lead);
                                     if (!modInfo.hasModeliste) return null;
@@ -3764,27 +3902,28 @@ const getLeadModelisteInfo = (lead: Lead) => {
                                 </button>
                               )}
 
-                              {/* 2. Validation / Status Buttons */}
+                              {/* 2. Compact Validation / Refusal Action Pill (ردها للجنب صغيرة) */}
                               {lead.crmStage === 'confirme' ? (
-                                <span className="h-9 px-3 rounded-xl text-xs font-black border bg-emerald-100 text-emerald-800 border-emerald-200 flex items-center gap-1.5 shadow-2xs">
-                                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="h-7.5 px-2.5 rounded-lg text-[10.5px] font-black border bg-emerald-100 text-emerald-800 border-emerald-300 flex items-center gap-1 shadow-2xs shrink-0">
+                                  <CheckCircle className="w-3 h-3 text-emerald-600" />
                                   <span>{isAr ? 'مؤكد' : 'Validé'}</span>
                                 </span>
                               ) : lead.crmStage === 'annule' ? (
-                                <span className="h-9 px-3 rounded-xl text-xs font-black border bg-rose-100 text-rose-800 border-rose-200 flex items-center gap-1.5 shadow-2xs">
-                                  <X className="w-3.5 h-3.5 text-rose-600" />
+                                <span className="h-7.5 px-2.5 rounded-lg text-[10.5px] font-black border bg-rose-100 text-rose-800 border-rose-300 flex items-center gap-1 shadow-2xs shrink-0">
+                                  <X className="w-3 h-3 text-rose-600" />
                                   <span>{isAr ? 'ملغى' : 'Annulé'}</span>
                                 </span>
                               ) : (
-                                <div className="flex items-center gap-1">
+                                <div className="inline-flex items-center bg-slate-100/90 p-0.5 rounded-xl border border-slate-200 shadow-2xs shrink-0" title={isAr ? 'تأكيد أو إلغاء الطلب' : 'Valider ou Refuser'}>
                                   <button 
                                     onClick={() => setConfirmLead(lead)}
-                                    className="h-9 px-2.5 rounded-xl text-xs font-black border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
-                                    title={isAr ? 'تأكيد الطلب' : 'Valider'}
+                                    className="h-7 px-2.5 rounded-lg text-[10.5px] font-black text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                                    title={isAr ? 'تأكيد الطلب وحساب التكلفة وإطلاق العينة' : 'Valider la commande / échantillon'}
                                   >
-                                    <CheckCircle className="w-3.5 h-3.5" />
+                                    <CheckCircle className="w-3 h-3 text-emerald-600 group-hover:text-white" />
                                     <span>{isAr ? 'تأكيد' : 'Valider'}</span>
                                   </button>
+                                  <div className="w-[1px] h-3 bg-slate-300 mx-0.5" />
                                   <button 
                                     onClick={async () => {
                                       if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
@@ -3793,10 +3932,10 @@ const getLeadModelisteInfo = (lead: Lead) => {
                                         await saveRecord('leads', updated, true);
                                       }
                                     }}
-                                    className="h-9 px-2.5 rounded-xl text-xs font-black border bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
-                                    title={isAr ? 'رفض الطلب' : 'Refuser'}
+                                    className="h-7 px-2.5 rounded-lg text-[10.5px] font-black text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                                    title={isAr ? 'رفض وإلغاء هذا الطلب' : 'Refuser et archiver cette demande'}
                                   >
-                                    <X className="w-3.5 h-3.5" />
+                                    <X className="w-3 h-3 text-rose-500 group-hover:text-white" />
                                     <span>{isAr ? 'رفض' : 'Refuser'}</span>
                                   </button>
                                 </div>
