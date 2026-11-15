@@ -1205,7 +1205,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
       {/* ─── Apple-Inspired Responsive Header ────────── */}
       <div className={`${
         isWhite
-          ? 'bg-white border border-slate-200/90 text-slate-900 shadow-sm'
+          ? 'bg-white border border-slate-300/80 text-slate-900 shadow-xs'
           : 'bg-[#12151E]/90 border border-white/[0.08] backdrop-blur-2xl text-white shadow-2xl'
       } rounded-3xl p-4 md:p-6 relative overflow-hidden transition-all duration-300`}>
         {/* Subtle Ambient Radial Glow */}
@@ -1237,7 +1237,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Month Filter */}
             <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${
-              isWhite ? 'bg-slate-100/90 border-slate-200 text-slate-800' : 'bg-white/[0.05] border-white/[0.08] text-white'
+              isWhite ? 'bg-slate-50 border-slate-300 text-slate-800' : 'bg-white/[0.05] border-white/[0.08] text-white'
             }`}>
               <Calendar className={`w-4 h-4 ${isWhite ? 'text-indigo-600' : 'text-indigo-300'}`} />
               <input
@@ -1274,7 +1274,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               onClick={fetchData}
               disabled={loading}
               className={`p-2.5 rounded-xl transition cursor-pointer border ${
-                isWhite ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200' : 'bg-white/[0.05] hover:bg-white/[0.1] text-white border-white/[0.08]'
+                isWhite ? 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-300' : 'bg-white/[0.05] hover:bg-white/[0.1] text-white border-white/[0.08]'
               }`}
               title={isAr ? 'تحديث البيانات' : 'Actualiser'}
             >
@@ -1286,14 +1286,14 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               onClick={toggleTheme}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-xs border ${
                 isWhite
-                  ? 'bg-slate-900 hover:bg-slate-800 text-white border-slate-700'
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
                   : 'bg-white/10 hover:bg-white/20 text-white border-white/15'
               }`}
               title={isWhite ? (isAr ? 'التبديل إلى الوضع الأسود الفخم' : 'Passer au mode sombre') : (isAr ? 'التبديل إلى الوضع الأبيض العادي' : 'Passer au blanc normal')}
             >
               {isWhite ? (
                 <>
-                  <Moon className="w-4 h-4 text-indigo-400" />
+                  <Moon className="w-4 h-4 text-slate-700" />
                   <span>{isAr ? 'الوضع الأسود' : 'Mode Sombre'}</span>
                 </>
               ) : (
@@ -1372,7 +1372,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           </div>
 
           {/* Quick Mini Metrics Strip on Mobile (Apple Wallet Style) */}
-          <div className={`grid grid-cols-3 gap-2 pt-2 border-t ${isWhite ? 'border-slate-100' : 'border-white/[0.08]'}`}>
+          <div className={`grid grid-cols-3 gap-2 pt-2 border-t ${isWhite ? 'border-slate-200' : 'border-white/[0.08]'}`}>
             <button
               onClick={() => handleTabChange('travaux')}
               className={`active:scale-95 transition p-2 rounded-xl text-center border ${
@@ -1491,7 +1491,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               onClick={() => handleTabChange('profil')}
               className={`kpi-card rounded-3xl p-6 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group ${
                 isWhite
-                  ? 'bg-white border-2 border-indigo-200 text-slate-900 shadow-md hover:border-indigo-400 hover:shadow-lg'
+                  ? 'bg-white border-2 border-indigo-300 text-slate-900 shadow-sm hover:border-indigo-500 hover:shadow-md'
                   : 'bg-gradient-to-b from-[#181C2B] to-[#11131C] border border-indigo-500/35 hover:border-indigo-500/60 text-white shadow-xl'
               }`}
             >
@@ -1521,7 +1521,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 )}
               </div>
               <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs ${
-                isWhite ? 'border-slate-100' : 'border-white/[0.08]'
+                isWhite ? 'border-slate-200' : 'border-white/[0.08]'
               }`}>
                 <span className={`font-medium ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>
                   {isAr ? (isAdmin ? 'المدفوع له حتى الآن :' : 'المدفوع حتى الآن :') : 'Déjà Réglé :'}
@@ -1541,7 +1541,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               onClick={() => handleTabChange('travaux')}
               className={`kpi-card rounded-3xl p-6 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group ${
                 isWhite
-                  ? 'bg-white border-2 border-amber-200 text-slate-900 shadow-md hover:border-amber-400 hover:shadow-lg'
+                  ? 'bg-white border-2 border-amber-300 text-slate-900 shadow-sm hover:border-amber-500 hover:shadow-md'
                   : 'bg-gradient-to-b from-[#1E1A16] to-[#121319] border border-amber-500/30 hover:border-amber-500/50 text-white shadow-xl'
               }`}
             >
@@ -1568,7 +1568,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 )}
               </div>
               <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs ${
-                isWhite ? 'border-slate-100' : 'border-white/[0.08]'
+                isWhite ? 'border-slate-200' : 'border-white/[0.08]'
               }`}>
                 <span className={`font-medium ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>
                   {isAr ? 'القيمة عند التسليم :' : 'Valeur à la livraison :'}
@@ -1588,7 +1588,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
               onClick={() => handleTabChange('travaux')}
               className={`kpi-card rounded-3xl p-6 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-all group ${
                 isWhite
-                  ? 'bg-white border-2 border-emerald-200 text-slate-900 shadow-md hover:border-emerald-400 hover:shadow-lg'
+                  ? 'bg-white border-2 border-emerald-300 text-slate-900 shadow-sm hover:border-emerald-500 hover:shadow-md'
                   : 'bg-gradient-to-b from-[#131E1B] to-[#10131A] border border-emerald-500/30 hover:border-emerald-500/50 text-white shadow-xl'
               }`}
             >
@@ -1615,7 +1615,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                 )}
               </div>
               <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs ${
-                isWhite ? 'border-slate-100' : 'border-white/[0.08]'
+                isWhite ? 'border-slate-200' : 'border-white/[0.08]'
               }`}>
                 <span className={`font-medium ${isWhite ? 'text-slate-500' : 'text-slate-400'}`}>
                   {isAr ? (isAdmin ? 'مجموع أرباح الموديليست :' : 'مجموع الأرباح المكتسبة :') : 'Gagné sur ces modèles :'}
@@ -1633,9 +1633,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
           {/* Quick Notice if there are unpriced items */}
           {summary.totalToPriceCount > 0 && (
-            <div className="rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border transition-all ${
-    isWhite ? 'bg-indigo-50/80 border-indigo-200 text-slate-900' : 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/5 border-indigo-500/30 text-white'
-  }">
+            <div className={`rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border transition-all ${
+    isWhite ? 'bg-indigo-50/90 border-indigo-300 text-slate-900 shadow-xs' : 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/5 border-indigo-500/30 text-white'
+  }`}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
                   <Scissors className="w-4 h-4" />
@@ -1662,9 +1662,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
           {/* Month Financial Card + Performance Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className={`lg:col-span-1 rounded-3xl p-6 space-y-4 border transition-all ${
-              isWhite ? 'bg-white border-slate-200/90 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-xl text-white'
+              isWhite ? 'bg-white border border-slate-300/80 shadow-xs text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-xl text-white'
             }`}>
-              <div className={`flex items-center justify-between border-b pb-3 ${isWhite ? 'border-slate-100' : 'border-white/[0.08]'}`}>
+              <div className={`flex items-center justify-between border-b pb-3 ${isWhite ? 'border-slate-200' : 'border-white/[0.08]'}`}>
                 <h3 className={`font-bold text-xs uppercase tracking-wider flex items-center gap-2 ${isWhite ? 'text-slate-800' : 'text-slate-200'}`}>
                   <TrendingUp className={`w-4 h-4 ${isWhite ? 'text-indigo-600' : 'text-indigo-400'}`} />
                   <span>{isAr ? `كشف حساب شهر (${selectedMois})` : `Bilan Mensuel (${selectedMois})`}</span>
@@ -1701,9 +1701,9 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
 
             {/* List of models completed with quick view */}
             <div className={`lg:col-span-2 rounded-3xl p-6 space-y-4 border transition-all ${
-              isWhite ? 'bg-white border-slate-200/90 shadow-sm text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-xl text-white'
+              isWhite ? 'bg-white border border-slate-300/80 shadow-xs text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-xl text-white'
             }`}>
-              <div className={`flex items-center justify-between border-b pb-3 ${isWhite ? 'border-slate-100' : 'border-white/[0.08]'}`}>
+              <div className={`flex items-center justify-between border-b pb-3 ${isWhite ? 'border-slate-200' : 'border-white/[0.08]'}`}>
                 <h3 className={`font-bold text-xs uppercase tracking-wider flex items-center gap-2 ${isWhite ? 'text-slate-800' : 'text-slate-200'}`}>
                   <FileCheck className={`w-4 h-4 ${isWhite ? 'text-emerald-600' : 'text-emerald-400'}`} />
                   <span>{isAr ? 'تفاصيل الموديلات المنجزة وأرباحها' : 'Détail des Travaux Réalisés'}</span>
@@ -2532,7 +2532,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
         <div className={`rounded-3xl border p-6 md:p-8 shadow-sm max-w-3xl mx-auto space-y-6 transition-all ${
     isWhite ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#12151E] border-white/[0.08] shadow-2xl text-white'
   }`}>
-          <div className={`flex items-center gap-3 border-b pb-4 ${isWhite ? 'border-slate-100' : 'border-white/[0.08]'}`}>
+          <div className={`flex items-center gap-3 border-b pb-4 ${isWhite ? 'border-slate-200' : 'border-white/[0.08]'}`}>
             <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold border border-indigo-500/30">
               <UserIcon className="w-6 h-6" />
             </div>

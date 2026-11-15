@@ -302,31 +302,8 @@ function AdminLayout({
       </div>
       
       <main className={`flex-1 overflow-y-auto w-full relative ${currentUser.role === 'worker' ? 'mt-0' : 'mt-16 md:mt-0'} print:mt-0 print:overflow-visible`}>
-        {/* Global Tools Bar - Theme Switcher & Notifications */}
+        {/* Global Tools Bar - Notifications */}
         <div className={`fixed top-8 ${isAr ? 'right-12' : 'right-12'} z-[130] hidden md:flex items-center gap-3 print:hidden`}>
-          {isDarkSection && (
-            <button
-              onClick={toggleModelisteTheme}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border shadow-xs active:scale-95 cursor-pointer backdrop-blur-md ${
-                modelisteTheme === 'light'
-                  ? 'bg-white/95 hover:bg-white text-slate-800 border-slate-300 shadow-sm'
-                  : 'bg-[#12151E]/90 hover:bg-[#12151E] text-white border-white/15'
-              }`}
-              title={modelisteTheme === 'light' ? (isAr ? 'التبديل إلى الوضع الأسود' : 'Passer au mode sombre') : (isAr ? 'التبديل إلى الأبيض العادي' : 'Passer au blanc normal')}
-            >
-              {modelisteTheme === 'light' ? (
-                <>
-                  <Moon className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>{isAr ? 'الوضع الأسود' : 'Mode Sombre'}</span>
-                </>
-              ) : (
-                <>
-                  <Sun className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{isAr ? 'الأبيض العادي' : 'Blanc Normal'}</span>
-                </>
-              )}
-            </button>
-          )}
           {currentUser.role === 'admin' && location.pathname === '/' && <NotificationCenter />}
         </div>
 
