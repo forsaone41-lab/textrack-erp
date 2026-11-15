@@ -784,23 +784,23 @@ export function loadCompanyProfile(): CompanyProfile {
     const data = safeStorage.getItem('textrack_profile');
     const parsed = data ? JSON.parse(data) : {};
     
-    // STRICT PURGE: Never allow Abdelaziz ELHACHAMI or his personal tax numbers to leak
+    // STRICT PURGE: Never allow fake or leaked legal numbers/names
     if (parsed.dirigeant && parsed.dirigeant.toLowerCase().includes('hachami')) {
       delete parsed.dirigeant;
     }
     if (parsed.email && parsed.email.toLowerCase().includes('hachami')) {
       parsed.email = 'contact@beya.ma';
     }
-    if (parsed.ice === '003457558000092') {
+    if (parsed.ice && (parsed.ice.includes('003457558') || parsed.ice.includes('004565') || parsed.ice.includes('000092'))) {
       parsed.ice = '';
     }
-    if (parsed.if_tax === '26008252') {
+    if (parsed.if_tax && (parsed.if_tax.includes('26008') || parsed.if_tax.includes('26008444') || parsed.if_tax.includes('26008252'))) {
       parsed.if_tax = '';
     }
-    if (parsed.patente === '18604042') {
+    if (parsed.patente && (parsed.patente.includes('18604042') || parsed.patente.includes('18604'))) {
       parsed.patente = '';
     }
-    if (parsed.cnie === 'DA13860') {
+    if (parsed.cnie && (parsed.cnie.includes('DA13860') || parsed.cnie.includes('DA13'))) {
       parsed.cnie = '';
     }
     if (parsed.address && (parsed.address.includes('Ain Aghbal') || parsed.address.includes('Azrou'))) {
@@ -822,16 +822,16 @@ export function loadCompanyProfile(): CompanyProfile {
     if (merged.email && merged.email.toLowerCase().includes('hachami')) {
       merged.email = 'contact@beya.ma';
     }
-    if (merged.ice === '003457558000092') {
+    if (merged.ice && (merged.ice.includes('003457558') || merged.ice.includes('004565') || merged.ice.includes('000092'))) {
       merged.ice = '';
     }
-    if (merged.if_tax === '26008252') {
+    if (merged.if_tax && (merged.if_tax.includes('26008') || merged.if_tax.includes('26008444') || merged.if_tax.includes('26008252'))) {
       merged.if_tax = '';
     }
-    if (merged.patente === '18604042') {
+    if (merged.patente && (merged.patente.includes('18604042') || merged.patente.includes('18604'))) {
       merged.patente = '';
     }
-    if (merged.cnie === 'DA13860') {
+    if (merged.cnie && (merged.cnie.includes('DA13860') || merged.cnie.includes('DA13'))) {
       merged.cnie = '';
     }
     if (merged.address && (merged.address.includes('Ain Aghbal') || merged.address.includes('Azrou'))) {

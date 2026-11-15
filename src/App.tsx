@@ -156,7 +156,7 @@ if (window.location.pathname && window.location.pathname !== '/' && !window.loca
 
 const AUTH_KEY = 'textrack_auth';
 
-const MobileLogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
+const MobileLogoWithFallback = ({ src, alt, isDark }: { src: string; alt: string; isDark?: boolean }) => {
   const [error, setError] = React.useState(false);
   if (error || !src) {
     return (
@@ -164,8 +164,8 @@ const MobileLogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
         <div className="w-8 h-8 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
           <Package className="w-5 h-5 text-white" />
         </div>
-        <span className="text-sm font-black text-slate-900 uppercase tracking-tighter italic">
-          {alt.split(' ')[0]} <span className="text-indigo-600 font-light italic ml-1">{alt.split(' ').slice(1).join(' ')}</span>
+        <span className={`text-sm font-black uppercase tracking-tighter italic ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          {alt.split(' ')[0]} <span className="text-indigo-400 font-light italic ml-1">{alt.split(' ').slice(1).join(' ')}</span>
         </span>
       </>
     );
@@ -192,13 +192,34 @@ function AdminLayout({
     setMobileOpen(false);
   }, [location.pathname]);
 
+  const isDarkSection = 
+    currentUser?.role === 'modeliste' ||
+    location.pathname.startsWith('/suivi-modeliste') ||
+    location.pathname.startsWith('/modeliste') ||
+    location.pathname.startsWith('/patronage-ai');
+
+  useEffect(() => {
+    if (isDarkSection) {
+      document.body.style.backgroundColor = '#07090e';
+    } else {
+      document.body.style.backgroundColor = '';
+    }
+    return () => {
+      document.body.style.backgroundColor = '';
+    };
+  }, [isDarkSection]);
+
   return (
-    <div className="flex min-h-screen bg-slate-50/50" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className={`flex min-h-screen transition-colors duration-200 ${isDarkSection ? 'bg-[#07090e] text-slate-100' : 'bg-slate-50/50'}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Mobile Header - Premium Glassy "Zaji" Design */}
       {currentUser.role !== 'worker' && (
-        <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 z-[140] flex items-center justify-between px-5 shadow-sm print:hidden">
+        <div className={`md:hidden fixed top-0 left-0 right-0 h-16 backdrop-blur-xl z-[140] flex items-center justify-between px-5 shadow-sm print:hidden transition-colors duration-200 ${
+          isDarkSection 
+            ? 'bg-[#0c0f17]/95 border-b border-white/10 text-white' 
+            : 'bg-white/70 border-b border-slate-200/50 text-slate-900'
+        }`}>
           <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
-            <MobileLogoWithFallback src={company.logoMobileHeader || company.logoUrl} alt={company.name} />
+            <MobileLogoWithFallback src={company.logoMobileHeader || company.logoUrl} alt={company.name} isDark={isDarkSection} />
           </div>
 
         <div className="flex items-center gap-2">
@@ -209,7 +230,11 @@ function AdminLayout({
           )}
           <button
             onClick={() => setMobileOpen(true)}
-            className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all bg-slate-100/50 rounded-xl border border-slate-200 active:scale-90"
+            className={`w-10 h-10 flex items-center justify-center transition-all rounded-xl border active:scale-90 ${
+              isDarkSection 
+                ? 'text-slate-200 hover:text-white bg-white/10 border-white/15' 
+                : 'text-slate-600 hover:text-indigo-600 bg-slate-100/50 border-slate-200'
+            }`}
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -251,10 +276,23 @@ function AdminLayout({
         )}
 
         {/* Decorative background element */}
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-500/5 blur-[120px] pointer-events-none print:hidden" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-purple-500/5 blur-[120px] pointer-events-none print:hidden" />
+        {!isDarkSection ? (
+          <>
+            <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-500/5 blur-[120px] pointer-events-none print:hidden" />
+            <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-purple-500/5 blur-[120px] pointer-events-none print:hidden" />
+          </>
+        ) : (
+          <>
+            <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-600/5 blur-[140px] pointer-events-none print:hidden" />
+            <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-blue-600/5 blur-[140px] pointer-events-none print:hidden" />
+          </>
+        )}
         
-        <div className="p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative print:p-0 print:max-w-none">
+        <div className={
+          isDarkSection 
+            ? "w-full p-2 sm:p-4 md:p-6 lg:p-8 max-w-full relative print:p-0" 
+            : "p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative print:p-0 print:max-w-none"
+        }>
           {currentUser.role === 'admin' && (
             <AdminLivePresenceBar currentUser={currentUser} />
           )}

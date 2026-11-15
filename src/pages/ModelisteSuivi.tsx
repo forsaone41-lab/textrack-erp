@@ -1142,7 +1142,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
   ];
 
   return (
-    <div className={`space-y-6 pb-28 md:pb-8 bg-[#090B10] min-h-screen text-slate-100 p-3 sm:p-5 md:p-8 rounded-3xl border border-white/[0.05] shadow-2xl relative ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
+    <div className={`space-y-6 pb-28 md:pb-8 w-full min-h-screen text-slate-100 relative ${isAr ? 'rtl font-sans' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Sleek Top Loading Strip (Charit / شريط تحميل علوي رفيع) */}
       {loading && (
         <div className="fixed top-0 left-0 right-0 z-[500] h-[3px] bg-slate-900/60 backdrop-blur-xs overflow-hidden pointer-events-none">

@@ -180,12 +180,12 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
             {company.phone && company.phone !== '0661-50-28-86' && <p>{isAr ? 'الهاتف:' : 'Tél:'} {company.phone}</p>}
             {company.email && !company.email.includes('hachami') && <p>{company.email}</p>}
           </div>
-          {(company.ice && company.ice !== '000000000000000' && !company.ice.includes('003457558000092')) && (
+          {(company.ice && company.ice !== '000000000000000' && !company.ice.includes('003457558') && !company.ice.includes('004565')) && (
             <div className="flex flex-wrap gap-1.5 pt-2 mt-2 border-t border-slate-200 font-mono text-[10px]">
               <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">ICE: <strong className="text-indigo-600">{company.ice}</strong></span>
-              {company.if_tax && company.if_tax !== '0000000' && !company.if_tax.includes('26008252') && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">IF: {company.if_tax}</span>}
-              {company.patente && company.patente !== '00000000' && !company.patente.includes('18604042') && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">TP: {company.patente}</span>}
-              {company.cnie && !company.cnie.includes('DA13860') && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">CNIE: {company.cnie}</span>}
+              {company.if_tax && company.if_tax !== '0000000' && !company.if_tax.includes('26008') && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">IF: {company.if_tax}</span>}
+              {company.patente && company.patente !== '00000000' && !company.patente.includes('18604') && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">TP: {company.patente}</span>}
+              {company.cnie && !company.cnie.includes('DA13') && <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">CNIE: {company.cnie}</span>}
             </div>
           )}
         </div>
@@ -358,13 +358,8 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
             <div className="border-2 border-dashed border-indigo-300 rounded-xl p-3 text-center mt-3 bg-white w-full shadow-2xs">
               <p className="text-[11px] font-black text-indigo-900 uppercase tracking-wider">{company.name || 'BEYA CREATIVE'}</p>
               <p className="text-[8.5px] font-bold text-slate-500 uppercase mt-0.5">Atelier de Confection Textile</p>
-              {company.ice && company.ice !== '000000000000000' && !company.ice.includes('003457558000092') && (
-                <div className="font-mono text-[7.5px] text-slate-600 leading-tight mt-1 border-t border-slate-100 pt-1">
-                  ICE: {company.ice}
-                  {company.if_tax && company.if_tax !== '0000000' && !company.if_tax.includes('26008252') && ` · IF: ${company.if_tax}`}
-                </div>
-              )}
-              <span className="inline-block bg-indigo-600 text-white text-[7.5px] font-black px-2 py-0.5 rounded-full mt-2 tracking-wide uppercase">
+              <p className="text-[8px] font-bold text-slate-400 uppercase mt-0.5">Casablanca — Maroc</p>
+              <span className="inline-block bg-indigo-600 text-white text-[7.5px] font-black px-2.5 py-0.5 rounded-full mt-2 tracking-wide uppercase">
                 {avance > 0 ? (isAr ? 'تم استلام التسبيق 50%' : 'ACOMPTE 50% REÇU') : (isAr ? 'توقيع مصادق عليه' : 'SIGNATURE VALIDÉE')}
               </span>
             </div>
@@ -379,11 +374,9 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
         </p>
         <p className="text-[9px] font-bold text-slate-500 mb-1">
           {[
-            company.address && !company.address.includes('Ain Aghbal') ? company.address : null,
+            company.address && !company.address.includes('Ain Aghbal') ? company.address : 'Casablanca, Maroc',
             company.phone && company.phone !== '0661-50-28-86' ? company.phone : '0624-465962',
             company.email && !company.email.includes('hachami') ? company.email : 'contact@beya.ma',
-            company.ice && company.ice !== '000000000000000' && !company.ice.includes('003457558000092') ? `ICE: ${company.ice}` : null,
-            company.if_tax && company.if_tax !== '0000000' && !company.if_tax.includes('26008252') ? `IF: ${company.if_tax}` : null,
           ].filter(Boolean).join(' | ')}
         </p>
         <p className="text-[8.5px] font-medium text-slate-400">
