@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin, RefreshCw, CloudUpload, Database, AlertTriangle, HelpCircle, Plus, Trash2, CheckCircle2, XCircle, ChevronDown, ChevronUp, ExternalLink, CreditCard, Target, Clock } from 'lucide-react';
-import { CompanyProfile, FaqItem, ServiceItem, loadCompanyProfile, saveCompanyProfile, saveRecord } from '../types';
+import { CompanyProfile, FaqItem, ServiceItem, loadCompanyProfile, syncCompanyProfile, saveCompanyProfile, saveRecord } from '../types';
 import { genId } from '../types';
 import { supabase } from '../supabase';
 import { compressImage } from '../utils/image';
@@ -102,6 +102,9 @@ export default function Settings() {
   useEffect(() => {
     setProfile(loadCompanyProfile());
     checkSyncStatus();
+    syncCompanyProfile().then(cloudProfile => {
+      if (cloudProfile) setProfile(cloudProfile);
+    });
   }, []);
 
   if (!profile) return null;

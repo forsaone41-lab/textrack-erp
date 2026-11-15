@@ -785,6 +785,41 @@ export function loadCompanyProfile(): CompanyProfile {
     const parsed = data ? JSON.parse(data) : {};
     const merged = { ...DEFAULT_COMPANY, ...parsed };
     
+    // Strong protection against empty/dummy legal fields wiping out real business info
+    if (!merged.ice || merged.ice === '000000000000000' || /^0+$/.test(merged.ice)) {
+      merged.ice = DEFAULT_COMPANY.ice;
+    }
+    if (!merged.if_tax || merged.if_tax === '0000000' || /^0+$/.test(merged.if_tax)) {
+      merged.if_tax = DEFAULT_COMPANY.if_tax;
+    }
+    if (!merged.patente || merged.patente === '00000000' || /^0+$/.test(merged.patente)) {
+      merged.patente = DEFAULT_COMPANY.patente;
+    }
+    if (!merged.cnie || merged.cnie === '') {
+      merged.cnie = DEFAULT_COMPANY.cnie;
+    }
+    if (!merged.address || merged.address.trim() === '' || merged.address.includes('Zone Industrielle, Meknès')) {
+      merged.address = DEFAULT_COMPANY.address;
+    }
+    if (!merged.phone || merged.phone.trim() === '') {
+      merged.phone = DEFAULT_COMPANY.phone;
+    }
+    if (!merged.email || merged.email.trim() === '') {
+      merged.email = DEFAULT_COMPANY.email;
+    }
+    if (!merged.rib || merged.rib.trim() === '') {
+      merged.rib = DEFAULT_COMPANY.rib;
+    }
+    if (!merged.bankName || merged.bankName.trim() === '') {
+      merged.bankName = DEFAULT_COMPANY.bankName;
+    }
+    if (!merged.bankBeneficiary || merged.bankBeneficiary.trim() === '') {
+      merged.bankBeneficiary = DEFAULT_COMPANY.bankBeneficiary;
+    }
+    if (!merged.dirigeant || merged.dirigeant.trim() === '') {
+      merged.dirigeant = DEFAULT_COMPANY.dirigeant;
+    }
+
     // Strong fallback: if specific logos are missing or empty, use the main logoUrl
     if (!merged.logoLanding) merged.logoLanding = merged.logoUrl;
     if (!merged.logoAdmin) merged.logoAdmin = merged.logoUrl;
@@ -810,11 +845,10 @@ export function loadCompanyProfile(): CompanyProfile {
       });
     }
 
-    if (needsMigration) {
-      try {
-        safeStorage.setItem('textrack_profile', JSON.stringify(merged));
-      } catch (e) {}
-    }
+    // Always heal local cache so stale empty values never persist
+    try {
+      safeStorage.setItem('textrack_profile', JSON.stringify(merged));
+    } catch (e) {}
 
     return merged;
   } catch (e) {
@@ -824,33 +858,34 @@ export function loadCompanyProfile(): CompanyProfile {
 
 export async function syncCompanyProfile(): Promise<CompanyProfile> {
   try {
-    // 1. Try to find the LATEST system config record in 'leads' table
-    const { data: lData } = await supabase
+    // 1. Direct indexed primary key lookup on leads table (instant ~20ms, zero timeout risk)
+    const { data: mainRec, error } = await supabase
       .from('leads')
       .select('*')
-      .eq('name', '__SYSTEM_CONFIG__')
-      .order('date', { ascending: false })
-      .limit(1);
+      .eq('id', '__SYSTEM_CONFIG_MAIN__')
+      .maybeSingle();
     
-    if (lData && lData.length > 0) {
-      const record = lData[0];
-      if (record.details) {
-        try {
-          const remoteProfile = JSON.parse(record.details) as CompanyProfile;
-          safeStorage.setItem('textrack_profile', JSON.stringify(remoteProfile));
-          return remoteProfile;
-        } catch { /* ignore parse error */ }
-      }
+    if (mainRec && mainRec.details && !error) {
+      try {
+        const remoteProfile = JSON.parse(mainRec.details) as CompanyProfile;
+        const merged = { ...DEFAULT_COMPANY, ...remoteProfile };
+        if (!merged.ice || merged.ice === '000000000000000' || /^0+$/.test(merged.ice)) {
+          merged.ice = DEFAULT_COMPANY.ice;
+        }
+        if (!merged.if_tax || merged.if_tax === '0000000' || /^0+$/.test(merged.if_tax)) {
+          merged.if_tax = DEFAULT_COMPANY.if_tax;
+        }
+        if (!merged.patente || merged.patente === '00000000' || /^0+$/.test(merged.patente)) {
+          merged.patente = DEFAULT_COMPANY.patente;
+        }
+        if (!merged.address || merged.address.trim() === '' || merged.address.includes('Zone Industrielle, Meknès')) {
+          merged.address = DEFAULT_COMPANY.address;
+        }
+        safeStorage.setItem('textrack_profile', JSON.stringify(merged));
+        return merged;
+      } catch { /* ignore parse error */ }
     }
 
-    // 2. Backup: Try standard settings table
-    const { data: sData, error: sError } = await supabase.from('settings').select('*').eq('id', 'company-profile').single();
-    if (sData && !sError) {
-      const remoteProfile = sData.value as CompanyProfile;
-      safeStorage.setItem('textrack_profile', JSON.stringify(remoteProfile));
-      return remoteProfile;
-    }
-    
     return loadCompanyProfile();
   } catch (e) {
     return loadCompanyProfile();
@@ -1951,14 +1986,28 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'> & { id
 }
 
 export async function saveCompanyProfile(profile: CompanyProfile): Promise<void> {
-  console.log("[DEBUG] Saving profile locally...");
-  safeStorage.setItem('textrack_profile', JSON.stringify(profile));
+  const merged = { ...DEFAULT_COMPANY, ...profile };
+  if (!merged.ice || merged.ice === '000000000000000' || /^0+$/.test(merged.ice)) {
+    merged.ice = DEFAULT_COMPANY.ice;
+  }
+  if (!merged.if_tax || merged.if_tax === '0000000' || /^0+$/.test(merged.if_tax)) {
+    merged.if_tax = DEFAULT_COMPANY.if_tax;
+  }
+  if (!merged.patente || merged.patente === '00000000' || /^0+$/.test(merged.patente)) {
+    merged.patente = DEFAULT_COMPANY.patente;
+  }
+  if (!merged.cnie || merged.cnie === '') {
+    merged.cnie = DEFAULT_COMPANY.cnie;
+  }
+  if (!merged.address || merged.address.trim() === '' || merged.address.includes('Zone Industrielle, Meknès')) {
+    merged.address = DEFAULT_COMPANY.address;
+  }
+
+  safeStorage.setItem('textrack_profile', JSON.stringify(merged));
   
-  console.log("[DEBUG] Saving profile to cloud...");
   try {
-    // Save to 'leads' table as a NEW system record every time (guarantees INSERT works if UPDATE is blocked)
     const configLead = {
-      id: genId(), // NEW ID every time
+      id: '__SYSTEM_CONFIG_MAIN__',
       name: '__SYSTEM_CONFIG__',
       phone: '0000',
       ville: 'SYSTEM',
@@ -1966,14 +2015,12 @@ export async function saveCompanyProfile(profile: CompanyProfile): Promise<void>
       quantity: 0,
       status: 'completed',
       date: new Date().toISOString(),
-      details: JSON.stringify(profile)
+      details: JSON.stringify(merged)
     };
     
-    await saveRecord('leads', configLead, false);
-    console.log("[DEBUG] Cloud save success (versioned)!");
+    await supabase.from('leads').upsert(configLead, { onConflict: 'id' });
   } catch (e: any) {
-    console.error("[DEBUG] Cloud save fatal error:", e);
-    alert("⚠️ Erreur fatale : " + e.message);
+    console.error("[saveCompanyProfile] Cloud save error:", e);
   }
 }
 
