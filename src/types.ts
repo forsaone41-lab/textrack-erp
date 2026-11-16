@@ -1430,11 +1430,11 @@ export async function loadClientLeads(user: { nom: string; email?: string; telep
   // 2. Direct REST API fallback (immune to JWT session locks, client timeouts, or browser client issues)
   if (!remoteLeads || remoteLeads.length === 0) {
     try {
-      const url = `https://cyduteruvmpefvemeutm.supabase.co/rest/v1/leads?or=(${encodeURIComponent(orFilter)})&select=${encodeURIComponent(LEADS_COLS)}&order=date.desc`;
+      const url = `https://hoaubgzgyxklhymboisv.supabase.co/rest/v1/leads?or=(${encodeURIComponent(orFilter)})&select=${encodeURIComponent(LEADS_COLS)}&order=date.desc`;
       const res = await fetch(url, {
         headers: {
-          'apikey': 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr',
-          'Authorization': 'Bearer sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr'
+          'apikey': 'sb_publishable_kTiPnxG4GYWqJIjTatvB_A_c3fvydye',
+          'Authorization': 'Bearer sb_publishable_kTiPnxG4GYWqJIjTatvB_A_c3fvydye'
         }
       });
       if (res.ok) {
@@ -1663,11 +1663,11 @@ export async function loadClientCityResolver(existingLeads: Lead[] = []): Promis
     if (!error && Array.isArray(data)) {
       remoteRecords = data as Lead[];
     } else {
-      const url = `https://cyduteruvmpefvemeutm.supabase.co/rest/v1/leads?type=eq.${encodeURIComponent(CLIENT_CITY_LEAD_TYPE)}&select=${encodeURIComponent(CITY_COLS)}&order=date.desc`;
+      const url = `https://hoaubgzgyxklhymboisv.supabase.co/rest/v1/leads?type=eq.${encodeURIComponent(CLIENT_CITY_LEAD_TYPE)}&select=${encodeURIComponent(CITY_COLS)}&order=date.desc`;
       const res = await fetch(url, {
         headers: {
-          'apikey': 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr',
-          'Authorization': 'Bearer sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr'
+          'apikey': 'sb_publishable_kTiPnxG4GYWqJIjTatvB_A_c3fvydye',
+          'Authorization': 'Bearer sb_publishable_kTiPnxG4GYWqJIjTatvB_A_c3fvydye'
         }
       });
       if (res.ok) {
@@ -1752,11 +1752,11 @@ export async function loadLeadPhoto(leadId: string): Promise<string | null> {
 
   // 3. Guaranteed direct REST fetch (bypasses any expired tokens or browser client errors)
   try {
-    const url = `https://cyduteruvmpefvemeutm.supabase.co/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&select=photo,photos`;
+    const url = `https://hoaubgzgyxklhymboisv.supabase.co/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&select=photo,photos`;
     const res = await fetch(url, {
       headers: {
-        'apikey': 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr',
-        'Authorization': 'Bearer sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr'
+        'apikey': 'sb_publishable_kTiPnxG4GYWqJIjTatvB_A_c3fvydye',
+        'Authorization': 'Bearer sb_publishable_kTiPnxG4GYWqJIjTatvB_A_c3fvydye'
       }
     });
     if (res.ok) {
@@ -1809,11 +1809,11 @@ export async function loadLeadPhotos(leadId: string): Promise<{photo: string | n
 
   // Direct REST fetch fallback
   try {
-    const url = `https://cyduteruvmpefvemeutm.supabase.co/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&select=photo,photos`;
+    const url = `https://hoaubgzgyxklhymboisv.supabase.co/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&select=photo,photos`;
     const res = await fetch(url, {
       headers: {
-        'apikey': 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr',
-        'Authorization': 'Bearer sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr'
+        'apikey': 'sb_publishable_kTiPnxG4GYWqJIjTatvB_A_c3fvydye',
+        'Authorization': 'Bearer sb_publishable_kTiPnxG4GYWqJIjTatvB_A_c3fvydye'
       }
     });
     if (res.ok) {
@@ -1893,11 +1893,11 @@ export async function loadLeadPhotosBatch(leadIds: string[]): Promise<Record<str
   const stillMissing = leadIds.filter(id => !map[id]?.photo);
   if (stillMissing.length > 0) {
     try {
-      const url = `https://cyduteruvmpefvemeutm.supabase.co/rest/v1/leads?id=in.(${stillMissing.join(',')})&select=id,photo,photos`;
+      const url = `https://hoaubgzgyxklhymboisv.supabase.co/rest/v1/leads?id=in.(${stillMissing.join(',')})&select=id,photo,photos`;
       const res = await fetch(url, {
         headers: {
-          'apikey': 'sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr',
-          'Authorization': 'Bearer sb_publishable_eDRmxvDKn5SG8tVClxmLUw_AgAQRLzr'
+          'apikey': 'sb_publishable_kTiPnxG4GYWqJIjTatvB_A_c3fvydye',
+          'Authorization': 'Bearer sb_publishable_kTiPnxG4GYWqJIjTatvB_A_c3fvydye'
         }
       });
       if (res.ok) {
