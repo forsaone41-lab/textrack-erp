@@ -13,14 +13,14 @@ import { supabase } from '../supabase';
 
 const DEFAULT_TEMPLATES = {
   ar: {
-    firstContact: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على طلبكم الخاص بـ *{type}*. باش نقدروا نعاونوكم أحسن، واش ممكن تجاوبونا على هاد الأسئلة:\n1. فوقاش محتاجين الطلبية (أقصى أجل)؟\n2. واش نتوما علامة تجارية واجدة (Brand) ولا كتبيعوا في الأنترنيت (E-com) وباغين تصاوبوا الماركة ديالكم؟\n3. واش عندكم التصميم (Logo/Design) واجد؟\n4. واش محتاجين الثوب من عندنا ولا عندكم الثوب ديالكم؟\n\nحنا في الخدمة! 🇲🇦",
-    firstContactRecrutement: "السلام عليكم *{name}*، معاكم مصنع *BEYA CREATIVE* بمكناس. 😊\n\nشفنا الطلب ديالك بخصوص خدمة *{type}*. بغينا غير نتأكدو من بعض المعلومات:\n1. شحال من عام ديال الخبرة عندك فهاد التخصص؟\n2. واش فايت ليك خدمتي فشي معمل ديال الخياطة من قبل؟\n3. واش ساكن(ة) في مكناس أو النواحي؟\n4. فوقاش تقدر تبدا الخدمة معنا يلا تفاهمنا؟\n\nحنا كنتسناو الجواب ديالك باش نحددو معاك موعد ديال لانتريتيان. 🇲🇦",
+    firstContact: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على اهتمامكم بطلبكم الخاص بـ *{type}*.\n\n📍 ورشتنا للإنتاج والتصنيع متواجدة بمدينة **آزرو**، ونضمن التوصيل السريع لجميع مدن المغرب 🇲🇦.\n\n✨ أهم التفاصيل حول طريقة العمل لدينا:\n• **الباتروناج والعينة:** كنصاوبوا الباترون الرقمي بدقة، وكنبداو بـ **عينة أولى (Prototype قطعة واحدة)** باش نتأكدوا مجموعين من القياسات، الفينيسيون، والتوب قبل الإنتاج.\n• **أقل كمية للطلب (MOQ):** 100 قطعة للموديل في الإنتاج التسلسلي (موزعة على المقاسات، وبحد أدنى 20 قطعة في اللون)، والعينة كتبدا من قطعة واحدة فقط.\n• **الأسعار:** كتحدد حسب الموديل، الثوب، وطريقة الفينيسيون المطلوبة.\n\n📸 باش نعطيوكم ثمن مضبوط فـ أقرب وقت، عفاك صيفطوا لينا صورة أو تصميم الموديل مع الكمية التقريبية. نتشرفوا بالخدمة معكم! 🧵",
+    firstContactRecrutement: "السلام عليكم *{name}*، معاكم مصنع *BEYA CREATIVE* بآزرو. 😊\n\nشفنا الطلب ديالك بخصوص خدمة *{type}*. بغينا غير نتأكدو من بعض المعلومات:\n1. شحال من عام ديال الخبرة عندك فهاد التخصص؟\n2. واش فايت ليك خدمتي فشي معمل ديال الخياطة من قبل؟\n3. واش ساكن(ة) في آزرو أو النواحي؟\n4. فوقاش تقدر تبدا الخدمة معنا يلا تفاهمنا؟\n\nحنا كنتسناو الجواب ديالك باش نحددو معاك موعد ديال لانتريتيان. 🇲🇦",
     devisTxt: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nإليكم عرض السعر لطلبكم الخاص بـ *{type}*:\n- الكمية: *{quantity} قطعة*\n- الثمن للقطعة: *{unitPrice} درهم*\n- المجموع الإجمالي: *{total} درهم* {note}\n\n*(ملاحظة: كلما زادت الكمية، ينخفض ثمن القطعة)*\n\nباش نضمنوا الجودة، كنقترحوا نصاوبوا **عينة (Échantillon)** هي الأولى باش نصاوبوا الورقة التقنية. واش نبداو العينة؟ 🧵🇲🇦",
     devisPdf: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nيسعدنا أن نقدم لكم تقدير الثمن الخاص بطلبكم. لقد حرصنا على دراسة طلبكم بعناية لنضمن لكم أفضل جودة لمنتجات *{type}*.\n\nنحن في انتظار تأكيدكم للبدء في العمل. شكراً لثقتكم!"
   },
   fr: {
-    firstContact: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre demande de *{type}*. Pour mieux vous accompagner, pourriez-vous nous préciser :\n1. Quel est votre délai souhaité ?\n2. Êtes-vous une marque établie ou vendez-vous en ligne (E-com) et souhaitez-vous créer votre propre branding ?\n3. Avez-vous déjà le design ou logo prêt ?\n4. Souhaitez-vous que nous fournissions le tissu ou avez-vous déjà le vôtre ?\n\nNous sommes à disposition ! 🇲🇦",
-    firstContactRecrutement: "Bonjour *{name}*, ici l'usine *BEYA CREATIVE* à Meknès. 😊\n\nNous avons bien reçu votre candidature pour le poste de *{type}*. Pour compléter votre dossier, pourriez-vous répondre à ces questions :\n1. Combien d'années d'expérience avez-vous dans ce domaine ?\n2. Avez-vous déjà travaillé dans une usine de confection ?\n3. Habitez-vous à Meknès ou aux alentours ?\n4. Quelle est votre disponibilité pour commencer ?\n\nNous attendons votre retour pour programmer un entretien. 🇲🇦",
+    firstContact: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre demande pour vos *{type}*.\n\n📍 Notre atelier de confection est basé à **Azrou**, avec livraison assurée dans toutes les villes du Maroc 🇲🇦.\n\n✨ Voici les détails essentiels sur notre fonctionnement :\n• **Patronage & Prototype :** Nous concevons le patronage numérique sur-mesure et réalisons d'abord un **prototype de validation (1 pièce)** pour valider la coupe, les finitions et le tombé avant de lancer la série.\n• **Minimum de commande (MOQ) :** À partir de **100 pièces par modèle** pour la série (répartissables sur vos tailles, min 20 pcs/couleur) et à partir de 1 pièce pour le prototype.\n• **Tarifs :** Établis sur-mesure selon le modèle, la matière et les finitions.\n\n📸 Pour vous établir un devis précis et rapide, partagez-nous simplement une photo ou un croquis de votre modèle avec la quantité souhaitée. Au plaisir de collaborer ! 🧵",
+    firstContactRecrutement: "Bonjour *{name}*, ici l'usine *BEYA CREATIVE* à Azrou. 😊\n\nNous avons bien reçu votre candidature pour le poste de *{type}*. Pour compléter votre dossier, pourriez-vous répondre à ces questions :\n1. Combien d'années d'expérience avez-vous dans ce domaine ?\n2. Avez-vous déjà travaillé dans une usine de confection ?\n3. Habitez-vous à Azrou ou aux alentours ?\n4. Quelle est votre disponibilité pour commencer ?\n\nNous attendons votre retour pour programmer un entretien. 🇲🇦",
     devisTxt: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nVoici notre proposition pour votre commande de *{type}* :\n- Quantité : *{quantity} pcs*\n- Prix Unitaire : *{unitPrice} MAD*\n- TOTAL : *{total} MAD* {note}\n\n*(Note : Tarif dégressif selon la quantité)*\n\nPour garantir la qualité, nous suggérons de commencer par un **Échantillon** pour créer la Fiche Technique. On lance l'échantillon ? 🧵🇲🇦",
     devisPdf: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nNous avons le plaisir de vous transmettre votre devis. Nous avons étudié votre demande avec soin pour vous garantir la meilleure qualité pour vos *{type}*.\n\nNous attendons votre confirmation pour lancer la production. Merci de votre confiance !"
   }
@@ -322,6 +322,12 @@ export default function Demandes() {
     try {
       const saved = localStorage.getItem('textrack_msg_templates');
       const parsed = saved ? JSON.parse(saved) : DEFAULT_TEMPLATES;
+      if (parsed?.ar?.firstContact && !parsed.ar.firstContact.includes('آزرو')) {
+        delete parsed.ar.firstContact;
+      }
+      if (parsed?.fr?.firstContact && !parsed.fr.firstContact.includes('Azrou')) {
+        delete parsed.fr.firstContact;
+      }
       // Deep merge with defaults to ensure all keys exist
       return {
         ar: { ...DEFAULT_TEMPLATES.ar, ...(parsed?.ar || {}) },
@@ -4529,9 +4535,9 @@ const getLeadModelisteInfo = (lead: Lead) => {
                 const clientOptions = [
                   {
                     id: 'standard',
-                    title: isAr ? 'رسالة تواصل قياسية' : 'Contact Standard',
-                    icon: <FileText className="w-5 h-5" />,
-                    desc: isAr ? 'الرسالة التي قمت بإعدادها في الإعدادات (تحية + أسئلة)' : 'Le message par défaut configuré dans les paramètres.',
+                    title: isAr ? 'رسالة ترحيبية + الأسئلة الشائعة (آزرو / الباتروناج / أقل كمية)' : 'Accueil Complet & FAQ (Azrou, Patronage, MOQ)',
+                    icon: <FileText className="w-5 h-5 text-emerald-500" />,
+                    desc: isAr ? 'رسالة شاملة تجيب عن: المقر بآزرو، الباتروناج، العينة، وأقل كمية للطلب' : 'Message complet : Atelier à Azrou, Patronage, Prototype 1 pièce et MOQ.',
                     msg: (templates[lang]?.firstContact || DEFAULT_TEMPLATES[lang].firstContact).replace(/{name}/g, contactingLead.name).replace(/{type}/g, cleanType)
                   },
                   {

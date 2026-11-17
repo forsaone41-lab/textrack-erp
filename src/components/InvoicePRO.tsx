@@ -374,7 +374,7 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
         </p>
         <p className="text-[9px] font-bold text-slate-500 mb-1">
           {[
-            company.address && !company.address.includes('Ain Aghbal') ? company.address : 'Casablanca, Maroc',
+            company.address && !company.address.includes('Ain Aghbal') && !company.address.includes('Casablanca') ? company.address : 'Azrou, Maroc',
             company.phone && company.phone !== '0661-50-28-86' ? company.phone : '0624-465962',
             company.email && !company.email.includes('hachami') ? company.email : 'contact@beya.ma',
           ].filter(Boolean).join(' | ')}

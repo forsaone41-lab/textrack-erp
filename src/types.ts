@@ -765,7 +765,7 @@ export const DEFAULT_COMPANY: CompanyProfile = {
   logoLogin: '/logo.png',
   logoMobileHeader: '/logo.png',
   cachetUrl: '',
-  address: 'Casablanca, Maroc',
+  address: 'Azrou, Maroc',
   ice: '',
   rc: '',
   if_tax: '',
@@ -804,8 +804,8 @@ export function loadCompanyProfile(): CompanyProfile {
     if (parsed.cnie && (parsed.cnie.includes('DA13860') || parsed.cnie.includes('DA13'))) {
       parsed.cnie = '';
     }
-    if (parsed.address && (parsed.address.includes('Ain Aghbal') || parsed.address.includes('Azrou'))) {
-      parsed.address = 'Casablanca, Maroc';
+    if (parsed.address && (parsed.address.includes('Ain Aghbal') || parsed.address.includes('Casablanca'))) {
+      parsed.address = 'Azrou, Maroc';
     }
     if (parsed.phone === '0661-50-28-86') {
       parsed.phone = '0624-465962';
@@ -835,8 +835,8 @@ export function loadCompanyProfile(): CompanyProfile {
     if (merged.cnie && (merged.cnie.includes('DA13860') || merged.cnie.includes('DA13'))) {
       merged.cnie = '';
     }
-    if (merged.address && (merged.address.includes('Ain Aghbal') || merged.address.includes('Azrou'))) {
-      merged.address = 'Casablanca, Maroc';
+    if (merged.address && (merged.address.includes('Ain Aghbal') || merged.address.includes('Casablanca'))) {
+      merged.address = 'Azrou, Maroc';
     }
     if (merged.phone === '0661-50-28-86') {
       merged.phone = '0624-465962';
@@ -926,7 +926,7 @@ export async function syncCompanyProfile(): Promise<CompanyProfile> {
         if (merged.if_tax && (merged.if_tax.includes('26008') || merged.if_tax.includes('26008252'))) merged.if_tax = '';
         if (merged.patente && (merged.patente.includes('18604042') || merged.patente.includes('18604'))) merged.patente = '';
         if (merged.cnie && (merged.cnie.includes('DA13860') || merged.cnie.includes('DA13'))) merged.cnie = '';
-        if (merged.address && (merged.address.includes('Ain Aghbal') || merged.address.includes('Azrou'))) merged.address = 'Casablanca, Maroc';
+        if (merged.address && (merged.address.includes('Ain Aghbal') || merged.address.includes('Casablanca'))) merged.address = 'Azrou, Maroc';
         if (merged.dirigeant && merged.dirigeant.toLowerCase().includes('hachami')) merged.dirigeant = '';
         if (merged.email && merged.email.includes('hachami')) merged.email = 'contact@beya.ma';
         if (merged.phone === '0661-50-28-86') merged.phone = '0624-465962';
@@ -2044,7 +2044,7 @@ export async function saveCompanyProfile(profile: CompanyProfile): Promise<void>
   if (merged.if_tax && (merged.if_tax.includes('26008') || merged.if_tax.includes('26008252'))) merged.if_tax = '';
   if (merged.patente && (merged.patente.includes('18604042') || merged.patente.includes('18604'))) merged.patente = '';
   if (merged.cnie && (merged.cnie.includes('DA13860') || merged.cnie.includes('DA13'))) merged.cnie = '';
-  if (merged.address && (merged.address.includes('Ain Aghbal') || merged.address.includes('Azrou'))) merged.address = 'Casablanca, Maroc';
+  if (merged.address && (merged.address.includes('Ain Aghbal') || merged.address.includes('Casablanca'))) merged.address = 'Azrou, Maroc';
   if (merged.email && merged.email.includes('hachami')) merged.email = 'contact@beya.ma';
   if (merged.phone === '0661-50-28-86') merged.phone = '0624-465962';
   if (merged.regimeFiscal && merged.regimeFiscal.includes('Auto-Entrepreneur')) merged.regimeFiscal = 'Atelier de Confection Textile';
