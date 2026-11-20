@@ -3920,9 +3920,31 @@ const getLeadModelisteInfo = (lead: Lead) => {
                                     <span>{isAr ? 'مؤكد' : 'Validé'}</span>
                                   </span>
                                   {lead.commercialConfirmedBy && (
-                                    <div className="inline-flex items-center gap-1 h-7.5 px-2 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-900 text-[10px] font-bold shadow-2xs" title={isAr ? `تم التأكيد بواسطة: ${lead.commercialConfirmedBy}` : `Confirmé par : ${lead.commercialConfirmedBy}`}>
+                                    <div className="inline-flex items-center gap-1.5 h-7.5 px-2 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-900 text-[10px] font-bold shadow-2xs" title={isAr ? `تم التأكيد بواسطة: ${lead.commercialConfirmedBy}` : `Confirmé par : ${lead.commercialConfirmedBy}`}>
                                       <UserCheck className="w-3 h-3 text-indigo-600" />
                                       <span className="max-w-[85px] truncate">{lead.commercialConfirmedBy}</span>
+
+                                      {/* Tissu condition badge */}
+                                      {lead.intentType !== 'consultation' && (
+                                        <span className={`px-1.5 py-0.2 rounded text-[8.5px] font-black border ${
+                                          lead.commercialCheckTissuValide 
+                                            ? 'bg-purple-100 text-purple-800 border-purple-200' 
+                                            : 'bg-rose-50 text-rose-600 border-rose-200'
+                                        }`} title={lead.commercialCheckTissuValide ? 'تم الاتفاق مع مورد الثوب والسلعة' : 'لم يتم الاتفاق مع مورد الثوب بعد'}>
+                                          {lead.commercialCheckTissuValide ? '✓ السلعة جاهزة' : '⚠️ السلعة؟'}
+                                        </span>
+                                      )}
+
+                                      {/* Avance condition badge */}
+                                      <span className={`px-1.5 py-0.2 rounded text-[8.5px] font-black border ${
+                                        lead.commercialCheckAvanceRecue 
+                                          ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                                          : 'bg-amber-100 text-amber-800 border-amber-200'
+                                      }`} title={lead.commercialCheckAvanceRecue ? `تم استلام التسبيق: ${lead.commercialAvanceMontant || 0} د.م` : 'في انتظار تحويل التسبيق البنكي'}>
+                                        {lead.commercialCheckAvanceRecue ? `✓ تسبيق: ${lead.commercialAvanceMontant || 0} د.م` : '⏳ بدون تسبيق'}
+                                      </span>
+
+                                      {/* Commission Action Pill */}
                                       {lead.commercialCommission !== undefined ? (
                                         <button
                                           type="button"
@@ -3936,11 +3958,19 @@ const getLeadModelisteInfo = (lead: Lead) => {
                                           title={isAr ? 'انقر لتبديل حالة دفع العمولة (معلقة / مدفوعة)' : 'Cliquer pour changer le statut de paiement'}
                                           className={`px-1.5 py-0.2 rounded text-[9px] font-black cursor-pointer border transition-all ${
                                             lead.commercialCommissionStatus === 'payee'
-                                              ? 'bg-emerald-600 text-white border-emerald-700'
-                                              : 'bg-amber-500 text-white border-amber-600'
+                                              ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                                              : lead.commercialCommissionStatus === 'avance_recue'
+                                                ? 'bg-blue-600 text-white border-blue-700 shadow-2xs'
+                                                : 'bg-amber-500 text-white border-amber-600'
                                           }`}
                                         >
-                                          {lead.commercialCommission} د.م ({lead.commercialCommissionStatus === 'payee' ? (isAr ? 'مدفوعة' : 'Payée') : (isAr ? 'معلقة' : 'En attente')})
+                                          {lead.commercialCommission} د.م ({
+                                            lead.commercialCommissionStatus === 'payee' 
+                                              ? (isAr ? 'مدفوعة ✓' : 'Payée') 
+                                              : lead.commercialCommissionStatus === 'avance_recue'
+                                                ? (isAr ? 'مستحقة 🎯' : 'Prête')
+                                                : (isAr ? 'معلقة ⏳' : 'En attente')
+                                          })
                                         </button>
                                       ) : null}
                                     </div>

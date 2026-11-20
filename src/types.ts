@@ -750,7 +750,11 @@ export interface Lead {
   commercialConfirmedBy?: string;
   commercialConfirmedAt?: string;
   commercialCommission?: number;
-  commercialCommissionStatus?: 'en_attente' | 'payee';
+  commercialCommissionStatus?: 'en_attente' | 'avance_recue' | 'payee';
+  commercialCheckClientValide?: boolean;
+  commercialCheckTissuValide?: boolean;
+  commercialCheckAvanceRecue?: boolean;
+  commercialAvanceMontant?: number;
   reponseAtelier?: string;
   reponseAtelierDate?: string;
   statusProgression?: 'reception' | 'etude' | 'echantillon' | 'production' | 'pret';
@@ -1376,6 +1380,10 @@ export function parseLeadMeta(l: any): Lead {
           if (parsed.commercialConfirmedAt) item.commercialConfirmedAt = parsed.commercialConfirmedAt;
           if (parsed.commercialCommission !== undefined) item.commercialCommission = Number(parsed.commercialCommission);
           if (parsed.commercialCommissionStatus) item.commercialCommissionStatus = parsed.commercialCommissionStatus;
+          if (parsed.commercialCheckClientValide !== undefined) item.commercialCheckClientValide = !!parsed.commercialCheckClientValide;
+          if (parsed.commercialCheckTissuValide !== undefined) item.commercialCheckTissuValide = !!parsed.commercialCheckTissuValide;
+          if (parsed.commercialCheckAvanceRecue !== undefined) item.commercialCheckAvanceRecue = !!parsed.commercialCheckAvanceRecue;
+          if (parsed.commercialAvanceMontant !== undefined) item.commercialAvanceMontant = Number(parsed.commercialAvanceMontant);
         }
       } catch (e) {
         console.error('Error parsing ATELIER_DEVIS:', e);
@@ -1963,6 +1971,10 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'> & { id
   if ((newLead as any).commercialConfirmedAt) atelierData.commercialConfirmedAt = (newLead as any).commercialConfirmedAt;
   if ((newLead as any).commercialCommission !== undefined) atelierData.commercialCommission = Number((newLead as any).commercialCommission);
   if ((newLead as any).commercialCommissionStatus) atelierData.commercialCommissionStatus = (newLead as any).commercialCommissionStatus;
+  if ((newLead as any).commercialCheckClientValide !== undefined) atelierData.commercialCheckClientValide = !!(newLead as any).commercialCheckClientValide;
+  if ((newLead as any).commercialCheckTissuValide !== undefined) atelierData.commercialCheckTissuValide = !!(newLead as any).commercialCheckTissuValide;
+  if ((newLead as any).commercialCheckAvanceRecue !== undefined) atelierData.commercialCheckAvanceRecue = !!(newLead as any).commercialCheckAvanceRecue;
+  if ((newLead as any).commercialAvanceMontant !== undefined) atelierData.commercialAvanceMontant = Number((newLead as any).commercialAvanceMontant);
 
   if ((newLead as any).commercialUnlocked) {
     baseDetails += '| COM_UNLOCK:true';
@@ -1986,7 +1998,8 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'> & { id
     'aiNotes', 'commercialUnlocked', 'modeleReel', 'unitPrice', 'totalPrice',
     'tissuSuggere', 'techDetails', 'delaiEstime', 'statusProgression',
     'reponseAtelier', 'reponseAtelierDate', 'patronagePrice', 'prixEchantillon',
-    'intentType', 'commercialConfirmedBy', 'commercialConfirmedAt', 'commercialCommission', 'commercialCommissionStatus'
+    'intentType', 'commercialConfirmedBy', 'commercialConfirmedAt', 'commercialCommission', 'commercialCommissionStatus',
+    'commercialCheckClientValide', 'commercialCheckTissuValide', 'commercialCheckAvanceRecue', 'commercialAvanceMontant'
   ];
   nonSchemaCols.forEach(col => delete supaPayload[col]);
 
@@ -2205,6 +2218,10 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     if (payload.commercialConfirmedAt) atelierData.commercialConfirmedAt = payload.commercialConfirmedAt;
     if (payload.commercialCommission !== undefined) atelierData.commercialCommission = Number(payload.commercialCommission);
     if (payload.commercialCommissionStatus) atelierData.commercialCommissionStatus = payload.commercialCommissionStatus;
+    if (payload.commercialCheckClientValide !== undefined) atelierData.commercialCheckClientValide = !!payload.commercialCheckClientValide;
+    if (payload.commercialCheckTissuValide !== undefined) atelierData.commercialCheckTissuValide = !!payload.commercialCheckTissuValide;
+    if (payload.commercialCheckAvanceRecue !== undefined) atelierData.commercialCheckAvanceRecue = !!payload.commercialCheckAvanceRecue;
+    if (payload.commercialAvanceMontant !== undefined) atelierData.commercialAvanceMontant = Number(payload.commercialAvanceMontant);
 
     if (Object.keys(atelierData).length > 0) {
       baseDetails += '| ATELIER_DEVIS:' + JSON.stringify(atelierData);
@@ -2232,6 +2249,10 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     delete payload.commercialConfirmedAt;
     delete payload.commercialCommission;
     delete payload.commercialCommissionStatus;
+    delete payload.commercialCheckClientValide;
+    delete payload.commercialCheckTissuValide;
+    delete payload.commercialCheckAvanceRecue;
+    delete payload.commercialAvanceMontant;
   }
 
   try {

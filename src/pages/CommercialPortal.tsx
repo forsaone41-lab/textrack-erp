@@ -192,6 +192,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const commissionStats = useMemo(() => {
     let totalCommissions = 0;
     let payees = 0;
+    let avanceRecue = 0;
     let enAttente = 0;
 
     myConfirmedLeads.forEach(l => {
@@ -201,6 +202,8 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
       totalCommissions += comm;
       if (l.commercialCommissionStatus === 'payee') {
         payees += comm;
+      } else if (l.commercialCommissionStatus === 'avance_recue' || (l.commercialCheckAvanceRecue && l.commercialCheckTissuValide)) {
+        avanceRecue += comm;
       } else {
         enAttente += comm;
       }
@@ -209,6 +212,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
     return {
       totalCommissions,
       payees,
+      avanceRecue,
       enAttente,
       confirmedCount: myConfirmedLeads.length
     };
@@ -223,6 +227,20 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
         ? Number(editForm.commercialCommission) 
         : (selectedLead.commercialCommission !== undefined ? selectedLead.commercialCommission : defaultComm);
 
+      // Determine commission status based on business conditions:
+      let commStatus: 'en_attente' | 'avance_recue' | 'payee' = (selectedLead.commercialCommissionStatus as any) || 'en_attente';
+      if (selectedLead.commercialCommissionStatus !== 'payee') {
+        const isProd = (editForm.intentType || selectedLead.intentType || 'production') === 'production';
+        if (isProd) {
+          // Conditions: Client Validé + Tissu & Fournisseur Validé + Avance Payée
+          const fullyReady = !!editForm.commercialCheckClientValide && !!editForm.commercialCheckTissuValide && !!editForm.commercialCheckAvanceRecue;
+          commStatus = fullyReady ? 'avance_recue' : 'en_attente';
+        } else {
+          // Consultation: Fee / Avance Payée
+          commStatus = editForm.commercialCheckAvanceRecue ? 'avance_recue' : 'en_attente';
+        }
+      }
+
       const updatedLead: Lead = { 
         ...selectedLead, 
         ...editForm, 
@@ -231,8 +249,12 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
           commercialConfirmedBy: currentUser?.nom || currentUser?.email || 'Commercial',
           commercialConfirmedAt: new Date().toISOString(),
           commercialCommission: finalComm,
-          commercialCommissionStatus: (selectedLead.commercialCommissionStatus || 'en_attente') as any,
-          intentType: editForm.intentType || selectedLead.intentType || 'production'
+          commercialCommissionStatus: commStatus,
+          intentType: editForm.intentType || selectedLead.intentType || 'production',
+          commercialCheckClientValide: !!editForm.commercialCheckClientValide,
+          commercialCheckTissuValide: !!editForm.commercialCheckTissuValide,
+          commercialCheckAvanceRecue: !!editForm.commercialCheckAvanceRecue,
+          commercialAvanceMontant: Number(editForm.commercialAvanceMontant || 0)
         } : {})
       };
 
@@ -263,7 +285,11 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
       crmNotes: lead.crmNotes,
       intentType: intent,
       commercialCommission: lead.commercialCommission !== undefined ? lead.commercialCommission : (intent === 'consultation' ? 50 : 150),
-      commercialCommissionStatus: lead.commercialCommissionStatus || 'en_attente'
+      commercialCommissionStatus: lead.commercialCommissionStatus || 'en_attente',
+      commercialCheckClientValide: lead.commercialCheckClientValide !== undefined ? lead.commercialCheckClientValide : true,
+      commercialCheckTissuValide: lead.commercialCheckTissuValide !== undefined ? lead.commercialCheckTissuValide : false,
+      commercialCheckAvanceRecue: lead.commercialCheckAvanceRecue !== undefined ? lead.commercialCheckAvanceRecue : false,
+      commercialAvanceMontant: lead.commercialAvanceMontant || 0
     });
   };
 
@@ -670,24 +696,38 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
             </div>
 
             {/* Sub-breakdown */}
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
-              <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3 border-t border-slate-100">
+              <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3">
                 <span className="text-[10px] font-bold uppercase text-emerald-800 tracking-wider flex items-center gap-1">
                   <CheckCircle className="w-3 h-3 text-emerald-600" />
-                  {isAr ? 'تم صرفها (مدفوعة)' : 'Payée'}
+                  {isAr ? 'مستحقة (جاهزة للصرف)' : 'Prête (Avance OK)'}
                 </span>
                 <p className="text-xl font-black text-emerald-700 mt-0.5">
-                  {commissionStats.payees.toLocaleString()} <span className="text-xs font-bold">MAD</span>
+                  {commissionStats.avanceRecue.toLocaleString()} <span className="text-xs font-bold">MAD</span>
                 </p>
+                <p className="text-[9px] text-emerald-600 font-medium">{isAr ? 'الزبون دوز التسبيق ومول السلعة جاهز' : 'Avance reçue & fournisseur prêt'}</p>
               </div>
-              <div className="bg-amber-50/70 border border-amber-100 rounded-2xl p-3">
+
+              <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-3">
                 <span className="text-[10px] font-bold uppercase text-amber-800 tracking-wider flex items-center gap-1">
                   <Clock className="w-3 h-3 text-amber-600" />
-                  {isAr ? 'قيد المعالجة (معلقة)' : 'En attente'}
+                  {isAr ? 'بانتظار التسبيق / السلعة' : 'En attente d\'avance'}
                 </span>
                 <p className="text-xl font-black text-amber-700 mt-0.5">
                   {commissionStats.enAttente.toLocaleString()} <span className="text-xs font-bold">MAD</span>
                 </p>
+                <p className="text-[9px] text-amber-600 font-medium">{isAr ? 'في انتظار تحويل التسبيق وتأكيد الثوب' : 'En attente du virement / tissu'}</p>
+              </div>
+
+              <div className="bg-indigo-50/80 border border-indigo-200 rounded-2xl p-3">
+                <span className="text-[10px] font-bold uppercase text-indigo-800 tracking-wider flex items-center gap-1">
+                  <CheckCheck className="w-3 h-3 text-indigo-600" />
+                  {isAr ? 'تم صرفها (مدفوعة)' : 'Payée'}
+                </span>
+                <p className="text-xl font-black text-indigo-700 mt-0.5">
+                  {commissionStats.payees.toLocaleString()} <span className="text-xs font-bold">MAD</span>
+                </p>
+                <p className="text-[9px] text-indigo-600 font-medium">{isAr ? 'تم تحويلها لحسابك بنجاح' : 'Versée sur votre compte'}</p>
               </div>
             </div>
 
@@ -749,6 +789,37 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                           <span>•</span>
                           <span>{lead.type}</span>
                           {lead.quantity ? <span>({lead.quantity} pcs)</span> : null}
+                        </div>
+
+                        {/* Checklist conditions badges */}
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-black border ${
+                            lead.commercialCheckClientValide !== false
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : 'bg-slate-50 text-slate-500 border-slate-200'
+                          }`}>
+                            {lead.commercialCheckClientValide !== false ? '✓ الزبون وافق' : '⚠️ بانتظار موافقة الزبون'}
+                          </span>
+
+                          {!isConsult && (
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-black border ${
+                              lead.commercialCheckTissuValide
+                                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                : 'bg-rose-50 text-rose-700 border-rose-200'
+                            }`}>
+                              {lead.commercialCheckTissuValide ? '✓ مول السلعة متفق' : '⚠️ تواصل مع مول السلعة'}
+                            </span>
+                          )}
+
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-black border ${
+                            lead.commercialCheckAvanceRecue
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                              : 'bg-amber-50 text-amber-800 border-amber-300'
+                          }`}>
+                            {lead.commercialCheckAvanceRecue 
+                              ? `✓ التسبيق واصل (${lead.commercialAvanceMontant || 0} د.م)` 
+                              : '⏳ بانتظار وصل التسبيق'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -923,6 +994,95 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                       />
                     </div>
                   </div>
+                </div>
+
+                {/* ── شروط استحقاق العمولة والتحقق (Checklist d'Éligibilité) ── */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h5 className="text-[11px] font-black uppercase text-slate-800 tracking-wider flex items-center gap-1.5">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      {isAr ? 'شروط استحقاق العمولة (Checklist)' : 'Conditions d\'Éligibilité de la Commission'}
+                    </h5>
+                    <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                      ((editForm.intentType === 'consultation' && editForm.commercialCheckAvanceRecue) ||
+                       (editForm.commercialCheckClientValide && editForm.commercialCheckTissuValide && editForm.commercialCheckAvanceRecue))
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                        : 'bg-amber-100 text-amber-800 border-amber-300'
+                    }`}>
+                      {((editForm.intentType === 'consultation' && editForm.commercialCheckAvanceRecue) ||
+                       (editForm.commercialCheckClientValide && editForm.commercialCheckTissuValide && editForm.commercialCheckAvanceRecue))
+                        ? (isAr ? '✓ جاهزة ومستحقة للصرف' : 'Prête au paiement')
+                        : (isAr ? '⏳ بانتظار التسبيق / السلعة' : 'En attente')}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    {/* Check 1: Client Validation */}
+                    <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:bg-slate-100/60 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={!!editForm.commercialCheckClientValide}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, commercialCheckClientValide: e.target.checked }))}
+                        className="w-4 h-4 mt-0.5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                      />
+                      <div className="flex-1">
+                        <p className="font-bold text-slate-800">{isAr ? '1. الزبون وافق على الموديل والدوفيز (Client Validé)' : '1. Accord Client sur le devis & modèle'}</p>
+                        <p className="text-[10px] text-slate-500">{isAr ? 'تأكيد عدد القطع والمواصفات النهائية' : 'Quantité et détails confirmés avec le client'}</p>
+                      </div>
+                    </label>
+
+                    {/* Check 2: Tissu & Fournisseur (for production) */}
+                    {editForm.intentType !== 'consultation' && (
+                      <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:bg-slate-100/60 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={!!editForm.commercialCheckTissuValide}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, commercialCheckTissuValide: e.target.checked }))}
+                          className="w-4 h-4 mt-0.5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                        />
+                        <div className="flex-1">
+                          <p className="font-bold text-slate-800">{isAr ? '2. الاتفاق على الثوب والتواصل مع مول السلعة (Tissu Dispo)' : '2. Contact avec le fournisseur de tissu & mercerie'}</p>
+                          <p className="text-[10px] text-slate-500">{isAr ? 'تم التحقق من نوع الثوب وتوفره عند المورد ومول السلعة جاهز' : 'Matière première validée et disponible chez le fournisseur'}</p>
+                        </div>
+                      </label>
+                    )}
+
+                    {/* Check 3: Avance Bancaire */}
+                    <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:bg-slate-100/60 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={!!editForm.commercialCheckAvanceRecue}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, commercialCheckAvanceRecue: e.target.checked }))}
+                        className="w-4 h-4 mt-0.5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
+                      />
+                      <div className="flex-1">
+                        <p className="font-bold text-slate-800">{isAr ? '3. الزبون دوز التسبيق واستلام وصل التحويل (Avance Reçue)' : '3. Reçu de virement / avance bancaire reçu'}</p>
+                        <p className="text-[10px] text-slate-500">{isAr ? 'تم استلام صورة التحويل البنكي لحساب الورشة' : 'Avance validée sur le compte bancaire'}</p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Avance amount input if checked */}
+                  {editForm.commercialCheckAvanceRecue && (
+                    <div className="pt-1">
+                      <label className="block text-[10px] font-black text-emerald-800 uppercase tracking-wider mb-1">
+                        {isAr ? 'مبلغ التسبيق المستلم (درهم):' : 'Montant de l\'avance reçue (MAD) :'}
+                      </label>
+                      <input
+                        type="number"
+                        value={editForm.commercialAvanceMontant || ''}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, commercialAvanceMontant: Number(e.target.value) }))}
+                        placeholder={editForm.intentType === 'consultation' ? '250' : 'مثلاً: 1500'}
+                        className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-sm font-black text-emerald-900 focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                      />
+                    </div>
+                  )}
+
+                  <p className="text-[9.5px] text-slate-500 font-bold leading-relaxed pt-1">
+                    {isAr 
+                      ? '⚠️ تذكير: عمولة 150 درهم لا تُصرف إلا بعد الاتفاق مع مول السلعة على الثوب ودخول تسبيق الزبون في الحساب البنكي.'
+                      : '⚠️ Rappel : La commission est versée uniquement après confirmation du tissu auprès du fournisseur et encaissement de l\'avance.'}
+                  </p>
                 </div>
 
                 <div>
