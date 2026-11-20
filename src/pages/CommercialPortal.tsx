@@ -538,6 +538,19 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                                     <CheckCircle className="w-3 h-3" /> {isAr ? 'مؤكد' : 'Validé'}
                                   </span>
                                 )}
+                                {req.commercialRecuPhoto && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setPreviewImage(req.commercialRecuPhoto || null);
+                                    }}
+                                    className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                                    title={isAr ? 'عرض وصل الفيرمون' : 'Voir le reçu de virement'}
+                                  >
+                                    📸 {isAr ? 'وصل الفيرمون' : 'Reçu Virement'}
+                                  </button>
+                                )}
                               </div>
                               
                               {/* New Project Details Tags */}

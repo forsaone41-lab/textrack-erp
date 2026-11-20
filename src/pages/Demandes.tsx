@@ -307,7 +307,8 @@ export default function Demandes() {
     commercialCheckClientValide: true,
     commercialCheckTissuValide: false,
     commercialCheckAvanceRecue: false,
-    commercialAvanceMontant: 0
+    commercialAvanceMontant: 0,
+    commercialRecuPhoto: ''
   });
 
   const openCommissionModal = (lead: Lead) => {
@@ -320,7 +321,8 @@ export default function Demandes() {
       commercialCheckClientValide: lead.commercialCheckClientValide !== undefined ? lead.commercialCheckClientValide : true,
       commercialCheckTissuValide: lead.commercialCheckTissuValide !== undefined ? lead.commercialCheckTissuValide : false,
       commercialCheckAvanceRecue: lead.commercialCheckAvanceRecue !== undefined ? lead.commercialCheckAvanceRecue : false,
-      commercialAvanceMontant: lead.commercialAvanceMontant || 0
+      commercialAvanceMontant: lead.commercialAvanceMontant || 0,
+      commercialRecuPhoto: lead.commercialRecuPhoto || ''
     });
   };
 
@@ -337,6 +339,7 @@ export default function Demandes() {
         commercialCheckTissuValide: !!commissionForm.commercialCheckTissuValide,
         commercialCheckAvanceRecue: !!commissionForm.commercialCheckAvanceRecue,
         commercialAvanceMontant: Number(commissionForm.commercialAvanceMontant || 0),
+        commercialRecuPhoto: commissionForm.commercialRecuPhoto || '',
         crmStage: 'confirme'
       };
       setLeads(prev => prev.map(l => l.id === updated.id ? updated : l));
@@ -2923,6 +2926,66 @@ const getLeadModelisteInfo = (lead: Lead) => {
                     />
                   </div>
                 )}
+
+                {/* Reçu de Virement Preview / Upload */}
+                <div className="pt-2 pl-6">
+                  {commissionForm.commercialRecuPhoto ? (
+                    <div className="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                      <img 
+                        src={commissionForm.commercialRecuPhoto} 
+                        alt="Reçu" 
+                        className="w-12 h-12 object-cover rounded-lg border border-slate-300 cursor-pointer shadow-2xs hover:opacity-90"
+                        onClick={() => setPreviewPhoto(commissionForm.commercialRecuPhoto)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[11px] font-bold text-slate-800 flex items-center gap-1">
+                          ✓ {isAr ? 'وصل التحويل البنكي مرفوع' : 'Reçu de virement joint'}
+                        </span>
+                        <div className="flex gap-3 mt-1 text-[10px] font-bold">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewPhoto(commissionForm.commercialRecuPhoto)}
+                            className="text-indigo-600 hover:underline cursor-pointer"
+                          >
+                            👁️ {isAr ? 'معاينة بالحجم الكامل' : 'Agrandir'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCommissionForm({ ...commissionForm, commercialRecuPhoto: '' })}
+                            className="text-rose-500 hover:underline cursor-pointer"
+                          >
+                            ✕ {isAr ? 'حذف' : 'Supprimer'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="flex items-center gap-2 p-2.5 rounded-xl border border-dashed border-slate-300 hover:border-indigo-400 bg-white cursor-pointer transition-colors text-xs text-slate-600 font-bold">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            const base64 = await compressImage(file, 1200, 0.8);
+                            setCommissionForm(prev => ({ 
+                              ...prev, 
+                              commercialRecuPhoto: base64,
+                              commercialCheckAvanceRecue: true 
+                            }));
+                          } catch (err) {
+                            console.error(err);
+                          }
+                          e.target.value = '';
+                        }}
+                      />
+                      <Upload className="w-4 h-4 text-indigo-600" />
+                      <span>{isAr ? 'إرفاق صورة وصل الفيرمون (Reçu)' : 'Joindre le reçu de virement'}</span>
+                    </label>
+                  )}
+                </div>
               </div>
 
               {/* Status Selector */}
@@ -4209,6 +4272,21 @@ const getLeadModelisteInfo = (lead: Lead) => {
                                       }`} title={lead.commercialCheckAvanceRecue ? `تم استلام التسبيق: ${lead.commercialAvanceMontant || 0} د.م` : 'في انتظار تحويل التسبيق البنكي'}>
                                         {lead.commercialCheckAvanceRecue ? `✓ تسبيق: ${lead.commercialAvanceMontant || 0} د.م` : '⏳ بدون تسبيق'}
                                       </span>
+
+                                      {/* Reçu Virement Pill */}
+                                      {lead.commercialRecuPhoto && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setPreviewPhoto(lead.commercialRecuPhoto || null);
+                                          }}
+                                          className="px-1.5 py-0.2 rounded text-[8.5px] font-black bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                                          title={isAr ? 'عرض صورة وصل التحويل البنكي' : 'Voir le reçu de virement'}
+                                        >
+                                          📸 {isAr ? 'وصل الفيرمون' : 'Reçu'}
+                                        </button>
+                                      )}
 
                                       {/* Commission Action Pill */}
                                       {lead.commercialCommission !== undefined ? (
