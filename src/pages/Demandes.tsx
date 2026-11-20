@@ -291,6 +291,55 @@ export default function Demandes() {
   const [expandedDetails, setExpandedDetails] = useState<string[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
+  // Commercial Commission Manager state (التحكم في عمولة التجاري وتعديل المبلغ)
+  const [commissionModalLead, setCommissionModalLead] = useState<Lead | null>(null);
+  const [commissionForm, setCommissionForm] = useState({
+    commercialConfirmedBy: '',
+    commercialCommission: 150,
+    commercialCommissionStatus: 'en_attente' as 'en_attente' | 'avance_recue' | 'payee',
+    commercialCheckClientValide: true,
+    commercialCheckTissuValide: false,
+    commercialCheckAvanceRecue: false,
+    commercialAvanceMontant: 0
+  });
+
+  const openCommissionModal = (lead: Lead) => {
+    setCommissionModalLead(lead);
+    const defComm = lead.intentType === 'consultation' ? 50 : 150;
+    setCommissionForm({
+      commercialConfirmedBy: lead.commercialConfirmedBy || (currentUser?.nom || 'Commercial'),
+      commercialCommission: lead.commercialCommission !== undefined ? lead.commercialCommission : defComm,
+      commercialCommissionStatus: (lead.commercialCommissionStatus as any) || 'en_attente',
+      commercialCheckClientValide: lead.commercialCheckClientValide !== undefined ? lead.commercialCheckClientValide : true,
+      commercialCheckTissuValide: lead.commercialCheckTissuValide !== undefined ? lead.commercialCheckTissuValide : false,
+      commercialCheckAvanceRecue: lead.commercialCheckAvanceRecue !== undefined ? lead.commercialCheckAvanceRecue : false,
+      commercialAvanceMontant: lead.commercialAvanceMontant || 0
+    });
+  };
+
+  const handleSaveCommission = async () => {
+    if (!commissionModalLead) return;
+    try {
+      const updated: Lead = {
+        ...commissionModalLead,
+        commercialConfirmedBy: commissionForm.commercialConfirmedBy || commissionModalLead.commercialConfirmedBy || 'Commercial',
+        commercialConfirmedAt: commissionModalLead.commercialConfirmedAt || new Date().toISOString(),
+        commercialCommission: Number(commissionForm.commercialCommission),
+        commercialCommissionStatus: commissionForm.commercialCommissionStatus,
+        commercialCheckClientValide: !!commissionForm.commercialCheckClientValide,
+        commercialCheckTissuValide: !!commissionForm.commercialCheckTissuValide,
+        commercialCheckAvanceRecue: !!commissionForm.commercialCheckAvanceRecue,
+        commercialAvanceMontant: Number(commissionForm.commercialAvanceMontant || 0),
+        crmStage: 'confirme'
+      };
+      setLeads(prev => prev.map(l => l.id === updated.id ? updated : l));
+      await saveRecord('leads', updated, true);
+      setCommissionModalLead(null);
+    } catch (e: any) {
+      alert(isAr ? 'حدث خطأ أثناء حفظ العمولة' : 'Erreur lors de l\'enregistrement');
+    }
+  };
+
   const modelistes = useMemo(() => users.filter(u => u.role === 'modeliste'), [users]);
   const [patronageModalLead, setPatronageModalLead] = useState<Lead | null>(null);
   const [patronageModelisteId, setPatronageModelisteId] = useState<string>('');
@@ -2722,6 +2771,216 @@ const getLeadModelisteInfo = (lead: Lead) => {
         );
       })()}
 
+      {/* Commercial Commission Manager Modal (التحكم في عمولة التجاري وتعديل المبلغ) */}
+      {commissionModalLead && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
+          <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-7 max-w-xl w-full shadow-2xl border border-slate-100 relative my-4 sm:my-8">
+            <button
+              onClick={() => setCommissionModalLead(null)}
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 sm:gap-4 mb-5">
+              <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 text-2xl font-black shrink-0">
+                💰
+              </div>
+              <div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  {isAr ? 'التحكم في عمولة التجاري' : 'Gestion Commission Commercial'}
+                </h3>
+                <p className="text-slate-500 font-bold text-xs mt-0.5">
+                  {isAr ? 'تحديد وتعديل مبلغ العمولة وشروط الصرف في أي وقت' : 'Fixer ou modifier la commission et vérifier les conditions'}
+                </p>
+              </div>
+            </div>
+
+            {/* Client summary */}
+            <div className="bg-slate-50 rounded-2xl p-4 mb-5 border border-slate-100 flex items-center justify-between text-xs">
+              <div>
+                <span className="text-slate-400 font-bold block text-[10px] uppercase">{isAr ? 'الزبون' : 'Client'}</span>
+                <span className="font-black text-slate-900 text-sm">{commissionModalLead.name}</span>
+                <span className="text-slate-500 block text-[11px]">{commissionModalLead.type}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-400 font-bold block text-[10px] uppercase">{isAr ? 'الكمية' : 'Quantité'}</span>
+                <span className="font-black text-indigo-600 text-sm">{commissionModalLead.quantity || 1} pcs</span>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-6 text-xs">
+              {/* Commercial Name */}
+              <div>
+                <label className="block font-black text-slate-700 mb-1.5 uppercase text-[11px]">
+                  {isAr ? 'اسم التجاري / المؤكد (Confirmateur)' : 'Nom du commercial'}
+                </label>
+                <input
+                  type="text"
+                  value={commissionForm.commercialConfirmedBy}
+                  onChange={e => setCommissionForm({ ...commissionForm, commercialConfirmedBy: e.target.value })}
+                  placeholder="Ex: Mohamed, Amine, ..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold outline-none focus:border-amber-500 transition-colors"
+                />
+              </div>
+
+              {/* Commission Amount with Quick Presets */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block font-black text-slate-700 uppercase text-[11px]">
+                    {isAr ? 'مبلغ العمولة (درهم مغربي MAD)' : 'Montant de la commission (MAD)'}
+                  </label>
+                  <span className="text-amber-600 font-black text-xs">
+                    {commissionForm.commercialCommission} DH
+                  </span>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="10"
+                  value={commissionForm.commercialCommission}
+                  onChange={e => setCommissionForm({ ...commissionForm, commercialCommission: Number(e.target.value) || 0 })}
+                  className="w-full bg-amber-50/50 border-2 border-amber-300 rounded-xl p-3 text-lg font-black text-amber-900 outline-none focus:border-amber-500 transition-colors"
+                />
+                {/* Presets */}
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  <span className="text-[10px] text-slate-400 font-bold self-center mr-1">{isAr ? 'تغيير سريع:' : 'Presets:'}</span>
+                  {[0, 50, 80, 100, 120, 150, 200].map(amt => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setCommissionForm({ ...commissionForm, commercialCommission: amt })}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                        commissionForm.commercialCommission === amt
+                          ? 'bg-amber-500 text-slate-950 scale-105 shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {amt} DH
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3 Conditions Checklist */}
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 space-y-2.5">
+                <span className="block font-black text-amber-900 text-xs uppercase mb-1">
+                  {isAr ? '📋 شروط استحقاق العمولة (Checklist):' : 'Conditions de validation :'}
+                </span>
+
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={commissionForm.commercialCheckClientValide}
+                    onChange={e => setCommissionForm({ ...commissionForm, commercialCheckClientValide: e.target.checked })}
+                    className="w-4 h-4 rounded text-amber-600 accent-amber-500 cursor-pointer"
+                  />
+                  <span className="font-bold text-slate-800">
+                    {isAr ? '1. الزبون وافق على الموديل، السعر والوقت' : '1. Accord Client sur modèle & prix'}
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={commissionForm.commercialCheckTissuValide}
+                    onChange={e => setCommissionForm({ ...commissionForm, commercialCheckTissuValide: e.target.checked })}
+                    className="w-4 h-4 rounded text-amber-600 accent-amber-500 cursor-pointer"
+                  />
+                  <span className="font-bold text-slate-800">
+                    {isAr ? '2. الاتفاق مع مورد الثوب / السلعة والتأكد من توفره' : '2. Contact Fournisseur tissu/mercerie fait & stock OK'}
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={commissionForm.commercialCheckAvanceRecue}
+                    onChange={e => setCommissionForm({ ...commissionForm, commercialCheckAvanceRecue: e.target.checked })}
+                    className="w-4 h-4 rounded text-amber-600 accent-amber-500 cursor-pointer"
+                  />
+                  <span className="font-bold text-slate-800">
+                    {isAr ? '3. الزبون حوّل التسبيق (Avance Bancaire مستلمة)' : '3. Avance bancaire versée par le client'}
+                  </span>
+                </label>
+
+                {commissionForm.commercialCheckAvanceRecue && (
+                  <div className="pt-2 pl-6 flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-slate-600">{isAr ? 'مبلغ التسبيق المستلم (MAD):' : 'Montant avance:'}</span>
+                    <input
+                      type="number"
+                      value={commissionForm.commercialAvanceMontant || ''}
+                      onChange={e => setCommissionForm({ ...commissionForm, commercialAvanceMontant: Number(e.target.value) || 0 })}
+                      placeholder="Ex: 1000"
+                      className="w-28 bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-black outline-none focus:border-amber-500"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Status Selector */}
+              <div>
+                <label className="block font-black text-slate-700 mb-1.5 uppercase text-[11px]">
+                  {isAr ? 'حالة العمولة (Statut)' : 'Statut de la commission'}
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCommissionForm({ ...commissionForm, commercialCommissionStatus: 'en_attente' })}
+                    className={`py-2 px-2 rounded-xl text-center font-black transition-all cursor-pointer ${
+                      commissionForm.commercialCommissionStatus === 'en_attente'
+                        ? 'bg-amber-500 text-slate-950 shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    ⏳ {isAr ? 'معلقة' : 'En attente'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCommissionForm({ ...commissionForm, commercialCommissionStatus: 'avance_recue' })}
+                    className={`py-2 px-2 rounded-xl text-center font-black transition-all cursor-pointer ${
+                      commissionForm.commercialCommissionStatus === 'avance_recue'
+                        ? 'bg-emerald-500 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    🎯 {isAr ? 'مستحقة' : 'Prête'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCommissionForm({ ...commissionForm, commercialCommissionStatus: 'payee' })}
+                    className={`py-2 px-2 rounded-xl text-center font-black transition-all cursor-pointer ${
+                      commissionForm.commercialCommissionStatus === 'payee'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    ✓ {isAr ? 'مدفوعة' : 'Payée'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setCommissionModalLead(null)}
+                className="flex-1 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-bold text-slate-600 text-xs transition-colors cursor-pointer"
+              >
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveCommission}
+                className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-md hover:shadow-lg transition-all cursor-pointer"
+              >
+                {isAr ? 'حفظ وتأكيد العمولة ✓' : 'Enregistrer la commission ✓'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Custom Confirmation Modal */}
       {confirmLead && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
@@ -4130,6 +4389,22 @@ const getLeadModelisteInfo = (lead: Lead) => {
                                     className="w-8 h-8 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition-colors cursor-pointer"
                                   >
                                     <MessageSquare className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                {/* Commercial Commission quick button */}
+                                {!lead.type.startsWith('RECRUTEMENT:') && (
+                                  <button
+                                    type="button"
+                                    onClick={() => openCommissionModal(lead)}
+                                    title={isAr ? 'التحكم في عمولة التجاري وتعديل المبلغ' : 'Gérer la commission commercial'}
+                                    className={`h-8 px-2 rounded-lg text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
+                                      lead.commercialCommission !== undefined
+                                        ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
+                                        : 'text-slate-500 hover:text-amber-700 hover:bg-amber-50'
+                                    }`}
+                                  >
+                                    <span>💰</span>
+                                    <span className="text-[11px] font-black">{lead.commercialCommission !== undefined ? `${lead.commercialCommission} DH` : (isAr ? 'عمولة' : 'Comm.')}</span>
                                   </button>
                                 )}
                                 <button 
