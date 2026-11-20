@@ -755,6 +755,7 @@ export interface Lead {
   commercialCheckTissuValide?: boolean;
   commercialCheckAvanceRecue?: boolean;
   commercialAvanceMontant?: number;
+  commercialRecuPhoto?: string;
   reponseAtelier?: string;
   reponseAtelierDate?: string;
   statusProgression?: 'reception' | 'etude' | 'echantillon' | 'production' | 'pret';
@@ -1384,6 +1385,7 @@ export function parseLeadMeta(l: any): Lead {
           if (parsed.commercialCheckTissuValide !== undefined) item.commercialCheckTissuValide = !!parsed.commercialCheckTissuValide;
           if (parsed.commercialCheckAvanceRecue !== undefined) item.commercialCheckAvanceRecue = !!parsed.commercialCheckAvanceRecue;
           if (parsed.commercialAvanceMontant !== undefined) item.commercialAvanceMontant = Number(parsed.commercialAvanceMontant);
+          if (parsed.commercialRecuPhoto) item.commercialRecuPhoto = parsed.commercialRecuPhoto;
         }
       } catch (e) {
         console.error('Error parsing ATELIER_DEVIS:', e);
@@ -1975,6 +1977,7 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'> & { id
   if ((newLead as any).commercialCheckTissuValide !== undefined) atelierData.commercialCheckTissuValide = !!(newLead as any).commercialCheckTissuValide;
   if ((newLead as any).commercialCheckAvanceRecue !== undefined) atelierData.commercialCheckAvanceRecue = !!(newLead as any).commercialCheckAvanceRecue;
   if ((newLead as any).commercialAvanceMontant !== undefined) atelierData.commercialAvanceMontant = Number((newLead as any).commercialAvanceMontant);
+  if ((newLead as any).commercialRecuPhoto) atelierData.commercialRecuPhoto = (newLead as any).commercialRecuPhoto;
 
   if ((newLead as any).commercialUnlocked) {
     baseDetails += '| COM_UNLOCK:true';
@@ -1999,7 +2002,8 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'> & { id
     'tissuSuggere', 'techDetails', 'delaiEstime', 'statusProgression',
     'reponseAtelier', 'reponseAtelierDate', 'patronagePrice', 'prixEchantillon',
     'intentType', 'commercialConfirmedBy', 'commercialConfirmedAt', 'commercialCommission', 'commercialCommissionStatus',
-    'commercialCheckClientValide', 'commercialCheckTissuValide', 'commercialCheckAvanceRecue', 'commercialAvanceMontant'
+    'commercialCheckClientValide', 'commercialCheckTissuValide', 'commercialCheckAvanceRecue', 'commercialAvanceMontant',
+    'commercialRecuPhoto'
   ];
   nonSchemaCols.forEach(col => delete supaPayload[col]);
 
@@ -2222,6 +2226,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     if (payload.commercialCheckTissuValide !== undefined) atelierData.commercialCheckTissuValide = !!payload.commercialCheckTissuValide;
     if (payload.commercialCheckAvanceRecue !== undefined) atelierData.commercialCheckAvanceRecue = !!payload.commercialCheckAvanceRecue;
     if (payload.commercialAvanceMontant !== undefined) atelierData.commercialAvanceMontant = Number(payload.commercialAvanceMontant);
+    if (payload.commercialRecuPhoto) atelierData.commercialRecuPhoto = payload.commercialRecuPhoto;
 
     if (Object.keys(atelierData).length > 0) {
       baseDetails += '| ATELIER_DEVIS:' + JSON.stringify(atelierData);
@@ -2253,6 +2258,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     delete payload.commercialCheckTissuValide;
     delete payload.commercialCheckAvanceRecue;
     delete payload.commercialAvanceMontant;
+    delete payload.commercialRecuPhoto;
   }
 
   try {

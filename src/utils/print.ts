@@ -508,7 +508,27 @@ export function cleanMeasurementName(raw: string, isAr: boolean): string {
   if (!raw) return isAr ? 'نقطة القياس' : 'Point de Mesure';
   const low = raw.toLowerCase();
 
-  if (low.includes('poitrine') || low.includes('صدر') || low.includes('buste') || low.includes('chest')) {
+  // Peplum & Bootcut specific points first to prevent false matches with 'buste' or 'longueur'
+  if (low.includes('peplum') || low.includes('كشكشة') || low.includes('basque')) {
+    return isAr ? 'طول البيبلوم / الكشكشة (Hauteur Peplum)' : 'Hauteur Peplum / Basque';
+  }
+  if (low.includes('buste') || low.includes('كورساج') || (low.includes('hauteur') && low.includes('taille'))) {
+    return isAr ? 'طول الصدر / الكورساج (Hauteur Buste)' : 'Hauteur Buste / Corsage';
+  }
+  if (low.includes('entrejambe') || low.includes('داخل الساق') || low.includes('حجر')) {
+    return isAr ? 'طول داخل الساق (Entrejambe)' : 'Longueur Entrejambe';
+  }
+  if (low.includes('bootcut') || (low.includes('bas') && low.includes('jambe') && low.includes('بوت'))) {
+    return isAr ? 'عرض أسفل الساق بوت كات (Bas Bootcut)' : 'Largeur Bas Bootcut';
+  }
+  if (low.includes('zip') || low.includes('سحاب') || low.includes('سنسلة')) {
+    return isAr ? 'طول السحاب النصفي (Demi-Zip)' : 'Longueur Demi-Zip';
+  }
+  if (low.includes('genou') || low.includes('ركبة')) {
+    return isAr ? 'عرض الركبة (Largeur Genou)' : 'Largeur Genou';
+  }
+
+  if (low.includes('poitrine') || low.includes('صدر') || low.includes('chest')) {
     return isAr ? 'محيط الصدر' : 'Tour de Poitrine';
   }
   if (low.includes('épaules') || low.includes('epaule') || low.includes('كتف') || low.includes('carrure') || low.includes('shoulder')) {

@@ -213,6 +213,13 @@ export function getLeadIntentType(lead: Lead): 'production' | 'consultation' {
 export default function Demandes() {
   const { isAr } = useLang();
   const navigate = useNavigate();
+  const currentUser: User = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('textrack_auth') || '{}');
+    } catch {
+      return {} as User;
+    }
+  }, []);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [tissus, setTissus] = useState<StockTissu[]>([]);

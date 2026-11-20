@@ -136,6 +136,27 @@ export const CATEGORY_MESURES: Record<
       { nom: 'الورك (Hanches)', valeurs: { S: 100, M: 104, L: 108, XL: 112, XXL: 116 } },
       { nom: 'الطول الكامل (Longueur)', valeurs: { S: 140, M: 142, L: 144, XL: 146, XXL: 148 } },
       { nom: 'طول الكم (Manche)', valeurs: { S: 59, M: 60, L: 61, XL: 62, XXL: 63 } }
+    ],
+    EnsembleSportModeste: [
+      { nom: 'دورة الصدر (Tour de Poitrine)', valeurs: { S: 88, M: 92, L: 98, XL: 104, XXL: 110 } },
+      { nom: 'دورة الخصر (Tour de Taille)', valeurs: { S: 70, M: 74, L: 80, XL: 86, XXL: 92 } },
+      { nom: 'دورة الحوض / الورك (Tour de Bassin / Hanches)', valeurs: { S: 94, M: 98, L: 104, XL: 110, XXL: 116 } },
+      { nom: 'طول التونيك الإجمالي (Longueur Tunique)', valeurs: { S: 72, M: 74, L: 76, XL: 78, XXL: 80 } },
+      { nom: 'طول الصدر / الكورساج (Hauteur Buste)', valeurs: { S: 39, M: 40, L: 41, XL: 42, XXL: 43 } },
+      { nom: 'طول البيبلوم / الكشكشة (Hauteur Peplum)', valeurs: { S: 33, M: 34, L: 35, XL: 36, XXL: 37 } },
+      { nom: 'عرض الكتفين (Largeur Épaules)', valeurs: { S: 37, M: 38.5, L: 40, XL: 41.5, XXL: 43 } },
+      { nom: 'طول الكم بوفانت مع البواني (Longueur Manche)', valeurs: { S: 59, M: 60, L: 61, XL: 62, XXL: 62.5 } },
+      { nom: 'ارتفاع الياقة كول أوفيسييه (Hauteur Col Montant)', valeurs: { S: 4.5, M: 4.5, L: 4.5, XL: 5, XXL: 5 } },
+      { nom: 'طول السحاب النصفي (Demi-Zip)', valeurs: { S: 22, M: 22, L: 24, XL: 24, XXL: 25 } }
+    ],
+    PantalonBootcut: [
+      { nom: 'الخصر المطاطي (Taille Élastiquée)', valeurs: { S: 68, M: 72, L: 78, XL: 84, XXL: 90 } },
+      { nom: 'الورك / الحوض (Hanches / Bassin)', valeurs: { S: 94, M: 98, L: 104, XL: 110, XXL: 116 } },
+      { nom: 'الطول الإجمالي الخارجي (Longueur Totale)', valeurs: { S: 102, M: 104, L: 106, XL: 107, XXL: 108 } },
+      { nom: 'طول داخل الساق (Longueur Entrejambe)', valeurs: { S: 76, M: 77, L: 78, XL: 78.5, XXL: 79 } },
+      { nom: 'محيط الفخذ (Tour de Cuisse)', valeurs: { S: 54, M: 56, L: 59, XL: 62, XXL: 65 } },
+      { nom: 'عرض الركبة (Largeur Genou)', valeurs: { S: 21, M: 22, L: 23, XL: 24, XXL: 25 } },
+      { nom: 'عرض أسفل الساق بوت كات (Bas Bootcut)', valeurs: { S: 24, M: 25, L: 26, XL: 27, XXL: 28 } }
     ]
   },
   enfant_garcon: {
@@ -229,6 +250,28 @@ export function getStandardMesuresForCategory(
     : (gender === 'femmes' ? 'adulte_femme' : 'adulte_homme');
   const pDict = CATEGORY_MESURES[profileKey] || CATEGORY_MESURES.adulte_homme;
   const low = (pieceName || '').toLowerCase();
+
+  // 0a. Ensemble Sport Modeste / Tunique Peplum / Tennis Sportswear
+  if (
+    low.includes('peplum') ||
+    low.includes('بيبلوم') ||
+    low.includes('sport modeste') ||
+    low.includes('سبور مستور') ||
+    low.includes('tunique') ||
+    low.includes('تونيك') ||
+    low.includes('tennis') ||
+    low.includes('تنس')
+  ) {
+    if (low.includes('pantalon') || low.includes('bootcut') || low.includes('سروال') || low.includes('bas')) {
+      return JSON.parse(JSON.stringify(CATEGORY_MESURES.adulte_femme.PantalonBootcut || CATEGORY_MESURES.adulte_femme.Pantalon));
+    }
+    return JSON.parse(JSON.stringify(CATEGORY_MESURES.adulte_femme.EnsembleSportModeste));
+  }
+
+  // 0b. Bootcut / Évasé Pants
+  if (low.includes('bootcut') || low.includes('بوتكات') || low.includes('évasé') || low.includes('evase')) {
+    return JSON.parse(JSON.stringify(CATEGORY_MESURES.adulte_femme.PantalonBootcut || CATEGORY_MESURES.adulte_femme.Pantalon));
+  }
 
   // 0. Crop Top / Top Fitté / Top Manches Longues Rib
   if (low.includes('crop') || low.includes('rib') || (low.includes('top') && !low.includes('pantalon') && !low.includes('bas'))) {
@@ -389,6 +432,37 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
     { nom: 'طول الكم مع البواني (Manche + Bord-Côte)', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } },
     { nom: 'ارتفاع الكابوش (Hauteur Capuche)', valeurs: { S: 36, M: 37, L: 38, XL: 39, XXL: 40 } },
     { nom: 'عرض الحاشية السفلية (1/2 Bas Bord-Côte)', valeurs: { S: 46, M: 49, L: 52, XL: 55, XXL: 58 } }
+  ],
+  EnsembleSportModeste: [
+    { nom: 'دورة الصدر (Tour de Poitrine)', valeurs: { S: 88, M: 92, L: 98, XL: 104, XXL: 110 } },
+    { nom: 'دورة الخصر (Tour de Taille)', valeurs: { S: 70, M: 74, L: 80, XL: 86, XXL: 92 } },
+    { nom: 'دورة الحوض / الورك (Tour de Bassin / Hanches)', valeurs: { S: 94, M: 98, L: 104, XL: 110, XXL: 116 } },
+    { nom: 'طول التونيك الإجمالي (Longueur Tunique)', valeurs: { S: 72, M: 74, L: 76, XL: 78, XXL: 80 } },
+    { nom: 'طول الصدر / الكورساج (Hauteur Buste)', valeurs: { S: 39, M: 40, L: 41, XL: 42, XXL: 43 } },
+    { nom: 'طول البيبلوم / الكشكشة (Hauteur Peplum)', valeurs: { S: 33, M: 34, L: 35, XL: 36, XXL: 37 } },
+    { nom: 'عرض الكتفين (Largeur Épaules)', valeurs: { S: 37, M: 38.5, L: 40, XL: 41.5, XXL: 43 } },
+    { nom: 'طول الكم بوفانت مع البواني (Longueur Manche)', valeurs: { S: 59, M: 60, L: 61, XL: 62, XXL: 62.5 } },
+    { nom: 'ارتفاع الياقة كول أوفيسييه (Hauteur Col Montant)', valeurs: { S: 4.5, M: 4.5, L: 4.5, XL: 5, XXL: 5 } },
+    { nom: 'طول السحاب النصفي (Demi-Zip)', valeurs: { S: 22, M: 22, L: 24, XL: 24, XXL: 25 } }
+  ],
+  TuniquePeplum: [
+    { nom: 'دورة الصدر (Tour de Poitrine)', valeurs: { S: 88, M: 92, L: 98, XL: 104, XXL: 110 } },
+    { nom: 'دورة الخصر (Tour de Taille)', valeurs: { S: 70, M: 74, L: 80, XL: 86, XXL: 92 } },
+    { nom: 'دورة الحوض / الورك (Tour de Bassin / Hanches)', valeurs: { S: 94, M: 98, L: 104, XL: 110, XXL: 116 } },
+    { nom: 'طول التونيك الإجمالي (Longueur Tunique)', valeurs: { S: 72, M: 74, L: 76, XL: 78, XXL: 80 } },
+    { nom: 'طول الصدر / الكورساج (Hauteur Buste)', valeurs: { S: 39, M: 40, L: 41, XL: 42, XXL: 43 } },
+    { nom: 'طول البيبلوم / الكشكشة (Hauteur Peplum)', valeurs: { S: 33, M: 34, L: 35, XL: 36, XXL: 37 } },
+    { nom: 'عرض الكتفين (Largeur Épaules)', valeurs: { S: 37, M: 38.5, L: 40, XL: 41.5, XXL: 43 } },
+    { nom: 'طول الكم بوفانت مع البواني (Longueur Manche)', valeurs: { S: 59, M: 60, L: 61, XL: 62, XXL: 62.5 } }
+  ],
+  PantalonBootcut: [
+    { nom: 'الخصر المطاطي (Taille Élastiquée)', valeurs: { S: 68, M: 72, L: 78, XL: 84, XXL: 90 } },
+    { nom: 'الورك / الحوض (Hanches / Bassin)', valeurs: { S: 94, M: 98, L: 104, XL: 110, XXL: 116 } },
+    { nom: 'الطول الإجمالي الخارجي (Longueur Totale)', valeurs: { S: 102, M: 104, L: 106, XL: 107, XXL: 108 } },
+    { nom: 'طول داخل الساق (Longueur Entrejambe)', valeurs: { S: 76, M: 77, L: 78, XL: 78.5, XXL: 79 } },
+    { nom: 'محيط الفخذ (Tour de Cuisse)', valeurs: { S: 54, M: 56, L: 59, XL: 62, XXL: 65 } },
+    { nom: 'عرض الركبة (Largeur Genou)', valeurs: { S: 21, M: 22, L: 23, XL: 24, XXL: 25 } },
+    { nom: 'عرض أسفل الساق بوت كات (Bas Bootcut)', valeurs: { S: 24, M: 25, L: 26, XL: 27, XXL: 28 } }
   ]
 };
 
@@ -999,8 +1073,25 @@ function buildFallbackAnalysis(
     (text.includes('trench') && text.includes('palazzo') && text.includes('top'))
   );
 
+  // Sport Modeste Peplum 2 Pieces (Tunique Peplum Évasée Demi-Zip + Pantalon Bootcut)
+  const isSportModestePeplum = (
+    text.includes('sport_modeste') ||
+    text.includes('peplum') ||
+    text.includes('بيبلوم') ||
+    text.includes('sport modeste') ||
+    text.includes('سبور مستور') ||
+    text.includes('tunique') ||
+    text.includes('تونيك') ||
+    text.includes('bootcut') ||
+    text.includes('بوتكات') ||
+    text.includes('tennis') ||
+    text.includes('تنس') ||
+    (text.includes('sport') && (text.includes('femme') || text.includes('voil') || text.includes('hijab') || text.includes('كشكشة') || text.includes('حزام')))
+  );
+
   // 2 Pieces Sportswear Tracksuit (Sweatshirt Col Rond / Hoodie + Pantalon Jogging)
   const isSurvet2Pieces = (
+    !isSportModestePeplum &&
     forcePiecesCount !== 1 &&
     !isThreePieces && (
       forcePiecesCount === 2 ||
@@ -1066,7 +1157,82 @@ function buildFallbackAnalysis(
     (text.includes('veste') || text.includes('jacket') || text.includes('jakit') || text.includes('فيست') || text.includes('جاكيت'))
   );
 
-  if (isVesteCasual) {
+  if (isSportModestePeplum) {
+    pieceName = isAr
+      ? 'طقم رياضي مستور قطعتين (تونيك بيبلوم بسحاب نصفي + سروال بوتكات)'
+      : 'Ensemble Sport Modeste 2 Pièces (Tunique Peplum Demi-Zip + Pantalon Bootcut)';
+
+    const mesuresTunique = getStandardMesuresForCategory('EnsembleSportModeste', audience, gender);
+    const mesuresBootcut = getStandardMesuresForCategory('PantalonBootcut', audience, gender);
+
+    piecesList = [
+      {
+        name: isAr ? 'تونيك سبور بيبلوم بكشكشة كلوش وسحاب نصفي (Tunique Peplum Sport)' : 'Tunique Sport Peplum Évasée avec Demi-Zip & Manches Ballon',
+        consumption: '1.45m',
+        fit: isAr ? 'مخصر بحزام خلفي وكشكشة كلوش واسعة ساترة (Coupe Cintrée & Peplum Évasé)' : 'Coupe Cintrée Peplum Évasé & Manches Froncées',
+        complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
+        costEstimate: '48 - 65 MAD',
+        components: isAr ? [
+          'صدر أمامي بلونين متناسقين مع سحاب نصفي 22 سم وياقة كول أوفيسييه مرتفعة',
+          'قصة برنسيس أنيقة مع كشكشة بوفانت في قبة الكتف (Manches Ballon Froncées)',
+          'أكمام طويلة ضيقة مع أساور بواني مريحة',
+          'تنورة بيبلوم سفلية كلوش واسعة ساترة للورك ومريحة في الحركة الرياضية',
+          'شريطا ربط خلفيان لضبط التخصير بدقة وسهولة حسب الرغبة (Cordons dos à nouer)',
+          'ظهر مستقيم مع درزة مركزية داعمة وشريط نظافة داخلي'
+        ] : [
+          'Devant bicolore avec empiècement contrasté et demi-zip métal 22cm',
+          'Col montant officier moderne',
+          'Manches longues ajustées avec fronces aux épaules (effet princesse bouffante)',
+          'Basque peplum corolle évasée et couvrante',
+          'Liens de cintrage au dos à nouer pour ajustement sur-mesure',
+          'Dos droit avec découpes princesse et finitions soignées'
+        ],
+        fabricSuggested: isAr ? 'مولتون سكوبا مطاطي ناعم 260 GSM (Molleton Scuba Crêpe Stretch)' : 'Molleton Scuba Crêpe Stretch 260 GSM',
+        fabricAlternatives: [
+          {
+            name: isAr ? 'إنترلوك دبل فيس ليكرا 280g' : 'Interlock Coton Élasthanne 280 GSM',
+            pros: isAr ? 'وجهان ناعمان ونسبة قطن طبيعي أعلى وملمس فاخر' : 'Toucher doux double face, riche en coton',
+            cons: isAr ? 'أثقل وزناً وسعر الكيلو أعلى' : 'Plus lourd et coût supérieur'
+          },
+          {
+            name: isAr ? 'فرينش تيري مطاطي 290g' : 'French Terry Stretch 290 GSM',
+            pros: isAr ? 'خفيف ومرن ومناسب لجميع فصول السنة' : 'Respirant et confortable',
+            cons: isAr ? 'أقل تماسكاً في كشكشة البيبلوم مقارنة بالسكوبا' : 'Moins de tenue sur le volume peplum'
+          }
+        ],
+        mesures: mesuresTunique
+      },
+      {
+        name: isAr ? 'سروال رياضي بقصة بوت كات مريحة (Pantalon Bootcut Sport)' : 'Pantalon Sport Coupe Bootcut Évasée au Bas',
+        consumption: '1.25m',
+        fit: isAr ? 'محدد عند الفخذين وواسع ابتداء من الركبة (Coupe Bootcut / Évasée)' : 'Coupe Bootcut Ajustée Cuisse & Évasée Bas',
+        complexity: isAr ? 'متوسطة' : 'Moyenne',
+        costEstimate: '35 - 48 MAD',
+        components: isAr ? [
+          'رجلين أمامية وخلفية بقصة بوت كات منسدلة أنيقة',
+          'حزام خصر مطاطي عريض مريح 4 سم مع درزات متوازية تمنع التواء اللاستيك',
+          'ثنية أسفل الساق واسعة ومتقونة بآلة الروكوفروز 2 إبر',
+          'حجر مريح مدعم يسمح بحرية الحركة والرياضة',
+          'درزات جانبية مقواة بخيط بوليستر عالي المتانة'
+        ] : [
+          'Jambes coupe bootcut ajustées aux cuisses et évasées vers le bas',
+          'Ceinture élastiquée confortable 4cm avec surpiqûres anti-torsion',
+          'Ourlet bas large double aiguille recouvreuse',
+          'Fourche renforcée grand confort pour activité sportive',
+          'Assemblage 4 fils haute résistance'
+        ],
+        fabricSuggested: isAr ? 'مولتون سكوبا مطاطي مطابق للتونيك 260 GSM' : 'Molleton Scuba Crêpe Stretch 260 GSM (Assorti)',
+        fabricAlternatives: [
+          {
+            name: isAr ? 'إنترلوك ليكرا مطابق 280g' : 'Interlock Coton Élasthanne Assorti',
+            pros: isAr ? 'مطاطية طبيعية ومقاومة للتمدد المستمر' : 'Très bonne récupération élastique',
+            cons: isAr ? 'أثقل قليلاً' : 'Plus dense'
+          }
+        ],
+        mesures: mesuresBootcut
+      }
+    ];
+  } else if (isVesteCasual) {
     const isBrandebourg = text.includes('brandebourg') || text.includes('officier') || text.includes('mao') || text.includes('matelass') || text.includes('ecru') || text.includes('écru') || text.includes('chinois') || text.includes('laine') || text.includes('drap');
     pieceName = isBrandebourg
       ? (isAr ? 'جاكيت عصرية كول أوفيسييه وأزرار براندبورغ (Veste Col Officier)' : 'Veste Col Officier & Boutonnage Brandebourg')
@@ -2355,11 +2521,14 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     await startAnalysis(image, imageFileName);
   };
 
-  const applyPiecePreset = (preset: 'veste_brandebourg' | 'veste_casual' | 'denim_veste' | 'survet_2_pieces' | 'sweatshirt' | 'jogging' | 'tshirt' | 'robe_chemise' | 'abaya' | 'caftan' | 'chemise' | 'pantalon' | 'hoodie' | '3_pieces' | '2_pieces' | 1 | 2 | 3) => {
+  const applyPiecePreset = (preset: 'veste_brandebourg' | 'veste_casual' | 'denim_veste' | 'survet_2_pieces' | 'sweatshirt' | 'jogging' | 'tshirt' | 'robe_chemise' | 'abaya' | 'caftan' | 'chemise' | 'pantalon' | 'hoodie' | 'sport_modeste' | '3_pieces' | '2_pieces' | 1 | 2 | 3) => {
     let ctx = '';
     let count: number | undefined = undefined;
 
-    if (preset === 'veste_brandebourg') {
+    if (preset === 'sport_modeste') {
+      ctx = 'ensemble sport modeste peplum tunique zippee bicolore manches ballon pantalon bootcut evase scuba';
+      count = 2;
+    } else if (preset === 'veste_brandebourg') {
       ctx = 'veste col officier boutonnage brandebourgs nœuds chinois drap de laine écru doublure satinée جاكيت كول أوفيسييه بأزرار براندبورغ';
       count = 1;
     } else if (preset === 'veste_casual') {
@@ -4237,27 +4406,85 @@ Tapez '1' pour le hoodie, '2' pour le jogging, ou 'KML' pour la gamme complète 
         : `🏃‍♂️ Détails Survêtement 2 pièces : Hoodie + Jogging en Molleton 320g. Consommation : ~3.10m. Coût de revient complet : ~124 MAD.`;
     }
 
-    // 6. Handling Sizes / المقاسات / Tailles
-    if (/(taille|tailles|mesure|mesures|مقاس|مقاسات|طاي|قياس|قياسات|gradation|جدول)/i.test(m)) {
-      return speakAr
-        ? `📐 جدول المقاسات القياسي للطقم الرياضي (S, M, L, XL, XXL) بالسنتيمتر (cm):
+    // 6. MEASUREMENTS & GRADATION BARÈME (3bar / l3bar / Mesures / Barème / Tailles AR & FR)
+    if (
+      /(3bar|l3bar|l-3bar|3barat|3tini.*3bar|mesure|mesures|bareme|barème|tableau.*mesure|mensuration|mensurations|tableau.*taille|قياس|قياسات|مقاس|مقاسات|جدول.*القياسات|طابلو.*العبار|طابلو.*القياس|طابلو.*المقاسات|عبارات|العبار|عبار|size.*chart|chart.*taille|gradation|tailles)/i.test(m)
+    ) {
+      const isPeplumOrSportModeste =
+        /(peplum|بيبلوم|sport.*modeste|سبور.*مستور|tunique|تونيك|bootcut|بوتكات|tennis|تنس)/i.test(m) ||
+        !analysisResult ||
+        /(peplum|بيبلوم|sport.*modeste|tunique|bootcut|scuba)/i.test(analysisResult?.category || '') ||
+        (analysisResult?.pieces && analysisResult.pieces.some((p: any) => /(peplum|tunique|bootcut)/i.test(p.name || '')));
 
-🧥 1. مقاسات الهودي (Hoodie):
-• S: الصدر 56cm | الطول 68cm | الكم 62cm
-• M: الصدر 59cm | الطول 71cm | الكم 64cm
-• L: الصدر 62cm | الطول 73cm | الكم 66cm
-• XL: الصدر 65cm | الطول 76cm | الكم 68cm
-• XXL: الصدر 68cm | الطول 78cm | الكم 70cm
+      if (isPeplumOrSportModeste) {
+        setTimeout(() => applyPiecePreset('sport_modeste'), 100);
+        return `📏 **جدول القياسات والمقاسات بالتدقيق (S إلى XXL) — ثنائي اللغة (Arabe & Français)**
+📐 **Tableau & Barème Officiel des Mesures (Gradation S à XXL) :**
 
-👖 2. مقاسات السروال (Jogging):
-• S: الخصر (عادي/ممدد) 36/46cm | الحوض 52cm | الطول 98cm
-• M: الخصر (عادي/ممدد) 38/49cm | الحوض 55cm | الطول 101cm
-• L: الخصر (عادي/ممدد) 40/52cm | الحوض 58cm | الطول 104cm
-• XL: الخصر (عادي/ممدد) 42/55cm | الحوض 61cm | الطول 106cm
-• XXL: الخصر (عادي/ممدد) 45/58cm | الحوض 64cm | الطول 108cm`
-        : `📐 Tableau des tailles Survêtement (S à XXL) en cm :
-• Hoodie : Longueur S:68, M:71, L:73, XL:76 | Poitrine S:56, M:59, L:62, XL:65.
-• Jogging : Longueur S:98, M:101, L:104, XL:106 | Bassin S:52, M:55, L:58, XL:61.`;
+---
+
+### 👚 1. التونيك الرياضية بيبلوم (Tunique Peplum Sport Bicolore)
+*طقم رياضي مستور بسحاب نصفي وأكمام بوفانت وكشكشة بيبلوم كلوش (Scuba 260 GSM)*
+
+| نقطة القياس (Point de Mesure) | S (36) | M (38) | L (40) | XL (42) | XXL (44) | التفاوت (Tolérance) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **دورة الصدر (Tour de Poitrine)** | 88 cm | 92 cm | 98 cm | 104 cm | 110 cm | ± 1.0 cm |
+| **دورة الخصر (Tour de Taille)** | 70 cm | 74 cm | 80 cm | 86 cm | 92 cm | ± 1.0 cm |
+| **دورة الحوض / الورك (Tour de Bassin / Hanches)** | 94 cm | 98 cm | 104 cm | 110 cm | 116 cm | ± 1.0 cm |
+| **طول التونيك الإجمالي (Longueur Tunique)** | 72 cm | 74 cm | 76 cm | 78 cm | 80 cm | ± 1.0 cm |
+| **طول الصدر / الكورساج (Hauteur Buste)** | 39 cm | 40 cm | 41 cm | 42 cm | 43 cm | ± 0.5 cm |
+| **طول البيبلوم / الكشكشة (Hauteur Peplum)** | 33 cm | 34 cm | 35 cm | 36 cm | 37 cm | ± 0.5 cm |
+| **عرض الكتفين (Largeur Épaules)** | 37 cm | 38.5 cm | 40 cm | 41.5 cm | 43 cm | ± 0.5 cm |
+| **طول الكم مع البواني (Longueur Manche + Poignet)** | 59 cm | 60 cm | 61 cm | 62 cm | 62.5 cm | ± 0.5 cm |
+| **ارتفاع الياقة كول أوفيسييه (Hauteur Col Montant)** | 4.5 cm | 4.5 cm | 4.5 cm | 5.0 cm | 5.0 cm | ± 0.2 cm |
+| **طول السحاب النصفي (Longueur Demi-Zip)** | 22 cm | 22 cm | 24 cm | 24 cm | 25 cm | ± 0.5 cm |
+
+---
+
+### 👖 2. سروال رياضي بوت كات واسع (Pantalon Bootcut / Évasé Sport)
+*قصة محددة عند الفخذين وواسعة انسيابية من الركبة إلى الأسفل مع خصر مطاطي*
+
+| نقطة القياس (Point de Mesure) | S (36) | M (38) | L (40) | XL (42) | XXL (44) | التفاوت (Tolérance) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **الخصر المطاطي (Taille Élastiquée)** | 68 cm | 72 cm | 78 cm | 84 cm | 90 cm | ± 1.0 cm |
+| **الورك / الحوض (Hanches / Bassin)** | 94 cm | 98 cm | 104 cm | 110 cm | 116 cm | ± 1.0 cm |
+| **الطول الإجمالي الخارجي (Longueur Totale)** | 102 cm | 104 cm | 106 cm | 107 cm | 108 cm | ± 1.0 cm |
+| **طول داخل الساق (Longueur Entrejambe)** | 76 cm | 77 cm | 78 cm | 78.5 cm | 79 cm | ± 0.8 cm |
+| **محيط الفخذ (Tour de Cuisse)** | 54 cm | 56 cm | 59 cm | 62 cm | 65 cm | ± 0.5 cm |
+| **عرض الركبة (Largeur Genou)** | 21 cm | 22 cm | 23 cm | 24 cm | 25 cm | ± 0.5 cm |
+| **عرض أسفل الساق بوت كات (Bas Bootcut)** | 24 cm | 25 cm | 26 cm | 27 cm | 28 cm | ± 0.5 cm |
+
+---
+
+💡 **توجيهات الفصالة والباترون بالورشة (Conseils Techniques Atelier) :**
+1. **القماش المعتمد (Tissu) :** مولتون سكوبا مطاطي 260 GSM (Scuba Crêpe 95% Poly / 5% Élasthanne) مع نسبة ليكرا 15% إلى 20%.
+2. **قيم الخياطة (Valeurs de couture) :** 1.0 سم لجميع تجميعات السورجي 4 خيوط، و 2.5 سم لثنية أسفل السروال وأسفل البيبلوم بالروكوفروز.
+3. **الخصر الخلفي (Ceinture Dos) :** شريطا الربط الخلفيان بطول 55 سم وعرض جاهز 2.5 سم لضبط التخصير بدقة وسهولة.
+✅ **تم تحديث جدول المقاسات التفاعلي والبطاقة التقنية على الشاشة تلقائياً!**`;
+      }
+
+      // If another model is active, generate its bilingual measurement table!
+      const activePieces = analysisResult?.pieces || [];
+      if (activePieces.length > 0) {
+        let resText = `📏 **جدول القياسات والمقاسات بالتدقيق (S إلى XXL) — ثنائي اللغة (Arabe & Français)**\n📐 **Tableau des Mesures pour [ ${analysisResult?.category || 'الموديل'} ] :**\n\n`;
+        activePieces.forEach((p: any, pIdx: number) => {
+          const pMesures = (piecesMesures && piecesMesures[pIdx] && piecesMesures[pIdx].length > 0)
+            ? piecesMesures[pIdx]
+            : (p.mesures && p.mesures.length > 0 ? p.mesures : getStandardMesuresForCategory(p.name, targetAudience, targetGender));
+          
+          resText += `### 📦 ${pIdx + 1}. ${p.name}\n\n`;
+          resText += `| نقطة القياس (Point de Mesure) | S | M | L | XL | XXL |\n`;
+          resText += `| :--- | :---: | :---: | :---: | :---: | :---: |\n`;
+          pMesures.forEach((pm: any) => {
+            resText += `| **${pm.nom}** | ${pm.valeurs?.S ?? '—'} cm | ${pm.valeurs?.M ?? '—'} cm | ${pm.valeurs?.L ?? '—'} cm | ${pm.valeurs?.XL ?? '—'} cm | ${pm.valeurs?.XXL ?? '—'} cm |\n`;
+          });
+          resText += `\n`;
+        });
+        resText += `\n💡 يمكنك تعديل أي قياس مباشرة في تبويب **جدول المقاسات والأبعاد (Tableau des Mesures)** على الشاشة!`;
+        return resText;
+      }
+
+      return `📏 **جدول القياسات القياسي (Tableau des Mesures S à XXL - AR & FR) :**\n\nيرجى تحديد الموديل أو رفع صورته لتوليد جدول القياسات الخاص به بدقة.`;
     }
 
     // 7. Handling Printing / Embroidery / Branding
@@ -5227,7 +5454,8 @@ ${userMessage}
             const isVesteAct = !isCustomNonPreset && !isBrandebourgAct && !isHoodieAct && (currentTitle.includes('veste') || currentTitle.includes('jacket') || currentTitle.includes('فيست') || currentTitle.includes('جاكيت'));
             const isTshirtAct = !isCustomNonPreset && !isHoodieAct && (currentTitle.includes('t-shirt') || currentTitle.includes('tshirt') || currentTitle.includes('تيشرت') || currentTitle.includes('تيشيرت'));
             const isPantalonAct = !isCustomNonPreset && (piecesCount === 1) && (currentTitle.includes('pantalon') || currentTitle.includes('سروال') || currentTitle.includes('jogging') || currentTitle.includes('جوغينغ'));
-            const isSurvetAct = !isCustomNonPreset && (piecesCount >= 2 || currentTitle.includes('ensemble') || currentTitle.includes('طقم') || currentTitle.includes('survêt'));
+            const isSportModesteAct = !isCustomNonPreset && (currentTitle.includes('peplum') || currentTitle.includes('بيبلوم') || currentTitle.includes('sport modeste') || currentTitle.includes('سبور مستور') || currentTitle.includes('bootcut') || currentTitle.includes('بوتكات') || currentTitle.includes('tennis'));
+            const isSurvetAct = !isCustomNonPreset && !isSportModesteAct && (piecesCount >= 2 || currentTitle.includes('ensemble') || currentTitle.includes('طقم') || currentTitle.includes('survêt'));
             const isRobeAct = !isCustomNonPreset && (currentTitle.includes('robe') || currentTitle.includes('فستان') || currentTitle.includes('abaya') || currentTitle.includes('عباية'));
 
             return (
@@ -5316,6 +5544,19 @@ ${userMessage}
                 >
                   <span>🏃</span>
                   <span>{isAr ? 'طقم قطعتين (Survêt)' : 'Ensemble 2P'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPiecePreset('sport_modeste')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 shadow-xs flex items-center gap-1 cursor-pointer ${
+                    isSportModesteAct
+                      ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 shadow-sm border border-indigo-600'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white'
+                  }`}
+                  title={isAr ? 'طقم رياضي مستور بيبلوم + سروال بوتكات' : 'Ensemble Sport Modeste Peplum + Pantalon Bootcut'}
+                >
+                  <span>🎾</span>
+                  <span>{isAr ? 'طقم سبور مستور' : 'Sport Modeste'}</span>
                 </button>
                 <button
                   type="button"
