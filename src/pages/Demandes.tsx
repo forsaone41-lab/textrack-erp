@@ -695,7 +695,11 @@ export default function Demandes() {
         ...lead,
         details: JSON.stringify(extLeadDetails),
         status: 'completed' as const,
-        crmStage: 'confirme' as const
+        crmStage: 'confirme' as const,
+        commercialConfirmedBy: lead.commercialConfirmedBy || (currentUser?.nom || 'Admin'),
+        commercialConfirmedAt: lead.commercialConfirmedAt || new Date().toISOString(),
+        commercialCommission: lead.commercialCommission !== undefined ? lead.commercialCommission : (lead.intentType === 'consultation' ? 50 : 150),
+        commercialCommissionStatus: lead.commercialCommissionStatus || 'en_attente'
       };
       setLeads(prev => prev.map(l => l.id === lead.id ? updatedLead : l));
       await saveRecord('leads', updatedLead, true);
@@ -3910,10 +3914,38 @@ const getLeadModelisteInfo = (lead: Lead) => {
 
                               {/* 2. Compact Validation / Refusal Action Pill (ردها للجنب صغيرة) */}
                               {lead.crmStage === 'confirme' ? (
-                                <span className="h-7.5 px-2.5 rounded-lg text-[10.5px] font-black border bg-emerald-100 text-emerald-800 border-emerald-300 flex items-center gap-1 shadow-2xs shrink-0">
-                                  <CheckCircle className="w-3 h-3 text-emerald-600" />
-                                  <span>{isAr ? 'مؤكد' : 'Validé'}</span>
-                                </span>
+                                <div className="inline-flex items-center gap-1.5 shrink-0 flex-wrap">
+                                  <span className="h-7.5 px-2.5 rounded-lg text-[10.5px] font-black border bg-emerald-100 text-emerald-800 border-emerald-300 flex items-center gap-1 shadow-2xs">
+                                    <CheckCircle className="w-3 h-3 text-emerald-600" />
+                                    <span>{isAr ? 'مؤكد' : 'Validé'}</span>
+                                  </span>
+                                  {lead.commercialConfirmedBy && (
+                                    <div className="inline-flex items-center gap-1 h-7.5 px-2 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-900 text-[10px] font-bold shadow-2xs" title={isAr ? `تم التأكيد بواسطة: ${lead.commercialConfirmedBy}` : `Confirmé par : ${lead.commercialConfirmedBy}`}>
+                                      <UserCheck className="w-3 h-3 text-indigo-600" />
+                                      <span className="max-w-[85px] truncate">{lead.commercialConfirmedBy}</span>
+                                      {lead.commercialCommission !== undefined ? (
+                                        <button
+                                          type="button"
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            const newStatus = lead.commercialCommissionStatus === 'payee' ? 'en_attente' : 'payee';
+                                            const updated = { ...lead, commercialCommissionStatus: newStatus as any };
+                                            setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
+                                            await saveRecord('leads', updated, true);
+                                          }}
+                                          title={isAr ? 'انقر لتبديل حالة دفع العمولة (معلقة / مدفوعة)' : 'Cliquer pour changer le statut de paiement'}
+                                          className={`px-1.5 py-0.2 rounded text-[9px] font-black cursor-pointer border transition-all ${
+                                            lead.commercialCommissionStatus === 'payee'
+                                              ? 'bg-emerald-600 text-white border-emerald-700'
+                                              : 'bg-amber-500 text-white border-amber-600'
+                                          }`}
+                                        >
+                                          {lead.commercialCommission} د.م ({lead.commercialCommissionStatus === 'payee' ? (isAr ? 'مدفوعة' : 'Payée') : (isAr ? 'معلقة' : 'En attente')})
+                                        </button>
+                                      ) : null}
+                                    </div>
+                                  )}
+                                </div>
                               ) : lead.crmStage === 'annule' ? (
                                 <span className="h-7.5 px-2.5 rounded-lg text-[10.5px] font-black border bg-rose-100 text-rose-800 border-rose-300 flex items-center gap-1 shadow-2xs shrink-0">
                                   <X className="w-3 h-3 text-rose-600" />

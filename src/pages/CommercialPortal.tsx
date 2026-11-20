@@ -25,7 +25,10 @@ import {
   LayoutGrid,
   Camera,
   Info,
-  ImageIcon
+  ImageIcon,
+  Coins,
+  CheckCheck,
+  Wallet
 } from 'lucide-react';
 import { 
   Lead,
@@ -66,6 +69,19 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
     return [];
   });
   
+  const [allLeads, setAllLeads] = useState<Lead[]>(() => {
+    try {
+      const cachedLeads = localStorage.getItem('textrack_data_leads');
+      if (cachedLeads) {
+        const parsed = JSON.parse(cachedLeads);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((l: any) => l && !l.type?.startsWith('RECRUTEMENT:'));
+        }
+      }
+    } catch { /* ignore */ }
+    return [];
+  });
+
   const [loading, setLoading] = useState(() => leads.length === 0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -73,14 +89,12 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [savedOk, setSavedOk] = useState(false);
   const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
-  const [bottomTab, setBottomTab] = useState<'leads' | 'devis' | 'profil'>('leads');
+  const [bottomTab, setBottomTab] = useState<'leads' | 'commissions' | 'devis' | 'profil'>('leads');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(15);
   const [selectedLeadInfo, setSelectedLeadInfo] = useState<Lead | null>(null);
 
-
   useEffect(() => {
-
     // 2. Fetch fresh data
     fetchLeads(false);
 
@@ -95,9 +109,10 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
     if (showLoading && leads.length === 0) setLoading(true);
     try {
       const data = await loadLeads();
-      const activeLeads = data.filter(l => 
-        l && (!l.type || !l.type.startsWith('RECRUTEMENT:')) && 
-        (!l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage))
+      const cleanData = data.filter(l => l && (!l.type || !l.type.startsWith('RECRUTEMENT:')));
+      setAllLeads(cleanData);
+      const activeLeads = cleanData.filter(l => 
+        !l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage)
       );
       activeLeads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setLeads(activeLeads);
@@ -160,23 +175,96 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
     };
   }, [leads]);
 
+  const myConfirmedLeads = useMemo(() => {
+    const currentNom = (currentUser?.nom || '').trim().toLowerCase();
+    const currentEmail = (currentUser?.email || '').trim().toLowerCase();
+
+    return allLeads.filter(l => {
+      if (l.crmStage !== 'confirme') return false;
+      if (l.commercialConfirmedBy) {
+        const confBy = l.commercialConfirmedBy.toLowerCase();
+        return (currentNom && confBy.includes(currentNom)) || (currentEmail && confBy.includes(currentEmail));
+      }
+      return true;
+    }).sort((a, b) => new Date(b.commercialConfirmedAt || b.date).getTime() - new Date(a.commercialConfirmedAt || a.date).getTime());
+  }, [allLeads, currentUser]);
+
+  const commissionStats = useMemo(() => {
+    let totalCommissions = 0;
+    let payees = 0;
+    let enAttente = 0;
+
+    myConfirmedLeads.forEach(l => {
+      const comm = l.commercialCommission !== undefined 
+        ? Number(l.commercialCommission) 
+        : (l.intentType === 'consultation' ? 50 : 150);
+      totalCommissions += comm;
+      if (l.commercialCommissionStatus === 'payee') {
+        payees += comm;
+      } else {
+        enAttente += comm;
+      }
+    });
+
+    return {
+      totalCommissions,
+      payees,
+      enAttente,
+      confirmedCount: myConfirmedLeads.length
+    };
+  }, [myConfirmedLeads]);
+
   const handleSave = async (nextStage?: string) => {
     if (!selectedLead) return;
     try {
-      const updatedLead = { ...selectedLead, ...editForm, ...(nextStage ? { crmStage: nextStage } : {}) };
+      const isConfirm = nextStage === 'confirme';
+      const defaultComm = editForm.intentType === 'consultation' ? 50 : 150;
+      const finalComm = editForm.commercialCommission !== undefined 
+        ? Number(editForm.commercialCommission) 
+        : (selectedLead.commercialCommission !== undefined ? selectedLead.commercialCommission : defaultComm);
+
+      const updatedLead: Lead = { 
+        ...selectedLead, 
+        ...editForm, 
+        ...(nextStage ? { crmStage: nextStage as any } : {}),
+        ...(isConfirm ? {
+          commercialConfirmedBy: currentUser?.nom || currentUser?.email || 'Commercial',
+          commercialConfirmedAt: new Date().toISOString(),
+          commercialCommission: finalComm,
+          commercialCommissionStatus: (selectedLead.commercialCommissionStatus || 'en_attente') as any,
+          intentType: editForm.intentType || selectedLead.intentType || 'production'
+        } : {})
+      };
+
       await saveRecord('leads', updatedLead);
-      setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead as Lead : l));
+      setAllLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
+      setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
       setSavedOk(true);
       setTimeout(() => { 
         setSavedOk(false); 
         if (nextStage === 'confirme' || nextStage === 'annule') {
            setSelectedLead(null);
-           fetchLeads(); // Refresh to remove confirmed/cancelled from this view
+           fetchLeads(false); // Refresh
         }
       }, 1200);
     } catch (e) {
       alert(isAr ? 'حدث خطأ' : 'Une erreur est survenue');
     }
+  };
+
+  const openEditLead = (lead: Lead) => {
+    setSelectedLead(lead);
+    const intent = lead.intentType || 'production';
+    setEditForm({
+      crmStage: lead.crmStage || 'nouveau',
+      crmContactMethod: lead.crmContactMethod,
+      crmPrice: lead.crmPrice,
+      crmPriceConfirmed: lead.crmPriceConfirmed,
+      crmNotes: lead.crmNotes,
+      intentType: intent,
+      commercialCommission: lead.commercialCommission !== undefined ? lead.commercialCommission : (intent === 'consultation' ? 50 : 150),
+      commercialCommissionStatus: lead.commercialCommissionStatus || 'en_attente'
+    });
   };
 
   return (
@@ -223,17 +311,31 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
         <h1 className="text-2xl font-black text-white tracking-tight mb-6 relative z-10">
           {isAr ? 'لوحة التحكم التجارية' : 'Tableau de Bord Commercial'}
         </h1>
-        <div className="grid grid-cols-3 gap-3 relative z-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 relative z-10">
           {[
-            { icon: Target, value: stats.totalActive, label: isAr ? 'إجمالي' : 'Total', color: 'bg-white/20' },
-            { icon: UserPlus, value: stats.nouveaux, label: isAr ? 'جديد' : 'Nouveaux', color: 'bg-emerald-400/20' },
-            { icon: Clock, value: stats.enAttente, label: isAr ? 'انتظار' : 'Attente', color: 'bg-amber-400/20' },
-          ].map(({ icon: Icon, value, label, color }) => (
-            <div key={label} className="bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className={`w-8 h-8 rounded-xl ${color} flex items-center justify-center mb-3`}>
+            { icon: Target, value: stats.totalActive, label: isAr ? 'طلبات نشطة' : 'Actifs', color: 'bg-white/20' },
+            { icon: UserPlus, value: stats.nouveaux, label: isAr ? 'جديد' : 'Nouveaux', color: 'bg-blue-400/20' },
+            { icon: CheckCircle, value: commissionStats.confirmedCount, label: isAr ? 'طلبات مؤكدة' : 'Confirmés', color: 'bg-emerald-400/20' },
+            { 
+              icon: Coins, 
+              value: `${commissionStats.totalCommissions} DH`, 
+              label: isAr ? 'أرباح العمولات' : 'Commissions', 
+              color: 'bg-amber-400/25',
+              highlight: true,
+              onClick: () => setBottomTab('commissions')
+            },
+          ].map(({ icon: Icon, value, label, color, highlight, onClick }) => (
+            <div 
+              key={label} 
+              onClick={onClick}
+              className={`bg-white/15 backdrop-blur-sm rounded-2xl p-3.5 border border-white/20 transition-all ${
+                highlight ? 'cursor-pointer hover:bg-white/25 active:scale-95 ring-1 ring-amber-300/40 shadow-sm' : ''
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-xl ${color} flex items-center justify-center mb-2.5`}>
                 <Icon className="w-4 h-4 text-white" />
               </div>
-              <p className="text-2xl font-black text-white">{value}</p>
+              <p className="text-xl md:text-2xl font-black text-white truncate">{value}</p>
               <p className="text-[9px] font-bold text-indigo-200 uppercase tracking-widest mt-0.5">{label}</p>
             </div>
           ))}
@@ -468,16 +570,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
 
                                 {req.crmStage !== 'confirme' && req.crmStage !== 'annule' && (
                                   <>
-                                    <button onClick={() => {
-                                      setSelectedLead(req);
-                                      setEditForm({
-                                        crmStage: req.crmStage || 'nouveau',
-                                        crmContactMethod: req.crmContactMethod,
-                                        crmPrice: req.crmPrice,
-                                        crmPriceConfirmed: req.crmPriceConfirmed,
-                                        crmNotes: req.crmNotes
-                                      });
-                                    }}
+                                    <button onClick={() => openEditLead(req)}
                                       className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
                                       ✓ {isAr ? 'تأكيد' : 'Valider'}
                                     </button>
@@ -494,30 +587,12 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                                   </>
                                 )}
 
-                                <button onClick={() => {
-                                  setSelectedLead(req);
-                                  setEditForm({
-                                    crmStage: req.crmStage || 'nouveau',
-                                    crmContactMethod: req.crmContactMethod,
-                                    crmPrice: req.crmPrice,
-                                    crmPriceConfirmed: req.crmPriceConfirmed,
-                                    crmNotes: req.crmNotes
-                                  });
-                                }} title="Notes"
+                                <button onClick={() => openEditLead(req)} title="Notes"
                                   className="w-8 h-8 bg-white text-slate-500 hover:bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
                                   <MessageSquare className="w-3.5 h-3.5" />
                                 </button>
                                 
-                                <button onClick={() => {
-                                  setSelectedLead(req);
-                                  setEditForm({
-                                    crmStage: req.crmStage || 'nouveau',
-                                    crmContactMethod: req.crmContactMethod,
-                                    crmPrice: req.crmPrice,
-                                    crmPriceConfirmed: req.crmPriceConfirmed,
-                                    crmNotes: req.crmNotes
-                                  });
-                                }} title="Modifier"
+                                <button onClick={() => openEditLead(req)} title="Modifier"
                                   className="w-8 h-8 bg-white text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
                                   <Edit2 className="w-3.5 h-3.5" />
                                 </button>
@@ -573,6 +648,145 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
         </div>
         </>
       )}
+
+      {/* ── Commissions & Confirmed Demandes Tab ── */}
+      {bottomTab === 'commissions' && (
+        <div className="space-y-4">
+          {/* Header Commission Summary */}
+          <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm relative overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest flex items-center gap-1.5">
+                  <Wallet className="w-3.5 h-3.5" />
+                  {isAr ? 'محفظة الأرباح والعمولات' : 'Portefeuille de Commissions'}
+                </span>
+                <h2 className="text-3xl font-black text-slate-900 mt-1">
+                  {commissionStats.totalCommissions.toLocaleString()} <span className="text-base text-slate-400 font-bold">MAD</span>
+                </h2>
+              </div>
+              <div className="w-12 h-12 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center text-amber-600 shadow-xs">
+                <Coins className="w-6 h-6" />
+              </div>
+            </div>
+
+            {/* Sub-breakdown */}
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+              <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-3">
+                <span className="text-[10px] font-bold uppercase text-emerald-800 tracking-wider flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3 text-emerald-600" />
+                  {isAr ? 'تم صرفها (مدفوعة)' : 'Payée'}
+                </span>
+                <p className="text-xl font-black text-emerald-700 mt-0.5">
+                  {commissionStats.payees.toLocaleString()} <span className="text-xs font-bold">MAD</span>
+                </p>
+              </div>
+              <div className="bg-amber-50/70 border border-amber-100 rounded-2xl p-3">
+                <span className="text-[10px] font-bold uppercase text-amber-800 tracking-wider flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-amber-600" />
+                  {isAr ? 'قيد المعالجة (معلقة)' : 'En attente'}
+                </span>
+                <p className="text-xl font-black text-amber-700 mt-0.5">
+                  {commissionStats.enAttente.toLocaleString()} <span className="text-xs font-bold">MAD</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Commission Scale / Rules */}
+            <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200/70 text-[11px] font-bold text-slate-600 flex items-center justify-between gap-2 flex-wrap">
+              <span className="flex items-center gap-1">
+                🎯 <strong>{isAr ? 'إنتاج وتصنيع:' : 'Confection :'}</strong> 150 MAD
+              </span>
+              <span className="text-slate-300">|</span>
+              <span className="flex items-center gap-1">
+                💬 <strong>{isAr ? 'استشارة براند:' : 'Consultation :'}</strong> 50 MAD
+              </span>
+            </div>
+          </div>
+
+          {/* List of Confirmed Leads */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest flex items-center gap-1.5">
+                <CheckCheck className="w-4 h-4 text-emerald-600" />
+                {isAr ? `الطلبات المؤكدة (${myConfirmedLeads.length})` : `Demandes Confirmées (${myConfirmedLeads.length})`}
+              </h3>
+            </div>
+
+            {myConfirmedLeads.length === 0 ? (
+              <div className="bg-white rounded-[2rem] p-12 text-center border border-dashed border-slate-300">
+                <Coins className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500 font-bold uppercase text-xs">
+                  {isAr ? 'لا توجد طلبات مؤكدة بعد. ابدأ بتأكيد الطلبات لكسب العمولات!' : 'Aucune demande confirmée pour le moment'}
+                </p>
+              </div>
+            ) : (
+              myConfirmedLeads.map(lead => {
+                const comm = lead.commercialCommission !== undefined 
+                  ? Number(lead.commercialCommission) 
+                  : (lead.intentType === 'consultation' ? 50 : 150);
+                const isConsult = lead.intentType === 'consultation';
+                const isPaid = lead.commercialCommissionStatus === 'payee';
+
+                return (
+                  <div key={lead.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-black text-base shrink-0 ${
+                        isConsult ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                      }`}>
+                        {isConsult ? '💬' : '🎯'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">{lead.name}</h4>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                            isConsult ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                          }`}>
+                            {isConsult ? (isAr ? 'استشارة' : 'Consultation') : (isAr ? 'إنتاج' : 'Production')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 mt-1">
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(lead.commercialConfirmedAt || lead.date).toLocaleDateString()}</span>
+                          <span>•</span>
+                          <span>{lead.type}</span>
+                          {lead.quantity ? <span>({lead.quantity} pcs)</span> : null}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Commission & Status */}
+                    <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-2 md:pt-0 border-slate-50">
+                      <div className={isAr ? 'text-left' : 'text-right'}>
+                        <span className="text-base font-black text-emerald-600">+{comm} MAD</span>
+                        <p className="text-[9px] font-bold uppercase tracking-wider">
+                          {isPaid ? (
+                            <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                              {isAr ? '✓ تم الصرف' : 'Payée'}
+                            </span>
+                          ) : (
+                            <span className="text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                              {isAr ? '⏳ قيد المعالجة' : 'En attente'}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const rawPhone = String(lead.phone || '').replace(/\D/g, '');
+                          const phone = rawPhone.startsWith('2120') ? '212' + rawPhone.slice(3) : rawPhone.startsWith('0') ? '212' + rawPhone.slice(1) : rawPhone;
+                          window.open(`https://wa.me/${phone}`, '_blank');
+                        }}
+                        className="h-8 px-2.5 rounded-xl text-xs font-black bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
       </div>
 
       {/* Confirmation Modal */}
@@ -620,18 +834,110 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
               <div className="space-y-4">
                 <h4 className="text-xs font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
-                  {isAr ? 'منطقة التأكيد' : 'Zone de Confirmation'}
+                  {isAr ? 'منطقة التأكيد والعمولة' : 'Zone de Confirmation & Commission'}
                 </h4>
 
+                {/* Type de Demande (Intent) & Commission */}
+                <div className="bg-gradient-to-br from-indigo-50/70 to-purple-50/70 border border-indigo-100 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase text-indigo-950 tracking-wider flex items-center gap-1.5">
+                      <Coins className="w-4 h-4 text-indigo-600" />
+                      {isAr ? 'نوع التأكيد والعمولة المستحقة' : 'Type de Confirmation & Commission'}
+                    </span>
+                    <span className="text-xs font-black text-indigo-700 bg-white px-2.5 py-0.5 rounded-full border border-indigo-200 shadow-2xs">
+                      +{editForm.commercialCommission !== undefined ? editForm.commercialCommission : (editForm.intentType === 'consultation' ? 50 : 150)} MAD
+                    </span>
+                  </div>
+
+                  {/* Intent Selection Buttons */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditForm(prev => ({
+                        ...prev,
+                        intentType: 'production',
+                        commercialCommission: prev.commercialCommission === 50 ? 150 : (prev.commercialCommission ?? 150)
+                      }))}
+                      className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                        (editForm.intentType || 'production') === 'production'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-400/40'
+                          : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-300'
+                      }`}
+                    >
+                      <span className="text-lg">🎯</span>
+                      <span className="text-xs font-black">{isAr ? 'إنتاج وتصنيع' : 'Production'}</span>
+                      <span className="text-[10px] font-bold opacity-90">{isAr ? 'عمولة: 150 د.م' : 'Comm: 150 MAD'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setEditForm(prev => ({
+                        ...prev,
+                        intentType: 'consultation',
+                        commercialCommission: prev.commercialCommission === 150 ? 50 : (prev.commercialCommission ?? 50),
+                        crmPrice: prev.crmPrice || 250
+                      }))}
+                      className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                        editForm.intentType === 'consultation'
+                          ? 'bg-amber-500 text-white border-amber-500 shadow-sm ring-2 ring-amber-400/40'
+                          : 'bg-white text-slate-700 border-slate-200 hover:border-amber-300'
+                      }`}
+                    >
+                      <span className="text-lg">💬</span>
+                      <span className="text-xs font-black">{isAr ? 'استشارة وتوجيه' : 'Consultation'}</span>
+                      <span className="text-[10px] font-bold opacity-90">{isAr ? 'عمولة: 50 د.م' : 'Comm: 50 MAD'}</span>
+                    </button>
+                  </div>
+
+                  {/* Commission custom chips */}
+                  <div className="pt-1">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                        {isAr ? 'مبلغ عمولة التأكيد:' : 'Commission :'}
+                      </label>
+                      <div className="flex gap-1">
+                        {[50, 100, 150, 200].map(amt => (
+                          <button
+                            key={amt}
+                            type="button"
+                            onClick={() => setEditForm(prev => ({ ...prev, commercialCommission: amt }))}
+                            className={`px-2 py-0.5 rounded text-[10px] font-black border transition-all cursor-pointer ${
+                              (editForm.commercialCommission !== undefined ? editForm.commercialCommission : (editForm.intentType === 'consultation' ? 50 : 150)) === amt
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            {amt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="number"
+                        value={editForm.commercialCommission !== undefined ? editForm.commercialCommission : (editForm.intentType === 'consultation' ? 50 : 150)}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, commercialCommission: Number(e.target.value) }))}
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-black text-slate-800"
+                        placeholder="150"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">{isAr ? 'ثمن القطعة (درهم)' : 'Prix Unitaire (DH)'}</label>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                    {editForm.intentType === 'consultation' 
+                      ? (isAr ? 'ثمن جلسة الاستشارة (درهم)' : 'Prix Consultation (MAD)')
+                      : (isAr ? 'ثمن القطعة (درهم)' : 'Prix Unitaire (DH)')}
+                  </label>
                   <div className="relative">
                     <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input 
                       type="number" 
                       value={editForm.crmPrice || ''} 
                       onChange={(e) => setEditForm({ ...editForm, crmPrice: Number(e.target.value) })}
-                      placeholder="0.00" 
+                      placeholder={editForm.intentType === 'consultation' ? '250' : '0.00'} 
                       className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-base font-black text-slate-800 focus:ring-2 focus:ring-indigo-500/20" 
                     />
                   </div>
@@ -652,31 +958,48 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                 <button
                     type="button"
                     onClick={() => {
-                        let msg = isAr 
-                            ? `مرحباً بك أستاذ(ة) *${selectedLead.name}* 👋\n\nنشكرك على تواصلك مع *BEYA CREATIVE* 🇲🇦.\nهذا تلخيص للطلبية ديالك باش نأكدوها:\n\n`
-                            : `Bonjour M./Mme *${selectedLead.name}* 👋\n\nMerci d'avoir contacté *BEYA CREATIVE* 🇲🇦.\nVoici le récapitulatif de votre commande pour confirmation :\n\n`;
-
-                        msg += isAr ? `📦 *المنتوج:* ${selectedLead.type}\n` : `📦 *Produit :* ${selectedLead.type}\n`;
-                        msg += isAr ? `🔢 *الكمية:* ${selectedLead.quantity} قطعة\n` : `🔢 *Quantité :* ${selectedLead.quantity} pièces\n`;
-                        
-                        if (editForm.crmPrice) {
-                            const unitPrice = editForm.crmPrice;
-                            const qty = selectedLead.quantity || 1;
-                            const totalPrice = unitPrice * qty;
-                            const avance = (totalPrice * 0.5).toFixed(2);
-                            
-                            msg += isAr ? `🏷️ *ثمن القطعة:* ${unitPrice} درهم\n` : `🏷️ *Prix unitaire :* ${unitPrice} MAD\n`;
-                            msg += isAr ? `💰 *السعر الإجمالي:* ${totalPrice} درهم\n` : `💰 *Prix total :* ${totalPrice} MAD\n`;
-                            msg += isAr ? `💳 *التسبيق المطلوب (50%):* ${avance} درهم\n` : `💳 *Avance requise (50%) :* ${avance} MAD\n`;
-                        }
-
                         const bName = company.bankName || 'CIH';
                         const bRib = company.rib || '230 000 0000000000000000 00';
                         const bBenef = company.bankBeneficiary || company.name || 'BEYA CREATIVE';
 
-                        msg += isAr 
-                            ? `\n🏦 *المعلومات البنكية (RIB):*\nالاسم/الشركة: ${bBenef}\nبنك: ${bName}\nRIB: ${bRib}\n\nالمرجو تأكيد الطلب بإرسال صورة التحويل (Reçu) باش نبداو الخدمة إن شاء الله ✨.\n\nتحياتنا!`
-                            : `\n🏦 *Coordonnées Bancaires (RIB):*\nNom/Entreprise : ${bBenef}\nBanque : ${bName}\nRIB : ${bRib}\n\nMerci de confirmer la commande en nous envoyant le reçu du virement pour lancer la production ✨.\n\nCordialement!`;
+                        let msg = '';
+                        if (editForm.intentType === 'consultation') {
+                          msg = isAr
+                            ? `مرحباً بك أستاذ(ة) *${selectedLead.name}* 👋\n\nنشكرك على تواصلك مع *BEYA CREATIVE* بخصوص *جلسة الاستشارة وتوجيه إطلاق البراند* 🇲🇦.\n\n` +
+                              `📋 *نوع الخدمة:* استشارة وتوجيه وتحديد خطة إطلاق البراند\n` +
+                              `💡 *المشروع / الفكرة:* ${selectedLead.type}\n` +
+                              `💰 *ثمن جلسة الاستشارة:* ${editForm.crmPrice || 250} درهم\n` +
+                              (editForm.crmNotes ? `📝 *ملاحظات:* ${editForm.crmNotes}\n` : '') +
+                              `\n🏦 *المعلومات البنكية (RIB):*\nالاسم/الشركة: ${bBenef}\nبنك: ${bName}\nRIB: ${bRib}\n\nالمرجو تأكيد الموعد بإرسال صورة التحويل (Reçu) للبدء في جلسة العمل والتنسيق المباشر إن شاء الله ✨.\n\nتحياتنا!`
+                            : `Bonjour M./Mme *${selectedLead.name}* 👋\n\nMerci d'avoir contacté *BEYA CREATIVE* pour votre *Consultation & Lancement de Marque* 🇲🇦.\n\n` +
+                              `📋 *Service :* Consultation & Orientation Technique de Lancement\n` +
+                              `💡 *Projet :* ${selectedLead.type}\n` +
+                              `💰 *Tarif Consultation :* ${editForm.crmPrice || 250} MAD\n` +
+                              (editForm.crmNotes ? `📝 *Notes :* ${editForm.crmNotes}\n` : '') +
+                              `\n🏦 *Coordonnées Bancaires (RIB):*\nNom/Entreprise : ${bBenef}\nBanque : ${bName}\nRIB : ${bRib}\n\nMerci de confirmer par l'envoi du reçu de virement pour bloquer votre créneau de consultation ✨.\n\nCordialement!`;
+                        } else {
+                          msg = isAr 
+                              ? `مرحباً بك أستاذ(ة) *${selectedLead.name}* 👋\n\nنشكرك على تواصلك مع *BEYA CREATIVE* 🇲🇦.\nهذا تلخيص للطلبية ديالك باش نأكدوها:\n\n`
+                              : `Bonjour M./Mme *${selectedLead.name}* 👋\n\nMerci d'avoir contacté *BEYA CREATIVE* 🇲🇦.\nVoici le récapitulatif de votre commande pour confirmation :\n\n`;
+
+                          msg += isAr ? `📦 *المنتوج:* ${selectedLead.type}\n` : `📦 *Produit :* ${selectedLead.type}\n`;
+                          msg += isAr ? `🔢 *الكمية:* ${selectedLead.quantity} قطعة\n` : `🔢 *Quantité :* ${selectedLead.quantity} pièces\n`;
+                          
+                          if (editForm.crmPrice) {
+                              const unitPrice = editForm.crmPrice;
+                              const qty = selectedLead.quantity || 1;
+                              const totalPrice = unitPrice * qty;
+                              const avance = (totalPrice * 0.5).toFixed(2);
+                              
+                              msg += isAr ? `🏷️ *ثمن القطعة:* ${unitPrice} درهم\n` : `🏷️ *Prix unitaire :* ${unitPrice} MAD\n`;
+                              msg += isAr ? `💰 *السعر الإجمالي:* ${totalPrice} درهم\n` : `💰 *Prix total :* ${totalPrice} MAD\n`;
+                              msg += isAr ? `💳 *التسبيق المطلوب (50%):* ${avance} درهم\n` : `💳 *Avance requise (50%) :* ${avance} MAD\n`;
+                          }
+
+                          msg += isAr 
+                              ? `\n🏦 *المعلومات البنكية (RIB):*\nالاسم/الشركة: ${bBenef}\nبنك: ${bName}\nRIB: ${bRib}\n\nالمرجو تأكيد الطلب بإرسال صورة التحويل (Reçu) باش نبداو الخدمة إن شاء الله ✨.\n\nتحياتنا!`
+                              : `\n🏦 *Coordonnées Bancaires (RIB):*\nNom/Entreprise : ${bBenef}\nBanque : ${bName}\nRIB : ${bRib}\n\nMerci de confirmer la commande en nous envoyant le reçu du virement pour lancer la production ✨.\n\nCordialement!`;
+                        }
 
                         let phone = selectedLead?.phone || '';
                         if (phone) {
@@ -728,20 +1051,26 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200 flex items-stretch shadow-xl" dir="ltr">
         {([
           { key: 'leads', icon: LayoutGrid, labelFr: 'Prospects', labelAr: 'الطلبات' },
+          { key: 'commissions', icon: Coins, labelFr: 'Commissions', labelAr: 'عمولاتي', badge: commissionStats.confirmedCount },
           { key: 'devis',  icon: FileText,   labelFr: 'Devis (PRO)', labelAr: 'تسعيرة' },
           { key: 'profil', icon: UserCircle2, labelFr: 'Mon Profil', labelAr: 'ملفي' },
-        ] as const).map(({ key, icon: Icon, labelFr, labelAr }) => (
+        ] as const).map(({ key, icon: Icon, labelFr, labelAr, badge }: any) => (
           <button
             key={key}
             onClick={() => setBottomTab(key)}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-all ${
+            className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-all relative ${
               bottomTab === key ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
             }`}
           >
-            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all relative ${
               bottomTab === key ? 'bg-indigo-50' : ''
             }`}>
               <Icon className={`w-5 h-5 ${bottomTab === key ? 'text-indigo-600' : 'text-slate-400'}`} />
+              {badge && badge > 0 ? (
+                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-xs">
+                  {badge > 99 ? '99+' : badge}
+                </span>
+              ) : null}
             </div>
             <span className="text-[9px] font-black uppercase tracking-widest">{isAr ? labelAr : labelFr}</span>
             {bottomTab === key && <div className="absolute bottom-0 w-8 h-0.5 bg-indigo-600 rounded-full" />}

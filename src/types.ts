@@ -747,6 +747,10 @@ export interface Lead {
   techDetails?: string;
   delaiEstime?: string;
   intentType?: 'production' | 'consultation';
+  commercialConfirmedBy?: string;
+  commercialConfirmedAt?: string;
+  commercialCommission?: number;
+  commercialCommissionStatus?: 'en_attente' | 'payee';
   reponseAtelier?: string;
   reponseAtelierDate?: string;
   statusProgression?: 'reception' | 'etude' | 'echantillon' | 'production' | 'pret';
@@ -1367,6 +1371,11 @@ export function parseLeadMeta(l: any): Lead {
           if (parsed.reponseAtelierDate) item.reponseAtelierDate = parsed.reponseAtelierDate;
           if (parsed.patronagePrice) item.patronagePrice = Number(parsed.patronagePrice);
           if (parsed.prixEchantillon) item.prixEchantillon = Number(parsed.prixEchantillon);
+          if (parsed.intentType) item.intentType = parsed.intentType;
+          if (parsed.commercialConfirmedBy) item.commercialConfirmedBy = parsed.commercialConfirmedBy;
+          if (parsed.commercialConfirmedAt) item.commercialConfirmedAt = parsed.commercialConfirmedAt;
+          if (parsed.commercialCommission !== undefined) item.commercialCommission = Number(parsed.commercialCommission);
+          if (parsed.commercialCommissionStatus) item.commercialCommissionStatus = parsed.commercialCommissionStatus;
         }
       } catch (e) {
         console.error('Error parsing ATELIER_DEVIS:', e);
@@ -1949,6 +1958,11 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'> & { id
   if (newLead.reponseAtelierDate) atelierData.reponseAtelierDate = newLead.reponseAtelierDate;
   if ((newLead as any).patronagePrice) atelierData.patronagePrice = Number((newLead as any).patronagePrice);
   if ((newLead as any).prixEchantillon) atelierData.prixEchantillon = Number((newLead as any).prixEchantillon);
+  if (newLead.intentType) atelierData.intentType = newLead.intentType;
+  if ((newLead as any).commercialConfirmedBy) atelierData.commercialConfirmedBy = (newLead as any).commercialConfirmedBy;
+  if ((newLead as any).commercialConfirmedAt) atelierData.commercialConfirmedAt = (newLead as any).commercialConfirmedAt;
+  if ((newLead as any).commercialCommission !== undefined) atelierData.commercialCommission = Number((newLead as any).commercialCommission);
+  if ((newLead as any).commercialCommissionStatus) atelierData.commercialCommissionStatus = (newLead as any).commercialCommissionStatus;
 
   if ((newLead as any).commercialUnlocked) {
     baseDetails += '| COM_UNLOCK:true';
@@ -1971,7 +1985,8 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'> & { id
   const nonSchemaCols = [
     'aiNotes', 'commercialUnlocked', 'modeleReel', 'unitPrice', 'totalPrice',
     'tissuSuggere', 'techDetails', 'delaiEstime', 'statusProgression',
-    'reponseAtelier', 'reponseAtelierDate', 'patronagePrice', 'prixEchantillon'
+    'reponseAtelier', 'reponseAtelierDate', 'patronagePrice', 'prixEchantillon',
+    'intentType', 'commercialConfirmedBy', 'commercialConfirmedAt', 'commercialCommission', 'commercialCommissionStatus'
   ];
   nonSchemaCols.forEach(col => delete supaPayload[col]);
 
@@ -2185,6 +2200,11 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     if (payload.reponseAtelierDate) atelierData.reponseAtelierDate = payload.reponseAtelierDate;
     if (payload.patronagePrice) atelierData.patronagePrice = Number(payload.patronagePrice);
     if (payload.prixEchantillon) atelierData.prixEchantillon = Number(payload.prixEchantillon);
+    if (payload.intentType) atelierData.intentType = payload.intentType;
+    if (payload.commercialConfirmedBy) atelierData.commercialConfirmedBy = payload.commercialConfirmedBy;
+    if (payload.commercialConfirmedAt) atelierData.commercialConfirmedAt = payload.commercialConfirmedAt;
+    if (payload.commercialCommission !== undefined) atelierData.commercialCommission = Number(payload.commercialCommission);
+    if (payload.commercialCommissionStatus) atelierData.commercialCommissionStatus = payload.commercialCommissionStatus;
 
     if (Object.keys(atelierData).length > 0) {
       baseDetails += '| ATELIER_DEVIS:' + JSON.stringify(atelierData);
@@ -2207,6 +2227,11 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     delete payload.reponseAtelierDate;
     delete payload.patronagePrice;
     delete payload.prixEchantillon;
+    delete payload.intentType;
+    delete payload.commercialConfirmedBy;
+    delete payload.commercialConfirmedAt;
+    delete payload.commercialCommission;
+    delete payload.commercialCommissionStatus;
   }
 
   try {
