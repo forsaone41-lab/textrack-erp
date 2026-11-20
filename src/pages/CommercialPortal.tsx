@@ -28,7 +28,8 @@ import {
   ImageIcon,
   Coins,
   CheckCheck,
-  Wallet
+  Wallet,
+  Upload
 } from 'lucide-react';
 import { 
   Lead,
@@ -289,7 +290,8 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
       commercialCheckClientValide: lead.commercialCheckClientValide !== undefined ? lead.commercialCheckClientValide : true,
       commercialCheckTissuValide: lead.commercialCheckTissuValide !== undefined ? lead.commercialCheckTissuValide : false,
       commercialCheckAvanceRecue: lead.commercialCheckAvanceRecue !== undefined ? lead.commercialCheckAvanceRecue : false,
-      commercialAvanceMontant: lead.commercialAvanceMontant || 0
+      commercialAvanceMontant: lead.commercialAvanceMontant || 0,
+      commercialRecuPhoto: lead.commercialRecuPhoto || ''
     });
   };
 
@@ -1062,21 +1064,105 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                     </label>
                   </div>
 
-                  {/* Avance amount input if checked */}
-                  {editForm.commercialCheckAvanceRecue && (
-                    <div className="pt-1">
-                      <label className="block text-[10px] font-black text-emerald-800 uppercase tracking-wider mb-1">
-                        {isAr ? 'مبلغ التسبيق المستلم (درهم):' : 'Montant de l\'avance reçue (MAD) :'}
-                      </label>
-                      <input
-                        type="number"
-                        value={editForm.commercialAvanceMontant || ''}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, commercialAvanceMontant: Number(e.target.value) }))}
-                        placeholder={editForm.intentType === 'consultation' ? '250' : 'مثلاً: 1500'}
-                        className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-sm font-black text-emerald-900 focus:ring-2 focus:ring-emerald-500 shadow-2xs"
-                      />
+                  {/* Avance amount input & Reçu de Virement Upload */}
+                  <div className="space-y-3 pt-1">
+                    {editForm.commercialCheckAvanceRecue && (
+                      <div>
+                        <label className="block text-[10px] font-black text-emerald-800 uppercase tracking-wider mb-1">
+                          {isAr ? 'مبلغ التسبيق المستلم (درهم):' : 'Montant de l\'avance reçue (MAD) :'}
+                        </label>
+                        <input
+                          type="number"
+                          value={editForm.commercialAvanceMontant || ''}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, commercialAvanceMontant: Number(e.target.value) }))}
+                          placeholder={editForm.intentType === 'consultation' ? '250' : 'مثلاً: 1500'}
+                          className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-sm font-black text-emerald-900 focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                        />
+                      </div>
+                    )}
+
+                    {/* 📸 BLASA DIAL TSWIRA DIAL VERMNT (Upload Reçu de Virement) */}
+                    <div className="p-3.5 rounded-2xl bg-white border-2 border-dashed border-indigo-200 hover:border-indigo-400 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-[11px] font-black text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
+                          <ImageIcon className="w-4 h-4 text-indigo-600" />
+                          {isAr ? 'صورة وصل التحويل البنكي (Reçu Virement)' : 'Photo / Reçu du Virement Bancaire'}
+                        </label>
+                        {editForm.commercialRecuPhoto ? (
+                          <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                            ✓ {isAr ? 'تم إرفاق الوصل' : 'Reçu attaché'}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                            {isAr ? 'مطلوب لتأكيد الإنتاج' : 'Requis pour production'}
+                          </span>
+                        )}
+                      </div>
+
+                      {editForm.commercialRecuPhoto ? (
+                        <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                          <img 
+                            src={editForm.commercialRecuPhoto} 
+                            alt="Reçu virement" 
+                            className="w-16 h-16 rounded-lg object-cover border border-slate-300 shadow-2xs cursor-pointer hover:opacity-90"
+                            onClick={() => setPreviewImage(editForm.commercialRecuPhoto || null)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate">{isAr ? 'وصل التحويل البنكي' : 'Reçu de virement bancaire'}</p>
+                            <p className="text-[10px] text-slate-500">{isAr ? 'انقر لتكبير ومعاينة الصورة' : 'Cliquez pour agrandir'}</p>
+                            <div className="flex gap-2 mt-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewImage(editForm.commercialRecuPhoto || null)}
+                                className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-[10px] font-black hover:bg-indigo-100 flex items-center gap-1 cursor-pointer transition-colors"
+                              >
+                                👁️ {isAr ? 'معاينة' : 'Voir'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditForm(prev => ({ ...prev, commercialRecuPhoto: '' }))}
+                                className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-[10px] font-black hover:bg-rose-100 flex items-center gap-1 cursor-pointer transition-colors"
+                              >
+                                ✕ {isAr ? 'حذف' : 'Supprimer'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center p-4 rounded-xl bg-indigo-50/40 hover:bg-indigo-50/80 border border-indigo-100 cursor-pointer transition-all text-center group">
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              try {
+                                const base64 = await compressImage(file, 1200, 0.8);
+                                setEditForm(prev => ({ 
+                                  ...prev, 
+                                  commercialRecuPhoto: base64,
+                                  commercialCheckAvanceRecue: true 
+                                }));
+                              } catch (err) {
+                                console.error('Upload error:', err);
+                              }
+                              e.target.value = '';
+                            }}
+                          />
+                          <div className="w-10 h-10 rounded-full bg-white shadow-xs border border-indigo-200 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                            <Upload className="w-5 h-5 text-indigo-600" />
+                          </div>
+                          <p className="text-xs font-black text-indigo-900">
+                            {isAr ? 'اضغط هنا لرفع صورة وصل الفيرمون (Reçu)' : 'Cliquez pour téléverser le reçu de virement'}
+                          </p>
+                          <p className="text-[10px] font-medium text-slate-500 mt-0.5">
+                            {isAr ? 'صورة الكابتور أو التوصيل البنكي (JPG, PNG)' : 'Capture d\'écran ou photo du reçu (JPG, PNG)'}
+                          </p>
+                        </label>
+                      )}
                     </div>
-                  )}
+                  </div>
 
                   <p className="text-[9.5px] text-slate-500 font-bold leading-relaxed pt-1">
                     {isAr 
