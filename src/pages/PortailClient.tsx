@@ -2359,7 +2359,7 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
   };
 
   const analyzeLeadPhotoWithAI = async (
-    target: { modele: string; details?: string; photo: string },
+    target: { modele: string; details?: string; photo: string; quantity?: number },
     apiKeyParam?: string
   ) => {
     const apiKey = (apiKeyParam || geminiApiKey || localStorage.getItem('beya_gemini_api_key') || (import.meta as any).env?.VITE_GEMINI_API_KEY || DEFAULT_GEMINI_KEY).trim();
@@ -2422,6 +2422,7 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
   * استهلاك القماش 1.90m إلى 2.40m، سعر الخياطة 60 إلى 110 درهم.
 
 الموديل المدخل من الزبون: "${target.modele || ''}"
+الكمية المطلوبة من الزبون: "${target.quantity ? `${target.quantity} قطعة` : 'حسب طلب الزبون'}"
 ملاحظات الزبون: "${target.details || ''}"
 
 أجب فقط بصيغة JSON صحيحة وبدون أي نصوص إضافية قبل أو بعد:
@@ -2596,7 +2597,7 @@ export default function PortailClient({ currentUser: currentUserProp, onLogout }
     const safeModel = (analysis?.modeleReel || lead?.type || 'الموديل').trim();
     const mod = safeModel.toLowerCase();
     const safeUnit = Number(analysis?.unitPrice) || 65;
-    const safeQty = Number(analysis?.qty) || Number(lead?.quantity) || 100;
+    const safeQty = Number(analysis?.qty) || Number(lead?.quantity) || 1;
     const safeTotal = Number(analysis?.totalPrice) || (safeUnit * safeQty);
     const safeTissu = (analysis?.tissuSuggere || 'قماش مخصص ومطابق للمواصفات').trim();
     const safeDelai = (analysis?.delaiEstime || '7 إلى 10 أيام عمل').trim();
@@ -3176,9 +3177,17 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     const fournisseurCouleurs = savedFournisseurColors ? String(savedFournisseurColors) : '';
     const fournisseurNote = savedFournisseurNotes ? String(savedFournisseurNotes) : '';
 
-    const rawQty = (extDetails.adminQty && Number(extDetails.adminQty) > 0)
-      ? Number(extDetails.adminQty)
-      : (Number(d.quantity) > 0 ? Number(d.quantity) : 100);
+    const sizesObj = d.tailles && typeof d.tailles === 'object' ? d.tailles : {};
+    const sumFromSizes = Object.values(sizesObj).reduce((sum: number, v: any) => sum + (Number(v) || 0), 0);
+    const clientRequestedQty = Number(d.quantity) > 0
+      ? Number(d.quantity)
+      : (sumFromSizes > 0 ? sumFromSizes : 0);
+
+    const rawQty = (extDetails.clientAdjustedQty && Number(extDetails.clientAdjustedQty) > 0)
+      ? Number(extDetails.clientAdjustedQty)
+      : (extDetails.adminQty && Number(extDetails.adminQty) > 0)
+        ? Number(extDetails.adminQty)
+        : (clientRequestedQty > 0 ? clientRequestedQty : (Number(d.quantity) || 1));
     const qty = rawQty;
 
     const tissuCostPerPiece = Math.round(defaultTissuConso * defaultPrixMetre);
@@ -3383,9 +3392,19 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
     
     try {
       const sizeQuantities: Record<string, number> = {};
+      let totalFromSizes = 0;
       Object.entries(newOrderForm.tailles).forEach(([s, q]) => {
-        if (q && parseInt(q) > 0) sizeQuantities[s] = parseInt(q);
+        const val = parseInt(q);
+        if (val && val > 0) {
+          sizeQuantities[s] = val;
+          totalFromSizes += val;
+        }
       });
+
+      const parsedTypedQty = parseInt(newOrderForm.quantite);
+      const resolvedQty = (parsedTypedQty && parsedTypedQty > 0)
+        ? parsedTypedQty
+        : (totalFromSizes > 0 ? totalFromSizes : 1);
 
       const pastPhone = mesDemandes.find(d => d.phone && d.phone.trim() !== '')?.phone || '';
       const pastPhone2 = mesDemandes.find(d => d.phone2 && d.phone2.trim() !== '')?.phone2 || '';
@@ -3397,7 +3416,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
         phone2: pastPhone2,
         ville: clientCity || currentUser?.ville || '',
         type: newOrderForm.modele,
-        quantity: parseInt(newOrderForm.quantite) || 100,
+        quantity: resolvedQty,
         photo: newOrderForm.photo,
         details: newOrderForm.details,
         tailles: sizeQuantities
@@ -3409,7 +3428,8 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
           const aiResult = await analyzeLeadPhotoWithAI({
             modele: newOrderForm.modele,
             details: newOrderForm.details,
-            photo: newOrderForm.photo
+            photo: newOrderForm.photo,
+            quantity: resolvedQty
           });
           if (aiResult) {
             leadPayload.modeleReel = aiResult.modeleReel;
@@ -4877,7 +4897,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                const officialLeadDevis = getOfficialDevisForLead(d);
                const isDevisReady = singleDevState.isConfirmedByAtelier || singleDevState.isVal || Boolean(officialLeadDevis);
 
-               const baseOrderQty = Math.max(1, Number(analysis.qty) || Number(d.quantity) || 100);
+               const baseOrderQty = Math.max(1, Number(analysis.qty) || Number(d.quantity) || 1);
                const currentQty = selectedTierQty[d.id] !== undefined ? selectedTierQty[d.id] : baseOrderQty;
                const isClientFabric = analysis.canSwitchFabricSource && fabricOption[d.id] === 'client';
                const selectedBasePrice = isClientFabric ? analysis.confectionPrice : analysis.fullPackagePrice;
@@ -4893,13 +4913,12 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                // Build smart ascending quantity tiers for the compact simulator right above Confirmation Box
                const simPresets = Array.from(
                  new Set([
-                   baseOrderQty,
-                   Math.max(baseOrderQty + 10, Math.round((baseOrderQty * 1.5) / 10) * 10),
-                   Math.max(baseOrderQty + 20, Math.round((baseOrderQty * 2) / 10) * 10),
-                   100,
-                   300,
-                   500
-                 ].filter(q => q >= baseOrderQty))
+                    baseOrderQty,
+                    Math.max(baseOrderQty + 10, Math.round((baseOrderQty * 1.5) / 5) * 5),
+                    Math.max(baseOrderQty + 25, Math.round((baseOrderQty * 2) / 5) * 5),
+                    Math.max(baseOrderQty + 50, Math.round((baseOrderQty * 3) / 10) * 10),
+                    Math.max(baseOrderQty + 100, Math.round((baseOrderQty * 5) / 10) * 10)
+                  ].filter(q => q >= baseOrderQty))
                ).sort((a, b) => a - b).slice(0, 5);
 
                const phoneForWhatsApp = (company.phone || '+212600000000').replace(/\D/g, '');
@@ -9296,7 +9315,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                   <div style={{ fontSize: '10px', color: '#94a3b8' }}>
                     {company.name || 'BEYA'} — {isAr ? 'المكتب التقني' : 'Bureau Technique'}
                   </div>
-                  {company.cachetUrl && (
+                  {company.showCachetOnDevis !== false && company.cachetUrl && (
                     <img src={company.cachetUrl} alt="Cachet" style={{ maxHeight: '58px', marginTop: '6px', objectFit: 'contain' }} />
                   )}
                 </div>
@@ -9423,7 +9442,7 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                         type="number" 
                         value={newOrderForm.quantite}
                         onChange={e => setNewOrderForm({...newOrderForm, quantite: e.target.value})}
-                        placeholder="100"
+                        placeholder={isAr ? "الكمية المطلوبة (مثال: 50)" : "Ex: 50"}
                         className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-indigo-600 transition-all ${isAr ? 'text-right' : ''}`}
                       />
                     </div>
@@ -9440,10 +9459,16 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                                  type="number"
                                  placeholder={size}
                                  value={newOrderForm.tailles[size]}
-                                 onChange={(e) => setNewOrderForm({
-                                   ...newOrderForm,
-                                   tailles: { ...newOrderForm.tailles, [size]: e.target.value }
-                                 })}
+                                 onChange={(e) => {
+                                   const val = e.target.value;
+                                   const updatedTailles = { ...newOrderForm.tailles, [size]: val };
+                                   const totalSizes = Object.values(updatedTailles).reduce((sum, v) => sum + (parseInt(v) || 0), 0);
+                                   setNewOrderForm({
+                                     ...newOrderForm,
+                                     tailles: updatedTailles,
+                                     quantite: totalSizes > 0 ? String(totalSizes) : newOrderForm.quantite
+                                   });
+                                 }}
                                  className={`w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-xs font-black text-center outline-none focus:border-indigo-500 transition-all placeholder:text-slate-300`}
                                />
                                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] font-black text-slate-400 uppercase">{size}</span>
@@ -9668,6 +9693,27 @@ const getDemandeAnalysis = (d: Lead, isAr: boolean) => {
                         </tr>
                       </tbody>
                     </table>
+                  </div>
+                </div>
+
+                {/* Prototype & Échantillon Badge */}
+                <div className="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-2xl flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">✂️</span>
+                    <div>
+                      <span className="font-black text-indigo-950 uppercase tracking-tight block">
+                        {isAr ? 'عينة أولية للمصادقة (Prototype Échantillon)' : 'Prototype de Validation (Échantillon)'}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-semibold">
+                        {isAr ? 'يتم تصنيع عينة 1 قطعة أولاً لمطابقة المقاسات والتوب قبل إطلاق السلسلة' : '1 pièce réalisée en amont pour valider le tombé, les mesures et les finitions.'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="font-mono font-black text-sm text-indigo-700 block">
+                      {(d as any).prixEchantillon || Math.max(250, Math.round((analysis.unitPrice || 60) * 2.8))} MAD
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase">{isAr ? 'للعينة' : '/ échantillon'}</span>
                   </div>
                 </div>
 

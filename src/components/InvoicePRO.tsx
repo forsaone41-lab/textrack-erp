@@ -32,6 +32,7 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
 
   const avance = facture.avance || 0;
   const reste = facture.montant - avance;
+  const shouldShowCachet = company.showCachetOnDevis !== false;
 
   if (isRecu) {
     return (
@@ -105,7 +106,7 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
                 <span style={{ width: '160px', flexShrink: 0 }}>{label}</span>
                 <span style={{ flex: 1, borderBottom: '1px solid #94a3b8', paddingBottom: '2px', minHeight: '24px', position: 'relative' }}>
                   {value}
-                  {label === 'Signature / Cachet :' && company.cachetUrl && (
+                  {label === 'Signature / Cachet :' && shouldShowCachet && company.cachetUrl && (
                     <img src={company.cachetUrl} style={{ position: 'absolute', right: '10px', bottom: '-10px', height: '80px', objectFit: 'contain', opacity: 0.9, zIndex: 10 }} alt="Cachet" />
                   )}
                 </span>
@@ -352,15 +353,22 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
           <span className={`absolute top-2.5 ${isAr ? 'right-3' : 'left-3'} text-[9px] font-black text-slate-400 uppercase tracking-widest`}>
             {isAr ? 'الختم والتوقيع' : 'Cachet / Signature'}
           </span>
-          {company.cachetUrl ? (
+          {shouldShowCachet && company.cachetUrl ? (
             <img src={company.cachetUrl} className="max-h-24 w-auto object-contain opacity-95 mix-blend-multiply mt-4" alt="Cachet" />
-          ) : (
+          ) : shouldShowCachet ? (
             <div className="border-2 border-dashed border-indigo-300 rounded-xl p-3 text-center mt-3 bg-white w-full shadow-2xs">
               <p className="text-[11px] font-black text-indigo-900 uppercase tracking-wider">{company.name || 'BEYA CREATIVE'}</p>
               <p className="text-[8.5px] font-bold text-slate-500 uppercase mt-0.5">Atelier de Confection Textile</p>
               <p className="text-[8px] font-bold text-slate-400 uppercase mt-0.5">Casablanca — Maroc</p>
               <span className="inline-block bg-indigo-600 text-white text-[7.5px] font-black px-2.5 py-0.5 rounded-full mt-2 tracking-wide uppercase">
                 {avance > 0 ? (isAr ? 'تم استلام التسبيق 50%' : 'ACOMPTE 50% REÇU') : (isAr ? 'توقيع مصادق عليه' : 'SIGNATURE VALIDÉE')}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-20 text-center mt-4">
+              <div className="w-28 border-b border-dashed border-slate-300 mb-2"></div>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                {isAr ? 'التوقيع اليدوي' : 'Signature Manuelle'}
               </span>
             </div>
           )}

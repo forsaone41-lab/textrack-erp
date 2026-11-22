@@ -649,6 +649,7 @@ export interface CompanyProfile {
   logoFooter?: string;
   logoAppIcon?: string;
   cachetUrl?: string;
+  showCachetOnDevis?: boolean;
   address: string;
   ice: string;
   rc: string;
@@ -774,6 +775,7 @@ export const DEFAULT_COMPANY: CompanyProfile = {
   logoLogin: '/logo.png',
   logoMobileHeader: '/logo.png',
   cachetUrl: '',
+  showCachetOnDevis: true,
   address: 'Azrou, Maroc',
   ice: '',
   rc: '',

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2, Camera } from 'lucide-react';
-import { Facture, Commande, User, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile, syncCompanyProfile, upsertClientDevis } from '../types';
+import { Facture, Commande, User, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile, syncCompanyProfile, saveCompanyProfile, upsertClientDevis } from '../types';
 import { printFacture, exportFacturesCSV } from '../utils/print';
 import { printElement } from '../utils/pdf';
 import { InvoicePRO } from '../components/InvoicePRO';
@@ -466,6 +466,23 @@ export default function Devis() {
                 <h2 className="text-xl font-black text-slate-800 tracking-tight">Détails de la Facture</h2>
               </div>
               <div className="flex items-center gap-3">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const nextVal = company.showCachetOnDevis === false ? true : false;
+                    const updated = { ...company, showCachetOnDevis: nextVal };
+                    setCompany(updated);
+                    saveCompanyProfile(updated);
+                  }}
+                  title={isAr ? 'إظهار أو إخفاء الختم' : 'Afficher ou masquer le cachet'}
+                  className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl text-xs font-black border transition-all cursor-pointer ${
+                    company.showCachetOnDevis !== false
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100'
+                      : 'bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100'
+                  }`}
+                >
+                  <span>{company.showCachetOnDevis !== false ? '✓ الختم ظاهر' : '✕ الختم مخفي'}</span>
+                </button>
                 <button onClick={() => setViewFacture(null)} className="px-5 py-2.5 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-all">Fermer</button>
                 <button 
                   onClick={() => printElement(`facture-pro-view-${viewFacture.id}`)}

@@ -109,7 +109,7 @@ export default function Settings() {
 
   if (!profile) return null;
 
-  const handleChange = (field: keyof CompanyProfile, value: string) => {
+  const handleChange = (field: keyof CompanyProfile, value: any) => {
     setProfile({ ...profile, [field]: value });
     setSaved(false);
   };
@@ -808,33 +808,121 @@ export default function Settings() {
               <input type="text" value={profile.rib || ''} onChange={e => handleChange('rib', e.target.value)} placeholder="000 000 0000000000000000 00" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-left" dir="ltr" />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">{isAr ? 'كود QR (للدفع السريع)' : 'QR Code (Paiement rapide)'}</label>
-            <div className="flex items-center gap-4">
-              <div className="w-24 h-24 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl overflow-hidden flex items-center justify-center">
-                {profile.bankQrCode ? (
-                  <img src={profile.bankQrCode} className="w-full h-full object-contain p-1" />
-                ) : (
-                  <ImageIcon className="w-6 h-6 text-slate-300" />
-                )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            {/* 1. Left: QR Code (Paiement rapide) */}
+            <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+              <div>
+                <label className="block text-sm font-bold text-slate-800 mb-1">{isAr ? 'كود QR (للدفع السريع)' : 'QR Code (Paiement rapide)'}</label>
+                <p className="text-xs text-slate-500 mb-3">{isAr ? 'سيظهر الكود في بوابة الكليان ليسهل عليه تحويل المبلغ مباشرة.' : 'Ce QR sera affiché dans le portail client.'}</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 bg-white border-2 border-dashed border-slate-200 rounded-xl overflow-hidden flex items-center justify-center shrink-0">
+                    {profile.bankQrCode ? (
+                      <img src={profile.bankQrCode} className="w-full h-full object-contain p-1" />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-slate-300" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <label className="cursor-pointer bg-white px-3.5 py-1.5 border border-slate-200 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors inline-block text-slate-700 shadow-2xs">
+                      {isAr ? 'تحميل صورة QR' : 'Uploader le QR'}
+                      <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const compressed = await compressImage(file);
+                          handleChange('bankQrCode', compressed);
+                        }
+                      }} />
+                    </label>
+                    {profile.bankQrCode && (
+                      <button type="button" onClick={() => handleChange('bankQrCode', '')} className="block text-rose-500 text-xs font-bold hover:underline cursor-pointer">
+                        {isAr ? 'إزالة الكود' : 'Supprimer'}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <label className="cursor-pointer bg-white px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors inline-block text-slate-700">
-                  {isAr ? 'تحميل صورة QR' : 'Uploader le QR'}
-                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const compressed = await compressImage(file);
-                      handleChange('bankQrCode', compressed);
-                    }
-                  }} />
-                </label>
-                {profile.bankQrCode && (
-                  <button onClick={() => handleChange('bankQrCode', '')} className="ml-2 px-3 py-2 text-rose-500 text-sm font-semibold hover:bg-rose-50 rounded-lg transition-colors">
-                    {isAr ? 'إزالة' : 'Supprimer'}
+            </div>
+
+            {/* 2. Right: Cachet sur Devis (Exactly where user drew the red box!) */}
+            <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-bold text-slate-800">
+                    {isAr ? 'الختم والتوقيع في الـ Devis' : 'Cachet sur Devis & Factures'}
+                  </label>
+                  <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${
+                    profile.showCachetOnDevis !== false
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      : 'bg-rose-100 text-rose-800 border border-rose-200'
+                  }`}>
+                    {profile.showCachetOnDevis !== false ? (isAr ? '✓ ظاهر في الدوفي' : '✓ Affiché sur Devis') : (isAr ? '✕ مخفي من الدوفي' : '✕ Masqué')}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mb-3">
+                  {isAr 
+                    ? 'تحكم في إظهار أو إخفاء الختم والتوقيع أسفل عروض الأسعار (Devis) والفواتير.' 
+                    : 'Choisissez d\'afficher ou masquer le cachet officiel en bas de vos devis et factures.'}
+                </p>
+
+                {/* Switch: Afficher vs Masquer */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => handleChange('showCachetOnDevis', true)}
+                    className={`py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      profile.showCachetOnDevis !== false
+                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-[1.02]'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>✓</span>
+                    <span>{isAr ? 'إظهار الختم (Oui)' : 'Afficher (Oui)'}</span>
                   </button>
-                )}
-                <p className="text-xs text-slate-500 mt-2">{isAr ? 'سيظهر الكود في بوابة الكليان ليسهل عليه تحويل المبلغ مباشرة.' : 'Ce QR sera affiché dans le portail client.'}</p>
+                  <button
+                    type="button"
+                    onClick={() => handleChange('showCachetOnDevis', false)}
+                    className={`py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      profile.showCachetOnDevis === false
+                        ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20 scale-[1.02]'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>✕</span>
+                    <span>{isAr ? 'إخفاء الختم (Non)' : 'Masquer (Non)'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Cachet preview & quick upload */}
+              <div className="flex items-center gap-3 pt-2.5 border-t border-slate-200/80">
+                <div className="w-14 h-14 bg-white rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                  {profile.cachetUrl ? (
+                    <img src={profile.cachetUrl} className="w-full h-full object-contain p-1 mix-blend-multiply" alt="Cachet" />
+                  ) : (
+                    <span className="text-[8px] font-bold text-slate-300 text-center uppercase">{isAr ? 'بدون ختم' : 'Aucun'}</span>
+                  )}
+                </div>
+                <div className="flex-1 space-y-1">
+                  <label className="cursor-pointer bg-white px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors inline-block text-slate-700 shadow-2xs">
+                    {profile.cachetUrl ? (isAr ? 'تغيير صورة الختم' : 'Changer Cachet') : (isAr ? 'تحميل الختم' : 'Uploader Cachet')}
+                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const compressed = await compressImage(file);
+                        handleChange('cachetUrl', compressed);
+                      }
+                    }} />
+                  </label>
+                  {profile.cachetUrl && (
+                    <button 
+                      type="button" 
+                      onClick={() => handleChange('cachetUrl', '')} 
+                      className="block text-rose-500 text-xs font-bold hover:underline cursor-pointer"
+                    >
+                      {isAr ? 'إزالة الختم' : 'Supprimer'}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
