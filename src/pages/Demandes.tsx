@@ -14,12 +14,16 @@ import { supabase } from '../supabase';
 const DEFAULT_TEMPLATES = {
   ar: {
     firstContact: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على اهتمامكم بطلبكم الخاص بـ *{type}*.\n\n📍 ورشتنا للإنتاج والتصنيع متواجدة بمدينة **آزرو**، ونضمن التوصيل السريع لجميع مدن المغرب 🇲🇦.\n\n✨ أهم التفاصيل حول طريقة العمل لدينا:\n• **الباتروناج والعينة:** كنصاوبوا الباترون الرقمي بدقة، وكنبداو بـ **عينة أولى (Prototype قطعة واحدة)** باش نتأكدوا مجموعين من القياسات، الفينيسيون، والتوب قبل الإنتاج.\n• **أقل كمية للطلب (MOQ):** 100 قطعة للموديل في الإنتاج التسلسلي (موزعة على المقاسات، وبحد أدنى 20 قطعة في اللون)، والعينة كتبدا من قطعة واحدة فقط.\n• **الأسعار:** كتحدد حسب الموديل، الثوب، وطريقة الفينيسيون المطلوبة.\n\n📸 باش نعطيوكم ثمن مضبوط فـ أقرب وقت، عفاك صيفطوا لينا صورة أو تصميم الموديل مع الكمية التقريبية. نتشرفوا بالخدمة معكم! 🧵",
+    firstContactConsultation: "السلام عليكم *{name}*، معكم ورشة *BEYA CREATIVE*. 😊🇲🇦\n\nشفنا أنكم طلبتوا *استشارة ومواكبة* بخصوص مشروعكم (*{type}*)، ومرحباً بكم! حنا هنا باش نعاونكم ونوجهوكم خطوة بخطوة باش تبداو بطريقة صحيحة وبأقل تكلفة. 🧵✨\n\nباش نقدروا نعطيوكم أحسن النصائح التقنية، عافاك جاوبونا على هاد 3 النقط :\n1️⃣ واش الفكرة ديالكم باغة تخدم كـ Brand خاصة ولا للبيع فـ E-commerce؟\n2️⃣ واش عندكم نوع ثوب محدد فبالكم، ولا بغيتونا نقترحوا عليكم أحسن قماش مناسب للموديل؟\n3️⃣ شحال الكمية التقريبية اللي ناويين تبداو بيها كأول تجربة؟\n\nصيفطوا لينا تصويرة الموديل أو الفكرة ديالكم، وغادي نجاوبكم وندرسوا معاكم المشروع مباشرة! 🤝",
+    firstContactRetard: "السلام عليكم *{name}*، معكم ورشة *BEYA CREATIVE*. 🙏\n\nكنعتذروا منكم بزاف وبشدة على هاد التأخير فالرد / المتابعة بخصوص طلبكم الخاص بـ *{type}*، راجع لضغط كبير كان عندنا فالإنتاج هذا الأسبوع. 🏭\n\nكنشكروكم على صبركم، وباش نعوضوا هاد التأخير، درنا الملف ديالكم دابا فـ *قمة الأولويات* (Traitement Prioritaire) باش نخدموا عليه فوراً ونعطيوكم أحسن حل. ⚡\n\nواش ما زال مهتمين نكملوا الإجراءات مع بعض؟ خبرونا باش نطلقوا الخدمة ونعطيوكم الأسبقية فوراً! 🤝🇲🇦",
     firstContactRecrutement: "السلام عليكم *{name}*، معاكم مصنع *BEYA CREATIVE* بآزرو. 😊\n\nشفنا الطلب ديالك بخصوص خدمة *{type}*. بغينا غير نتأكدو من بعض المعلومات:\n1. شحال من عام ديال الخبرة عندك فهاد التخصص؟\n2. واش فايت ليك خدمتي فشي معمل ديال الخياطة من قبل؟\n3. واش ساكن(ة) في آزرو أو النواحي؟\n4. فوقاش تقدر تبدا الخدمة معنا يلا تفاهمنا؟\n\nحنا كنتسناو الجواب ديالك باش نحددو معاك موعد ديال لانتريتيان. 🇲🇦",
     devisTxt: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nإليكم عرض السعر لطلبكم الخاص بـ *{type}*:\n- الكمية: *{quantity} قطعة*\n- الثمن للقطعة: *{unitPrice} درهم*\n- المجموع الإجمالي: *{total} درهم* {note}\n\n*(ملاحظة: كلما زادت الكمية، ينخفض ثمن القطعة)*\n\nباش نضمنوا الجودة، كنقترحوا نصاوبوا **عينة (Échantillon)** هي الأولى باش نصاوبوا الورقة التقنية. واش نبداو العينة؟ 🧵🇲🇦",
     devisPdf: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nيسعدنا أن نقدم لكم تقدير الثمن الخاص بطلبكم. لقد حرصنا على دراسة طلبكم بعناية لنضمن لكم أفضل جودة لمنتجات *{type}*.\n\nنحن في انتظار تأكيدكم للبدء في العمل. شكراً لثقتكم!"
   },
   fr: {
     firstContact: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre demande pour vos *{type}*.\n\n📍 Notre atelier de confection est basé à **Azrou**, avec livraison assurée dans toutes les villes du Maroc 🇲🇦.\n\n✨ Voici les détails essentiels sur notre fonctionnement :\n• **Patronage & Prototype :** Nous concevons le patronage numérique sur-mesure et réalisons d'abord un **prototype de validation (1 pièce)** pour valider la coupe, les finitions et le tombé avant de lancer la série.\n• **Minimum de commande (MOQ) :** À partir de **100 pièces par modèle** pour la série (répartissables sur vos tailles, min 20 pcs/couleur) et à partir de 1 pièce pour le prototype.\n• **Tarifs :** Établis sur-mesure selon le modèle, la matière et les finitions.\n\n📸 Pour vous établir un devis précis et rapide, partagez-nous simplement une photo ou un croquis de votre modèle avec la quantité souhaitée. Au plaisir de collaborer ! 🧵",
+    firstContactConsultation: "Bonjour *{name}*, ici l'Atelier *BEYA CREATIVE*. 😊🇲🇦\n\nNous avons bien reçu votre demande de *consultation et accompagnement* pour votre projet (*{type}*). C'est un plaisir d'échanger avec vous !\n\nNotre rôle est de vous guider pas à pas pour lancer votre confection avec les meilleurs standards et un coût optimisé. 🧵✨\n\nAfin de vous conseiller au mieux :\n1️⃣ S'agit-il d'un projet de marque propre (Branding) ou de vente en ligne (E-commerce) ?\n2️⃣ Avez-vous déjà choisi la matière/tissu ou souhaitez-vous nos recommandations ?\n3️⃣ Quelle quantité envisagez-vous pour cette première série ?\n\nN'hésitez pas à nous partager une photo ou croquis de votre idée, nous vous orienterons avec plaisir ! 🤝",
+    firstContactRetard: "Bonjour *{name}*, ici l'Atelier *BEYA CREATIVE*. 🙏\n\nNous vous présentons toutes nos excuses pour ce retard de suivi concernant votre projet de *{type}*. Nous avons fait face à une très forte charge de production à l'atelier ces derniers jours. 🏭\n\nPour compenser ce délai, votre dossier est désormais placé en **priorité absolue** pour une prise en charge immédiate. ⚡\n\nÊtes-vous toujours disponible pour finaliser les détails ensemble ? Nous sommes à votre entière disposition pour avancer au plus vite ! 🤝🇲🇦",
     firstContactRecrutement: "Bonjour *{name}*, ici l'usine *BEYA CREATIVE* à Azrou. 😊\n\nNous avons bien reçu votre candidature pour le poste de *{type}*. Pour compléter votre dossier, pourriez-vous répondre à ces questions :\n1. Combien d'années d'expérience avez-vous dans ce domaine ?\n2. Avez-vous déjà travaillé dans une usine de confection ?\n3. Habitez-vous à Azrou ou aux alentours ?\n4. Quelle est votre disponibilité pour commencer ?\n\nNous attendons votre retour pour programmer un entretien. 🇲🇦",
     devisTxt: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nVoici notre proposition pour votre commande de *{type}* :\n- Quantité : *{quantity} pcs*\n- Prix Unitaire : *{unitPrice} MAD*\n- TOTAL : *{total} MAD* {note}\n\n*(Note : Tarif dégressif selon la quantité)*\n\nPour garantir la qualité, nous suggérons de commencer par un **Échantillon** pour créer la Fiche Technique. On lance l'échantillon ? 🧵🇲🇦",
     devisPdf: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nNous avons le plaisir de vous transmettre votre devis. Nous avons étudié votre demande avec soin pour vous garantir la meilleure qualité pour vos *{type}*.\n\nNous attendons votre confirmation pour lancer la production. Merci de votre confiance !"
@@ -4069,13 +4073,26 @@ const getLeadModelisteInfo = (lead: Lead) => {
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="flex items-center gap-1 text-emerald-600 font-black text-sm uppercase tracking-tight">
-                                    <Package className="w-3.5 h-3.5" /> 
-                                    {lead.type === 'Demande via New Landing' ? (isAr ? 'مشروع جديد' : 'Nouveau Projet') : lead.type.replace(' (CMT - Client Tissu)', '')} 
-                                    {lead.quantity && Number(lead.quantity) > 0 ? (
-                                      <span className="text-slate-400 text-xs font-bold" dir="ltr">({lead.quantity} {isAr ? 'قطعة' : 'pcs'})</span>
-                                    ) : null}
-                                  </span>
+                                  {(() => {
+                                    const parsedModelFromDetails = lead.details?.match(/Mod[èe]le\s*:\s*([^|\n]+)/i)?.[1]?.trim();
+                                    const parsedQtyFromDetails = lead.details?.match(/Qt[ée]\s*:\s*(\d+)/i)?.[1];
+                                    const resolvedModelName = (lead.type?.toLowerCase().includes('formulaire') && (lead.modeleReel || parsedModelFromDetails))
+                                      ? (lead.modeleReel || parsedModelFromDetails)
+                                      : (lead.type === 'Demande via New Landing' ? (isAr ? 'مشروع جديد' : 'Nouveau Projet') : lead.type.replace(' (CMT - Client Tissu)', ''));
+                                    const resolvedQty = (lead.quantity && Number(lead.quantity) > 0)
+                                      ? lead.quantity
+                                      : (parsedQtyFromDetails ? Number(parsedQtyFromDetails) : null);
+
+                                    return (
+                                      <span className="flex items-center gap-1 text-emerald-600 font-black text-sm uppercase tracking-tight">
+                                        <Package className="w-3.5 h-3.5" /> 
+                                        {resolvedModelName} 
+                                        {resolvedQty ? (
+                                          <span className="text-slate-400 text-xs font-bold" dir="ltr">({resolvedQty} {isAr ? 'قطعة' : 'pcs'})</span>
+                                        ) : null}
+                                      </span>
+                                    );
+                                  })()}
                                   {lead.type.includes('CMT - Client Tissu') && (
                                     <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 border border-amber-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
                                       ✂️ CMT (Tissu Client)
@@ -4843,6 +4860,22 @@ const getLeadModelisteInfo = (lead: Lead) => {
                         onChange={(e) => setTemplates({ ...templates, ar: { ...templates.ar, devisPdf: e.target.value } })}
                       />
                     </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">💡 رسالة استشارة ومواكبة المشروع (نصائح وتوجيه)</label>
+                      <textarea
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
+                        value={templates.ar.firstContactConsultation || DEFAULT_TEMPLATES.ar.firstContactConsultation}
+                        onChange={(e) => setTemplates({ ...templates, ar: { ...templates.ar, firstContactConsultation: e.target.value } })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-rose-600 uppercase tracking-widest mb-2">⏳ رسالة اعتذار عن التأخير + أولوية مستعجلة</label>
+                      <textarea
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
+                        value={templates.ar.firstContactRetard || DEFAULT_TEMPLATES.ar.firstContactRetard}
+                        onChange={(e) => setTemplates({ ...templates, ar: { ...templates.ar, firstContactRetard: e.target.value } })}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -4876,6 +4909,22 @@ const getLeadModelisteInfo = (lead: Lead) => {
                         className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
                         value={templates.fr.devisPdf}
                         onChange={(e) => setTemplates({ ...templates, fr: { ...templates.fr, devisPdf: e.target.value } })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">💡 Consultation & Conseil Projet (Orientation)</label>
+                      <textarea
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
+                        value={templates.fr.firstContactConsultation || DEFAULT_TEMPLATES.fr.firstContactConsultation}
+                        onChange={(e) => setTemplates({ ...templates, fr: { ...templates.fr, firstContactConsultation: e.target.value } })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-rose-600 uppercase tracking-widest mb-2">⏳ Excuse Retard & Prise en Charge Prioritaire</label>
+                      <textarea
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
+                        value={templates.fr.firstContactRetard || DEFAULT_TEMPLATES.fr.firstContactRetard}
+                        onChange={(e) => setTemplates({ ...templates, fr: { ...templates.fr, firstContactRetard: e.target.value } })}
                       />
                     </div>
                   </div>
@@ -4979,6 +5028,20 @@ const getLeadModelisteInfo = (lead: Lead) => {
                     msg: isAr
                       ? `السلام عليكم *${contactingLead.name}*، معكم *BEYA CREATIVE*. 😊 شكراً على طلبكم الخاص بـ *${cleanType}*. واش ممكن تعطينا تفاصيل أكثر؟`
                       : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. 😊 Merci pour votre demande de *${cleanType}*. Pourriez-vous nous donner plus de détails ?`
+                  },
+                  {
+                    id: 'consultation',
+                    title: isAr ? '💡 استشارة وتوجيه المشروع (نصائح وأسئلة)' : '💡 Consultation & Conseil Projet',
+                    icon: <Sparkles className="w-5 h-5 text-amber-500" />,
+                    desc: isAr ? 'أسئلة توجيهية لفهم فكرة الزبون ونصائح لاختيار القماش والكمية والتكلفة' : 'Questions clés pour orienter le client : Tissu, quantité, budget & lancement.',
+                    msg: (templates[lang]?.firstContactConsultation || DEFAULT_TEMPLATES[lang].firstContactConsultation).replace(/{name}/g, contactingLead.name).replace(/{type}/g, cleanType)
+                  },
+                  {
+                    id: 'retard',
+                    title: isAr ? '⏳ اعتذار عن التأخير + أولوية مستعجلة' : '⏳ Excuse Retard & Relance Prioritaire',
+                    icon: <Clock className="w-5 h-5 text-rose-500" />,
+                    desc: isAr ? 'اعتذار مهني عن التأخير في الرد مع وضع الطلب في قمة الأولويات' : 'Excuse polie pour le délai avec prise en charge prioritaire immédiate.',
+                    msg: (templates[lang]?.firstContactRetard || DEFAULT_TEMPLATES[lang].firstContactRetard).replace(/{name}/g, contactingLead.name).replace(/{type}/g, cleanType)
                   }
                 ];
 

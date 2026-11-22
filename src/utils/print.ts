@@ -864,6 +864,16 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
     globalCost = `${computedEnsembleMin} - ${computedEnsembleMax} MAD`;
   }
 
+  // Prix Échantillon / Prototype (1 pièce de validation)
+  const isMultiPieces = pieces.length > 1;
+  const costMatchesEch = String(globalCost || '').match(/\d+/g);
+  const minFaconBase = costMatchesEch && costMatchesEch[0] ? parseInt(costMatchesEch[0]) : (isMultiPieces ? 65 : 30);
+  const customEchPrice = analysis.prixEchantillon || analysis.echantillonPrice;
+  const resolvedEchNum = customEchPrice
+    ? (typeof customEchPrice === 'number' ? customEchPrice : parseInt(String(customEchPrice).match(/\d+/)?.[0] || '250'))
+    : (isMultiPieces ? Math.max(350, Math.round(minFaconBase * 3.5)) : Math.max(250, Math.round(minFaconBase * 3.5)));
+  const echantillonPriceDisplay = isAr ? `${resolvedEchNum} درهم` : `${resolvedEchNum} MAD`;
+
   const tierMode: '1_tier' | '2_tiers' | '3_tiers' = analysis.costingTierMode || '1_tier';
   const globalComplexity = isAr ? cleanLabel(analysis.complexity || 'متوسطة', true) : cleanLabel(analysis.complexity || 'Moyenne', false);
   const globalFit = isAr ? cleanLabel(analysis.fit || pieces[0]?.fit || 'قصة قياسية كاجوال', true) : cleanLabel(analysis.fit || pieces[0]?.fit || 'Regular / Oversize', false);
@@ -1167,8 +1177,8 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
             <tr>
               <th>${isAr ? (pieces.length > 1 ? 'تقدير تكلفة الصنع (طقم كامل)' : 'تقدير تكلفة الصنع (الخدمة)') : (pieces.length > 1 ? 'Coût Façon Estimé (Ensemble)' : 'Coût Façon Estimé')}</th>
               <td class="font-bold font-mono">${isAr ? String(globalCost).replace(/MAD/gi, 'درهم') : globalCost} ${pieces.length > 1 ? `<span style="font-size: 7.5px; font-weight: 700; color: #333;">${isAr ? `(مجموع ${pieces.length} قطع)` : `(${pieces.length} Pièces Réunies)`}</span>` : ''}</td>
-              <th>${isAr ? 'التصنيف الصناعي' : 'Segment Marché'}</th>
-              <td>${isAr ? 'ملابس جاهزة / ستريتوير B2B' : 'Prêt-à-porter / Streetwear B2B'}</td>
+              <th>${isAr ? '✂️ ثمن العينة الأولية (Prototype)' : '✂️ Prix Échantillon (1 pc)'}</th>
+              <td class="font-bold font-mono" style="color: #059669; font-size: 10px;">${echantillonPriceDisplay} <span style="font-size: 7.5px; font-weight: 700; color: #64748b;">${isAr ? '(نموذج المصادقة)' : '(Validation)'}</span></td>
             </tr>
           </table>
         </td>
@@ -1585,6 +1595,21 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
           </tr>
         </tbody>
       </table>
+
+      <!-- TARIF PROTOTYPE & ÉCHANTILLON HIGHLIGHT -->
+      <div style="margin-top: 6px; padding: 6px 10px; background: #f8fafc; border: 1.5px solid #0f172a; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 8.5px; font-weight: 900; text-transform: uppercase; color: #0f172a;">
+            ✂️ ${isAr ? 'ثمن العينة الأولية للمصادقة (PROTOTYPE DE VALIDATION 1 PIÈCE) :' : 'TARIF PROTOTYPE & ÉCHANTILLON DE VALIDATION (1 PIÈCE) :'}
+          </span>
+          <span style="font-size: 7.5px; color: #64748b; margin-${isAr ? 'right' : 'left'}: 6px;">
+            ${isAr ? '(يشمل إعداد الباترون الأولي، الفصالة، وخياطة أول عينة للاختبار قبل السيري)' : '(Inclus patronage initial, coupe unitaire et confection prototype avant série)'}
+          </span>
+        </div>
+        <div style="font-family: monospace; font-size: 11px; font-weight: 900; color: #059669;">
+          ${echantillonPriceDisplay}
+        </div>
+      </div>
       `;
     })()}
 

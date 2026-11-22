@@ -495,6 +495,41 @@ function normalizeCostRange(str?: string): string {
   return str;
 }
 
+// Calibrates façon labor costs to realistic Moroccan small-atelier CMT rates (معامل وورشات الخياطة الصغرى بالمغرب)
+function sanitizeMoroccanFacon(costStr?: string, piecesCount: number = 1): string {
+  if (!costStr) return piecesCount > 1 ? '45 – 60 MAD' : '24 – 34 MAD';
+  const nums = String(costStr).match(/\d+/g)?.map(Number) || [];
+  if (nums.length === 0) return piecesCount > 1 ? '45 – 60 MAD' : '24 – 34 MAD';
+  
+  let min = nums[0];
+  let max = nums[1] !== undefined ? nums[1] : min;
+  if (min > max) {
+    const tmp = min;
+    min = max;
+    max = tmp;
+  }
+
+  if (piecesCount >= 3) {
+    if (min > 85 || max > 120) {
+      min = 65;
+      max = 85;
+    }
+  } else if (piecesCount === 2) {
+    // If it's the inflated industrial price (like 110 - 145 MAD or > 75 MAD)
+    if (min >= 70 || max >= 95) {
+      min = 45;
+      max = 60;
+    }
+  } else {
+    // Single piece (e.g. hoodie / pantalon / tshirt)
+    if (min >= 45 || max >= 65) {
+      min = 24;
+      max = 34;
+    }
+  }
+  return `${min} – ${max} MAD`;
+}
+
 // Three-Tier Precise Costing Calculation Engine for Moroccan Garment & Manufacturing Market
 function computeThreeTierCosting(result: any) {
   const pieces = result?.pieces || [];
@@ -530,19 +565,27 @@ function computeThreeTierCosting(result: any) {
 
   // Derive realistic base atelier labor if AI supplied costEstimate
   const costNums = String(result?.costEstimate || pieces?.[0]?.costEstimate || '').match(/\d+/g)?.map(Number).filter(n => n > 5 && n < 2000) || [];
-  const aiMidFacon = costNums.length >= 2
+  const rawMidFacon = costNums.length >= 2
     ? Math.round((costNums[0] + costNums[1]) / 2)
-    : (costNums.length === 1 ? costNums[0] : (isThreePieces ? 48 : isMultiPiece ? 34 : 24));
+    : (costNums.length === 1 ? costNums[0] : (isThreePieces ? 75 : isMultiPiece ? 50 : 28));
+
+  // Moroccan small-atelier calibration (معامل وورشات الخياطة الصغرى بالمغرب)
+  // Standard small workshop façon: ~45-55 MAD for 2pc ensemble, ~24-34 MAD for 1pc
+  const aiMidFacon = isThreePieces
+    ? Math.min(85, Math.max(55, rawMidFacon > 100 ? 75 : rawMidFacon))
+    : isMultiPiece
+      ? Math.min(65, Math.max(38, rawMidFacon > 80 ? 50 : rawMidFacon))
+      : Math.min(42, Math.max(12, rawMidFacon > 50 ? 28 : rawMidFacon));
 
   // Trims & Accessories (Zips, Rib/Bord-côte, Cordons, Œillets, Boutons, Fil, Sachets):
-  const trimsMziana = isThreePieces ? 28.0 : isMultiPiece ? 18.0 : 12.0;
-  const trimsNormal = isThreePieces ? 18.0 : isMultiPiece ? 12.0 : 8.0;
-  const trimsFaible = isThreePieces ? 12.0 : isMultiPiece ? 8.0 : 5.0;
+  const trimsMziana = isThreePieces ? 22.0 : isMultiPiece ? 15.0 : 9.0;
+  const trimsNormal = isThreePieces ? 15.0 : isMultiPiece ? 10.0 : 6.0;
+  const trimsFaible = isThreePieces ? 10.0 : isMultiPiece ? 6.0 : 4.0;
 
   // Labor (Coupe au matelas + Façon atelier + Repassage professionnel):
-  const faconNormal = Math.min(180, Math.max(12, Math.round(aiMidFacon * 0.65)));
-  const faconMziana = Math.max(faconNormal + 8, Math.round(faconNormal * 1.35));
-  const faconFaible = Math.max(10, Math.round(faconNormal * 0.72));
+  const faconNormal = aiMidFacon;
+  const faconMziana = Math.round(aiMidFacon * 1.25);
+  const faconFaible = Math.max(8, Math.round(aiMidFacon * 0.8));
 
   const coutTissuMziana = Math.round(totalM * prixTissuMzianaM * 10) / 10;
   const coutTissuNormal = Math.round(totalM * prixTissuNormalM * 10) / 10;
@@ -1171,7 +1214,7 @@ function buildFallbackAnalysis(
         consumption: '1.45m',
         fit: isAr ? 'مخصر بحزام خلفي وكشكشة كلوش واسعة ساترة (Coupe Cintrée & Peplum Évasé)' : 'Coupe Cintrée Peplum Évasé & Manches Froncées',
         complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
-        costEstimate: '48 - 65 MAD',
+        costEstimate: '26 - 34 MAD',
         components: isAr ? [
           'صدر أمامي بلونين متناسقين مع سحاب نصفي 22 سم وياقة كول أوفيسييه مرتفعة',
           'قصة برنسيس أنيقة مع كشكشة بوفانت في قبة الكتف (Manches Ballon Froncées)',
@@ -1207,7 +1250,7 @@ function buildFallbackAnalysis(
         consumption: '1.25m',
         fit: isAr ? 'محدد عند الفخذين وواسع ابتداء من الركبة (Coupe Bootcut / Évasée)' : 'Coupe Bootcut Ajustée Cuisse & Évasée Bas',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: '35 - 48 MAD',
+        costEstimate: '19 - 25 MAD',
         components: isAr ? [
           'رجلين أمامية وخلفية بقصة بوت كات منسدلة أنيقة',
           'حزام خصر مطاطي عريض مريح 4 سم مع درزات متوازية تمنع التواء اللاستيك',
@@ -1268,7 +1311,7 @@ function buildFallbackAnalysis(
         consumption: '0.85m',
         fit: isAr ? 'قصة لاصقة محددة للقوام' : 'Coupe Près du Corps / Fitted',
         complexity: isAr ? 'بسيطة' : 'Simple',
-        costEstimate: '22 - 32 MAD',
+        costEstimate: '14 - 20 MAD',
         components: isAr
           ? ['صدر أمامي قصة ريب', 'ظهر كامل متناسق', 'أكمام طويلة ضيقة', 'ياقة كول رون محاكة بنعومة']
           : ['Devant près du corps', 'Dos complet ajusté', 'Manches longues fittées', 'Encolure col rond finie bandelette'],
@@ -1284,7 +1327,7 @@ function buildFallbackAnalysis(
         consumption: '1.45m',
         fit: isAr ? 'قصة واسعة متهدلة كاجوال' : 'Coupe Ample Wide-Leg / Palazzo',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: '42 - 58 MAD',
+        costEstimate: '20 - 28 MAD',
         components: isAr
           ? ['رجلين أمامية وخلفية بقصة عريضة منسدلة', 'حزام مطاطي عريض مع 3 خياطات متوازية', 'عيون حديدية غير قابلة للصدأ مع قيطان قطني وأطراف معدنية', 'جيوب جانبية مدمجة بالدرزة', 'ثنية أسفل الرِجلين واسعة ومسدولة']
           : ['Jambes évasées tombé lourd fluide', 'Ceinture élastiquée avec surpiqûres 3 aiguilles', 'Œillets métal inox avec cordon tubulaire et aglets métal', 'Poches latérales italiennes dans la couture', 'Ourlets bas larges droits'],
@@ -1310,7 +1353,7 @@ function buildFallbackAnalysis(
         consumption: '2.10m',
         fit: isAr ? 'قصة محددة بحزام مع درزات بارزة' : 'Coupe Structurée Ceinturée',
         complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
-        costEstimate: '55 - 75 MAD',
+        costEstimate: '32 - 42 MAD',
         components: isAr
           ? ['صدر أمامي مع قفل أزرار معدنية بارزة', 'ياقة جاكيت رسمية كلاسيكية', 'حزام خصر دنيم متناسق مع عرى التثبيت', 'أكمام طويلة مع أساور وبوانيات بأزرار كبس', 'درزات مزدوجة بخيط نحاسي سميك متين', 'جيوب صدرية وجيوب جانبية مدمجة']
           : ['Devants avec boutonnage boutons clous jean', 'Col chemisier tailleur', 'Ceinture denim assortie avec passants', 'Manches longues avec poignets boutonnés', 'Surpiqûres 2 aiguilles fil épais orange/caramel', 'Poches poitrine à rabat et passepoils'],
@@ -1326,7 +1369,7 @@ function buildFallbackAnalysis(
         consumption: '1.45m',
         fit: isAr ? 'قصة مستقيمة مريحة كلاسيك' : 'Coupe Droite Regular Jean',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: '45 - 65 MAD',
+        costEstimate: '22 - 30 MAD',
         components: isAr
           ? ['أرجل جينز أمامية وخلفية بدرزات جانبية مقواة', 'حزام خصر مع عرى حزام جينز', 'سحاب معدني أمامي مع زر كبس نحاسي', 'جيوب أمامية دائرية مع جيب ساعة صغير', 'جيوب خلفية بارزة مع تطريز درزات الجينز الكلاسيكية']
           : ['Jambes devant et dos avec surpiqûres renforcées', 'Ceinture jean avec passants', 'Fermeture zip métal et bouton clou', 'Poches cavalières et poche ticket', 'Poches plaquées dos avec surpiqûres décoratives'],
@@ -1345,7 +1388,7 @@ function buildFallbackAnalysis(
       consumption: '2.10m',
       fit: isAr ? 'قصة محددة عصرية مع تفاصيل جينز بارزة' : 'Coupe Structurée Denim',
       complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
-      costEstimate: '55 - 75 MAD',
+      costEstimate: '32 - 42 MAD',
       components: isAr
         ? ['صدر أمامي مع أزرار معدنية بارزة', 'ياقة كلاسيكية', 'حزام سفلي أو حزام خصر', 'أكمام طويلة مع بوانيات', 'درزات مزدوجة بخيط نحاسي سميك', 'جيوب صدرية وجانبية']
         : ['Devants avec boutonnage clous métal', 'Col classique', 'Ceinture bas ou taille', 'Manches avec poignets', 'Surpiqûres 2 aiguilles', 'Poches poitrine et passepoils'],
@@ -1369,7 +1412,7 @@ function buildFallbackAnalysis(
         consumption: '1.50m',
         fit: isAr ? 'مريح عادي كاجوال (Regular Confort)' : 'Coupe Droite & Confort',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: '45 - 60 MAD',
+        costEstimate: '22 - 30 MAD',
         components: isAr
           ? ['صدر أمامي مع أشرطة مقلمة متناسقة', 'ظهر مريح بلون موحد', 'أكمام طويلة مع خطوط مطابقة', 'ياقة كول رون ببورد كوت مطاطي', 'أساور وحاشية سفلية ببورد كوت', 'شريط نظافة داخل الياقة لمنع التمدد']
           : ['Buste devant avec empiècements rayés', 'Dos uni confortable', 'Manches longues avec finitions poignets bord-côte', 'Col rond bord-côte renforcé', 'Bande de propreté col', 'Ourlet bas bord-côte'],
@@ -1385,7 +1428,7 @@ function buildFallbackAnalysis(
         consumption: '1.40m',
         fit: isAr ? 'مريح عادي مع حاشية كاحل (Jogger Confort)' : 'Coupe Jogger Confort',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: '40 - 55 MAD',
+        costEstimate: '18 - 25 MAD',
         components: isAr
           ? ['أرجل أمامية مع درزة طولية شياكة', 'أرجل خلفية مريحة', 'حزام خصر مطاطي عريض مع كوردون سحب', 'جيوب جانبية إيطالية مدمجة', 'حجر مقوى لحرية الحركة', 'أساور أو كفافة كاحل مرنة']
           : ['Jambes devant avec surpiqûres', 'Jambes dos', 'Ceinture élastiquée large avec cordon de serrage', 'Poches latérales italiennes', 'Empiècement entrejambe renforcé', 'Bord-côte bas chevilles'],
@@ -1409,7 +1452,7 @@ function buildFallbackAnalysis(
           consumption: '2.60m',
           fit: isAr ? 'قصة مستقيمة انسيابية راقية (Coupe Droite & Fluide)' : 'Coupe Droite & Fluide',
           complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
-          costEstimate: '85 - 110 MAD',
+          costEstimate: '38 - 50 MAD',
           components: isAr
             ? ['صدر أمامي طويل مع كول شال أو كول راباطي', 'ظهر طويل مع فتحة راحة (Fente d\'aisance)', 'أكمام طويلة كلاسيكية مع فينيسيون دقيق', 'جيوب جانبية مشقوقة (Poches passepoilées)', 'حزام خصر اختياري مع عرى تثبيت', 'سجاف وبطانة نصف داخلية']
             : ['Devants longs avec col revers/châle', 'Dos long avec fente d\'aisance', 'Manches longues finitions poignets', 'Poches passepoilées latérales', 'Passants de ceinture', 'Parementure et demi-doublure'],
@@ -1425,7 +1468,7 @@ function buildFallbackAnalysis(
           consumption: '1.40m',
           fit: isAr ? 'واسع انسيابي بالازو (Coupe Large Palazzo)' : 'Coupe Large Palazzo',
           complexity: isAr ? 'متوسطة' : 'Moyenne',
-          costEstimate: '45 - 60 MAD',
+          costEstimate: '20 - 28 MAD',
           components: isAr
             ? ['أرجل عريضة انسيابية بقصة أنيقة', 'حزام خصر عالي (Taille Haute) مع عرى حزام', 'سحاب جانبي أو أمامي مخفي', 'جيوب إيطالية جانبية', 'كفافة سفلية عريضة غير مرئية']
             : ['Jambes amples tombé fluide', 'Ceinture taille haute avec passants', 'Fermeture zip invisible', 'Poches italiennes', 'Ourlet invisible bas large'],
@@ -1440,7 +1483,7 @@ function buildFallbackAnalysis(
           consumption: '0.90m',
           fit: isAr ? 'عادي سليم مريح (Regular / Fitted)' : 'Regular / Fitted',
           complexity: isAr ? 'بسيطة إلى متوسطة' : 'Simple à Moyenne',
-          costEstimate: '25 - 35 MAD',
+          costEstimate: '10 - 15 MAD',
           components: isAr
             ? ['صدر أمامي بياقة دائرية كلاسيكية', 'ظهر متناسق مريح', 'شريط نظافة في الياقة (Bande de propreté)', 'ثنية سفلية بآلة الروكوفروز 2 إبر']
             : ['Buste devant col rond', 'Dos confort', 'Biais de propreté encolure', 'Ourlet bas double aiguille'],
@@ -1462,7 +1505,7 @@ function buildFallbackAnalysis(
           consumption: '2.40m',
           fit: isAr ? 'واسع مريح مستور (Coupe Longue & Ample)' : 'Coupe Longue & Ample',
           complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
-          costEstimate: `75 - 95 MAD`,
+          costEstimate: `35 - 48 MAD`,
           components: isAr ? ['صدر أمامي بسحاب طويل كامل', 'ظهر طويل مريح', 'كابوش مزدوج مبطن', 'أكمام طويلة مع أساور بورد كوت', 'جيوب جانبية مدمجة', 'فتحات جانبية للحركة'] : ['Devants zippés pleine hauteur', 'Dos long confort', 'Capuche doublée', 'Manches avec bord-côte', 'Poches passepoilées/italiennes', 'Fentes latérales'],
           fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك 280g' : 'Molleton Gratté / Interlock Coton 280g',
           fabricAlternatives: [
@@ -1476,7 +1519,7 @@ function buildFallbackAnalysis(
           consumption: '1.40m',
           fit: isAr ? 'أوفرسايز مريح (Over-size / Relaxed)' : 'Over-size / Relaxed',
           complexity: isAr ? 'متوسطة' : 'Moyenne',
-          costEstimate: `50 - 65 MAD`,
+          costEstimate: `22 - 30 MAD`,
           components: isAr ? ['صدر أمامي مع طباعة/شعار أو سحاب', 'ظهر كامل مريح', 'كابوش مزدوج مبطن', 'أكمام طويلة مع أساور بورد كوت', 'جيب كنغر أمامي'] : ['Buste devant avec logo', 'Dos confort', 'Capuche doublée', 'Manches longues avec finitions', 'Poche kangourou'],
           fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك 280g' : 'Molleton Gratté / Interlock 280g',
           fabricAlternatives: [
@@ -1490,7 +1533,7 @@ function buildFallbackAnalysis(
           consumption: '1.40m',
           fit: isAr ? 'مريح عادي مع أساور كاحل (Jogger Fit)' : 'Jogger Fit',
           complexity: isAr ? 'متوسطة' : 'Moyenne',
-          costEstimate: `45 - 55 MAD`,
+          costEstimate: `18 - 25 MAD`,
           components: isAr ? ['أرجل أمامية وخلفية', 'حزام خصر مطاطي عريض مع كوردون سحب', 'جيوب جانبية إيطالية', 'أساور كاحل مطاطية'] : ['Jambes devant et dos', 'Ceinture élastiquée large avec cordon', 'Poches italiennes latérales', 'Bord-côte bas de jambe'],
           fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك 280g' : 'Molleton Gratté / Interlock 280g',
           fabricAlternatives: [
@@ -1508,7 +1551,7 @@ function buildFallbackAnalysis(
       consumption: '3.80m',
       fit: isAr ? 'مخصر عند الصدر وواسع بليات في الأسفل (Coupe Évasée & Plissée)' : 'Coupe Évasée & Plissée',
       complexity: isAr ? 'متوسطة إلى احترافية' : 'Moyenne à Avancée',
-      costEstimate: '95 - 135 MAD',
+      costEstimate: '40 - 55 MAD',
       components: isAr ? [
         'صدر أمامي مع كول شوميز وأزرار بطول الصدر',
         'ظهر مع قصة خصر وسكالب مريح',
@@ -1539,7 +1582,7 @@ function buildFallbackAnalysis(
       consumption: hoodieConso,
       fit: isAr ? 'أوفرسايز مريح بأكتاف ساقطة وقصة ستريتوير عصرية (Coupe Oversize Drop-Shoulder)' : 'Coupe Oversize Drop-Shoulder Confort & Streetwear',
       complexity: isAr ? 'متوسطة' : 'Moyenne',
-      costEstimate: '38 - 55 MAD',
+      costEstimate: '24 - 34 MAD',
       components: isAr ? [
         'صدر أمامي واسع مع جيب كنغر كبير مقوى بدرزات بارزة (Poche Kangourou)',
         'ظهر مريح مسطح مع قصة أكتاف ساقطة (Drop-Shoulder)',
@@ -1606,7 +1649,7 @@ function buildFallbackAnalysis(
       consumption: '0.90m',
       fit: isAr ? 'عادي مريح / أوفرسايز (Regular / Oversize)' : 'Coupe Droite & Confort (Regular / Oversize)',
       complexity: isAr ? 'بسيطة' : 'Simple',
-      costEstimate: '22 - 35 MAD',
+      costEstimate: '10 - 15 MAD',
       components: isAr
         ? ['صدر أمامي', 'ظهر متناسق مريح', 'أكمام قصيرة مع كفافة', 'ياقة دائرية كول رون بورد-كوت مع شريط نظافة', 'ثنية سفلية مزدوجة بآلة الروكوفروز']
         : ['Buste devant', 'Dos uni confortable', 'Manches courtes avec ourlets', 'Col rond bord-côte avec bande de propreté', 'Ourlet bas double aiguille'],
@@ -1738,7 +1781,7 @@ function buildFallbackAnalysis(
       consumption: '2.10m',
       fit: isAr ? 'عادي أوفرسايز عصري (Regular / Oversize)' : 'Coupe Regular / Oversize',
       complexity: isAr ? 'متوسطة إلى عالية' : 'Moyenne à Avancée',
-      costEstimate: '75 - 95 MAD',
+      costEstimate: '32 - 45 MAD',
       components: isAr
         ? ['صدر أمامي بجيوب وأزرار/سحاب', 'ظهر مقوى بقطعة يوك', 'أكمام طويلة بأساور وقفل', 'ياقة كلاسيكية أو مرتفعة', 'سجاف وبطانة خفيفة']
         : ['Devant avec poches et zip/boutons', 'Dos avec empiècement', 'Manches longues avec poignets', 'Col classique', 'Doublure/parementure'],
@@ -1780,9 +1823,12 @@ function buildFallbackAnalysis(
     const nums = String(p.costEstimate || '').match(/\d+/g);
     return acc + (nums && nums[1] ? parseInt(nums[1]) : (nums ? parseInt(nums[0]) + 15 : 45));
   }, 0);
-  const totalCostStr = isThreePieces
-    ? '160 - 205 MAD'
-    : (piecesList.length > 1 ? `${sumMinCost} - ${sumMaxCost} MAD` : (piecesList[0]?.costEstimate || `${Math.round(breakdown.coutRevientEstime)} - ${Math.round(breakdown.prixVenteConseille)} MAD`));
+  const totalCostStr = sanitizeMoroccanFacon(
+    isThreePieces
+      ? `${sumMinCost} - ${sumMaxCost} MAD`
+      : (piecesList.length > 1 ? `${sumMinCost} - ${sumMaxCost} MAD` : (piecesList[0]?.costEstimate || '24 - 34 MAD')),
+    piecesList.length
+  );
 
   const result: any = {
     category: pieceName,
@@ -1858,6 +1904,18 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [customCostOverride, setCustomCostOverride] = useState<string>('');
   const [isEditingCustomCost, setIsEditingCustomCost] = useState(false);
   const [tempCustomCost, setTempCustomCost] = useState('');
+  const [customEchantillonPrice, setCustomEchantillonPrice] = useState<string>('');
+  const [isEditingEchantillonPrice, setIsEditingEchantillonPrice] = useState(false);
+  const [tempEchantillonPrice, setTempEchantillonPrice] = useState('');
+
+  const handleSaveEchantillonPrice = (newPrice: string) => {
+    const trimmed = newPrice.trim();
+    setCustomEchantillonPrice(trimmed);
+    setIsEditingEchantillonPrice(false);
+    if (analysisResult) {
+      setAnalysisResult({ ...analysisResult, prixEchantillon: trimmed });
+    }
+  };
 
   const handleSaveCustomCost = (newCost: string) => {
     const trimmed = newCost.trim();
@@ -2144,6 +2202,35 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }
   }, [location.state, isAr]);
 
+  // Auto-calibrate façon prices to Moroccan small-atelier standards if an inflated industrial price is loaded
+  useEffect(() => {
+    if (analysisResult?.costEstimate && !customCostOverride) {
+      const isMulti = Boolean(analysisResult.pieces && analysisResult.pieces.length > 1);
+      const nums = String(analysisResult.costEstimate).match(/\d+/g)?.map(Number) || [];
+      if (nums.length > 0) {
+        const minVal = Math.min(...nums);
+        const maxVal = Math.max(...nums);
+        if ((isMulti && (minVal >= 70 || maxVal >= 95)) || (!isMulti && (minVal >= 45 || maxVal >= 65))) {
+          const calibrated = sanitizeMoroccanFacon(analysisResult.costEstimate, analysisResult.pieces?.length || 1);
+          const updatedPieces = (analysisResult.pieces || []).map((p: any, idx: number) => {
+            if (analysisResult.pieces.length === 2) {
+              return {
+                ...p,
+                costEstimate: idx === 0 ? '25 – 33 MAD' : '20 – 27 MAD'
+              };
+            }
+            return p;
+          });
+          setAnalysisResult({
+            ...analysisResult,
+            costEstimate: calibrated,
+            pieces: updatedPieces.length > 0 ? updatedPieces : analysisResult.pieces
+          });
+        }
+      }
+    }
+  }, [analysisResult?.costEstimate]);
+
   // Gemini API integration
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
@@ -2344,7 +2431,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         consumption: '2.40m',
         fit: isAr ? 'واسع مريح (Coupe Longue)' : 'Coupe Longue & Ample',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: '75 - 95 MAD',
+        costEstimate: '35 - 45 MAD',
         components: isAr ? ['صدر أمامي بسحاب', 'ظهر طويل', 'كابوش مزدوج', 'أكمام طويلة', 'جيوب جانبية'] : ['Devants zippés', 'Dos long', 'Capuche doublée', 'Manches', 'Poches'],
         fabricSuggested: isAr ? 'مولتون قطن مبطن / إنترلوك' : 'Molleton Gratté / Interlock',
         fabricAlternatives: [],
@@ -2356,7 +2443,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         consumption: '1.40m',
         fit: isAr ? 'أوفرسايز واسع (Over-size / Relaxed)' : 'Over-size / Relaxed',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: '50 - 65 MAD',
+        costEstimate: '24 - 34 MAD',
         components: isAr ? ['صدر أمامي', 'ظهر كامل', 'كابوش مزدوج', 'جيب كنغر', 'أكمام مع بورد-كوت'] : ['Devant', 'Dos', 'Capuche doublée', 'Poche kangourou', 'Manches'],
         fabricSuggested: isAr ? 'ميلتون قطن ممشوط' : 'Molleton Gratté 320g',
         fabricAlternatives: [],
@@ -2368,7 +2455,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         consumption: '1.40m',
         fit: isAr ? 'مريح عادي (Regular Jogger)' : 'Regular Jogger',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: '45 - 55 MAD',
+        costEstimate: '18 - 25 MAD',
         components: isAr ? ['أرجل أمامية وخلفية', 'حزام خصر مطاطي', 'جيوب جانبية', 'أساور كاحل'] : ['Jambes devant/dos', 'Ceinture élastique', 'Poches', 'Bord-côte chevilles'],
         fabricSuggested: isAr ? 'ميلتون قطن ممشوط' : 'Molleton Gratté 320g',
         fabricAlternatives: [],
@@ -2380,7 +2467,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         consumption: '1.50m',
         fit: isAr ? 'عادي (Regular)' : 'Regular',
         complexity: isAr ? 'متوسطة' : 'Moyenne',
-        costEstimate: '40 - 60 MAD',
+        costEstimate: '20 - 28 MAD',
         components: isAr ? ['أجزاء تفصيل أساسية'] : ['Composants de base'],
         fabricSuggested: analysisResult.fabricSuggested || '',
         fabricAlternatives: [],
@@ -3082,13 +3169,20 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 5. ${targetProfileDescAr}
 6. في مصفوفة mesures: ضع القياسات الخاصة بهذا الموديل فقط (لا تضع قياس طول الأكمام إذا كانت القطعة بدون أكمام! ولا تضع ارتفاع الكابوش إلا إذا كان بها كابوش!).
 7. اكتب القيم النصية (category, pieces[].name, components, fabricSuggested, fabricPros, fabricCons, fit) بالعربية المهنية الواضحة.
+8. ثمن الفصالة والخياطة الواقعي للمصانع والورشات المتوسطة والصغيرة بالمغرب (معامل صغار بدون احتساب ثمن القماش):
+   - تيشيرت / بولو / توب: 8 - 14 درهم (MAD)
+   - سروال جوغينغ / شورت: 18 - 25 درهم (MAD)
+   - هودي بكابوش وجيب كنغر: 24 - 35 درهم (MAD)
+   - طقم كامل قطعتين (هودي + سروال): 45 - 60 درهم (MAD)
+   - فيست / جاكيت معقدة: 32 - 45 درهم (MAD)
+   ⚠️ تجنب الأسعار الصناعية الفاخرة المبالغ فيها (> 65 درهم للأطقم) فالمطلوب تسعير ورشات ومعامل الخياطة الصغرى بالمغرب.
 
 أجب بصيغة JSON فقط بهذا الهيكل الدقيق:
 {
   "category": "الاسم الدقيق للموديل الظاهر في الصورة",
   "gender": "femmes",
   "totalConsumption": "1.20m",
-  "totalCost": "55 - 85 MAD",
+  "totalCost": "45 - 60 MAD",
   "complexity": "متوسطة",
   "fabricSuggested": "اسم القماش الحقيقي + الغراماج GSM",
   "fabricPricePerMeterMAD": "45 - 65 MAD/متر",
@@ -3102,7 +3196,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     "consumption": "1.20m",
     "fit": "القصة الحقيقية للموديل",
     "complexity": "متوسطة",
-    "costEstimate": "55 - 85 MAD",
+    "costEstimate": "24 - 34 MAD",
     "components": ["الجزء الأمامي...", "الظهر...", "الياقة..."],
     "fabricSuggested": "اسم القماش الحقيقي",
     "mesures": [{ "nom": "محيط الصدر (Poitrine)", "valeurs": { "S": 96, "M": 102, "L": 108, "XL": 114, "XXL": 120 } }]
@@ -3124,7 +3218,7 @@ Réponds STRICTEMENT en JSON valide (en français professionnel, avec nomAr et n
   "category": "Nom exact du modèle visible",
   "gender": "femmes",
   "totalConsumption": "1.20m",
-  "totalCost": "55 - 85 MAD",
+  "totalCost": "45 - 60 MAD",
   "complexity": "Moyenne",
   "fabricSuggested": "Nom exact du tissu + grammage GSM",
   "fabricPricePerMeterMAD": "45 - 65 MAD/mètre",
@@ -3138,7 +3232,7 @@ Réponds STRICTEMENT en JSON valide (en français professionnel, avec nomAr et n
     "consumption": "1.20m",
     "fit": "Coupe réelle",
     "complexity": "Moyenne",
-    "costEstimate": "55 - 85 MAD",
+    "costEstimate": "24 - 34 MAD",
     "components": ["Devants...", "Dos..."],
     "fabricSuggested": "Nom exact du tissu",
     "mesures": [{ "nom": "Tour de Poitrine (الصدر)", "valeurs": { "S": 96, "M": 102, "L": 108, "XL": 114, "XXL": 120 } }]
@@ -3297,13 +3391,23 @@ Réponds STRICTEMENT en JSON valide (en français professionnel, avec nomAr et n
           if (result.pieces.length > 1) {
             const sumMin = result.pieces.reduce((acc: number, p: any) => {
               const nums = String(p.costEstimate || '').match(/\d+/g);
-              return acc + (nums ? parseInt(nums[0]) : 30);
+              return acc + (nums ? parseInt(nums[0]) : 22);
             }, 0);
             const sumMax = result.pieces.reduce((acc: number, p: any) => {
               const nums = String(p.costEstimate || '').match(/\d+/g);
-              return acc + (nums && nums[1] ? parseInt(nums[1]) : (nums ? parseInt(nums[0]) + 15 : 45));
+              return acc + (nums && nums[1] ? parseInt(nums[1]) : (nums ? parseInt(nums[0]) + 10 : 32));
             }, 0);
-            result.costEstimate = `${sumMin} - ${sumMax} MAD`;
+            result.costEstimate = sanitizeMoroccanFacon(`${sumMin} - ${sumMax} MAD`, result.pieces.length);
+            // Proportionately calibrate pieces to Moroccan small-atelier standard
+            if (result.pieces.length === 2 && sumMin >= 70) {
+              result.pieces[0].costEstimate = '25 – 33 MAD';
+              result.pieces[1].costEstimate = '20 – 27 MAD';
+            }
+          } else {
+            result.costEstimate = sanitizeMoroccanFacon(result.costEstimate || result.pieces[0]?.costEstimate, 1);
+            if (result.pieces[0]) {
+              result.pieces[0].costEstimate = result.costEstimate;
+            }
           }
         } else {
           result.pieces = [{
@@ -5014,6 +5118,7 @@ ${userMessage}
       ...analysisResult,
       costingTierMode: costingTierMode,
       costEstimate: effectiveCost,
+      prixEchantillon: customEchantillonPrice.trim() || analysisResult.prixEchantillon,
       pieces: effectivePieces.length > 0 ? effectivePieces : analysisResult.pieces
     };
     printRapportIA(effectiveAnalysis, image, isAr);
@@ -5603,13 +5708,13 @@ ${userMessage}
                         </div>
                       </div>
 
-                      {/* Current Façon Price & Inline Edit */}
-                      <div className={`flex items-center gap-2 bg-slate-800/90 px-3.5 py-2 rounded-2xl border border-slate-700 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      {/* Current Façon Price & Échantillon Price Inline Edit */}
+                      <div className={`flex items-center gap-3 bg-slate-800/90 px-3.5 py-2 rounded-2xl border border-slate-700 ${isAr ? 'flex-row-reverse' : ''}`}>
                         <div className={`text-right ${isAr ? 'text-left' : ''}`}>
                           <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
                             {analysisResult.pieces && analysisResult.pieces.length > 1
-                              ? (isAr ? 'ثمن الفصالة والخياطة (طقم كامل)' : 'Façon Ensemble Complet')
-                              : (isAr ? 'ثمن الفصالة والخياطة' : 'Coût Façon Atelier')}
+                              ? (isAr ? 'ثمن الفصالة والخياطة (طقم)' : 'Façon Ensemble')
+                              : (isAr ? 'ثمن الفصالة والخياطة' : 'Coût Façon')}
                           </span>
                           {isEditingCustomCost ? (
                             <div className="flex items-center gap-1.5 mt-1">
@@ -5619,7 +5724,7 @@ ${userMessage}
                                 value={tempCustomCost}
                                 onChange={(e) => setTempCustomCost(e.target.value)}
                                 placeholder="ex: 38 - 55 MAD"
-                                className="px-2.5 py-1 bg-slate-950 border border-indigo-500 text-white font-mono font-black text-xs rounded-lg w-32 focus:outline-none ring-2 ring-indigo-500/30"
+                                className="px-2.5 py-1 bg-slate-950 border border-indigo-500 text-white font-mono font-black text-xs rounded-lg w-28 focus:outline-none ring-2 ring-indigo-500/30"
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     handleSaveCustomCost(tempCustomCost);
@@ -5656,8 +5761,8 @@ ${userMessage}
                                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-slate-700/80 border border-slate-600 hover:border-emerald-400 text-emerald-400 transition-all cursor-pointer group shadow-inner"
                                 title={isAr ? 'انقر لتعديل ثمن الفصالة والخياطة حسب رغبتك' : 'Cliquer pour modifier le coût façon'}
                               >
-                                <span className="text-sm font-black font-mono tracking-tight group-hover:text-emerald-300">
-                                  {customCostOverride || analysisResult.costEstimate || '—'}
+                                <span dir="ltr" className="text-sm font-black font-mono tracking-tight group-hover:text-emerald-300">
+                                  {normalizeCostRange(customCostOverride || analysisResult.costEstimate || '—')}
                                 </span>
                                 <Pencil className="w-3 h-3 text-indigo-400 group-hover:text-emerald-300 transition-colors" />
                               </button>
@@ -5674,6 +5779,165 @@ ${userMessage}
                             </div>
                           )}
                         </div>
+
+                        {/* Vertical Divider */}
+                        <div className="w-[1px] h-9 bg-slate-700/80 mx-1" />
+
+                        {/* Échantillon Price */}
+                        <div className={`text-right ${isAr ? 'text-left' : ''}`}>
+                          <span className="text-[10px] font-bold text-amber-400 block uppercase tracking-wider flex items-center gap-1">
+                            <span>✂️</span>
+                            <span>{isAr ? 'ثمن العينة (Échantillon)' : 'Prix Échantillon'}</span>
+                          </span>
+                          {isEditingEchantillonPrice ? (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <input
+                                type="text"
+                                autoFocus
+                                value={tempEchantillonPrice}
+                                onChange={(e) => setTempEchantillonPrice(e.target.value)}
+                                placeholder="ex: 250 MAD"
+                                className="px-2.5 py-1 bg-slate-950 border border-amber-500 text-amber-300 font-mono font-black text-xs rounded-lg w-28 focus:outline-none ring-2 ring-amber-500/30"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveEchantillonPrice(tempEchantillonPrice);
+                                  else if (e.key === 'Escape') setIsEditingEchantillonPrice(false);
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleSaveEchantillonPrice(tempEchantillonPrice)}
+                                className="p-1 bg-amber-600 hover:bg-amber-500 text-white rounded-md text-xs font-bold transition-all shadow-xs"
+                                title={isAr ? 'تأكيد' : 'Valider'}
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setIsEditingEchantillonPrice(false)}
+                                className="p-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md text-xs transition-all"
+                                title={isAr ? 'إلغاء' : 'Annuler'}
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const defaultEch = customEchantillonPrice || analysisResult.prixEchantillon || (analysisResult.pieces?.length > 1 ? '350 MAD' : '250 MAD');
+                                  setTempEchantillonPrice(defaultEch);
+                                  setIsEditingEchantillonPrice(true);
+                                }}
+                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-slate-700/80 border border-slate-600 hover:border-amber-400 text-amber-300 transition-all cursor-pointer group shadow-inner"
+                                title={isAr ? 'انقر لتحديد ثمن العينة الأولية للمصادقة' : 'Cliquer pour modifier le prix échantillon'}
+                              >
+                                <span className="text-sm font-black font-mono tracking-tight group-hover:text-amber-200">
+                                  {customEchantillonPrice || analysisResult.prixEchantillon || (analysisResult.pieces?.length > 1 ? '350 MAD' : '250 MAD')}
+                                </span>
+                                <Pencil className="w-3 h-3 text-amber-400 group-hover:text-amber-200 transition-colors" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Moroccan Small-Atelier Quick Presets (أزرار التسعير السريع لمعامل الخياطة الصغرى بالمغرب) */}
+                    <div className={`flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-2xl bg-slate-800/60 border border-slate-700/60 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      <div className={`flex items-center gap-1.5 text-xs font-black text-slate-300 ${isAr ? 'flex-row-reverse' : ''}`}>
+                        <span className="text-base">🇲🇦</span>
+                        <span className="text-emerald-400 font-bold">{isAr ? 'تسعير المعامل الصغرى بالمغرب (Façon Atelier):' : 'Tarifs Façon Confection Ateliers Maroc :'}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">
+                          {isAr ? '(خياطة وفصالة بدون قماش)' : '(CMT Hors Tissu)'}
+                        </span>
+                      </div>
+                      <div className={`flex flex-wrap items-center gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
+                        {analysisResult.pieces && analysisResult.pieces.length > 1 ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSaveCustomCost('45 - 55 MAD');
+                                if (analysisResult.pieces && analysisResult.pieces.length === 2) {
+                                  const updated = [...analysisResult.pieces];
+                                  updated[0] = { ...updated[0], costEstimate: '25 – 30 MAD' };
+                                  updated[1] = { ...updated[1], costEstimate: '20 – 25 MAD' };
+                                  setAnalysisResult({ ...analysisResult, costEstimate: '45 - 55 MAD', pieces: updated });
+                                }
+                              }}
+                              className="px-2.5 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-black transition-all cursor-pointer active:scale-95 shadow-xs flex items-center gap-1"
+                              title={isAr ? 'معامل صغار قياسي: 45 - 55 درهم لطقم كامل (25 درهم هودي + 20 درهم سروال)' : 'Standard petit atelier: 45 - 55 MAD'}
+                            >
+                              <span>⚡</span>
+                              <span>{isAr ? 'معامل صغار: 45 - 55 د.م' : 'Atelier: 45 - 55 MAD'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSaveCustomCost('38 - 45 MAD');
+                                if (analysisResult.pieces && analysisResult.pieces.length === 2) {
+                                  const updated = [...analysisResult.pieces];
+                                  updated[0] = { ...updated[0], costEstimate: '20 – 24 MAD' };
+                                  updated[1] = { ...updated[1], costEstimate: '18 – 21 MAD' };
+                                  setAnalysisResult({ ...analysisResult, costEstimate: '38 - 45 MAD', pieces: updated });
+                                }
+                              }}
+                              className="px-2.5 py-1 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 text-xs font-black transition-all cursor-pointer active:scale-95 shadow-xs flex items-center gap-1"
+                              title={isAr ? 'إنتاج اقتصادي كبير: 38 - 45 درهم للطقم' : 'Grande série éco: 38 - 45 MAD'}
+                            >
+                              <span>🏷️</span>
+                              <span>{isAr ? 'اقتصادي: 38 - 45 د.م' : 'Éco: 38 - 45 MAD'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSaveCustomCost('55 - 65 MAD');
+                                if (analysisResult.pieces && analysisResult.pieces.length === 2) {
+                                  const updated = [...analysisResult.pieces];
+                                  updated[0] = { ...updated[0], costEstimate: '30 – 36 MAD' };
+                                  updated[1] = { ...updated[1], costEstimate: '25 – 29 MAD' };
+                                  setAnalysisResult({ ...analysisResult, costEstimate: '55 - 65 MAD', pieces: updated });
+                                }
+                              }}
+                              className="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-black transition-all cursor-pointer active:scale-95 shadow-xs flex items-center gap-1"
+                              title={isAr ? 'فينيسيون براند راقية ومتقونة: 55 - 65 درهم للطقم' : 'Finition premium soignée: 55 - 65 MAD'}
+                            >
+                              <span>✨</span>
+                              <span>{isAr ? 'فينيسيون راقية: 55 - 65 د.م' : 'Finition Soignée: 55 - 65 MAD'}</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleSaveCustomCost('22 - 30 MAD')}
+                              className="px-2.5 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-black transition-all cursor-pointer active:scale-95 shadow-xs flex items-center gap-1"
+                              title={isAr ? 'معامل صغار (22 - 30 درهم للقطعة)' : 'Atelier standard (22 - 30 MAD)'}
+                            >
+                              <span>⚡</span>
+                              <span>{isAr ? 'معامل صغار: 22 - 30 د.م' : 'Atelier: 22 - 30 MAD'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSaveCustomCost('16 - 22 MAD')}
+                              className="px-2.5 py-1 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 text-xs font-black transition-all cursor-pointer active:scale-95 shadow-xs flex items-center gap-1"
+                              title={isAr ? 'إنتاج اقتصادي (16 - 22 درهم للقطعة)' : 'Économique: 16 - 22 MAD'}
+                            >
+                              <span>🏷️</span>
+                              <span>{isAr ? 'اقتصادي: 16 - 22 د.م' : 'Éco: 16 - 22 MAD'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSaveCustomCost('30 - 38 MAD')}
+                              className="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-black transition-all cursor-pointer active:scale-95 shadow-xs flex items-center gap-1"
+                              title={isAr ? 'فينيسيون راقية (30 - 38 درهم للقطعة)' : 'Finition soignée: 30 - 38 MAD'}
+                            >
+                              <span>✨</span>
+                              <span>{isAr ? 'فينيسيون راقية: 30 - 38 د.م' : 'Finition Soignée: 30 - 38 MAD'}</span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
 
