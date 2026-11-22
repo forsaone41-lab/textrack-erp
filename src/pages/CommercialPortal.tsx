@@ -61,6 +61,7 @@ import {
   saveRecord,
   loadCompanyProfile,
   loadLeadPhoto,
+  loadLeadPhotosBatch,
   loadData,
   StockTissu,
   StockFourniture,
@@ -164,7 +165,14 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [stageFilter, setStageFilter] = useState<'all' | 'nouveau' | 'en_cours'>('all');
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [savedOk, setSavedOk] = useState(false);
-  const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
+  const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>(() => {
+    try {
+      const cached = localStorage.getItem('textrack_lead_photos_cache');
+      return cached ? JSON.parse(cached) : {};
+    } catch {
+      return {};
+    }
+  });
   
   // Extended Navigation Tabs
   type CommercialTab = 'leads' | 'commissions' | 'ai_devis' | 'fournisseurs' | 'stock' | 'rh' | 'profil';
@@ -550,28 +558,39 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
 
   useEffect(() => {
     const fetchPhotos = async () => {
-      const missingPhotos = filteredLeads.filter(l => (l.photoCount || 0) > 0 && !fetchedPhotosRef.current.has(l.id));
+      const missingPhotos = filteredLeads.filter(l => {
+        if (l.photo || (l.photos && l.photos.length > 0)) return false;
+        if (leadPhotos[l.id]) return false;
+        if (fetchedPhotosRef.current.has(l.id)) return false;
+        return true;
+      });
       if (missingPhotos.length === 0) return;
       
       // Mark as fetched immediately to prevent concurrent duplicate fetches
       missingPhotos.forEach(l => fetchedPhotosRef.current.add(l.id));
 
-      const newPhotos: Record<string, string> = {};
-      
-      for (const l of missingPhotos) {
-        try {
-          const photo = await loadLeadPhoto(l.id);
-          if (photo) newPhotos[l.id] = photo;
-          
-          // Small delay to let the browser breathe
-          await new Promise(resolve => setTimeout(resolve, 50));
-        } catch (e) {
-          console.error('Failed to load photo for', l.id);
+      try {
+        const ids = missingPhotos.map(l => l.id);
+        for (let i = 0; i < ids.length; i += 25) {
+          const chunk = ids.slice(i, i + 25);
+          const photosMap = await loadLeadPhotosBatch(chunk);
+          const photoUpdates: Record<string, string> = {};
+          Object.entries(photosMap).forEach(([id, data]) => {
+            if (data.photo) photoUpdates[id] = data.photo;
+          });
+
+          if (Object.keys(photoUpdates).length > 0) {
+            setLeadPhotos(prev => {
+              const updated = { ...prev, ...photoUpdates };
+              try {
+                localStorage.setItem('textrack_lead_photos_cache', JSON.stringify(updated));
+              } catch (_) {}
+              return updated;
+            });
+          }
         }
-      }
-      
-      if (Object.keys(newPhotos).length > 0) {
-        setLeadPhotos(prev => ({ ...prev, ...newPhotos }));
+      } catch (err) {
+        console.error('Failed to batch load photos in commercial portal', err);
       }
     };
     fetchPhotos();
@@ -887,70 +906,94 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                 return (
                   <div key={client.phone + client.name} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all relative">
                     {/* CLIENT HEADER */}
-                    <div className="flex flex-wrap items-start justify-between gap-4 mb-4 border-b border-slate-50 pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl shrink-0 bg-indigo-50 text-indigo-600">
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl shrink-0 bg-indigo-50 text-indigo-600 shadow-2xs">
                           {client.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                            {client.name}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                              {client.name}
+                            </h3>
                             {hasPriority && <span className="text-xs">⭐</span>}
-                          </h3>
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500 mt-1" dir="ltr">
-                            <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-indigo-400" /> {displayPhone}</span>
+                            <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-black flex items-center gap-1 shadow-2xs">
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>{isAr ? 'عميل مؤكد' : 'Client Ajouté'}</span>
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-600 mt-1.5" dir="ltr">
+                            <a 
+                              href={`tel:${client.phone.replace(/\D/g, '').startsWith('0') ? '212' + client.phone.replace(/\D/g, '').substring(1) : client.phone.replace(/\D/g, '')}`}
+                              className="inline-flex items-center gap-1.5 text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200/60 px-2.5 py-1 rounded-xl transition-colors shadow-2xs font-mono font-black"
+                              title={isAr ? 'انقر للاتصال بالهاتف' : 'Cliquer pour appeler'}
+                            >
+                              <Phone className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>{displayPhone}</span>
+                            </a>
+                            {client.ville && (
+                              <span className="inline-flex items-center gap-1 text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-lg text-[11px] font-semibold">
+                                <MapPin className="w-3 h-3 text-rose-500" /> {client.ville}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
                       
                       {/* CLIENT ACTIONS */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
                         <button onClick={() => setSelectedLeadInfo({ ...client, details: requests.map(r => r.details).filter(Boolean).join(' | ') } as Lead)}
-                          className="h-9 px-3 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-amber-200 shadow-sm"
+                          className="h-9 px-3 bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white rounded-xl flex items-center gap-1.5 text-xs font-black transition-all border border-amber-200 shadow-2xs cursor-pointer active:scale-95"
+                          title={isAr ? 'معلومات وتفاصيل الزبون' : 'Informations'}
                         >
-                          <FileText className="w-4 h-4" /> {isAr ? 'معلومات' : 'Infos'}
+                          <FileText className="w-4 h-4" /> 
+                          <span>{isAr ? 'معلومات' : 'Infos'}</span>
                         </button>
-                        <a href={`tel:${client.phone.replace(/\\D/g, '').startsWith('0') ? '212' + client.phone.replace(/\\D/g, '').substring(1) : client.phone.replace(/\\D/g, '')}`}
-                          className="h-9 px-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-slate-200 shadow-sm">
-                          <PhoneCall className="w-4 h-4" /> {isAr ? 'اتصال' : 'Appel'}
+                        <a href={`tel:${client.phone.replace(/\D/g, '').startsWith('0') ? '212' + client.phone.replace(/\D/g, '').substring(1) : client.phone.replace(/\D/g, '')}`}
+                          className="h-9 px-3 bg-slate-50 text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center gap-1.5 text-xs font-black transition-all border border-slate-200 shadow-2xs active:scale-95">
+                          <PhoneCall className="w-4 h-4 text-indigo-600" /> 
+                          <span>{isAr ? 'اتصال' : 'Appel'}</span>
                         </a>
                         <button onClick={() => {
-                          const rawPhone = String(client.phone || '').replace(/\\D/g, '');
+                          const rawPhone = String(client.phone || '').replace(/\D/g, '');
                           const phone = rawPhone.startsWith('2120') ? '212' + rawPhone.slice(3) : rawPhone.startsWith('0') ? '212' + rawPhone.slice(1) : rawPhone;
                           window.open(`https://wa.me/${phone}`, '_blank');
                         }}
-                          className="h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600">
-                          <MessageCircle className="w-4 h-4" /> WhatsApp
-                        </button>
-
-                        <button onClick={() => alert(isAr ? 'ديفيز متوفر في الإدارة' : 'Le devis complet est géré par l\'administration')}
-                          className="h-9 w-9 rounded-xl flex items-center justify-center border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
-                        >
-                          <Calculator className="w-4 h-4" />
-                        </button>
-
-                        <button onClick={() => alert(isAr ? 'تمت إضافة الزبون' : 'Le client est déjà enregistré')}
-                          className="h-9 px-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-xl border border-emerald-200 text-[10px] font-black flex items-center gap-1 transition-all shadow-sm">
-                          <CheckCircle className="w-4 h-4" /> {isAr ? 'تمت الإضافة كزبون' : 'Client Ajouté'}
+                          className="h-9 px-3.5 rounded-xl text-xs font-black uppercase flex items-center gap-1.5 border transition-all shadow-2xs bg-[#25D366] text-white border-[#25D366] hover:bg-[#128C7E] active:scale-95 cursor-pointer">
+                          <MessageCircle className="w-4 h-4" /> 
+                          <span>WhatsApp</span>
                         </button>
                       </div>
                     </div>
 
                     {/* REQUESTS LIST */}
                     <div className="space-y-2">
-                      {requests.map(req => (
+                      {requests.map(req => {
+                        const currentPhoto = req.photo || (req.photos && req.photos[0]) || leadPhotos[req.id];
+                        return (
                         <div key={req.id} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-3 rounded-xl border gap-4 transition-colors ${req.crmStage === 'confirme' ? 'bg-emerald-50/30 border-emerald-100' : 'bg-slate-50/50 border-slate-100'}`}>
                           <div className="flex items-center gap-3 flex-1 min-w-0">
-                            {leadPhotos[req.id] ? (
-                              <img 
-                                src={leadPhotos[req.id]} 
-                                alt={req.type} 
-                                onClick={() => setPreviewImage(leadPhotos[req.id])}
-                                className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
-                              />
+                            {currentPhoto ? (
+                              <div className="relative group shrink-0">
+                                <img 
+                                  src={currentPhoto} 
+                                  alt={req.type} 
+                                  onClick={() => setPreviewImage(currentPhoto)}
+                                  className="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-sm cursor-pointer hover:opacity-85 transition-opacity" 
+                                />
+                                {(req.photos && req.photos.length > 1) && (
+                                  <span className="absolute bottom-0 right-0 bg-slate-900/80 text-white text-[8px] font-black px-1.5 py-0.5 rounded-tl-lg">
+                                    +{req.photos.length - 1}
+                                  </span>
+                                )}
+                              </div>
                             ) : (
-                              <div className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                                <ImageIcon className="w-6 h-6 text-slate-300 opacity-50" />
+                              <div 
+                                title={isAr ? 'طلب بدون صورة مرفقة (نقاش أو استفسار)' : 'Demande sans image jointe'}
+                                className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-2xs text-slate-300"
+                              >
+                                <ImageIcon className="w-5 h-5 opacity-40 text-slate-400" />
+                                <span className="text-[7px] font-bold text-slate-400 mt-0.5">{isAr ? 'بدون صورة' : 'Sans photo'}</span>
                               </div>
                             )}
                             <div className="min-w-0 flex-1">
@@ -1158,7 +1201,8 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                             </button>
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 );
