@@ -29,15 +29,39 @@ import {
   Coins,
   CheckCheck,
   Wallet,
-  Upload
+  Upload,
+  Package,
+  Layers,
+  Sparkles,
+  Building2,
+  Factory,
+  Percent,
+  BadgePercent,
+  ArrowRight,
+  Copy,
+  Check,
+  ExternalLink,
+  ShieldCheck,
+  Tag,
+  MapPin,
+  Star,
+  AlertTriangle,
+  UserCog,
+  RefreshCw,
+  Send
 } from 'lucide-react';
 import { 
   Lead,
   loadLeads,
   saveRecord,
   loadCompanyProfile,
-  loadLeadPhoto
+  loadLeadPhoto,
+  loadData,
+  StockTissu,
+  StockFourniture,
+  User
 } from '../types';
+import { SUPPLIERS_DATA, SupplierProfile } from '../data/suppliersData';
 import { useLang } from '../contexts/LangContext';
 import { compressImage } from '../utils/image';
 import { lazy, Suspense } from 'react';
@@ -90,10 +114,77 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [savedOk, setSavedOk] = useState(false);
   const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
-  const [bottomTab, setBottomTab] = useState<'leads' | 'commissions' | 'devis' | 'profil'>('leads');
+  
+  // Extended Navigation Tabs
+  type CommercialTab = 'leads' | 'commissions' | 'ai_devis' | 'fournisseurs' | 'stock' | 'rh' | 'profil';
+  const [bottomTab, setBottomTab] = useState<CommercialTab>('leads');
+  
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(15);
   const [selectedLeadInfo, setSelectedLeadInfo] = useState<Lead | null>(null);
+
+  // ── Mode de Calcul de Commission Dynamique (% vs Pièce vs Fixe) ──
+  const [commissionCalcMode, setCommissionCalcMode] = useState<'percent' | 'piece' | 'fixed'>('percent');
+  const [commissionRate, setCommissionRate] = useState<number>(3); // 3% par défaut
+
+  // ── Fournisseurs State ──
+  const [supplierSearch, setSupplierSearch] = useState('');
+  const [supplierCategory, setSupplierCategory] = useState<string>('all');
+
+  // ── Stock Materials State ──
+  const [stockTissus, setStockTissus] = useState<StockTissu[]>([]);
+  const [stockFournitures, setStockFournitures] = useState<StockFourniture[]>([]);
+  const [stockTab, setStockTab] = useState<'tissus' | 'fournitures'>('tissus');
+  const [stockSearch, setStockSearch] = useState('');
+  const [stockLoading, setStockLoading] = useState(false);
+
+  // ── RH & Team State ──
+  const [teamUsers, setTeamUsers] = useState<User[]>([]);
+  const [rhLoading, setRhLoading] = useState(false);
+
+  // ── AI Devis Chiffrage Rapide State ──
+  const [aiDevisModel, setAiDevisModel] = useState<'hoodie' | 'pantalon' | 'tshirt' | 'ensemble' | 'custom'>('ensemble');
+  const [aiDevisQty, setAiDevisQty] = useState<number>(100);
+  const [aiDevisFabricCost, setAiDevisFabricCost] = useState<number>(75);
+  const [aiDevisLaborCost, setAiDevisLaborCost] = useState<number>(35);
+  const [aiDevisAccessoriesCost, setAiDevisAccessoriesCost] = useState<number>(15);
+  const [aiDevisBroderieCost, setAiDevisBroderieCost] = useState<number>(15);
+  const [aiDevisTargetMargin, setAiDevisTargetMargin] = useState<number>(30); // 30% marge atelier
+  const [aiDevisCopied, setAiDevisCopied] = useState(false);
+
+  // Load Stock & RH team data on mount
+  useEffect(() => {
+    const loadStockData = async () => {
+      try {
+        setStockLoading(true);
+        const [t, f] = await Promise.all([
+          loadData('stock_tissus') as Promise<StockTissu[]>,
+          loadData('stock_fournitures') as Promise<StockFourniture[]>
+        ]);
+        setStockTissus(t || []);
+        setStockFournitures(f || []);
+      } catch (err) {
+        console.error('Failed to load stock for commercial portal', err);
+      } finally {
+        setStockLoading(false);
+      }
+    };
+
+    const loadTeamData = async () => {
+      try {
+        setRhLoading(true);
+        const users = await loadData('users') as User[];
+        setTeamUsers((users || []).filter(u => u && u.nom && !['client', 'affiliate'].includes(u.role)));
+      } catch (err) {
+        console.error('Failed to load team users for RH', err);
+      } finally {
+        setRhLoading(false);
+      }
+    };
+
+    loadStockData();
+    loadTeamData();
+  }, []);
 
   useEffect(() => {
     // 2. Fetch fresh data
@@ -372,6 +463,89 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
 
       {/* Content lifted over hero */}
       <div className="px-4 -mt-6 relative z-10">
+        {/* ── Top Navigation Quick Pills Bar ── */}
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 shadow-lg border border-slate-200/80 mb-6 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+          <button 
+            type="button" 
+            onClick={() => setBottomTab('leads')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+              bottomTab === 'leads' 
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Target className="w-3.5 h-3.5" />
+            <span>{isAr ? 'الطلبات والتأكيد' : 'Prospects & Confirmation'}</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-white/20 text-white font-mono">{stats.totalActive}</span>
+          </button>
+
+          <button 
+            type="button" 
+            onClick={() => setBottomTab('ai_devis')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+              bottomTab === 'ai_devis' 
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>{isAr ? 'دوفي الذكاء الاصطناعي' : 'Devis & Chiffrage IA'}</span>
+          </button>
+
+          <button 
+            type="button" 
+            onClick={() => setBottomTab('fournisseurs')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+              bottomTab === 'fournisseurs' 
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Factory className="w-3.5 h-3.5" />
+            <span>{isAr ? 'الموردين ومول السلعة' : 'Fournisseurs & Tissus'}</span>
+          </button>
+
+          <button 
+            type="button" 
+            onClick={() => setBottomTab('stock')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+              bottomTab === 'stock' 
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Package className="w-3.5 h-3.5" />
+            <span>{isAr ? 'المخزون بالأتيليي' : 'Stock Matières'}</span>
+          </button>
+
+          <button 
+            type="button" 
+            onClick={() => setBottomTab('rh')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+              bottomTab === 'rh' 
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>{isAr ? 'الموارد البشرية والعمال' : 'Suivi RH & Équipe'}</span>
+          </button>
+
+          <button 
+            type="button" 
+            onClick={() => setBottomTab('commissions')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+              bottomTab === 'commissions' 
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Coins className="w-3.5 h-3.5 text-amber-500" />
+            <span>{isAr ? 'عمولاتي' : 'Commissions'}</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-amber-100 text-amber-900 font-bold">{commissionStats.confirmedCount}</span>
+          </button>
+        </div>
+
         {bottomTab === 'leads' && (
           <>
             <div className="relative mb-6">
@@ -873,6 +1047,532 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
           </div>
         </div>
       )}
+
+      {/* ── AI Devis & Fast Chiffrage Tab ── */}
+      {bottomTab === 'ai_devis' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                    {isAr ? 'حاسبة ومولد التسعيرة بالذكاء الاصطناعي (AI Devis)' : 'Calculateur & Devis Chiffrage IA'}
+                  </h2>
+                  <p className="text-xs text-slate-500 font-bold">
+                    {isAr ? 'حساب تكلفة الإنتاج، هامش ربح الورشة، وعمولة التجاري بدقة عالية' : 'Estimer les coûts, marge atelier et commission en temps réel'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBottomTab('devis')}
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-2 cursor-pointer transition-all"
+              >
+                <FileText className="w-4 h-4" />
+                <span>{isAr ? 'فتح محرر Devis PRO الرسمي' : 'Éditeur Devis PRO'}</span>
+              </button>
+            </div>
+
+            {/* Model Presets */}
+            <div className="mb-6">
+              <label className="block text-xs font-black uppercase text-slate-600 mb-2">
+                {isAr ? 'اختر نوع الموديل:' : 'Modèle de Vêtement :'}
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {[
+                  { key: 'hoodie', labelAr: '🧥 هودي 360g', labelFr: 'Hoodie 360g', fabric: 45, labor: 25, acc: 8, emb: 15 },
+                  { key: 'pantalon', labelAr: '👖 سروال 360g', labelFr: 'Sweatpant 360g', fabric: 35, labor: 20, acc: 10, emb: 8 },
+                  { key: 'tshirt', labelAr: '👕 تيشورت 240g', labelFr: 'T-Shirt 240g', fabric: 22, labor: 12, acc: 4, emb: 8 },
+                  { key: 'ensemble', labelAr: '⚡ إنسومبل كامل', labelFr: 'Ensemble Complet', fabric: 75, labor: 38, acc: 18, emb: 20 },
+                  { key: 'custom', labelAr: '✨ موديل مخصص', labelFr: 'Sur-mesure', fabric: 50, labor: 30, acc: 10, emb: 10 },
+                ].map(m => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => {
+                      setAiDevisModel(m.key as any);
+                      setAiDevisFabricCost(m.fabric);
+                      setAiDevisLaborCost(m.labor);
+                      setAiDevisAccessoriesCost(m.acc);
+                      setAiDevisBroderieCost(m.emb);
+                    }}
+                    className={`p-3 rounded-xl border text-center font-black text-xs transition-all cursor-pointer ${
+                      aiDevisModel === m.key
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.02]'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {isAr ? m.labelAr : m.labelFr}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Cost Elements Inputs Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
+                  {isAr ? 'الكمية المطلوبة (Qté)' : 'Quantité :'}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    value={aiDevisQty}
+                    onChange={e => setAiDevisQty(Math.max(1, Number(e.target.value) || 1))}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-base font-black outline-none focus:border-indigo-600"
+                  />
+                  <span className="text-xs font-bold text-slate-400">pcs</span>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
+                  {isAr ? 'تكلفة الثوب / بياسة' : 'Coût Tissu :'}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    value={aiDevisFabricCost}
+                    onChange={e => setAiDevisFabricCost(Number(e.target.value) || 0)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-base font-black outline-none focus:border-indigo-600"
+                  />
+                  <span className="text-xs font-bold text-slate-400">DH</span>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
+                  {isAr ? 'الفصالة والخياطة (Main d\'œuvre)' : 'Façon Atelier :'}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    value={aiDevisLaborCost}
+                    onChange={e => setAiDevisLaborCost(Number(e.target.value) || 0)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-base font-black outline-none focus:border-indigo-600"
+                  />
+                  <span className="text-xs font-bold text-slate-400">DH</span>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
+                  {isAr ? 'الطرز 3D / الإكسسوارات' : 'Finition & Broderie :'}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    value={aiDevisAccessoriesCost + aiDevisBroderieCost}
+                    onChange={e => {
+                      const totalAcc = Number(e.target.value) || 0;
+                      setAiDevisAccessoriesCost(Math.round(totalAcc / 2));
+                      setAiDevisBroderieCost(totalAcc - Math.round(totalAcc / 2));
+                    }}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-base font-black outline-none focus:border-indigo-600"
+                  />
+                  <span className="text-xs font-bold text-slate-400">DH</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Calculations Engine Output */}
+            {(() => {
+              const unitCost = aiDevisFabricCost + aiDevisLaborCost + aiDevisAccessoriesCost + aiDevisBroderieCost;
+              const marginFactor = Math.max(0.1, 1 - (aiDevisTargetMargin / 100));
+              const sellingPrice = Math.round(unitCost / marginFactor);
+              const totalTurnover = sellingPrice * aiDevisQty;
+              const totalCost = unitCost * aiDevisQty;
+              const atelierProfit = totalTurnover - totalCost;
+              const commSuggested = Math.round(totalTurnover * 0.03); // 3%
+
+              const copyWhatsappText = () => {
+                const text = isAr 
+                  ? `سلام عليكم، هذا عرض السعر التقديري لطلبيتكم لدى BEYA CREATIVE:
+📦 الموديل: ${aiDevisModel === 'ensemble' ? 'إنسومبل كامل (هودي + سروال 360 GSM)' : aiDevisModel}
+🔢 الكمية: ${aiDevisQty} قطعة
+💰 ثمن الوحدة المقترح: ${sellingPrice} درهم
+💵 الإجمالي التقديري: ${totalTurnover.toLocaleString()} درهم
+⏱️ مدة الإنتاج: 10 إلى 15 يوم عمل
+للتأكيد وإطلاق العينة تواصلوا معنا مباشرة.`
+                  : `Bonjour, voici l'estimation de votre commande BEYA CREATIVE :
+📦 Modèle : ${aiDevisModel}
+🔢 Quantité : ${aiDevisQty} pcs
+💰 Prix unitaire : ${sellingPrice} MAD
+💵 Total HT : ${totalTurnover.toLocaleString()} MAD
+Pour valider et lancer l'échantillon, contactez-nous directement.`;
+                navigator.clipboard.writeText(text);
+                setAiDevisCopied(true);
+                setTimeout(() => setAiDevisCopied(false), 2500);
+              };
+
+              return (
+                <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-6 rounded-3xl shadow-xl space-y-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">
+                        {isAr ? 'سعر التكلفة للبياسة' : 'Coût de Revient'}
+                      </span>
+                      <span className="text-2xl font-black text-slate-200">{unitCost} DH</span>
+                    </div>
+
+                    <div className="bg-emerald-500/20 p-4 rounded-2xl border border-emerald-500/30">
+                      <span className="text-[10px] text-emerald-300 font-bold uppercase block mb-1">
+                        {isAr ? 'سعر البيع المقترح' : 'Prix de Vente Conseillé'}
+                      </span>
+                      <span className="text-3xl font-black text-emerald-400">{sellingPrice} DH</span>
+                    </div>
+
+                    <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">
+                        {isAr ? 'رقم المعاملات الإجمالي' : 'Chiffre d\'Affaires'}
+                      </span>
+                      <span className="text-2xl font-black text-white">{totalTurnover.toLocaleString()} DH</span>
+                    </div>
+
+                    <div className="bg-amber-500/20 p-4 rounded-2xl border border-amber-500/30">
+                      <span className="text-[10px] text-amber-300 font-bold uppercase block mb-1">
+                        {isAr ? 'عمولة التجاري المقترحة (3%)' : 'Commission Commercial (3%)'}
+                      </span>
+                      <span className="text-2xl font-black text-amber-400">{commSuggested} DH</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/10">
+                    <span className="text-xs text-slate-300 font-bold">
+                      {isAr ? `💡 ربح الأتيليي الصافي: ${atelierProfit.toLocaleString()} درهم` : `Bénéfice Atelier : ${atelierProfit.toLocaleString()} MAD`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={copyWhatsappText}
+                      className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                    >
+                      {aiDevisCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      <span>{aiDevisCopied ? (isAr ? 'تم نسخ العرض بنجاح ✓' : 'Copié ✓') : (isAr ? 'نسخ رسالة العرض للواتساب' : 'Copier Message WhatsApp')}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* ── Fournisseurs & Matières Tab ── */}
+      {bottomTab === 'fournisseurs' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+              <div>
+                <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest flex items-center gap-1.5">
+                  <Factory className="w-3.5 h-3.5" />
+                  {isAr ? 'دليل موردي الأقمشة والسلعة المعتمدين' : 'Annuaire Fournisseurs & Matières Premières'}
+                </span>
+                <h2 className="text-2xl font-black text-slate-900 mt-1">
+                  {isAr ? 'موردي الأقمشة ومول السلعة' : 'Fournisseurs Tissus & Mercerie'}
+                </h2>
+              </div>
+              <span className="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                {SUPPLIERS_DATA.length} {isAr ? 'مورد معتمد' : 'fournisseurs'}
+              </span>
+            </div>
+
+            {/* Search and filters */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+              <div className="relative flex-1">
+                <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 ${isAr ? 'right-3' : 'left-3'}`} />
+                <input
+                  type="text"
+                  placeholder={isAr ? 'بحث عن مورد، نوع الثوب، أو المدينة (درب عمر، طنجة)...' : 'Rechercher un fournisseur, tissu, ville...'}
+                  value={supplierSearch}
+                  onChange={e => setSupplierSearch(e.target.value)}
+                  className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-600`}
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                {[
+                  { key: 'all', label: isAr ? 'الكل' : 'Tous' },
+                  { key: 'streetwear', label: isAr ? 'مولطون وستريتوير' : 'Streetwear & Molleton' },
+                  { key: 'crepe', label: isAr ? 'سكوبا وكريب' : 'Scuba & Crêpe' },
+                  { key: 'denim', label: isAr ? 'جينز وكارغو' : 'Denim & Cargo' },
+                ].map(cat => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => setSupplierCategory(cat.key)}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                      supplierCategory === cat.key
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Suppliers Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {SUPPLIERS_DATA.filter(s => {
+                const matchSearch = s.name.toLowerCase().includes(supplierSearch.toLowerCase()) ||
+                  s.city.toLowerCase().includes(supplierSearch.toLowerCase()) ||
+                  s.fabricTags.some(t => t.toLowerCase().includes(supplierSearch.toLowerCase()));
+                const matchCat = supplierCategory === 'all' || s.fabricCategory === supplierCategory;
+                return matchSearch && matchCat;
+              }).map(sup => (
+                <div key={sup.id} className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 flex flex-col justify-between hover:border-indigo-300 transition-all">
+                  <div>
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div>
+                        <h4 className="font-black text-slate-900 text-sm">{sup.name}</h4>
+                        <span className="text-[10px] text-slate-500 font-bold flex items-center gap-1 mt-0.5">
+                          <MapPin className="w-3 h-3 text-indigo-500" />
+                          {sup.city} • {sup.district}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-black px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full shrink-0">
+                        ⭐ {sup.rating} ({sup.reviewsCount})
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-600 font-medium mb-3 line-clamp-2">
+                      {sup.specialtyTag || sup.desc}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {sup.fabricTags.map(tag => (
+                        <span key={tag} className="text-[9px] font-bold px-2 py-0.5 bg-white border border-slate-200 text-slate-600 rounded-md">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-200/80">
+                    <a
+                      href={`https://wa.me/${sup.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(isAr ? 'السلام عليكم، كنسول على توفر الأقمشة والأسعار لدى شركتكم (BEYA CREATIVE)' : 'Bonjour, demande de disponibilité de tissus.')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>WhatsApp</span>
+                    </a>
+                    <a
+                      href={`tel:${sup.phone}`}
+                      className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>{isAr ? 'اتصال' : 'Appeler'}</span>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Stock Matières Tab ── */}
+      {bottomTab === 'stock' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+              <div>
+                <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest flex items-center gap-1.5">
+                  <Package className="w-3.5 h-3.5" />
+                  {isAr ? 'مخزون الأقمشة والمواد بالورشة' : 'Stock Réel à l\'Atelier'}
+                </span>
+                <h2 className="text-2xl font-black text-slate-900 mt-1">
+                  {isAr ? 'المخزون الحالي والمواد الأولية' : 'Disponibilité des Matières'}
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStockTab('tissus')}
+                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    stockTab === 'tissus'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {isAr ? 'الأقمشة (Tissus)' : 'Tissus'} ({stockTissus.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStockTab('fournitures')}
+                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    stockTab === 'fournitures'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {isAr ? 'السلعة والإكسسوارات' : 'Fournitures'} ({stockFournitures.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Stock Search */}
+            <div className="relative mb-4">
+              <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 ${isAr ? 'right-3' : 'left-3'}`} />
+              <input
+                type="text"
+                placeholder={isAr ? 'بحث في المخزون عن ثوب، لون، أو مادة...' : 'Rechercher tissu, couleur, fourniture...'}
+                value={stockSearch}
+                onChange={e => setStockSearch(e.target.value)}
+                className={`w-full ${isAr ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-600`}
+              />
+            </div>
+
+            {/* Stock Items Table */}
+            {stockTab === 'tissus' ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-500 font-black uppercase text-[10px]">
+                      <th className="py-2.5">{isAr ? 'نوع الثوب' : 'Tissu'}</th>
+                      <th className="py-2.5">{isAr ? 'اللون' : 'Couleur'}</th>
+                      <th className="py-2.5">{isAr ? 'الأمتار المتبقية' : 'Métrage'}</th>
+                      <th className="py-2.5">{isAr ? 'الحالة' : 'Statut'}</th>
+                      <th className="py-2.5">{isAr ? 'الموقع' : 'Emplacement'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {stockTissus.filter(t => !stockSearch || t.type.toLowerCase().includes(stockSearch.toLowerCase()) || (t.couleur && t.couleur.toLowerCase().includes(stockSearch.toLowerCase()))).map(t => (
+                      <tr key={t.id} className="hover:bg-slate-50 font-bold">
+                        <td className="py-3 font-black text-slate-900">{t.type}</td>
+                        <td>
+                          <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px]">
+                            {t.couleur || '—'}
+                          </span>
+                        </td>
+                        <td className="font-mono text-indigo-600 font-black">{t.metrage} m</td>
+                        <td>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                            t.metrage > (t.seuilAlerte || 20)
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : t.metrage > 0
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            {t.metrage > (t.seuilAlerte || 20) ? (isAr ? 'متوفر' : 'Disponible') : t.metrage > 0 ? (isAr ? 'قارب على النفاد' : 'Alerte') : (isAr ? 'منتهي' : 'Épuisé')}
+                          </span>
+                        </td>
+                        <td className="text-slate-500">{t.emplacement || 'Atelier'}</td>
+                      </tr>
+                    ))}
+                    {stockTissus.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-slate-400 font-bold">
+                          {isAr ? 'لا يوجد أقمشة مسجلة حالياً بالمخزن' : 'Aucun tissu en stock pour le moment'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-500 font-black uppercase text-[10px]">
+                      <th className="py-2.5">{isAr ? 'المادة' : 'Fourniture'}</th>
+                      <th className="py-2.5">{isAr ? 'الصنف' : 'Catégorie'}</th>
+                      <th className="py-2.5">{isAr ? 'الكمية' : 'Quantité'}</th>
+                      <th className="py-2.5">{isAr ? 'الحالة' : 'Statut'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {stockFournitures.filter(f => !stockSearch || f.nom.toLowerCase().includes(stockSearch.toLowerCase())).map(f => (
+                      <tr key={f.id} className="hover:bg-slate-50 font-bold">
+                        <td className="py-3 font-black text-slate-900">{f.nom}</td>
+                        <td className="text-slate-600">{f.categorie}</td>
+                        <td className="font-mono text-indigo-600 font-black">{f.quantite} {f.unite}</td>
+                        <td>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                            f.quantite > (f.stockMin || 10)
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : f.quantite > 0
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            {f.quantite > (f.stockMin || 10) ? (isAr ? 'متوفر' : 'Normal') : f.quantite > 0 ? (isAr ? 'تنبيه نقص' : 'Alerte') : (isAr ? 'نفذ' : 'Rupture')}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {stockFournitures.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-slate-400 font-bold">
+                          {isAr ? 'لا يوجد إكسسوارات مسجلة حالياً' : 'Aucune fourniture en stock'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Suivi RH & Équipe Tab ── */}
+      {bottomTab === 'rh' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+              <div>
+                <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" />
+                  {isAr ? 'الموارد البشرية وفريق العمل' : 'Gestion d\'Équipe & RH'}
+                </span>
+                <h2 className="text-2xl font-black text-slate-900 mt-1">
+                  {isAr ? 'فريق العمل بالورشة ومتابعة الحضور' : 'Personnel & Présence'}
+                </h2>
+              </div>
+              <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-200">
+                {teamUsers.length} {isAr ? 'عضو في الفريق' : 'membres'}
+              </span>
+            </div>
+
+            {/* Team Members List */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {teamUsers.map(user => (
+                <div key={user.id} className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/60 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-black flex items-center justify-center shrink-0">
+                    {user.photo ? <img src={user.photo} className="w-full h-full object-cover rounded-xl" alt="" /> : (user.nom || 'U')[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-xs text-slate-900 truncate">{user.nom}</p>
+                    <span className="inline-block px-2 py-0.5 rounded text-[9px] font-bold bg-white border border-slate-200 text-slate-600 mt-0.5">
+                      {user.role}
+                    </span>
+                  </div>
+                  {user.telephone && (
+                    <a
+                      href={`tel:${user.telephone}`}
+                      className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-indigo-600 hover:bg-indigo-50 transition-colors"
+                      title={user.telephone}
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       </div>
 
       {/* Confirmation Modal */}
@@ -935,79 +1635,163 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                     </span>
                   </div>
 
-                  {/* Intent Selection Buttons */}
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* ── Mode de Calcul de Commission Dynamique (% vs Pièce vs Fixe) ── */}
+                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-white rounded-xl border border-slate-200">
                     <button
                       type="button"
-                      onClick={() => setEditForm(prev => ({
-                        ...prev,
-                        intentType: 'production',
-                        commercialCommission: prev.commercialCommission === 50 ? 150 : (prev.commercialCommission ?? 150)
-                      }))}
-                      className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 cursor-pointer ${
-                        (editForm.intentType || 'production') === 'production'
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-400/40'
-                          : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-300'
+                      onClick={() => {
+                        setCommissionCalcMode('percent');
+                        const total = (Number(selectedLead.quantity) || 1) * (Number(editForm.crmPrice || selectedLead.crmPrice) || 180);
+                        const calc = Math.round(total * (commissionRate / 100));
+                        setEditForm(prev => ({ ...prev, commercialCommission: calc }));
+                      }}
+                      className={`py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${
+                        commissionCalcMode === 'percent'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-50'
                       }`}
                     >
-                      <span className="text-lg">🎯</span>
-                      <span className="text-xs font-black">{isAr ? 'إنتاج وتصنيع' : 'Production'}</span>
-                      <span className="text-[10px] font-bold opacity-90">{isAr ? 'عمولة: 150 د.م' : 'Comm: 150 MAD'}</span>
+                      📊 {isAr ? 'نسبة مئوية (%)' : 'Pourcentage %'}
                     </button>
-
                     <button
                       type="button"
-                      onClick={() => setEditForm(prev => ({
-                        ...prev,
-                        intentType: 'consultation',
-                        commercialCommission: prev.commercialCommission === 150 ? 50 : (prev.commercialCommission ?? 50),
-                        crmPrice: prev.crmPrice || 250
-                      }))}
-                      className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 cursor-pointer ${
-                        editForm.intentType === 'consultation'
-                          ? 'bg-amber-500 text-white border-amber-500 shadow-sm ring-2 ring-amber-400/40'
-                          : 'bg-white text-slate-700 border-slate-200 hover:border-amber-300'
+                      onClick={() => {
+                        setCommissionCalcMode('piece');
+                        const qty = Number(selectedLead.quantity) || 1;
+                        const calc = Math.round(qty * 3);
+                        setEditForm(prev => ({ ...prev, commercialCommission: calc }));
+                      }}
+                      className={`py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${
+                        commissionCalcMode === 'piece'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-50'
                       }`}
                     >
-                      <span className="text-lg">💬</span>
-                      <span className="text-xs font-black">{isAr ? 'استشارة وتوجيه' : 'Consultation'}</span>
-                      <span className="text-[10px] font-bold opacity-90">{isAr ? 'عمولة: 50 د.م' : 'Comm: 50 MAD'}</span>
+                      📦 {isAr ? 'بالقطعة (DH/pc)' : 'Par Pièce'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCommissionCalcMode('fixed')}
+                      className={`py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${
+                        commissionCalcMode === 'fixed'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      💵 {isAr ? 'مبلغ ثابت (Fixe)' : 'Fixe (MAD)'}
                     </button>
                   </div>
 
-                  {/* Commission custom chips */}
-                  <div className="pt-1">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[10px] font-black uppercase text-slate-600 tracking-wider">
-                        {isAr ? 'مبلغ عمولة التأكيد:' : 'Commission :'}
-                      </label>
-                      <div className="flex gap-1">
-                        {[50, 100, 150, 200].map(amt => (
-                          <button
-                            key={amt}
-                            type="button"
-                            onClick={() => setEditForm(prev => ({ ...prev, commercialCommission: amt }))}
-                            className={`px-2 py-0.5 rounded text-[10px] font-black border transition-all cursor-pointer ${
-                              (editForm.commercialCommission !== undefined ? editForm.commercialCommission : (editForm.intentType === 'consultation' ? 50 : 150)) === amt
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                            }`}
-                          >
-                            {amt}
-                          </button>
-                        ))}
+                  {/* Mode 1: Pourcentage (%) */}
+                  {commissionCalcMode === 'percent' && (
+                    <div className="bg-white p-3 rounded-xl border border-indigo-100 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-500 font-bold">{isAr ? 'النسبة المئوية من مجموع الطلب:' : 'Taux de commission :'}</span>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 5, 7, 10].map(pct => (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() => {
+                                setCommissionRate(pct);
+                                const total = (Number(selectedLead.quantity) || 1) * (Number(editForm.crmPrice || selectedLead.crmPrice) || 180);
+                                const calc = Math.round(total * (pct / 100));
+                                setEditForm(prev => ({ ...prev, commercialCommission: calc }));
+                              }}
+                              className={`px-2 py-0.5 rounded text-[10px] font-black border transition-all cursor-pointer ${
+                                commissionRate === pct
+                                  ? 'bg-indigo-600 text-white border-indigo-600'
+                                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                              }`}
+                            >
+                              {pct}%
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200 flex justify-between items-center">
+                        <span>
+                          {isAr ? 'تقدير الطلب:' : 'Est. :'} <strong>{((Number(selectedLead.quantity) || 1) * (Number(editForm.crmPrice || selectedLead.crmPrice) || 180)).toLocaleString()} MAD</strong> ({selectedLead.quantity || 1} pcs × {editForm.crmPrice || selectedLead.crmPrice || 180} DH)
+                        </span>
+                        <span className="font-black text-indigo-700 font-mono">
+                          × {commissionRate}% = {Math.round(((Number(selectedLead.quantity) || 1) * (Number(editForm.crmPrice || selectedLead.crmPrice) || 180)) * (commissionRate / 100))} DH
+                        </span>
                       </div>
                     </div>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="number"
-                        value={editForm.commercialCommission !== undefined ? editForm.commercialCommission : (editForm.intentType === 'consultation' ? 50 : 150)}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, commercialCommission: Number(e.target.value) }))}
-                        className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-black text-slate-800"
-                        placeholder="150"
-                      />
+                  )}
+
+                  {/* Mode 2: Par Pièce (DH/pc) */}
+                  {commissionCalcMode === 'piece' && (
+                    <div className="bg-white p-3 rounded-xl border border-indigo-100 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-500 font-bold">{isAr ? 'المبلغ لكل قطعة:' : 'Montant par pièce :'}</span>
+                        <div className="flex gap-1">
+                          {[2, 3, 5, 10, 15].map(amt => (
+                            <button
+                              key={amt}
+                              type="button"
+                              onClick={() => {
+                                setCommissionRate(amt);
+                                const calc = Math.round((Number(selectedLead.quantity) || 1) * amt);
+                                setEditForm(prev => ({ ...prev, commercialCommission: calc }));
+                              }}
+                              className={`px-2 py-0.5 rounded text-[10px] font-black border transition-all cursor-pointer ${
+                                commissionRate === amt
+                                  ? 'bg-indigo-600 text-white border-indigo-600'
+                                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                              }`}
+                            >
+                              {amt} DH
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200 flex justify-between items-center">
+                        <span>
+                          {selectedLead.quantity || 1} قطعة × {commissionRate} د.م/بياسة
+                        </span>
+                        <span className="font-black text-indigo-700 font-mono">
+                          = {Math.round((Number(selectedLead.quantity) || 1) * commissionRate)} DH
+                        </span>
+                      </div>
                     </div>
+                  )}
+
+                  {/* Mode 3: Fixe */}
+                  {commissionCalcMode === 'fixed' && (
+                    <div className="bg-white p-3 rounded-xl border border-indigo-100 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-500 font-bold">{isAr ? 'مبالغ سريعة:' : 'Montants rapides :'}</span>
+                        <div className="flex gap-1">
+                          {[50, 100, 150, 200, 300].map(amt => (
+                            <button
+                              key={amt}
+                              type="button"
+                              onClick={() => setEditForm(prev => ({ ...prev, commercialCommission: amt }))}
+                              className={`px-2 py-0.5 rounded text-[10px] font-black border transition-all cursor-pointer ${
+                                editForm.commercialCommission === amt
+                                  ? 'bg-indigo-600 text-white border-indigo-600'
+                                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                              }`}
+                            >
+                              {amt} DH
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Direct Input */}
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">MAD</span>
+                    <input
+                      type="number"
+                      value={editForm.commercialCommission ?? 150}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, commercialCommission: Number(e.target.value) }))}
+                      className="w-full pl-12 pr-4 py-2.5 bg-white border-2 border-indigo-200 rounded-xl text-base font-black text-slate-900 outline-none focus:border-indigo-600 transition-colors"
+                      placeholder="150"
+                    />
                   </div>
                 </div>
 
@@ -1309,9 +2093,12 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
       {/* ── Bottom Navigation Bar ── */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200 flex items-stretch shadow-xl" dir="ltr">
         {([
-          { key: 'leads', icon: LayoutGrid, labelFr: 'Prospects', labelAr: 'الطلبات' },
+          { key: 'leads', icon: Target, labelFr: 'Prospects', labelAr: 'الطلبات', badge: stats.totalActive },
+          { key: 'ai_devis', icon: Sparkles, labelFr: 'Devis IA', labelAr: 'تسعيرة IA' },
+          { key: 'fournisseurs', icon: Factory, labelFr: 'Fournisseurs', labelAr: 'الموردين' },
+          { key: 'stock', icon: Package, labelFr: 'Stock', labelAr: 'المخزون' },
+          { key: 'rh', icon: Users, labelFr: 'RH', labelAr: 'العمال' },
           { key: 'commissions', icon: Coins, labelFr: 'Commissions', labelAr: 'عمولاتي', badge: commissionStats.confirmedCount },
-          { key: 'devis',  icon: FileText,   labelFr: 'Devis (PRO)', labelAr: 'تسعيرة' },
           { key: 'profil', icon: UserCircle2, labelFr: 'Mon Profil', labelAr: 'ملفي' },
         ] as const).map(({ key, icon: Icon, labelFr, labelAr, badge }: any) => (
           <button
