@@ -402,6 +402,35 @@ export function isModelisteEmployee(emp?: Employe | null): boolean {
   );
 }
 
+export function isDtfOrSousTraitance(emp?: Employe | null): boolean {
+  if (!emp) return false;
+  if (emp.remunerationType === 'tache') return true;
+  const p = (emp.poste || '').toLowerCase();
+  const n = (emp.nom || '').toLowerCase();
+  const pr = (emp.prenom || '').toLowerCase();
+  const combined = `${p} ${n} ${pr}`;
+  if (
+    combined.includes('dtf') ||
+    combined.includes('impression') ||
+    combined.includes('broderie') ||
+    combined.includes('prestataire') ||
+    combined.includes('serigraphie') ||
+    combined.includes('sérigraphie') ||
+    combined.includes('sublimation')
+  ) {
+    return true;
+  }
+  if (emp.type === 'sous_traitance' && !isModelisteEmployee(emp)) {
+    return true;
+  }
+  return false;
+}
+
+export function isAtelierSalaried(emp?: Employe | null): boolean {
+  if (!emp) return false;
+  return !isDtfOrSousTraitance(emp);
+}
+
 export function getEffectiveMode(emp: Employe, rule?: EmpPayrollRule): ExtendedRemunerationType {
   if (rule?.mode) return rule.mode;
   if (emp.remunerationType) return emp.remunerationType;

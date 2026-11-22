@@ -8,8 +8,8 @@ import {
 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import {
-  Employe, Presence, PaiementSalaire, User, Lead, Charge,
-  loadData, saveRecord, deleteRecord, genId, loadCompanyProfile, safeStorage
+  Employe, Presence, PaiementSalaire, User, Lead, Charge, Fournisseur,
+  loadData, saveRecord, deleteRecord, genId, loadCompanyProfile, safeStorage, saveFournisseur
 } from '../types';
 import { supabase } from '../supabase';
 import { printElement } from '../utils/pdf';
@@ -31,6 +31,8 @@ import {
   deletePayrollAdjustment,
   computeWorkerMonthBalance,
   isModelisteEmployee,
+  isDtfOrSousTraitance,
+  isAtelierSalaried,
 } from '../utils/payrollEngine';
 
 function getLocalRH<T>(key: string): T[] {
@@ -77,7 +79,8 @@ export default function BalancePaie() {
     if (t === 'horaire' || t === 'modeliste') return t;
     return 'balance';
   });
-  const [modeFilter, setModeFilter] = useState<'all' | 'horaire' | 'modele' | 'mensuel'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<'atelier' | 'sous_traitance' | 'all'>('atelier');
+  const [modeFilter, setModeFilter] = useState<'all' | 'horaire' | 'modele' | 'mensuel' | 'tache'>('all');
   const [search, setSearch] = useState('');
 
   // Selected workers for drill-down tabs
@@ -87,11 +90,20 @@ export default function BalancePaie() {
   // Modals
   const [releveEmpId, setReleveEmpId] = useState<string | null>(null);
   const [ruleModalEmp, setRuleModalEmp] = useState<Employe | null>(null);
-  const [ruleForm, setRuleForm] = useState<{ mode: ExtendedRemunerationType; tauxHoraire: number; tarifParModele: number; salaireMensuel: number }>({
+  const [ruleForm, setRuleForm] = useState<{
+    mode: ExtendedRemunerationType;
+    tauxHoraire: number;
+    tarifParModele: number;
+    salaireMensuel: number;
+    type: 'atelier' | 'sous_traitance';
+    tarifTache: number;
+  }>({
     mode: 'mensuel',
     tauxHoraire: 17.1,
     tarifParModele: 0,
     salaireMensuel: 0,
+    type: 'atelier',
+    tarifTache: 0,
   });
 
   const [payModalEmp, setPayModalEmp] = useState<Employe | null>(null);
@@ -249,7 +261,24 @@ export default function BalancePaie() {
     return map;
   }, [activeEmployes, selectedMois, presences, paiements, extras]);
 
-  // Global KPI Totals
+  // Counts by Category
+  const atelierCount = useMemo(
+    () => activeEmployes.filter(e => !isDtfOrSousTraitance(e)).length,
+    [activeEmployes]
+  );
+  const dtfCount = useMemo(
+    () => activeEmployes.filter(e => isDtfOrSousTraitance(e)).length,
+    [activeEmployes]
+  );
+
+  // Grouped active employees by category
+  const displayedEmps = useMemo(() => {
+    if (categoryFilter === 'atelier') return activeEmployes.filter(e => !isDtfOrSousTraitance(e));
+    if (categoryFilter === 'sous_traitance') return activeEmployes.filter(e => isDtfOrSousTraitance(e));
+    return activeEmployes;
+  }, [activeEmployes, categoryFilter]);
+
+  // Global KPI Totals (calculated based on displayed category)
   const kpis = useMemo(() => {
     let totalBrut = 0;
     let totalNetGagne = 0;
@@ -261,8 +290,9 @@ export default function BalancePaie() {
     let horaireCount = 0;
     let modeleCount = 0;
     let mensuelCount = 0;
+    let tacheCount = 0;
 
-    activeEmployes.forEach(emp => {
+    displayedEmps.forEach(emp => {
       const b = allBalances[emp.id];
       if (!b) return;
       totalBrut += b.salaireBaseGagne;
@@ -275,6 +305,7 @@ export default function BalancePaie() {
 
       if (b.mode === 'horaire') horaireCount++;
       else if (b.mode === 'modele') modeleCount++;
+      else if (b.mode === 'tache') tacheCount++;
       else mensuelCount++;
     });
 
@@ -289,25 +320,27 @@ export default function BalancePaie() {
       horaireCount,
       modeleCount,
       mensuelCount,
+      tacheCount,
     };
-  }, [activeEmployes, allBalances]);
+  }, [displayedEmps, allBalances]);
 
   // Filtered Workers for Tab 1 (Master Balance)
   const filteredBalanceEmps = useMemo(() => {
     const q = search.toLowerCase().trim();
-    return activeEmployes.filter(e => {
+    return displayedEmps.filter(e => {
       const b = allBalances[e.id];
       if (!b) return false;
       if (modeFilter === 'horaire' && b.mode !== 'horaire') return false;
       if (modeFilter === 'modele' && b.mode !== 'modele') return false;
-      if (modeFilter === 'mensuel' && (b.mode === 'horaire' || b.mode === 'modele')) return false;
+      if (modeFilter === 'mensuel' && b.mode !== 'mensuel' && b.mode !== 'hebdomadaire') return false;
+      if (modeFilter === 'tache' && b.mode !== 'tache') return false;
       if (q) {
         const hay = `${e.nom} ${e.prenom} ${e.poste} ${e.cin || ''} ${e.telephone || ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [activeEmployes, allBalances, modeFilter, search]);
+  }, [displayedEmps, allBalances, modeFilter, search]);
 
   // Hourly Workers List
   const hourlyEmps = useMemo(
@@ -386,11 +419,16 @@ export default function BalancePaie() {
   const openRuleConfig = (emp: Employe) => {
     const b = allBalances[emp.id];
     const existingRule = extras.rules.find(r => r.employeId === emp.id);
+    const isDTF = isDtfOrSousTraitance(emp);
+    const defaultMode: ExtendedRemunerationType = isDTF ? 'tache' : (b?.mode || emp.remunerationType || 'mensuel');
+
     setRuleForm({
-      mode: b?.mode || emp.remunerationType || 'mensuel',
+      mode: (b?.mode === 'tache' || defaultMode === 'tache') ? 'tache' : (b?.mode || emp.remunerationType || 'mensuel'),
       tauxHoraire: existingRule?.tauxHoraire || b?.tauxHoraire || 17.1,
       tarifParModele: existingRule ? (Number(existingRule.tarifParModele) || 0) : (b?.tarifParModele ?? 0),
       salaireMensuel: Number(emp.salaireMensuel) || 0,
+      type: emp.type || (isDTF ? 'sous_traitance' : 'atelier'),
+      tarifTache: Number(emp.salaireMensuel) || 0,
     });
     setRuleModalEmp(emp);
   };
@@ -407,8 +445,9 @@ export default function BalancePaie() {
 
     const updatedEmp: Employe = {
       ...ruleModalEmp,
+      type: ruleForm.type,
       remunerationType: ruleForm.mode,
-      salaireMensuel: Number(ruleForm.salaireMensuel) || 0,
+      salaireMensuel: ruleForm.mode === 'tache' ? (Number(ruleForm.tarifTache) || 0) : (Number(ruleForm.salaireMensuel) || 0),
     };
 
     const nextEmps = employes.map(e => (e.id === updatedEmp.id ? updatedEmp : e));
@@ -422,6 +461,44 @@ export default function BalancePaie() {
       rules: [...prev.rules.filter(r => r.employeId !== updatedEmp.id), savedRule],
     }));
     setRuleModalEmp(null);
+  };
+
+  const handleConvertToFournisseur = async () => {
+    if (!ruleModalEmp) return;
+    const fName = empName(ruleModalEmp);
+    const confirmMsg = isAr
+      ? `هل تريد نسخ "${fName}" إلى قائمة الموردين (Fournisseurs DTF) واستبعاده من أجور عمال الورشة؟`
+      : `Voulez-vous enregistrer "${fName}" comme Fournisseur DTF et l'exclure de la paie atelier ?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const fData: Fournisseur = {
+        id: genId(),
+        nom: fName,
+        type: 'autre',
+        telephone: ruleModalEmp.telephone || '',
+        email: ruleModalEmp.email || '',
+        notes: `Prestataire Impression DTF (transféré depuis Balance Paie)`,
+        dateCreation: new Date().toISOString().slice(0, 10),
+      };
+      await saveFournisseur(fData);
+
+      const updatedEmp: Employe = {
+        ...ruleModalEmp,
+        type: 'sous_traitance',
+        remunerationType: 'tache',
+      };
+      const nextEmps = employes.map(e => (e.id === updatedEmp.id ? updatedEmp : e));
+      setEmployes(nextEmps);
+      saveLocalRH('employes', nextEmps);
+      saveRecord('employes', updatedEmp, true).catch(() => {});
+
+      alert(isAr ? `✅ تم بنجاح تسجيل "${fName}" في قائمة الموردين.` : `✅ "${fName}" a été enregistré dans les Fournisseurs avec succès.`);
+      setRuleModalEmp(null);
+    } catch (e) {
+      console.error(e);
+      alert(isAr ? 'حدث خطأ أثناء الحفظ' : 'Erreur lors de l’enregistrement');
+    }
   };
 
   const openPayModal = (emp: Employe, defaultType: 'avance' | 'solde' = 'avance') => {
@@ -653,6 +730,8 @@ export default function BalancePaie() {
       ? `⏱️ ساعات العمل الصافية: ${b.totalHours} ساعة × ${b.tauxHoraire} درهم/س`
       : b.mode === 'modele'
       ? `✂️ الموديلات المصادق عليها: ${b.totalModelsValides} موديل`
+      : b.mode === 'tache'
+      ? `🖨️ خدمات ومستحقات طباعة DTF / مناولة (${moisLabel(selectedMois)})`
       : `📅 الأجر الأساسي الشهري (${moisLabel(selectedMois)})`;
 
     const msg = isAr
@@ -840,6 +919,71 @@ export default function BalancePaie() {
       {/* ===================================================================== */}
       {activeTab === 'balance' && (
         <div className="space-y-4">
+          {/* PRIMARY CATEGORY SELECTOR (Atelier vs DTF/Sous-traitance) */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white p-3 rounded-[24px] shadow-sm">
+            <div className="flex items-center gap-1.5 p-1 bg-white/10 backdrop-blur-md rounded-2xl flex-wrap">
+              <button
+                type="button"
+                onClick={() => { setCategoryFilter('atelier'); setModeFilter('all'); }}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-2 ${
+                  categoryFilter === 'atelier'
+                    ? 'bg-white text-slate-900 shadow-md'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <span>🏭</span>
+                <span>{isAr ? 'عمال المعمل والورشة' : 'Salariés Atelier'}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${categoryFilter === 'atelier' ? 'bg-indigo-600 text-white' : 'bg-white/20 text-white'}`}>
+                  {atelierCount}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setCategoryFilter('sous_traitance'); setModeFilter('all'); }}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-2 ${
+                  categoryFilter === 'sous_traitance'
+                    ? 'bg-amber-400 text-slate-950 shadow-md'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <span>🖨️</span>
+                <span>{isAr ? 'خدمات وطباعة DTF' : 'Prestataires DTF & Externe'}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${categoryFilter === 'sous_traitance' ? 'bg-slate-950 text-white' : 'bg-white/20 text-white'}`}>
+                  {dtfCount}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setCategoryFilter('all'); setModeFilter('all'); }}
+                className={`px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                  categoryFilter === 'all'
+                    ? 'bg-white text-slate-900 shadow-md'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <span>🌐</span>
+                <span>{isAr ? 'الكل' : 'Tous'}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${categoryFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white/20 text-white'}`}>
+                  {activeEmployes.length}
+                </span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-300 px-3">
+              {categoryFilter === 'atelier' && (
+                <span>{isAr ? '✨ خاص بأجور عمال الورشة (مستبعد منها مزودو طباعة DTF)' : 'Ouvriers & salariés de l’atelier uniquement'}</span>
+              )}
+              {categoryFilter === 'sous_traitance' && (
+                <span className="text-amber-300">{isAr ? '🖨️ مزودو خدمات الطباعة DTF والمناولة الخارجية (خلاص حسب الفواتير/الطلبيات)' : 'Sous-traitants & imprimeurs DTF réglés à la commande'}</span>
+              )}
+              {categoryFilter === 'all' && (
+                <span>{isAr ? '🌐 عرض جميع السجلات (الورشة + الخدمات الخارجية)' : 'Tous les comptes réunis'}</span>
+              )}
+            </div>
+          </div>
+
           {/* Search & Mode Filters */}
           <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-white p-4 rounded-[24px] border-2 border-slate-100">
             <div className="relative flex-1">
@@ -859,6 +1003,7 @@ export default function BalancePaie() {
                 { id: 'horaire', label: isAr ? '⏱️ بالساعة' : '⏱️ Horaire' },
                 { id: 'modele', label: isAr ? '✂️ بالموديل' : '✂️ Modélistes' },
                 { id: 'mensuel', label: isAr ? '📅 شهري / قار' : '📅 Mensuel' },
+                { id: 'tache', label: isAr ? '🖨️ DTF / بالقطعة' : '🖨️ DTF / Tâche' },
               ].map(f => (
                 <button
                   key={f.id}
@@ -907,17 +1052,26 @@ export default function BalancePaie() {
                           {/* Worker + Mode */}
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0 overflow-hidden">
+                              <div className={`w-10 h-10 rounded-xl font-black text-xs flex items-center justify-center shrink-0 overflow-hidden ${
+                                isDtfOrSousTraitance(emp) ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-white'
+                              }`}>
                                 {emp.photo ? (
                                   <img src={emp.photo} alt={emp.nom} className="w-full h-full object-cover" />
                                 ) : (
-                                  <span>{(emp.prenom?.[0] || '') + (emp.nom?.[0] || '') || '??'}</span>
+                                  <span>{isDtfOrSousTraitance(emp) ? 'DTF' : ((emp.prenom?.[0] || '') + (emp.nom?.[0] || '') || '??')}</span>
                                 )}
                               </div>
                               <div>
-                                <p className="font-black text-slate-900 text-sm">{empName(emp)}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-black text-slate-900 text-sm">{empName(emp)}</p>
+                                  {isDtfOrSousTraitance(emp) && (
+                                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-md text-[9px] font-black">
+                                      DTF Externe
+                                    </span>
+                                  )}
+                                </div>
                                 <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                  <span className="text-[10px] font-bold text-slate-400">{emp.poste || 'Atelier'}</span>
+                                  <span className="text-[10px] font-bold text-slate-400">{emp.poste || (isDtfOrSousTraitance(emp) ? 'Prestataire Impression' : 'Atelier')}</span>
                                   <button
                                     onClick={() => openRuleConfig(emp)}
                                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black cursor-pointer transition ${
@@ -925,13 +1079,16 @@ export default function BalancePaie() {
                                         ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
                                         : b.mode === 'modele'
                                         ? 'bg-violet-100 text-violet-700 hover:bg-violet-200'
+                                        : b.mode === 'tache'
+                                        ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                     }`}
-                                    title={isAr ? 'انقر لتغيير طريقة الحساب والسعر' : 'Changer le mode de calcul et tarif'}
+                                    title={isAr ? 'انقر لتغيير طريقة الحساب والسعر والتصنيف' : 'Changer le mode de calcul et tarif'}
                                   >
                                     {b.mode === 'horaire' && `⏱️ ${b.tauxHoraire} MAD/h`}
                                     {b.mode === 'modele' && (b.tarifParModele > 0 ? `✂️ ${b.tarifParModele} MAD/modèle` : (isAr ? '✂️ متغير حسب الموديل' : '✂️ Prix variable / modèle'))}
-                                    {b.mode !== 'horaire' && b.mode !== 'modele' && (isAr ? '📅 قار' : '📅 Mensuel')}
+                                    {b.mode === 'tache' && (b.salaireBaseGagne > 0 ? `🖨️ ${b.salaireBaseGagne} MAD/tâche` : (isAr ? '🖨️ بالقطعة / DTF' : '🖨️ À la Tâche / DTF'))}
+                                    {b.mode !== 'horaire' && b.mode !== 'modele' && b.mode !== 'tache' && (isAr ? '📅 قار' : '📅 Mensuel')}
                                     <Edit2 className="w-2.5 h-2.5" />
                                   </button>
                                 </div>
@@ -965,6 +1122,14 @@ export default function BalancePaie() {
                                   </span>
                                 )}
                               </div>
+                            ) : b.mode === 'tache' || isDtfOrSousTraitance(emp) ? (
+                              <div className="inline-flex flex-col items-center">
+                                <span className="font-black text-amber-700 text-xs flex items-center gap-1">
+                                  <Printer className="w-3.5 h-3.5 text-amber-600" />
+                                  <span>{isAr ? 'خدمات DTF' : 'Prestation DTF'}</span>
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-400">{isAr ? 'خلاص حسب الفواتير' : 'Sur factures'}</span>
+                              </div>
                             ) : (
                               <div className="inline-flex flex-col items-center">
                                 <span className="font-bold text-slate-700 tabular-nums">{b.daysPresent} {isAr ? 'يوم حضور' : 'j présents'}</span>
@@ -977,7 +1142,13 @@ export default function BalancePaie() {
 
                           {/* Base Earned */}
                           <td className="p-4 text-center font-black text-slate-800 tabular-nums">
-                            {b.salaireBaseGagne.toLocaleString()} <span className="text-[10px] text-slate-400">MAD</span>
+                            {b.mode === 'tache' && b.salaireBaseGagne === 0 ? (
+                              <span className="text-xs text-slate-400 font-bold">{isAr ? 'حسب الفاتورة' : 'Sur facture'}</span>
+                            ) : (
+                              <>
+                                {b.salaireBaseGagne.toLocaleString()} <span className="text-[10px] text-slate-400">MAD</span>
+                              </>
+                            )}
                           </td>
 
                           {/* Primes & Retenues */}
@@ -1769,13 +1940,69 @@ export default function BalancePaie() {
           <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="font-black text-base text-slate-900">{empName(ruleModalEmp)}</h3>
-                <p className="text-[11px] font-bold text-slate-400">{isAr ? 'ضبط نظام الخلاص المتزامن مع RH' : 'Configurer le Mode de Paie & Tarif'}</p>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black text-base text-slate-900">{empName(ruleModalEmp)}</h3>
+                  {isDtfOrSousTraitance(ruleModalEmp) && (
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-black">
+                      🖨️ DTF Externe
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] font-bold text-slate-400">{isAr ? 'ضبط نظام الخلاص والتصنيف (ورشة / DTF خارجي)' : 'Mode de Paie & Classification'}</p>
               </div>
               <button onClick={() => setRuleModalEmp(null)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer"><X className="w-4 h-4" /></button>
             </div>
 
             <div className="p-6 space-y-4">
+              {/* Classification: Atelier vs Prestataire DTF */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">
+                  {isAr ? 'تصنيف الموظف في النظام' : 'Classification RH'}
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRuleForm(prev => ({ ...prev, type: 'atelier' }))}
+                    className={`p-3 rounded-2xl border-2 text-xs font-black transition cursor-pointer flex items-center justify-center gap-2 ${
+                      ruleForm.type === 'atelier'
+                        ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                        : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>🏭</span>
+                    <span>{isAr ? 'عامل بالورشة (Salarié)' : 'Salarié Atelier'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRuleForm(prev => ({ ...prev, type: 'sous_traitance', mode: 'tache' }))}
+                    className={`p-3 rounded-2xl border-2 text-xs font-black transition cursor-pointer flex items-center justify-center gap-2 ${
+                      ruleForm.type === 'sous_traitance'
+                        ? 'bg-amber-400 border-amber-400 text-slate-950 shadow-sm'
+                        : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>🖨️</span>
+                    <span>{isAr ? 'خدمة DTF / خارجي' : 'Prestataire DTF'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Informative Banner if DTF / Sous-traitance */}
+              {(ruleForm.type === 'sous_traitance' || ruleForm.mode === 'tache' || isDtfOrSousTraitance(ruleModalEmp)) && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 space-y-1.5">
+                  <div className="flex items-center gap-2 text-amber-900 font-black text-xs">
+                    <Printer className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>{isAr ? 'مزود خدمة طباعة DTF (خارجي)' : 'Prestataire DTF / Sous-traitance Externe'}</span>
+                  </div>
+                  <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
+                    {isAr
+                      ? 'هذا الحساب مخصص لخدمات الطباعة DTF أو المناولة الخارجية. مستبعد تلقائياً من كشف أجور عمال الورشة، ويتم خلاصه حسب طلبيات الطباعة أو الفواتير.'
+                      : 'Ce profil effectue des impressions DTF ou sous-traitance. Il est automatiquement exclu de la paie fixe de l’atelier et réglé selon factures / commandes.'}
+                  </p>
+                </div>
+              )}
+
+              {/* Mode Selection */}
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">{isAr ? 'نظام الحساب' : 'Mode de Rémunération'}</label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1784,14 +2011,21 @@ export default function BalancePaie() {
                     { id: 'modele', label: isAr ? '✂️ بالموديل (Modéliste)' : '✂️ Au Modèle' },
                     { id: 'mensuel', label: isAr ? '📅 قار شهري' : '📅 Mensuel Fixe' },
                     { id: 'hebdomadaire', label: isAr ? '📆 أسبوعي' : '📆 Hebdomadaire' },
+                    { id: 'tache', label: isAr ? '🖨️ بالقطعة / بطباعة DTF' : '🖨️ À la Tâche / DTF', span: true },
                   ].map(opt => (
                     <button
                       key={opt.id}
                       type="button"
-                      onClick={() => setRuleForm(prev => ({ ...prev, mode: opt.id as ExtendedRemunerationType }))}
+                      onClick={() => setRuleForm(prev => ({
+                        ...prev,
+                        mode: opt.id as ExtendedRemunerationType,
+                        type: opt.id === 'tache' ? 'sous_traitance' : prev.type,
+                      }))}
                       className={`p-3 rounded-2xl border-2 text-xs font-black transition cursor-pointer ${
+                        opt.span ? 'col-span-2' : ''
+                      } ${
                         ruleForm.mode === opt.id
-                          ? 'bg-indigo-600 border-indigo-600 text-white'
+                          ? (opt.id === 'tache' ? 'bg-amber-400 border-amber-400 text-slate-950 font-black shadow-sm' : 'bg-indigo-600 border-indigo-600 text-white')
                           : 'bg-slate-50 border-slate-100 text-slate-700 hover:bg-slate-100'
                       }`}
                     >
@@ -1800,6 +2034,40 @@ export default function BalancePaie() {
                   ))}
                 </div>
               </div>
+
+              {/* Mode: DTF / Tache */}
+              {ruleForm.mode === 'tache' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-black text-amber-800 uppercase mb-1.5">
+                      {isAr ? 'ثمن مرجعي للطباعة DTF أو القطعة (اختياري MAD)' : 'Tarif indicatif DTF / tâche (MAD optionnel)'}
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      value={ruleForm.tarifTache}
+                      onChange={e => setRuleForm(prev => ({ ...prev, tarifTache: parseFloat(e.target.value) || 0 }))}
+                      placeholder={isAr ? '0 = حسب الفاتورة أو الطلبية' : '0 = Selon facture par commande'}
+                      className="w-full bg-amber-50/50 border-2 border-amber-200 rounded-2xl p-3.5 text-lg font-black text-slate-900 outline-none focus:border-amber-500"
+                    />
+                    <p className="text-[10px] text-slate-400 font-bold mt-1">
+                      {isAr ? 'يمكن تركه 0 إذا كان الخلاص يتم حسب فاتورة كل طلبية على حدة.' : 'Laissez 0 si le règlement se fait par facture/bon.'}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={handleConvertToFournisseur}
+                      className="w-full py-2.5 px-3 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Briefcase className="w-3.5 h-3.5 text-amber-700" />
+                      <span>{isAr ? '📦 نسخ إلى دليل الموردين (Fournisseurs DTF)' : '📦 Enregistrer comme Fournisseur DTF'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {ruleForm.mode === 'horaire' && (
                 <div>
