@@ -609,12 +609,20 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
     const currentEmail = (currentUser?.email || '').trim().toLowerCase();
 
     return allLeads.filter(l => {
+      // Must be confirmed stage
       if (l.crmStage !== 'confirme') return false;
-      if (l.commercialConfirmedBy) {
-        const confBy = l.commercialConfirmedBy.toLowerCase();
-        return (currentNom && confBy.includes(currentNom)) || (currentEmail && confBy.includes(currentEmail));
-      }
-      return true;
+
+      // 1. MUST have an uploaded screenshot/receipt of virement (Screen shot dial verment)
+      const ext = parseLeadDetailsJson(l.details);
+      const recu = l.commercialRecuPhoto || ext.commercialRecuPhoto;
+      if (!recu) return false;
+
+      // 2. MUST be confirmed by this commercial (not by beya creative / admin)
+      const confBy = (l.commercialConfirmedBy || ext.commercialConfirmedBy || '').trim().toLowerCase();
+      if (!confBy) return false;
+      if (confBy.includes('beya') || confBy.includes('admin') || confBy.includes('atelier')) return false;
+
+      return (currentNom && confBy.includes(currentNom)) || (currentEmail && confBy.includes(currentEmail));
     }).sort((a, b) => new Date(b.commercialConfirmedAt || b.date).getTime() - new Date(a.commercialConfirmedAt || a.date).getTime());
   }, [allLeads, currentUser]);
 
@@ -651,6 +659,13 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
     if (!selectedLead) return;
     try {
       const isConfirm = nextStage === 'confirme';
+      if (isConfirm && !editForm.commercialRecuPhoto) {
+        alert(isAr 
+          ? '⚠️ لا يمكن تأكيد الطلبية واحتساب العمولة إلا بعد إرفاق لقطة شاشة وصل التحويل البنكي (Reçu de Virement) للزبون!' 
+          : '⚠️ Veuillez joindre la capture d\'écran du reçu de virement pour valider la confirmation et la commission !');
+        return;
+      }
+
       const defaultComm = editForm.intentType === 'consultation' ? 50 : 150;
       const finalComm = editForm.commercialCommission !== undefined 
         ? Number(editForm.commercialCommission) 
@@ -679,6 +694,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
           commercialConfirmedAt: new Date().toISOString(),
           commercialCommission: finalComm,
           commercialCommissionStatus: commStatus,
+          commercialRecuPhoto: editForm.commercialRecuPhoto,
           intentType: editForm.intentType || selectedLead.intentType || 'production',
           commercialCheckClientValide: !!editForm.commercialCheckClientValide,
           commercialCheckTissuValide: !!editForm.commercialCheckTissuValide,
