@@ -40,6 +40,8 @@ import {
   MessageSquare,
   ArrowRight,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Sparkles,
   Sun,
   Moon
@@ -252,6 +254,7 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
   const [zoomImage, setZoomImage] = useState<string | null>(null);
   const [actionPendingId, setActionPendingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; isError?: boolean } | null>(null);
+  const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
 
   // Pricing inputs
   const [pricingItem, setPricingItem] = useState<ModelItem | null>(null);
@@ -1900,10 +1903,42 @@ export default function ModelisteSuivi({ currentUser }: ModelisteSuiviProps) {
                     </div>
 
                     {item.clientNotes && (
-                      <div className={`text-[11px] p-2.5 rounded-xl border leading-relaxed ${
+                      <div className={`text-[11px] p-2.5 rounded-xl border leading-relaxed transition-all ${
                         isWhite ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-white/[0.04] border-white/[0.06] text-slate-300'
                       }`}>
-                        <strong className={`font-bold ${isWhite ? 'text-slate-900' : 'text-white'}`}>{isAr ? 'ملاحظات الموديل :' : 'Spécifications :'}</strong> {item.clientNotes}
+                        <div className="whitespace-pre-line">
+                          <strong className={`font-bold ${isWhite ? 'text-slate-900' : 'text-white'}`}>
+                            {isAr ? 'ملاحظات الموديل :' : 'Spécifications :'}
+                          </strong>{' '}
+                          <span>
+                            {item.clientNotes.length > 130 && !expandedNotes[item.id]
+                              ? `${item.clientNotes.slice(0, 130)}...`
+                              : item.clientNotes}
+                          </span>
+                        </div>
+                        {item.clientNotes.length > 130 && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedNotes(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                            className={`mt-2 inline-flex items-center gap-1 text-[10.5px] font-black px-2.5 py-1 rounded-lg cursor-pointer transition-colors ${
+                              isWhite
+                                ? 'text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/60'
+                                : 'text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20'
+                            }`}
+                          >
+                            {expandedNotes[item.id] ? (
+                              <>
+                                <ChevronUp className="w-3.5 h-3.5" />
+                                <span>{isAr ? 'إخفاء' : 'Réduire'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-3.5 h-3.5" />
+                                <span>{isAr ? 'إقرأ المزيد' : 'Lire la suite'}</span>
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     )}
 
