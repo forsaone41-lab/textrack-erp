@@ -240,7 +240,7 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 -m-4 md:-m-6 lg:-m-8">
+    <div className="flex flex-col min-h-screen bg-slate-50 w-full overflow-x-hidden">
       {/* Premium Dynamic Header */}
       <div className="relative bg-slate-900 pt-16 pb-24 overflow-hidden print:hidden">
         {/* Animated Background Elements */}

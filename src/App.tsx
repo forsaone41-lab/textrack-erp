@@ -330,7 +330,9 @@ function AdminLayout({
         <div className={
           isDarkSection 
             ? "w-full p-2 sm:p-4 md:p-6 lg:p-8 max-w-full relative print:p-0" 
-            : "p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative print:p-0 print:max-w-none"
+            : (location.pathname.startsWith('/pointage') || location.pathname.startsWith('/fast-scanner')
+                ? "w-full p-0 max-w-full relative print:p-0"
+                : "p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative print:p-0 print:max-w-none")
         }>
           {currentUser.role === 'admin' && (
             <AdminLivePresenceBar currentUser={currentUser} />
@@ -1404,11 +1406,14 @@ function AppContent() {
           </Suspense>
         } />
 
+        <Route path="pointage" element={can('pointage') ? <Pointage onLogout={handleLogout} /> : <Navigate to="/" replace />} />
+        <Route path="/pointage" element={can('pointage') ? <Pointage onLogout={handleLogout} /> : <Navigate to="/" replace />} />
+        <Route path="fast-scanner" element={can('fast_scanner') ? <FastScanner /> : <Navigate to="/" replace />} />
+        <Route path="/fast-scanner" element={can('fast_scanner') ? <FastScanner /> : <Navigate to="/" replace />} />
+
       </Route>
       <Route element={<PointageLayout />}>
-        <Route path="pointage" element={can('pointage') ? <Pointage onLogout={handleLogout} /> : <Navigate to="/" replace />} />
         <Route path="kiosk" element={<KioskScanner />} />
-        <Route path="fast-scanner" element={can('fast_scanner') ? <FastScanner /> : <Navigate to="/" replace />} />
       </Route>
       <Route path="/portfolio" element={
         <Suspense fallback={<PageLoader />}>
