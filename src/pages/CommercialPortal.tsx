@@ -68,6 +68,49 @@ import { lazy, Suspense } from 'react';
 
 const DevisBuilder = lazy(() => import('./DevisBuilder'));
 
+function isNovember2026OrLater(dateStr?: string | number): boolean {
+  if (!dateStr) return false;
+  if (typeof dateStr === 'number') {
+    const d = new Date(dateStr);
+    const y = d.getFullYear();
+    const m = d.getMonth() + 1;
+    return y > 2026 || (y === 2026 && m >= 11);
+  }
+  if (typeof dateStr === 'string' && dateStr.includes('/')) {
+    const parts = dateStr.trim().split('/');
+    if (parts.length === 3) {
+      const p1 = parseInt(parts[0], 10);
+      const p2 = parseInt(parts[1], 10);
+      const p3 = parseInt(parts[2], 10);
+      const year = p3 > 100 ? p3 : (p1 > 100 ? p1 : 2026);
+      const month = p3 > 100 ? p2 : (p1 > 100 ? p2 : p2);
+      if (!isNaN(year) && !isNaN(month)) {
+        if (year > 2026) return true;
+        if (year === 2026 && month >= 11) return true;
+        return false;
+      }
+    }
+  }
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return false;
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  if (year > 2026) return true;
+  if (year === 2026 && month >= 11) return true;
+  return false;
+}
+
+function isLeadEligibleForCommercial(l: any): boolean {
+  if (!l || l.type?.startsWith('RECRUTEMENT:')) return false;
+  // Ne garder que les clients de Novembre 2026 et au-delà (mois 11+)
+  if (!isNovember2026OrLater(l.date)) return false;
+  // Ne jamais afficher les leads verrouillés/bloqués
+  if (l.commercialUnlocked === false) return false;
+  // Étapes CRM actives
+  if (l.crmStage && !['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage)) return false;
+  return true;
+}
+
 interface CommercialPortalProps {
   currentUser: any;
   onLogout: () => void;
@@ -82,10 +125,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
       if (cachedLeads) {
         const parsed = JSON.parse(cachedLeads);
         if (Array.isArray(parsed)) {
-          const activeLeads = parsed.filter((l: any) => 
-            l && !l.type?.startsWith('RECRUTEMENT:') && 
-            (!l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage))
-          );
+          const activeLeads = parsed.filter((l: any) => isLeadEligibleForCommercial(l));
           activeLeads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           return activeLeads;
         }
@@ -110,7 +150,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [loading, setLoading] = useState(() => leads.length === 0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [accessFilter, setAccessFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
+  const [stageFilter, setStageFilter] = useState<'all' | 'nouveau' | 'en_cours'>('all');
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [savedOk, setSavedOk] = useState(false);
   const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
@@ -203,9 +243,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
       const data = await loadLeads();
       const cleanData = data.filter(l => l && (!l.type || !l.type.startsWith('RECRUTEMENT:')));
       setAllLeads(cleanData);
-      const activeLeads = cleanData.filter(l => 
-        !l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage)
-      );
+      const activeLeads = cleanData.filter(l => isLeadEligibleForCommercial(l));
       activeLeads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setLeads(activeLeads);
     } catch (e) {
@@ -216,16 +254,17 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   };
 
   const filteredLeads = leads.filter(l => {
-    const isUnlocked = !!(l as any).commercialUnlocked;
-    const matchAccess = accessFilter === 'all' || 
-                        (accessFilter === 'unlocked' && isUnlocked) || 
-                        (accessFilter === 'locked' && !isUnlocked);
+    if (!isLeadEligibleForCommercial(l)) return false;
 
-    const matchSearch = l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           l.phone.includes(searchQuery) ||
-           l.type.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchStage = stageFilter === 'all' || 
+                        (stageFilter === 'nouveau' && (!l.crmStage || l.crmStage === 'nouveau')) ||
+                        (stageFilter === 'en_cours' && (l.crmStage === 'contact_en_cours' || l.crmStage === 'attente_confirmation' || l.crmStage === 'rdv_fixe'));
+
+    const matchSearch = (l.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+           (l.phone || '').includes(searchQuery) ||
+           (l.type || '').toLowerCase().includes(searchQuery.toLowerCase());
            
-    return matchAccess && matchSearch;
+    return matchStage && matchSearch;
   });
 
   const fetchedPhotosRef = useRef<Set<string>>(new Set());
@@ -468,81 +507,29 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
           <button 
             type="button" 
             onClick={() => setBottomTab('leads')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
               bottomTab === 'leads' 
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            <Target className="w-3.5 h-3.5" />
+            <Target className="w-4 h-4" />
             <span>{isAr ? 'الطلبات والتأكيد' : 'Prospects & Confirmation'}</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-white/20 text-white font-mono">{stats.totalActive}</span>
-          </button>
-
-          <button 
-            type="button" 
-            onClick={() => setBottomTab('ai_devis')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
-              bottomTab === 'ai_devis' 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isAr ? 'دوفي الذكاء الاصطناعي' : 'Devis & Chiffrage IA'}</span>
-          </button>
-
-          <button 
-            type="button" 
-            onClick={() => setBottomTab('fournisseurs')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
-              bottomTab === 'fournisseurs' 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Factory className="w-3.5 h-3.5" />
-            <span>{isAr ? 'الموردين ومول السلعة' : 'Fournisseurs & Tissus'}</span>
-          </button>
-
-          <button 
-            type="button" 
-            onClick={() => setBottomTab('stock')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
-              bottomTab === 'stock' 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Package className="w-3.5 h-3.5" />
-            <span>{isAr ? 'المخزون بالأتيليي' : 'Stock Matières'}</span>
-          </button>
-
-          <button 
-            type="button" 
-            onClick={() => setBottomTab('rh')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
-              bottomTab === 'rh' 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>{isAr ? 'الموارد البشرية والعمال' : 'Suivi RH & Équipe'}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-mono font-bold">{stats.totalActive}</span>
           </button>
 
           <button 
             type="button" 
             onClick={() => setBottomTab('commissions')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
               bottomTab === 'commissions' 
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            <Coins className="w-3.5 h-3.5 text-amber-500" />
+            <Coins className="w-4 h-4 text-amber-500" />
             <span>{isAr ? 'عمولاتي' : 'Commissions'}</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-amber-100 text-amber-900 font-bold">{commissionStats.confirmedCount}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-900 font-bold">{commissionStats.confirmedCount}</span>
           </button>
         </div>
 
@@ -561,9 +548,9 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
 
         <div className="bg-slate-100/80 p-1.5 rounded-2xl mb-8 flex gap-1.5 border border-slate-200/50 backdrop-blur-md">
           <button
-            onClick={() => setAccessFilter('all')}
+            onClick={() => setStageFilter('all')}
             className={`flex-1 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${
-              accessFilter === 'all' 
+              stageFilter === 'all' 
                 ? 'bg-white text-indigo-600 shadow-md ring-1 ring-slate-900/5 scale-[1.02]' 
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
             }`}
@@ -572,26 +559,26 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
             {isAr ? 'الكل' : 'Tous'}
           </button>
           <button
-            onClick={() => setAccessFilter('unlocked')}
+            onClick={() => setStageFilter('nouveau')}
             className={`flex-1 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${
-              accessFilter === 'unlocked' 
-                ? 'bg-white text-emerald-600 shadow-md ring-1 ring-slate-900/5 scale-[1.02]' 
-                : 'text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50'
+              stageFilter === 'nouveau' 
+                ? 'bg-white text-blue-600 shadow-md ring-1 ring-slate-900/5 scale-[1.02]' 
+                : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50/50'
             }`}
           >
-            <CheckCircle className="w-4 h-4" /> 
-            {isAr ? 'مسموح التواصل' : 'Accès Donné'}
+            <UserPlus className="w-4 h-4" /> 
+            {isAr ? 'طلبات جديدة' : 'Nouveaux'}
           </button>
           <button
-            onClick={() => setAccessFilter('locked')}
+            onClick={() => setStageFilter('en_cours')}
             className={`flex-1 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${
-              accessFilter === 'locked' 
-                ? 'bg-white text-rose-600 shadow-md ring-1 ring-slate-900/5 scale-[1.02]' 
-                : 'text-slate-500 hover:text-rose-600 hover:bg-rose-50/50'
+              stageFilter === 'en_cours' 
+                ? 'bg-white text-amber-600 shadow-md ring-1 ring-slate-900/5 scale-[1.02]' 
+                : 'text-slate-500 hover:text-amber-600 hover:bg-amber-50/50'
             }`}
           >
-            <LogOut className="w-4 h-4" style={{ transform: 'rotate(180deg)' }} /> 
-            {isAr ? 'مقفل' : 'Verrouillé'}
+            <Clock className="w-4 h-4" /> 
+            {isAr ? 'قيد التواصل' : 'En Cours'}
           </button>
         </div>
 
@@ -614,9 +601,8 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
 
               return groupedLeadsList.map(group => {
                 const { client, requests } = group;
-                // Check if ANY lead in the group has been unlocked (not just the first)
-                const isUnlocked = requests.some(r => !!(r as any).commercialUnlocked) || !!(client as any).commercialUnlocked;
-                const displayPhone = isUnlocked ? client.phone : client.phone.substring(0, 4) + ' ••• ••• •••';
+                const isUnlocked = true;
+                const displayPhone = client.phone;
                 const hasPriority = requests.some(r => r.crmPriority);
 
                 return (
@@ -624,14 +610,13 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                     {/* CLIENT HEADER */}
                     <div className="flex flex-wrap items-start justify-between gap-4 mb-4 border-b border-slate-50 pb-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl shrink-0 ${isUnlocked ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-400'}`}>
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl shrink-0 bg-indigo-50 text-indigo-600">
                           {client.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
                             {client.name}
                             {hasPriority && <span className="text-xs">⭐</span>}
-                            {!isUnlocked && <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 border border-rose-200 text-[8px] font-black uppercase tracking-widest rounded shadow-sm">{isAr ? 'مقفل' : 'Verrouillé'}</span>}
                           </h3>
                           <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500 mt-1" dir="ltr">
                             <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-indigo-400" /> {displayPhone}</span>
@@ -641,43 +626,34 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                       
                       {/* CLIENT ACTIONS */}
                       <div className="flex items-center gap-2">
-                        {isUnlocked ? (
-                          <>
-                            <button onClick={() => setSelectedLeadInfo({ ...client, details: requests.map(r => r.details).filter(Boolean).join(' | ') } as Lead)}
-                              className="h-9 px-3 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-amber-200 shadow-sm"
-                            >
-                              <FileText className="w-4 h-4" /> {isAr ? 'معلومات' : 'Infos'}
-                            </button>
-                            <a href={`tel:${client.phone.replace(/\\D/g, '').startsWith('0') ? '212' + client.phone.replace(/\\D/g, '').substring(1) : client.phone.replace(/\\D/g, '')}`}
-                              className="h-9 px-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-slate-200 shadow-sm">
-                              <PhoneCall className="w-4 h-4" /> {isAr ? 'اتصال' : 'Appel'}
-                            </a>
-                            <button onClick={() => {
-                              const rawPhone = String(client.phone || '').replace(/\\D/g, '');
-                              const phone = rawPhone.startsWith('2120') ? '212' + rawPhone.slice(3) : rawPhone.startsWith('0') ? '212' + rawPhone.slice(1) : rawPhone;
-                              window.open(`https://wa.me/${phone}`, '_blank');
-                            }}
-                              className="h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600">
-                              <MessageCircle className="w-4 h-4" /> WhatsApp
-                            </button>
+                        <button onClick={() => setSelectedLeadInfo({ ...client, details: requests.map(r => r.details).filter(Boolean).join(' | ') } as Lead)}
+                          className="h-9 px-3 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-amber-200 shadow-sm"
+                        >
+                          <FileText className="w-4 h-4" /> {isAr ? 'معلومات' : 'Infos'}
+                        </button>
+                        <a href={`tel:${client.phone.replace(/\\D/g, '').startsWith('0') ? '212' + client.phone.replace(/\\D/g, '').substring(1) : client.phone.replace(/\\D/g, '')}`}
+                          className="h-9 px-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-slate-200 shadow-sm">
+                          <PhoneCall className="w-4 h-4" /> {isAr ? 'اتصال' : 'Appel'}
+                        </a>
+                        <button onClick={() => {
+                          const rawPhone = String(client.phone || '').replace(/\\D/g, '');
+                          const phone = rawPhone.startsWith('2120') ? '212' + rawPhone.slice(3) : rawPhone.startsWith('0') ? '212' + rawPhone.slice(1) : rawPhone;
+                          window.open(`https://wa.me/${phone}`, '_blank');
+                        }}
+                          className="h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600">
+                          <MessageCircle className="w-4 h-4" /> WhatsApp
+                        </button>
 
+                        <button onClick={() => alert(isAr ? 'ديفيز متوفر في الإدارة' : 'Le devis complet est géré par l\'administration')}
+                          className="h-9 w-9 rounded-xl flex items-center justify-center border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
+                        >
+                          <Calculator className="w-4 h-4" />
+                        </button>
 
-                            <button onClick={() => alert(isAr ? 'ديفيز متوفر في الإدارة' : 'Le devis complet est géré par l\'administration')}
-                              className="h-9 w-9 rounded-xl flex items-center justify-center border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
-                            >
-                              <Calculator className="w-4 h-4" />
-                            </button>
-
-                            <button onClick={() => alert(isAr ? 'تمت إضافة الزبون' : 'Le client est déjà enregistré')}
-                              className="h-9 px-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-xl border border-emerald-200 text-[10px] font-black flex items-center gap-1 transition-all shadow-sm">
-                              <CheckCircle className="w-4 h-4" /> {isAr ? 'تمت الإضافة كزبون' : 'Client Ajouté'}
-                            </button>
-                          </>
-                        ) : (
-                          <div className="h-9 px-3 bg-slate-50 text-slate-400 rounded-xl flex items-center gap-2 text-[10px] font-black border border-slate-200 shadow-sm cursor-not-allowed">
-                            <Store className="w-3.5 h-3.5" /> {isAr ? 'بانتظار الصلاحية' : 'Accès requis'}
-                          </div>
-                        )}
+                        <button onClick={() => alert(isAr ? 'تمت إضافة الزبون' : 'Le client est déjà enregistré')}
+                          className="h-9 px-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-xl border border-emerald-200 text-[10px] font-black flex items-center gap-1 transition-all shadow-sm">
+                          <CheckCircle className="w-4 h-4" /> {isAr ? 'تمت الإضافة كزبون' : 'Client Ajouté'}
+                        </button>
                       </div>
                     </div>
 
@@ -757,77 +733,69 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                           </div>
 
                           <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0">
-                            {isUnlocked ? (
-                              <>
-                                <button onClick={async () => {
-                                  const updated = { ...req, crmPriority: !req.crmPriority };
+                            <button onClick={async () => {
+                              const updated = { ...req, crmPriority: !req.crmPriority };
+                              setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
+                              await saveRecord('leads', updated, true);
+                            }} title={req.crmPriority ? 'Retirer priorité' : 'Marquer important'}
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all border ${req.crmPriority ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-200 opacity-50 hover:opacity-100'}`}>
+                              ⭐
+                            </button>
+                            
+                            <div className="w-px h-5 bg-slate-200 mx-1" />
+
+                            {req.crmStage !== 'annule' && req.crmStage !== 'confirme' && (
+                              <button onClick={async () => {
+                                if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
+                                  const updated = { ...req, crmStage: 'annule' as const, rejectedAt: new Date().toISOString() };
                                   setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
                                   await saveRecord('leads', updated, true);
-                                }} title={req.crmPriority ? 'Retirer priorité' : 'Marquer important'}
-                                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all border ${req.crmPriority ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-200 opacity-50 hover:opacity-100'}`}>
-                                  ⭐
-                                </button>
-                                
-                                <div className="w-px h-5 bg-slate-200 mx-1" />
-
-                                {req.crmStage !== 'annule' && req.crmStage !== 'confirme' && (
-                                  <button onClick={async () => {
-                                    if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
-                                      const updated = { ...req, crmStage: 'annule' as const, rejectedAt: new Date().toISOString() };
-                                      setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
-                                      await saveRecord('leads', updated, true);
-                                    }
-                                  }}
-                                    className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
-                                    ✕ {isAr ? 'رفض' : 'Refuser'}
-                                  </button>
-                                )}
-
-                                {req.crmStage !== 'confirme' && req.crmStage !== 'annule' && (
-                                  <>
-                                    <button onClick={() => openEditLead(req)}
-                                      className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
-                                      ✓ {isAr ? 'تأكيد' : 'Valider'}
-                                    </button>
-
-                                    <button onClick={() => alert(isAr ? 'تحليل الموديل متوفر في الإدارة' : 'L\'analyse de modèle est gérée par l\'administration')}
-                                      className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-500 hover:text-white transition-all shadow-sm flex items-center gap-1">
-                                      <Scissors className="w-3.5 h-3.5" /> {isAr ? 'تحليل الموديل' : 'Analyser Modèle'}
-                                    </button>
-
-                                    <button onClick={() => alert(isAr ? 'طلب تسعير الباترون متوفر في الإدارة' : 'Le prix de patronage est géré par l\'administration')}
-                                      className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-500 hover:text-white transition-all shadow-sm flex items-center gap-1">
-                                      <Scissors className="w-3.5 h-3.5" /> {isAr ? 'باترون' : 'Prix Patronage'}
-                                    </button>
-                                  </>
-                                )}
-
-                                <button onClick={() => openEditLead(req)} title="Notes"
-                                  className="w-8 h-8 bg-white text-slate-500 hover:bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
-                                  <MessageSquare className="w-3.5 h-3.5" />
-                                </button>
-                                
-                                <button onClick={() => openEditLead(req)} title="Modifier"
-                                  className="w-8 h-8 bg-white text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </button>
-
-                                <button onClick={async () => {
-                                  if (window.confirm(isAr ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Voulez-vous supprimer ce prospect ?')) {
-                                    const updated = { ...req, crmStage: 'annule' as const };
-                                    setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
-                                    await saveRecord('leads', updated, true);
-                                  }
-                                }} title="Supprimer"
-                                  className="w-8 h-8 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </>
-                            ) : (
-                              <button disabled className="h-8 px-3 rounded-lg text-[9px] font-black uppercase border bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed">
-                                🔒 {isAr ? 'مغلق' : 'Bloqué'}
+                                }
+                              }}
+                                className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
+                                ✕ {isAr ? 'رفض' : 'Refuser'}
                               </button>
                             )}
+
+                            {req.crmStage !== 'confirme' && req.crmStage !== 'annule' && (
+                              <>
+                                <button onClick={() => openEditLead(req)}
+                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
+                                  ✓ {isAr ? 'تأكيد' : 'Valider'}
+                                </button>
+
+                                <button onClick={() => alert(isAr ? 'تحليل الموديل متوفر في الإدارة' : 'L\'analyse de modèle est gérée par l\'administration')}
+                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-500 hover:text-white transition-all shadow-sm flex items-center gap-1">
+                                  <Scissors className="w-3.5 h-3.5" /> {isAr ? 'تحليل الموديل' : 'Analyser Modèle'}
+                                </button>
+
+                                <button onClick={() => alert(isAr ? 'طلب تسعير الباترون متوفر في الإدارة' : 'Le prix de patronage est géré par l\'administration')}
+                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-500 hover:text-white transition-all shadow-sm flex items-center gap-1">
+                                  <Scissors className="w-3.5 h-3.5" /> {isAr ? 'باترون' : 'Prix Patronage'}
+                                </button>
+                              </>
+                            )}
+
+                            <button onClick={() => openEditLead(req)} title="Notes"
+                              className="w-8 h-8 bg-white text-slate-500 hover:bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
+                              <MessageSquare className="w-3.5 h-3.5" />
+                            </button>
+                            
+                            <button onClick={() => openEditLead(req)} title="Modifier"
+                              className="w-8 h-8 bg-white text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button onClick={async () => {
+                              if (window.confirm(isAr ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Voulez-vous supprimer ce prospect ?')) {
+                                const updated = { ...req, crmStage: 'annule' as const };
+                                setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
+                                await saveRecord('leads', updated, true);
+                              }
+                            }} title="Supprimer"
+                              className="w-8 h-8 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -2091,13 +2059,9 @@ Pour valider et lancer l'échantillon, contactez-nous directement.`;
       )}
 
       {/* ── Bottom Navigation Bar ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200 flex items-stretch shadow-xl" dir="ltr">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200 flex items-stretch shadow-xl max-w-lg mx-auto md:max-w-xl" dir="ltr">
         {([
           { key: 'leads', icon: Target, labelFr: 'Prospects', labelAr: 'الطلبات', badge: stats.totalActive },
-          { key: 'ai_devis', icon: Sparkles, labelFr: 'Devis IA', labelAr: 'تسعيرة IA' },
-          { key: 'fournisseurs', icon: Factory, labelFr: 'Fournisseurs', labelAr: 'الموردين' },
-          { key: 'stock', icon: Package, labelFr: 'Stock', labelAr: 'المخزون' },
-          { key: 'rh', icon: Users, labelFr: 'RH', labelAr: 'العمال' },
           { key: 'commissions', icon: Coins, labelFr: 'Commissions', labelAr: 'عمولاتي', badge: commissionStats.confirmedCount },
           { key: 'profil', icon: UserCircle2, labelFr: 'Mon Profil', labelAr: 'ملفي' },
         ] as const).map(({ key, icon: Icon, labelFr, labelAr, badge }: any) => (
