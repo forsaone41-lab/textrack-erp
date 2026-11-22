@@ -48,7 +48,12 @@ import {
   AlertTriangle,
   UserCog,
   RefreshCw,
-  Send
+  Send,
+  Globe,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  Calendar
 } from 'lucide-react';
 import { 
   Lead,
@@ -59,14 +64,20 @@ import {
   loadData,
   StockTissu,
   StockFourniture,
-  User
+  User,
+  parseLeadDetailsJson,
+  upsertClientDevis,
+  findMatchingCommandeForLead,
+  Commande
 } from '../types';
 import { SUPPLIERS_DATA, SupplierProfile } from '../data/suppliersData';
 import { useLang } from '../contexts/LangContext';
 import { compressImage } from '../utils/image';
 import { lazy, Suspense } from 'react';
+import { saveModelisteWorkLog } from '../utils/payrollEngine';
 
 const DevisBuilder = lazy(() => import('./DevisBuilder'));
+const AISpace = lazy(() => import('./AISpace'));
 
 function isNovember2026OrLater(dateStr?: string | number): boolean {
   if (!dateStr) return false;
@@ -191,6 +202,274 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [aiDevisBroderieCost, setAiDevisBroderieCost] = useState<number>(15);
   const [aiDevisTargetMargin, setAiDevisTargetMargin] = useState<number>(30); // 30% marge atelier
   const [aiDevisCopied, setAiDevisCopied] = useState(false);
+
+  // ── AI Analysis State ──
+  const [aiAnalysisLead, setAiAnalysisLead] = useState<Lead | null>(null);
+
+  // ── Devis Atelier State ──
+  const [devisLead, setDevisLead] = useState<Lead | null>(null);
+  const [devisMode, setDevisMode] = useState<'echantillon' | 'commande'>('commande');
+  const [devisModeleReel, setDevisModeleReel] = useState<string>('');
+  const [devisDelai, setDevisDelai] = useState<string>('');
+  const [devisReponse, setDevisReponse] = useState<string>('');
+  const [devisProgression, setDevisProgression] = useState<'reception' | 'etude' | 'echantillon' | 'production'>('etude');
+  const [fabricType, setFabricType] = useState<string>('');
+  const [devisPatronagePrice, setDevisPatronagePrice] = useState<string>('');
+  const [devisPrixEchantillon, setDevisPrixEchantillon] = useState<string>('');
+  const [matierePrice, setMatierePrice] = useState<string>('');
+  const [laborPrice, setLaborPrice] = useState<string>('');
+  const [devisSupplierNom, setDevisSupplierNom] = useState<string>('');
+  const [devisSupplierTel, setDevisSupplierTel] = useState<string>('');
+  const [devisSupplierCity, setDevisSupplierCity] = useState<string>('');
+  const [devisSupplierCode, setDevisSupplierCode] = useState<string>('');
+  const [devisSupplierColors, setDevisSupplierColors] = useState<string>('');
+  const [devisSupplierNotes, setDevisSupplierNotes] = useState<string>('');
+  const [devisOfficielConfirmed, setDevisOfficielConfirmed] = useState<boolean>(true);
+
+  // ── Patronage Management State ──
+  const [patronageModalLead, setPatronageModalLead] = useState<Lead | null>(null);
+  const [patronageModelisteId, setPatronageModelisteId] = useState<string>('');
+  const [patronageDeadline, setPatronageDeadline] = useState<string>('');
+  const [patronageDirectPrice, setPatronageDirectPrice] = useState<string>('');
+  const [patronageTab, setPatronageTab] = useState<'request' | 'validate'>('request');
+  const [patronageSubmitting, setPatronageSubmitting] = useState<boolean>(false);
+
+  const modelistes = useMemo(() => teamUsers.filter(u => u.role === 'modeliste'), [teamUsers]);
+
+  const openDevisModal = (lead: Lead, mode: 'echantillon' | 'commande' = 'commande') => {
+    setDevisLead(lead);
+    setDevisMode(mode);
+    let ext: any = {};
+    try { ext = parseLeadDetailsJson(lead.details); } catch(e) {}
+    setDevisModeleReel(lead.modeleReel || lead.type || '');
+    setDevisDelai(ext.adminDelai || lead.delaiEstime || '7 - 10 jours ouvrables');
+    setDevisReponse(ext.adminReponse !== undefined ? ext.adminReponse : (lead.reponseAtelier || ''));
+    setDevisProgression(lead.statusProgression || 'etude');
+    setFabricType(ext.adminFabric !== undefined ? ext.adminFabric : (lead.tissuSuggere || ''));
+    setDevisPatronagePrice(lead.patronagePrice ? String(lead.patronagePrice) : ext.patronagePrice ? String(ext.patronagePrice) : '');
+    setDevisPrixEchantillon(lead.prixEchantillon ? String(lead.prixEchantillon) : ext.prixEchantillon ? String(ext.prixEchantillon) : '');
+    setDevisSupplierNom(ext.supplierName || (lead as any).fournisseurNom || '');
+    setDevisSupplierTel(ext.supplierPhone || (lead as any).fournisseurTel || '');
+    setDevisSupplierCity(ext.supplierCity || (lead as any).fournisseurVille || '');
+    setDevisSupplierCode(ext.supplierCode || (lead as any).fournisseurCode || '');
+    setDevisSupplierColors(ext.supplierColors || (lead as any).fournisseurCouleurs || '');
+    setDevisSupplierNotes(ext.supplierNotes || (lead as any).fournisseurNote || '');
+    setDevisOfficielConfirmed(ext.devisOfficielConfirmed !== undefined ? ext.devisOfficielConfirmed : true);
+
+    if (ext.matierePrice !== undefined || ext.laborPrice !== undefined) {
+      setMatierePrice(ext.matierePrice ? String(ext.matierePrice) : '');
+      setLaborPrice(ext.laborPrice ? String(ext.laborPrice) : '');
+    } else if (lead.unitPrice) {
+      setMatierePrice('');
+      setLaborPrice(String(lead.unitPrice));
+    } else {
+      setMatierePrice('');
+      setLaborPrice('');
+    }
+  };
+
+  const handleSendToPortail = async () => {
+    if (!devisLead || (!matierePrice && !laborPrice)) return;
+    const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
+    const currentQuantity = devisMode === 'echantillon' ? 1 : devisLead.quantity;
+    const total = unitPrice * currentQuantity;
+
+    let extDetails: any = {};
+    try { extDetails = parseLeadDetailsJson(devisLead.details); } catch(e) {}
+
+    const allCommandes = await loadData<Commande>('commandes');
+    const clientNorm = (devisLead.name || '').trim().toLowerCase();
+    const clientCmds = (allCommandes || []).filter(c => (c.client || '').trim().toLowerCase() === clientNorm);
+    const matchedCmd = findMatchingCommandeForLead(devisLead, clientCmds);
+    if (matchedCmd) {
+      extDetails.commandeId = matchedCmd.id;
+      extDetails.commandeReference = matchedCmd.reference;
+    }
+
+    const { devis } = await upsertClientDevis({
+      preferredId: extDetails.devisId,
+      preferredNumero: extDetails.devisNumero,
+      commandeId: extDetails.commandeId || undefined,
+      leadId: devisLead.id,
+      leadDetails: devisLead.details,
+      client: devisLead.name,
+      clientPhone: devisLead.phone,
+      modele: devisModeleReel.trim() || devisLead.type,
+      mode: devisMode,
+      quantity: currentQuantity,
+      unitPrice,
+      matierePrice: Number(matierePrice || 0),
+      laborPrice: Number(laborPrice || 0),
+      patronagePrice: devisPatronagePrice ? Number(devisPatronagePrice) : undefined,
+      prixEchantillon: devisPrixEchantillon ? Number(devisPrixEchantillon) : undefined,
+      tissuSuggere: fabricType.trim() || undefined,
+      delaiEstime: devisDelai.trim() || undefined,
+      reponseAtelier: devisReponse.trim() || undefined,
+      supplierName: devisSupplierNom.trim() || undefined,
+      supplierPhone: devisSupplierTel.trim() || undefined,
+      supplierCity: devisSupplierCity.trim() || undefined,
+      supplierCode: devisSupplierCode.trim() || undefined,
+      supplierColors: devisSupplierColors.trim() || undefined,
+      supplierNotes: devisSupplierNotes.trim() || undefined,
+      devisOfficielConfirmed
+    });
+
+    extDetails.devisId = devis.id;
+    extDetails.devisNumero = devis.numero;
+    extDetails.adminMode = devisMode;
+    extDetails.adminQty = currentQuantity;
+    extDetails.adminFabric = fabricType.trim();
+    extDetails.adminDelai = devisDelai.trim();
+    extDetails.adminReponse = devisReponse.trim();
+    extDetails.matierePrice = Number(matierePrice || 0);
+    extDetails.laborPrice = Number(laborPrice || 0);
+    extDetails.unitPrice = unitPrice;
+    extDetails.totalPrice = total;
+    extDetails.devisOfficielConfirmed = devisOfficielConfirmed;
+    if (devisPatronagePrice) {
+      extDetails.patronagePrice = Number(devisPatronagePrice);
+      extDetails.patronageStatus = 'priced';
+    }
+    if (devisPrixEchantillon) {
+      extDetails.prixEchantillon = Number(devisPrixEchantillon);
+    }
+    if (devisSupplierNom) extDetails.supplierName = devisSupplierNom.trim();
+    if (devisSupplierTel) extDetails.supplierPhone = devisSupplierTel.trim();
+    if (devisSupplierCity) extDetails.supplierCity = devisSupplierCity.trim();
+    if (devisSupplierCode) extDetails.supplierCode = devisSupplierCode.trim();
+    if (devisSupplierColors) extDetails.supplierColors = devisSupplierColors.trim();
+    if (devisSupplierNotes) extDetails.supplierNotes = devisSupplierNotes.trim();
+
+    const updatedLead: Lead = {
+      ...devisLead,
+      modeleReel: devisModeleReel.trim() || devisLead.modeleReel,
+      details: JSON.stringify(extDetails),
+      statusProgression: devisProgression,
+      tissuSuggere: fabricType.trim() || devisLead.tissuSuggere,
+      delaiEstime: devisDelai.trim() || devisLead.delaiEstime,
+      reponseAtelier: devisReponse.trim() || devisLead.reponseAtelier,
+      reponseAtelierDate: new Date().toISOString(),
+      patronagePrice: devisPatronagePrice ? Number(devisPatronagePrice) : devisLead.patronagePrice,
+      prixEchantillon: devisPrixEchantillon ? Number(devisPrixEchantillon) : devisLead.prixEchantillon,
+      unitPrice,
+      totalPrice: total
+    };
+
+    setLeads(prev => prev.map(l => l.id === devisLead.id ? updatedLead : l));
+    await saveRecord('leads', updatedLead, true);
+    setDevisLead(null);
+    alert(isAr ? 'تم حفظ الدوفيز ونشره في فضاء الزبون بنجاح!' : 'Devis enregistré et publié sur le portail client avec succès !');
+  };
+
+  const sendDevisWhatsApp = () => {
+    if (!devisLead || (!matierePrice && !laborPrice)) return;
+    const unit = Number(matierePrice || 0) + Number(laborPrice || 0);
+    const qty = devisMode === 'echantillon' ? 1 : devisLead.quantity;
+    const total = unit * qty;
+    const rawPhone = String(devisLead.phone || '').replace(/\D/g, '');
+    const phone = rawPhone.startsWith('2120') ? '212' + rawPhone.slice(3) : rawPhone.startsWith('0') ? '212' + rawPhone.slice(1) : rawPhone;
+    const msg = isAr
+      ? `السلام عليكم *${devisLead.name}*، معكم *BEYA CREATIVE*. 😊\n\n📌 تفاصيل الدوفيز الخاص بطلبكم (*${devisModeleReel || devisLead.type}*):\n• الكمية: *${qty} قطعة*\n• ثمن القطعة: *${unit} درهم*\n• المجموع الإجمالي: *${total.toLocaleString()} درهم*\n${fabricType ? `• نوع الثوب: *${fabricType}*\n` : ''}${devisDelai ? `• مدة الإنجاز: *${devisDelai}*\n` : ''}\nيمكنكم تتبع وتأكيد طلبكم مباشرة عبر بوابتكم الخاصة:\n👉 https://beyacreative.com/#/portal\n\nنحن رهن إشارتكم لأي استفسار!`
+      : `Bonjour *${devisLead.name}*, ici *BEYA CREATIVE*. 😊\n\n📌 Détails de votre devis pour (*${devisModeleReel || devisLead.type}*) :\n• Quantité : *${qty} pcs*\n• Prix unitaire : *${unit} MAD*\n• Total estimé : *${total.toLocaleString()} MAD*\n${fabricType ? `• Tissu : *${fabricType}*\n` : ''}${devisDelai ? `• Délai estimé : *${devisDelai}*\n` : ''}\nSuivez et validez votre commande directement sur votre portail :\n👉 https://beyacreative.com/#/portal\n\nÀ votre entière disposition !`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
+  const openPatronageModal = (lead: Lead) => {
+    setPatronageModalLead(lead);
+    const ext = parseLeadDetailsJson(lead.details);
+    const patPrice = Number(ext.patronagePrice ?? (lead as any).patronagePrice) || 0;
+    const initialModelisteId = ext.modelisteId || (modelistes[0]?.id || '');
+    setPatronageModelisteId(initialModelisteId);
+    setPatronageDeadline(ext.deadlineDate || new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10));
+    setPatronageDirectPrice(patPrice > 0 ? String(patPrice) : '');
+  };
+
+  const handleRequestPriceFromModeliste = async () => {
+    if (!patronageModalLead) return;
+    setPatronageSubmitting(true);
+    try {
+      const ext = parseLeadDetailsJson(patronageModalLead.details);
+      const assignedUser = teamUsers.find(u => u.id === patronageModelisteId) || modelistes[0];
+      const newDetails = {
+        ...ext,
+        patronageStatus: 'requested',
+        modelisteId: assignedUser?.id || '',
+        modelisteName: assignedUser?.nom || '',
+        deadlineDate: patronageDeadline || ext.deadlineDate
+      };
+      const updatedLead: Lead = {
+        ...patronageModalLead,
+        details: JSON.stringify(newDetails)
+      };
+      setLeads(prev => prev.map(l => l.id === patronageModalLead.id ? updatedLead : l));
+      await saveRecord('leads', updatedLead, true);
+      const modPhone = (assignedUser?.telephone || '').replace(/\D/g, '');
+      const modeleClean = (patronageModalLead.type || 'Modèle').replace(' (CMT - Client Tissu)', '').replace('RECRUTEMENT:', '');
+      const waMsg = isAr
+        ? `السلام عليكم ${assignedUser?.nom || 'أخي'}، يوجد موديل جديد "${modeleClean}" (الزبون: ${patronageModalLead.name}) يتطلب تسعيركم لخدمة الباتروناج والقص.\nالمرجو الدخول على حساب الموديليست وتحديد السعر والوقت. شكراً!`
+        : `Bonjour ${assignedUser?.nom || ''}, un nouveau modèle "${modeleClean}" (Client: ${patronageModalLead.name}) nécessite votre chiffrage de patronage.\nMerci de fixer le tarif sur votre espace modéliste.`;
+      setPatronageModalLead(null);
+      if (modPhone && window.confirm(isAr ? 'تم إرسال الطلب للموديليست بنجاح! هل تريد تذكيره عبر واتساب الآن؟' : 'Demande transmise au modéliste ! Prévenir par WhatsApp ?')) {
+        window.open(`https://wa.me/${modPhone}?text=${encodeURIComponent(waMsg)}`, '_blank');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setPatronageSubmitting(false);
+    }
+  };
+
+  const handleValidatePatronageAndLaunch = async () => {
+    if (!patronageModalLead) return;
+    setPatronageSubmitting(true);
+    try {
+      const ext = parseLeadDetailsJson(patronageModalLead.details);
+      const assignedUser = teamUsers.find(u => u.id === patronageModelisteId) || modelistes[0];
+      const basePrice = Number(ext.patronagePrice ?? (patronageModalLead as any).patronagePrice) || 0;
+      const customPrice = Number(patronageDirectPrice) || 0;
+      const patPrice = basePrice > 0 ? basePrice : customPrice;
+
+      const newDetails = {
+        ...ext,
+        patronagePrice: patPrice,
+        patronageStatus: 'priced',
+        adminValidatedToWork: true,
+        modelisteId: assignedUser?.id || ext.modelisteId,
+        modelisteName: assignedUser?.nom || ext.modelisteName,
+        deadlineDate: patronageDeadline || ext.deadlineDate
+      };
+      const updatedLead: Lead = {
+        ...patronageModalLead,
+        details: JSON.stringify(newDetails),
+        patronagePrice: patPrice
+      };
+      setLeads(prev => prev.map(l => l.id === patronageModalLead.id ? updatedLead : l));
+      await saveRecord('leads', updatedLead, true);
+
+      if (assignedUser) {
+        try {
+          await saveModelisteWorkLog({
+            employeId: assignedUser.id,
+            date: new Date().toISOString().slice(0, 10),
+            modeleName: (patronageModalLead.type || 'Modèle').replace(' (CMT - Client Tissu)', '').replace('RECRUTEMENT:', ''),
+            clientName: patronageModalLead.name,
+            leadId: patronageModalLead.id,
+            prixPatronage: patPrice,
+            deadline: patronageDeadline || undefined,
+            statut: 'en_cours'
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      setPatronageModalLead(null);
+      alert(isAr ? 'تمت المصادقة على الباترون وتكليف الموديليست بنجاح!' : 'Patronage validé et assigné avec succès !');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setPatronageSubmitting(false);
+    }
+  };
 
   // Load Stock & RH team data on mount
   useEffect(() => {
@@ -733,51 +1012,132 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                           </div>
 
                           <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0">
-                            <button onClick={async () => {
-                              const updated = { ...req, crmPriority: !req.crmPriority };
-                              setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
-                              await saveRecord('leads', updated, true);
-                            }} title={req.crmPriority ? 'Retirer priorité' : 'Marquer important'}
-                              className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all border ${req.crmPriority ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-200 opacity-50 hover:opacity-100'}`}>
-                              ⭐
-                            </button>
-                            
-                            <div className="w-px h-5 bg-slate-200 mx-1" />
-
-                            {req.crmStage !== 'annule' && req.crmStage !== 'confirme' && (
-                              <button onClick={async () => {
-                                if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
-                                  const updated = { ...req, crmStage: 'annule' as const, rejectedAt: new Date().toISOString() };
-                                  setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
-                                  await saveRecord('leads', updated, true);
-                                }
-                              }}
-                                className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
-                                ✕ {isAr ? 'رفض' : 'Refuser'}
+                            {/* 1. Devis Atelier (Royal Indigo Gradient) */}
+                            {!req.type.startsWith('RECRUTEMENT:') && (
+                              <button 
+                                onClick={() => openDevisModal(req, 'commande')} 
+                                title={isAr ? 'قرار وتسعير دوفيز الورشة الرسمي' : 'Devis & Décision Atelier'}
+                                className="h-9 px-3.5 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 text-white font-black rounded-xl border border-indigo-400/30 flex items-center gap-1.5 transition-all shadow-sm shadow-indigo-600/30 active:scale-95 text-xs cursor-pointer group shrink-0"
+                              >
+                                <FileText className="w-3.5 h-3.5 text-indigo-200 group-hover:text-white transition-colors" />
+                                <span>{isAr ? 'قرار ودوفيز الورشة' : 'Devis Atelier'}</span>
                               </button>
                             )}
 
-                            {req.crmStage !== 'confirme' && req.crmStage !== 'annule' && (
-                              <>
-                                <button onClick={() => openEditLead(req)}
-                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
-                                  ✓ {isAr ? 'تأكيد' : 'Valider'}
+                            {/* 2. Valider | Refuser (Pill) */}
+                            {req.crmStage === 'confirme' ? (
+                              <span className="h-7.5 px-2.5 rounded-lg text-[10.5px] font-black border bg-emerald-100 text-emerald-800 border-emerald-300 flex items-center gap-1 shadow-2xs">
+                                <CheckCircle className="w-3 h-3 text-emerald-600" />
+                                <span>{isAr ? 'مؤكد' : 'Validé'}</span>
+                              </span>
+                            ) : req.crmStage === 'annule' ? (
+                              <span className="h-7.5 px-2.5 rounded-lg text-[10.5px] font-black border bg-rose-100 text-rose-800 border-rose-300 flex items-center gap-1 shadow-2xs shrink-0">
+                                <X className="w-3 h-3 text-rose-600" />
+                                <span>{isAr ? 'ملغى' : 'Annulé'}</span>
+                              </span>
+                            ) : (
+                              <div className="inline-flex items-center bg-slate-100/90 p-0.5 rounded-xl border border-slate-200 shadow-2xs shrink-0" title={isAr ? 'تأكيد أو إلغاء الطلب' : 'Valider ou Refuser'}>
+                                <button 
+                                  onClick={() => openEditLead(req)}
+                                  className="h-7 px-2.5 rounded-lg text-[10.5px] font-black text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                                  title={isAr ? 'تأكيد الطلب' : 'Valider la commande'}
+                                >
+                                  <CheckCircle className="w-3 h-3 text-emerald-600" />
+                                  <span>{isAr ? 'تأكيد' : 'Valider'}</span>
                                 </button>
-
-                                <button onClick={() => alert(isAr ? 'تحليل الموديل متوفر في الإدارة' : 'L\'analyse de modèle est gérée par l\'administration')}
-                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-500 hover:text-white transition-all shadow-sm flex items-center gap-1">
-                                  <Scissors className="w-3.5 h-3.5" /> {isAr ? 'تحليل الموديل' : 'Analyser Modèle'}
+                                <div className="w-[1px] h-3 bg-slate-300 mx-0.5" />
+                                <button 
+                                  onClick={async () => {
+                                    if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
+                                      const updated = { ...req, crmStage: 'annule' as const, rejectedAt: new Date().toISOString() };
+                                      setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
+                                      await saveRecord('leads', updated, true);
+                                    }
+                                  }}
+                                  className="h-7 px-2.5 rounded-lg text-[10.5px] font-black text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                                  title={isAr ? 'رفض وإلغاء هذا الطلب' : 'Refuser et archiver cette demande'}
+                                >
+                                  <X className="w-3 h-3 text-rose-500" />
+                                  <span>{isAr ? 'رفض' : 'Refuser'}</span>
                                 </button>
-
-                                <button onClick={() => alert(isAr ? 'طلب تسعير الباترون متوفر في الإدارة' : 'Le prix de patronage est géré par l\'administration')}
-                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-500 hover:text-white transition-all shadow-sm flex items-center gap-1">
-                                  <Scissors className="w-3.5 h-3.5" /> {isAr ? 'باترون' : 'Prix Patronage'}
-                                </button>
-                              </>
+                              </div>
                             )}
 
-                            <button onClick={() => openEditLead(req)} title="Notes"
-                              className="w-8 h-8 bg-white text-slate-500 hover:bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
+                            {/* 3. Analyse (Pink button with scissors) */}
+                            <button 
+                              onClick={() => setAiAnalysisLead(req)}
+                              className="h-9 px-2.5 rounded-xl text-xs font-black border bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 hover:bg-fuchsia-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                              title={isAr ? 'تحليل الموديل واستخراج القياسات' : 'Analyser le modèle et extraire les mesures'}
+                            >
+                              <Scissors className="w-3.5 h-3.5" />
+                              <span>{isAr ? 'تحليل الموديل' : 'Analyse'}</span>
+                            </button>
+
+                            {/* 4. Patronage (Indigo button with scissors) */}
+                            {(() => {
+                              const ext = parseLeadDetailsJson(req.details);
+                              const patPrice = Number(ext.patronagePrice ?? (req as any).patronagePrice) || 0;
+                              const isValidated = !ext.patronageCancelled && Boolean(ext.adminValidatedToWork || ext.clientValidated || req.crmPriceConfirmed);
+                              const isPriced = !ext.patronageCancelled && (ext.patronageStatus === 'priced' || patPrice > 0);
+                              const isRequested = !ext.patronageCancelled && ext.patronageStatus === 'requested';
+
+                              if (isPriced && !isValidated) {
+                                return (
+                                  <button 
+                                    onClick={() => openPatronageModal(req)}
+                                    title={isAr ? 'قرار الباترون' : 'Décision Patronage'}
+                                    className="h-9 px-3 rounded-xl text-xs font-black border bg-gradient-to-r from-amber-500 via-indigo-600 to-indigo-700 text-white hover:brightness-110 transition-all shadow-md flex items-center gap-1.5 cursor-pointer animate-pulse"
+                                  >
+                                    <Scissors className="w-3.5 h-3.5" />
+                                    <span>{isAr ? `قرار الباترون (${patPrice} د.م)` : `Décision (${patPrice} MAD)`}</span>
+                                  </button>
+                                );
+                              }
+
+                              if (isValidated) {
+                                return (
+                                  <button 
+                                    onClick={() => openPatronageModal(req)}
+                                    title={isAr ? 'باترون مصادق عليه' : 'Patronage Validé'}
+                                    className="h-9 px-2.5 rounded-xl text-xs font-black border bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>{isAr ? `✓ باترون مصادق (${patPrice} د.م)` : `✓ Validé (${patPrice} MAD)`}</span>
+                                  </button>
+                                );
+                              }
+
+                              if (isRequested) {
+                                return (
+                                  <button 
+                                    onClick={() => openPatronageModal(req)}
+                                    title={isAr ? 'بانتظار الموديليست' : 'En attente modéliste'}
+                                    className="h-9 px-2.5 rounded-xl text-xs font-black border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                                    <span>{isAr ? 'بانتظار الموديليست ⏳' : 'Attente Modéliste ⏳'}</span>
+                                  </button>
+                                );
+                              }
+
+                              return (
+                                <button 
+                                  onClick={() => openPatronageModal(req)}
+                                  title={isAr ? 'طلب تسعير ومصادقة الباترون' : 'Demander / Gérer Patronage'}
+                                  className="h-9 px-2.5 rounded-xl text-xs font-black border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Scissors className="w-3.5 h-3.5" />
+                                  <span>{isAr ? 'باترون' : 'Patronage'}</span>
+                                </button>
+                              );
+                            })()}
+
+                            {/* 5. Notes / Details */}
+                            <button 
+                              onClick={() => setSelectedLeadInfo(req)} 
+                              title={isAr ? 'عرض التفاصيل والملاحظات' : 'Détails & Notes'}
+                              className="w-8 h-8 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition-colors cursor-pointer border border-slate-200 bg-white"
+                            >
                               <MessageSquare className="w-3.5 h-3.5" />
                             </button>
                             
@@ -2201,6 +2561,413 @@ Pour valider et lancer l'échantillon, contactez-nous directement.`;
             <X className="w-6 h-6" />
           </button>
           <img src={previewImage} onClick={(e) => e.stopPropagation()} className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl" alt="Preview" />
+        </div>
+      )}
+
+      {/* ─── Devis Atelier Modal ─── */}
+      {devisLead && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden my-auto flex flex-col max-h-[90vh]">
+            {/* Header compact */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-indigo-500/20 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-600/30">
+                  <FileText className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                    {isAr ? 'قرار وتسعير الورشة (DEVIS ATELIER)' : 'Décision Finale & Devis Atelier'}
+                  </p>
+                  <p className="text-[10px] text-indigo-300 font-bold max-w-[280px] truncate">{devisLead.name} — {devisLead.type}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDevisLead(null)}
+                className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white rounded-xl flex items-center justify-center transition-all border border-white/20 shadow-sm cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-3 overflow-y-auto custom-scrollbar flex-1">
+              {/* Type / Nom Modèle Réel */}
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                  {isAr ? 'اسم / نوع الموديل' : 'Modèle / Article'}
+                </label>
+                <input
+                  type="text"
+                  value={devisModeleReel}
+                  onChange={e => setDevisModeleReel(e.target.value)}
+                  placeholder={devisLead.type}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Mode switch: Échantillon vs Commande */}
+              <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setDevisMode('commande')}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-black transition-all ${devisMode === 'commande' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'}`}
+                >
+                  {isAr ? `طلبية إنتاج (${devisLead.quantity} قطعة)` : `Production (${devisLead.quantity} pcs)`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDevisMode('echantillon')}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-black transition-all ${devisMode === 'echantillon' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'}`}
+                >
+                  {isAr ? 'عينة تجريبية (1 قطعة)' : 'Échantillon (1 pc)'}
+                </button>
+              </div>
+
+              {/* Tissu suggéré */}
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                  {isAr ? 'نوع القماش المقترح' : 'Tissu suggéré'}
+                </label>
+                <input
+                  type="text"
+                  value={fabricType}
+                  onChange={e => setFabricType(e.target.value)}
+                  placeholder={isAr ? 'مثال: Molleton 320g / Coton Peigné...' : 'Ex: Molleton 320g, Coton 100%...'}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Prix Matière & Prix Façon (MO) */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">
+                    {isAr ? 'سعر القماش للمتر/قطعة (MAD)' : 'Matière / pc (MAD)'}
+                  </label>
+                  <input
+                    type="number"
+                    value={matierePrice}
+                    onChange={e => setMatierePrice(e.target.value)}
+                    placeholder="0"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm font-black text-slate-900 outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">
+                    {isAr ? 'سعر الخياطة والفصالة (MAD)' : 'Façon MO / pc (MAD)'}
+                  </label>
+                  <input
+                    type="number"
+                    value={laborPrice}
+                    onChange={e => setLaborPrice(e.target.value)}
+                    placeholder="0"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm font-black text-slate-900 outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Patronage & Échantillon Prices */}
+              <div className="grid grid-cols-2 gap-2 p-2.5 bg-amber-50/70 rounded-xl border border-amber-200">
+                <div>
+                  <label className="block text-[8px] font-black text-amber-900 uppercase tracking-widest mb-1 flex items-center gap-1">
+                    <Scissors className="w-3 h-3 text-amber-600" />
+                    <span>{isAr ? 'الباترون (MAD)' : 'Patronage (MAD)'}</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={devisPatronagePrice}
+                    onChange={e => setDevisPatronagePrice(e.target.value)}
+                    placeholder="Ex: 250"
+                    className="w-full bg-white border border-amber-200 rounded-lg py-1.5 px-3 text-xs font-black text-amber-900 outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[8px] font-black text-indigo-900 uppercase tracking-widest mb-1 flex items-center gap-1">
+                    <Tag className="w-3 h-3 text-indigo-600" />
+                    <span>{isAr ? 'سعر العينة (MAD)' : 'Échantillon (MAD)'}</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={devisPrixEchantillon}
+                    onChange={e => setDevisPrixEchantillon(e.target.value)}
+                    placeholder="Ex: 350"
+                    className="w-full bg-white border border-indigo-200 rounded-lg py-1.5 px-3 text-xs font-black text-indigo-900 outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Délai & Progression */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                    {isAr ? 'أجل التسليم المتوقع' : 'Délai estimé'}
+                  </label>
+                  <input
+                    type="text"
+                    value={devisDelai}
+                    onChange={e => setDevisDelai(e.target.value)}
+                    placeholder="7 - 10 jours ouvrables"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                    {isAr ? 'المرحلة الحالية' : 'Étape Actuelle'}
+                  </label>
+                  <select
+                    value={devisProgression}
+                    onChange={e => setDevisProgression(e.target.value as any)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-400"
+                  >
+                    <option value="reception">{isAr ? 'استلام الطلب' : 'Réception'}</option>
+                    <option value="etude">{isAr ? 'دراسة تقنية وتوفير القماش' : 'Étude & Tissu'}</option>
+                    <option value="echantillon">{isAr ? 'تنفيذ العينة (Prototype)' : 'Échantillon en cours'}</option>
+                    <option value="production">{isAr ? 'قيد الإنتاج الفعلي' : 'En Production'}</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Fournisseur rapide */}
+              <div className="p-3 bg-emerald-50/70 rounded-xl border border-emerald-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1">
+                    <Store className="w-3.5 h-3.5" />
+                    {isAr ? 'مورد معتمد من شبكة BEYA' : 'Fournisseur Tissu Partenaire'}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {SUPPLIERS_DATA.slice(0, 5).map(p => (
+                    <button
+                      key={p.code}
+                      type="button"
+                      onClick={() => {
+                        setDevisSupplierNom(p.name);
+                        setDevisSupplierTel(p.phone);
+                        setDevisSupplierCity(p.city);
+                        setDevisSupplierCode(p.code);
+                        setDevisSupplierColors(p.colors);
+                        setDevisSupplierNotes(isAr ? 'متوفر بسعر تفضيلي لدى شبكة شركاء BEYA.' : 'Disponible au tarif partenaire BEYA Creative.');
+                      }}
+                      className="px-2 py-0.5 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-[9px] font-bold transition shadow-2xs cursor-pointer"
+                    >
+                      + {p.name.split(' - ')[0]}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div>
+                    <input
+                      type="text"
+                      value={devisSupplierNom}
+                      onChange={e => setDevisSupplierNom(e.target.value)}
+                      placeholder={isAr ? 'اسم المورد' : 'Nom Fournisseur'}
+                      className="w-full bg-white border border-emerald-200 rounded-lg py-1 px-2 text-xs font-bold outline-none"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      value={devisSupplierTel}
+                      onChange={e => setDevisSupplierTel(e.target.value)}
+                      placeholder="06..."
+                      dir="ltr"
+                      className="w-full bg-white border border-emerald-200 rounded-lg py-1 px-2 text-xs font-bold outline-none text-left"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Display */}
+              <div className="bg-slate-900 rounded-2xl px-4 py-3 text-white flex items-center justify-between shadow-md">
+                <div>
+                  <p className="text-[9px] font-black text-white/50 uppercase tracking-widest">
+                    {isAr ? 'المجموع التقديري' : 'Total estimé'}
+                  </p>
+                  <p className="text-xs text-indigo-300 font-bold">
+                    {devisMode === 'echantillon' ? '1 pc' : `${devisLead.quantity} pcs`} × {(Number(matierePrice || 0) + Number(laborPrice || 0))} MAD
+                  </p>
+                </div>
+                <p className="text-xl font-black">
+                  {((Number(matierePrice || 0) + Number(laborPrice || 0)) * (devisMode === 'echantillon' ? 1 : devisLead.quantity)).toLocaleString()} <span className="text-xs">MAD</span>
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={sendDevisWhatsApp}
+                  disabled={!matierePrice && !laborPrice}
+                  className="h-10 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shadow-sm shadow-[#25D366]/20 cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>WhatsApp</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendToPortail}
+                  disabled={!matierePrice && !laborPrice}
+                  className="h-10 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shadow-md shadow-indigo-600/25 active:scale-95 cursor-pointer border border-indigo-400/30"
+                >
+                  <Globe className="w-4 h-4 text-indigo-200" />
+                  <span>{isAr ? 'نشر في البوابة' : 'Publier au Portail'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Patronage Modal ─── */}
+      {patronageModalLead && (() => {
+        const ext = parseLeadDetailsJson(patronageModalLead.details);
+        const patPrice = Number(ext.patronagePrice ?? (patronageModalLead as any).patronagePrice) || 0;
+        const isPriced = ext.patronageStatus === 'priced' || patPrice > 0;
+        const isValidated = Boolean(ext.adminValidatedToWork || ext.clientValidated || patronageModalLead.crmPriceConfirmed);
+        const modeleClean = (patronageModalLead.type || 'Modèle').replace(' (CMT - Client Tissu)', '').replace('RECRUTEMENT:', '');
+
+        return (
+          <div className="fixed inset-0 z-[130] flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="bg-white rounded-[2rem] p-5 sm:p-6 max-w-lg w-full shadow-2xl border border-slate-100 relative my-auto flex flex-col">
+              <button
+                onClick={() => setPatronageModalLead(null)}
+                className="absolute top-4 left-4 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all cursor-pointer z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
+                <div className="w-12 h-12 bg-gradient-to-tr from-indigo-500 to-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
+                  <Scissors className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-800 text-sm sm:text-base">
+                    {isAr ? 'إدارة وتكليف الباترون' : 'Gestion & Affectation Patronage'}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-bold truncate max-w-[260px]">{patronageModalLead.name} — {modeleClean}</p>
+                </div>
+              </div>
+
+              {/* Status Info */}
+              <div className="mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                <div>
+                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">
+                    {isAr ? 'حالة الباترون الحالية' : 'Statut actuel'}
+                  </span>
+                  <span className="text-xs font-black text-indigo-700">
+                    {isValidated ? (isAr ? '✓ مصادق عليه وقيد الإنجاز' : '✓ Validé & en cours') : isPriced ? (isAr ? `مسعر بـ ${patPrice} MAD` : `Chiffré à ${patPrice} MAD`) : (isAr ? 'غير مسعر بعد' : 'Non chiffré')}
+                  </span>
+                </div>
+                {patPrice > 0 && (
+                  <span className="text-base font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-lg border border-amber-200">
+                    {patPrice} MAD
+                  </span>
+                )}
+              </div>
+
+              {/* Tabs */}
+              <div className="flex gap-2 p-1 bg-slate-100 rounded-xl mb-4">
+                <button
+                  type="button"
+                  onClick={() => setPatronageTab('request')}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-black transition-all ${patronageTab === 'request' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'}`}
+                >
+                  {isAr ? 'طلب تسعير من موديليست' : 'Demander Chiffrage'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPatronageTab('validate')}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-black transition-all ${patronageTab === 'validate' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'}`}
+                >
+                  {isAr ? 'مصادقة وإطلاق العمل' : 'Valider & Lancer'}
+                </button>
+              </div>
+
+              {/* Modeliste selector */}
+              <div className="space-y-3 mb-4">
+                <div>
+                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">
+                    {isAr ? 'اختيار الموديليست' : 'Modéliste'}
+                  </label>
+                  <select
+                    value={patronageModelisteId}
+                    onChange={e => setPatronageModelisteId(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+                  >
+                    {modelistes.length === 0 ? (
+                      <option value="">{isAr ? 'لا يوجد موديليست مسجل' : 'Aucun modéliste configuré'}</option>
+                    ) : (
+                      modelistes.map(m => (
+                        <option key={m.id} value={m.id}>{m.nom} {m.telephone ? `(${m.telephone})` : ''}</option>
+                      ))
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">
+                    {isAr ? 'أجل التسليم (Deadline)' : 'Délai d\'exécution (Date limite)'}
+                  </label>
+                  <input
+                    type="date"
+                    value={patronageDeadline}
+                    onChange={e => setPatronageDeadline(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                {patronageTab === 'validate' && (
+                  <div>
+                    <label className="block text-[9px] font-black text-emerald-700 uppercase tracking-widest mb-1">
+                      {isAr ? 'سعر الباترون المتفق عليه (MAD)' : 'Tarif de Patronage Convenu (MAD)'}
+                    </label>
+                    <input
+                      type="number"
+                      value={patronageDirectPrice}
+                      onChange={e => setPatronageDirectPrice(e.target.value)}
+                      placeholder="Ex: 250"
+                      className="w-full bg-emerald-50/50 border-2 border-emerald-200 rounded-xl py-2 px-3 text-sm font-black text-emerald-900 outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Action Button */}
+              {patronageTab === 'request' ? (
+                <button
+                  type="button"
+                  onClick={handleRequestPriceFromModeliste}
+                  disabled={patronageSubmitting || !patronageModelisteId}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-md shadow-indigo-600/25 disabled:opacity-50 cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>{patronageSubmitting ? (isAr ? 'جاري الإرسال...' : 'Envoi...') : (isAr ? 'إرسال طلب التسعير للموديليست' : 'Envoyer la demande au modéliste')}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleValidatePatronageAndLaunch}
+                  disabled={patronageSubmitting || (!patPrice && !patronageDirectPrice)}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-600/25 disabled:opacity-50 cursor-pointer"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>{patronageSubmitting ? (isAr ? 'جاري الحفظ...' : 'Enregistrement...') : (isAr ? 'مصادقة الباترون وإطلاق العمل' : 'Valider & Lancer le patronage')}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ─── AI Analysis Modal ─── */}
+      {aiAnalysisLead && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm md:p-6 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white w-full h-[100dvh] md:h-auto md:max-h-[90vh] md:rounded-[32px] md:max-w-6xl overflow-hidden shadow-2xl relative ring-0 md:ring-4 ring-white/20 flex flex-col">
+            <div className="flex-1 h-full overflow-hidden">
+              <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
+                <AISpace initialLead={aiAnalysisLead} onClose={() => setAiAnalysisLead(null)} />
+              </Suspense>
+            </div>
+          </div>
         </div>
       )}
     </div>
